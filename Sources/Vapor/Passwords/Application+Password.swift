@@ -16,7 +16,7 @@ extension Application {
         }
 
         public var sync: PasswordHasher {
-            guard let makeVerifier = self.application.passwords.storage.makeVerifier else {
+            guard let makeVerifier = self.application.passwords.storage.makeVerifier.withLockedValue({ $0.factory }) else {
                 fatalError("No password verifier configured. Configure with app.passwords.use(...)")
             }
             return makeVerifier(self.application)

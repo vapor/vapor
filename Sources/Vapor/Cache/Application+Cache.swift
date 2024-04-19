@@ -1,3 +1,5 @@
+import NIOConcurrencyHelpers
+
 extension Application {
     /// Controls application's configured caches.
     ///
@@ -9,27 +11,32 @@ extension Application {
 
     /// Current application cache. See `Request.cache` for caching in request handlers.
     public var cache: Cache {
-        guard let makeCache = self.caches.storage.makeCache else {
+        guard let makeCache = self.caches.storage.makeCache.withLockedValue({ $0.factory }) else {
             fatalError("No cache configured. Configure with app.caches.use(...)")
         }
         return makeCache(self)
     }
 
-    public struct Caches {
-        public struct Provider {
-            let run: (Application) -> ()
+    public struct Caches: Sendable {
+        public struct Provider: Sendable {
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
         
-        final class Storage {
-            var makeCache: ((Application) -> Cache)?
-            init() { }
+        final class Storage: Sendable {
+            struct CacheFactory {
+                let factory: (@Sendable (Application) -> Cache)?
+            }
+            let makeCache: NIOLockedValueBox<CacheFactory>
+            init() {
+                self.makeCache = .init(.init(factory: nil))
+            }
         }
 
-        struct Key: StorageKey {
+        struct Key: StorageKey, Sendable {
             typealias Value = Storage
         }
 
@@ -39,8 +46,8 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeCache: @escaping (Application) -> (Cache)) {
-            self.storage.makeCache = makeCache
+        @preconcurrency public func use(_ makeCache: @Sendable @escaping (Application) -> (Cache)) {
+            self.storage.makeCache.withLockedValue { $0 = .init(factory: makeCache) }
         }
 
         func initialize() {

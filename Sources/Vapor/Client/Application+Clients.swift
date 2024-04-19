@@ -1,30 +1,37 @@
+import NIOConcurrencyHelpers
+
 extension Application {
     public var clients: Clients {
         .init(application: self)
     }
     
     public var client: Client {
-        guard let makeClient = self.clients.storage.makeClient else {
+        guard let makeClient = self.clients.storage.makeClient.withLockedValue({ $0.factory }) else {
             fatalError("No client configured. Configure with app.clients.use(...)")
         }
         return makeClient(self)
     }
 
-    public struct Clients {
+    public struct Clients: Sendable {
         public struct Provider {
-            let run: (Application) -> ()
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
         
-        final class Storage {
-            var makeClient: ((Application) -> Client)?
-            init() { }
+        final class Storage: Sendable {
+            struct ClientFactory {
+                let factory: (@Sendable (Application) -> Client)?
+            }
+            let makeClient: NIOLockedValueBox<ClientFactory>
+            init() {
+                self.makeClient = .init(.init(factory: nil))
+            }
         }
         
-        struct Key: StorageKey {
+        struct Key: StorageKey, Sendable {
             typealias Value = Storage
         }
 
@@ -36,8 +43,8 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeClient: @escaping (Application) -> (Client)) {
-            self.storage.makeClient = makeClient
+        @preconcurrency public func use(_ makeClient: @Sendable @escaping (Application) -> (Client)) {
+            self.storage.makeClient.withLockedValue { $0 = .init(factory: makeClient) }
         }
 
         public let application: Application

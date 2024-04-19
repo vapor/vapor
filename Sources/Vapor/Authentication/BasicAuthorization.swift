@@ -2,7 +2,7 @@ import Foundation
 import NIOHTTP1
 
 /// A basic username and password.
-public struct BasicAuthorization {
+public struct BasicAuthorization: Sendable {
     /// The username, sometimes an email address
     public let username: String
 

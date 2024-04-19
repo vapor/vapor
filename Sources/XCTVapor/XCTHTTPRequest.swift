@@ -7,6 +7,13 @@ public struct XCTHTTPRequest {
     public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer
+    
+    public init(method: HTTPMethod, url: URI, headers: HTTPHeaders, body: ByteBuffer) {
+        self.method = method
+        self.url = url
+        self.headers = headers
+        self.body = body
+    }
 
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer

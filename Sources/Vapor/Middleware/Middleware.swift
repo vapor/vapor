@@ -4,7 +4,8 @@ import NIOCore
 /// mutating both incoming requests and outgoing responses. `Middleware` can choose
 /// to pass requests on to the next `Middleware` in a chain, or they can short circuit and
 /// return a custom `Response` if desired.
-public protocol Middleware {
+@preconcurrency
+public protocol Middleware: Sendable {
     /// Called with each `Request` that passes through this middleware.
     /// - parameters:
     ///     - request: The incoming `Request`.

@@ -1,10 +1,16 @@
+@preconcurrency import Dispatch
+#if !canImport(Darwin) && swift(<5.9)
+@preconcurrency import Foundation
+#else
 import Foundation
+#endif
 import NIOCore
+import NIOConcurrencyHelpers
 
 extension Response {
-    struct BodyStream {
+    struct BodyStream: Sendable {
         let count: Int
-        let callback: (BodyStreamWriter) -> ()
+        let callback: @Sendable (BodyStreamWriter) -> ()
     }
 
     /// Represents a `Response`'s body.
@@ -12,9 +18,9 @@ extension Response {
     ///     let body = Response.Body(string: "Hello, world!")
     ///
     /// This can contain any data (streaming or static) and should match the message's `"Content-Type"` header.
-    public struct Body: CustomStringConvertible, ExpressibleByStringLiteral {
+    public struct Body: CustomStringConvertible, ExpressibleByStringLiteral, Sendable {
         /// The internal HTTP body storage enum. This is an implementation detail.
-        internal enum Storage {
+        internal enum Storage: Sendable {
             /// Cases
             case none
             case buffer(ByteBuffer)
@@ -150,12 +156,14 @@ extension Response {
             self.storage = .buffer(buffer)
         }
         
-        public init(stream: @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        @preconcurrency
+        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .stream(.init(count: count, callback: stream))
         }
 
-        public init(stream: @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        @preconcurrency
+        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
         
@@ -173,26 +181,33 @@ extension Response {
     }
 }
 
-private final class ResponseBodyCollector: BodyStreamWriter {
+// Since all buffer mutation is done on the event loop, we can be unchecked here.
+// This removes the need for a lock and performance hits from that
+// Any changes to this type need to be carefully considered
+private final class ResponseBodyCollector: BodyStreamWriter, @unchecked Sendable {
     var buffer: ByteBuffer
-    var eventLoop: EventLoop
-    var promise: EventLoopPromise<ByteBuffer>
+    let eventLoop: EventLoop
+    let promise: EventLoopPromise<ByteBuffer>
 
     init(eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
         self.buffer = byteBufferAllocator.buffer(capacity: 0)
         self.eventLoop = eventLoop
-        self.promise = self.eventLoop.makePromise(of: ByteBuffer.self)
+        self.promise = eventLoop.makePromise(of: ByteBuffer.self)
     }
 
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-        switch result {
-        case .buffer(var buffer):
-            self.buffer.writeBuffer(&buffer)
-        case .error(let error):
-            self.promise.fail(error)
-        case .end:
-            self.promise.succeed(self.buffer)
+        let future = self.eventLoop.submit {
+            switch result {
+            case .buffer(var buffer):
+                self.buffer.writeBuffer(&buffer)
+            case .error(let error):
+                self.promise.fail(error)
+                throw error
+            case .end:
+                self.promise.succeed(self.buffer)
+            }
         }
-        promise?.succeed(())
+        // Fixes an issue where errors in the stream should fail the individual write promise.
+        if let promise { future.cascade(to: promise) }
     }
 }

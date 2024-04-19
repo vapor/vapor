@@ -1,26 +1,48 @@
 import NIOCore
 import NIOHTTP1
 import NIOFoundationCompat
+import NIOConcurrencyHelpers
 
 /// An HTTP response from a server back to the client.
 ///
 ///     let res = Response(status: .ok)
 ///
 /// See `HTTPClient` and `HTTPServer`.
-public final class Response: CustomStringConvertible {
+public final class Response: CustomStringConvertible, Sendable {
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
 
     /// The HTTP version that corresponds to this response.
-    public var version: HTTPVersion
+    public var version: HTTPVersion {
+        get {
+            self.responseBox.withLockedValue { $0.version }
+        }
+        set {
+            self.responseBox.withLockedValue { $0.version = newValue }
+        }
+    }
     
     /// The HTTP response status.
-    public var status: HTTPResponseStatus
+    public var status: HTTPResponseStatus {
+        get {
+            self.responseBox.withLockedValue { $0.status }
+        }
+        set {
+            self.responseBox.withLockedValue { $0.status = newValue }
+        }
+    }
     
     /// The header fields for this HTTP response.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPHeaders
+    public var headers: HTTPHeaders {
+        get {
+            self.responseBox.withLockedValue { $0.headers }
+        }
+        set {
+            self.responseBox.withLockedValue { $0.headers = newValue }
+        }
+    }
     
     /// The `Body`. Updating this property will also update the associated transport headers.
     ///
@@ -29,35 +51,59 @@ public final class Response: CustomStringConvertible {
     /// Also be sure to set this message's `contentType` property to a `MediaType` that correctly
     /// represents the `Body`.
     public var body: Body {
-        didSet { self.headers.updateContentLength(self.body.count) }
+        get {
+            responseBox.withLockedValue { $0.body }
+        }
+        set {
+            responseBox.withLockedValue { box in
+                box.body = newValue
+            }
+        }
     }
 
-    // If `true`, don't serialize the body.
-    var forHeadRequest: Bool
-    
     /// Optional Upgrade behavior to apply to this response.
     /// currently, websocket upgrades are the only defined case.
-    public var upgrader: Upgrader?
+    public var upgrader: Upgrader? {
+        get {
+            self.responseBox.withLockedValue { $0.upgrader }
+        }
+        set {
+            self.responseBox.withLockedValue { $0.upgrader = newValue }
+        }
+    }
 
-    public var storage: Storage
+    public var storage: Storage {
+        get {
+            self._storage.withLockedValue { $0 }
+        }
+        set {
+            self._storage.withLockedValue { $0 = newValue }
+        }
+    }
     
     /// Get and set `HTTPCookies` for this `Response`.
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
         get {
-            return self.headers.setCookie ?? .init()
+            return self.responseBox.withLockedValue { box in
+                box.headers.setCookie ?? .init()
+            }
         }
         set {
-            self.headers.setCookie = newValue
+            self.responseBox.withLockedValue { box in
+                box.headers.setCookie = newValue
+            }
         }
     }
     
     /// See `CustomStringConvertible`
     public var description: String {
         var desc: [String] = []
-        desc.append("HTTP/\(self.version.major).\(self.version.minor) \(self.status.code) \(self.status.reasonPhrase)")
-        desc.append(self.headers.debugDescription)
-        desc.append(self.body.description)
+        self.responseBox.withLockedValue { box in
+            desc.append("HTTP/\(box.version.major).\(box.version.minor) \(box.status.code) \(box.status.reasonPhrase)")
+            desc.append(box.headers.debugDescription)
+            desc.append(box.body.description)
+        }
         return desc.joined(separator: "\n")
     }
 
@@ -71,31 +117,39 @@ public final class Response: CustomStringConvertible {
         }
 
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(encodable, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
+            try self.response.responseBox.withLockedValue { box in
+                var body = box.body.byteBufferAllocator.buffer(capacity: 0)
+                try encoder.encode(encodable, to: &body, headers: &box.headers)
+                box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
+            }
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
-            guard let body = self.response.body.buffer else {
-                throw Abort(.unprocessableEntity)
+            try self.response.responseBox.withLockedValue { box in
+                guard let body = box.body.buffer else {
+                    throw Abort(.unprocessableEntity)
+                }
+                return try decoder.decode(D.self, from: body, headers: box.headers)
             }
-            return try decoder.decode(D.self, from: body, headers: self.response.headers)
         }
 
         func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
-            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(content, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
+            try self.response.responseBox.withLockedValue { box in
+                var body = box.body.byteBufferAllocator.buffer(capacity: 0)
+                try encoder.encode(content, to: &body, headers: &box.headers)
+                box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
+            }
         }
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
-            guard let body = self.response.body.buffer else {
-                throw Abort(.unprocessableEntity)
+            var decoded = try self.response.responseBox.withLockedValue { box in
+                guard let body = box.body.buffer else {
+                    throw Abort(.unprocessableEntity)
+                }
+                return try decoder.decode(C.self, from: body, headers: box.headers)
             }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.response.headers)
             try decoded.afterDecode()
             return decoded
         }
@@ -109,6 +163,24 @@ public final class Response: CustomStringConvertible {
             // ignore since Request is a reference type
         }
     }
+    
+    struct ResponseBox: Sendable {
+        var version: HTTPVersion
+        var status: HTTPResponseStatus
+        var headers: HTTPHeaders
+        var body: Body {
+            didSet {
+                self.headers.updateContentLength(body.count)
+            }
+        }
+        var upgrader: Upgrader?
+        // If `true`, don't serialize the body.
+        var forHeadRequest: Bool
+
+    }
+    
+    let responseBox: NIOLockedValueBox<ResponseBox>
+    private let _storage: NIOLockedValueBox<Storage>
     
     // MARK: Init
     
@@ -147,12 +219,8 @@ public final class Response: CustomStringConvertible {
         headersNoUpdate headers: HTTPHeaders,
         body: Body
     ) {
-        self.status = status
-        self.version = version
-        self.headers = headers
-        self.body = body
-        self.storage = .init()
-        self.forHeadRequest = false
+        self._storage = .init(.init())
+        self.responseBox = .init(.init(version: version, status: status, headers: headers, body: body, forHeadRequest: false))
     }
 }
 

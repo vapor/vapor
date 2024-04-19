@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Validations {
+public struct Validations: Sendable {
     var storage: [Validation]
     
     public init() {
@@ -36,11 +36,11 @@ public struct Validations {
         self.storage.append(.init(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription))
     }
     
-    public mutating func add(
+    @preconcurrency public mutating func add(
         each key: ValidationKey,
         required: Bool = true,
         customFailureDescription: String? = nil,
-        _ handler: @escaping (Int, inout Validations) -> ()
+        _ handler: @Sendable @escaping (Int, inout Validations) -> ()
     ) {
         self.storage.append(.init(nested: key, required: required, unkeyed: handler, customFailureDescription: customFailureDescription))
     }

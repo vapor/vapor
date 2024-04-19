@@ -177,7 +177,6 @@ final class QueryTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("urlencodedform") { req -> HTTPStatus in
-            debugPrint(req)
             let foo = try req.query.decode(User.self)
             XCTAssertEqual(foo.name, "Vapor")
             XCTAssertEqual(foo.age, 3)
@@ -300,5 +299,28 @@ final class QueryTests: XCTestCase {
             req.url = .init(path: "/foo?bar=baz&page=a")
             XCTAssertThrowsError(try req.query.get(Int?.self, at: "page"))
         }
+    }
+
+    func testValuelessParamGet() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "/"),
+            on: app.eventLoopGroup.next()
+        )
+
+        req.url = .init(path: "/foo?bar")
+        XCTAssertTrue(try req.query.get(Bool.self, at: "bar"))
+
+        req.url = .init(path: "/foo?bar&baz=bop")
+        XCTAssertTrue(try req.query.get(Bool.self, at: "bar"))
+
+        req.url = .init(path: "/foo")
+        XCTAssertFalse(try req.query.get(Bool.self, at: "bar"))
+
+        req.url = .init(path: "/foo?baz=bop")
+        XCTAssertFalse(try req.query.get(Bool.self, at: "bar"))
     }
 }

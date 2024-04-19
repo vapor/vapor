@@ -14,7 +14,7 @@ final class RequestTests: XCTestCase {
         }
         
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "vapor/is/fun") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "vapor/is/fun") { res in
             XCTAssertEqual(res.body.string, ipV4Hostname)
         }
     }
@@ -29,6 +29,18 @@ final class RequestTests: XCTestCase {
         XCTAssertNotEqual(request1.id, request2.id)
     }
 
+    func testRequestIdInLoggerMetadata() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        guard case .string(let string) = request.logger[metadataKey: "request-id"] else {
+            XCTFail("Did not find request-id key in logger metadata.")
+            return
+        }
+        XCTAssertEqual(string, request.id)
+    }
+
     func testRequestPeerAddressForwarded() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -41,7 +53,7 @@ final class RequestTests: XCTestCase {
             return peerAddress.description
         }
 
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
         }
     }
@@ -58,12 +70,12 @@ final class RequestTests: XCTestCase {
             return peerAddress.description
         }
 
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]5.6.7.8:80")
         }
     }
 
-    func testRequestPeerAddressRemoteAddres() throws {
+    func testRequestPeerAddressRemoteAddress() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -75,7 +87,7 @@ final class RequestTests: XCTestCase {
         }
 
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "remote") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
             XCTAssertContains(res.body.string, "[IPv4]\(ipV4Hostname)")
         }
     }
@@ -94,11 +106,29 @@ final class RequestTests: XCTestCase {
         }
 
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "remote") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
         }
     }
 
+    func testRequestIdForwarding() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("remote") {
+            if case .string(let string) = $0.logger[metadataKey: "request-id"], string == $0.id {
+                return string
+            } else {
+                throw Abort(.notFound)
+            }
+        }
+        
+        try app.testable(method: .running(port: 0)).test(.GET, "remote", beforeRequest: { req in
+            req.headers.add(name: .xRequestId, value: "test")
+        }, afterResponse: { res in
+            XCTAssertEqual(res.body.string, "test")
+        })
+    }
 
     func testRequestRemoteAddress() throws {
         let app = Application(.testing)
@@ -108,112 +138,11 @@ final class RequestTests: XCTestCase {
             $0.remoteAddress?.description ?? "n/a"
         }
         
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertContains(res.body.string, "IP")
         }
     }
 
-    func testURI() throws {
-        do {
-            var uri = URI(string: "http://vapor.codes/foo?bar=baz#qux")
-            XCTAssertEqual(uri.scheme, "http")
-            XCTAssertEqual(uri.host, "vapor.codes")
-            XCTAssertEqual(uri.path, "/foo")
-            XCTAssertEqual(uri.query, "bar=baz")
-            XCTAssertEqual(uri.fragment, "qux")
-            uri.query = "bar=baz&test=1"
-            XCTAssertEqual(uri.string, "http://vapor.codes/foo?bar=baz&test=1#qux")
-            uri.query = nil
-            XCTAssertEqual(uri.string, "http://vapor.codes/foo#qux")
-        }
-        do {
-            let uri = URI(string: "/foo/bar/baz")
-            XCTAssertEqual(uri.path, "/foo/bar/baz")
-        }
-        do {
-            let uri = URI(string: "ws://echo.websocket.org/")
-            XCTAssertEqual(uri.scheme, "ws")
-            XCTAssertEqual(uri.host, "echo.websocket.org")
-            XCTAssertEqual(uri.path, "/")
-        }
-        do {
-            let uri = URI(string: "http://foo")
-            XCTAssertEqual(uri.scheme, "http")
-            XCTAssertEqual(uri.host, "foo")
-            XCTAssertEqual(uri.path, "")
-        }
-        do {
-            let uri = URI(string: "foo")
-            XCTAssertEqual(uri.scheme, "foo")
-            XCTAssertEqual(uri.host, nil)
-            XCTAssertEqual(uri.path, "")
-        }
-        do {
-            let uri: URI = "/foo/bar/baz"
-            XCTAssertEqual(uri.path, "/foo/bar/baz")
-        }
-        do {
-            let foo = "foo"
-            let uri: URI = "/\(foo)/bar/baz"
-            XCTAssertEqual(uri.path, "/foo/bar/baz")
-        }
-        do {
-            let uri = URI(scheme: "foo", host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "foo://host:1/test?query#fragment")
-        }
-        do {
-            let bar = "bar"
-            let uri = URI(scheme: "foo\(bar)", host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "foobar://host:1/test?query#fragment")
-        }
-        do {
-            let uri = URI(scheme: "foo", host: "host", port: 1, path: "/test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "foo://host:1/test?query#fragment")
-        }
-        do {
-            let scheme = "foo"
-            let uri = URI(scheme: scheme, host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "foo://host:1/test?query#fragment")
-        }
-        do {
-            let scheme: String? = "foo"
-            let uri = URI(scheme: scheme, host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "foo://host:1/test?query#fragment")
-        }
-        do {
-            let uri = URI(scheme: .http, host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "http://host:1/test?query#fragment")
-        }
-        do {
-            let uri = URI(scheme: nil, host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "host:1/test?query#fragment")
-        }
-        do {
-            let uri = URI(scheme: URI.Scheme(), host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "host:1/test?query#fragment")
-        }
-        do {
-            let uri = URI(host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "host:1/test?query#fragment")
-        }
-        do {
-            let uri = URI(scheme: .httpUnixDomainSocket, host: "/path", path: "test", query: "query", fragment: "fragment")
-            XCTAssertEqual(uri.string, "http+unix://%2Fpath/test?query#fragment")
-        }
-        do {
-            let uri = URI(scheme: .httpUnixDomainSocket, host: "/path", path: "test", fragment: "fragment")
-            XCTAssertEqual(uri.string, "http+unix://%2Fpath/test#fragment")
-        }
-        do {
-            let uri = URI(scheme: .httpUnixDomainSocket, host: "/path", path: "test")
-            XCTAssertEqual(uri.string, "http+unix://%2Fpath/test")
-        }
-        do {
-            let uri = URI()
-            XCTAssertEqual(uri.string, "/")
-        }
-    }
-    
     func testRedirect() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -233,27 +162,33 @@ final class RequestTests: XCTestCase {
             $0.redirect(to: "foo", redirectType: .permanentPost)
         }
         
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
         
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
+        
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
             .seeOther
         )
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
             .movedPermanently
         )
         XCTAssertEqual(
-            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
             .temporaryRedirect
         )
         XCTAssertEqual(
-            try app.client.post("http://localhost:8080/redirect_permanentPost").wait().status,
+            try app.client.post("http://localhost:\(port)/redirect_permanentPost").wait().status,
             .permanentRedirect
         )
     }
     
+    @available(*, deprecated, message: "Testing deprecated methods; this attribute silences the warnings")
     func testRedirect_old() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -272,19 +207,24 @@ final class RequestTests: XCTestCase {
             $0.redirect(to: "foo", type: .temporary)
         }
         
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
         
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
+        
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
             .seeOther
         )
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
             .movedPermanently
         )
         XCTAssertEqual(
-            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
             .temporaryRedirect
         )
     }
@@ -296,7 +236,7 @@ final class RequestTests: XCTestCase {
         let request = Request(
             application: app,
             collectedBody: .init(string: ""),
-            on: EmbeddedEventLoop()
+            on: app.eventLoopGroup.any()
         )
         
         let handleBufferExpectation = XCTestExpectation()

@@ -483,7 +483,6 @@ final class URLEncodedFormTests: XCTestCase {
     func testCodable() throws {
         let a = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [], nums: [], isCool: true)
         let body = try URLEncodedFormEncoder().encode(a)
-        print(body)
         let b = try! URLEncodedFormDecoder().decode(User.self, from: body)
         XCTAssertEqual(a, b)
     }

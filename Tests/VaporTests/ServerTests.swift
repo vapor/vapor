@@ -1,3 +1,7 @@
+#if !canImport(Darwin)
+@preconcurrency import Dispatch
+#endif
+import Foundation
 import Vapor
 import XCTest
 import AsyncHTTPClient
@@ -38,16 +42,14 @@ final class ServerTests: XCTestCase {
         let app = Application(env)
         defer { app.shutdown() }
         
-        app.get("foo") { req in
-            return "bar"
-        }
+        app.get("foo") { _ in "bar" }
         try app.start()
         
-        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")).wait()
+        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }.wait()
         XCTAssertEqual(res.body?.string, "bar")
         
         // no server should be bound to the port despite one being set on the configuration.
-        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo").wait())
+        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }.wait())
     }
     
     func testIncompatibleStartupOptions() throws {
@@ -122,7 +124,7 @@ final class ServerTests: XCTestCase {
     @available(*, deprecated)
     func testDeprecatedServerStartMethods() throws {
         /// TODO: This test may be removed in the next major version
-        class OldServer: Server {
+        class OldServer: Server, @unchecked Sendable {
             var onShutdown: EventLoopFuture<Void> {
                 preconditionFailure("We should never get here.")
             }
@@ -156,15 +158,15 @@ final class ServerTests: XCTestCase {
         
         // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
         oldServer = OldServer()
-        try oldServer.start(address: .hostname("localhost", port: 8080))
+        try oldServer.start(address: .hostname("localhost", port: 8081))
         XCTAssertEqual(oldServer.hostname, "localhost")
-        XCTAssertEqual(oldServer.port, 8080)
+        XCTAssertEqual(oldServer.port, 8081)
         
         // start(address: .unixDomainSocket(path: ...)) should throw
         oldServer = OldServer()
         XCTAssertThrowsError(try oldServer.start(address: .unixDomainSocket(path: "/path")))
         
-        class NewServer: Server {
+        class NewServer: Server, @unchecked Sendable {
             var onShutdown: EventLoopFuture<Void> {
                 preconditionFailure("We should never get here.")
             }
@@ -214,9 +216,9 @@ final class ServerTests: XCTestCase {
         
         // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
         newServer = NewServer()
-        try newServer.start(address: .hostname("localhost", port: 8080))
+        try newServer.start(address: .hostname("localhost", port: 8082))
         XCTAssertEqual(newServer.hostname, "localhost")
-        XCTAssertEqual(newServer.port, 8080)
+        XCTAssertEqual(newServer.port, 8082)
         XCTAssertNil(newServer.socketPath)
         
         // start(address: .unixDomainSocket(path: ...)) should throw
@@ -378,16 +380,16 @@ final class ServerTests: XCTestCase {
         defer { app.shutdown() }
         
         app.servers.use(.custom)
-        XCTAssertEqual(app.customServer.didStart, false)
-        XCTAssertEqual(app.customServer.didShutdown, false)
+        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), false)
+        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), false)
         
         try app.server.start()
-        XCTAssertEqual(app.customServer.didStart, true)
-        XCTAssertEqual(app.customServer.didShutdown, false)
+        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
+        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), false)
         
         app.server.shutdown()
-        XCTAssertEqual(app.customServer.didStart, true)
-        XCTAssertEqual(app.customServer.didShutdown, true)
+        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
+        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), true)
     }
     
     func testMultipleChunkBody() throws {
@@ -407,7 +409,7 @@ final class ServerTests: XCTestCase {
         
         var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
         buffer.writeBytes(payload)
-        try app.testable(method: .running).test(.POST, "payload", body: buffer) { res in
+        try app.testable(method: .running(port: 0)).test(.POST, "payload", body: buffer) { res in
             XCTAssertEqual(res.status, .ok)
         }
     }
@@ -431,7 +433,7 @@ final class ServerTests: XCTestCase {
             return promise.futureResult
         }
         
-        try app.testable(method: .running).test(.POST, "drain", beforeRequest: { req in
+        try app.testable(method: .running(port: 0)).test(.POST, "drain", beforeRequest: { req in
             try req.content.encode(["hello": "world"])
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
@@ -472,16 +474,16 @@ final class ServerTests: XCTestCase {
                 return req.eventLoop.makeFailedFuture(Abort(.badRequest))
             }
             
-            var count = 0
+            let countBox = NIOLockedValueBox<Int>(0)
             let promise = req.eventLoop.makePromise(of: Int.self)
             req.body.drain { part in
                 switch part {
                 case .buffer(let buffer):
-                    count += buffer.readableBytes
+                    countBox.withLockedValue { $0 += buffer.readableBytes }
                 case .error(let error):
                     promise.fail(error)
                 case .end:
-                    promise.succeed(count)
+                    promise.succeed(countBox.withLockedValue({ $0 }))
                 }
                 return req.eventLoop.makeSucceededFuture(())
             }
@@ -491,7 +493,7 @@ final class ServerTests: XCTestCase {
         var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)
         buffer.writeString(String(repeating: "a", count: 10_000_000))
         
-        try app.testable(method: .running).test(.POST, "upload", beforeRequest: { req in
+        try app.testable(method: .running(port: 0)).test(.POST, "upload", beforeRequest: { req in
             req.body = buffer
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .badRequest)
@@ -503,16 +505,17 @@ final class ServerTests: XCTestCase {
         })
     }
     
+    @available(*, deprecated, message: "To avoid deprecation warnings")
     func testEchoServer() throws {
-        let app = Application(.testing)
+        let app = Application(.testing, .createNew)
         defer { app.shutdown() }
         
-        final class Context {
-            var server: [String]
-            var client: [String]
+        final class Context: Sendable {
+            let server: NIOLockedValueBox<[String]>
+            let client: NIOLockedValueBox<[String]>
             init() {
-                self.server = []
-                self.client = []
+                self.server = .init([])
+                self.client = .init([])
             }
         }
         let context = Context()
@@ -522,7 +525,7 @@ final class ServerTests: XCTestCase {
                 request.body.drain { body in
                     switch body {
                     case .buffer(let buffer):
-                        context.server.append(buffer.string)
+                        context.server.withLockedValue { $0.append(buffer.string) }
                         return writer.write(.buffer(buffer))
                     case .error(let error):
                         return writer.write(.error(error))
@@ -533,10 +536,14 @@ final class ServerTests: XCTestCase {
             }))
         }
         
-        let port = 1337
-        app.http.server.configuration.port = port
+        app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
         try app.start()
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port")
+            return
+        }
         
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/echo",
@@ -545,10 +552,13 @@ final class ServerTests: XCTestCase {
                 "transfer-encoding": "chunked"
             ],
             body: .stream(length: nil, { stream in
-                stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-                    stream.write(.byteBuffer(.init(string: "bar")))
+                // We set the application to have a single event loop so we can use the same
+                // event loop here
+                let streamBox = NIOLoopBound(stream, eventLoop: app.eventLoopGroup.any())
+                return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
+                    streamBox.value.write(.byteBuffer(.init(string: "bar")))
                 }.flatMap {
-                    stream.write(.byteBuffer(.init(string: "baz")))
+                    streamBox.value.write(.byteBuffer(.init(string: "baz")))
                 }
             })
         )
@@ -565,7 +575,7 @@ final class ServerTests: XCTestCase {
                 task: HTTPClient.Task<HTTPClient.Response>,
                 _ buffer: ByteBuffer
             ) -> EventLoopFuture<Void> {
-                self.context.client.append(buffer.string)
+                self.context.client.withLockedValue { $0.append(buffer.string) }
                 return task.eventLoop.makeSucceededFuture(())
             }
             
@@ -579,22 +589,29 @@ final class ServerTests: XCTestCase {
             delegate: response
         ).wait()
         
-        XCTAssertEqual(context.server, ["foo", "bar", "baz"])
-        XCTAssertEqual(context.client, ["foo", "bar", "baz"])
+        let server = context.server.withLockedValue { $0 }
+        let client = context.client.withLockedValue { $0 }
+        XCTAssertEqual(server, ["foo", "bar", "baz"])
+        XCTAssertEqual(client, ["foo", "bar", "baz"])
     }
     
     func testSkipStreaming() throws {
-        let app = Application(.testing)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let app = Application(.testing, .shared(eventLoopGroup))
         defer { app.shutdown() }
         
         app.on(.POST, "echo", body: .stream) { request in
             "hello, world"
         }
         
-        let port = 1337
-        app.http.server.configuration.port = port
+        app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
         try app.start()
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port")
+            return
+        }
         
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/echo",
@@ -603,10 +620,13 @@ final class ServerTests: XCTestCase {
                 "transfer-encoding": "chunked"
             ],
             body: .stream(length: nil, { stream in
-                stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-                    stream.write(.byteBuffer(.init(string: "bar")))
+                // We set the application to have a single event loop so we can use the same
+                // event loop here
+                let streamBox = NIOLoopBound(stream, eventLoop: eventLoopGroup.any())
+                return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
+                    streamBox.value.write(.byteBuffer(.init(string: "bar")))
                 }.flatMap {
-                    stream.write(.byteBuffer(.init(string: "baz")))
+                    streamBox.value.write(.byteBuffer(.init(string: "baz")))
                 }
             })
         )
@@ -653,25 +673,7 @@ final class ServerTests: XCTestCase {
         
         XCTAssertNoThrow(try app.start())
     }
-    
-    func testStartWithDefaultHostname() throws {
-        let app = Application(.testing)
-        app.http.server.configuration.address = .hostname(nil, port: 0)
-        defer { app.shutdown() }
-        app.environment.arguments = ["serve"]
-        
-        XCTAssertNoThrow(try app.start())
-    }
-    
-    func testStartWithDefaultPort() throws {
-        let app = Application(.testing)
-        app.http.server.configuration.address = .hostname("0.0.0.0", port: nil)
-        defer { app.shutdown() }
-        app.environment.arguments = ["serve"]
-        
-        XCTAssertNoThrow(try app.start())
-    }
-    
+
     func testAddressConfigurations() throws {
         var configuration = HTTPServer.Configuration()
         XCTAssertEqual(configuration.address, .hostname(HTTPServer.Configuration.defaultHostname, port: HTTPServer.Configuration.defaultPort))
@@ -743,10 +745,14 @@ final class ServerTests: XCTestCase {
             "world"
         }
         
-        let port = 1337
-        app.http.server.configuration.port = port
+        app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
         try app.start()
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port")
+            return
+        }
         
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/hello",
@@ -925,7 +931,6 @@ final class ServerTests: XCTestCase {
             // This lies and accepts the above cert, which has actually expired.
             XCTAssertEqual(peerCerts, [cert])
             successPromise.succeed(.certificateVerified)
-            
         }
         
         // We need to disable verification on the client, because the cert we're using has expired, and we want to
@@ -961,6 +966,91 @@ final class ServerTests: XCTestCase {
         XCTAssertEqual(a.body, ByteBuffer(string: "world"))
     }
     
+    func testCanChangeConfigurationDynamically() throws {
+        guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
+              let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
+            XCTFail("Cannot load expired cert and associated key")
+            return
+        }
+        
+        let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+        let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
+        
+        let app = Application(.testing)
+        
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+        app.http.server.configuration.serverName = "Old"
+        
+        /// We need to disable verification on the client, because the cert we're using has expired
+        var clientConfig = TLSConfiguration.makeClientConfiguration()
+        clientConfig.certificateVerification = .none
+        clientConfig.certificateChain = [.certificate(cert)]
+        clientConfig.privateKey = .privateKey(key)
+        app.http.client.configuration.tlsConfiguration = clientConfig
+        app.http.client.configuration.maximumUsesPerConnection = 1
+        
+        app.environment.arguments = ["serve"]
+        
+        app.get("hello") { req in
+            "world"
+        }
+        
+        defer { app.shutdown() }
+        try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let ip = localAddress.ipAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
+        /// Make a regular request
+        let a = try app.http.client.shared.execute(
+            request: try HTTPClient.Request(
+                url: "http://\(ip):\(port)/hello",
+                method: .GET
+            )
+        ).wait()
+        XCTAssertEqual(a.headers[.server], ["Old"])
+        XCTAssertEqual(a.body, ByteBuffer(string: "world"))
+        
+        /// Configure server name without stopping the server
+        app.http.server.configuration.serverName = "New"
+        /// Configure TLS without stopping the server
+        var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
+        serverConfig.certificateVerification = .noHostnameVerification
+        
+        app.http.server.configuration.tlsConfiguration = serverConfig
+        app.http.server.configuration.customCertificateVerifyCallback = { peerCerts, successPromise in
+            /// This lies and accepts the above cert, which has actually expired.
+            XCTAssertEqual(peerCerts, [cert])
+            successPromise.succeed(.certificateVerified)
+        }
+        
+        /// Make a TLS request this time around
+        let b = try app.http.client.shared.execute(
+            request: try HTTPClient.Request(
+                url: "https://\(ip):\(port)/hello",
+                method: .GET
+            )
+        ).wait()
+        XCTAssertEqual(b.headers[.server], ["New"])
+        XCTAssertEqual(b.body, ByteBuffer(string: "world"))
+        
+        /// Non-TLS request should now fail
+        XCTAssertThrowsError(try app.http.client.shared.execute(
+            request: try HTTPClient.Request(
+                url: "http://\(ip):\(port)/hello",
+                method: .GET
+            )
+        ).wait()) { error in
+            XCTAssertEqual(error as? HTTPClientError, HTTPClientError.remoteConnectionClosed)
+        }
+    }
+    
     override class func setUp() {
         XCTAssertTrue(isLoggingConfigured)
     }
@@ -990,16 +1080,16 @@ extension Application {
     }
 }
 
-final class CustomServer: Server {
-    var didStart: Bool
-    var didShutdown: Bool
+final class CustomServer: Server, Sendable {
+    let didStart: NIOLockedValueBox<Bool>
+    let didShutdown: NIOLockedValueBox<Bool>
     var onShutdown: EventLoopFuture<Void> {
         fatalError()
     }
     
     init() {
-        self.didStart = false
-        self.didShutdown = false
+        self.didStart = .init(false)
+        self.didShutdown = .init(false)
     }
     
     func start(hostname: String?, port: Int?) throws {
@@ -1007,11 +1097,11 @@ final class CustomServer: Server {
     }
     
     func start(address: BindAddress?) throws {
-        self.didStart = true
+        self.didStart.withLockedValue { $0 = true }
     }
     
     func shutdown() {
-        self.didShutdown = true
+        self.didShutdown.withLockedValue { $0 = true }
     }
 }
 

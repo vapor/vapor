@@ -73,9 +73,11 @@ public final class FileMiddleware: Middleware {
         if isDir.boolValue {
             guard absPath.hasSuffix("/") else {
                 switch directoryAction.kind {
-                case .redirect:
+                case .redirect:                    
+                    var redirectUrl = request.url
+                    redirectUrl.path += "/"
                     return request.eventLoop.future(
-                        request.redirect(to: request.url.path + "/", redirectType: .permanent)
+                        request.redirect(to: redirectUrl.string, redirectType: .permanent)
                     )
                 case .none:
                     return next.respond(to: request)
@@ -127,11 +129,11 @@ public final class FileMiddleware: Middleware {
             throw BundleSetupError.publicDirectoryIsNotAFolder
         }
         
-        self.init(publicDirectory: bundleResourceURL.path, defaultFile: defaultFile, directoryAction: directoryAction)
+        self.init(publicDirectory: publicDirectoryURL.path, defaultFile: defaultFile, directoryAction: directoryAction)
     }
     
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory
-    public struct DirectoryAction {
+    public struct DirectoryAction: Sendable {
         let kind: Kind
         
         /// Indicates that the request should be passed through the middleware

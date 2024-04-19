@@ -55,7 +55,7 @@ final class ContentTests: XCTestCase {
         let request = Request(
             application: app,
             collectedBody: .init(string: complexJSON),
-            on: app.eventLoopGroup.next()
+            on: app.eventLoopGroup.any()
         )
         request.headers.contentType = .json
         try XCTAssertEqual(request.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
@@ -199,6 +199,61 @@ final class ContentTests: XCTestCase {
             XCTAssertEqualJSON(res.body.string, expected)
         }
     }
+  
+    func testMultipartDecodedEmptyMultipartForm() throws {
+        let data = """
+        --123\r
+        --123--\r
+        """
+        let expected = User(
+            name: "Vapor"
+        )
+
+        struct User: Content, Equatable {
+            var name: String
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("multipart") { req -> User in
+            let decoded = try req.content.decode(User.self)
+            XCTAssertEqual(decoded, expected)
+            return decoded
+        }
+
+        try app.testable().test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+        }
+    }
+
+    func testMultipartDecodedEmptyBody() throws {
+        let data = ""
+        let expected = User(
+            name: "Vapor"
+        )
+
+        struct User: Content, Equatable {
+            var name: String
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("multipart") { req -> User in
+            let decoded = try req.content.decode(User.self)
+            XCTAssertEqual(decoded, expected)
+            return decoded
+        }
+
+        try app.testable().test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+        }
+    }
     
     func testMultipartDecodeUnicode() throws {
         let data = """
@@ -223,7 +278,7 @@ final class ContentTests: XCTestCase {
             image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
         )
 
-        struct User: Content, Equatable {
+        struct User: Content, Equatable, Sendable {
             var name: String
             var age: Int
             var image: File
@@ -269,7 +324,7 @@ final class ContentTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=droplet.png")
+            XCTAssertContains(res.body.string, "filename=\"droplet.png\"")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
@@ -297,7 +352,7 @@ final class ContentTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
+            XCTAssertContains(res.body.string, "filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\"")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
@@ -345,7 +400,6 @@ final class ContentTests: XCTestCase {
             return User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
         }
         try app.testable().test(.GET, "/urlencodedform") { res in
-            debugPrint(res)
             XCTAssertEqual(res.status.code, 200)
             XCTAssertEqual(res.headers.contentType, .urlEncodedForm)
             XCTAssertContains(res.body.string, "luckyNumbers[]=5")
@@ -446,7 +500,7 @@ final class ContentTests: XCTestCase {
         let request = Request(
             application: app,
             collectedBody: .init(string:""),
-            on: EmbeddedEventLoop()
+            on: app.eventLoopGroup.any()
         )
         request.url.query = "name=before+decode"
         request.headers.contentType = .json
@@ -457,11 +511,44 @@ final class ContentTests: XCTestCase {
         XCTAssertEqual(request.url.query, "name=new%20name")
     }
 
+    /// https://github.com/vapor/vapor/issues/3135
+    func testDecodePercentEncodedQuery() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        let request = Request(
+            application: app,
+            collectedBody: .init(string: ""),
+            on: app.eventLoopGroup.any()
+        )
+        request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
+        request.headers.contentType = .urlEncodedForm
+
+        XCTAssertEqual(try request.query.get(String.self, at: "name"), "value has 1% of its percents")
+    }
+
+    /// https://github.com/vapor/vapor/issues/3133
+    func testEncodePercentEncodedQuery() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        struct Foo: Content {
+            var status: String
+        }
+        
+        var request = ClientRequest(url: .init(scheme: "https", host: "example.com", path: "/api"))
+        try request.query.encode(Foo(status:
+            "⬆️ taylorswift just released swift-mongodb v0.10.1 – use BSON and MongoDB in pure Swift\n\nhttps://swiftpackageindex.com/tayloraswift/swift-mongodb#releases"
+        ))
+
+        XCTAssertEqual(request.url.string, "https://example.com/api?status=%E2%AC%86%EF%B8%8F%20taylorswift%20just%20released%20swift-mongodb%20v0.10.1%20%E2%80%93%20use%20BSON%20and%20MongoDB%20in%20pure%20Swift%0A%0Ahttps://swiftpackageindex.com/tayloraswift/swift-mongodb%23releases")
+    }
+
     func testSnakeCaseCodingKeyError() throws {
         let app = Application()
         defer { app.shutdown() }
 
-        let req = Request(application: app, on: app.eventLoopGroup.next())
+        let req = Request(application: app, on: app.eventLoopGroup.any())
         try req.content.encode([
             "title": "The title"
         ], as: .json)
@@ -492,7 +579,7 @@ final class ContentTests: XCTestCase {
             url: URI(string: "https://vapor.codes"),
             headersNoUpdate: ["Content-Type": "application/json"],
             collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
-            on: app.eventLoopGroup.next()
+            on: app.eventLoopGroup.any()
         )
         
         struct DecodeModel: Content {
@@ -510,7 +597,7 @@ final class ContentTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
         
-        let req = Request(application: app, on: app.eventLoopGroup.next())
+        let req = Request(application: app, on: app.eventLoopGroup.any())
         try req.content.encode([
             "items": ["1"]
         ], as: .json)
@@ -539,7 +626,7 @@ final class ContentTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
         
-        let req = Request(application: app, on: app.eventLoopGroup.next())
+        let req = Request(application: app, on: app.eventLoopGroup.any())
         try req.content.encode([
             "item": [
                 "title": "The title"

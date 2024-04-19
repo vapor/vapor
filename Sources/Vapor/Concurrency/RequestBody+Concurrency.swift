@@ -1,4 +1,3 @@
-#if compiler(>=5.7)
 import NIOCore
 import NIOConcurrencyHelpers
 
@@ -13,11 +12,12 @@ extension Request.Body {
     /// in `Request.Body/makeAsyncIterator()` method.
     fileprivate final class AsyncSequenceDelegate: @unchecked Sendable, NIOAsyncSequenceProducerDelegate {
         private enum State {
+            case notCalledYet
             case noSignalReceived
             case waitingForSignalFromConsumer(EventLoopPromise<Void>)
         }
 
-        private var _state: State = .noSignalReceived
+        private var _state: State = .notCalledYet
         private let eventLoop: any EventLoop
 
         init(eventLoop: any EventLoop) {
@@ -27,6 +27,9 @@ extension Request.Body {
         private func produceMore0() {
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
+            case .notCalledYet:
+                // We can just return here to sign to the producer that we want more data
+                break
             case .noSignalReceived:
                 preconditionFailure()
             case .waitingForSignalFromConsumer(let promise):
@@ -38,6 +41,9 @@ extension Request.Body {
         private func didTerminate0() {
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
+            case .notCalledYet:
+                // Means didn't hit the backpressure limits, so just return
+                break
             case .noSignalReceived:
                 // we will inform the producer, since the next write will fail.
                 break
@@ -50,7 +56,7 @@ extension Request.Body {
         func registerBackpressurePromise(_ promise: EventLoopPromise<Void>) {
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
-            case .noSignalReceived:
+            case .noSignalReceived, .notCalledYet:
                 self._state = .waitingForSignalFromConsumer(promise)
             case .waitingForSignalFromConsumer:
                 preconditionFailure()
@@ -98,7 +104,7 @@ extension Request.Body: AsyncSequence {
     ///
     /// Example: app.on(.POST, "/upload", body: .stream) { ... }
     private func checkBodyStorage() {
-        switch request.bodyStorage {
+        switch request.bodyStorage.withLockedValue({ $0 }) {
         case .stream(_):
             break
         case .collected(_):
@@ -114,7 +120,7 @@ extension Request.Body: AsyncSequence {
     /// Generates an `AsyncIterator` to stream the body’s content as
     /// `ByteBuffer` sequences. This implementation supports backpressure using
     /// `NIOAsyncSequenceProducerBackPressureStrategies`
-    /// - Returns: `AsyncIterator` containing the `Requeset.Body` as a
+    /// - Returns: `AsyncIterator` containing the `Request.Body` as a
     /// `ByteBuffer` sequence
     public func makeAsyncIterator() -> AsyncIterator {
         let delegate = AsyncSequenceDelegate(eventLoop: request.eventLoop)
@@ -124,6 +130,7 @@ extension Request.Body: AsyncSequence {
             failureType: Error.self,
             backPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies
                 .HighLowWatermark(lowWatermark: 5, highWatermark: 20),
+            finishOnDeinit: true,
             delegate: delegate
         )
         
@@ -140,6 +147,7 @@ extension Request.Body: AsyncSequence {
                     // The consumer dropped the sequence.
                     // Inform the producer that we don't want more data
                     // by returning an error in the future.
+                    delegate.didTerminate()
                     return request.eventLoop.makeFailedFuture(CancellationError())
                 case .stopProducing:
                     // The consumer is too slow.
@@ -151,7 +159,7 @@ extension Request.Body: AsyncSequence {
                     // return the future that we will fulfill eventually.
                     return promise.futureResult
                 case .produceMore:
-                    // We can produce more immidately. Return a succeeded future.
+                    // We can produce more immediately. Return a succeeded future.
                     return request.eventLoop.makeSucceededVoidFuture()
                 }
             case .error(let error):
@@ -166,4 +174,3 @@ extension Request.Body: AsyncSequence {
         return AsyncIterator(underlying: producer.sequence.makeAsyncIterator())
     }
 }
-#endif

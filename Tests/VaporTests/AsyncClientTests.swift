@@ -42,7 +42,7 @@ final class AsyncClientTests: XCTestCase {
         
         remoteApp.environment.arguments = ["serve"]
         try remoteApp.boot()
-        try remoteApp.start()
+        try await remoteApp.startup()
         
         XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
         guard let localAddress = remoteApp.http.server.shared.localAddress,
@@ -68,10 +68,15 @@ final class AsyncClientTests: XCTestCase {
             $0.redirect(to: "foo")
         }
 
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
 
-        let res = try await app.client.get("http://localhost:8080/redirect")
+        let res = try await app.client.get("http://localhost:\(port)/redirect")
 
         XCTAssertEqual(res.status, .seeOther)
     }
@@ -86,13 +91,18 @@ final class AsyncClientTests: XCTestCase {
             $0.redirect(to: "foo")
         }
 
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
 
-        _ = try await app.client.get("http://localhost:8080/redirect")
+        _ = try await app.client.get("http://localhost:\(port)/redirect")
 
         app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
-        let res = try await app.client.get("http://localhost:8080/redirect")
+        let res = try await app.client.get("http://localhost:\(port)/redirect")
         XCTAssertEqual(res.status, .seeOther)
     }
 
@@ -126,10 +136,11 @@ final class AsyncClientTests: XCTestCase {
         let app = Application(.testing)
         app.http.server.configuration.port = 0
         defer { app.shutdown() }
+        let remotePort = self.remoteAppPort!
 
         app.get("foo") { req async throws -> String in
             do {
-                let response = try await req.client.get("http://localhost:\(self.remoteAppPort!)/status/201")
+                let response = try await req.client.get("http://localhost:\(remotePort)/status/201")
                 XCTAssertEqual(response.status.code, 201)
                 req.application.running?.stop()
                 return "bar"
@@ -141,7 +152,7 @@ final class AsyncClientTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
         try app.boot()
-        try app.start()
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -181,23 +192,27 @@ final class AsyncClientTests: XCTestCase {
 }
 
 
-final class CustomClient: Client {
-    var eventLoop: EventLoop {
-        EmbeddedEventLoop()
+final class CustomClient: Client, Sendable {
+    let eventLoop: any EventLoop
+    let _requests: NIOLockedValueBox<[ClientRequest]>
+    var requests: [ClientRequest] {
+        get {
+            self._requests.withLockedValue { $0 }
+        }
     }
-    var requests: [ClientRequest]
 
-    init() {
-        self.requests = []
+    init(eventLoop: any EventLoop, _requests: [ClientRequest] = []) {
+        self.eventLoop = eventLoop
+        self._requests = .init(_requests)
     }
 
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
-        self.requests.append(request)
+        self._requests.withLockedValue { $0.append(request) }
         return self.eventLoop.makeSucceededFuture(ClientResponse())
     }
 
-    func delegating(to eventLoop: EventLoop) -> Client {
-        self
+    func delegating(to eventLoop: any EventLoop) -> Client {
+        self._requests.withLockedValue { CustomClient(eventLoop: eventLoop, _requests: $0) }
     }
 }
 
@@ -210,7 +225,7 @@ extension Application {
         if let existing = self.storage[CustomClientKey.self] {
             return existing
         } else {
-            let new = CustomClient()
+            let new = CustomClient(eventLoop: self.eventLoopGroup.any())
             self.storage[CustomClientKey.self] = new
             return new
         }
@@ -227,15 +242,42 @@ extension Application.Clients.Provider {
 
 
 final class TestLogHandler: LogHandler {
+    
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
-        get { self.lock.withLock { self.metadata[key] } }
-        set { self.lock.withLockVoid { self.metadata[key] = newValue } }
+        get { self.metadata[key] }
+        set { self.metadata[key] = newValue }
     }
 
-    let lock: NIOLock
-    var metadata: Logger.Metadata
-    var logLevel: Logger.Level
-    var messages: [Logger.Message]
+    var metadata: Logger.Metadata {
+        get {
+            self._metadata.withLockedValue { $0 }
+        }
+        set {
+            self._metadata.withLockedValue { $0 = newValue }
+        }
+    }
+    
+    var logLevel: Logger.Level {
+        get {
+            _logLevel
+        }
+        set {
+            // We don't use this anywhere
+        }
+    }
+    
+    var messages: [Logger.Message] {
+        get {
+            self._messages.withLockedValue { $0 }
+        }
+        set {
+            self._messages.withLockedValue { $0 = newValue }
+        }
+    }
+    
+    let _logLevel: Logger.Level
+    let _metadata: NIOLockedValueBox<Logger.Metadata>
+    let _messages: NIOLockedValueBox<[Logger.Message]>
 
     var logger: Logger {
         .init(label: "test") { label in
@@ -244,10 +286,9 @@ final class TestLogHandler: LogHandler {
     }
 
     init() {
-        self.lock = .init()
-        self.metadata = [:]
-        self.logLevel = .trace
-        self.messages = []
+        self._metadata = .init([:])
+        self._logLevel = .trace
+        self._messages = .init([])
     }
 
     func log(
@@ -259,24 +300,19 @@ final class TestLogHandler: LogHandler {
         function: String,
         line: UInt
     ) {
-        self.lock.withLockVoid {
-            self.messages.append(message)
-        }
+        self._messages.withLockedValue { $0.append(message) }
     }
 
     func read() -> [String] {
-        self.lock.withLock { () -> [Logger.Message] in
-            let copy = self.messages
-            self.messages = []
-            return copy
-        }.map(\.description)
+        self._messages.withLockedValue {
+            let copy = $0
+            $0 = []
+            return copy.map(\.description)
+        }
     }
 
     func getMetadata() -> Logger.Metadata {
-        self.lock.withLock { () -> Logger.Metadata in
-            let copy = self.metadata
-            return copy
-        }
+        self._metadata.withLockedValue { $0 }
     }
 }
 

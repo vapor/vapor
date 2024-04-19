@@ -3,12 +3,12 @@ import WebSocketKit
 import NIOHTTP1
 
 extension Request {
-     public func webSocket(
+     @preconcurrency public func webSocket(
          maxFrameSize: WebSocketMaxFrameSize = .`default`,
-         shouldUpgrade: @escaping ((Request) -> EventLoopFuture<HTTPHeaders?>) = {
+         shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
              $0.eventLoop.makeSucceededFuture([:])
          },
-         onUpgrade: @escaping (Request, WebSocket) -> ()
+         onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
      ) -> Response {
          let res = Response(status: .switchingProtocols)
          res.upgrader = WebSocketUpgrader(maxFrameSize: maxFrameSize, shouldUpgrade: {
