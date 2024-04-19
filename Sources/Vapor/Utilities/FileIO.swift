@@ -247,7 +247,7 @@ public struct FileIO: Sendable {
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool,
-        onCompleted: @Sendable @escaping (Result<Void, Error>) -> () = { _ in }
+        onCompleted: @escaping @Sendable (Result<Void, Error>) -> () = { _ in }
     ) -> EventLoopFuture<Response> {
         // Get file attributes for this file.
         guard
