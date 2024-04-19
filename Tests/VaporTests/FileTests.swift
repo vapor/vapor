@@ -27,6 +27,7 @@ final class FileTests: XCTestCase {
         }
     }
 
+    @available(*, deprecated)
     func testLegacyStreamFile() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
