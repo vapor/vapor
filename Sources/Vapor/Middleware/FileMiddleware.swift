@@ -27,8 +27,8 @@ public final class FileMiddleware: Middleware {
         public typealias Value = [String: FileHash]
 
         public struct FileHash {
-            var lastModified: Date
-            var digest: SHA256Digest
+            let lastModified: Date
+            let digestHex: String
         }
     }
 

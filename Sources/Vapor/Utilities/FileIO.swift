@@ -247,7 +247,7 @@ public struct FileIO: Sendable {
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool,
-        onCompleted: @escaping (Result<Void, Error>) -> () = { _ in }
+        onCompleted: @Sendable @escaping (Result<Void, Error>) -> () = { _ in }
     ) -> EventLoopFuture<Response> {
         // Get file attributes for this file.
         guard
@@ -273,11 +273,6 @@ public struct FileIO: Sendable {
         } else {
             contentRange = nil
         }
-        // Create empty headers array.
-        var headers: HTTPHeaders = [:]
-
-        // Respond with lastModified header
-        headers.lastModified = HTTPHeaders.LastModified(value: modifiedAt)
 
         var eTagFuture: EventLoopFuture<String>
 
@@ -289,6 +284,12 @@ public struct FileIO: Sendable {
         }
 
         return eTagFuture.map { fileETag in
+            // Create empty headers array.
+            var headers: HTTPHeaders = [:]
+
+            // Respond with lastModified header
+            headers.lastModified = HTTPHeaders.LastModified(value: modifiedAt)
+
             headers.replaceOrAdd(name: .eTag, value: fileETag)
 
             // Check if file has been cached already and return NotModified response if the etags match
@@ -415,13 +416,13 @@ public struct FileIO: Sendable {
     /// - Returns: An `EventLoopFuture<String>` which holds the ETag.
     private func generateETagHash(path: String, lastModified: Date) -> EventLoopFuture<String> {
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
-            return request.eventLoop.makeSucceededFuture(hash.digest.hex)
+            return request.eventLoop.makeSucceededFuture(hash.digestHex)
         } else {
             return collectFile(at: path).map { buffer in
                 let digest = SHA256.hash(data: buffer.readableBytesView)
                 
                 // update hash in dictionary
-                request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digest: digest)
+                request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
 
                 return digest.hex
             }
