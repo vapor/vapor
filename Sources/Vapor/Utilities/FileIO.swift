@@ -282,7 +282,7 @@ public struct FileIO {
         if advancedETagComparison {
             eTagFuture = generateETagHash(path: path, lastModified: modifiedAt)
         } else {
-            // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
+            // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
             eTagFuture = request.eventLoop.makeSucceededFuture("\"\(modifiedAt.timeIntervalSince1970)-\(fileSize)\"")
         }
 
@@ -407,17 +407,14 @@ public struct FileIO {
     ///   - lastModified: When the file was last modified.
     /// - Returns: An `EventLoopFuture<String>` which holds the ETag.
     private func generateETagHash(path: String, lastModified: Date) -> EventLoopFuture<String> {
-        var hashingDictionary = request.application.storage[FileMiddleware.ETagHashes.self] ?? [:]
-
-        if let hash = hashingDictionary[path], hash.lastModified == lastModified {
+        if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
             return request.eventLoop.makeSucceededFuture(hash.digest.hex)
         } else {
             return collectFile(at: path).map { buffer in
                 let digest = SHA256.hash(data: buffer.readableBytesView)
-
+                
                 // update hash in dictionary
-                hashingDictionary[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digest: digest)
-                request.application.storage[FileMiddleware.ETagHashes.self] = hashingDictionary
+                request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digest: digest)
 
                 return digest.hex
             }
