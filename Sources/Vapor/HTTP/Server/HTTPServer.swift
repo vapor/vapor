@@ -119,7 +119,7 @@ public final class HTTPServer: Server, Sendable {
 
             /// Enables decompression with default configuration.
             public static var enabled: Self {
-                .enabled(limit: .ratio(10))
+                .enabled(limit: .ratio(25))
             }
 
             /// Enables decompression with custom configuration.
