@@ -119,7 +119,7 @@ public final class HTTPServer: Server, Sendable {
 
             /// Enables decompression with default configuration.
             public static var enabled: Self {
-                .enabled(limit: .ratio(10))
+                .enabled(limit: .ratio(25))
             }
 
             /// Enables decompression with custom configuration.
@@ -168,7 +168,7 @@ public final class HTTPServer: Server, Sendable {
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
             responseCompression: CompressionConfiguration = .disabled,
-            requestDecompression: DecompressionConfiguration = .disabled,
+            requestDecompression: DecompressionConfiguration = .enabled,
             supportPipelining: Bool = true,
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
@@ -200,7 +200,7 @@ public final class HTTPServer: Server, Sendable {
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
             responseCompression: CompressionConfiguration = .disabled,
-            requestDecompression: DecompressionConfiguration = .disabled,
+            requestDecompression: DecompressionConfiguration = .enabled,
             supportPipelining: Bool = true,
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
