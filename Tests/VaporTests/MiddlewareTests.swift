@@ -92,7 +92,7 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSMiddlewareNoVariationByRequstOriginAllowed() throws {
+    func testCORSMiddlewareNoVariationByRequestOriginAllowed() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 

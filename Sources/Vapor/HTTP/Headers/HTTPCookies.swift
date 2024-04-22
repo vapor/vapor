@@ -193,7 +193,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         
         // MARK: Methods
         
-        /// Seriaizes an `HTTPCookie` to a `String`.
+        /// Serializes an `HTTPCookie` to a `String`.
         public func serialize(name: String) -> String {
             var serialized = "\(name)=\(self.string)"
             
@@ -264,7 +264,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     
     // MARK: Serialize
     
-    /// Seriaizes the `Cookies` for a `Request`
+    /// Serializes the `Cookies` for a `Request`
     var cookieHeader: String? {
         guard !self.cookies.isEmpty else {
             return nil

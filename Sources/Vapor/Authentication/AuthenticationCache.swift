@@ -104,7 +104,7 @@ extension Request.Authentication {
 // multiple places. But given how Vapor and its users use Authentication this should almost never
 // occur and it was decided the trade-off was acceptable
 // As the name implies, the usage of this is unsafe because it disables the sendable checking of the
-// compiler and does not add any synchronisation.
+// compiler and does not add any synchronization.
 @usableFromInline
 internal struct UnsafeAuthenticationBox<A>: @unchecked Sendable {
     @usableFromInline

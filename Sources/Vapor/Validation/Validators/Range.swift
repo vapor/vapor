@@ -59,7 +59,7 @@ extension Validator {
 // TODO: Remove when keypaths are `Sendable`
 /// ``UnsafeMutableTransferBox`` can be used to make non-`Sendable` values `Sendable` and mutable.
 /// It can be used to capture local mutable values in a `@Sendable` closure and mutate them from within the closure.
-/// As the name implies, the usage of this is unsafe because it disables the sendable checking of the compiler and does not add any synchronisation.
+/// As the name implies, the usage of this is unsafe because it disables the sendable checking of the compiler and does not add any synchronization.
 @usableFromInline
 final class UnsafeMutableTransferBox<Wrapped> {
     @usableFromInline

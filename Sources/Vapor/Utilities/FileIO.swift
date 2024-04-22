@@ -3,6 +3,7 @@ import NIOCore
 import NIOHTTP1
 import NIOPosix
 import Logging
+import Crypto
 import NIOConcurrencyHelpers
 
 extension Request {
@@ -122,6 +123,7 @@ public struct FileIO: Sendable {
     ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
     ///     - onCompleted: Closure to be run on completion of stream.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
+    @available(*, deprecated, message: "Use the new `streamFile` method which returns EventLoopFuture<Response>")
     @preconcurrency public func streamFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
@@ -157,7 +159,7 @@ public struct FileIO: Sendable {
 
         // Respond with lastModified header
         headers.lastModified = HTTPHeaders.LastModified(value: modifiedAt)
-        
+
         // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
         let fileETag = "\"\(modifiedAt.timeIntervalSince1970)-\(fileSize)\""
         headers.replaceOrAdd(name: .eTag, value: fileETag)
@@ -218,8 +220,135 @@ public struct FileIO: Sendable {
                 onCompleted(result)
             }
         }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
-        
+
         return response
+    }
+
+    /// Generates a chunked `Response` for the specified file. This method respects values in
+    /// the `"ETag"` header and is capable of responding `304 Not Modified` if the file in question
+    /// has not been modified since last served. If `advancedETagComparison` is set to true,
+    /// the response will have its ETag field set to a byte-by-byte hash of the requested file. If set to false, a simple ETag consisting of the last modified date and file size
+    /// will be used. This method will also set the `"Content-Type"` header
+    /// automatically if an appropriate `MediaType` can be found for the file's suffix.
+    ///
+    ///     router.get("file-stream") { req in
+    ///         return req.fileio.streamFile(at: "/path/to/file.txt")
+    ///     }
+    ///
+    /// - parameters:
+    ///     - path: Path to file on the disk.
+    ///     - chunkSize: Maximum size for the file data chunks.
+    ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
+    ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
+    ///     - onCompleted: Closure to be run on completion of stream.
+    /// - returns: A `200 OK` response containing the file stream and appropriate headers.
+    public func streamFile(
+        at path: String,
+        chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
+        mediaType: HTTPMediaType? = nil,
+        advancedETagComparison: Bool,
+        onCompleted: @escaping @Sendable (Result<Void, Error>) -> () = { _ in }
+    ) -> EventLoopFuture<Response> {
+        // Get file attributes for this file.
+        guard
+            let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+            let modifiedAt = attributes[.modificationDate] as? Date,
+            let fileSize = (attributes[.size] as? NSNumber)?.intValue
+        else {
+            return request.eventLoop.makeSucceededFuture(Response(status: .internalServerError))
+        }
+
+        let contentRange: HTTPHeaders.Range?
+        if let rangeFromHeaders = request.headers.range {
+            if rangeFromHeaders.unit == .bytes && rangeFromHeaders.ranges.count == 1 {
+                contentRange = rangeFromHeaders
+            } else {
+                contentRange = nil
+            }
+        } else if request.headers.contains(name: .range) {
+            // Range header was supplied but could not be parsed i.e. it was invalid
+            request.logger.debug("Range header was provided in request but was invalid")
+            let response = Response(status: .badRequest)
+            return request.eventLoop.makeSucceededFuture(response)
+        } else {
+            contentRange = nil
+        }
+
+        var eTagFuture: EventLoopFuture<String>
+
+        if advancedETagComparison {
+            eTagFuture = generateETagHash(path: path, lastModified: modifiedAt)
+        } else {
+            // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
+            eTagFuture = request.eventLoop.makeSucceededFuture("\"\(modifiedAt.timeIntervalSince1970)-\(fileSize)\"")
+        }
+
+        return eTagFuture.map { fileETag in
+            // Create empty headers array.
+            var headers: HTTPHeaders = [:]
+
+            // Respond with lastModified header
+            headers.lastModified = HTTPHeaders.LastModified(value: modifiedAt)
+
+            headers.replaceOrAdd(name: .eTag, value: fileETag)
+
+            // Check if file has been cached already and return NotModified response if the etags match
+            if fileETag == request.headers.first(name: .ifNoneMatch) {
+                // Per RFC 9110 here: https://www.rfc-editor.org/rfc/rfc9110.html#status.304
+                // and here: https://www.rfc-editor.org/rfc/rfc9110.html#name-content-encoding
+                // A 304 response MUST include the ETag header and a Content-Length header matching what the original resource's content length would have been were this a 200 response.
+                headers.replaceOrAdd(name: .contentLength, value: fileSize.description)
+                return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
+            }
+
+            // Create the HTTP response.
+            let response = Response(status: .ok, headers: headers)
+            let offset: Int64
+            let byteCount: Int
+            if let contentRange = contentRange {
+                response.status = .partialContent
+                response.headers.add(name: .accept, value: contentRange.unit.serialize())
+                if let firstRange = contentRange.ranges.first {
+                    do {
+                        let range = try firstRange.asResponseContentRange(limit: fileSize)
+                        response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
+                        (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: fileSize, logger: request.logger)
+                    } catch {
+                        let response = Response(status: .badRequest)
+                        return response
+                    }
+                } else {
+                    offset = 0
+                    byteCount = fileSize
+                }
+            } else {
+                offset = 0
+                byteCount = fileSize
+            }
+            // Set Content-Type header based on the media type
+            // Only set Content-Type if file not modified and returned above.
+            if
+                let fileExtension = path.components(separatedBy: ".").last,
+                let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
+            {
+                response.headers.contentType = type
+            }
+            response.body = .init(stream: { stream in
+                self.read(path: path, fromOffset: offset, byteCount: byteCount, chunkSize: chunkSize) { chunk in
+                    return stream.write(.buffer(chunk))
+                }.whenComplete { result in
+                    switch result {
+                    case .failure(let error):
+                        stream.write(.error(error), promise: nil)
+                    case .success:
+                        stream.write(.end, promise: nil)
+                    }
+                    onCompleted(result)
+                }
+            }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
+
+            return response
+        }
     }
 
     /// Private read method. `onRead` closure uses ByteBuffer and expects future return.
@@ -276,6 +405,26 @@ public struct FileIO: Sendable {
                 return done
             } catch {
                 return self.request.eventLoop.makeFailedFuture(error)
+            }
+        }
+    }
+
+    /// Generates a fresh ETag for a file or returns its currently cached one.
+    /// - Parameters:
+    ///   - path: The file's path.
+    ///   - lastModified: When the file was last modified.
+    /// - Returns: An `EventLoopFuture<String>` which holds the ETag.
+    private func generateETagHash(path: String, lastModified: Date) -> EventLoopFuture<String> {
+        if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
+            return request.eventLoop.makeSucceededFuture(hash.digestHex)
+        } else {
+            return collectFile(at: path).map { buffer in
+                let digest = SHA256.hash(data: buffer.readableBytesView)
+                
+                // update hash in dictionary
+                request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
+
+                return digest.hex
             }
         }
     }

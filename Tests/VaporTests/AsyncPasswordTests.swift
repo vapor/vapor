@@ -68,11 +68,11 @@ final class AsyncPasswordTests: XCTestCase {
             .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
             .hash("vapor")
 
-        let asyncVerifiy = try await app.password
+        let asyncVerify = try await app.password
             .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
             .verify("vapor", created: asyncHash)
 
-        XCTAssertTrue(asyncVerifiy, file: file, line: line)
+        XCTAssertTrue(asyncVerify, file: file, line: line)
     }
 
     private func assertAsyncRequestPasswordVerifies(

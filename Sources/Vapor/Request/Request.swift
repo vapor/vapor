@@ -57,7 +57,7 @@ public final class Request: CustomStringConvertible, Sendable {
     /// A unique ID for the request.
     ///
     /// The request identifier is set to value of the `X-Request-Id` header when present, or to a
-    /// uniquelly generated value otherwise.
+    /// uniquely generated value otherwise.
     public let id: String
     
     // MARK: Metadata

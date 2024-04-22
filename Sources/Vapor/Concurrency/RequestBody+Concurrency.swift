@@ -120,7 +120,7 @@ extension Request.Body: AsyncSequence {
     /// Generates an `AsyncIterator` to stream the body’s content as
     /// `ByteBuffer` sequences. This implementation supports backpressure using
     /// `NIOAsyncSequenceProducerBackPressureStrategies`
-    /// - Returns: `AsyncIterator` containing the `Requeset.Body` as a
+    /// - Returns: `AsyncIterator` containing the `Request.Body` as a
     /// `ByteBuffer` sequence
     public func makeAsyncIterator() -> AsyncIterator {
         let delegate = AsyncSequenceDelegate(eventLoop: request.eventLoop)
@@ -159,7 +159,7 @@ extension Request.Body: AsyncSequence {
                     // return the future that we will fulfill eventually.
                     return promise.futureResult
                 case .produceMore:
-                    // We can produce more immidately. Return a succeeded future.
+                    // We can produce more immediately. Return a succeeded future.
                     return request.eventLoop.makeSucceededVoidFuture()
                 }
             case .error(let error):
