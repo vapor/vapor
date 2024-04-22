@@ -67,7 +67,7 @@ public final class HTTPServer: Server, Sendable {
         }
         
         /// A human-readable description of the configured address. Used in log messages when starting server.
-        public var addressDescription: String {
+        var addressDescription: String {
             let scheme = tlsConfiguration == nil ? "http" : "https"
             switch address {
             case .hostname(let hostname, let port):
