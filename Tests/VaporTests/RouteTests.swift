@@ -229,38 +229,23 @@ final class RouteTests: XCTestCase {
         }
     }
 
-    func testHeadRequestWithConstantPathReturnsOK() throws {
+    func testHeadRequestForwardedToGet() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
         app.get("hello") { req -> String in
-            return "hi"
-        }
-
-        try app.testable(method: .running(port: 0)).test(.HEAD, "/hello") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.headers.first(name: .contentLength), "0")
-            XCTAssertEqual(res.body.readableBytes, 0)
-        }
-    }
-
-    func testHeadRequestWithParameterForwardedToGet() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("hello", ":name") { req -> String in
             XCTAssertEqual(req.method, .HEAD)
             return "hi"
         }
 
-        try app.testable(method: .running(port: 0)).test(.HEAD, "/hello/joe") { res in
+        try app.testable(method: .running(port: 0)).test(.HEAD, "/hello") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.headers.first(name: .contentLength), "2")
             XCTAssertEqual(res.body.readableBytes, 0)
         }
     }
 
-    func testExplicitHeadRouteHandlerOverridesGeneratedHandler() throws {
+    func testExplicitHeadRouteOverridesForwardingToGet() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
