@@ -123,7 +123,6 @@ public struct FileIO: Sendable {
     ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
     ///     - onCompleted: Closure to be run on completion of stream.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
-    @available(*, deprecated, message: "Use the new `streamFile` method which returns EventLoopFuture<Response>")
     @preconcurrency public func streamFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
