@@ -40,7 +40,7 @@ public final class FileMiddleware: Middleware {
     ///     an absolute path from the public directory root. If `nil`, no default files are served.
     ///     - directoryAction: Determines the action to take when the request doesn't have a trailing slash but matches a directory.
     ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
-    public init(publicDirectory: String, defaultFile: String? = nil, directoryAction: DirectoryAction = .none, advancedETagComparison: Bool = true) {
+    public init(publicDirectory: String, defaultFile: String? = nil, directoryAction: DirectoryAction = .none, advancedETagComparison: Bool = false) {
         self.publicDirectory = publicDirectory.addTrailingSlash()
         self.defaultFile = defaultFile
         self.directoryAction = directoryAction
