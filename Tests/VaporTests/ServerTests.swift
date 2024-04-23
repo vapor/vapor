@@ -1409,6 +1409,16 @@ final class ServerTests: XCTestCase {
         }
     }
     
+    func testConfigurationHasActualPortAfterStart() throws {
+        let app = Application(.testing)
+        app.http.server.configuration.port = 0
+        defer { app.shutdown() }
+        try app.start()
+
+        XCTAssertNotEqual(app.http.server.configuration.port, 0)
+        XCTAssertEqual(app.http.server.configuration.port, app.http.server.shared.localAddress?.port)
+    }
+    
     override class func setUp() {
         XCTAssertTrue(isLoggingConfigured)
     }
