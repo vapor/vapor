@@ -555,7 +555,7 @@ final class FileTests: XCTestCase {
     }
 
     func testAsyncFileRead() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         let request = Request(application: app, on: app.eventLoopGroup.next())

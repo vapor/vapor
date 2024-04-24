@@ -452,13 +452,10 @@ public struct FileIO: Sendable {
     ///     - path: Path to file on the disk.
     /// - returns: `ByteBuffer` containing the file data.
     public func collectFile(at path: String) async throws -> ByteBuffer {
-        guard
-            let attributes = try? FileManager.default.attributesOfItem(atPath: path),
-            let fileSize = attributes[.size] as? NSNumber
-        else {
+        guard let fileSize = try await FileSystem.shared.info(forFileAt: .init(path))?.size else {
             throw Abort(.internalServerError)
         }
-        return try await self.read(path: path, fromOffset: 0, byteCount: fileSize.intValue)
+        return try await self.read(path: path, fromOffset: 0, byteCount: Int(fileSize))
     }
     
     /// Wrapper around `NIOFileSystem.FileChunks`.
