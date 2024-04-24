@@ -19,7 +19,7 @@ extension DotEnvFile {
     public static func load(
         for environment: Environment = .development,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
-        logger: Logger = Logger(label: "dot-env-loggger")
+        logger: Logger = Logger(label: "dot-env-logger")
     ) {
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()
@@ -51,7 +51,7 @@ extension DotEnvFile {
     public static func load(
         path: String,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
-        logger: Logger = Logger(label: "dot-env-loggger")
+        logger: Logger = Logger(label: "dot-env-logger")
     ) {
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()

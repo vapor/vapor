@@ -35,13 +35,13 @@ final class AsyncRequestTests: XCTestCase {
         let testValue = String.randomDigits()
 
         app.on(.POST, "stream", body: .stream) { req in
-            var recievedBuffer = ByteBuffer()
+            var receivedBuffer = ByteBuffer()
             for try await part in req.body {
                 XCTAssertNotNil(part)
                 var part = part
-                recievedBuffer.writeBuffer(&part)
+                receivedBuffer.writeBuffer(&part)
             }
-            let string = String(buffer: recievedBuffer)
+            let string = String(buffer: receivedBuffer)
             return string
         }
 

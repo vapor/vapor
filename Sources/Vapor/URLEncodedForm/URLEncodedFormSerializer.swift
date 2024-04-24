@@ -53,7 +53,7 @@ extension Array where Element == CodingKey {
     }
 }
 
-// MARK: Utilties
+// MARK: Utilities
 
 extension String {
     /// Prepares a `String` for inclusion in form-urlencoded data.

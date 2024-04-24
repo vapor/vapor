@@ -46,7 +46,7 @@ public struct DotEnvFile: Sendable {
         for environment: Environment = .development,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
         fileio: NonBlockingFileIO,
-        logger: Logger = Logger(label: "dot-env-loggger")
+        logger: Logger = Logger(label: "dot-env-logger")
     ) {
         let eventLoopGroup: EventLoopGroup
 
@@ -94,7 +94,7 @@ public struct DotEnvFile: Sendable {
         path: String,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
         fileio: NonBlockingFileIO,
-        logger: Logger = Logger(label: "dot-env-loggger")
+        logger: Logger = Logger(label: "dot-env-logger")
     ) {
         let eventLoopGroup: EventLoopGroup
 
