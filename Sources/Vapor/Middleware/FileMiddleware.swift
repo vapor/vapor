@@ -9,7 +9,8 @@ public final class FileMiddleware: Middleware {
     private let publicDirectory: String
     private let defaultFile: String?
     private let directoryAction: DirectoryAction
-    
+    private let advancedETagComparison: Bool
+
     public struct BundleSetupError: Equatable, Error {
         
         /// The description of this error.
@@ -22,6 +23,15 @@ public final class FileMiddleware: Middleware {
         public static let publicDirectoryIsNotAFolder: Self = .init(description: "Cannot find any actual folder for the given Public Directory")
     }
 
+    struct ETagHashes: StorageKey {
+        public typealias Value = [String: FileHash]
+
+        public struct FileHash {
+            let lastModified: Date
+            let digestHex: String
+        }
+    }
+
     /// Creates a new `FileMiddleware`.
     ///
     /// - parameters:
@@ -29,10 +39,12 @@ public final class FileMiddleware: Middleware {
     ///     - defaultFile: The name of the default file to look for and serve if a request hits any public directory. Starting with `/` implies
     ///     an absolute path from the public directory root. If `nil`, no default files are served.
     ///     - directoryAction: Determines the action to take when the request doesn't have a trailing slash but matches a directory.
-    public init(publicDirectory: String, defaultFile: String? = nil, directoryAction: DirectoryAction = .none) {
+    ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
+    public init(publicDirectory: String, defaultFile: String? = nil, directoryAction: DirectoryAction = .none, advancedETagComparison: Bool = false) {
         self.publicDirectory = publicDirectory.addTrailingSlash()
         self.defaultFile = defaultFile
         self.directoryAction = directoryAction
+        self.advancedETagComparison = advancedETagComparison
     }
     
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
@@ -88,10 +100,9 @@ public final class FileMiddleware: Middleware {
                 return next.respond(to: request)
             }
         }
-        
+
         // stream the file
-        let res = request.fileio.streamFile(at: absPath)
-        return request.eventLoop.makeSucceededFuture(res)
+        return request.fileio.streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
     }
 
     /// Creates a new `FileMiddleware` for a server contained in an Xcode Project.

@@ -75,7 +75,7 @@ final class RequestTests: XCTestCase {
         }
     }
 
-    func testRequestPeerAddressRemoteAddres() throws {
+    func testRequestPeerAddressRemoteAddress() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 

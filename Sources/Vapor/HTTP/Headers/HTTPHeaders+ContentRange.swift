@@ -5,7 +5,7 @@ extension HTTPHeaders {
     
     /// The unit in which `ContentRange`s and `Range`s are specified. This is usually `bytes`.
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
-    public enum RangeUnit: Equatable {
+    public enum RangeUnit: Sendable, Equatable {
         case bytes
         case custom(value: String)
         
@@ -21,7 +21,7 @@ extension HTTPHeaders {
     
     /// Represents the HTTP `Range` request header.
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
-    public struct Range: Equatable {
+    public struct Range: Sendable, Equatable {
         public let unit: RangeUnit
         public let ranges: [HTTPHeaders.Range.Value]
         
@@ -134,7 +134,7 @@ extension HTTPHeaders.Range {
     /// Represents one value of the `Range` request header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
-    public enum Value: Equatable {
+    public enum Value: Sendable, Equatable {
         ///Integer with single trailing dash, e.g. `25-`
         case start(value: Int)
         ///Integer with single leading dash, e.g. `-25`

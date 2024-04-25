@@ -156,7 +156,7 @@ internal final class TestTimer: TimerHandler, Equatable, @unchecked Sendable {
         }
     }
 
-    func retriveValueInPreferredUnit(atIndex i: Int) -> Double {
+    func retrieveValueInPreferredUnit(atIndex i: Int) -> Double {
         return self.lock.withLock {
             let value = values[i].1
             guard let displayUnit = self.displayUnit else {

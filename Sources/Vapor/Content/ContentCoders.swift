@@ -27,7 +27,7 @@ public protocol ContentEncoder {
 
 /// Conform a type to this protocol to make it usable for decoding data via Vapor's ``ContentConfiguration`` system.
 public protocol ContentDecoder {
-    /// Legacy "decode object" method. The provided ``NIOCore/ByteBuffer`` should be decoded as a vaule of the given
+    /// Legacy "decode object" method. The provided ``NIOCore/ByteBuffer`` should be decoded as a value of the given
     /// type, optionally guided by the provided ``NIOHTTP1/HTTPHeaders``.
     ///
     /// Most decoders should implement this method by simply forwarding it to the decoder userInfo-aware version below,
@@ -36,7 +36,7 @@ public protocol ContentDecoder {
     func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D
         where D: Decodable
 
-    /// "Decode object" method. The provided ``NIOCore/ByteBuffer`` should be decoded as a vaule of the given type,
+    /// "Decode object" method. The provided ``NIOCore/ByteBuffer`` should be decoded as a value of the given type,
     /// optionally guided by the provided ``NIOHTTP1/HTTPHeaders``. The provided ``userInfo`` dictionary must be
     /// forwarded to the underlying ``Swift/Decoder`` used to perform the decoding operation.
     ///

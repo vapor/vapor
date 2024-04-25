@@ -39,26 +39,6 @@ internal struct DefaultResponder: Responder {
                 }
             }
             
-            // If the route isn't explicitly a HEAD route,
-            // and it's made up solely of .constant components,
-            // register a HEAD route with the same path
-            if route.method == .GET &&
-                route.path.allSatisfy({ component in
-                    if case .constant(_) = component { return true }
-                    return false
-            }) {
-                let headRoute = Route(
-                    method: .HEAD,
-                    path: route.path,
-                    responder: middleware.makeResponder(chainingTo: HeadResponder()),
-                    requestType: route.requestType,
-                    responseType: route.responseType)
-
-                let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeResponder(chainingTo: HeadResponder()))
-
-                router.register(headCachedRoute, at: [.constant(HTTPMethod.HEAD.string)] + path)
-            }
-            
             router.register(cached, at: [.constant(route.method.string)] + path)
         }
         self.router = router
@@ -152,12 +132,6 @@ internal struct DefaultResponder: Responder {
             dimensions: dimensions,
             preferredDisplayUnit: .seconds
         ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-    }
-}
-
-private struct HeadResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeSucceededFuture(.init(status: .ok))
     }
 }
 
