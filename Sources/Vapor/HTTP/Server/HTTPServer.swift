@@ -48,23 +48,34 @@ public final class HTTPServer: Server, Sendable {
         
         /// Port the server will bind to.
         public var port: Int {
-           get {
-               switch address {
-               case .hostname(_, let port):
-                   return port ?? Self.defaultPort
-               default:
-                   return Self.defaultPort
-               }
-           }
-           set {
-               switch address {
-               case .hostname(let hostname, _):
-                   address = .hostname(hostname, port: newValue)
-               default:
-                   address = .hostname(nil, port: newValue)
-               }
-           }
-       }
+            get {
+                switch address {
+                case .hostname(_, let port):
+                    return port ?? Self.defaultPort
+                default:
+                    return Self.defaultPort
+                }
+            }
+            set {
+                switch address {
+                case .hostname(let hostname, _):
+                    address = .hostname(hostname, port: newValue)
+                default:
+                    address = .hostname(nil, port: newValue)
+                }
+            }
+        }
+        
+        /// A human-readable description of the configured address. Used in log messages when starting server.
+        var addressDescription: String {
+            let scheme = tlsConfiguration == nil ? "http" : "https"
+            switch address {
+            case .hostname(let hostname, let port):
+                return "\(scheme)://\(hostname ?? Self.defaultHostname):\(port ?? Self.defaultPort)"
+            case .unixDomainSocket(let socketPath):
+                return "\(scheme)+unix: \(socketPath)"
+            }
+        }
         
         /// Listen backlog.
         public var backlog: Int
@@ -307,19 +318,10 @@ public final class HTTPServer: Server, Sendable {
             /// Override the socket path.
             configuration.address = address!
         }
-        
-        /// Print starting message.
-        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
-        let addressDescription: String
-        switch configuration.address {
-        case .hostname(let hostname, let port):
-            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
-        case .unixDomainSocket(let socketPath):
-            addressDescription = "\(scheme)+unix: \(socketPath)"
-        }
-        
-        self.configuration.logger.notice("Server starting on \(addressDescription)")
 
+        /// Log starting message for debugging before attempting to start the server.
+        configuration.logger.debug("Server starting on \(configuration.addressDescription)")
+        
         /// Start the actual `HTTPServer`.
         try self.connection.withLockedValue {
             $0 = try HTTPServerConnection.start(
@@ -330,6 +332,19 @@ public final class HTTPServer: Server, Sendable {
                 on: self.eventLoopGroup
             ).wait()
         }
+
+        /// Overwrite configuration with actual address, if applicable.
+        /// They may differ from the provided configuation if port 0 was provided, for example.
+        if let localAddress = self.localAddress {
+            if let hostname = localAddress.hostname, let port = localAddress.port {
+                configuration.address = .hostname(hostname, port: port)
+            } else if let pathname = localAddress.pathname {
+                configuration.address = .unixDomainSocket(path: pathname)
+            }
+        }
+
+        /// Log started message with the actual configuration.
+        configuration.logger.notice("Server started on \(configuration.addressDescription)")
 
         self.configuration = configuration
         self.didStart.withLockedValue { $0 = true }
