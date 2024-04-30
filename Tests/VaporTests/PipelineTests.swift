@@ -86,7 +86,9 @@ final class PipelineTests: XCTestCase {
             }))
         }
         
-        try app.start()
+        app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
+        try await app.startup()
         
         guard
             let localAddress = app.http.server.shared.localAddress,
@@ -96,7 +98,7 @@ final class PipelineTests: XCTestCase {
             return
         }
         
-        let client = HTTPClient(eventLoopGroupProvider: .createNew)
+        let client = HTTPClient()
         
         let chunks = [
             "1\r\n",
