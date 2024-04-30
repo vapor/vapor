@@ -14,6 +14,7 @@ import NIOPosix
 import NIOCore
 import NIOConcurrencyHelpers
 
+/// An internal helper that formats cookie dates as RFC1123
 private final class RFC1123 {
     /// Thread-specific RFC1123
     private static let thread: ThreadSpecificVariable<RFC1123> = .init()
