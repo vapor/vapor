@@ -4,6 +4,7 @@ import XCTest
 import AsyncHTTPClient
 import NIOEmbedded
 import NIOCore
+import NIOConcurrencyHelpers
 
 final class PipelineTests: XCTestCase {
     var app: Application!
@@ -86,7 +87,9 @@ final class PipelineTests: XCTestCase {
             }))
         }
         
-        try app.start()
+        app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
+        try await app.startup()
         
         guard
             let localAddress = app.http.server.shared.localAddress,
@@ -96,7 +99,7 @@ final class PipelineTests: XCTestCase {
             return
         }
         
-        let client = HTTPClient(eventLoopGroupProvider: .createNew)
+        let client = HTTPClient()
         
         let chunks = [
             "1\r\n",
@@ -111,14 +114,15 @@ final class PipelineTests: XCTestCase {
         ]
         
         let response = try await client.post(url: "http://localhost:\(port)/echo", body: .stream { writer in
+            let box = UnsafeMutableTransferBox(writer)
             @Sendable func write(chunks: [String]) -> EventLoopFuture<Void> {
                 var chunks = chunks
                 let chunk = chunks.removeFirst()
                 
                 if chunks.isEmpty {
-                    return writer.write(.byteBuffer(ByteBuffer(string: chunk)))
+                    return box.wrappedValue.write(.byteBuffer(ByteBuffer(string: chunk)))
                 } else {
-                    return writer.write(.byteBuffer(ByteBuffer(string: chunk))).flatMap { [chunks] in
+                    return box.wrappedValue.write(.byteBuffer(ByteBuffer(string: chunk))).flatMap { [chunks] in
                         return write(chunks: chunks)
                     }
                 }
