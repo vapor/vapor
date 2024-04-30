@@ -69,7 +69,7 @@ extension BodyStreamWriter {
 }
 
 /// A type that represents the writable handle of a streamed ``Response`` body
-public protocol AsyncBodyStreamWriter {
+public protocol AsyncBodyStreamWriter: Sendable {
     /// Writes an event to a streaming HTTP body. If the `result` is `.end` or `.error`, the stream ends.
     func write(_ result: BodyStreamResult) async throws
     
