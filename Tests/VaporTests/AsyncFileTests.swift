@@ -108,7 +108,7 @@ final class AsyncFileTests: XCTestCase {
             let attributes = try FileManager.default.attributesOfItem(atPath: #file)
             let modifiedAt = attributes[.modificationDate] as! Date
             let fileSize = (attributes[.size] as? NSNumber)!.intValue
-            let fileETag = "\"\(modifiedAt.timeIntervalSince1970)-\(fileSize)\""
+            let fileETag = "\"\(Int(modifiedAt.timeIntervalSince1970))-\(fileSize)\""
 
             XCTAssertEqual(res.headers.first(name: .eTag), fileETag)
         }
