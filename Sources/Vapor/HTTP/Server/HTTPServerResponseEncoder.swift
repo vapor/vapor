@@ -70,6 +70,17 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                     count: stream.count == -1 ? nil : stream.count
                 )
                 stream.callback(channelStream)
+            case .asyncStream(let stream):
+                let channelStream = ChannelResponseBodyStream(
+                    context: context,
+                    handler: self,
+                    promise: nil,
+                    count: stream.count == -1 ? nil : stream.count
+                )
+                
+                promise?.completeWithTask {
+                    try await stream.callback(channelStream)
+                }
             }
         }
     }
@@ -84,7 +95,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
     }
 }
 
-private final class ChannelResponseBodyStream: BodyStreamWriter {
+private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStreamWriter {
     let contextBox: NIOLoopBound<ChannelHandlerContext>
     let handlerBox: NIOLoopBound<HTTPServerResponseEncoder>
     let promise: EventLoopPromise<Void>?
@@ -113,15 +124,26 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         self.eventLoop = context.eventLoop
     }
     
+    func write(_ result: BodyStreamResult) async throws {
+        // Explicitly adds the ELF because Swift 5.6 fails to infer the return type
+        try await self.eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let promise = self.eventLoop.makePromise(of: Void.self)
+            self.write(result, promise: promise)
+            return promise.futureResult
+        }.get()
+    }
+    
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(let buffer):
+            // See: https://github.com/vapor/vapor/issues/2976
             self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
             if let count = self.count, self.currentCount.wrappingIncrementThenLoad(by: buffer.readableBytes, ordering: .sequentiallyConsistent) > count {
                 self.promise?.fail(Error.tooManyBytes)
                 promise?.fail(Error.notEnoughBytes)
             }
         case .end:
+            // See: https://github.com/vapor/vapor/issues/2976
             self.isComplete.store(true, ordering: .sequentiallyConsistent)
             if let count = self.count, self.currentCount.load(ordering: .sequentiallyConsistent) < count {
                 self.promise?.fail(Error.notEnoughBytes)

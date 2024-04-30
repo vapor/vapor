@@ -2,7 +2,7 @@ import NIOCore
 import NIOConcurrencyHelpers
 
 extension Request {
-    final class BodyStream: BodyStreamWriter {
+    final class BodyStream: BodyStreamWriter, AsyncBodyStreamWriter {
         let eventLoop: EventLoop
 
         var isBeingRead: Bool {
@@ -44,6 +44,15 @@ extension Request {
                 handler(result, promise)
             }
             self.handlerBuffer.value.buffer = []
+        }
+        
+        func write(_ result: BodyStreamResult) async throws {
+            // Explicitly adds the ELF because Swift 5.6 fails to infer the return type
+            try await self.eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+                let promise = self.eventLoop.makePromise(of: Void.self)
+                self.write0(result, promise: promise)
+                return promise.futureResult
+            }.get()
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
