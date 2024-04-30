@@ -1,15 +1,30 @@
+#if os(Linux)
+// Needed because DispatchQueue isn't Sendable on Linux
+@preconcurrency import Foundation
+#else
 import Foundation
+#endif
 import NIOCore
+import NIOConcurrencyHelpers
 
 /// Simple in-memory sessions implementation.
-public struct MemorySessions: SessionDriver {
+public struct MemorySessions: SessionDriver, Sendable {
     public let storage: Storage
     
-    public final class Storage {
-        public var sessions: [SessionID: SessionData]
+    public final class Storage: Sendable {
+        public var sessions: [SessionID: SessionData] {
+            get {
+                self._sessions.withLockedValue { $0 }
+            }
+            set {
+                self._sessions.withLockedValue { $0 = newValue }
+            }
+        }
+        
         public let queue: DispatchQueue
+        private let _sessions: NIOLockedValueBox<[SessionID: SessionData]>
         public init() {
-            self.sessions = [:]
+            self._sessions = .init([:])
             self.queue = DispatchQueue(label: "MemorySessions.Storage")
         }
     }

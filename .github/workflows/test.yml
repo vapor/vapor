@@ -23,14 +23,14 @@ jobs:
           - provider: vapor/apns
             ref: 3.0.0
     runs-on: ubuntu-latest
-    container: swift:5.8
+    container: swift:5.10
     steps: 
       - name: Check out Vapor
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: vapor
       - name: Check out provider
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with: 
           repository: ${{ matrix.provider }}
           path: provider
@@ -40,12 +40,9 @@ jobs:
       - name: Run tests
         env:
             SWIFT_DETERMINISTIC_HASHING: 1
-        run: swift test
-        working-directory: provider
+        run: swift test --package-path ./provider
 
   unit-tests:
-     uses: vapor/ci/.github/workflows/run-unit-tests.yml@reusable-workflows
+     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
      with:
-       with_coverage: false
        with_tsan: false
-       with_public_api_check: true

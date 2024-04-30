@@ -28,20 +28,12 @@ extension Logger {
             reason = abort.reason
             source = nil
             level = .warning
-        case let localized as LocalizedError:
-            reason = localized.localizedDescription
-            source = nil
-            level = .warning
-        case let convertible as CustomStringConvertible:
-            reason = convertible.description
-            source = nil
-            level = .warning
         default:
-            reason = "\(error)"
+            reason = String(reflecting: error)
             source = nil
             level = .warning
         }
-        
+
         self.log(
             level: level,
             .init(stringLiteral: reason),

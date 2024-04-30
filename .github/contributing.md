@@ -84,7 +84,7 @@ The release title should be concise description. For example:
 - ✅ Add case-insensitive routing
 - ✅ Fix `routes` command symbol usage
 
-The release titles should use sentence capitialization and not be too verbose. They should also use present tense.
+The release titles should use sentence capitalization and not be too verbose. They should also use present tense.
 
 - ❌ Fix `routes` Command Symbol Usage
 - ❌ Add new method on RouteBuilder called `caseInsensitive` which can be used to enable case-insensitive routing 

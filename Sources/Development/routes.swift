@@ -2,6 +2,7 @@ import class Foundation.Bundle
 import Vapor
 import NIOCore
 import NIOHTTP1
+import NIOConcurrencyHelpers
 
 struct Creds: Content {
     var email: String
@@ -18,21 +19,21 @@ public func routes(_ app: Application) throws {
     app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
         let done = req.eventLoop.makePromise(of: String.self)
 
-        var total = 0
+        let totalBox = NIOLoopBoundBox(0, eventLoop: req.eventLoop)
         req.body.drain { result in
             let promise = req.eventLoop.makePromise(of: Void.self)
 
             switch result {
             case .buffer(let buffer):
                 req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
-                    total += buffer.readableBytes
+                    totalBox.value += buffer.readableBytes
                     promise.succeed(())
                 }
             case .error(let error):
                 done.fail(error)
             case .end:
                 promise.succeed(())
-                done.succeed(total.description)
+                done.succeed(totalBox.value.description)
             }
 
             // manually return pre-completed future
@@ -202,7 +203,9 @@ public func routes(_ app: Application) throws {
             eventLoop: req.eventLoop
         ).flatMap { fileHandle in
             let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
+            let fileHandleBox = NIOLoopBound(fileHandle, eventLoop: req.eventLoop)
             req.body.drain { part in
+                let fileHandle = fileHandleBox.value
                 switch part {
                 case .buffer(let buffer):
                     return req.application.fileio.write(
@@ -244,19 +247,16 @@ public func routes(_ app: Application) throws {
         return String(buffer: body)
     }
 
-    func asyncRouteTester(_ req: Request) async throws -> String {
+    asyncRoutes.get("client2") { req -> String in
         let response = try await req.client.get("https://www.google.com")
         guard let body = response.body else {
             throw Abort(.internalServerError)
         }
         return String(buffer: body)
     }
-    asyncRoutes.get("client2", use: asyncRouteTester)
     
-    asyncRoutes.get("content", use: asyncContentTester)
-    
-    func asyncContentTester(_ req: Request) async throws -> Creds {
-        return Creds(email: "name", password: "password")
+    asyncRoutes.get("content") { req in
+        Creds(email: "name", password: "password")
     }
     
     asyncRoutes.get("content2") { req async throws -> Creds in
@@ -313,15 +313,13 @@ struct TestError: AbortError, DebuggableError {
     }
 
     var source: ErrorSource?
-    var stackTrace: StackTrace?
 
     init(
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,
-        range: Range<UInt>? = nil,
-        stackTrace: StackTrace? = .capture(skip: 1)
+        range: Range<UInt>? = nil
     ) {
         self.source = .init(
             file: file,
@@ -330,7 +328,6 @@ struct TestError: AbortError, DebuggableError {
             column: column,
             range: range
         )
-        self.stackTrace = stackTrace
     }
 }
 

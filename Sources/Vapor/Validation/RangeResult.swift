@@ -57,11 +57,13 @@ public enum RangeResult<T>: Equatable where T: Comparable {
             // any other case is either not comparable (e.g. comparing Float.nan with anything is always false)
             // or it should never happen because all static methods on `Validator` that can make
             // the count and range validators all result in at least a minimum or a maximum or both.
-            // The thrown error needs to be handlded at a higher level then.
+            // The thrown error needs to be handled at a higher level then.
             throw RangeResultError.notComparable
         }
     }
 }
+
+extension RangeResult: Sendable where T: Sendable {}
 
 enum RangeResultError: Error {
     case notComparable

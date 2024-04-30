@@ -11,9 +11,7 @@ struct Entrypoint {
         defer { app.shutdown() }
 
         try configure(app)
-        // TODO: Replace with correctly async version of `app.run()`.
-        try app.start()
-        try await app.running?.onStop.get()
+        try await app.execute()
     }
 }
 

@@ -51,24 +51,28 @@ public final class ErrorMiddleware: Middleware {
             // attempt to serialize the error to json
             do {
                 let errorResponse = ErrorResponse(error: true, reason: reason)
-                response.body = try .init(data: JSONEncoder().encode(errorResponse), byteBufferAllocator: req.byteBufferAllocator)
-                response.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
+                try response.responseBox.withLockedValue { box in
+                    box.body = try .init(data: JSONEncoder().encode(errorResponse), byteBufferAllocator: req.byteBufferAllocator)
+                    box.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
+                }
             } catch {
-                response.body = .init(string: "Oops: \(error)", byteBufferAllocator: req.byteBufferAllocator)
-                response.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
+                response.responseBox.withLockedValue { box in
+                    box.body = .init(string: "Oops: \(error)", byteBufferAllocator: req.byteBufferAllocator)
+                    box.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
+                }
             }
             return response
         }
     }
 
     /// Error-handling closure.
-    private let closure: (Request, Error) -> (Response)
+    private let closure: @Sendable (Request, Error) -> (Response)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    public init(_ closure: @escaping (Request, Error) -> (Response)) {
+    @preconcurrency public init(_ closure: @Sendable @escaping (Request, Error) -> (Response)) {
         self.closure = closure
     }
     

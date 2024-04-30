@@ -2,7 +2,7 @@
 internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
     let result: D
     
-    static func userInfo(for keyPath: [CodingKey]) -> [CodingUserInfoKey: Any] {
+    static func userInfo(for keyPath: [CodingKey]) -> [CodingUserInfoKey: Sendable] {
         [.containerGetKeypath: keyPath]
     }
     
@@ -11,13 +11,21 @@ internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Container getter couldn't find keypath to fetch (broken Decoder?)"))
         }
         
-        self.result = try keypath.reduce(decoder) {
+        let lastDecoder = try keypath.dropLast().reduce(decoder) {
             if let index = $1.intValue {
                 return try $0.unkeyedContainer(startingAt: index)._unsafe_inplace_superDecoder()
             } else {
                 return try $0.container(keyedBy: BasicCodingKey.self).superDecoder(forKey: .key($1.stringValue))
             }
-        }.singleValueContainer().decode(D.self)
+        }
+        if let index = keypath.last?.intValue {
+            var container = try lastDecoder.unkeyedContainer(startingAt: index)
+            self.result = try container.decode(D.self)
+        } else if let key = keypath.last?.stringValue {
+            self.result = try lastDecoder.container(keyedBy: BasicCodingKey.self).decode(D.self, forKey: .key(key))
+        } else {
+            self.result = try lastDecoder.singleValueContainer().decode(D.self)
+        }
     }
 }
 

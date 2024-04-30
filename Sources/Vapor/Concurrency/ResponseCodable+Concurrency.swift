@@ -7,11 +7,11 @@ import NIOHTTP1
 ///
 /// This is the async version of `ResponseEncodable`
 public protocol AsyncResponseEncodable {
-    /// Encodes an instance of `Self` to a `HTTPResponse`.
+    /// Encodes an instance of `Self` to a `Response`.
     ///
     /// - parameters:
-    ///     - for: The `HTTPRequest` associated with this `HTTPResponse`.
-    /// - returns: An `HTTPResponse`.
+    ///     - for: The `Request` associated with this `Response`.
+    /// - returns: An `Response`.
     func encodeResponse(for request: Request) async throws -> Response
 }
 
@@ -21,10 +21,10 @@ public protocol AsyncResponseEncodable {
 ///
 /// This is the async version of `RequestDecodable`
 public protocol AsyncRequestDecodable {
-    /// Decodes an instance of `HTTPRequest` to a `Self`.
+    /// Decodes an instance of `Request` to a `Self`.
     ///
     /// - parameters:
-    ///     - request: The `HTTPRequest` to be decoded.
+    ///     - request: The `Request` to be decoded.
     /// - returns: An asynchronous `Self`.
     static func decodeRequest(_ request: Request) async throws -> Self
 }
@@ -39,7 +39,7 @@ extension Request: AsyncRequestDecodable {
 extension AsyncResponseEncodable {
     /// Asynchronously encodes `Self` into a `Response`, setting the supplied status and headers.
     ///
-    ///     router.post("users") { req async throws -> HTTPResponse in
+    ///     router.post("users") { req async throws -> Response in
     ///         return try await req.content
     ///             .decode(User.self)
     ///             .save(on: req)
@@ -52,10 +52,12 @@ extension AsyncResponseEncodable {
     /// - returns: Newly encoded `Response`.
     public func encodeResponse(status: HTTPStatus, headers: HTTPHeaders = [:], for request: Request) async throws -> Response {
         let response = try await self.encodeResponse(for: request)
-        for (name, value) in headers {
-            response.headers.replaceOrAdd(name: name, value: value)
+        response.responseBox.withLockedValue { box in
+            for (name, value) in headers {
+                box.headers.replaceOrAdd(name: name, value: value)
+            }
+            box.status = status
         }
-        response.status = status
         return response
     }
 }

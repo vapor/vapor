@@ -1,6 +1,6 @@
 import NIOCore
 
-public enum BodyStreamResult {
+public enum BodyStreamResult: Sendable {
     /// A normal data chunk.
     /// There will be 0 or more of these.
     case buffer(ByteBuffer)
@@ -40,7 +40,7 @@ extension BodyStreamResult: CustomDebugStringConvertible {
 }
 
 /// A type that represents the writable handle of a streamed ``Response`` body.
-public protocol BodyStreamWriter {
+public protocol BodyStreamWriter: Sendable {
     /// The eventloop upon which writes must be sent
     var eventLoop: EventLoop { get }
     
@@ -50,6 +50,18 @@ public protocol BodyStreamWriter {
 
 extension BodyStreamWriter {
     public func write(_ result: BodyStreamResult) -> EventLoopFuture<Void> {
+        // We need to ensure we're on the event loop here for write as there's
+        // no guarantee that users will be on the event loop
+        if self.eventLoop.inEventLoop {
+            return write0(result)
+        } else {
+            return self.eventLoop.flatSubmit {
+                self.write0(result)
+            }
+        }
+    }
+    
+    private func write0(_ result: BodyStreamResult) -> EventLoopFuture<Void> {
         let promise = self.eventLoop.makePromise(of: Void.self)
         self.write(result, promise: promise)
         return promise.futureResult

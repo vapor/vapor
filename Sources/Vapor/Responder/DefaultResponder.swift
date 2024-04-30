@@ -1,6 +1,6 @@
 import Foundation
 import Metrics
-import RoutingKit
+@preconcurrency import RoutingKit
 import NIOCore
 import NIOHTTP1
 import Logging
@@ -28,6 +28,7 @@ internal struct DefaultResponder: Responder {
                 route: route,
                 responder: middleware.makeResponder(chainingTo: route.responder)
             )
+            
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
@@ -36,26 +37,6 @@ internal struct DefaultResponder: Responder {
                 default:
                     return true
                 }
-            }
-            
-            // If the route isn't explicitly a HEAD route,
-            // and it's made up solely of .constant components,
-            // register a HEAD route with the same path
-            if route.method == .GET &&
-                route.path.allSatisfy({ component in
-                    if case .constant(_) = component { return true }
-                    return false
-            }) {
-                let headRoute = Route(
-                    method: .HEAD,
-                    path: cached.route.path,
-                    responder: middleware.makeResponder(chainingTo: HeadResponder()),
-                    requestType: cached.route.requestType,
-                    responseType: cached.route.responseType)
-
-                let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeResponder(chainingTo: HeadResponder()))
-
-                router.register(headCachedRoute, at: [.constant(HTTPMethod.HEAD.string)] + path)
             }
             
             router.register(cached, at: [.constant(route.method.string)] + path)
@@ -154,25 +135,13 @@ internal struct DefaultResponder: Responder {
     }
 }
 
-private struct HeadResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeSucceededFuture(.init(status: .ok))
-    }
-}
-
 private struct NotFoundResponder: Responder {
     func respond(to request: Request) -> EventLoopFuture<Response> {
         request.eventLoop.makeFailedFuture(RouteNotFound())
     }
 }
 
-struct RouteNotFound: Error {
-    let stackTrace: StackTrace?
-
-    init() {
-        self.stackTrace = StackTrace.capture(skip: 1)
-    }
-}
+struct RouteNotFound: Error {}
 
 extension RouteNotFound: AbortError {    
     var status: HTTPResponseStatus {

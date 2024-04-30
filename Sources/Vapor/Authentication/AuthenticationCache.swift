@@ -1,3 +1,5 @@
+import NIOConcurrencyHelpers
+
 extension Request {
     /// Helper for accessing authenticated objects.
     /// See `Authenticator` for more information.
@@ -19,7 +21,7 @@ extension Request.Authentication {
     public func login<A>(_ instance: A)
         where A: Authenticatable
     {
-        self.cache[A.self] = instance
+        self.cache[A.self] = UnsafeAuthenticationBox(instance)
     }
 
     /// Unauthenticates an authenticatable type.
@@ -46,7 +48,7 @@ extension Request.Authentication {
     public func get<A>(_ type: A.Type = A.self) -> A?
         where A: Authenticatable
     {
-        return self.cache[A.self]
+        return self.cache[A.self]?.authenticated
     }
 
     /// Returns `true` if the type has been authenticated.
@@ -56,18 +58,22 @@ extension Request.Authentication {
         return self.get(A.self) != nil
     }
 
-    private final class Cache {
-        private var storage: [ObjectIdentifier: Any]
+    private final class Cache: Sendable {
+        private let storage: NIOLockedValueBox<[ObjectIdentifier: Sendable]>
 
         init() {
-            self.storage = [:]
+            self.storage = .init([:])
         }
 
-        internal subscript<A>(_ type: A.Type) -> A?
+        internal subscript<A>(_ type: A.Type) -> UnsafeAuthenticationBox<A>?
             where A: Authenticatable
             {
-            get { return storage[ObjectIdentifier(A.self)] as? A }
-            set { storage[ObjectIdentifier(A.self)] = newValue }
+            get { 
+                storage.withLockedValue { $0[ObjectIdentifier(A.self)] as? UnsafeAuthenticationBox<A> }
+            }
+            set { 
+                storage.withLockedValue { $0[ObjectIdentifier(A.self)] = newValue }
+            }
         }
     }
 
@@ -88,5 +94,24 @@ extension Request.Authentication {
         set {
             self.request.storage[CacheKey.self] = newValue
         }
+    }
+}
+
+// This is to get around the fact that for legacy reasons we can't enforce Sendability on Authenticatable
+// types (e.g. Fluent 4 models can never be Sendable because they're reference types with mutable values
+// required by protocols and property wrappers). This allows us to store the Authenticatable type in a
+// safe-most-of-the-time way. This does introduce an edge case where type could be stored and mutated in
+// multiple places. But given how Vapor and its users use Authentication this should almost never
+// occur and it was decided the trade-off was acceptable
+// As the name implies, the usage of this is unsafe because it disables the sendable checking of the
+// compiler and does not add any synchronization.
+@usableFromInline
+internal struct UnsafeAuthenticationBox<A>: @unchecked Sendable {
+    @usableFromInline
+    let authenticated: A
+    
+    @inlinable
+    init(_ authenticated: A) {
+        self.authenticated = authenticated
     }
 }

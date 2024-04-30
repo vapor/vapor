@@ -38,10 +38,22 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         case .head(let head):
             switch self.requestState {
             case .ready:
+                /// Note: It is critical that `URI.init(path:)` is used here, _NOT_ `URI.init(string:)`. The following
+                /// example illustrates why:
+                ///
+                ///     let uri1 = URI(string: "//foo/bar?a#b"), uri2 = URI(path: "//foo/bar?a#b")
+                ///
+                ///     print(uri1.host, uri1.path, uri1.query, uri1.fragment)
+                ///     // Optional(foo) /bar a b
+                ///     print(uri2.host, uri2.path, uri2.query, uri2.fragment)
+                ///     // nil /foo/bar a b
+                ///
+                /// The latter parse has the correct semantics for an HTTP request's URL (which, in the absence of an
+                /// accompanying scheme, should never have a host); the former follows strict RFC 3986 rules.
                 let request = Request(
                     application: self.application,
                     method: head.method,
-                    url: .init(string: head.uri),
+                    url: .init(path: head.uri),
                     version: head.version,
                     headersNoUpdate: head.headers,
                     remoteAddress: context.channel.remoteAddress,
@@ -51,9 +63,9 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 )
                 switch head.version.major {
                 case 2:
-                    request.isKeepAlive = true
+                    request.requestBox.withLockedValue { $0.isKeepAlive = true }
                 default:
-                    request.isKeepAlive = head.isKeepAlive
+                    request.requestBox.withLockedValue { $0.isKeepAlive = head.isKeepAlive }
                 }
                 self.requestState = .awaitingBody(request)
             default: assertionFailure("Unexpected state: \(self.requestState)")
@@ -71,7 +83,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                     self.requestState = .awaitingEnd(request, buffer)
                 } else {
                     let stream = Request.BodyStream(on: context.eventLoop, byteBufferAllocator: context.channel.allocator)
-                    request.bodyStorage = .stream(stream)
+                    request.bodyStorage.withLockedValue { $0 = .stream(stream) }
                     self.requestState = .streamingBody(stream)
                     context.fireChannelRead(self.wrapInboundOut(request))
                     self.handleBodyStreamStateResult(
@@ -95,7 +107,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
             case .awaitingBody(let request):
                 context.fireChannelRead(self.wrapInboundOut(request))
             case .awaitingEnd(let request, let buffer):
-                request.bodyStorage = .collected(buffer)
+                request.bodyStorage.withLockedValue { $0 = .collected(buffer) }
                 context.fireChannelRead(self.wrapInboundOut(request))
             case .streamingBody(let stream):
                 self.handleBodyStreamStateResult(
@@ -133,6 +145,10 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         default:
             break
         }
+
+        if error is HTTPParserError {
+            self.logger.debug("Invalid HTTP request, will close connection: \(String(reflecting: error))")
+        }
         context.fireErrorCaught(error)
     }
 
@@ -158,19 +174,21 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         switch result.action {
         case .nothing: break
         case .write(let buffer):
+            let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
             stream.write(.buffer(buffer)).whenComplete { writeResult in
+                let (context, handler) = box.value
                 switch writeResult {
                 case .failure(let error):
-                    self.handleBodyStreamStateResult(
+                    handler.handleBodyStreamStateResult(
                         context: context,
-                        self.bodyStreamState.didError(error),
+                        handler.bodyStreamState.didError(error),
                         stream: stream
                     )
                 case .success: break
                 }
-                self.handleBodyStreamStateResult(
+                handler.handleBodyStreamStateResult(
                     context: context,
-                    self.bodyStreamState.didWrite(),
+                    handler.bodyStreamState.didWrite(),
                     stream: stream
                 )
             }
@@ -216,7 +234,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 context.fireUserInboundEventTriggered(event)
             }
         default:
-            self.logger.trace("Unhandled user event: \(event)")
+            context.fireUserInboundEventTriggered(event)
         }
     }
 }

@@ -34,6 +34,12 @@ extension ContentContainer {
         return content
     }
 
+    /// Use the default configured decoder for the ``contentType`` parameter to read a value
+    /// of type `D` from the container.
+    public func decode<D: Decodable>(_: D.Type, as contentType: HTTPMediaType) throws -> D {
+        try self.decode(D.self, using: self.configuredDecoder(for: contentType))
+    }
+
     // MARK: - Encoding helpers
 
     /// Serialize a ``Content`` object to the container as its default content type.
@@ -115,8 +121,8 @@ extension ContentContainer {
     }
     
     /// Look up a ``ContentDecoder`` for the container's ``contentType``.
-    private func configuredDecoder() throws -> ContentDecoder {
-        guard let contentType = self.contentType else {
+    private func configuredDecoder(for mediaType: HTTPMediaType? = nil) throws -> ContentDecoder {
+        guard let contentType = mediaType ?? self.contentType else {
             throw Abort(.unsupportedMediaType, reason: "Can't decode data without a content type")
         }
         return try ContentConfiguration.global.requireDecoder(for: contentType)
@@ -125,12 +131,12 @@ extension ContentContainer {
 
 /// Injects coder userInfo into a ``ContentDecoder`` so we don't have to add passthroughs to ``ContentContainer``.
 fileprivate struct ForwardingContentDecoder: ContentDecoder {
-    let base: ContentDecoder, info: [CodingUserInfoKey: Any]
+    let base: ContentDecoder, info: [CodingUserInfoKey: Sendable]
     
     func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: self.info)
     }
-    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws -> D {
+    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: userInfo.merging(self.info) { $1 })
     }
 }

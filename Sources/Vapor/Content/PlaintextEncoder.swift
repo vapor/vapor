@@ -26,12 +26,12 @@ public struct PlaintextEncoder: ContentEncoder {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
     
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
         where E: Encodable
     {
         let actualEncoder: _PlaintextEncoder
         if !userInfo.isEmpty {  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
-            actualEncoder = _PlaintextEncoder(userInfo: self.encoder.userInfo.merging(userInfo) { $1 })
+            actualEncoder = _PlaintextEncoder(userInfo: self.encoder.userInfoSendable.merging(userInfo) { $1 })
         } else {
             actualEncoder = self.encoder
         }
@@ -51,10 +51,11 @@ public struct PlaintextEncoder: ContentEncoder {
 
 private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     public var codingPath: [CodingKey] = []
-    public var userInfo: [CodingUserInfoKey: Any]
+    fileprivate var userInfoSendable: [CodingUserInfoKey: Sendable]
+    public var userInfo: [CodingUserInfoKey: Any] { self.userInfoSendable }
     public var plaintext: String?
     
-    public init(userInfo: [CodingUserInfoKey: Any] = [:]) { self.userInfo = userInfo }
+    public init(userInfo: [CodingUserInfoKey: Sendable] = [:]) { self.userInfoSendable = userInfo }
     
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
     public func unkeyedContainer() -> UnkeyedEncodingContainer { FailureEncoder() }
@@ -82,7 +83,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func encode<T>(_ value: T) throws where T: Encodable {
         if let data = value as? Data {
             // special case for data
-#if swift(>=5.7)
+#if swift(>=5.7.2)
             let utf8Maybe = data.withUnsafeBytes({ $0.withMemoryRebound(to: CChar.self, { String(validatingUTF8: $0.baseAddress!) }) })
 #else
             let utf8Maybe = data.withUnsafeBytes({ String(validatingUTF8: $0.bindMemory(to: CChar.self).baseAddress!) })
@@ -97,7 +98,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         }
     }
 
-    /// This ridiculosity is a workaround for the inability of encoders to throw errors in various places. It's still better than fatalError()ing.
+    /// This ridiculously is a workaround for the inability of encoders to throw errors in various places. It's still better than fatalError()ing.
     struct FailureEncoder<K: CodingKey>: Encoder, KeyedEncodingContainerProtocol, UnkeyedEncodingContainer, SingleValueEncodingContainer {
         let codingPath = [CodingKey](), userInfo = [CodingUserInfoKey: Any](), count = 0
         var error: EncodingError { .invalidValue((), .init(codingPath: [], debugDescription: "Plaintext encoding does not support nesting.")) }
@@ -112,7 +113,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         func nestedUnkeyedContainer(forKey: K) -> UnkeyedEncodingContainer { self }
         func superEncoder() -> Encoder { self }
         func superEncoder(forKey: K) -> Encoder { self }
-        func container<K: CodingKey>(keyedBy: K.Type) -> KeyedEncodingContainer<K> { .init(FailureEncoder<K>()) }
+        func container<Key: CodingKey>(keyedBy: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
         func unkeyedContainer() -> UnkeyedEncodingContainer { self }
         func singleValueContainer() -> SingleValueEncodingContainer { self }
     }

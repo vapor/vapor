@@ -1,7 +1,7 @@
 import NIOCore
 
 extension Request {
-    public struct Body: CustomStringConvertible {
+    public struct Body: CustomStringConvertible, Sendable {
         let request: Request
         
         init(_ request: Request) {
@@ -9,7 +9,7 @@ extension Request {
         }
         
         public var data: ByteBuffer? {
-            switch self.request.bodyStorage {
+            switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .collected(let buffer): return buffer
             case .none, .stream: return nil
             }
@@ -23,25 +23,27 @@ extension Request {
             }
         }
         
-        public func drain(_ handler: @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
-            switch self.request.bodyStorage {
+        @preconcurrency public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
+            switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
                 stream.read { (result, promise) in
                     handler(result).cascade(to: promise)
                 }
             case .collected(let buffer):
                 _ = handler(.buffer(buffer))
-                _ = handler(.end)
+                    .map {
+                        handler(.end)
+                    }
             case .none:
                 _ = handler(.end)
             }
         }
         
         public func collect(max: Int? = 1 << 14) -> EventLoopFuture<ByteBuffer?> {
-            switch self.request.bodyStorage {
+            switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
                 return stream.consume(max: max, on: self.request.eventLoop).map { buffer in
-                    self.request.bodyStorage = .collected(buffer)
+                    self.request.bodyStorage.withLockedValue({ $0 = .collected(buffer) })
                     return buffer
                 }
             case .collected(let buffer):

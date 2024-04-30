@@ -1,13 +1,14 @@
-import Foundation
+@preconcurrency import Foundation
 import ConsoleKit
+import NIOConcurrencyHelpers
 
 /// Boots the application's server. Listens for `SIGINT` and `SIGTERM` for graceful shutdown.
 ///
 ///     $ swift run Run serve
 ///     Server starting on http://localhost:8080
 ///
-public final class ServeCommand: Command {
-    public struct Signature: CommandSignature {
+public final class ServeCommand: Command, Sendable {
+    public struct Signature: CommandSignature, Sendable {
         @Option(name: "hostname", short: "H", help: "Set the hostname the server will run on.")
         var hostname: String?
         
@@ -36,16 +37,20 @@ public final class ServeCommand: Command {
     public var help: String {
         return "Begins serving the app over HTTP."
     }
+    
+    struct SendableBox: Sendable {
+        var didShutdown: Bool
+        var running: Application.Running?
+        var signalSources: [DispatchSourceSignal]
+        var server: Server?
+    }
 
-    private var signalSources: [DispatchSourceSignal]
-    private var didShutdown: Bool
-    private var server: Server?
-    private var running: Application.Running?
+    private let box: NIOLockedValueBox<SendableBox>
 
     /// Create a new `ServeCommand`.
     init() {
-        self.signalSources = []
-        self.didShutdown = false
+        let box = SendableBox(didShutdown: false, signalSources: [])
+        self.box = .init(box)
     }
 
     /// See `Command`.
@@ -69,40 +74,48 @@ public final class ServeCommand: Command {
         default: throw Error.incompatibleFlags
         }
         
-        self.server = context.application.server
+        var box = self.box.withLockedValue { $0 }
+        box.server = context.application.server
 
         // allow the server to be stopped or waited for
         let promise = context.application.eventLoopGroup.next().makePromise(of: Void.self)
         context.application.running = .start(using: promise)
-        self.running = context.application.running
+        box.running = context.application.running
 
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
         func makeSignalSource(_ code: Int32) {
+            #if canImport(Darwin)
+            /// https://github.com/swift-server/swift-service-lifecycle/blob/main/Sources/UnixSignals/UnixSignalsSequence.swift#L77-L82
+            signal(code, SIG_IGN)
+            #endif
+            
             let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
             source.setEventHandler {
                 print() // clear ^C
                 promise.succeed(())
             }
             source.resume()
-            self.signalSources.append(source)
-            signal(code, SIG_IGN)
+            box.signalSources.append(source)
         }
         makeSignalSource(SIGTERM)
         makeSignalSource(SIGINT)
+        self.box.withLockedValue { $0 = box }
     }
 
     func shutdown() {
-        self.didShutdown = true
-        self.running?.stop()
-        if let server = self.server {
+        var box = self.box.withLockedValue { $0 }
+        box.didShutdown = true
+        box.running?.stop()
+        if let server = box.server {
             server.shutdown()
         }
-        self.signalSources.forEach { $0.cancel() } // clear refs
-        self.signalSources = []
+        box.signalSources.forEach { $0.cancel() } // clear refs
+        box.signalSources = []
+        self.box.withLockedValue { $0 = box }
     }
     
     deinit {
-        assert(self.didShutdown, "ServeCommand did not shutdown before deinit")
+        assert(self.box.withLockedValue({ $0.didShutdown }), "ServeCommand did not shutdown before deinit")
     }
 }

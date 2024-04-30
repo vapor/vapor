@@ -1,7 +1,7 @@
 import NIOHTTP1
 
 /// A bearer token.
-public struct BearerAuthorization {
+public struct BearerAuthorization: Sendable {
     /// The plaintext token
     public let token: String
 

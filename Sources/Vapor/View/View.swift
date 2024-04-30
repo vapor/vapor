@@ -9,8 +9,10 @@ public struct View: ResponseEncodable {
 
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
         let response = Response()
-        response.headers.contentType = .html
-        response.body = .init(buffer: self.data, byteBufferAllocator: request.byteBufferAllocator)
+        response.responseBox.withLockedValue { box in
+            box.headers.contentType = .html
+            box.body = .init(buffer: self.data, byteBufferAllocator: request.byteBufferAllocator)
+        }
         return request.eventLoop.makeSucceededFuture(response)
     }
 }

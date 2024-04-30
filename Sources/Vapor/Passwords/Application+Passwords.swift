@@ -1,13 +1,15 @@
+import NIOConcurrencyHelpers
+
 extension Application {
     public var passwords: Passwords {
         .init(application: self)
     }
 
-    public struct Passwords {
-        public struct Provider {
-            let run: (Application) -> ()
+    public struct Passwords: Sendable {
+        public struct Provider: Sendable {
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -22,15 +24,20 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(
-            _ makeVerifier: @escaping (Application) -> (PasswordHasher)
+        @preconcurrency public func use(
+            _ makeVerifier: @Sendable @escaping (Application) -> (PasswordHasher)
         ) {
-            self.storage.makeVerifier = makeVerifier
+            self.storage.makeVerifier.withLockedValue { $0 = .init(factory: makeVerifier) }
         }
 
-        final class Storage {
-            var makeVerifier: ((Application) -> PasswordHasher)?
-            init() { }
+        final class Storage: Sendable {
+            struct PasswordsFactory {
+                let factory: (@Sendable (Application) -> PasswordHasher)?
+            }
+            let makeVerifier: NIOLockedValueBox<PasswordsFactory>
+            init() {
+                self.makeVerifier = .init(.init(factory: nil))
+            }
         }
 
         var storage: Storage {

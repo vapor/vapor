@@ -98,7 +98,7 @@ final class HTTPHeaderTests: XCTestCase {
             [.init(value: "foo"), .init(value: "bar", parameter: "baz")],
             [.init(value: "qux", parameter: "quuz")]
         ])
-        XCTAssertEqual(serializer.serialize(), "foo; bar=baz, qux=quuz")
+        XCTAssertEqual(serializer.serialize(), "foo; bar=\"baz\", qux=\"quuz\"")
     }
 
     func testForwarded() throws {
@@ -197,8 +197,15 @@ final class HTTPHeaderTests: XCTestCase {
         ))
         XCTAssertEqual(
             headers.first(name: "Forwarded"),
-            "by=203.0.113.43; for=192.0.2.60; proto=http"
+            "by=\"203.0.113.43\"; for=\"192.0.2.60\"; proto=\"http\""
         )
+    }
+
+    func testXRequestId() throws {
+        var headers = HTTPHeaders()
+        let xRequestId = UUID().uuidString
+        headers.replaceOrAdd(name: .xRequestId, value: xRequestId)
+        XCTAssertEqual(headers.first(name: "X-Request-Id"), xRequestId)
     }
 
     func testContentDisposition() throws {
@@ -219,7 +226,6 @@ final class HTTPHeaderTests: XCTestCase {
                 """
             )
         ])
-        print(headers.cookie!.all.keys)
         XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "0FuTYcHmGw7Bz1G4HiF+EA==")
         XCTAssertEqual(headers.cookie?["vapor-session"]?.sameSite, .lax)
         XCTAssertEqual(headers.cookie?["_ga"]?.string, "GA1.1.500315824.1585154561")
@@ -267,7 +273,7 @@ final class HTTPHeaderTests: XCTestCase {
     func testContentDispositionQuotedFilename() throws {
         var headers = HTTPHeaders()
         headers.contentDisposition = .init(.formData, filename: "foo")
-        XCTAssertEqual(headers.first(name: .contentDisposition), "form-data; filename=foo")
+        XCTAssertEqual(headers.first(name: .contentDisposition), "form-data; filename=\"foo\"")
         headers.contentDisposition = .init(.formData, filename: "foo bar")
         XCTAssertEqual(headers.first(name: .contentDisposition), #"form-data; filename="foo bar""#)
         headers.contentDisposition = .init(.formData, filename: "foo\"bar")
@@ -393,7 +399,7 @@ final class HTTPHeaderTests: XCTestCase {
         var headers = HTTPHeaders()
         
         headers.links = links
-        XCTAssertEqual(headers.first(name: .link), #"<https://localhost/?a=1>; rel=next, <https://localhost/?a=2>; rel=last; custom1=whatever, </?a=-1>; rel=related, </?a=-2>; rel=related"#)
+        XCTAssertEqual(headers.first(name: .link), #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel="related", </?a=-2>; rel="related""#)
     }
     
     /// Test parse and serialize  of `Last-Modified` header
@@ -432,5 +438,43 @@ final class HTTPHeaderTests: XCTestCase {
 
         XCTAssertEqual(cacheControl.serialize(), "immutable")
 
+    }
+    
+    /// Test that multiple same-named headers round-trip through Codable
+    func testCodableMultipleHeadersRountrip() throws {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.withoutEscapingSlashes, .sortedKeys]
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        var headers = HTTPHeaders()
+        headers.add(name: .date, value: "\(Date(timeIntervalSinceReferenceDate: 100.0))")
+        headers.add(name: .date, value: "\(Date(timeIntervalSinceReferenceDate: -100.0))")
+        headers.add(name: .connection, value: "be-strange")
+        
+        let encodedHeaders = try encoder.encode(headers)
+        
+        XCTAssertEqual(String(decoding: encodedHeaders, as: UTF8.self), #"[{"name":"date","value":"2001-01-01 00:01:40 +0000"},{"name":"date","value":"2000-12-31 23:58:20 +0000"},{"name":"connection","value":"be-strange"}]"#)
+        
+        let decodedHeaders = try decoder.decode(HTTPHeaders.self, from: encodedHeaders)
+        
+        XCTAssertEqual(decodedHeaders.count, headers.count)
+        for ((k1, v1), (k2, v2)) in zip(headers, decodedHeaders) {
+            XCTAssertEqual(k1, k2)
+            XCTAssertEqual(v1, v2)
+        }
+    }
+    
+    /// Make sure the old HTTPHeaders encoding can still be decoded
+    func testOldHTTPHeadersEncoding() throws {
+        let decoder = JSONDecoder()
+        let json = #"{"connection":"fun","attention":"none"}"#
+        var headers = HTTPHeaders()
+        
+        XCTAssertNoThrow(headers = try decoder.decode(HTTPHeaders.self, from: Data(json.utf8)))
+        XCTAssertEqual(headers.count, 2)
+        XCTAssertEqual(headers.first(name: "connection"), "fun")
+        XCTAssertEqual(headers.first(name: "attention"), "none")
     }
 }

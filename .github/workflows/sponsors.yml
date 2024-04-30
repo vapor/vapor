@@ -1,50 +1,40 @@
 name: Generate Sponsors README
 on: workflow_dispatch
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Get token
+        id: get-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.PENNY_APP_ID }}
+          private-key: ${{ secrets.PENNY_APP_PRIVATE_KEY }}
 
       - name: Generate Sponsors
         uses: JamesIves/github-sponsors-readme-action@v1
         with:
-          token: ${{ secrets.SPONSORS_PAT }}
+          token: ${{ steps.get-token.outputs.token }}
           file: "README.md"
           minimum: 500
           maximum: 9900
           marker: "backers"
           organization: true
 
-      # Here we can eventually add sponsors too rather than just backers
-
       - name: Commit and create PR
-        uses: peter-evans/create-pull-request@v4
-        with: 
-          token: ${{secrets.SPONSORS_PR_PAT}}
-          commit-message: Update README with new sponsor
-          committer: VaporBot <bot@vapor.codes>
-          branch: new-sponsor
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ steps.get-token.outputs.token }}
+          commit-message: "[skip ci] Update README with new sponsor"
+          committer: "Penny[bot] <360798+penny[bot]@vapor.codes>"
+          author: "Penny[bot] <360798+penny[bot]@vapor.codes>"
+          branch: update-sponsors
           delete-branch: true
-          title: Update README with new Sponsor
+          title: Update README with new sponsor
           body: Update README adding new sponsor
-          labels: no-release-needed
-          team-reviewers: core
-      
-      # We can comment this out if we want to automate approve and merge
-      
-      # - name: Enable Pull Request Automerge
-      #   if: steps.cpr.outputs.pull-request-operation == 'created'
-      #   uses: peter-evans/enable-pull-request-automerge@v2
-      #   with:
-      #     token: ${{ secrets.SPONSORS_PR_PAT }}
-      #     pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-      #     merge-method: merge
-
-      # - name: Auto approve
-      #   if: steps.cpr.outputs.pull-request-operation == 'created'
-      #   uses: juliangruber/approve-pull-request-action@v2
-      #   with:
-      #     github-token: ${{ secrets.SPONSORS_PR_PAT }}
-      #     number: ${{ steps.cpr.outputs.pull-request-number }}
+          labels: no-release-needed,sponsors
+          reviewers: 0xTim

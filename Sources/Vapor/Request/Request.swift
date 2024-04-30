@@ -3,31 +3,61 @@ import NIOCore
 import NIOHTTP1
 import Logging
 import RoutingKit
+import NIOConcurrencyHelpers
 
 /// Represents an HTTP request in an application.
-public final class Request: CustomStringConvertible {
+public final class Request: CustomStringConvertible, Sendable {
     public let application: Application
 
     /// The HTTP method for this request.
     ///
     ///     httpReq.method = .GET
     ///
-    public var method: HTTPMethod
+    public var method: HTTPMethod {
+        get {
+            self.requestBox.withLockedValue { $0.method }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.method = newValue }
+        }
+    }
     
     /// The URL used on this request.
-    public var url: URI
+    public var url: URI {
+        get {
+            self.requestBox.withLockedValue { $0.url }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.url = newValue }
+        }
+    }
     
     /// The version for this HTTP request.
-    public var version: HTTPVersion
+    public var version: HTTPVersion {
+        get {
+            self.requestBox.withLockedValue { $0.version }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.version = newValue }
+        }
+    }
     
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPHeaders
+    public var headers: HTTPHeaders {
+        get {
+            self.requestBox.withLockedValue { $0.headers }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.headers = newValue }
+        }
+    }
     
-    internal var isKeepAlive: Bool
-    
-    /// A uniquely generated ID for each request
+    /// A unique ID for the request.
+    ///
+    /// The request identifier is set to value of the `X-Request-Id` header when present, or to a
+    /// uniquely generated value otherwise.
     public let id: String
     
     // MARK: Metadata
@@ -37,9 +67,16 @@ public final class Request: CustomStringConvertible {
     ///
     ///     req.route?.description // "GET /hello/:name"
     ///
-    public var route: Route?
+    public var route: Route? {
+        get {
+            self.requestBox.withLockedValue { $0.route }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.route = newValue }
+        }
+    }
 
-    /// We try to determine true peer address if load balacer or reversed proxy provided info in headers
+    /// We try to determine true peer address if load balancer or reversed proxy provided info in headers
     ///
     /// Priority of getting value from headers is as following:
     ///
@@ -61,7 +98,7 @@ public final class Request: CustomStringConvertible {
 
     // MARK: Content
 
-    private struct _URLQueryContainer: URLQueryContainer {
+    private struct _URLQueryContainer: URLQueryContainer, Sendable {
         let request: Request
 
         func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
@@ -86,7 +123,7 @@ public final class Request: CustomStringConvertible {
         }
     }
 
-    private struct _ContentContainer: ContentContainer {
+    private struct _ContentContainer: ContentContainer, Sendable {
         let request: Request
 
         var contentType: HTTPMediaType? {
@@ -96,7 +133,7 @@ public final class Request: CustomStringConvertible {
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.request.headers)
-            self.request.bodyStorage = .collected(body)
+            self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
@@ -112,7 +149,7 @@ public final class Request: CustomStringConvertible {
             try content.beforeEncode()
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.request.headers)
-            self.request.bodyStorage = .collected(body)
+            self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
         }
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
@@ -139,21 +176,26 @@ public final class Request: CustomStringConvertible {
     
     /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
     /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
-    public var logger: Logger
+    public var logger: Logger {
+        get {
+            self._logger.withLockedValue { $0 }
+        }
+        set {
+            self._logger.withLockedValue { $0 = newValue }
+        }
+    }
     
     public var body: Body {
         return Body(self)
     }
     
-    internal enum BodyStorage {
+    internal enum BodyStorage: Sendable {
         case none
         case collected(ByteBuffer)
         case stream(BodyStream)
     }
-    
-    internal var bodyStorage: BodyStorage
-    
-    /// Get and set `HTTPCookies` for this `HTTPRequest`
+        
+    /// Get and set `HTTPCookies` for this `Request`
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
         get {
@@ -185,12 +227,49 @@ public final class Request: CustomStringConvertible {
     
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
-    public var parameters: Parameters
+    public var parameters: Parameters {
+        get {
+            self.requestBox.withLockedValue { $0.parameters }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.parameters = newValue }
+        }
+    }
 
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
-    public var storage: Storage
+    public var storage: Storage {
+        get {
+            self._storage.withLockedValue { $0 }
+        }
+        set {
+            self._storage.withLockedValue { $0 = newValue }
+        }
+    }
 
-    public var byteBufferAllocator: ByteBufferAllocator
+    public var byteBufferAllocator: ByteBufferAllocator {
+        get {
+            self.requestBox.withLockedValue { $0.byteBufferAllocator }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.byteBufferAllocator = newValue }
+        }
+    }
+    
+    struct RequestBox: Sendable {
+        var method: HTTPMethod
+        var url: URI
+        var version: HTTPVersion
+        var headers: HTTPHeaders
+        var isKeepAlive: Bool
+        var route: Route?
+        var parameters: Parameters
+        var byteBufferAllocator: ByteBufferAllocator
+    }
+    
+    let requestBox: NIOLockedValueBox<RequestBox>
+    private let _storage: NIOLockedValueBox<Storage>
+    private let _logger: NIOLockedValueBox<Logger>
+    internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     
     public convenience init(
         application: Application,
@@ -233,24 +312,35 @@ public final class Request: CustomStringConvertible {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
-        self.id = UUID().uuidString
-        self.application = application
-        self.method = method
-        self.url = url
-        self.version = version
-        self.headers = headers
+        let requestId = headers.first(name: .xRequestId) ?? UUID().uuidString
+        let bodyStorage: BodyStorage
         if let body = collectedBody {
-            self.bodyStorage = .collected(body)
+            bodyStorage = .collected(body)
         } else {
-            self.bodyStorage = .none
+            bodyStorage = .none
         }
+        
+        var logger = logger
+        logger[metadataKey: "request-id"] = .string(requestId)
+        self._logger = .init(logger)
+        
+        let storageBox = RequestBox(
+            method: method,
+            url: url,
+            version: version,
+            headers: headers,
+            isKeepAlive: true,
+            route: nil,
+            parameters: .init(),
+            byteBufferAllocator: byteBufferAllocator
+        )
+        self.requestBox = .init(storageBox)
+        self.id = requestId
+        self.application = application
+        
         self.remoteAddress = remoteAddress
         self.eventLoop = eventLoop
-        self.parameters = .init()
-        self.storage = .init()
-        self.isKeepAlive = true
-        self.logger = logger
-        self.logger[metadataKey: "request-id"] = .string(id)
-        self.byteBufferAllocator = byteBufferAllocator
+        self._storage = .init(.init())
+        self.bodyStorage = .init(bodyStorage)
     }
 }
