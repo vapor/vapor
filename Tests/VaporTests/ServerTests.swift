@@ -1411,6 +1411,7 @@ final class ServerTests: XCTestCase {
     
     func testConfigurationHasActualPortAfterStart() throws {
         let app = Application(.testing)
+        app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
         defer { app.shutdown() }
         try app.start()
