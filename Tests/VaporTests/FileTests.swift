@@ -20,7 +20,7 @@ final class FileTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running).test(.GET, "/file-stream") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
@@ -104,7 +104,7 @@ final class FileTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running).test(.GET, "/file-stream") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
             let fileData = try Data(contentsOf: URL(fileURLWithPath: #file))
             let digest = SHA256.hash(data: fileData)
             let eTag = res.headers.first(name: "etag")
@@ -126,7 +126,7 @@ final class FileTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running).test(.GET, "/file-stream") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
             let attributes = try FileManager.default.attributesOfItem(atPath: #file)
             let modifiedAt = attributes[.modificationDate] as! Date
             let fileSize = (attributes[.size] as? NSNumber)!.intValue
