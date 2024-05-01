@@ -1,12 +1,12 @@
 import Foundation
 import NIOCore
-import NIOFileSystem
+import _NIOFileSystem
 import NIOHTTP1
 import NIOPosix
 import Logging
 import Crypto
 import NIOConcurrencyHelpers
-import NIOFileSystemFoundationCompat
+import _NIOFileSystemFoundationCompat
 
 extension Request {
     public var fileio: FileIO {
@@ -463,19 +463,19 @@ public struct FileIO: Sendable {
     /// This can be removed once `NIOFileSystem` reaches a stable API.
     public struct FileChunks: AsyncSequence {
         public typealias Element = ByteBuffer
-        private let fileHandle: NIOFileSystem.FileHandleProtocol
-        private let fileChunks: NIOFileSystem.FileChunks
+        private let fileHandle: _NIOFileSystem.FileHandleProtocol
+        private let fileChunks: _NIOFileSystem.FileChunks
 
-        init(fileChunks: NIOFileSystem.FileChunks, fileHandle: some NIOFileSystem.FileHandleProtocol) {
+        init(fileChunks: _NIOFileSystem.FileChunks, fileHandle: some _NIOFileSystem.FileHandleProtocol) {
             self.fileChunks = fileChunks
             self.fileHandle = fileHandle
         }
 
         public struct FileChunksIterator: AsyncIteratorProtocol {
-            private var iterator: NIOFileSystem.FileChunks.AsyncIterator
-            private let fileHandle: NIOFileSystem.FileHandleProtocol
+            private var iterator: _NIOFileSystem.FileChunks.AsyncIterator
+            private let fileHandle: _NIOFileSystem.FileHandleProtocol
 
-            fileprivate init(wrapping iterator: NIOFileSystem.FileChunks.AsyncIterator, fileHandle: some NIOFileSystem.FileHandleProtocol) {
+            fileprivate init(wrapping iterator: _NIOFileSystem.FileChunks.AsyncIterator, fileHandle: some _NIOFileSystem.FileHandleProtocol) {
                 self.iterator = iterator
                 self.fileHandle = fileHandle
             }
@@ -514,7 +514,7 @@ public struct FileIO: Sendable {
         
         let readHandle = try await fileSystem.openFile(forReadingAt: filePath)
         
-        let chunks: NIOFileSystem.FileChunks
+        let chunks: _NIOFileSystem.FileChunks
         
         if let offset {
             if let byteCount {
