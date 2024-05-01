@@ -81,6 +81,11 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                 Task {
                     do {
                         try await stream.callback(channelStream)
+                        // We assert in ChannelResponseBodyStream that either .end or .error gets sent, so once we
+                        // get here the promise can be assumed to already be completed. However, just in case, succeed
+                        // it here anyway. This guarantees we never leave the callback without completing the promise
+                        // one way or the other in release builds.
+                        promise?.succeed()
                     } catch {
                         promise?.fail(error)
                     }
