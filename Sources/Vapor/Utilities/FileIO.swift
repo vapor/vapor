@@ -6,6 +6,7 @@ import NIOPosix
 import Logging
 import Crypto
 import NIOConcurrencyHelpers
+import NIOFileSystemFoundationCompat
 
 extension Request {
     public var fileio: FileIO {
@@ -597,7 +598,7 @@ public struct FileIO: Sendable {
         let eTag: String
 
         if advancedETagComparison {
-            eTag = try await generateETagHash(path: path, lastModified: Date(timeIntervalSince1970: Double(fileInfo.lastDataModificationTime.seconds))).get()
+            eTag = try await generateETagHash(path: path, lastModified: fileInfo.lastDataModificationTime.date).get()
         } else {
             // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
             eTag = "\"\(fileInfo.lastDataModificationTime.seconds)-\(fileInfo.size)\""
@@ -607,7 +608,7 @@ public struct FileIO: Sendable {
         var headers: HTTPHeaders = [:]
 
         // Respond with lastModified header
-        headers.lastModified = HTTPHeaders.LastModified(value: Date(timeIntervalSince1970: Double(fileInfo.lastDataModificationTime.seconds)))
+        headers.lastModified = HTTPHeaders.LastModified(value: fileInfo.lastDataModificationTime.date)
 
         headers.replaceOrAdd(name: .eTag, value: eTag)
 

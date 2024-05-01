@@ -90,8 +90,8 @@ let package = Package(
                 .product(name: "WebSocketKit", package: "websocket-kit"),
                 .product(name: "MultipartKit", package: "multipart-kit"),
                 .product(name: "Atomics", package: "swift-atomics"),
-
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
+                .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
             ],
             swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
         ),
