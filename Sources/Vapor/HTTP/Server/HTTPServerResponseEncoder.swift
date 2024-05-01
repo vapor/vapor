@@ -157,7 +157,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
             self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.succeed(())
         case .error(let error):
-            self.isComplete.store(true, ordering: .relaxed)
+            self.isComplete.store(true, ordering: .sequentiallyConsistent)
             self.contextBox.value.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
             self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.fail(error)
