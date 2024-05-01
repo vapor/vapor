@@ -74,12 +74,16 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                 let channelStream = ChannelResponseBodyStream(
                     context: context,
                     handler: self,
-                    promise: nil,
+                    promise: promise,
                     count: stream.count == -1 ? nil : stream.count
                 )
                 
-                promise?.completeWithTask {
-                    try await stream.callback(channelStream)
+                Task {
+                    do {
+                        try await stream.callback(channelStream)
+                    } catch {
+                        promise?.fail(error)
+                    }
                 }
             }
         }
