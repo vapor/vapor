@@ -674,7 +674,7 @@ public struct FileIO: Sendable {
                 try await stream.write(.end)
                 try await onCompleted(.success(()))
             } catch {
-                try await stream.write(.error(error))
+                try? await stream.write(.error(error))
                 try await onCompleted(.failure(error))
             }
         }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
