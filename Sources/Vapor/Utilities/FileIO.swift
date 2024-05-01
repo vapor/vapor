@@ -571,7 +571,7 @@ public struct FileIO: Sendable {
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool = false,
-        onCompleted: @escaping @Sendable (Result<Void, Error>) -> () = { _ in }
+        onCompleted: @escaping @Sendable (Result<Void, Error>) async throws -> () = { _ in }
     ) async throws -> Response {
         // Get file attributes for this file.
         guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(path)) else {
@@ -659,10 +659,10 @@ public struct FileIO: Sendable {
                     try await stream.writeBuffer(chunk)
                 }
                 try await stream.write(.end)
-                onCompleted(.success(()))
+                try await onCompleted(.success(()))
             } catch {
                 try await stream.write(.error(error))
-                onCompleted(.failure(error))
+                try await onCompleted(.failure(error))
             }
         }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
 
