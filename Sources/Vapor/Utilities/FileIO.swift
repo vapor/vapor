@@ -483,10 +483,15 @@ public struct FileIO: Sendable {
             public mutating func next() async throws -> ByteBuffer? {
                 let chunk = try await iterator.next()
                 if chunk == nil {
+                    // For convenience's sake, close when we hit EOF. Closing on error is left up to the caller.
                     try await fileHandle.close()
                 }
                 return chunk
             }
+        }
+        
+        public func closeHandle() async throws {
+            try await self.fileHandle.close()
         }
 
         public func makeAsyncIterator() -> FileChunksIterator {
@@ -656,8 +661,15 @@ public struct FileIO: Sendable {
         
         response.body = .init(asyncStream: { stream in
             do {
-                for try await chunk in try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount) {
-                    try await stream.writeBuffer(chunk)
+                let chunks = try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount)
+                do {
+                    for try await chunk in chunks {
+                        try await stream.writeBuffer(chunk)
+                    }
+                    try? await chunks.closeHandle()
+                } catch {
+                    try? await chunks.closeHandle()
+                    throw error
                 }
                 try await stream.write(.end)
                 try await onCompleted(.success(()))
