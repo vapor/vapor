@@ -659,8 +659,10 @@ public struct FileIO: Sendable {
                     try await stream.writeBuffer(chunk)
                 }
                 try await stream.write(.end)
+                onCompleted(.success(()))
             } catch {
                 try await stream.write(.error(error))
+                onCompleted(.failure(error))
             }
         }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
 
