@@ -1,5 +1,6 @@
 import Foundation
 import NIOCore
+import _NIOFileSystem
 
 /// Serves static files from a public directory.
 ///
