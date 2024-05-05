@@ -181,12 +181,8 @@ final class AsyncFileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
-            return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+            try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
         
@@ -212,12 +208,8 @@ final class AsyncFileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+            try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
 
@@ -239,12 +231,8 @@ final class AsyncFileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
-            return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+            try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
         
@@ -265,12 +253,8 @@ final class AsyncFileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
-            return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+            try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
         
@@ -291,12 +275,8 @@ final class AsyncFileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
-            return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+            try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
         
@@ -334,7 +314,7 @@ final class AsyncFileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
-            return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true)
+            try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true)
         }
 
         var headers = HTTPHeaders()
