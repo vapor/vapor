@@ -427,7 +427,7 @@ public struct FileIO: Sendable {
         
         if let offset {
             if let byteCount {
-                chunks = readHandle.readChunks(in: offset...(offset+Int64(byteCount)), chunkLength: .bytes(Int64(chunkSize)))
+                chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(Int64(chunkSize)))
             } else {
                 chunks = readHandle.readChunks(in: offset..., chunkLength: .bytes(Int64(chunkSize)))
             }
