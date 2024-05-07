@@ -303,7 +303,7 @@ final class ContentTests: XCTestCase {
 
     func testMultipartEncode() throws {
         struct User: Content {
-            static var defaultContentType: HTTPMediaType = .formData
+            static let defaultContentType: HTTPMediaType = .formData
             var name: String
             var age: Int
             var image: File
@@ -331,7 +331,7 @@ final class ContentTests: XCTestCase {
     
     func testMultiPartEncodeUnicode() throws {
         struct User: Content {
-            static var defaultContentType: HTTPMediaType = .formData
+            static let defaultContentType: HTTPMediaType = .formData
             var name: String
             var age: Int
             var image: File

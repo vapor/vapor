@@ -372,7 +372,7 @@ final class FileTests: XCTestCase {
 
         try await app.test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
             XCTAssertEqual(res.status, .forbidden)
-        }.test(.GET, "Utilities/foo.txt") { res in
+        }.test(.GET, "Utilities/foo.txt") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "bar\n")
         }
@@ -388,7 +388,7 @@ final class FileTests: XCTestCase {
         try await app.test(.GET, "Utilities/") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Root Default</h1>\n")
-        }.test(.GET, "Utilities/SubUtilities/") { res in
+        }.test(.GET, "Utilities/SubUtilities/") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Subdirectory Default</h1>\n")
         }
@@ -404,7 +404,7 @@ final class FileTests: XCTestCase {
         try await app.test(.GET, "Utilities/") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Root Default</h1>\n")
-        }.test(.GET, "Utilities/SubUtilities/") { res in
+        }.test(.GET, "Utilities/SubUtilities/") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Root Default</h1>\n")
         }
