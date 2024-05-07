@@ -215,7 +215,7 @@ final class AsyncFileTests: XCTestCase {
 
         var headers = HTTPHeaders()
         headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .partialContent)
 
             XCTAssertEqual(res.headers.first(name: .contentLength), "1")
