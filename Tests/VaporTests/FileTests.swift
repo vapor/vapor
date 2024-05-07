@@ -86,7 +86,7 @@ final class FileTests: XCTestCase {
         }
 
         try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
-            XCTAssertTrue(res.body.string.isEmpty)
+            XCTAssertEqual(res.status, .internalServerError)
         }
     }
 
