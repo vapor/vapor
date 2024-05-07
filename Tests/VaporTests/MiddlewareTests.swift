@@ -120,7 +120,7 @@ final class MiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         app.middleware.use(fileMiddleware)
         
-        try await app.testable(method: .running(port: 0)).test(.GET, "/foo.txt") { result async in
+        try await app.testable().test(.GET, "/foo.txt") { result in
             XCTAssertEqual(result.status, .ok)
             XCTAssertEqual(result.body.string, "bar\n")
         }
@@ -135,7 +135,7 @@ final class MiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         app.middleware.use(fileMiddleware)
         
-        try await app.testable(method: .running(port: 0)).test(.GET, "/index.html") { result async in
+        try await app.testable().test(.GET, "/index.html") { result in
             XCTAssertEqual(result.status, .ok)
             XCTAssertEqual(result.body.string, "<h1>Subdirectory Default</h1>\n")
         }

@@ -357,7 +357,7 @@ final class FileTests: XCTestCase {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-        try await app.testable(method: .running(port: 0)).test(.GET, "/Utilities/foo%20bar.html") { res async in
+        try await app.test(.GET, "/Utilities/foo%20bar.html") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Hello</h1>\n")
         }
@@ -370,7 +370,7 @@ final class FileTests: XCTestCase {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-        try await app.testable(method: .running(port: 0)).test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
+        try await app.test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
             XCTAssertEqual(res.status, .forbidden)
         }.test(.GET, "Utilities/foo.txt") { res async in
             XCTAssertEqual(res.status, .ok)
@@ -385,7 +385,7 @@ final class FileTests: XCTestCase {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
 
-        try await app.testable(method: .running(port: 0)).test(.GET, "Utilities/") { res async in
+        try await app.test(.GET, "Utilities/") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Root Default</h1>\n")
         }.test(.GET, "Utilities/SubUtilities/") { res async in
@@ -401,7 +401,7 @@ final class FileTests: XCTestCase {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
 
-        try await app.testable(method: .running(port: 0)).test(.GET, "Utilities/") { res async in
+        try await app.test(.GET, "Utilities/") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Root Default</h1>\n")
         }.test(.GET, "Utilities/SubUtilities/") { res async in
