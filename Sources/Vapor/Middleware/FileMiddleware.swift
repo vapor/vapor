@@ -1,10 +1,11 @@
 import Foundation
 import NIOCore
+import _NIOFileSystem
 
 /// Serves static files from a public directory.
 ///
 /// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.
-public final class FileMiddleware: Middleware {
+public final class FileMiddleware: AsyncMiddleware {
     /// The public directory. Guaranteed to end with a slash.
     private let publicDirectory: String
     private let defaultFile: String?
@@ -47,10 +48,10 @@ public final class FileMiddleware: Middleware {
         self.advancedETagComparison = advancedETagComparison
     }
     
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {
-            return request.eventLoop.makeFailedFuture(Abort(.badRequest))
+            throw Abort(.badRequest)
         }
 
         // path must be relative.
@@ -58,51 +59,44 @@ public final class FileMiddleware: Middleware {
 
         // protect against relative paths
         guard !path.contains("../") else {
-            return request.eventLoop.makeFailedFuture(Abort(.forbidden))
+            throw Abort(.forbidden)
         }
 
         // create absolute path
         var absPath = self.publicDirectory + path
-
-        // check if path exists and whether it is a directory
-        var isDir: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: absPath, isDirectory: &isDir) else {
-            return next.respond(to: request)
+        
+        if let fileInfo = try await FileSystem.shared.info(forFileAt: .init(absPath)) {
+            // path exists, check for directory or file
+            if fileInfo.type == .directory {
+                // directory exists, see if we can return a file
+                if absPath.hasSuffix("/") {
+                    // If a directory, check for the default file
+                    if let defaultFile = defaultFile {
+                        if defaultFile.isAbsolute() {
+                            absPath = self.publicDirectory + defaultFile.removeLeadingSlashes()
+                        } else {
+                            absPath = absPath + defaultFile
+                        }
+                        
+                        if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
+                            // If the default file exists, stream it
+                            return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                        }
+                    }
+                } else {
+                    if directoryAction.kind == .redirect {
+                        var redirectUrl = request.url
+                        redirectUrl.path += "/"
+                        return request.redirect(to: redirectUrl.string, redirectType: .permanent)
+                    }
+                }
+            } else {
+                // file exists, stream it
+                return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+            }
         }
         
-        if isDir.boolValue {
-            guard absPath.hasSuffix("/") else {
-                switch directoryAction.kind {
-                case .redirect:                    
-                    var redirectUrl = request.url
-                    redirectUrl.path += "/"
-                    return request.eventLoop.future(
-                        request.redirect(to: redirectUrl.string, redirectType: .permanent)
-                    )
-                case .none:
-                    return next.respond(to: request)
-                }
-            }
-            
-            // If a directory, check for the default file
-            guard let defaultFile = defaultFile else {
-                return next.respond(to: request)
-            }
-            
-            if defaultFile.isAbsolute() {
-                absPath = self.publicDirectory + defaultFile.removeLeadingSlashes()
-            } else {
-                absPath = absPath + defaultFile
-            }
-            
-            // If the default file doesn't exist, pass on request
-            guard FileManager.default.fileExists(atPath: absPath) else {
-                return next.respond(to: request)
-            }
-        }
-
-        // stream the file
-        return request.fileio.streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+        return try await next.respond(to: request)
     }
 
     /// Creates a new `FileMiddleware` for a server contained in an Xcode Project.

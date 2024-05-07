@@ -224,7 +224,7 @@ final class PipelineTests: XCTestCase {
             return ResponseThing(eventLoop: eventLoop)
         }
         
-        try app.test(.GET, "dont-crash") { res in
+        try await app.test(.GET, "dont-crash") { res async in
             XCTAssertEqual(res.status, .ok)
         }
 
@@ -254,7 +254,7 @@ final class PipelineTests: XCTestCase {
             return "OK"
         }
         
-        try app.test(.GET, "dont-crash") { res in
+        try await app.test(.GET, "dont-crash") { res async in
             XCTAssertEqual(res.status, .ok)
         }
 
