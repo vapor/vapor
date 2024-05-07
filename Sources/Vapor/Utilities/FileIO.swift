@@ -94,20 +94,21 @@ public struct FileIO: Sendable {
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         onRead: @Sendable @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
-        guard
-            let attributes = try? FileManager.default.attributesOfItem(atPath: path),
-            let fileSize = attributes[.size] as? NSNumber
-        else {
-            return self.request.eventLoop.makeFailedFuture(Abort(.internalServerError))
+        return self.request.eventLoop.makeFutureWithTask { () -> Int64? in
+            let fileInfo = try await FileSystem.shared.info(forFileAt: .init(path))
+            return fileInfo?.size
+        }.flatMap { fileSize in
+            guard let fileSize = fileSize else {
+                return self.request.eventLoop.makeFailedFuture(Abort(.internalServerError))
+            }
+            return self.read(
+                path: path,
+                fromOffset: 0,
+                byteCount: Int(fileSize),
+                chunkSize: chunkSize,
+                onRead: onRead
+            )
         }
-        return self.read(
-            path: path,
-            fromOffset: 0,
-            byteCount:
-            fileSize.intValue,
-            chunkSize: chunkSize,
-            onRead: onRead
-        )
     }
 
     /// Generates a chunked `Response` for the specified file. This method respects values in

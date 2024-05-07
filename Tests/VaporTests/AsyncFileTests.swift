@@ -3,6 +3,7 @@ import XCTest
 import Vapor
 import NIOCore
 import NIOHTTP1
+import _NIOFileSystem
 import Crypto
 
 final class AsyncFileTests: XCTestCase {
@@ -90,7 +91,7 @@ final class AsyncFileTests: XCTestCase {
         }
     }
 
-    func testSimpleETagHeaders() throws {
+    func testSimpleETagHeaders() async throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -104,12 +105,12 @@ final class AsyncFileTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
-            let attributes = try FileManager.default.attributesOfItem(atPath: #file)
-            let modifiedAt = attributes[.modificationDate] as! Date
-            let fileSize = (attributes[.size] as? NSNumber)!.intValue
-            let fileETag = "\"\(Int(modifiedAt.timeIntervalSince1970))-\(fileSize)\""
-
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
+            guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(#file)) else {
+                XCTFail("Missing File Info")
+                return
+            }
+            let fileETag = "\"\(Int(fileInfo.lastDataModificationTime.date.timeIntervalSince1970))-\(fileInfo.size)\""
             XCTAssertEqual(res.headers.first(name: .eTag), fileETag)
         }
     }
@@ -293,19 +294,23 @@ final class AsyncFileTests: XCTestCase {
     }
     
     func testFileWrite() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-        
         let data = "Hello"
         let path = "/tmp/fileio_write.txt"
         
-        try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
-        defer { try? FileManager.default.removeItem(atPath: path) }
-        
-        let result = try String(contentsOfFile: path)
-        XCTAssertEqual(result, data)
+        do {
+            let app = Application(.testing)
+            defer { app.shutdown() }
+            
+            let request = Request(application: app, on: app.eventLoopGroup.next())
+            
+            try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
+            
+            let result = try String(contentsOfFile: path)
+            XCTAssertEqual(result, data)
+        } catch {
+            try await FileSystem.shared.removeItem(at: .init(path))
+            throw error
+        }
     }
     
     // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
