@@ -66,33 +66,29 @@ public final class FileMiddleware: AsyncMiddleware {
         var absPath = self.publicDirectory + path
         
         if let fileInfo = try await FileSystem.shared.info(forFileAt: .init(absPath)) {
+            // path exists, check for directory or file
             if fileInfo.type == .directory {
                 // directory exists, see if we can return a file
-                guard absPath.hasSuffix("/") else {
-                    switch directoryAction.kind {
-                    case .redirect:
+                if absPath.hasSuffix("/") {
+                    // If a directory, check for the default file
+                    if let defaultFile = defaultFile {
+                        if defaultFile.isAbsolute() {
+                            absPath = self.publicDirectory + defaultFile.removeLeadingSlashes()
+                        } else {
+                            absPath = absPath + defaultFile
+                        }
+                        
+                        if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
+                            // If the default file exists, stream it
+                            return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                        }
+                    }
+                } else {
+                    if directoryAction.kind == .redirect {
                         var redirectUrl = request.url
                         redirectUrl.path += "/"
                         return request.redirect(to: redirectUrl.string, redirectType: .permanent)
-                    case .none:
-                        return try await next.respond(to: request)
                     }
-                }
-                
-                // If a directory, check for the default file
-                guard let defaultFile = defaultFile else {
-                    return try await next.respond(to: request)
-                }
-                
-                if defaultFile.isAbsolute() {
-                    absPath = self.publicDirectory + defaultFile.removeLeadingSlashes()
-                } else {
-                    absPath = absPath + defaultFile
-                }
-                
-                if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
-                    // If the default file exists, stream it
-                    return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
                 }
             } else {
                 // file exists, stream it
