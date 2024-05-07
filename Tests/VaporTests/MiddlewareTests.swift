@@ -126,7 +126,7 @@ final class MiddlewareTests: XCTestCase {
         }
     }
     
-    func testFileMiddlewareFromBundleSubfolder() throws {
+    func testFileMiddlewareFromBundleSubfolder() async throws {
         var fileMiddleware: FileMiddleware!
         
         XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities"), "FileMiddleware instantiation from Bundle should not fail")
@@ -135,7 +135,7 @@ final class MiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         app.middleware.use(fileMiddleware)
         
-        try app.testable().test(.GET, "/index.html") { result in
+        try await app.testable().test(.GET, "/index.html") { result in
             XCTAssertEqual(result.status, .ok)
             XCTAssertEqual(result.body.string, "<h1>Subdirectory Default</h1>\n")
         }
