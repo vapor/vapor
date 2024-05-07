@@ -6,7 +6,7 @@ import NIOHTTP1
 import _NIOFileSystem
 import Crypto
 
-final class AsyncFileTests: XCTestCase {
+final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     func testStreamFile() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -52,8 +52,8 @@ final class AsyncFileTests: XCTestCase {
         app.get("file-stream") { req -> Response in
             var tmpPath: String
             repeat {
-                tmpPath = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
-            } while (FileManager.default.fileExists(atPath: tmpPath))
+                tmpPath = try await FileSystem.shared.temporaryDirectory.appending(UUID().uuidString).string
+            } while try await self.fileExists(at: tmpPath)
 
             return try await req.fileio.asyncStreamFile(at: tmpPath, advancedETagComparison: true) { result in
                 do {
@@ -67,6 +67,10 @@ final class AsyncFileTests: XCTestCase {
         try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
             XCTAssertTrue(res.body.string.isEmpty)
         }
+    }
+    
+    private func fileExists(at path: String) async throws -> Bool {
+        return try await FileSystem.shared.info(forFileAt: .init(path)) != nil
     }
 
     func testAdvancedETagHeaders() throws {
