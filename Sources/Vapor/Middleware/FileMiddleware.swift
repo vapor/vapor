@@ -65,38 +65,37 @@ public final class FileMiddleware: AsyncMiddleware {
         // create absolute path
         var absPath = self.publicDirectory + path
         
-        if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
-            // file exists, stream it
-            return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
-        }
-        
-        let directoryInfo = try? await FileSystem.shared.openDirectory(atPath: .init(absPath))
-        if directoryInfo != nil {
-            // directory exists, see if we can return a file
-            guard absPath.hasSuffix("/") else {
-                switch directoryAction.kind {
-                case .redirect:
-                    var redirectUrl = request.url
-                    redirectUrl.path += "/"
-                    return request.redirect(to: redirectUrl.string, redirectType: .permanent)
-                case .none:
+        if let fileInfo = try await FileSystem.shared.info(forFileAt: .init(absPath)) {
+            if fileInfo.type == .directory {
+                // directory exists, see if we can return a file
+                guard absPath.hasSuffix("/") else {
+                    switch directoryAction.kind {
+                    case .redirect:
+                        var redirectUrl = request.url
+                        redirectUrl.path += "/"
+                        return request.redirect(to: redirectUrl.string, redirectType: .permanent)
+                    case .none:
+                        return try await next.respond(to: request)
+                    }
+                }
+                
+                // If a directory, check for the default file
+                guard let defaultFile = defaultFile else {
                     return try await next.respond(to: request)
                 }
-            }
-            
-            // If a directory, check for the default file
-            guard let defaultFile = defaultFile else {
-                return try await next.respond(to: request)
-            }
-            
-            if defaultFile.isAbsolute() {
-                absPath = self.publicDirectory + defaultFile.removeLeadingSlashes()
+                
+                if defaultFile.isAbsolute() {
+                    absPath = self.publicDirectory + defaultFile.removeLeadingSlashes()
+                } else {
+                    absPath = absPath + defaultFile
+                }
+                
+                if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
+                    // If the default file exists, stream it
+                    return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                }
             } else {
-                absPath = absPath + defaultFile
-            }
-            
-            if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
-                // If the default file exists, stream it
+                // file exists, stream it
                 return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
             }
         }
