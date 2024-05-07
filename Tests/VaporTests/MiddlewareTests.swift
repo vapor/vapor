@@ -111,7 +111,7 @@ final class MiddlewareTests: XCTestCase {
         }
     }
     
-    func testFileMiddlewareFromBundle() throws {
+    func testFileMiddlewareFromBundle() async throws {
         var fileMiddleware: FileMiddleware!
         
         XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/"), "FileMiddleware instantiation from Bundle should not fail")

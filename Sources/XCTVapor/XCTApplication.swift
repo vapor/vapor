@@ -261,7 +261,7 @@ extension XCTApplicationTester {
             let response = try await self.performTest(request: request)
             try await afterResponse(response)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(String(reflecting: error))", file: file, line: line)
             throw error
         }
         return self
@@ -290,7 +290,7 @@ extension XCTApplicationTester {
             let response = try self.performTest(request: request)
             try afterResponse(response)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(String(reflecting: error))", file: file, line: line)
             throw error
         }
         return self
@@ -315,7 +315,7 @@ extension XCTApplicationTester {
         do {
             return try await self.performTest(request: request)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(String(reflecting: error))", file: file, line: line)
             throw error
         }
     }
@@ -340,7 +340,7 @@ extension XCTApplicationTester {
         do {
             return try self.performTest(request: request)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(String(reflecting: error))", file: file, line: line)
             throw error
         }
     }
