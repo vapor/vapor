@@ -106,7 +106,6 @@ public struct FileIO: Sendable {
                 onRead: onRead
             ).get()
         }
-        }
     }
 
     /// Generates a chunked `Response` for the specified file. This method respects values in
