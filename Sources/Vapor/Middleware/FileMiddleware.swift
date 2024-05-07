@@ -64,14 +64,15 @@ public final class FileMiddleware: AsyncMiddleware {
 
         // create absolute path
         var absPath = self.publicDirectory + path
-
-        // check if path exists and whether it is a directory
-        var isDir: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: absPath, isDirectory: &isDir) else {
-            return try await next.respond(to: request)
+        
+        if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
+            // file exists, stream it
+            return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
         }
         
-        if isDir.boolValue {
+        let directoryInfo = try? await FileSystem.shared.openDirectory(atPath: .init(absPath))
+        if directoryInfo != nil {
+            // directory exists, see if we can return a file
             guard absPath.hasSuffix("/") else {
                 switch directoryAction.kind {
                 case .redirect:
@@ -94,14 +95,13 @@ public final class FileMiddleware: AsyncMiddleware {
                 absPath = absPath + defaultFile
             }
             
-            // If the default file doesn't exist, pass on request
-            guard FileManager.default.fileExists(atPath: absPath) else {
-                return try await next.respond(to: request)
+            if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
+                // If the default file exists, stream it
+                return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
             }
         }
-
-        // stream the file
-        return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+        
+        return try await next.respond(to: request)
     }
 
     /// Creates a new `FileMiddleware` for a server contained in an Xcode Project.
