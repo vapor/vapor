@@ -50,10 +50,10 @@ public final class ErrorMiddleware: Middleware {
                     buffer: try JSONEncoder().encodeAsByteBuffer(ErrorResponse(error: true, reason: reason), allocator: req.byteBufferAllocator),
                     byteBufferAllocator: req.byteBufferAllocator
                 )
-                headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
+                headers.contentType = .json
             } catch {
                 body = .init(string: "Oops: \(String(describing: error))\nWhile encoding error: \(reason)", byteBufferAllocator: req.byteBufferAllocator)
-                headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
+                headers.contentType = .plainText
             }
             
             // create a Response with appropriate status
