@@ -94,20 +94,18 @@ public struct FileIO: Sendable {
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         onRead: @Sendable @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
-        return self.request.eventLoop.makeFutureWithTask { () -> Int64? in
-            let fileInfo = try await FileSystem.shared.info(forFileAt: .init(path))
-            return fileInfo?.size
-        }.flatMap { fileSize in
-            guard let fileSize = fileSize else {
-                return self.request.eventLoop.makeFailedFuture(Abort(.internalServerError))
+        self.request.eventLoop.makeFutureWithTask {
+            guard let fileSize = try await FileSystem.shared.info(forFileAt: .init(path))?.size else {
+                throw Abort(.internalServerError)
             }
-            return self.read(
+            try await self.read(
                 path: path,
                 fromOffset: 0,
                 byteCount: Int(fileSize),
                 chunkSize: chunkSize,
                 onRead: onRead
-            )
+            ).get()
+        }
         }
     }
 
