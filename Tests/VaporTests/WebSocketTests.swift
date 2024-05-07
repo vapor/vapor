@@ -56,6 +56,7 @@ final class WebSocketTests: XCTestCase {
             ws.close(promise: nil)
         }
 
+        app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
 
         try app.start()
