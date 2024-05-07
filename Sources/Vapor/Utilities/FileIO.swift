@@ -484,7 +484,7 @@ public struct FileIO: Sendable {
     ) async throws -> Response {
         // Get file attributes for this file.
         guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(path)) else {
-            return Response(status: .internalServerError)
+            throw Abort(.internalServerError)
         }
 
         let contentRange: HTTPHeaders.Range?
@@ -497,8 +497,7 @@ public struct FileIO: Sendable {
         } else if request.headers.contains(name: .range) {
             // Range header was supplied but could not be parsed i.e. it was invalid
             request.logger.debug("Range header was provided in request but was invalid")
-            let response = Response(status: .badRequest)
-            return response
+            throw Abort(.badRequest)
         } else {
             contentRange = nil
         }
@@ -542,8 +541,7 @@ public struct FileIO: Sendable {
                     response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
                     (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: Int(fileInfo.size), logger: request.logger)
                 } catch {
-                    let response = Response(status: .badRequest)
-                    return response
+                    throw Abort(.badRequest)
                 }
             } else {
                 offset = 0
