@@ -245,7 +245,7 @@ final class FileTests: XCTestCase {
 
         var headers = HTTPHeaders()
         headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .partialContent)
 
             XCTAssertEqual(res.headers.first(name: .contentLength), "1")
@@ -350,27 +350,27 @@ final class FileTests: XCTestCase {
         XCTAssertEqual(result, data)
     }
 
-    func testPercentDecodedFilePath() throws {
+    func testPercentDecodedFilePath() async throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-        try app.test(.GET, "/Utilities/foo%20bar.html") { res in
+        try await app.test(.GET, "/Utilities/foo%20bar.html") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Hello</h1>\n")
         }
     }
 
-    func testPercentDecodedRelativePath() throws {
+    func testPercentDecodedRelativePath() async throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-        try app.test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res in
+        try await app.test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
             XCTAssertEqual(res.status, .forbidden)
         }.test(.GET, "Utilities/foo.txt") { res in
             XCTAssertEqual(res.status, .ok)
@@ -378,14 +378,14 @@ final class FileTests: XCTestCase {
         }
     }
     
-    func testDefaultFileRelative() throws {
+    func testDefaultFileRelative() async throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
 
-        try app.test(.GET, "Utilities/") { res in
+        try await app.test(.GET, "Utilities/") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Root Default</h1>\n")
         }.test(.GET, "Utilities/SubUtilities/") { res in
@@ -394,14 +394,14 @@ final class FileTests: XCTestCase {
         }
     }
     
-    func testDefaultFileAbsolute() throws {
+    func testDefaultFileAbsolute() async throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
 
-        try app.test(.GET, "Utilities/") { res in
+        try await app.test(.GET, "Utilities/") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Root Default</h1>\n")
         }.test(.GET, "Utilities/SubUtilities/") { res in

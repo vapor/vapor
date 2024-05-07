@@ -217,6 +217,7 @@ extension XCTApplicationTester {
         )
     }
 
+    @available(*, noasync, message: "Use the async method instead.")
     @discardableResult
     public func test(
         _ method: HTTPMethod,

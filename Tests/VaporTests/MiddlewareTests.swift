@@ -120,7 +120,7 @@ final class MiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         app.middleware.use(fileMiddleware)
         
-        try app.testable().test(.GET, "/foo.txt") { result in
+        try await app.testable().test(.GET, "/foo.txt") { result in
             XCTAssertEqual(result.status, .ok)
             XCTAssertEqual(result.body.string, "bar\n")
         }
