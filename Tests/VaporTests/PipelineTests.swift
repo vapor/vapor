@@ -10,7 +10,7 @@ final class PipelineTests: XCTestCase {
     var app: Application!
     
     override func setUp() async throws {
-        app = await Application(.testing)
+        app = try await Application.make(.testing)
     }
     
     override func tearDown() async throws {
@@ -69,7 +69,7 @@ final class PipelineTests: XCTestCase {
     }
 
     func testAsyncEchoHandlers() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
         
         

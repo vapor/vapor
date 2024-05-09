@@ -7,7 +7,7 @@ import NIOPosix
 
 final class AsyncWebSocketTests: XCTestCase {
     func testWebSocketClient() async throws {
-        let server = await Application(.testing)
+        let server = try await Application.make(.testing)
 
         server.http.server.configuration.port = 0
 
@@ -47,7 +47,7 @@ final class AsyncWebSocketTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/1997
     func testWebSocket404() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.http.server.configuration.port = 0
@@ -80,7 +80,7 @@ final class AsyncWebSocketTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/2009
     func testWebSocketServer() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
         app.webSocket("foo") { req, ws in
             ws.send("foo")
@@ -114,7 +114,7 @@ final class AsyncWebSocketTests: XCTestCase {
     }
 
     func testManualUpgradeToWebSocket() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.http.server.configuration.port = 0

@@ -319,7 +319,7 @@ final class ServerTests: XCTestCase {
         /// To regenerate, copy the above and run `% pbpaste | gzip | base64`. To verify, run `% pbpaste | base64 -d | gzip -d` instead.
         let compressedPayload = ByteBuffer(base64String: "H4sIANRAImYAA6tWSs7PLShKLS5OTVGyUohWyk6tBNJKZYk5palKOgqj/FH+KH+UP8of5RPmx9YCAMfjVAhQBgAA")!
         
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
         
         app.http.server.configuration.hostname = "127.0.0.1"
@@ -423,7 +423,7 @@ final class ServerTests: XCTestCase {
         /// To regenerate, copy the above and run `% pbpaste | gzip | base64`. To verify, run `% pbpaste | base64 -d | gzip -d` instead.
         let compressedPayload = ByteBuffer(base64String: "H4sIANRAImYAA6tWSs7PLShKLS5OTVGyUohWyk6tBNJKZYk5palKOgqj/FH+KH+UP8of5RPmx9YCAMfjVAhQBgAA")!
         
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
         
         app.http.server.configuration.hostname = "127.0.0.1"
@@ -532,7 +532,7 @@ final class ServerTests: XCTestCase {
     func testHTTP1ResponseDecompression() async throws {
         let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
         
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
         
         app.http.server.configuration.hostname = "127.0.0.1"
@@ -600,7 +600,7 @@ final class ServerTests: XCTestCase {
         
         let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
         
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
         
         app.http.server.configuration.hostname = "127.0.0.1"

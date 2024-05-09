@@ -19,7 +19,7 @@ final class AsyncRouteTests: XCTestCase {
             }
         }
 
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.routes.get("foo") { req -> IntOrString in
@@ -44,7 +44,7 @@ final class AsyncRouteTests: XCTestCase {
             var name: String
         }
 
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.post("users") { req async throws -> Response in
@@ -65,7 +65,7 @@ final class AsyncRouteTests: XCTestCase {
     }
 
     func testWebsocketUpgrade() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let testMarkerHeaderKey = "TestMarker"

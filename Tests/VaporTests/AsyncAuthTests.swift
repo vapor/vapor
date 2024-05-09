@@ -21,7 +21,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.routes.grouped([
@@ -63,7 +63,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.routes.grouped([
@@ -104,7 +104,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.routes.grouped([
@@ -142,7 +142,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let redirectMiddleware = Test.redirectMiddleware { req -> String in
@@ -199,7 +199,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.routes.grouped([

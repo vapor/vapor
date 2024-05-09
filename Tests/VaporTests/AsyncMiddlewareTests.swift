@@ -29,7 +29,7 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let store = OrderStore()
@@ -48,7 +48,7 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testPrependingMiddleware() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let store = OrderStore()
@@ -70,7 +70,7 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testCORSMiddlewareVariedByRequestOrigin() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.grouped(
@@ -89,7 +89,7 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testCORSMiddlewareNoVariationByRequestOriginAllowed() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.grouped(

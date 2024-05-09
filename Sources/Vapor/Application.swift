@@ -159,7 +159,7 @@ public final class Application: Sendable {
         self.asyncCommands.use(RoutesCommand(), as: "routes")
     }
     
-    public static func makeApplication(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton) async throws -> Application {
+    public static func make(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton) async throws -> Application {
         let app = Application(environment, eventLoopGroupProvider, async: true)
         await DotEnvFile.load(for: app.environment, fileio: app.fileio, logger: app.logger)
         return app

@@ -83,7 +83,7 @@ final class AsyncSessionTests: XCTestCase {
     }
     
     func testInvalidCookie() async throws {
-        let app = await Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         // Configure sessions.
