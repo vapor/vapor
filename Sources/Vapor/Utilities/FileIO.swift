@@ -1,11 +1,12 @@
 import Foundation
 import NIOCore
-import NIOFileSystem
+import _NIOFileSystem
 import NIOHTTP1
 import NIOPosix
 import Logging
 import Crypto
 import NIOConcurrencyHelpers
+import _NIOFileSystemFoundationCompat
 
 extension Request {
     public var fileio: FileIO {
@@ -93,20 +94,18 @@ public struct FileIO: Sendable {
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         onRead: @Sendable @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
-        guard
-            let attributes = try? FileManager.default.attributesOfItem(atPath: path),
-            let fileSize = attributes[.size] as? NSNumber
-        else {
-            return self.request.eventLoop.makeFailedFuture(Abort(.internalServerError))
+        self.request.eventLoop.makeFutureWithTask {
+            guard let fileSize = try await FileSystem.shared.info(forFileAt: .init(path))?.size else {
+                throw Abort(.internalServerError)
+            }
+            try await self.read(
+                path: path,
+                fromOffset: 0,
+                byteCount: Int(fileSize),
+                chunkSize: chunkSize,
+                onRead: onRead
+            ).get()
         }
-        return self.read(
-            path: path,
-            fromOffset: 0,
-            byteCount:
-            fileSize.intValue,
-            chunkSize: chunkSize,
-            onRead: onRead
-        )
     }
 
     /// Generates a chunked `Response` for the specified file. This method respects values in
@@ -231,7 +230,7 @@ public struct FileIO: Sendable {
     /// will be used. This method will also set the `"Content-Type"` header
     /// automatically if an appropriate `MediaType` can be found for the file's suffix.
     ///
-    ///     router.get("file-stream") { req in
+    ///     app.get("file-stream") { req in
     ///         return req.fileio.streamFile(at: "/path/to/file.txt")
     ///     }
     ///
@@ -250,104 +249,8 @@ public struct FileIO: Sendable {
         onCompleted: @escaping @Sendable (Result<Void, Error>) -> () = { _ in }
     ) -> EventLoopFuture<Response> {
         // Get file attributes for this file.
-        guard
-            let attributes = try? FileManager.default.attributesOfItem(atPath: path),
-            let modifiedAt = attributes[.modificationDate] as? Date,
-            let fileSize = (attributes[.size] as? NSNumber)?.intValue
-        else {
-            return request.eventLoop.makeSucceededFuture(Response(status: .internalServerError))
-        }
-
-        let contentRange: HTTPHeaders.Range?
-        if let rangeFromHeaders = request.headers.range {
-            if rangeFromHeaders.unit == .bytes && rangeFromHeaders.ranges.count == 1 {
-                contentRange = rangeFromHeaders
-            } else {
-                contentRange = nil
-            }
-        } else if request.headers.contains(name: .range) {
-            // Range header was supplied but could not be parsed i.e. it was invalid
-            request.logger.debug("Range header was provided in request but was invalid")
-            let response = Response(status: .badRequest)
-            return request.eventLoop.makeSucceededFuture(response)
-        } else {
-            contentRange = nil
-        }
-
-        var eTagFuture: EventLoopFuture<String>
-
-        if advancedETagComparison {
-            eTagFuture = generateETagHash(path: path, lastModified: modifiedAt)
-        } else {
-            // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
-            eTagFuture = request.eventLoop.makeSucceededFuture("\"\(modifiedAt.timeIntervalSince1970)-\(fileSize)\"")
-        }
-
-        return eTagFuture.map { fileETag in
-            // Create empty headers array.
-            var headers: HTTPHeaders = [:]
-
-            // Respond with lastModified header
-            headers.lastModified = HTTPHeaders.LastModified(value: modifiedAt)
-
-            headers.replaceOrAdd(name: .eTag, value: fileETag)
-
-            // Check if file has been cached already and return NotModified response if the etags match
-            if fileETag == request.headers.first(name: .ifNoneMatch) {
-                // Per RFC 9110 here: https://www.rfc-editor.org/rfc/rfc9110.html#status.304
-                // and here: https://www.rfc-editor.org/rfc/rfc9110.html#name-content-encoding
-                // A 304 response MUST include the ETag header and a Content-Length header matching what the original resource's content length would have been were this a 200 response.
-                headers.replaceOrAdd(name: .contentLength, value: fileSize.description)
-                return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
-            }
-
-            // Create the HTTP response.
-            let response = Response(status: .ok, headers: headers)
-            let offset: Int64
-            let byteCount: Int
-            if let contentRange = contentRange {
-                response.status = .partialContent
-                response.headers.add(name: .accept, value: contentRange.unit.serialize())
-                if let firstRange = contentRange.ranges.first {
-                    do {
-                        let range = try firstRange.asResponseContentRange(limit: fileSize)
-                        response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
-                        (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: fileSize, logger: request.logger)
-                    } catch {
-                        let response = Response(status: .badRequest)
-                        return response
-                    }
-                } else {
-                    offset = 0
-                    byteCount = fileSize
-                }
-            } else {
-                offset = 0
-                byteCount = fileSize
-            }
-            // Set Content-Type header based on the media type
-            // Only set Content-Type if file not modified and returned above.
-            if
-                let fileExtension = path.components(separatedBy: ".").last,
-                let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
-            {
-                response.headers.contentType = type
-            }
-            response.body = .init(stream: { stream in
-                self.read(path: path, fromOffset: offset, byteCount: byteCount, chunkSize: chunkSize) { chunk in
-                    return stream.write(.buffer(chunk))
-                }.whenComplete { result in
-                    switch result {
-                    case .failure(let error):
-                        stream.write(.error(error), promise: nil)
-                    case .success:
-                        stream.write(.end, promise: nil)
-                    }
-                    onCompleted(result)
-                }
-            }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
-
-            return response
+        self.request.eventLoop.makeFutureWithTask {
+            try await self.asyncStreamFile(at: path, chunkSize: chunkSize, mediaType: mediaType, advancedETagComparison: advancedETagComparison, onCompleted: onCompleted)
         }
     }
 
@@ -462,19 +365,19 @@ public struct FileIO: Sendable {
     /// This can be removed once `NIOFileSystem` reaches a stable API.
     public struct FileChunks: AsyncSequence {
         public typealias Element = ByteBuffer
-        private let fileHandle: NIOFileSystem.FileHandleProtocol
-        private let fileChunks: NIOFileSystem.FileChunks
+        private let fileHandle: _NIOFileSystem.FileHandleProtocol
+        private let fileChunks: _NIOFileSystem.FileChunks
 
-        init(fileChunks: NIOFileSystem.FileChunks, fileHandle: some NIOFileSystem.FileHandleProtocol) {
+        init(fileChunks: _NIOFileSystem.FileChunks, fileHandle: some _NIOFileSystem.FileHandleProtocol) {
             self.fileChunks = fileChunks
             self.fileHandle = fileHandle
         }
 
         public struct FileChunksIterator: AsyncIteratorProtocol {
-            private var iterator: NIOFileSystem.FileChunks.AsyncIterator
-            private let fileHandle: NIOFileSystem.FileHandleProtocol
+            private var iterator: _NIOFileSystem.FileChunks.AsyncIterator
+            private let fileHandle: _NIOFileSystem.FileHandleProtocol
 
-            fileprivate init(wrapping iterator: NIOFileSystem.FileChunks.AsyncIterator, fileHandle: some NIOFileSystem.FileHandleProtocol) {
+            fileprivate init(wrapping iterator: _NIOFileSystem.FileChunks.AsyncIterator, fileHandle: some _NIOFileSystem.FileHandleProtocol) {
                 self.iterator = iterator
                 self.fileHandle = fileHandle
             }
@@ -482,10 +385,15 @@ public struct FileIO: Sendable {
             public mutating func next() async throws -> ByteBuffer? {
                 let chunk = try await iterator.next()
                 if chunk == nil {
+                    // For convenience's sake, close when we hit EOF. Closing on error is left up to the caller.
                     try await fileHandle.close()
                 }
                 return chunk
             }
+        }
+        
+        public func closeHandle() async throws {
+            try await self.fileHandle.close()
         }
 
         public func makeAsyncIterator() -> FileChunksIterator {
@@ -505,12 +413,25 @@ public struct FileIO: Sendable {
     /// - returns: `FileChunks` containing the file data chunks.
     public func readFile(
         at path: String,
-        chunkSize: Int = NonBlockingFileIO.defaultChunkSize
+        chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
+        offset: Int64? = nil,
+        byteCount: Int? = nil
     ) async throws -> FileChunks {
         let filePath = FilePath(path)
         
         let readHandle = try await fileSystem.openFile(forReadingAt: filePath)
-        let chunks = readHandle.readChunks(chunkLength: .bytes(Int64(chunkSize)))
+        
+        let chunks: _NIOFileSystem.FileChunks
+        
+        if let offset {
+            if let byteCount {
+                chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(Int64(chunkSize)))
+            } else {
+                chunks = readHandle.readChunks(in: offset..., chunkLength: .bytes(Int64(chunkSize)))
+            }
+        } else {
+            chunks = readHandle.readChunks(chunkLength: .bytes(Int64(chunkSize)))
+        }
 
         return FileChunks(fileChunks: chunks, fileHandle: readHandle)
     }
@@ -530,6 +451,135 @@ public struct FileIO: Sendable {
             try? fd.close()
         }
         try await self.io.write(fileHandle: fd, buffer: buffer)
+    }
+    
+    /// Generates a chunked `Response` for the specified file. This method respects values in
+    /// the `"ETag"` header and is capable of responding `304 Not Modified` if the file in question
+    /// has not been modified since last served. If `advancedETagComparison` is set to true,
+    /// the response will have its ETag field set to a byte-by-byte hash of the requested file. If set to false, a simple ETag consisting of the last modified date and file size
+    /// will be used. This method will also set the `"Content-Type"` header
+    /// automatically if an appropriate `MediaType` can be found for the file's suffix.
+    ///
+    ///     app.get("file-stream") { req in
+    ///         return req.fileio.asyncStreamFile(at: "/path/to/file.txt")
+    ///     }
+    ///
+    /// Async equivalent of ``streamFile(at:chunkSize:mediaType:advancedETagComparison:onCompleted:)`` using Swift Concurrency
+    /// functions under the hood
+    ///
+    /// - parameters:
+    ///     - path: Path to file on the disk.
+    ///     - chunkSize: Maximum size for the file data chunks.
+    ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
+    ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
+    ///     - onCompleted: Closure to be run on completion of stream.
+    /// - returns: A `200 OK` response containing the file stream and appropriate headers.
+    public func asyncStreamFile(
+        at path: String,
+        chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
+        mediaType: HTTPMediaType? = nil,
+        advancedETagComparison: Bool = false,
+        onCompleted: @escaping @Sendable (Result<Void, Error>) async throws -> () = { _ in }
+    ) async throws -> Response {
+        // Get file attributes for this file.
+        guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(path)) else {
+            throw Abort(.internalServerError)
+        }
+
+        let contentRange: HTTPHeaders.Range?
+        if let rangeFromHeaders = request.headers.range {
+            if rangeFromHeaders.unit == .bytes && rangeFromHeaders.ranges.count == 1 {
+                contentRange = rangeFromHeaders
+            } else {
+                contentRange = nil
+            }
+        } else if request.headers.contains(name: .range) {
+            // Range header was supplied but could not be parsed i.e. it was invalid
+            request.logger.debug("Range header was provided in request but was invalid")
+            throw Abort(.badRequest)
+        } else {
+            contentRange = nil
+        }
+
+        let eTag: String
+
+        if advancedETagComparison {
+            eTag = try await generateETagHash(path: path, lastModified: fileInfo.lastDataModificationTime.date).get()
+        } else {
+            // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
+            eTag = "\"\(fileInfo.lastDataModificationTime.seconds)-\(fileInfo.size)\""
+        }
+        
+        // Create empty headers array.
+        var headers: HTTPHeaders = [:]
+
+        // Respond with lastModified header
+        headers.lastModified = HTTPHeaders.LastModified(value: fileInfo.lastDataModificationTime.date)
+
+        headers.replaceOrAdd(name: .eTag, value: eTag)
+
+        // Check if file has been cached already and return NotModified response if the etags match
+        if eTag == request.headers.first(name: .ifNoneMatch) {
+            // Per RFC 9110 here: https://www.rfc-editor.org/rfc/rfc9110.html#status.304
+            // and here: https://www.rfc-editor.org/rfc/rfc9110.html#name-content-encoding
+            // A 304 response MUST include the ETag header and a Content-Length header matching what the original resource's content length would have been were this a 200 response.
+            headers.replaceOrAdd(name: .contentLength, value: fileInfo.size.description)
+            return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
+        }
+
+        // Create the HTTP response.
+        let response = Response(status: .ok, headers: headers)
+        let offset: Int64
+        let byteCount: Int
+        if let contentRange = contentRange {
+            response.status = .partialContent
+            response.headers.add(name: .accept, value: contentRange.unit.serialize())
+            if let firstRange = contentRange.ranges.first {
+                do {
+                    let range = try firstRange.asResponseContentRange(limit: Int(fileInfo.size))
+                    response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
+                    (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: Int(fileInfo.size), logger: request.logger)
+                } catch {
+                    throw Abort(.badRequest)
+                }
+            } else {
+                offset = 0
+                byteCount = Int(fileInfo.size)
+            }
+        } else {
+            offset = 0
+            byteCount = Int(fileInfo.size)
+        }
+        // Set Content-Type header based on the media type
+        // Only set Content-Type if file not modified and returned above.
+        if
+            let fileExtension = path.components(separatedBy: ".").last,
+            let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
+        {
+            response.headers.contentType = type
+        }
+        
+        response.body = .init(asyncStream: { stream in
+            do {
+                let chunks = try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount)
+                do {
+                    for try await chunk in chunks {
+                        try await stream.writeBuffer(chunk)
+                    }
+                    try? await chunks.closeHandle()
+                } catch {
+                    try? await chunks.closeHandle()
+                    throw error
+                }
+                try await stream.write(.end)
+                try await onCompleted(.success(()))
+            } catch {
+                try? await stream.write(.error(error))
+                try await onCompleted(.failure(error))
+            }
+        }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
+
+        return response
     }
 }
 

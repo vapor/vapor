@@ -171,6 +171,14 @@ public final class HTTPServer: Server, Sendable {
         /// This is the same as `NIOSSLCustomVerificationCallback` but just marked as `Sendable`
         @preconcurrency
         public var customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)?
+        
+        /// The number of incoming TCP connections to accept per "tick" (i.e. each time through the server's event loop).
+        ///
+        /// Most users will never need to change this value; its primary use case is to work around benchmarking
+        /// artifacts where bursts of connections are created within extremely small intervals. See
+        /// https://forums.swift.org/t/standard-vapor-website-drops-1-5-of-requests-even-at-concurrency-of-100/71583/49
+        /// for additional information.
+        public var connectionsPerServerTick: UInt
 
         public init(
             hostname: String = Self.defaultHostname,
@@ -186,7 +194,9 @@ public final class HTTPServer: Server, Sendable {
             serverName: String? = nil,
             reportMetrics: Bool = true,
             logger: Logger? = nil,
-            shutdownTimeout: TimeAmount = .seconds(10)
+            shutdownTimeout: TimeAmount = .seconds(10),
+            customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
+            connectionsPerServerTick: UInt = 256
         ) {
             self.init(
                 address: .hostname(hostname, port: port),
@@ -201,10 +211,12 @@ public final class HTTPServer: Server, Sendable {
                 serverName: serverName,
                 reportMetrics: reportMetrics,
                 logger: logger,
-                shutdownTimeout: shutdownTimeout
+                shutdownTimeout: shutdownTimeout,
+                customCertificateVerifyCallback: customCertificateVerifyCallback,
+                connectionsPerServerTick: connectionsPerServerTick
             )
         }
-        
+
         public init(
             address: BindAddress,
             backlog: Int = 256,
@@ -218,7 +230,9 @@ public final class HTTPServer: Server, Sendable {
             serverName: String? = nil,
             reportMetrics: Bool = true,
             logger: Logger? = nil,
-            shutdownTimeout: TimeAmount = .seconds(10)
+            shutdownTimeout: TimeAmount = .seconds(10),
+            customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
+            connectionsPerServerTick: UInt = 256
         ) {
             self.address = address
             self.backlog = backlog
@@ -237,7 +251,8 @@ public final class HTTPServer: Server, Sendable {
             self.reportMetrics = reportMetrics
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
-            self.customCertificateVerifyCallback = nil
+            self.customCertificateVerifyCallback = customCertificateVerifyCallback
+            self.connectionsPerServerTick = connectionsPerServerTick
         }
     }
     
@@ -269,6 +284,7 @@ public final class HTTPServer: Server, Sendable {
             let canBeUpdatedDynamically =
                 oldValue.address == newValue.address
                 && oldValue.backlog == newValue.backlog
+                && oldValue.connectionsPerServerTick == newValue.connectionsPerServerTick
                 && oldValue.reuseAddress == newValue.reuseAddress
                 && oldValue.tcpNoDelay == newValue.tcpNoDelay
             
@@ -453,7 +469,8 @@ private final class HTTPServerConnection: Sendable {
     ) -> EventLoopFuture<HTTPServerConnection> {
         let quiesce = ServerQuiescingHelper(group: eventLoopGroup)
         let bootstrap = ServerBootstrap(group: eventLoopGroup)
-            /// Specify backlog and enable `SO_REUSEADDR` for the server itself.
+            /// Specify accepts per loop and backlog, and enable `SO_REUSEADDR` for the server itself.
+            .serverChannelOption(ChannelOptions.maxMessagesPerRead, value: configuration.connectionsPerServerTick)
             .serverChannelOption(ChannelOptions.backlog, value: Int32(configuration.backlog))
             .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             

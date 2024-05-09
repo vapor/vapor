@@ -1,8 +1,10 @@
 @testable import Vapor
 import enum NIOHTTP1.HTTPParserError
 import XCTest
+import AsyncHTTPClient
 import NIOEmbedded
 import NIOCore
+import NIOConcurrencyHelpers
 
 final class PipelineTests: XCTestCase {
     var app: Application!
@@ -64,6 +66,73 @@ final class PipelineTests: XCTestCase {
         try channel.writeInbound(ByteBuffer(string: "0\r\n\r\n"))
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "0\r\n\r\n")
         try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
+    }
+
+    func testAsyncEchoHandlers() async throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        
+        app.on(.POST, "echo", body: .stream) { request async throws -> Response in
+            var buffers = [ByteBuffer]()
+            
+            for try await buffer in request.body {
+                buffers.append(buffer)
+            }
+            
+            return Response(body: .init(managedAsyncStream: { [buffers] writer in
+                for buffer in buffers {
+                    try await writer.writeBuffer(buffer)
+                }
+            }))
+        }
+        
+        app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
+        try await app.startup()
+        
+        guard
+            let localAddress = app.http.server.shared.localAddress,
+            let port = localAddress.port
+        else {
+            XCTFail("couldn't get port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
+        let client = HTTPClient()
+        
+        let chunks = [
+            "1\r\n",
+            "a",
+            "\r\n",
+            "1\r\n",
+            "b",
+            "\r\n",
+            "1\r\n",
+            "c",
+            "\r\n",
+        ]
+        
+        let response = try await client.post(url: "http://localhost:\(port)/echo", body: .stream { writer in
+            let box = UnsafeMutableTransferBox(writer)
+            @Sendable func write(chunks: [String]) -> EventLoopFuture<Void> {
+                var chunks = chunks
+                let chunk = chunks.removeFirst()
+                
+                if chunks.isEmpty {
+                    return box.wrappedValue.write(.byteBuffer(ByteBuffer(string: chunk)))
+                } else {
+                    return box.wrappedValue.write(.byteBuffer(ByteBuffer(string: chunk))).flatMap { [chunks] in
+                        return write(chunks: chunks)
+                    }
+                }
+            }
+            
+            return write(chunks: chunks)
+        }).get()
+        
+        XCTAssertEqual(response.body?.string, chunks.joined(separator: ""))
+        try await client.shutdown()
     }
 
     func testEOFFraming() throws {
@@ -155,7 +224,7 @@ final class PipelineTests: XCTestCase {
             return ResponseThing(eventLoop: eventLoop)
         }
         
-        try app.test(.GET, "dont-crash") { res in
+        try await app.test(.GET, "dont-crash") { res async in
             XCTAssertEqual(res.status, .ok)
         }
 
@@ -185,7 +254,7 @@ final class PipelineTests: XCTestCase {
             return "OK"
         }
         
-        try app.test(.GET, "dont-crash") { res in
+        try await app.test(.GET, "dont-crash") { res async in
             XCTAssertEqual(res.status, .ok)
         }
 

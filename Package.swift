@@ -34,7 +34,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),
 
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.63.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
 
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
@@ -92,8 +92,8 @@ let package = Package(
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
             .product(name: "Atomics", package: "swift-atomics"),
-
             .product(name: "_NIOFileSystem", package: "swift-nio"),
+            .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
         ]),
 
         // Development
@@ -121,6 +121,7 @@ let package = Package(
             .copy("Utilities/my-secret-env-content"),
             .copy("Utilities/expired.crt"),
             .copy("Utilities/expired.key"),
+            .copy("Utilities/long-test-file.txt"),
         ]),
     ]
 )
