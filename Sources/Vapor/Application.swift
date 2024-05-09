@@ -150,7 +150,7 @@ public final class Application: Sendable {
         self.clients.initialize()
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
-        self.commands.use(RoutesCommand(), as: "routes")
+        self.asyncCommands.use(RoutesCommand(), as: "routes")
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
@@ -189,7 +189,7 @@ public final class Application: Sendable {
         self.clients.initialize()
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
-        self.commands.use(RoutesCommand(), as: "routes")
+        self.asyncCommands.use(RoutesCommand(), as: "routes")
         await DotEnvFile.load(for: environment, fileio: self.fileio, logger: self.logger)
     }
 
