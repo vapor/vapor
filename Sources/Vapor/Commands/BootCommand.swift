@@ -5,13 +5,13 @@ import ConsoleKit
 ///     $ swift run Run boot
 ///     Done.
 ///
-public final class BootCommand: Command {
-    /// See `Command`.
+public final class BootCommand: AsyncCommand {
+    // See `AsyncCommand`.
     public struct Signature: CommandSignature {
         public init() { }
     }
 
-    /// See `Command`.
+    // See `AsyncCommand`.
     public var help: String {
         return "Boots the application's providers."
     }
@@ -19,8 +19,8 @@ public final class BootCommand: Command {
     /// Create a new `BootCommand`.
     public init() { }
 
-    /// See `Command`.
-    public func run(using context: CommandContext, signature: Signature) throws {
+    // See `AsyncCommand`.
+    public func run(using context: ConsoleKitCommands.CommandContext, signature: Signature) async throws {
         context.console.success("Done.")
     }
 }
