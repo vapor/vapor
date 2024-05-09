@@ -116,11 +116,11 @@ final class MiddlewareTests: XCTestCase {
         
         XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/"), "FileMiddleware instantiation from Bundle should not fail")
         
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
         app.middleware.use(fileMiddleware)
         
-        try await app.testable().test(.GET, "/foo.txt") { result in
+        try await app.testable().test(.GET, "/foo.txt") { result async in
             XCTAssertEqual(result.status, .ok)
             XCTAssertEqual(result.body.string, "bar\n")
         }
@@ -131,11 +131,11 @@ final class MiddlewareTests: XCTestCase {
         
         XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities"), "FileMiddleware instantiation from Bundle should not fail")
         
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
         app.middleware.use(fileMiddleware)
         
-        try await app.testable().test(.GET, "/index.html") { result in
+        try await app.testable().test(.GET, "/index.html") { result async in
             XCTAssertEqual(result.status, .ok)
             XCTAssertEqual(result.body.string, "<h1>Subdirectory Default</h1>\n")
         }

@@ -351,7 +351,7 @@ final class FileTests: XCTestCase {
     }
 
     func testPercentDecodedFilePath() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
@@ -364,7 +364,7 @@ final class FileTests: XCTestCase {
     }
 
     func testPercentDecodedRelativePath() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
@@ -379,7 +379,7 @@ final class FileTests: XCTestCase {
     }
     
     func testDefaultFileRelative() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
@@ -395,7 +395,7 @@ final class FileTests: XCTestCase {
     }
     
     func testDefaultFileAbsolute() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")

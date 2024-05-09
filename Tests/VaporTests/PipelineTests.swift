@@ -69,7 +69,7 @@ final class PipelineTests: XCTestCase {
     }
 
     func testAsyncEchoHandlers() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
         
         

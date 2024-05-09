@@ -96,7 +96,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
 
     func testSimpleETagHeaders() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -209,7 +209,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
 
     func testStreamFileContentHeadersOnlyFirstByte() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
@@ -302,7 +302,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         let path = "/tmp/fileio_write.txt"
         
         do {
-            let app = Application(.testing)
+            let app = await Application(.testing)
             defer { app.shutdown() }
             
             let request = Request(application: app, on: app.eventLoopGroup.next())
@@ -369,7 +369,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
 
     func testAsyncFileRead() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         let request = Request(application: app, on: app.eventLoopGroup.next())
