@@ -114,7 +114,7 @@ public final class Application: Sendable {
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
 
-    @available(*, noasync, message: "This initialiser cannot be used in async contexts, use the async version instead")
+    @available(*, deprecated, message: "This initialiser should not be used in async functions due to the use of wait(). Migrate to the async initialiser instead. This will be marked as noasync in a future version")
     public init(
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
