@@ -3,20 +3,20 @@ import XCTest
 import Vapor
 
 final class AsyncPasswordTests: XCTestCase {
-    func testAsyncBCryptRequestPassword() throws {
+    func testAsyncBCryptRequestPassword() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(test)
+        let app = await Application(test)
         defer { app.shutdown() }
 
-        try assertAsyncRequestPasswordVerifies(.bcrypt, on: app)
+        try await assertAsyncRequestPasswordVerifies(.bcrypt, on: app)
     }
 
-    func testAsyncPlaintextRequestPassword() throws {
+    func testAsyncPlaintextRequestPassword() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(test)
+        let app = await Application(test)
         defer { app.shutdown() }
 
-        try assertAsyncRequestPasswordVerifies(.plaintext, on: app)
+        try await assertAsyncRequestPasswordVerifies(.plaintext, on: app)
     }
 
     func testAsyncBCryptApplicationPassword() async throws {
@@ -80,7 +80,7 @@ final class AsyncPasswordTests: XCTestCase {
         on app: Application,
         file: StaticString = #filePath,
         line: UInt = #line
-    ) throws {
+    ) async throws {
         app.passwords.use(provider)
 
         app.get("test") { req async throws -> String in
@@ -89,7 +89,7 @@ final class AsyncPasswordTests: XCTestCase {
             return result ? "true" : "false"
         }
 
-        try app.test(.GET, "test", afterResponse: { res in
+        try await app.test(.GET, "test", afterResponse: { res async in
             XCTAssertEqual(res.body.string, "true", file: file, line: line)
         })
     }

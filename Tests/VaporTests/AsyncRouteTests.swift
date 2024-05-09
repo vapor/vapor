@@ -4,7 +4,7 @@ import Vapor
 import NIOHTTP1
 
 final class AsyncRouteTests: XCTestCase {
-    func testEnumResponse() throws {
+    func testEnumResponse() async throws {
         enum IntOrString: AsyncResponseEncodable {
             case int(Int)
             case string(String)
@@ -19,7 +19,7 @@ final class AsyncRouteTests: XCTestCase {
             }
         }
 
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.routes.get("foo") { req -> IntOrString in
@@ -30,21 +30,21 @@ final class AsyncRouteTests: XCTestCase {
             }
         }
 
-        try app.testable().test(.GET, "/foo?number=true") { res in
+        try await app.testable().test(.GET, "/foo?number=true") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "42")
-        }.test(.GET, "/foo?number=false") { res in
+        }.test(.GET, "/foo?number=false") { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "string")
         }
     }
 
-    func testResponseEncodableStatus() throws {
+    func testResponseEncodableStatus() async throws {
         struct User: Content {
             var name: String
         }
 
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.post("users") { req async throws -> Response in
@@ -53,7 +53,7 @@ final class AsyncRouteTests: XCTestCase {
                 .encodeResponse(status: .created, for: req)
         }
 
-        try app.testable().test(.POST, "/users", beforeRequest: { req in
+        try await app.testable().test(.POST, "/users", beforeRequest: { req async throws in
             try req.content.encode(["name": "vapor"], as: .json)
         }) { res in
             XCTAssertEqual(res.status, .created)
@@ -64,8 +64,8 @@ final class AsyncRouteTests: XCTestCase {
         }
     }
 
-    func testWebsocketUpgrade() throws {
-        let app = Application(.testing)
+    func testWebsocketUpgrade() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         let testMarkerHeaderKey = "TestMarker"
@@ -75,7 +75,7 @@ final class AsyncRouteTests: XCTestCase {
             [testMarkerHeaderKey: testMarkerHeaderValue]
         }, onUpgrade: { _, _ in })
 
-        try app.testable(method: .running(port: 0)).test(.GET, "customshouldupgrade", beforeRequest: { req in
+        try await app.testable(method: .running(port: 0)).test(.GET, "customshouldupgrade", beforeRequest: { req async in
             req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
             req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
             req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
