@@ -7,8 +7,8 @@ import _NIOFileSystem
 import Crypto
 
 final class AsyncFileTests: XCTestCase, @unchecked Sendable {
-    func testStreamFile() throws {
-        let app = Application(.testing)
+    func testStreamFile() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -21,15 +21,15 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
             }
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res async in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
         }
     }
 
-    func testStreamFileConnectionClose() throws {
-        let app = Application(.testing)
+    func testStreamFileConnectionClose() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -38,15 +38,15 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
 
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .connection, value: "close")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
         }
     }
 
-    func testStreamFileNull() throws {
-        let app = Application(.testing)
+    func testStreamFileNull() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -64,7 +64,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
             }
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res async in
             XCTAssertEqual(res.status, .internalServerError)
         }
     }
@@ -73,8 +73,8 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         return try await FileSystem.shared.info(forFileAt: .init(path)) != nil
     }
 
-    func testAdvancedETagHeaders() throws {
-        let app = Application(.testing)
+    func testAdvancedETagHeaders() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -87,7 +87,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
             }
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res async throws in
             let fileData = try Data(contentsOf: URL(fileURLWithPath: #file))
             let digest = SHA256.hash(data: fileData)
             let eTag = res.headers.first(name: "etag")
@@ -119,8 +119,8 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         }
     }
     
-    func testStreamFileContentHeaderTail() throws {
-        let app = Application(.testing)
+    func testStreamFileContentHeaderTail() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -135,7 +135,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
@@ -150,8 +150,8 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         }
     }
     
-    func testStreamFileContentHeaderStart() throws {
-        let app = Application(.testing)
+    func testStreamFileContentHeaderStart() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -166,7 +166,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
 
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
@@ -181,8 +181,8 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         }
     }
     
-    func testStreamFileContentHeadersWithin() throws {
-        let app = Application(.testing)
+    func testStreamFileContentHeadersWithin() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -193,7 +193,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
@@ -231,8 +231,8 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         }
     }
     
-    func testStreamFileContentHeadersWithinFail() throws {
-        let app = Application(.testing)
+    func testStreamFileContentHeadersWithinFail() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -243,18 +243,18 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: -20, end: 25)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 10, end: 100000000)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
     
-    func testStreamFileContentHeadersStartFail() throws {
-        let app = Application(.testing)
+    func testStreamFileContentHeadersStartFail() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -265,18 +265,18 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: -20)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 100000000)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
     
-    func testStreamFileContentHeadersTailFail() throws {
-        let app = Application(.testing)
+    func testStreamFileContentHeadersTailFail() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -287,12 +287,12 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: -20)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 100000000)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
@@ -318,8 +318,8 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
     
     // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
-    func testInvalidRangeHeaderDoesNotCrash() throws {
-        let app = Application(.testing)
+    func testInvalidRangeHeaderDoesNotCrash() async throws {
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req -> Response in
@@ -328,42 +328,42 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
 
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=-1-10")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=100-10")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=10--100")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=9223372036854775808-")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=922337203-")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=-922337203")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=-9223372036854775808")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
