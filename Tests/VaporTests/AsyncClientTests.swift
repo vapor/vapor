@@ -55,7 +55,7 @@ final class AsyncClientTests: XCTestCase {
     }
     
     override func tearDown() async throws {
-        remoteApp.shutdown()
+        try await remoteApp.asyncShutdown()
     }
     
     func testClientConfigurationChange() async throws {
@@ -119,7 +119,7 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientBeforeSend() async throws {
-        let app = await Application()
+        let app = try await Application.make()
         defer { app.shutdown() }
         try app.boot()
 
