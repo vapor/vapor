@@ -242,6 +242,7 @@ public final class Application: Sendable {
         }
     }
 
+    @available(*, noasync, message: "This can block the thread and should not be called in an async context", renamed: "asyncShutdown()")
     public func shutdown() {
         assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
@@ -261,6 +262,34 @@ public final class Application: Sendable {
             self.logger.trace("Shutting down EventLoopGroup")
             do {
                 try self.eventLoopGroup.syncShutdownGracefully()
+            } catch {
+                self.logger.warning("Shutting down EventLoopGroup failed: \(error)")
+            }
+        }
+
+        self._didShutdown.withLockedValue { $0 = true }
+        self.logger.trace("Application shutdown complete")
+    }
+    
+    public func asyncShutdown() async throws {
+        assert(!self.didShutdown, "Application has already shut down")
+        self.logger.debug("Application shutting down")
+
+        self.logger.trace("Shutting down providers")
+        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
+        self.lifecycle.handlers = []
+
+        self.logger.trace("Clearing Application storage")
+        self.storage.shutdown()
+        self.storage.clear()
+
+        switch self.eventLoopGroupProvider {
+        case .shared:
+            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
+        case .createNew:
+            self.logger.trace("Shutting down EventLoopGroup")
+            do {
+                try await self.eventLoopGroup.shutdownGracefully()
             } catch {
                 self.logger.warning("Shutting down EventLoopGroup failed: \(error)")
             }
