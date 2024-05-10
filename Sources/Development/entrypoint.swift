@@ -13,7 +13,7 @@ struct Entrypoint {
             try await app.execute()
             try await app.asyncShutdown()
         } catch {
-            try await app.asyncShutdown()
+            try? await app.asyncShutdown()
             throw error
         }
     }
