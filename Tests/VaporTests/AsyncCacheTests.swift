@@ -5,7 +5,7 @@ import NIOCore
 
 final class AsyncCacheTests: XCTestCase {
     func testInMemoryCache() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let value1 = try await app.cache.get("foo", as: String.self)
@@ -33,7 +33,7 @@ final class AsyncCacheTests: XCTestCase {
     }
 
     func testCustomCache() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
         app.caches.use(.foo)
         try await app.cache.set("1", to: "2")

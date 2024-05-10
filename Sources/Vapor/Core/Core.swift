@@ -80,9 +80,9 @@ extension Application {
 
             init() {
                 self.console = .init(Terminal())
-                var commands = Commands()
-                commands.use(BootCommand(), as: "boot")
-                self.commands = .init(commands)
+                self.commands = .init(Commands())
+                var asyncCommands = AsyncCommands()
+                asyncCommands.use(BootCommand(), as: "boot")
                 self.asyncCommands = .init(AsyncCommands())
                 let threadPool = NIOThreadPool(numberOfThreads: System.coreCount)
                 threadPool.start()

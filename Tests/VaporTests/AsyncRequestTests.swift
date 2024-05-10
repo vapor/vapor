@@ -21,7 +21,7 @@ final class AsyncRequestTests: XCTestCase {
     var app: Application!
     
     override func setUp() async throws {
-        app = Application(.testing)
+        app = try await Application.make(.testing)
     }
     
     override func tearDown() async throws {
@@ -100,9 +100,7 @@ final class AsyncRequestTests: XCTestCase {
         }
     }
     
-    // TODO: Re-enable once it reliably works and doesn't cause issues with trying to shut the application down
-    // This may require some work in Vapor
-    func _testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
+    func testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
         

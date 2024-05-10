@@ -18,7 +18,7 @@ public final class Application: Sendable {
             self._environment.withLockedValue { $0 = newValue }
         }
     }
-
+    
     public var storage: Storage {
         get {
             self._storage.withLockedValue { $0 }
@@ -27,11 +27,11 @@ public final class Application: Sendable {
             self._storage.withLockedValue { $0 = newValue }
         }
     }
-
+    
     public var didShutdown: Bool {
         self._didShutdown.withLockedValue { $0 }
     }
-
+    
     public var logger: Logger {
         get {
             self._logger.withLockedValue { $0 }
@@ -40,18 +40,18 @@ public final class Application: Sendable {
             self._logger.withLockedValue { $0 = newValue }
         }
     }
-
+    
     public struct Lifecycle: Sendable {
         var handlers: [LifecycleHandler]
         init() {
             self.handlers = []
         }
-
+        
         public mutating func use(_ handler: LifecycleHandler) {
             self.handlers.append(handler)
         }
     }
-
+    
     public var lifecycle: Lifecycle {
         get {
             self._lifecycle.withLockedValue { $0 }
@@ -60,17 +60,17 @@ public final class Application: Sendable {
             self._lifecycle.withLockedValue { $0 = newValue }
         }
     }
-
+    
     public final class Locks: Sendable {
         public let main: NIOLock
         // Is there a type we can use to make this Sendable but reuse the existing lock we already have?
         private let storage: NIOLockedValueBox<[ObjectIdentifier: NIOLock]>
-
+        
         init() {
             self.main = .init()
             self.storage = .init([:])
         }
-
+        
         public func lock<Key>(for key: Key.Type) -> NIOLock
         where Key: LockKey {
             self.main.withLock {
@@ -80,7 +80,7 @@ public final class Application: Sendable {
             }
         }
     }
-
+    
     public var locks: Locks {
         get {
             self._locks.withLockedValue { $0 }
@@ -89,21 +89,21 @@ public final class Application: Sendable {
             self._locks.withLockedValue { $0 = newValue }
         }
     }
-
+    
     public var sync: NIOLock {
         self.locks.main
     }
-
+    
     public enum EventLoopGroupProvider: Sendable {
         case shared(EventLoopGroup)
         @available(*, deprecated, renamed: "singleton", message: "Use '.singleton' for a shared 'EventLoopGroup', for better performance")
         case createNew
-
+        
         public static var singleton: EventLoopGroupProvider {
             .shared(MultiThreadedEventLoopGroup.singleton)
         }
     }
-
+    
     public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
     internal let isBooted: NIOLockedValueBox<Bool>
@@ -113,11 +113,18 @@ public final class Application: Sendable {
     private let _logger: NIOLockedValueBox<Logger>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
-
-    public init(
+    
+    @available(*, noasync, message: "This initialiser cannot be used in async contexts, Application.makeApplication() instead")
+    public convenience init(
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
+        self.init(environment, eventLoopGroupProvider, async: false)
+        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
+    }
+    
+    // async flag here is just to stop the compiler from complaining about duplicates
+    private init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, async: Bool) {
         #if swift(<5.9)
             Backtrace.install()
         #endif
@@ -149,8 +156,13 @@ public final class Application: Sendable {
         self.clients.initialize()
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
-        self.commands.use(RoutesCommand(), as: "routes")
-        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
+        self.asyncCommands.use(RoutesCommand(), as: "routes")
+    }
+    
+    public static func make(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton) async throws -> Application {
+        let app = Application(environment, eventLoopGroupProvider, async: true)
+        await DotEnvFile.load(for: app.environment, fileio: app.fileio, logger: app.logger)
+        return app
     }
 
     /// Starts the ``Application`` using the ``start()`` method, then waits for any running tasks to complete.

@@ -403,7 +403,7 @@ public struct FileIO: Sendable {
 
     /// Reads the contents of a file at the supplied path in chunks.
     ///
-    ///    for chunk in try await req.fileio.readFile(at: "/path/to/file.txt") {
+    ///    for try await chunk in try await req.fileio.readFile(at: "/path/to/file.txt") {
     ///        print("chunk: \(data)")
     ///    }
     ///

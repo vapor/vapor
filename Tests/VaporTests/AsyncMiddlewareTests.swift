@@ -29,7 +29,7 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let store = OrderStore()
@@ -48,7 +48,7 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testPrependingMiddleware() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let store = OrderStore()
@@ -69,8 +69,8 @@ final class AsyncMiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSMiddlewareVariedByRequestOrigin() throws {
-        let app = Application(.testing)
+    func testCORSMiddlewareVariedByRequestOrigin() async throws {
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.grouped(
@@ -79,7 +79,7 @@ final class AsyncMiddlewareTests: XCTestCase {
             return "done"
         }
 
-        try app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+        try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
             XCTAssertEqual(res.headers[.vary], ["origin"])
@@ -88,8 +88,8 @@ final class AsyncMiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSMiddlewareNoVariationByRequestOriginAllowed() throws {
-        let app = Application(.testing)
+    func testCORSMiddlewareNoVariationByRequestOriginAllowed() async throws {
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.grouped(
@@ -98,7 +98,7 @@ final class AsyncMiddlewareTests: XCTestCase {
             return "done"
         }
 
-        try app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+        try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
             XCTAssertEqual(res.headers[.vary], [])
@@ -107,7 +107,7 @@ final class AsyncMiddlewareTests: XCTestCase {
         }
     }
     
-    func testFileMiddlewareFromBundleInvalidPublicDirectory() {
+    func testFileMiddlewareFromBundleInvalidPublicDirectory() async throws {
         XCTAssertThrowsError(try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")) { error in
             guard let error = error as? FileMiddleware.BundleSetupError else {
                 return XCTFail("Error should be of type FileMiddleware.SetupError")
