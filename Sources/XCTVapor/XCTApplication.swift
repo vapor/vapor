@@ -89,7 +89,8 @@ extension Application {
         }
         
         func performTest(request: XCTHTTPRequest) async throws -> XCTHTTPResponse {
-            try app.server.start(address: .hostname(self.hostname, port: self.port))
+            try await app.server.start(address: .hostname(self.hostname, port: self.port))
+            #warning("Fix")
             defer { app.server.shutdown() }
             
             let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)

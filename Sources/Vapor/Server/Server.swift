@@ -7,7 +7,13 @@ public protocol Server: Sendable {
     /// Start the server with the specified address.
     /// - Parameters:
     ///   - address: The address to start the server with.
+    @available(*, noasync, message: "Use the async start() method instead.")
     func start(address: BindAddress?) throws
+    
+    /// Start the server with the specified address.
+    /// - Parameters:
+    ///   - address: The address to start the server with.
+    func start(address: BindAddress?) async throws
     
     /// Start the server with the specified hostname and port, if provided. If left blank, the server will be started with its default configuration.
     /// - Deprecated: Please use `start(address: .hostname(hostname, port: port))` instead.
@@ -17,7 +23,10 @@ public protocol Server: Sendable {
     @available(*, deprecated, renamed: "start(address:)", message: "Please use `start(address: .hostname(hostname, port: port))` instead")
     func start(hostname: String?, port: Int?) throws
     
+    @available(*, noasync, message: "Use the async start() method instead.")
     func shutdown()
+    
+    func shutdown() async
 }
 
 public enum BindAddress: Equatable, Sendable {
