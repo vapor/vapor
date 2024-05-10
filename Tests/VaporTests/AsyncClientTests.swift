@@ -69,7 +69,6 @@ final class AsyncClientTests: XCTestCase {
         }
 
         try await app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
         
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port for app")
@@ -79,6 +78,8 @@ final class AsyncClientTests: XCTestCase {
         let res = try await app.client.get("http://localhost:\(port)/redirect")
 
         XCTAssertEqual(res.status, .seeOther)
+        
+        await app.server.shutdown()
     }
 
     func testClientConfigurationCantBeChangedAfterClientHasBeenUsed() async throws {
@@ -89,7 +90,6 @@ final class AsyncClientTests: XCTestCase {
         }
 
         try await app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
         
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port for app")
@@ -101,6 +101,8 @@ final class AsyncClientTests: XCTestCase {
         app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
         let res = try await app.client.get("http://localhost:\(port)/redirect")
         XCTAssertEqual(res.status, .seeOther)
+        
+        await app.server.shutdown()
     }
 
     func testClientResponseCodable() async throws {

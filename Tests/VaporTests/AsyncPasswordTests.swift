@@ -3,42 +3,34 @@ import XCTest
 import Vapor
 
 final class AsyncPasswordTests: XCTestCase {
-    func testAsyncBCryptRequestPassword() async throws {
+    var app: Application!
+    
+    override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = try await Application.make(test)
-        defer { app.shutdown() }
-
+        app = try await Application.make(test)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
+    func testAsyncBCryptRequestPassword() async throws {
         try await assertAsyncRequestPasswordVerifies(.bcrypt, on: app)
     }
 
     func testAsyncPlaintextRequestPassword() async throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = try await Application.make(test)
-        defer { app.shutdown() }
-
         try await assertAsyncRequestPasswordVerifies(.plaintext, on: app)
     }
 
     func testAsyncBCryptApplicationPassword() async throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = try await Application.make(test)
-        defer { app.shutdown() }
-
         try await assertAsyncApplicationPasswordVerifies(.bcrypt, on: app)
     }
 
     func testAsyncPlaintextApplicationPassword() async throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = try await Application.make(test)
-        defer { app.shutdown() }
-
         try await assertAsyncApplicationPasswordVerifies(.plaintext, on: app)
     }
 
     func testAsyncUsesProvider() async throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = try await Application.make(test)
-        defer { app.shutdown() }
         app.passwords.use(.plaintext)
         let hash = try await app.password.async(
             on: app.threadPool,
@@ -48,9 +40,6 @@ final class AsyncPasswordTests: XCTestCase {
     }
 
     func testAsyncApplicationDefault() async throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = try await Application.make(test)
-        defer { app.shutdown() }
         app.passwords.use(.plaintext)
         let hash = try await app.password.async.hash("vapor")
         XCTAssertEqual(hash, "vapor")
