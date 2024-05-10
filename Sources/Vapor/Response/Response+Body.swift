@@ -108,6 +108,13 @@ extension Response {
                 stream.callback(collector)
                 return collector.promise.futureResult
                     .map { $0 }
+            case .asyncStream(let stream):
+                let collector = ResponseBodyCollector(eventLoop: eventLoop, byteBufferAllocator: self.byteBufferAllocator)
+                return eventLoop.makeFutureWithTask {
+                    try await stream.callback(collector)
+                }.flatMap {
+                    collector.promise.futureResult.map { $0 }
+                }
             default:
                 return eventLoop.makeSucceededFuture(self.buffer)
             }
@@ -242,7 +249,7 @@ extension Response {
 // Since all buffer mutation is done on the event loop, we can be unchecked here.
 // This removes the need for a lock and performance hits from that
 // Any changes to this type need to be carefully considered
-private final class ResponseBodyCollector: BodyStreamWriter, @unchecked Sendable {
+private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWriter, @unchecked Sendable {
     var buffer: ByteBuffer
     let eventLoop: EventLoop
     let promise: EventLoopPromise<ByteBuffer>
@@ -267,5 +274,12 @@ private final class ResponseBodyCollector: BodyStreamWriter, @unchecked Sendable
         }
         // Fixes an issue where errors in the stream should fail the individual write promise.
         if let promise { future.cascade(to: promise) }
+    }
+    
+    func write(_ result: BodyStreamResult) async throws {
+        let promise = self.eventLoop.makePromise(of: Void.self)
+        
+        self.eventLoop.execute { self.write(result, promise: promise) }
+        try await promise.futureResult.get()
     }
 }

@@ -59,6 +59,10 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
                 case .failure(let error):
                     if case .stream(let stream) = response.body.storage {
                         stream.callback(ErrorBodyStreamWriter(eventLoop: request.eventLoop, error: error))
+                    } else if case .asyncStream(let stream) = response.body.storage {
+                        Task {
+                            try? await stream.callback(ErrorBodyStreamWriter(eventLoop: request.eventLoop, error: error))
+                        }
                     }
                     handler.errorCaught(context: context, error: error)
                 }
@@ -77,10 +81,15 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     }
 }
 
-struct ErrorBodyStreamWriter: BodyStreamWriter {
-    var eventLoop: EventLoop
-    var error: Error
+fileprivate struct ErrorBodyStreamWriter: BodyStreamWriter, AsyncBodyStreamWriter {
+    let eventLoop: EventLoop
+    let error: Error
+    
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         promise?.fail(error)
+    }
+    
+    func write(_ result: BodyStreamResult) async throws {
+        throw error
     }
 }
