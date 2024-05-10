@@ -90,41 +90,46 @@ extension Application {
         
         func performTest(request: XCTHTTPRequest) async throws -> XCTHTTPResponse {
             try await app.server.start(address: .hostname(self.hostname, port: self.port))
-            #warning("Fix")
-            defer { app.server.shutdown() }
-            
             let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
-            defer { try! client.syncShutdown() }
-            var path = request.url.path
-            path = path.hasPrefix("/") ? path : "/\(path)"
             
-            let actualPort: Int
-            
-            if self.port == 0 {
-                guard let portAllocated = app.http.server.shared.localAddress?.port else {
-                    throw Abort(.internalServerError, reason: "Failed to get port from local address")
+            do {
+                var path = request.url.path
+                path = path.hasPrefix("/") ? path : "/\(path)"
+                
+                let actualPort: Int
+                
+                if self.port == 0 {
+                    guard let portAllocated = app.http.server.shared.localAddress?.port else {
+                        throw Abort(.internalServerError, reason: "Failed to get port from local address")
+                    }
+                    actualPort = portAllocated
+                } else {
+                    actualPort = self.port
                 }
-                actualPort = portAllocated
-            } else {
-                actualPort = self.port
+                
+                var url = "http://\(self.hostname):\(actualPort)\(path)"
+                if let query = request.url.query {
+                    url += "?\(query)"
+                }
+                var clientRequest = try HTTPClient.Request(
+                    url: url,
+                    method: request.method,
+                    headers: request.headers
+                )
+                clientRequest.body = .byteBuffer(request.body)
+                let response = try await client.execute(request: clientRequest).get()
+                try await client.shutdown()
+                await app.server.shutdown()
+                return XCTHTTPResponse(
+                    status: response.status,
+                    headers: response.headers,
+                    body: response.body ?? ByteBufferAllocator().buffer(capacity: 0)
+                )
+            } catch {
+                try? await client.shutdown()
+                await app.server.shutdown()
+                throw error
             }
-            
-            var url = "http://\(self.hostname):\(actualPort)\(path)"
-            if let query = request.url.query {
-                url += "?\(query)"
-            }
-            var clientRequest = try HTTPClient.Request(
-                url: url,
-                method: request.method,
-                headers: request.headers
-            )
-            clientRequest.body = .byteBuffer(request.body)
-            let response = try await client.execute(request: clientRequest).get()
-            return XCTHTTPResponse(
-                status: response.status,
-                headers: response.headers,
-                body: response.body ?? ByteBufferAllocator().buffer(capacity: 0)
-            )
         }
     }
 
