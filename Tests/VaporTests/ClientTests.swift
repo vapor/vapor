@@ -62,7 +62,7 @@ final class ClientTests: XCTestCase {
     }
     
     override func tearDown() async throws {
-        remoteApp.shutdown()
+        try await remoteApp.asyncShutdown()
     }
     
     func testClientConfigurationChange() throws {
