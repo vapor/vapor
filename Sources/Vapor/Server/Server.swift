@@ -23,9 +23,11 @@ public protocol Server: Sendable {
     @available(*, deprecated, renamed: "start(address:)", message: "Please use `start(address: .hostname(hostname, port: port))` instead")
     func start(hostname: String?, port: Int?) throws
     
+    /// Shut the server down.
     @available(*, noasync, message: "Use the async start() method instead.")
     func shutdown()
     
+    /// Shut the server down.
     func shutdown() async
 }
 
@@ -62,6 +64,27 @@ extension Server {
     @available(*, deprecated, renamed: "start(address:)", message: "Please use `start(address: .hostname(hostname, port: port))` instead")
     public func start(hostname: String?, port: Int?) throws {
         try self.start(address: .hostname(hostname, port: port))
+    }
+    
+    /// A default implementation for those servers that haven't migrated yet
+    @available(*, deprecated, message: "Implement an async version of this yourself")
+    public func start(address: BindAddress?) async throws {
+        try self.syncStart(address: address)
+    }
+        
+    /// A default implementation for those servers that haven't migrated yet
+    @available(*, deprecated, message: "Implement an async version of this yourself")
+    public func shutdown() async {
+        self.syncShutdown()
+    }
+    
+    // Trick the compiler
+    private func syncStart(address: BindAddress?) throws {
+        try self.start(address: address)
+    }
+    
+    private func syncShutdown() {
+        self.shutdown()
     }
 }
 
