@@ -14,6 +14,7 @@ struct Entrypoint {
             try await app.asyncShutdown()
         } catch {
             try await app.asyncShutdown()
+            throw error
         }
     }
 }
