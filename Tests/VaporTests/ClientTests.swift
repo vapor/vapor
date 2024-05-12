@@ -15,7 +15,7 @@ final class ClientTests: XCTestCase {
     var remoteApp: Application!
     
     override func setUp() async throws {
-        remoteApp = Application(.testing)
+        remoteApp = try await Application.make(.testing)
         remoteApp.http.server.configuration.port = 0
         
         remoteApp.get("json") { _ in
@@ -62,7 +62,7 @@ final class ClientTests: XCTestCase {
     }
     
     override func tearDown() async throws {
-        remoteApp.shutdown()
+        try await remoteApp.asyncShutdown()
     }
     
     func testClientConfigurationChange() throws {

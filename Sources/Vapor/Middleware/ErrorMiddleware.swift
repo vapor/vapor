@@ -20,48 +20,44 @@ public final class ErrorMiddleware: Middleware {
     ///     - environment: The environment to respect when presenting errors.
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
-            // variables to determine
-            let status: HTTPResponseStatus
-            let reason: String
-            let headers: HTTPHeaders
+            let status: HTTPResponseStatus, reason: String, source: ErrorSource
+            var headers: HTTPHeaders
 
-            // inspect the error type
+            // Inspect the error type and extract what data we can.
             switch error {
+            case let debugAbort as (DebuggableError & AbortError):
+                (reason, status, headers, source) = (debugAbort.reason, debugAbort.status, debugAbort.headers, debugAbort.source ?? .capture())
+                
             case let abort as AbortError:
-                // this is an abort error, we should use its status, reason, and headers
-                reason = abort.reason
-                status = abort.status
-                headers = abort.headers
+                (reason, status, headers, source) = (abort.reason, abort.status, abort.headers, .capture())
+            
+            case let debugErr as DebuggableError:
+                (reason, status, headers, source) = (debugErr.reason, .internalServerError, [:], debugErr.source ?? .capture())
+            
             default:
-                // if not release mode, and error is debuggable, provide debug info
-                // otherwise, deliver a generic 500 to avoid exposing any sensitive error info
-                reason = environment.isRelease
-                    ? "Something went wrong."
-                    : String(describing: error)
-                status = .internalServerError
-                headers = [:]
+                // In debug mode, provide the error description; otherwise hide it to avoid sensitive data disclosure.
+                reason = environment.isRelease ? "Something went wrong." : String(describing: error)
+                (status, headers, source) = (.internalServerError, [:], .capture())
             }
             
-            // Report the error to logger.
-            req.logger.report(error: error)
-            
-            // create a Response with appropriate status
-            let response = Response(status: status, headers: headers)
+            // Report the error
+            req.logger.report(error: error, file: source.file, function: source.function, line: source.line)
             
             // attempt to serialize the error to json
+            let body: Response.Body
             do {
-                let errorResponse = ErrorResponse(error: true, reason: reason)
-                try response.responseBox.withLockedValue { box in
-                    box.body = try .init(data: JSONEncoder().encode(errorResponse), byteBufferAllocator: req.byteBufferAllocator)
-                    box.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
-                }
+                body = .init(
+                    buffer: try JSONEncoder().encodeAsByteBuffer(ErrorResponse(error: true, reason: reason), allocator: req.byteBufferAllocator),
+                    byteBufferAllocator: req.byteBufferAllocator
+                )
+                headers.contentType = .json
             } catch {
-                response.responseBox.withLockedValue { box in
-                    box.body = .init(string: "Oops: \(error)", byteBufferAllocator: req.byteBufferAllocator)
-                    box.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
-                }
+                body = .init(string: "Oops: \(String(describing: error))\nWhile encoding error: \(reason)", byteBufferAllocator: req.byteBufferAllocator)
+                headers.contentType = .plainText
             }
-            return response
+            
+            // create a Response with appropriate status
+            return Response(status: status, headers: headers, body: body)
         }
     }
 
@@ -77,8 +73,8 @@ public final class ErrorMiddleware: Middleware {
     }
     
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        return next.respond(to: request).flatMapErrorThrowing { error in
-            return self.closure(request, error)
+        next.respond(to: request).flatMapErrorThrowing { error in
+            self.closure(request, error)
         }
     }
 }

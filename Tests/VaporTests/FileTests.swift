@@ -230,7 +230,7 @@ final class FileTests: XCTestCase {
     }
 
     func testStreamFileContentHeadersOnlyFirstByte() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
@@ -351,7 +351,7 @@ final class FileTests: XCTestCase {
     }
 
     func testPercentDecodedFilePath() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
@@ -364,7 +364,7 @@ final class FileTests: XCTestCase {
     }
 
     func testPercentDecodedRelativePath() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
@@ -379,7 +379,7 @@ final class FileTests: XCTestCase {
     }
     
     func testDefaultFileRelative() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
@@ -395,7 +395,7 @@ final class FileTests: XCTestCase {
     }
     
     func testDefaultFileAbsolute() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
@@ -539,7 +539,7 @@ final class FileTests: XCTestCase {
     }
     
     func testAsyncFileWrite() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
         
         let request = Request(application: app, on: app.eventLoopGroup.next())
@@ -555,7 +555,7 @@ final class FileTests: XCTestCase {
     }
 
     func testAsyncFileRead() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let request = Request(application: app, on: app.eventLoopGroup.next())

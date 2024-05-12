@@ -320,6 +320,7 @@ public final class HTTPServer: Server, Sendable {
         self.connection = .init(nil)
     }
     
+    @available(*, noasync, message: "Use the async start() method instead.")
     public func start(address: BindAddress?) throws {
         var configuration = self.configuration
         
@@ -366,6 +367,52 @@ public final class HTTPServer: Server, Sendable {
         self.didStart.withLockedValue { $0 = true }
     }
     
+    public func start(address: BindAddress?) async throws {
+        var configuration = self.configuration
+        
+        switch address {
+        case .none:
+            /// Use the configuration as is.
+            break
+        case .hostname(let hostname, let port):
+            /// Override the hostname, port, neither, or both.
+            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
+        case .unixDomainSocket:
+            /// Override the socket path.
+            configuration.address = address!
+        }
+        
+        /// Print starting message.
+        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
+        let addressDescription: String
+        switch configuration.address {
+        case .hostname(let hostname, let port):
+            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
+        case .unixDomainSocket(let socketPath):
+            addressDescription = "\(scheme)+unix: \(socketPath)"
+        }
+        
+        self.configuration.logger.notice("Server starting on \(addressDescription)")
+
+        /// Start the actual `HTTPServer`.
+        let serverConnection = try await HTTPServerConnection.start(
+            application: self.application,
+            server: self,
+            responder: self.responder,
+            configuration: configuration,
+            on: self.eventLoopGroup
+        ).get()
+        
+        self.connection.withLockedValue {
+            precondition($0 == nil, "You can't start the server connection twice")
+            $0 = serverConnection
+        }
+
+        self.configuration = configuration
+        self.didStart.withLockedValue { $0 = true }
+    }
+    
+    @available(*, noasync, message: "Use the async shutdown() method instead.")
     public func shutdown() {
         guard let connection = self.connection.withLockedValue({ $0 }) else {
             return
@@ -378,6 +425,24 @@ public final class HTTPServer: Server, Sendable {
         }
         self.configuration.logger.debug("HTTP server shutting down")
         self.didShutdown.withLockedValue { $0 = true }
+        // Make sure we remove the connection reference in case we want to start up again
+        self.connection.withLockedValue { $0 = nil }
+    }
+    
+    public func shutdown() async {
+        guard let connection = self.connection.withLockedValue({ $0 }) else {
+            return
+        }
+        self.configuration.logger.debug("Requesting HTTP server shutdown")
+        do {
+            try await connection.close(timeout: self.configuration.shutdownTimeout).get()
+        } catch {
+            self.configuration.logger.error("Could not stop HTTP server: \(error)")
+        }
+        self.configuration.logger.debug("HTTP server shutting down")
+        self.didShutdown.withLockedValue { $0 = true }
+        // Make sure we remove the connection reference in case we want to start up again
+        self.connection.withLockedValue { $0 = nil }
     }
 
     public var localAddress: SocketAddress? {

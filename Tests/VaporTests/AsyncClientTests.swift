@@ -12,7 +12,7 @@ final class AsyncClientTests: XCTestCase {
     var remoteApp: Application!
     
     override func setUp() async throws {
-        remoteApp = Application(.testing)
+        remoteApp = try await Application.make(.testing)
         remoteApp.http.server.configuration.port = 0
         
         remoteApp.get("json") { _ in
@@ -55,11 +55,11 @@ final class AsyncClientTests: XCTestCase {
     }
     
     override func tearDown() async throws {
-        remoteApp.shutdown()
+        try await remoteApp.asyncShutdown()
     }
     
     func testClientConfigurationChange() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.http.client.configuration.redirectConfiguration = .disallow
@@ -82,7 +82,7 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientConfigurationCantBeChangedAfterClientHasBeenUsed() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.http.client.configuration.redirectConfiguration = .disallow
@@ -107,7 +107,7 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientResponseCodable() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         let res = try await app.client.get("http://localhost:\(remoteAppPort!)/json")
@@ -119,7 +119,7 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientBeforeSend() async throws {
-        let app = Application()
+        let app = try await Application.make()
         defer { app.shutdown() }
         try app.boot()
 
@@ -133,7 +133,7 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testBoilerplateClient() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         app.http.server.configuration.port = 0
         defer { app.shutdown() }
         let remotePort = self.remoteAppPort!
@@ -168,7 +168,7 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testCustomClient() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
 
         app.clients.use(.custom)
@@ -179,7 +179,7 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientLogging() async throws {
-        let app = Application(.testing)
+        let app = try await Application.make(.testing)
         defer { app.shutdown() }
         let logs = TestLogHandler()
         app.logger = logs.logger

@@ -41,7 +41,7 @@ final class SessionTests: XCTestCase {
 
         var cookie: HTTPCookies.Value?
 
-        let app = Application()
+        let app = try await Application.make()
         defer { app.shutdown() }
 
         let cache = MockKeyedCache()
