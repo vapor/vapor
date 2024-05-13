@@ -1,4 +1,3 @@
-import NIOCore
 import NIOPosix
 @testable import Vapor
 import XCTest
