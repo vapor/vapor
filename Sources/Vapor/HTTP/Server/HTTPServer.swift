@@ -382,17 +382,8 @@ public final class HTTPServer: Server, Sendable {
             configuration.address = address!
         }
         
-        /// Print starting message.
-        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
-        let addressDescription: String
-        switch configuration.address {
-        case .hostname(let hostname, let port):
-            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
-        case .unixDomainSocket(let socketPath):
-            addressDescription = "\(scheme)+unix: \(socketPath)"
-        }
-        
-        self.configuration.logger.notice("Server starting on \(addressDescription)")
+        /// Log starting message for debugging before attempting to start the server.
+        configuration.logger.debug("Server starting on \(configuration.addressDescription)")
 
         /// Start the actual `HTTPServer`.
         let serverConnection = try await HTTPServerConnection.start(
@@ -407,6 +398,19 @@ public final class HTTPServer: Server, Sendable {
             precondition($0 == nil, "You can't start the server connection twice")
             $0 = serverConnection
         }
+        
+        /// Overwrite configuration with actual address, if applicable.
+        /// They may differ from the provided configuation if port 0 was provided, for example.
+        if let localAddress = self.localAddress {
+            if let hostname = localAddress.hostname, let port = localAddress.port {
+                configuration.address = .hostname(hostname, port: port)
+            } else if let pathname = localAddress.pathname {
+                configuration.address = .unixDomainSocket(path: pathname)
+            }
+        }
+
+        /// Log started message with the actual configuration.
+        configuration.logger.notice("Server started on \(configuration.addressDescription)")
 
         self.configuration = configuration
         self.didStart.withLockedValue { $0 = true }

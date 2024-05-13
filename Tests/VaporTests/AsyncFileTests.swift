@@ -7,10 +7,17 @@ import _NIOFileSystem
 import Crypto
 
 final class AsyncFileTests: XCTestCase, @unchecked Sendable {
+    var app: Application!
+    
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     func testStreamFile() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
                 do {
@@ -29,9 +36,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
 
     func testStreamFileConnectionClose() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true)
         }
@@ -46,9 +50,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
 
     func testStreamFileNull() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             var tmpPath: String
             repeat {
@@ -74,9 +75,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
 
     func testAdvancedETagHeaders() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
                 do {
@@ -96,9 +94,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
 
     func testSimpleETagHeaders() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: false) { result in
                 do {
@@ -120,9 +115,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
     
     func testStreamFileContentHeaderTail() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
                 do {
@@ -151,9 +143,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
     
     func testStreamFileContentHeaderStart() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             return try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
                 do {
@@ -182,9 +171,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
     
     func testStreamFileContentHeadersWithin() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
                 XCTAssertNoThrow(try result.get())
@@ -209,9 +195,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
 
     func testStreamFileContentHeadersOnlyFirstByte() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req in
             try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
                 XCTAssertNoThrow(try result.get())
@@ -232,9 +215,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
     
     func testStreamFileContentHeadersWithinFail() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
                 XCTAssertNoThrow(try result.get())
@@ -254,9 +234,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
     
     func testStreamFileContentHeadersStartFail() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
                 XCTAssertNoThrow(try result.get())
@@ -276,9 +253,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
     
     func testStreamFileContentHeadersTailFail() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true) { result in
                 XCTAssertNoThrow(try result.get())
@@ -302,9 +276,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
         let path = "/tmp/fileio_write.txt"
         
         do {
-            let app = try await Application.make(.testing)
-            defer { app.shutdown() }
-            
             let request = Request(application: app, on: app.eventLoopGroup.next())
             
             try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
@@ -319,9 +290,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     
     // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
     func testInvalidRangeHeaderDoesNotCrash() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.get("file-stream") { req -> Response in
             try await req.fileio.asyncStreamFile(at: #file, advancedETagComparison: true)
         }
@@ -369,9 +337,6 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     }
 
     func testAsyncFileRead() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         let request = Request(application: app, on: app.eventLoopGroup.next())
 
         let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/long-test-file.txt"

@@ -4,6 +4,17 @@ import Vapor
 import NIOHTTP1
 
 final class AsyncSessionTests: XCTestCase {
+    var app: Application!
+    
+    override func setUp() async throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        app = try await Application.make(test)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     func testSessionDestroy() async throws {
         actor MockKeyedCache: AsyncSessionDriver {
             var ops: [String] = []
@@ -39,9 +50,6 @@ final class AsyncSessionTests: XCTestCase {
         }
 
         var cookie: HTTPCookies.Value?
-
-        let app = try await Application.make()
-        defer { app.shutdown() }
 
         let cache = MockKeyedCache()
         app.sessions.use { _ in cache }
@@ -83,9 +91,6 @@ final class AsyncSessionTests: XCTestCase {
     }
     
     func testInvalidCookie() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         // Configure sessions.
         app.sessions.use(.memory)
         app.middleware.use(app.sessions.middleware)

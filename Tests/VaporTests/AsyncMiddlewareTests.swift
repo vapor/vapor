@@ -3,6 +3,16 @@ import XCTest
 import Vapor
 
 final class AsyncMiddlewareTests: XCTestCase {
+    var app: Application!
+    
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     actor OrderStore {
         var order: [String] = []
         
@@ -29,9 +39,6 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         let store = OrderStore()
         app.grouped(
             OrderMiddleware("a", store: store), OrderMiddleware("b", store: store), OrderMiddleware("c", store: store)
@@ -48,9 +55,6 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testPrependingMiddleware() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         let store = OrderStore()
         app.middleware.use(OrderMiddleware("b", store: store))
         app.middleware.use(OrderMiddleware("c", store: store))
@@ -70,9 +74,6 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testCORSMiddlewareVariedByRequestOrigin() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.grouped(
             CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.GET], allowedHeaders: [.origin]))
         ).get("order") { req -> String in
@@ -89,9 +90,6 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testCORSMiddlewareNoVariationByRequestOriginAllowed() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.grouped(
             CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.GET], allowedHeaders: []))
         ).get("order") { req -> String in

@@ -4,6 +4,16 @@ import Vapor
 import NIOHTTP1
 
 final class AsyncRouteTests: XCTestCase {
+    var app: Application!
+    
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     func testEnumResponse() async throws {
         enum IntOrString: AsyncResponseEncodable {
             case int(Int)
@@ -18,9 +28,6 @@ final class AsyncRouteTests: XCTestCase {
                 }
             }
         }
-
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
 
         app.routes.get("foo") { req -> IntOrString in
             if try req.query.get(String.self, at: "number") == "true" {
@@ -44,9 +51,6 @@ final class AsyncRouteTests: XCTestCase {
             var name: String
         }
 
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.post("users") { req async throws -> Response in
             return try await req.content
                 .decode(User.self)
@@ -65,9 +69,6 @@ final class AsyncRouteTests: XCTestCase {
     }
 
     func testWebsocketUpgrade() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         let testMarkerHeaderKey = "TestMarker"
         let testMarkerHeaderValue = "addedInShouldUpgrade"
 

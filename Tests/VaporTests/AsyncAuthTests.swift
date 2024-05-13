@@ -3,6 +3,17 @@ import Vapor
 import XCTest
 
 final class AsyncAuthenticationTests: XCTestCase {
+    
+    var app: Application!
+    
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     func testBearerAuthenticator() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
@@ -20,9 +31,6 @@ final class AsyncAuthenticationTests: XCTestCase {
                 }
             }
         }
-
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
 
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
@@ -63,9 +71,6 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
@@ -103,10 +108,7 @@ final class AsyncAuthenticationTests: XCTestCase {
                 }
             }
         }
-
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
+        
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
@@ -141,9 +143,6 @@ final class AsyncAuthenticationTests: XCTestCase {
                 }
             }
         }
-
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
 
         let redirectMiddleware = Test.redirectMiddleware { req -> String in
             return "/redirect?orig=\(req.url.path)"
@@ -198,9 +197,6 @@ final class AsyncAuthenticationTests: XCTestCase {
                 request.auth.login(test)
             }
         }
-
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
 
         app.routes.grouped([
             app.sessions.middleware,
