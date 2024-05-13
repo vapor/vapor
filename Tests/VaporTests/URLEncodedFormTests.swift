@@ -193,7 +193,7 @@ final class URLEncodedFormTests: XCTestCase {
         let resultForInternetDateTime = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .iso8601)
         ).encode(toEncode)
-        XCTAssertEqual("dates[]=1970-01-01T00:00:00Z&dates[]=1970-01-01T02:46:40Z&dates[]=1970-01-01T05:33:20Z&dates[]=1970-01-01T08:20:00Z&dates[]=1970-01-01T11:06:40Z&dates[]=1970-01-01T13:53:20Z", resultForInternetDateTime)
+        XCTAssertEqual("dates[]=1970-01-01T00%3A00%3A00Z&dates[]=1970-01-01T02%3A46%3A40Z&dates[]=1970-01-01T05%3A33%3A20Z&dates[]=1970-01-01T08%3A20%3A00Z&dates[]=1970-01-01T11%3A06%3A40Z&dates[]=1970-01-01T13%3A53%3A20Z", resultForInternetDateTime)
 
         let decodedInternetDateTime = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
@@ -230,7 +230,7 @@ final class URLEncodedFormTests: XCTestCase {
                 try container.encode(factory.currentValue.string(from: date))
             })
         ).encode(toEncode)
-        XCTAssertEqual("dates[]=Date:%201970-01-01%20Time:%2000:00:00%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2002:46:40%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2005:33:20%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2008:20:00%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2011:06:40%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2013:53:20%20Timezone:%20Z", resultCustom)
+        XCTAssertEqual("dates[]=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2002%3A46%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2005%3A33%3A20%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2008%3A20%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2011%3A06%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2013%3A53%3A20%20Timezone%3A%20Z", resultCustom)
 
         let decodedCustom = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .custom { decoder -> Date in
@@ -270,7 +270,7 @@ final class URLEncodedFormTests: XCTestCase {
         let resultForInternetDateTime = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .iso8601)
         ).encode(toEncode)
-        XCTAssertEqual("date=1970-01-01T00:00:00Z", resultForInternetDateTime)
+        XCTAssertEqual("date=1970-01-01T00%3A00%3A00Z", resultForInternetDateTime)
 
         let decodedInternetDateTime = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
@@ -307,7 +307,7 @@ final class URLEncodedFormTests: XCTestCase {
                 try container.encode(factory.currentValue.string(from: date))
             })
         ).encode(toEncode)
-        XCTAssertEqual("date=Date:%201970-01-01%20Time:%2000:00:00%20Timezone:%20Z", resultCustom)
+        XCTAssertEqual("date=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z", resultCustom)
 
         let decodedCustom = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .custom { decoder -> Date in
@@ -324,7 +324,7 @@ final class URLEncodedFormTests: XCTestCase {
 
     func testOptionalDateEncodingAndDecoding_GH2518() throws {
         let optionalDate: Date? = Date(timeIntervalSince1970: 0)
-        let dateString = "1970-01-01T00:00:00Z"
+        let dateString = "1970-01-01T00%3A00%3A00Z"
 
         let resultForDecodedOptionalDate = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
@@ -664,7 +664,7 @@ final class URLEncodedFormTests: XCTestCase {
         let data = try URLEncodedFormSerializer().serialize([
             "test": "&;!$'(),/:=?@~",
         ])
-        XCTAssertEqual(data, "test=%26%3B!%24'(),/:%3D%3F@~")
+        XCTAssertEqual(data, "test=%26%3B%21%24%27%28%29%2C%2F%3A%3D%3F%40%7E")
     }
 
     func testHeavilyNestedArray() throws {

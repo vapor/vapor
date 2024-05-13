@@ -72,10 +72,10 @@ extension String {
 
 /// Characters allowed in form-urlencoded data.
 private enum Characters {
+    // https://url.spec.whatwg.org/#application-x-www-form-urlencoded-percent-encode-set
     static let allowedCharacters: CharacterSet = {
-        var allowed = CharacterSet.urlQueryAllowed
-        // these symbols are reserved for url-encoded form
-        allowed.remove(charactersIn: "?&=[];+$")
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "*-._")
         return allowed
     }()
 }
