@@ -111,19 +111,19 @@ extension Application {
                 if let query = request.url.query {
                     url += "?\(query)"
                 }
-                var clientRequest = try HTTPClient.Request(
-                    url: url,
-                    method: request.method,
-                    headers: request.headers
-                )
-                clientRequest.body = .byteBuffer(request.body)
-                let response = try await client.execute(request: clientRequest).get()
+                var clientRequest = HTTPClientRequest(url: url)
+                clientRequest.method = request.method
+                clientRequest.headers = request.headers
+                clientRequest.body = .bytes(request.body)
+                let response = try await client.execute(clientRequest, timeout: .seconds(30))
+                // Collect up to 1MB
+                let responseBody = try await response.body.collect(upTo: 1024 * 1024)
                 try await client.shutdown()
                 await app.server.shutdown()
                 return XCTHTTPResponse(
                     status: response.status,
                     headers: response.headers,
-                    body: response.body ?? ByteBufferAllocator().buffer(capacity: 0)
+                    body: responseBody
                 )
             } catch {
                 try? await client.shutdown()
