@@ -114,7 +114,7 @@ public final class Application: Sendable {
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
     
-    @available(*, noasync, message: "This initialiser cannot be used in async contexts, Application.makeApplication() instead")
+    @available(*, noasync, message: "This initialiser cannot be used in async contexts, use Application.make(_:_:) instead")
     public convenience init(
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
