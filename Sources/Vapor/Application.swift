@@ -218,7 +218,7 @@ public final class Application: Sendable {
     /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
     /// use ``execute()`` instead.
     public func startup() async throws {
-        try self.boot()
+        try await self.asyncBoot()
 
         let combinedCommands = AsyncCommands(
             commands: self.asyncCommands.commands.merging(self.commands.commands) { $1 },
@@ -231,6 +231,7 @@ public final class Application: Sendable {
         try await self.console.run(combinedCommands, with: context)
     }
 
+    @available(*, noasync, message: "This can potentially block the thread and should not be called in an async context", renamed: "asyncBoot()")
     public func boot() throws {
         try self.isBooted.withLockedValue { booted in
             guard !booted else {
@@ -239,6 +240,21 @@ public final class Application: Sendable {
             booted = true
             try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
             try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
+        }
+    }
+    
+    public func asyncBoot() async throws {
+        self.isBooted.withLockedValue { booted in
+            guard !booted else {
+                return
+            }
+            booted = true
+        }
+        for handler in self.lifecycle.handlers {
+            try await handler.willBootAsync(self)
+        }
+        for handler in self.lifecycle.handlers {
+            try await handler.didBootAsync(self)
         }
     }
 
