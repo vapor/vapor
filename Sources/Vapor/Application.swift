@@ -231,7 +231,9 @@ public final class Application: Sendable {
         try await self.console.run(combinedCommands, with: context)
     }
 
+    
     @available(*, noasync, message: "This can potentially block the thread and should not be called in an async context", renamed: "asyncBoot()")
+    /// Called when the applications starts up, will trigger the lifecycle handlers
     public func boot() throws {
         try self.isBooted.withLockedValue { booted in
             guard !booted else {
@@ -243,6 +245,7 @@ public final class Application: Sendable {
         }
     }
     
+    /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
     public func asyncBoot() async throws {
         self.isBooted.withLockedValue { booted in
             guard !booted else {
