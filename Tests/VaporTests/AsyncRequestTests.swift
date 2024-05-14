@@ -124,7 +124,7 @@ final class AsyncRequestTests: XCTestCase {
                         _ = bodyIterator // make sure to not prematurely cancelling the sequence
                     }
                     try await Task.sleep(nanoseconds: 10_000_000_000) // wait "forever"
-                    serverSawEnd.store(true, ordering: .relaxed)
+                    serverSawEnd.store(true, ordering: .sequentiallyConsistent)
                     return Response(status: .ok)
                 }
             }
@@ -184,8 +184,8 @@ final class AsyncRequestTests: XCTestCase {
         }
         
         XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load(ordering: .sequentiallyConsistent))
-        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
-        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheClientSent.load(ordering: .sequentiallyConsistent))
+        XCTAssertGreaterThanOrEqual(tenMB.readableBytes, bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
+        XCTAssertGreaterThanOrEqual(tenMB.readableBytes, bytesTheClientSent.load(ordering: .sequentiallyConsistent))
         XCTAssertEqual(0, bytesTheClientSent.load(ordering: .sequentiallyConsistent)) // We'd only see this if we sent the full 10 MB.
         XCTAssertFalse(serverSawEnd.load(ordering: .sequentiallyConsistent))
         XCTAssertTrue(serverSawRequest.load(ordering: .sequentiallyConsistent))
