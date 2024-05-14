@@ -69,10 +69,6 @@ final class PipelineTests: XCTestCase {
     }
 
     func testAsyncEchoHandlers() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-        
-        
         app.on(.POST, "echo", body: .stream) { request async throws -> Response in
             var buffers = [ByteBuffer]()
             

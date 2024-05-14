@@ -10,6 +10,7 @@ final class AsyncClientTests: XCTestCase {
     
     var remoteAppPort: Int!
     var remoteApp: Application!
+    var app: Application!
     
     override func setUp() async throws {
         remoteApp = try await Application.make(.testing)
@@ -52,6 +53,8 @@ final class AsyncClientTests: XCTestCase {
         }
         
         self.remoteAppPort = port
+        
+        app = try await Application.make(.testing)
     }
     
     override func tearDown() async throws {
@@ -59,17 +62,13 @@ final class AsyncClientTests: XCTestCase {
     }
     
     func testClientConfigurationChange() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.http.client.configuration.redirectConfiguration = .disallow
 
         app.get("redirect") {
             $0.redirect(to: "foo")
         }
 
-        try app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
+        try await app.server.start(address: .hostname("localhost", port: 0))
         
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port for app")
@@ -79,20 +78,18 @@ final class AsyncClientTests: XCTestCase {
         let res = try await app.client.get("http://localhost:\(port)/redirect")
 
         XCTAssertEqual(res.status, .seeOther)
+        
+        await app.server.shutdown()
     }
 
     func testClientConfigurationCantBeChangedAfterClientHasBeenUsed() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.http.client.configuration.redirectConfiguration = .disallow
 
         app.get("redirect") {
             $0.redirect(to: "foo")
         }
 
-        try app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
+        try await app.server.start(address: .hostname("localhost", port: 0))
         
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port for app")
@@ -104,12 +101,11 @@ final class AsyncClientTests: XCTestCase {
         app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
         let res = try await app.client.get("http://localhost:\(port)/redirect")
         XCTAssertEqual(res.status, .seeOther)
+        
+        await app.server.shutdown()
     }
 
     func testClientResponseCodable() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         let res = try await app.client.get("http://localhost:\(remoteAppPort!)/json")
 
         let encoded = try JSONEncoder().encode(res)
@@ -119,8 +115,6 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientBeforeSend() async throws {
-        let app = try await Application.make()
-        defer { app.shutdown() }
         try app.boot()
 
         let res = try await app.client.post("http://localhost:\(remoteAppPort!)/anything") { req in
@@ -133,9 +127,7 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testBoilerplateClient() async throws {
-        let app = try await Application.make(.testing)
         app.http.server.configuration.port = 0
-        defer { app.shutdown() }
         let remotePort = self.remoteAppPort!
 
         app.get("foo") { req async throws -> String in
@@ -168,9 +160,6 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testCustomClient() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
-
         app.clients.use(.custom)
         _ = try await app.client.get("https://vapor.codes")
 
@@ -179,8 +168,6 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientLogging() async throws {
-        let app = try await Application.make(.testing)
-        defer { app.shutdown() }
         let logs = TestLogHandler()
         app.logger = logs.logger
 
