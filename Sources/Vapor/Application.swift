@@ -143,7 +143,7 @@ public final class Application: Sendable {
         self._storage = .init(.init(logger: logger))
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
-        self.core.initialize()
+        self.core.initialize(asyncEnvironment: async)
         self.caches.initialize()
         self.views.initialize()
         self.passwords.use(.bcrypt)
