@@ -69,6 +69,80 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), true)
     }
     
+    func testLifecycleHandlerAsync() async throws {
+        final class Foo: LifecycleHandler {
+            let willBootFlag: NIOLockedValueBox<Bool>
+            let didBootFlag: NIOLockedValueBox<Bool>
+            let shutdownFlag: NIOLockedValueBox<Bool>
+            let willBootAsyncFlag: NIOLockedValueBox<Bool>
+            let didBootAsyncFlag: NIOLockedValueBox<Bool>
+            let shutdownAsyncFlag: NIOLockedValueBox<Bool>
+
+            init() {
+                self.willBootFlag = .init(false)
+                self.didBootFlag = .init(false)
+                self.shutdownFlag = .init(false)
+                self.didBootAsyncFlag = .init(false)
+                self.willBootAsyncFlag = .init(false)
+                self.shutdownAsyncFlag = .init(false)
+            }
+
+            func willBootAsync(_ application: Application) async throws {
+                self.willBootAsyncFlag.withLockedValue { $0 = true }
+            }
+            
+            func didBootAsync(_ application: Application) async throws {
+                self.didBootAsyncFlag.withLockedValue { $0 = true }
+            }
+            
+            func shutdownAsync(_ application: Application) async {
+                self.shutdownAsyncFlag.withLockedValue { $0 = true }
+            }
+            
+            func willBoot(_ application: Application) throws {
+                self.willBootFlag.withLockedValue { $0 = true }
+            }
+
+            func didBoot(_ application: Application) throws {
+                self.didBootFlag.withLockedValue { $0 = true }
+            }
+
+            func shutdown(_ application: Application) {
+                self.shutdownFlag.withLockedValue { $0 = true }
+            }
+        }
+        
+        let app = try await Application.make(.testing)
+
+        let foo = Foo()
+        app.lifecycle.use(foo)
+
+        XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), false)
+        XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), false)
+        XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), false)
+        XCTAssertEqual(foo.willBootAsyncFlag.withLockedValue({ $0 }), false)
+        XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), false)
+        XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
+
+        try await app.asyncBoot()
+
+        XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), true)
+        XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), true)
+        XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), false)
+        XCTAssertEqual(foo.willBootAsyncFlag.withLockedValue({ $0 }), true)
+        XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), true)
+        XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
+
+        try await app.asyncShutdown()
+
+        XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), true)
+        XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), true)
+        XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), true)
+        XCTAssertEqual(foo.willBootAsyncFlag.withLockedValue({ $0 }), true)
+        XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), true)
+        XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), true)
+    }
+    
     func testThrowDoesNotCrash() throws {
         enum Static {
             static let app: NIOLockedValueBox<Application?> = .init(nil)
