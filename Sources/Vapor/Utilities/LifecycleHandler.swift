@@ -33,17 +33,23 @@ public protocol LifecycleHandler: Sendable {
     /// Called when the application is about to shutdown
     func shutdown(_ application: Application)
     /// Called when the application is about to boot up. This is the asynchronous version
-    /// of ``willBoot(_:)-9zn``.
+    /// of ``willBoot(_:)-9zn``. When adopting the async APIs you should ensure you
+    /// provide a compatitble implementation for ``willBoot(_:)-8anu6`` as well if you
+    /// want to support older users still running in a non-async context
     /// **Note** your application must be running in an asynchronous context and initialised with
     /// ``Application/make(_:_:)`` for this handler to be called
     func willBootAsync(_ application: Application) async throws
     /// Called when the application is about to boot up. This is the asynchronous version
-    /// of ``didBoot(_:)-wfef``.
+    /// of ``didBoot(_:)-wfef``. When adopting the async APIs you should ensure you
+    /// provide a compatitble implementation for ``didBoot(_:)-wfef`` as well if you
+    /// want to support older users still running in a non-async context
     /// **Note** your application must be running in an asynchronous context and initialised with
     /// ``Application/make(_:_:)`` for this handler to be called
     func didBootAsync(_ application: Application) async throws
     /// Called when the application is about to boot up. This is the asynchronous version
-    /// of ``shutdown(_:)-2clwm``.
+    /// of ``shutdown(_:)-2clwm``. When adopting the async APIs you should ensure you
+    /// provide a compatitble implementation for ``shutdown(_:)-2clwm`` as well if you
+    /// want to support older users still running in a non-async context
     /// **Note** your application must be running in an asynchronous context and initialised with
     /// ``Application/make(_:_:)`` for this handler to be called
     func shutdownAsync(_ application: Application) async
