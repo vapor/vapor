@@ -244,6 +244,12 @@ public final class Application: Sendable {
 
     @available(*, noasync, message: "This can block the thread and should not be called in an async context", renamed: "asyncShutdown()")
     public func shutdown() {
+        assert(!self.didShutdown, "Application has already shut down")
+        self.logger.debug("Application shutting down")
+
+        self.logger.trace("Shutting down providers")
+        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
+        
         triggerShutdown()
 
         switch self.eventLoopGroupProvider {
@@ -263,6 +269,14 @@ public final class Application: Sendable {
     }
     
     public func asyncShutdown() async throws {
+        assert(!self.didShutdown, "Application has already shut down")
+        self.logger.debug("Application shutting down")
+
+        self.logger.trace("Shutting down providers")
+        for handler in self.lifecycle.handlers.reversed()  {
+            await handler.shutdownAsync(self)
+        }
+        
         triggerShutdown()
 
         switch self.eventLoopGroupProvider {
@@ -282,11 +296,6 @@ public final class Application: Sendable {
     }
     
     private func triggerShutdown() {
-        assert(!self.didShutdown, "Application has already shut down")
-        self.logger.debug("Application shutting down")
-
-        self.logger.trace("Shutting down providers")
-        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
         self.lifecycle.handlers = []
 
         self.logger.trace("Clearing Application storage")
