@@ -118,8 +118,8 @@ final class AsyncRequestTests: XCTestCase {
                     XCTAssertTrue(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged)
                     var bodyIterator = req.body.makeAsyncIterator()
                     let firstChunk = try await bodyIterator.next() // read only first chunk
-                    numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .relaxed)
-                    bytesTheServerSaw.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .relaxed)
+                    numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .sequentiallyConsistent)
+                    bytesTheServerSaw.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .sequentiallyConsistent)
                     defer {
                         _ = bodyIterator // make sure to not prematurely cancelling the sequence
                     }
@@ -162,7 +162,7 @@ final class AsyncRequestTests: XCTestCase {
             }
             
             func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
-                self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .relaxed)
+                self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .sequentiallyConsistent)
             }
         }
         
@@ -183,12 +183,12 @@ final class AsyncRequestTests: XCTestCase {
             }
         }
         
-        XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load(ordering: .relaxed))
-        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheServerSaw.load(ordering: .relaxed))
-        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheClientSent.load(ordering: .relaxed))
-        XCTAssertEqual(0, bytesTheClientSent.load(ordering: .relaxed)) // We'd only see this if we sent the full 10 MB.
-        XCTAssertFalse(serverSawEnd.load(ordering: .relaxed))
-        XCTAssertTrue(serverSawRequest.load(ordering: .relaxed))
+        XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load(ordering: .sequentiallyConsistent))
+        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
+        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheClientSent.load(ordering: .sequentiallyConsistent))
+        XCTAssertEqual(0, bytesTheClientSent.load(ordering: .sequentiallyConsistent)) // We'd only see this if we sent the full 10 MB.
+        XCTAssertFalse(serverSawEnd.load(ordering: .sequentiallyConsistent))
+        XCTAssertTrue(serverSawRequest.load(ordering: .sequentiallyConsistent))
         
         requestHandlerTask.withLockedValue { $0?.cancel() }
         try await httpClient.shutdown()
