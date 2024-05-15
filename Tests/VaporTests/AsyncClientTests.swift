@@ -42,7 +42,7 @@ final class AsyncClientTests: XCTestCase {
         }
         
         remoteApp.environment.arguments = ["serve"]
-        try remoteApp.boot()
+        try await remoteApp.asyncBoot()
         try await remoteApp.startup()
         
         XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
@@ -115,7 +115,7 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientBeforeSend() async throws {
-        try app.boot()
+        try await app.asyncBoot()
 
         let res = try await app.client.post("http://localhost:\(remoteAppPort!)/anything") { req in
             try req.content.encode(["hello": "world"])
@@ -143,7 +143,7 @@ final class AsyncClientTests: XCTestCase {
         }
 
         app.environment.arguments = ["serve"]
-        try app.boot()
+        try await app.asyncBoot()
         try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)

@@ -143,7 +143,7 @@ public final class Application: Sendable {
         self._storage = .init(.init(logger: logger))
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
-        self.core.initialize()
+        self.core.initialize(asyncEnvironment: async)
         self.caches.initialize()
         self.views.initialize()
         self.passwords.use(.bcrypt)
@@ -218,7 +218,7 @@ public final class Application: Sendable {
     /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
     /// use ``execute()`` instead.
     public func startup() async throws {
-        try self.boot()
+        try await self.asyncBoot()
 
         let combinedCommands = AsyncCommands(
             commands: self.asyncCommands.commands.merging(self.commands.commands) { $1 },
@@ -231,6 +231,9 @@ public final class Application: Sendable {
         try await self.console.run(combinedCommands, with: context)
     }
 
+    
+    @available(*, noasync, message: "This can potentially block the thread and should not be called in an async context", renamed: "asyncBoot()")
+    /// Called when the applications starts up, will trigger the lifecycle handlers
     public func boot() throws {
         try self.isBooted.withLockedValue { booted in
             guard !booted else {
@@ -241,9 +244,31 @@ public final class Application: Sendable {
             try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
         }
     }
+    
+    /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
+    public func asyncBoot() async throws {
+        self.isBooted.withLockedValue { booted in
+            guard !booted else {
+                return
+            }
+            booted = true
+        }
+        for handler in self.lifecycle.handlers {
+            try await handler.willBootAsync(self)
+        }
+        for handler in self.lifecycle.handlers {
+            try await handler.didBootAsync(self)
+        }
+    }
 
     @available(*, noasync, message: "This can block the thread and should not be called in an async context", renamed: "asyncShutdown()")
     public func shutdown() {
+        assert(!self.didShutdown, "Application has already shut down")
+        self.logger.debug("Application shutting down")
+
+        self.logger.trace("Shutting down providers")
+        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
+        
         triggerShutdown()
 
         switch self.eventLoopGroupProvider {
@@ -263,6 +288,14 @@ public final class Application: Sendable {
     }
     
     public func asyncShutdown() async throws {
+        assert(!self.didShutdown, "Application has already shut down")
+        self.logger.debug("Application shutting down")
+
+        self.logger.trace("Shutting down providers")
+        for handler in self.lifecycle.handlers.reversed()  {
+            await handler.shutdownAsync(self)
+        }
+        
         triggerShutdown()
 
         switch self.eventLoopGroupProvider {
@@ -282,11 +315,6 @@ public final class Application: Sendable {
     }
     
     private func triggerShutdown() {
-        assert(!self.didShutdown, "Application has already shut down")
-        self.logger.debug("Application shutting down")
-
-        self.logger.trace("Shutting down providers")
-        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
         self.lifecycle.handlers = []
 
         self.logger.trace("Clearing Application storage")
