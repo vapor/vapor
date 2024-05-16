@@ -222,6 +222,10 @@ public extension HTTPMediaType {
     static let png = HTTPMediaType(type: "image", subType: "png")
     /// SVG image.
     static let svg = HTTPMediaType(type: "image", subType: "svg+xml")
+    /// TIFF image.
+    static let tiff = HTTPMediaType(type: "image", subType: "tiff")
+    /// WebP image.
+    static let webp = HTTPMediaType(type: "image", subType: "webp")
     /// Basic audio.
     static let audio = HTTPMediaType(type: "audio", subType: "basic")
     /// MIDI audio.
@@ -638,6 +642,7 @@ let fileExtensionMediaTypeMapping: [String: HTTPMediaType] = [
     "svgz": HTTPMediaType(type: "image", subType: "svg+xml"),
     "tiff": HTTPMediaType(type: "image", subType: "tiff"),
     "tif": HTTPMediaType(type: "image", subType: "tiff"),
+    "webp": HTTPMediaType(type: "image", subType: "webp"),
     "djvu": HTTPMediaType(type: "image", subType: "vnd.djvu"),
     "djv": HTTPMediaType(type: "image", subType: "vnd.djvu"),
     "ico": HTTPMediaType(type: "image", subType: "vnd.microsoft.icon"),
