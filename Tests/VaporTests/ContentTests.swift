@@ -80,7 +80,7 @@ final class ContentTests: XCTestCase {
 
         try app.testable().test(.GET, "/decode_error") { res in
             XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, #"Value at path 'bar' was not of type 'Int'. Expected to decode Int but found a string"#)
+            XCTAssertContains(res.body.string, #"Value was not of type 'Int' at path 'bar'. Expected to decode Int but found a string"#)
         }
     }
 
@@ -303,7 +303,7 @@ final class ContentTests: XCTestCase {
 
     func testMultipartEncode() throws {
         struct User: Content {
-            static var defaultContentType: HTTPMediaType = .formData
+            static let defaultContentType: HTTPMediaType = .formData
             var name: String
             var age: Int
             var image: File
@@ -331,7 +331,7 @@ final class ContentTests: XCTestCase {
     
     func testMultiPartEncodeUnicode() throws {
         struct User: Content {
-            static var defaultContentType: HTTPMediaType = .formData
+            static let defaultContentType: HTTPMediaType = .formData
             var name: String
             var age: Int
             var image: File
@@ -564,7 +564,7 @@ final class ContentTests: XCTestCase {
         XCTAssertThrowsError(try req.content.decode(PostInput.self)) { error in
             XCTAssertEqual(
                 (error as? AbortError)?.reason,
-                #"Value required for key at path 'is_free'. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
+                #"No such key 'is_free' at path ''. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
             )
         }
     }
@@ -617,7 +617,7 @@ final class ContentTests: XCTestCase {
         XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
             XCTAssertEqual(
                 (error as? AbortError)?.reason,
-                #"Value of type 'String' was not found at path 'items.Index 1'. Unkeyed container is at end."#
+                #"No value found (expected type 'String') at path 'items.Index 1'. Unkeyed container is at end."#
             )
         }
     }
@@ -642,7 +642,7 @@ final class ContentTests: XCTestCase {
         XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
             XCTAssertContains(
                 (error as? AbortError)?.reason,
-                #"Value at path 'item.title' was not of type 'Int'. Expected to decode Int but found a string"#
+                #"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#
             )
         }
     }

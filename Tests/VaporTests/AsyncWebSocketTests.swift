@@ -6,8 +6,19 @@ import NIOCore
 import NIOPosix
 
 final class AsyncWebSocketTests: XCTestCase {
+    var app: Application!
+    
+    override func setUp() async throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        app = try await Application.make(test)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     func testWebSocketClient() async throws {
-        let server = Application(.testing)
+        let server = try await Application.make(.testing)
 
         server.http.server.configuration.port = 0
 
@@ -16,10 +27,6 @@ final class AsyncWebSocketTests: XCTestCase {
         }
         server.environment.arguments = ["serve"]
         try await server.startup()
-
-        defer {
-            server.shutdown()
-        }
 
         guard let localAddress = server.http.server.shared.localAddress, let port = localAddress.port else {
             XCTFail("couldn't get port from \(server.http.server.shared.localAddress.debugDescription)")
@@ -42,14 +49,13 @@ final class AsyncWebSocketTests: XCTestCase {
 
         let string = try await promise.futureResult.get()
         XCTAssertEqual(string, "Hello, world!")
+        
+        try await server.asyncShutdown()
     }
 
 
     // https://github.com/vapor/vapor/issues/1997
     func testWebSocket404() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.http.server.configuration.port = 0
 
         app.webSocket("bar") { req, ws in
@@ -80,8 +86,6 @@ final class AsyncWebSocketTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/2009
     func testWebSocketServer() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
         app.webSocket("foo") { req, ws in
             ws.send("foo")
             ws.close(promise: nil)
@@ -114,9 +118,6 @@ final class AsyncWebSocketTests: XCTestCase {
     }
 
     func testManualUpgradeToWebSocket() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.http.server.configuration.port = 0
 
         app.get("foo") { req in

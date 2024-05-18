@@ -5,6 +5,17 @@ import NIOCore
 import NIOHTTP1
 
 final class SessionTests: XCTestCase {
+    var app: Application!
+    
+    override func setUp() async throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        app = try await Application.make(test)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     func testSessionDestroy() async throws {
         actor MockKeyedCache: AsyncSessionDriver {
             var ops: [String] = []
@@ -40,9 +51,6 @@ final class SessionTests: XCTestCase {
         }
 
         var cookie: HTTPCookies.Value?
-
-        let app = Application()
-        defer { app.shutdown() }
 
         let cache = MockKeyedCache()
         app.sessions.use { _ in cache }
@@ -84,9 +92,6 @@ final class SessionTests: XCTestCase {
     }
 
     func testInvalidCookie() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         // Configure sessions.
         app.sessions.use(.memory)
         app.middleware.use(app.sessions.middleware)

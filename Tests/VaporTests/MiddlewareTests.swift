@@ -4,6 +4,17 @@ import Vapor
 import NIOCore
 
 final class MiddlewareTests: XCTestCase {
+    var app: Application!
+    
+    override func setUp() async throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        app = try await Application.make(test)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     actor OrderStore {
         var order: [String] = []
         
@@ -33,9 +44,6 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         let store = OrderStore()
         app.grouped(
             OrderMiddleware("a", store: store), OrderMiddleware("b", store: store), OrderMiddleware("c", store: store)
@@ -52,9 +60,6 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testPrependingMiddleware() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         let store = OrderStore()
         app.middleware.use(OrderMiddleware("b", store: store))
         app.middleware.use(OrderMiddleware("c", store: store))
@@ -74,9 +79,6 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSMiddlewareVariedByRequestOrigin() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.grouped(
             CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.GET], allowedHeaders: [.origin]))
         ).get("order") { req -> String in
@@ -93,9 +95,6 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSMiddlewareNoVariationByRequestOriginAllowed() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.grouped(
             CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.GET], allowedHeaders: []))
         ).get("order") { req -> String in
@@ -111,31 +110,27 @@ final class MiddlewareTests: XCTestCase {
         }
     }
     
-    func testFileMiddlewareFromBundle() throws {
+    func testFileMiddlewareFromBundle() async throws {
         var fileMiddleware: FileMiddleware!
         
         XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/"), "FileMiddleware instantiation from Bundle should not fail")
         
-        let app = Application(.testing)
-        defer { app.shutdown() }
         app.middleware.use(fileMiddleware)
         
-        try app.testable().test(.GET, "/foo.txt") { result in
+        try await app.testable().test(.GET, "/foo.txt") { result async in
             XCTAssertEqual(result.status, .ok)
             XCTAssertEqual(result.body.string, "bar\n")
         }
     }
     
-    func testFileMiddlewareFromBundleSubfolder() throws {
+    func testFileMiddlewareFromBundleSubfolder() async throws {
         var fileMiddleware: FileMiddleware!
         
         XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities"), "FileMiddleware instantiation from Bundle should not fail")
         
-        let app = Application(.testing)
-        defer { app.shutdown() }
         app.middleware.use(fileMiddleware)
         
-        try app.testable().test(.GET, "/index.html") { result in
+        try await app.testable().test(.GET, "/index.html") { result async in
             XCTAssertEqual(result.status, .ok)
             XCTAssertEqual(result.body.string, "<h1>Subdirectory Default</h1>\n")
         }

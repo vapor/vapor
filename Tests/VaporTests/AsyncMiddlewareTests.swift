@@ -3,6 +3,16 @@ import XCTest
 import Vapor
 
 final class AsyncMiddlewareTests: XCTestCase {
+    var app: Application!
+    
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     actor OrderStore {
         var order: [String] = []
         
@@ -29,9 +39,6 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         let store = OrderStore()
         app.grouped(
             OrderMiddleware("a", store: store), OrderMiddleware("b", store: store), OrderMiddleware("c", store: store)
@@ -48,9 +55,6 @@ final class AsyncMiddlewareTests: XCTestCase {
     }
 
     func testPrependingMiddleware() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         let store = OrderStore()
         app.middleware.use(OrderMiddleware("b", store: store))
         app.middleware.use(OrderMiddleware("c", store: store))
@@ -69,17 +73,14 @@ final class AsyncMiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSMiddlewareVariedByRequestOrigin() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
+    func testCORSMiddlewareVariedByRequestOrigin() async throws {
         app.grouped(
             CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.GET], allowedHeaders: [.origin]))
         ).get("order") { req -> String in
             return "done"
         }
 
-        try app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+        try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
             XCTAssertEqual(res.headers[.vary], ["origin"])
@@ -88,17 +89,14 @@ final class AsyncMiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSMiddlewareNoVariationByRequestOriginAllowed() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
+    func testCORSMiddlewareNoVariationByRequestOriginAllowed() async throws {
         app.grouped(
             CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.GET], allowedHeaders: []))
         ).get("order") { req -> String in
             return "done"
         }
 
-        try app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+        try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
             XCTAssertEqual(res.headers[.vary], [])
@@ -107,7 +105,7 @@ final class AsyncMiddlewareTests: XCTestCase {
         }
     }
     
-    func testFileMiddlewareFromBundleInvalidPublicDirectory() {
+    func testFileMiddlewareFromBundleInvalidPublicDirectory() async throws {
         XCTAssertThrowsError(try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")) { error in
             guard let error = error as? FileMiddleware.BundleSetupError else {
                 return XCTFail("Error should be of type FileMiddleware.SetupError")

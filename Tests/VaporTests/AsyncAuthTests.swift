@@ -3,7 +3,18 @@ import Vapor
 import XCTest
 
 final class AsyncAuthenticationTests: XCTestCase {
-    func testBearerAuthenticator() throws {
+    
+    var app: Application!
+    
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
+    func testBearerAuthenticator() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
@@ -21,29 +32,26 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }
 
-        try app.testable().test(.GET, "/test") { res in
+        try await app.testable().test(.GET, "/test") { res async in
             XCTAssertEqual(res.status, .unauthorized)
         }
-        .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
+        .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
         }
-        .test(.GET, "/test", headers: ["Authorization": "bearer test"]) { res in
+        .test(.GET, "/test", headers: ["Authorization": "bearer test"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
         }
     }
 
-    func testBasicAuthenticator() throws {
+    func testBasicAuthenticator() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
@@ -63,9 +71,6 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
@@ -73,18 +78,18 @@ final class AsyncAuthenticationTests: XCTestCase {
         }
 
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try app.testable().test(.GET, "/test") { res in
+        try await app.testable().test(.GET, "/test") { res async in
             XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
-        }.test(.GET, "/test", headers: ["Authorization": "basic \(basic)"]) { res in
+        }.test(.GET, "/test", headers: ["Authorization": "basic \(basic)"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
         }
     }
 
-    func testBasicAuthenticatorWithColonInPassword() throws {
+    func testBasicAuthenticatorWithColonInPassword() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
@@ -103,10 +108,7 @@ final class AsyncAuthenticationTests: XCTestCase {
                 }
             }
         }
-
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
+        
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
@@ -114,15 +116,15 @@ final class AsyncAuthenticationTests: XCTestCase {
         }
 
         let basic = "test:secret:with:colon".data(using: .utf8)!.base64EncodedString()
-        try app.testable().test(.GET, "/test") { res in
+        try await app.testable().test(.GET, "/test") { res async in
             XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
         }
     }
 
-    func testBasicAuthenticatorWithRedirect() throws {
+    func testBasicAuthenticatorWithRedirect() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
@@ -142,9 +144,6 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         let redirectMiddleware = Test.redirectMiddleware { req -> String in
             return "/redirect?orig=\(req.url.path)"
         }
@@ -156,16 +155,16 @@ final class AsyncAuthenticationTests: XCTestCase {
         }
 
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try app.testable().test(.GET, "/test") { res in
+        try await app.testable().test(.GET, "/test") { res async in
             XCTAssertEqual(res.status, .seeOther)
             XCTAssertEqual(res.headers["Location"].first, "/redirect?orig=/test")
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
         }
     }
 
-    func testSessionAuthentication() throws {
+    func testSessionAuthentication() async throws {
         struct Test: Authenticatable, SessionAuthenticatable {
             static func bearerAuthenticator() -> AsyncAuthenticator {
                 TestBearerAuthenticator()
@@ -199,9 +198,6 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.grouped([
             app.sessions.middleware,
             Test.sessionAuthenticator(),
@@ -212,10 +208,10 @@ final class AsyncAuthenticationTests: XCTestCase {
         }
 
         var sessionCookie: HTTPCookies.Value?
-        try app.testable().test(.GET, "/test") { res in
+        try await app.testable().test(.GET, "/test") { res async in
             XCTAssertEqual(res.status, .unauthorized)
             XCTAssertNil(res.headers.first(name: .setCookie))
-        }.test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
+        }.test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
             if let cookie = res.headers.setCookie?["vapor-session"] {
@@ -224,14 +220,14 @@ final class AsyncAuthenticationTests: XCTestCase {
                 XCTFail("No set cookie header")
             }
         }
-        .test(.GET, "/test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")]) { res in
+        .test(.GET, "/test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")]) { res async in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
             XCTAssertNotNil(res.headers.first(name: .setCookie))
         }
     }
 
-    func testMiddlewareConfigExistential() {
+    func testMiddlewareConfigExistential() async {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()

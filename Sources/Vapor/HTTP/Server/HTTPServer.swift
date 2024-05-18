@@ -48,23 +48,34 @@ public final class HTTPServer: Server, Sendable {
         
         /// Port the server will bind to.
         public var port: Int {
-           get {
-               switch address {
-               case .hostname(_, let port):
-                   return port ?? Self.defaultPort
-               default:
-                   return Self.defaultPort
-               }
-           }
-           set {
-               switch address {
-               case .hostname(let hostname, _):
-                   address = .hostname(hostname, port: newValue)
-               default:
-                   address = .hostname(nil, port: newValue)
-               }
-           }
-       }
+            get {
+                switch address {
+                case .hostname(_, let port):
+                    return port ?? Self.defaultPort
+                default:
+                    return Self.defaultPort
+                }
+            }
+            set {
+                switch address {
+                case .hostname(let hostname, _):
+                    address = .hostname(hostname, port: newValue)
+                default:
+                    address = .hostname(nil, port: newValue)
+                }
+            }
+        }
+        
+        /// A human-readable description of the configured address. Used in log messages when starting server.
+        var addressDescription: String {
+            let scheme = tlsConfiguration == nil ? "http" : "https"
+            switch address {
+            case .hostname(let hostname, let port):
+                return "\(scheme)://\(hostname ?? Self.defaultHostname):\(port ?? Self.defaultPort)"
+            case .unixDomainSocket(let socketPath):
+                return "\(scheme)+unix: \(socketPath)"
+            }
+        }
         
         /// Listen backlog.
         public var backlog: Int
@@ -160,6 +171,14 @@ public final class HTTPServer: Server, Sendable {
         /// This is the same as `NIOSSLCustomVerificationCallback` but just marked as `Sendable`
         @preconcurrency
         public var customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)?
+        
+        /// The number of incoming TCP connections to accept per "tick" (i.e. each time through the server's event loop).
+        ///
+        /// Most users will never need to change this value; its primary use case is to work around benchmarking
+        /// artifacts where bursts of connections are created within extremely small intervals. See
+        /// https://forums.swift.org/t/standard-vapor-website-drops-1-5-of-requests-even-at-concurrency-of-100/71583/49
+        /// for additional information.
+        public var connectionsPerServerTick: UInt
 
         public init(
             hostname: String = Self.defaultHostname,
@@ -175,7 +194,9 @@ public final class HTTPServer: Server, Sendable {
             serverName: String? = nil,
             reportMetrics: Bool = true,
             logger: Logger? = nil,
-            shutdownTimeout: TimeAmount = .seconds(10)
+            shutdownTimeout: TimeAmount = .seconds(10),
+            customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
+            connectionsPerServerTick: UInt = 256
         ) {
             self.init(
                 address: .hostname(hostname, port: port),
@@ -190,10 +211,12 @@ public final class HTTPServer: Server, Sendable {
                 serverName: serverName,
                 reportMetrics: reportMetrics,
                 logger: logger,
-                shutdownTimeout: shutdownTimeout
+                shutdownTimeout: shutdownTimeout,
+                customCertificateVerifyCallback: customCertificateVerifyCallback,
+                connectionsPerServerTick: connectionsPerServerTick
             )
         }
-        
+
         public init(
             address: BindAddress,
             backlog: Int = 256,
@@ -207,7 +230,9 @@ public final class HTTPServer: Server, Sendable {
             serverName: String? = nil,
             reportMetrics: Bool = true,
             logger: Logger? = nil,
-            shutdownTimeout: TimeAmount = .seconds(10)
+            shutdownTimeout: TimeAmount = .seconds(10),
+            customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
+            connectionsPerServerTick: UInt = 256
         ) {
             self.address = address
             self.backlog = backlog
@@ -226,7 +251,8 @@ public final class HTTPServer: Server, Sendable {
             self.reportMetrics = reportMetrics
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
-            self.customCertificateVerifyCallback = nil
+            self.customCertificateVerifyCallback = customCertificateVerifyCallback
+            self.connectionsPerServerTick = connectionsPerServerTick
         }
     }
     
@@ -258,6 +284,7 @@ public final class HTTPServer: Server, Sendable {
             let canBeUpdatedDynamically =
                 oldValue.address == newValue.address
                 && oldValue.backlog == newValue.backlog
+                && oldValue.connectionsPerServerTick == newValue.connectionsPerServerTick
                 && oldValue.reuseAddress == newValue.reuseAddress
                 && oldValue.tcpNoDelay == newValue.tcpNoDelay
             
@@ -293,6 +320,7 @@ public final class HTTPServer: Server, Sendable {
         self.connection = .init(nil)
     }
     
+    @available(*, noasync, message: "Use the async start() method instead.")
     public func start(address: BindAddress?) throws {
         var configuration = self.configuration
         
@@ -307,19 +335,10 @@ public final class HTTPServer: Server, Sendable {
             /// Override the socket path.
             configuration.address = address!
         }
-        
-        /// Print starting message.
-        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
-        let addressDescription: String
-        switch configuration.address {
-        case .hostname(let hostname, let port):
-            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
-        case .unixDomainSocket(let socketPath):
-            addressDescription = "\(scheme)+unix: \(socketPath)"
-        }
-        
-        self.configuration.logger.notice("Server starting on \(addressDescription)")
 
+        /// Log starting message for debugging before attempting to start the server.
+        configuration.logger.debug("Server starting on \(configuration.addressDescription)")
+        
         /// Start the actual `HTTPServer`.
         try self.connection.withLockedValue {
             $0 = try HTTPServerConnection.start(
@@ -331,10 +350,73 @@ public final class HTTPServer: Server, Sendable {
             ).wait()
         }
 
+        /// Overwrite configuration with actual address, if applicable.
+        /// They may differ from the provided configuation if port 0 was provided, for example.
+        if let localAddress = self.localAddress {
+            if let hostname = localAddress.hostname, let port = localAddress.port {
+                configuration.address = .hostname(hostname, port: port)
+            } else if let pathname = localAddress.pathname {
+                configuration.address = .unixDomainSocket(path: pathname)
+            }
+        }
+
+        /// Log started message with the actual configuration.
+        configuration.logger.notice("Server started on \(configuration.addressDescription)")
+
         self.configuration = configuration
         self.didStart.withLockedValue { $0 = true }
     }
     
+    public func start(address: BindAddress?) async throws {
+        var configuration = self.configuration
+        
+        switch address {
+        case .none:
+            /// Use the configuration as is.
+            break
+        case .hostname(let hostname, let port):
+            /// Override the hostname, port, neither, or both.
+            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
+        case .unixDomainSocket:
+            /// Override the socket path.
+            configuration.address = address!
+        }
+        
+        /// Log starting message for debugging before attempting to start the server.
+        configuration.logger.debug("Server starting on \(configuration.addressDescription)")
+
+        /// Start the actual `HTTPServer`.
+        let serverConnection = try await HTTPServerConnection.start(
+            application: self.application,
+            server: self,
+            responder: self.responder,
+            configuration: configuration,
+            on: self.eventLoopGroup
+        ).get()
+        
+        self.connection.withLockedValue {
+            precondition($0 == nil, "You can't start the server connection twice")
+            $0 = serverConnection
+        }
+        
+        /// Overwrite configuration with actual address, if applicable.
+        /// They may differ from the provided configuation if port 0 was provided, for example.
+        if let localAddress = self.localAddress {
+            if let hostname = localAddress.hostname, let port = localAddress.port {
+                configuration.address = .hostname(hostname, port: port)
+            } else if let pathname = localAddress.pathname {
+                configuration.address = .unixDomainSocket(path: pathname)
+            }
+        }
+
+        /// Log started message with the actual configuration.
+        configuration.logger.notice("Server started on \(configuration.addressDescription)")
+
+        self.configuration = configuration
+        self.didStart.withLockedValue { $0 = true }
+    }
+    
+    @available(*, noasync, message: "Use the async shutdown() method instead.")
     public func shutdown() {
         guard let connection = self.connection.withLockedValue({ $0 }) else {
             return
@@ -347,6 +429,24 @@ public final class HTTPServer: Server, Sendable {
         }
         self.configuration.logger.debug("HTTP server shutting down")
         self.didShutdown.withLockedValue { $0 = true }
+        // Make sure we remove the connection reference in case we want to start up again
+        self.connection.withLockedValue { $0 = nil }
+    }
+    
+    public func shutdown() async {
+        guard let connection = self.connection.withLockedValue({ $0 }) else {
+            return
+        }
+        self.configuration.logger.debug("Requesting HTTP server shutdown")
+        do {
+            try await connection.close(timeout: self.configuration.shutdownTimeout).get()
+        } catch {
+            self.configuration.logger.error("Could not stop HTTP server: \(error)")
+        }
+        self.configuration.logger.debug("HTTP server shutting down")
+        self.didShutdown.withLockedValue { $0 = true }
+        // Make sure we remove the connection reference in case we want to start up again
+        self.connection.withLockedValue { $0 = nil }
     }
 
     public var localAddress: SocketAddress? {
@@ -373,7 +473,8 @@ private final class HTTPServerConnection: Sendable {
     ) -> EventLoopFuture<HTTPServerConnection> {
         let quiesce = ServerQuiescingHelper(group: eventLoopGroup)
         let bootstrap = ServerBootstrap(group: eventLoopGroup)
-            /// Specify backlog and enable `SO_REUSEADDR` for the server itself.
+            /// Specify accepts per loop and backlog, and enable `SO_REUSEADDR` for the server itself.
+            .serverChannelOption(ChannelOptions.maxMessagesPerRead, value: configuration.connectionsPerServerTick)
             .serverChannelOption(ChannelOptions.backlog, value: Int32(configuration.backlog))
             .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             

@@ -5,8 +5,13 @@ import XCTest
 import Vapor
 
 extension Application: XCTApplicationTester {
+    @available(*, noasync, message: "Use the async method instead.")
     public func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
          try self.testable().performTest(request: request)
+    }
+    
+    public func performTest(request: XCTHTTPRequest) async throws -> XCTHTTPResponse {
+         try await self.testable().performTest(request: request)
     }
 }
 
@@ -44,6 +49,7 @@ extension Application {
             self.port = port
         }
 
+        @available(*, noasync, message: "Use the async method instead.")
         func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
             try app.server.start(address: .hostname(self.hostname, port: self.port))
             defer { app.server.shutdown() }
@@ -81,6 +87,50 @@ extension Application {
                 body: response.body ?? ByteBufferAllocator().buffer(capacity: 0)
             )
         }
+        
+        func performTest(request: XCTHTTPRequest) async throws -> XCTHTTPResponse {
+            try await app.server.start(address: .hostname(self.hostname, port: self.port))
+            let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
+            
+            do {
+                var path = request.url.path
+                path = path.hasPrefix("/") ? path : "/\(path)"
+                
+                let actualPort: Int
+                
+                if self.port == 0 {
+                    guard let portAllocated = app.http.server.shared.localAddress?.port else {
+                        throw Abort(.internalServerError, reason: "Failed to get port from local address")
+                    }
+                    actualPort = portAllocated
+                } else {
+                    actualPort = self.port
+                }
+                
+                var url = "http://\(self.hostname):\(actualPort)\(path)"
+                if let query = request.url.query {
+                    url += "?\(query)"
+                }
+                var clientRequest = HTTPClientRequest(url: url)
+                clientRequest.method = request.method
+                clientRequest.headers = request.headers
+                clientRequest.body = .bytes(request.body)
+                let response = try await client.execute(clientRequest, timeout: .seconds(30))
+                // Collect up to 1MB
+                let responseBody = try await response.body.collect(upTo: 1024 * 1024)
+                try await client.shutdown()
+                await app.server.shutdown()
+                return XCTHTTPResponse(
+                    status: response.status,
+                    headers: response.headers,
+                    body: responseBody
+                )
+            } catch {
+                try? await client.shutdown()
+                await app.server.shutdown()
+                throw error
+            }
+        }
     }
 
     private struct InMemory: XCTApplicationTester {
@@ -89,6 +139,7 @@ extension Application {
             self.app = app
         }
 
+        @available(*, noasync, message: "Use the async method instead.")
         @discardableResult
         public func performTest(
             request: XCTHTTPRequest
@@ -114,11 +165,39 @@ extension Application {
                 body: res.body.collect(on: request.eventLoop).wait() ?? ByteBufferAllocator().buffer(capacity: 0)
             )
         }
+        
+        @discardableResult
+        public func performTest(
+            request: XCTHTTPRequest
+        ) async throws -> XCTHTTPResponse {
+            var headers = request.headers
+            headers.replaceOrAdd(
+                name: .contentLength,
+                value: request.body.readableBytes.description
+            )
+            let request = Request(
+                application: app,
+                method: request.method,
+                url: request.url,
+                headers: headers,
+                collectedBody: request.body.readableBytes == 0 ? nil : request.body,
+                remoteAddress: nil,
+                on: self.app.eventLoopGroup.next()
+            )
+            let res = try await self.app.responder.respond(to: request).get()
+            return try await XCTHTTPResponse(
+                status: res.status,
+                headers: res.headers,
+                body: res.body.collect(on: request.eventLoop).get() ?? ByteBufferAllocator().buffer(capacity: 0)
+            )
+        }
     }
 }
 
 public protocol XCTApplicationTester {
+    @available(*, noasync, message: "Use the async method instead.")
     func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse
+    func performTest(request: XCTHTTPRequest) async throws -> XCTHTTPResponse
 }
 
 extension XCTApplicationTester {
@@ -144,6 +223,7 @@ extension XCTApplicationTester {
         )
     }
 
+    @available(*, noasync, message: "Use the async method instead.")
     @discardableResult
     public func test(
         _ method: HTTPMethod,
@@ -185,15 +265,16 @@ extension XCTApplicationTester {
         )
         try await beforeRequest(&request)
         do {
-            let response = try self.performTest(request: request)
+            let response = try await self.performTest(request: request)
             try await afterResponse(response)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(String(reflecting: error))", file: file, line: line)
             throw error
         }
         return self
     }
 
+    @available(*, noasync, message: "Use the async method instead.")
     @discardableResult
     public func test(
         _ method: HTTPMethod,
@@ -216,7 +297,7 @@ extension XCTApplicationTester {
             let response = try self.performTest(request: request)
             try afterResponse(response)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(String(reflecting: error))", file: file, line: line)
             throw error
         }
         return self
@@ -239,13 +320,14 @@ extension XCTApplicationTester {
         )
         try await beforeRequest(&request)
         do {
-            return try self.performTest(request: request)
+            return try await self.performTest(request: request)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(String(reflecting: error))", file: file, line: line)
             throw error
         }
     }
 
+    @available(*, noasync, message: "Use the async method instead.")
     public func sendRequest(
         _ method: HTTPMethod,
         _ path: String,
@@ -265,7 +347,7 @@ extension XCTApplicationTester {
         do {
             return try self.performTest(request: request)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(String(reflecting: error))", file: file, line: line)
             throw error
         }
     }

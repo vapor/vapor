@@ -23,7 +23,7 @@ jobs:
           - provider: vapor/apns
             ref: 3.0.0
     runs-on: ubuntu-latest
-    container: swift:5.9-jammy
+    container: swift:5.10
     steps: 
       - name: Check out Vapor
         uses: actions/checkout@v4
@@ -46,3 +46,13 @@ jobs:
      uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
      with:
        with_tsan: false
+
+  test-parallel:
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    runs-on: ubuntu-latest
+    container: swift:5.10
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v4
+      - name: Run tests
+        run: swift test --parallel

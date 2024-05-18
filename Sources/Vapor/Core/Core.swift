@@ -80,9 +80,9 @@ extension Application {
 
             init() {
                 self.console = .init(Terminal())
-                var commands = Commands()
-                commands.use(BootCommand(), as: "boot")
-                self.commands = .init(commands)
+                self.commands = .init(Commands())
+                var asyncCommands = AsyncCommands()
+                asyncCommands.use(BootCommand(), as: "boot")
                 self.asyncCommands = .init(AsyncCommands())
                 let threadPool = NIOThreadPool(numberOfThreads: System.coreCount)
                 threadPool.start()
@@ -96,6 +96,16 @@ extension Application {
         struct LifecycleHandler: Vapor.LifecycleHandler {
             func shutdown(_ application: Application) {
                 try! application.threadPool.syncShutdownGracefully()
+            }
+        }
+        
+        struct AsyncLifecycleHandler: Vapor.LifecycleHandler {
+            func shutdownAsync(_ application: Application) async {
+                do {
+                    try await application.threadPool.shutdownGracefully()
+                } catch {
+                    application.logger.debug("Failed to shutdown threadpool", metadata: ["error": "\(error)"])
+                }
             }
         }
 
@@ -112,9 +122,13 @@ extension Application {
             return storage
         }
 
-        func initialize() {
+        func initialize(asyncEnvironment: Bool) {
             self.application.storage[Key.self] = .init()
-            self.application.lifecycle.use(LifecycleHandler())
+            if asyncEnvironment {
+                self.application.lifecycle.use(AsyncLifecycleHandler())
+            } else {
+                self.application.lifecycle.use(LifecycleHandler())
+            }
         }
     }
 }

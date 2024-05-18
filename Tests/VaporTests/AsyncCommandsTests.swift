@@ -2,10 +2,17 @@ import XCTest
 import Vapor
 
 final class AsyncCommandsTests: XCTestCase {
+    var app: Application!
+    
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+    
     func testAsyncCommands() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.asyncCommands.use(FooCommand(), as: "foo")
 
         app.environment.arguments = ["vapor", "foo", "bar"]
