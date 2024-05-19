@@ -247,12 +247,17 @@ public final class Application: Sendable {
     
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
     public func asyncBoot() async throws {
-        self.isBooted.withLockedValue { booted in
-            guard !booted else {
-                return
+        let notBooted = self.isBooted.withLockedValue { booted in
+            guard booted else {
+                booted = true
+                return true
             }
-            booted = true
+
+            return false
         }
+
+        guard notBooted else { return }
+
         for handler in self.lifecycle.handlers {
             try await handler.willBootAsync(self)
         }
