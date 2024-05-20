@@ -98,6 +98,16 @@ extension Application {
                 try! application.threadPool.syncShutdownGracefully()
             }
         }
+        
+        struct AsyncLifecycleHandler: Vapor.LifecycleHandler {
+            func shutdownAsync(_ application: Application) async {
+                do {
+                    try await application.threadPool.shutdownGracefully()
+                } catch {
+                    application.logger.debug("Failed to shutdown threadpool", metadata: ["error": "\(error)"])
+                }
+            }
+        }
 
         struct Key: StorageKey {
             typealias Value = Storage
@@ -112,9 +122,13 @@ extension Application {
             return storage
         }
 
-        func initialize() {
+        func initialize(asyncEnvironment: Bool) {
             self.application.storage[Key.self] = .init()
-            self.application.lifecycle.use(LifecycleHandler())
+            if asyncEnvironment {
+                self.application.lifecycle.use(AsyncLifecycleHandler())
+            } else {
+                self.application.lifecycle.use(LifecycleHandler())
+            }
         }
     }
 }

@@ -36,6 +36,16 @@ final class ServiceTests: XCTestCase {
         try app.start()
         app.running?.stop()
     }
+    
+    func testAsyncLifecycleHandler() async throws {
+        let app = try await Application.make(.testing)
+        app.http.server.configuration.port = 0
+        
+        app.lifecycle.use(AsyncHello())
+        app.environment.arguments = ["serve"]
+        try await app.startup()
+        app.running?.stop()
+    }
 
     func testLocks() throws {
         let app = Application(.testing)
@@ -89,6 +99,12 @@ private extension Application {
 
 private struct Hello: LifecycleHandler {
     func willBoot(_ app: Application) throws {
+        app.logger.info("Hello!")
+    }
+}
+
+private struct AsyncHello: LifecycleHandler {
+    func willBootAsync(_ app: Application) async throws {
         app.logger.info("Hello!")
     }
 }
