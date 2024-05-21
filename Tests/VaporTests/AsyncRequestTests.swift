@@ -59,7 +59,7 @@ final class AsyncRequestTests: XCTestCase {
         request.method = .POST
         request.body = .stream(testValue.utf8.async, length: .unknown)
         
-        let response: HTTPClientResponse = try await app.http.client.asyncShared.execute(request, timeout: .seconds(5))
+        let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
         XCTAssertEqual(response.status, .ok)
         let body = try await response.body.collect(upTo: 1024 * 1024)
         XCTAssertEqual(body.string, testValue)
@@ -94,7 +94,7 @@ final class AsyncRequestTests: XCTestCase {
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
         request.method = .POST
         request.body = .stream(oneMB.async, length: .known(oneMB.count))
-        if let response = try? await app.http.client.asyncShared.execute(request, timeout: .seconds(5)) {
+        if let response = try? await app.http.client.shared.execute(request, timeout: .seconds(5)) {
             XCTAssertGreaterThan(bytesTheServerRead.load(ordering: .relaxed), 0)
             XCTAssertEqual(response.status, .internalServerError)
         }

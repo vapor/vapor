@@ -1,7 +1,6 @@
 import AsyncHTTPClient
 
 extension Application.Clients.Provider {
-    @available(*, noasync, message: "Don't use from an async context")
     public static var http: Self {
         .init {
             $0.clients.use {
@@ -19,7 +18,6 @@ extension Application.HTTP {
     public struct Client {
         let application: Application
 
-        @available(*, noasync, renamed: "asyncShared", message: "Use the async property instead.")
         public var shared: HTTPClient {
             self.application.locks.lock(for: Key.self).withLock {
                 if let existing = self.application.storage[Key.self] {
@@ -30,31 +28,9 @@ extension Application.HTTP {
                     configuration: self.configuration,
                     backgroundActivityLogger: self.application.logger
                 )
-                self.application.storage.set(Key.self, to: new) {
-                    try $0.syncShutdown()
-                }
-                return new
-            }
-        }
-        
-        public var asyncShared: HTTPClient {
-            get async {
-                let lock = self.application.locks.lock(for: Key.self)
-                lock.lock()
-                if let existing = self.application.storage[Key.self] {
-                    lock.unlock()
-                    return existing
-                }
-                
-                let new = HTTPClient(
-                    eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
-                    configuration: self.configuration,
-                    backgroundActivityLogger: self.application.logger
-                )
-                await self.application.storage.setWithAsyncShutdown(Key.self, to: new) {
+                self.application.storage.setFirstTime(Key.self, to: new, onShutdown: { try $0.syncShutdown() }) {
                     try await $0.shutdown()
                 }
-                lock.unlock()
                 return new
             }
         }

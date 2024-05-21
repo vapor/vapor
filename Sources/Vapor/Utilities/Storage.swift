@@ -123,6 +123,23 @@ public struct Storage: Sendable {
             await existing.asyncShutdown(logger: self.logger)
         }
     }
+    
+    // Provides a way to set an async shutdown with an async call to avoid breaking the API
+    // This must not be called when a value alraedy exists in storage
+    mutating func setFirstTime<Key>(
+        _ key: Key.Type,
+        to value: Key.Value?,
+        onShutdown: (@Sendable (Key.Value) throws -> ())? = nil,
+        onAsyncShutdown: (@Sendable (Key.Value) async throws -> ())? = nil
+    )
+        where Key: StorageKey
+    {
+        let key = ObjectIdentifier(Key.self)
+        precondition(self.storage[key] == nil, "You must not call this when a value already exists in storage")
+        if let value {
+            self.storage[key] = Value(value: value, onShutdown: onShutdown, onAsyncShutdown: onAsyncShutdown)
+        }
+    }
 
     /// For every key in the container having a shutdown closure, invoke the closure. Designed to
     /// be invoked during an explicit app shutdown process or in a reference type's `deinit`.
