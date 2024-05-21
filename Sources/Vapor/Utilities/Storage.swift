@@ -21,8 +21,8 @@ public struct Storage: Sendable {
         }
         func asyncShutdown(logger: Logger) async {
             do {
-                try self.onShutdown?(self.value)
                 try await self.onAsyncShutdown?(self.value)
+                try self.onShutdown?(self.value)
             } catch {
                 logger.warning("Could not shutdown \(T.self): \(error)")
             }
