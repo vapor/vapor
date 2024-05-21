@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 
 extension Application.Clients.Provider {
+    @available(*, noasync, message: "Don't use from an async context")
     public static var http: Self {
         .init {
             $0.clients.use {
