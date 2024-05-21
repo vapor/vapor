@@ -51,6 +51,7 @@ extension Application {
             self.storage.makeServer.withLockedValue { $0 = .init(factory: makeServer) }
         }
 
+        @available(*, deprecated, renamed: "asyncCommand", message: "Use asyncCommand instead")
         public var command: ServeCommand {
             if let existing = self.application.storage.get(CommandKey.self) {
                 return existing
@@ -60,6 +61,20 @@ extension Application {
                     $0.shutdown()
                 }
                 return new
+            }
+        }
+        
+        public var asyncCommand: ServeCommand {
+            get async {
+                if let existing = self.application.storage.get(CommandKey.self) {
+                    return existing
+                } else {
+                    let new = ServeCommand()
+                    await self.application.storage.setWithAsyncShutdown(CommandKey.self, to: new) {
+                        await $0.asyncShutdown()
+                    }
+                    return new
+                }
             }
         }
 

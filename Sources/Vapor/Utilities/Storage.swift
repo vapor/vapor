@@ -11,9 +11,17 @@ public struct Storage: Sendable {
     struct Value<T: Sendable>: AnyStorageValue {
         var value: T
         var onShutdown: (@Sendable (T) throws -> ())?
+        var onAsyncShutdown: (@Sendable (T) async throws -> ())?
         func shutdown(logger: Logger) {
             do {
                 try self.onShutdown?(self.value)
+            } catch {
+                logger.warning("Could not shutdown \(T.self): \(error)")
+            }
+        }
+        func asyncShutdown(logger: Logger) async {
+            do {
+                try await self.onAsyncShutdown?(self.value)
             } catch {
                 logger.warning("Could not shutdown \(T.self): \(error)")
             }
@@ -94,12 +102,40 @@ public struct Storage: Sendable {
             existing.shutdown(logger: self.logger)
         }
     }
+    
+    /// Set or remove a value for a given key, optionally providing an async shutdown closure for the value.
+    ///
+    /// If a key that has a shutdown closure is removed by this method, the closure **is** invoked.
+    public mutating func setWithAsyncShutdown<Key>(
+        _ key: Key.Type,
+        to value: Key.Value?,
+        onShutdown: (@Sendable (Key.Value) async throws -> ())? = nil
+    ) async
+        where Key: StorageKey
+    {
+        let key = ObjectIdentifier(Key.self)
+        if let value = value {
+            self.storage[key] = Value(value: value, onShutdown: nil, onAsyncShutdown: onShutdown)
+        } else if let existing = self.storage[key] {
+            self.storage[key] = nil
+            await existing.asyncShutdown(logger: self.logger)
+        }
+    }
 
     /// For every key in the container having a shutdown closure, invoke the closure. Designed to
     /// be invoked during an explicit app shutdown process or in a reference type's `deinit`.
+    @available(*, noasync, message: "Use the async asyncShutdown() method instead.")
     public func shutdown() {
         self.storage.values.forEach {
             $0.shutdown(logger: self.logger)
+        }
+    }
+    
+    /// For every key in the container having a shutdown closure, invoke the closure. Designed to
+    /// be invoked during an explicit app shutdown process or in a reference type's `deinit`.
+    public func asyncShutdown() async {
+        for value in self.storage.values {
+            await value.asyncShutdown(logger: self.logger)
         }
     }
 }
@@ -108,6 +144,7 @@ public struct Storage: Sendable {
 /// typed key values.
 protocol AnyStorageValue: Sendable {
     func shutdown(logger: Logger)
+    func asyncShutdown(logger: Logger) async
 }
 
 /// A key used to store values in a ``Storage`` must conform to this protocol.
