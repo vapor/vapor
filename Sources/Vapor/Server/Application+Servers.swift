@@ -51,7 +51,7 @@ extension Application {
             self.storage.makeServer.withLockedValue { $0 = .init(factory: makeServer) }
         }
 
-        @available(*, deprecated, renamed: "asyncCommand", message: "Use asyncCommand instead")
+        @available(*, noasync, renamed: "asyncCommand", message: "Use the async property instead.")
         public var command: ServeCommand {
             if let existing = self.application.storage.get(CommandKey.self) {
                 return existing
