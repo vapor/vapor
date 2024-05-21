@@ -18,6 +18,7 @@ extension Application.HTTP {
     public struct Client {
         let application: Application
 
+        @available(*, noasync, renamed: "asyncShared", message: "Use the async property instead.")
         public var shared: HTTPClient {
             self.application.locks.lock(for: Key.self).withLock {
                 if let existing = self.application.storage[Key.self] {
@@ -31,6 +32,28 @@ extension Application.HTTP {
                 self.application.storage.set(Key.self, to: new) {
                     try $0.syncShutdown()
                 }
+                return new
+            }
+        }
+        
+        public var asyncShared: HTTPClient {
+            get async {
+                let lock = self.application.locks.lock(for: Key.self)
+                lock.lock()
+                if let existing = self.application.storage[Key.self] {
+                    lock.unlock()
+                    return existing
+                }
+                
+                let new = HTTPClient(
+                    eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
+                    configuration: self.configuration,
+                    backgroundActivityLogger: self.application.logger
+                )
+                await self.application.storage.setWithAsyncShutdown(Key.self, to: new) {
+                    try await $0.shutdown()
+                }
+                lock.unlock()
                 return new
             }
         }

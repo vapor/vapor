@@ -21,6 +21,7 @@ public struct Storage: Sendable {
         }
         func asyncShutdown(logger: Logger) async {
             do {
+                try self.onShutdown?(self.value)
                 try await self.onAsyncShutdown?(self.value)
             } catch {
                 logger.warning("Could not shutdown \(T.self): \(error)")
@@ -87,6 +88,7 @@ public struct Storage: Sendable {
     /// Set or remove a value for a given key, optionally providing a shutdown closure for the value.
     ///
     /// If a key that has a shutdown closure is removed by this method, the closure **is** invoked.
+    @available(*, noasync, message: "Use the async setWithAsyncShutdown() method instead.", renamed: "setWithAsyncShutdown")
     public mutating func set<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
