@@ -120,9 +120,7 @@ public final class ServeCommand: AsyncCommand, Sendable {
         var box = self.box.withLockedValue { $0 }
         box.didShutdown = true
         box.running?.stop()
-        if let server = box.server {
-            await server.shutdown()
-        }
+        await box.server?.shutdown()
         box.signalSources.forEach { $0.cancel() } // clear refs
         box.signalSources = []
         self.box.withLockedValue { $0 = box }
