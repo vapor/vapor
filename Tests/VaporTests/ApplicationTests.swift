@@ -169,6 +169,47 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), true)
         XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), true)
     }
+
+    func testBootDoesNotTriggerLifecycleHandlerMultipleTimes() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        final class Handler: LifecycleHandler, Sendable {
+            let bootCount = NIOLockedValueBox(0)
+            func willBoot(_ application: Application) throws {
+                bootCount.withLockedValue { $0 += 1 }
+            }
+        }
+        
+        let handler = Handler()
+        app.lifecycle.use(handler)
+        
+        try app.boot()
+        try app.boot()
+
+        XCTAssertEqual(handler.bootCount.withLockedValue({ $0 }), 1)
+    }
+    
+    func testAsyncBootDoesNotTriggerLifecycleHandlerMultipleTimes() async throws {
+        let app = try await Application.make(.testing)
+        
+        final class Handler: LifecycleHandler, Sendable {
+            let bootCount = NIOLockedValueBox(0)
+            func willBoot(_ application: Application) throws {
+                bootCount.withLockedValue { $0 += 1 }
+            }
+        }
+        
+        let handler = Handler()
+        app.lifecycle.use(handler)
+        
+        try await app.asyncBoot()
+        try await app.asyncBoot()
+
+        XCTAssertEqual(handler.bootCount.withLockedValue({ $0 }), 1)
+        
+        try await app.asyncShutdown()
+    }
     
     func testThrowDoesNotCrash() throws {
         enum Static {
