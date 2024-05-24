@@ -120,6 +120,7 @@ public final class Application: Sendable {
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
         self.init(environment, eventLoopGroupProvider, async: false)
+        self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
@@ -155,12 +156,12 @@ public final class Application: Sendable {
         self.servers.use(.http)
         self.clients.initialize()
         self.clients.use(.http)
-        self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         self.asyncCommands.use(RoutesCommand(), as: "routes")
     }
     
     public static func make(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton) async throws -> Application {
         let app = Application(environment, eventLoopGroupProvider, async: true)
+        await app.asyncCommands.use(app.servers.asyncCommand, as: "serve", isDefault: true)
         await DotEnvFile.load(for: app.environment, fileio: app.fileio, logger: app.logger)
         return app
     }
@@ -271,8 +272,11 @@ public final class Application: Sendable {
 
         self.logger.trace("Shutting down providers")
         self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
-        
-        triggerShutdown()
+        self.lifecycle.handlers = []
+
+        self.logger.trace("Clearing Application storage")
+        self.storage.shutdown()
+        self.storage.clear()
 
         switch self.eventLoopGroupProvider {
         case .shared:
@@ -298,8 +302,11 @@ public final class Application: Sendable {
         for handler in self.lifecycle.handlers.reversed()  {
             await handler.shutdownAsync(self)
         }
-        
-        triggerShutdown()
+        self.lifecycle.handlers = []
+
+        self.logger.trace("Clearing Application storage")
+        await self.storage.asyncShutdown()
+        self.storage.clear()
 
         switch self.eventLoopGroupProvider {
         case .shared:
@@ -315,14 +322,6 @@ public final class Application: Sendable {
 
         self._didShutdown.withLockedValue { $0 = true }
         self.logger.trace("Application shutdown complete")
-    }
-    
-    private func triggerShutdown() {
-        self.lifecycle.handlers = []
-
-        self.logger.trace("Clearing Application storage")
-        self.storage.shutdown()
-        self.storage.clear()
     }
 
     deinit {

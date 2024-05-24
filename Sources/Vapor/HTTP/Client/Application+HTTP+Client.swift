@@ -28,8 +28,8 @@ extension Application.HTTP {
                     configuration: self.configuration,
                     backgroundActivityLogger: self.application.logger
                 )
-                self.application.storage.set(Key.self, to: new) {
-                    try $0.syncShutdown()
+                self.application.storage.setFirstTime(Key.self, to: new, onShutdown: { try $0.syncShutdown() }) {
+                    try await $0.shutdown()
                 }
                 return new
             }
