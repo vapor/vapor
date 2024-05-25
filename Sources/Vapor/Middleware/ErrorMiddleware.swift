@@ -42,6 +42,10 @@ public final class ErrorMiddleware: Middleware {
             
             // Report the error
             req.logger.report(error: error, file: source.file, function: source.function, line: source.line)
+
+            if let error = error as? RenderableError {
+                return error.render(req)
+            }
             
             // attempt to serialize the error to json
             let body: Response.Body
