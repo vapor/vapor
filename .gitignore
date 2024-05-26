@@ -9,6 +9,7 @@ Tests/LinuxMain.swift
 .vscode
 .bash_history
 .cache/
+periphery.out
 
 # API Docs Generation
 generate-package-api-docs.swift
