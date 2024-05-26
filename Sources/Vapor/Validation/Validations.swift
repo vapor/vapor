@@ -9,7 +9,6 @@ public struct Validations: Sendable {
     
     public mutating func add<T>(
         _ key: ValidationKey,
-        as type: T.Type = T.self,
         is validator: Validator<T> = .valid,
         required: Bool = true,
         customFailureDescription: String? = nil

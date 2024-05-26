@@ -248,9 +248,6 @@ private extension Character {
     static var comma: Self {
         .init(",")
     }
-    static var space: Self {
-        .init(" ")
-    }
     
     /// The characters defined in RFC2616.
     ///

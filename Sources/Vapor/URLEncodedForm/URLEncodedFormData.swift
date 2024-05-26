@@ -42,14 +42,6 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
             return false
         }
     }
-    
-    func hash(into: inout Hasher) {
-        do {
-            try self.asUrlDecoded().hash(into: &into)
-        } catch {
-            Logger(label: "codes.vapor.url").report(error: error)
-        }
-    }
 }
 
 /// Represents application/x-www-form-urlencoded encoded data.

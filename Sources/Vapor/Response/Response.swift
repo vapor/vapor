@@ -132,27 +132,6 @@ public final class Response: CustomStringConvertible, Sendable {
                 return try decoder.decode(D.self, from: body, headers: box.headers)
             }
         }
-
-        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
-            var content = content
-            try content.beforeEncode()
-            try self.response.responseBox.withLockedValue { box in
-                var body = box.body.byteBufferAllocator.buffer(capacity: 0)
-                try encoder.encode(content, to: &body, headers: &box.headers)
-                box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
-            }
-        }
-
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
-            var decoded = try self.response.responseBox.withLockedValue { box in
-                guard let body = box.body.buffer else {
-                    throw Abort(.unprocessableEntity)
-                }
-                return try decoder.decode(C.self, from: body, headers: box.headers)
-            }
-            try decoded.afterDecode()
-            return decoded
-        }
     }
 
     public var content: ContentContainer {

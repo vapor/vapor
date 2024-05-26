@@ -237,12 +237,6 @@ extension Response {
             self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .string(value)
         }
-        
-        /// Internal init.
-        internal init(storage: Storage, byteBufferAllocator: ByteBufferAllocator) {
-            self.byteBufferAllocator = byteBufferAllocator
-            self.storage = storage
-        }
     }
 }
 

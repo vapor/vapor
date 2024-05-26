@@ -417,14 +417,3 @@ private extension URLEncodedFormEncoder.Configuration {
         }
     }
 }
-
-private extension EncodingError {
-    static func invalidValue(_ value: Any, at path: [CodingKey]) -> EncodingError {
-        let pathString = path.map { $0.stringValue }.joined(separator: ".")
-        let context = EncodingError.Context(
-            codingPath: path,
-            debugDescription: "Invalid value at '\(pathString)': \(value)"
-        )
-        return Swift.EncodingError.invalidValue(value, context)
-    }
-}

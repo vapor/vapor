@@ -143,24 +143,6 @@ public final class Request: CustomStringConvertible, Sendable {
             }
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
         }
-
-        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
-            var content = content
-            try content.beforeEncode()
-            var body = self.request.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(content, to: &body, headers: &self.request.headers)
-            self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
-        }
-
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
-            guard let body = self.request.body.data else {
-                self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
-                throw Abort(.unprocessableEntity)
-            }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
-            try decoded.afterDecode()
-            return decoded
-        }
     }
 
     /// This container is used to read your `Decodable` type using a `ContentDecoder` implementation.

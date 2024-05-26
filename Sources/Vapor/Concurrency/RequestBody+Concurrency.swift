@@ -96,27 +96,6 @@ extension Request.Body: AsyncSequence {
         }
     }
     
-    /// Checks that the request has a body suitable for an AsyncSequence
-    ///
-    /// AsyncSequence streaming should use a body of type .stream().
-    /// Using `.collected(_)` will load the entire request into memory
-    /// which should be avoided for large file uploads.
-    ///
-    /// Example: app.on(.POST, "/upload", body: .stream) { ... }
-    private func checkBodyStorage() {
-        switch request.bodyStorage.withLockedValue({ $0 }) {
-        case .stream(_):
-            break
-        case .collected(_):
-            break
-        default:
-            preconditionFailure("""
-            AsyncSequence streaming should use a body of type .stream()
-            Example: app.on(.POST, "/upload", body: .stream) { ... }
-           """)
-        }
-    }
-    
     /// Generates an `AsyncIterator` to stream the body’s content as
     /// `ByteBuffer` sequences. This implementation supports backpressure using
     /// `NIOAsyncSequenceProducerBackPressureStrategies`

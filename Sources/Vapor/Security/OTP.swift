@@ -260,11 +260,3 @@ public struct TOTP: OTP {
         return Self.init(key: key, digest: digest, digits: digits, interval: interval).generate(time: time)
     }
 }
-
-fileprivate extension FixedWidthInteger {
-    /// The raw data representing the integer.
-    var data: Data {
-        var copy = self
-        return .init(bytes: &copy, count: MemoryLayout<Self>.size)
-    }
-}

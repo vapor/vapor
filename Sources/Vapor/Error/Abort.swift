@@ -54,17 +54,12 @@ public struct Abort: AbortError, DebuggableError {
     /// Source location where this error was created.
     public var source: ErrorSource?
 
-    /// Stack trace at point of error creation.
-    @available(*, deprecated, message: "Captured stack traces are no longer supported by Vapor")
-    public var stackTrace: StackTrace?
-
     /// Create a new `Abort`, capturing current source location info.
     public init(
         _ status: HTTPResponseStatus,
         headers: HTTPHeaders = [:],
         reason: String? = nil,
         identifier: String? = nil,
-        suggestedFixes: [String] = [],
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line,
@@ -82,33 +77,5 @@ public struct Abort: AbortError, DebuggableError {
             column: column,
             range: range
         )
-    }
-
-    @available(*, deprecated, message: "Captured stack traces are no longer supported by Vapor")
-    public init(
-        _ status: HTTPResponseStatus,
-        headers: HTTPHeaders = [:],
-        reason: String? = nil,
-        identifier: String? = nil,
-        suggestedFixes: [String] = [],
-        file: String = #fileID,
-        function: String = #function,
-        line: UInt = #line,
-        column: UInt = #column,
-        range: Range<UInt>? = nil,
-        stackTrace: StackTrace?
-    ) {
-        self.identifier = identifier ?? status.code.description
-        self.headers = headers
-        self.status = status
-        self.reason = reason ?? status.reasonPhrase
-        self.source = ErrorSource(
-            file: file,
-            function: function,
-            line: line,
-            column: column,
-            range: range
-        )
-        self.stackTrace = stackTrace
     }
 }

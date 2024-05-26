@@ -37,7 +37,7 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
     /// - parameters:
     ///     - type: `Authenticatable` type to ensure is authed.
     ///     - error: `Error` to throw if the type is not authed.
-    internal init(_ type: A.Type = A.self, throwing error: Error) {
+    internal init(throwing error: Error) {
         self.error = error
     }
 

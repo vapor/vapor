@@ -573,22 +573,8 @@ private final class HTTPServerConnection: Sendable {
         return promise.futureResult
     }
     
-    var onClose: EventLoopFuture<Void> {
-        self.channel.closeFuture
-    }
-    
     deinit {
         assert(!self.channel.isActive, "HTTPServerConnection deinitialized without calling shutdown()")
-    }
-}
-
-extension HTTPResponseHead {
-    /// Determines if the head is purely informational. If a head is informational another head will follow this
-    /// head eventually.
-    /// 
-    /// This is also from SwiftNIO
-    var isInformational: Bool {
-        100 <= self.status.code && self.status.code < 200 && self.status.code != 101
     }
 }
 
