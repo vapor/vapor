@@ -59,6 +59,9 @@ let package = Package(
 
         // Low-level atomic operations
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
+
+        // Swift-Periphery
+        .package(url: "https://github.com/peripheryapp/periphery.git", from: "2.19.0"),
     ],
     targets: [
         // C helpers
