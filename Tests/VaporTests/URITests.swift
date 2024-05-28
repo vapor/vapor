@@ -132,6 +132,19 @@ final class URITests: XCTestCase {
         XCTAssertURIComponents(scheme: "wss", host: "echo.websocket.org", path: "/", generate: "wss://echo.websocket.org/")
     }
     
+    func testSpecialCharacters() {
+        XCTAssertURIString(
+            "https://user:pass@vapor.codes:1234/foo;?bar=abcd%C3%A4%2B#qux",
+            hasScheme: "https",
+            hasUserinfo: "user:pass",
+            hasHost: "vapor.codes",
+            hasPort: 1234,
+            hasPath: "/foo;",
+            hasQuery: "bar=abcd%C3%A4%2B",
+            hasFragment: "qux"
+        )
+    }
+    
     func testMutation() {
         var uri = URI(string: "https://user:pass@vapor.codes:1234/foo?bar=baz#qux")
     

@@ -199,7 +199,9 @@ public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Ha
         self.components?.string ?? ""
         #else
         // On Linux, URLComponents incorrectly treats `;` as *not* allowed in the path component.
-        self.components?.string?.replacingOccurrences(of: "%3B", with: ";") ?? ""
+        let modify = self.components?.string ?? ""
+        let replaceUntil = modify.firstIndex(where: { $0 == "?" || $0 == "#" }) ?? modify.endIndex
+        return modify[modify.startIndex..<replaceUntil].replacingOccurrences(of: "%3B", with: ";") + modify[replaceUntil..<modify.endIndex]
         #endif
     }
     
