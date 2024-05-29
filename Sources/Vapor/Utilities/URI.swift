@@ -195,14 +195,14 @@ public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Ha
     }
 
     public var string: String {
-        #if canImport(Darwin)
-        self.components?.string ?? ""
-        #else
-        // On Linux, URLComponents incorrectly treats `;` as *not* allowed in the path component.
-        let modify = self.components?.string ?? ""
-        let replaceUntil = modify.firstIndex(where: { $0 == "?" || $0 == "#" }) ?? modify.endIndex
-        return modify[modify.startIndex..<replaceUntil].replacingOccurrences(of: "%3B", with: ";") + modify[replaceUntil..<modify.endIndex]
-        #endif
+        if urlPathAllowedIsBroken {
+            // On Linux and in older Xcode versions, URLComponents incorrectly treats `;` as *not* allowed in the path component.
+            let modify = self.components?.string ?? ""
+            let replaceUntil = modify.firstIndex(where: { $0 == "?" || $0 == "#" }) ?? modify.endIndex
+            return modify[modify.startIndex..<replaceUntil].replacingOccurrences(of: "%3B", with: ";") + modify[replaceUntil..<modify.endIndex]
+        } else {
+            return self.components?.string ?? ""
+        }
     }
     
     // See `ExpressibleByStringInterpolation.init(stringLiteral:)`.
@@ -333,3 +333,8 @@ extension CharacterSet {
         .urlPathAllowed.union(.init(charactersIn: ";"))
     }
 }
+
+/// On Linux and in older Xcode versions, URLComponents incorrectly treats `;` as *not* allowed in the path component.
+fileprivate let urlPathAllowedIsBroken: Bool = {
+    return CharacterSet.urlPathAllowed != CharacterSet.urlCorrectPathAllowed
+}()
