@@ -132,6 +132,19 @@ final class URITests: XCTestCase {
         XCTAssertURIComponents(scheme: "wss", host: "echo.websocket.org", path: "/", generate: "wss://echo.websocket.org/")
     }
     
+    func testSemicolonIsNotEncodedInPathComponent() {
+        XCTAssertURIString(
+            "https://user:pass@vapor.codes:1234/foo;?bar=abcd%3B%C3%A4%2B;efg#qux%3B",
+            hasScheme: "https",
+            hasUserinfo: "user:pass",
+            hasHost: "vapor.codes",
+            hasPort: 1234,
+            hasPath: "/foo;",
+            hasQuery: "bar=abcd%3B%C3%A4%2B;efg",
+            hasFragment: "qux%3B"
+        )
+    }
+    
     func testMutation() {
         var uri = URI(string: "https://user:pass@vapor.codes:1234/foo?bar=baz#qux")
     

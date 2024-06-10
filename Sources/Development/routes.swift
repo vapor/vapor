@@ -268,6 +268,7 @@ public func routes(_ app: Application) throws {
         return [cred1]
     }
     
+    @Sendable
     func opaqueRouteTester(_ req: Request) async throws -> some AsyncResponseEncodable {
         "Hello World"
     }

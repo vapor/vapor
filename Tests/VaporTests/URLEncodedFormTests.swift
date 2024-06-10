@@ -1,15 +1,15 @@
+import NIOPosix
 @testable import Vapor
 import XCTest
-import NIOPosix
 
 final class URLEncodedFormTests: XCTestCase {
     // MARK: Codable
-    
+
     func testDecode() throws {
         let data = """
         name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
         """
-        
+
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
         XCTAssertEqual(user.name, "Tanner")
         XCTAssertEqual(user.age, 23)
@@ -21,7 +21,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.foos[0], .baz)
         XCTAssertEqual(user.nums[0], 3.14)
     }
-    
+
     func testDecodeCommaSeparatedArray() throws {
         let data = """
         name=Tanner&age=23&pets=Zizek,Foo%2C&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
@@ -37,12 +37,12 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.foos[0], .baz)
         XCTAssertEqual(user.nums[0], 3.14)
     }
-    
+
     func testDecodeWithoutArrayBrackets() throws {
         let data = """
         name=Tanner&age=23&pets=Zizek&pets=Foo&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
         """
-        
+
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
         XCTAssertEqual(user.name, "Tanner")
         XCTAssertEqual(user.age, 23)
@@ -61,7 +61,7 @@ final class URLEncodedFormTests: XCTestCase {
         """
         XCTAssertThrowsError(try URLEncodedFormDecoder().decode(User.self, from: data))
     }
-    
+
     func testDecodeStringWithCommas() throws {
         let data = """
         name=Vapor, Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
@@ -115,7 +115,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(test.array[2], "b")
         XCTAssertEqual(test.array[3], "")
     }
-    
+
     func testDecodeUnindexedArray() throws {
         struct Test: Decodable {
             let array: [String]
@@ -157,65 +157,63 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("nums[]=3.14"))
         XCTAssert(result.contains("isCool=true"))
     }
-    
+
     func testDateArrayCoding() throws {
         let toEncode = DateArrayCoding(
             dates: [
                 Date(timeIntervalSince1970: 0),
-                Date(timeIntervalSince1970: 10_000),
-                Date(timeIntervalSince1970: 20_000),
-                Date(timeIntervalSince1970: 30_000),
-                Date(timeIntervalSince1970: 40_000),
-                Date(timeIntervalSince1970: 50_000),
+                Date(timeIntervalSince1970: 10000),
+                Date(timeIntervalSince1970: 20000),
+                Date(timeIntervalSince1970: 30000),
+                Date(timeIntervalSince1970: 40000),
+                Date(timeIntervalSince1970: 50000),
             ]
         )
-        
+
         let decodedDefaultFromUnixTimestamp = try URLEncodedFormDecoder().decode(DateArrayCoding.self, from: "dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0")
         XCTAssertEqual(decodedDefaultFromUnixTimestamp, toEncode)
-        
+
         let resultForDefault = try URLEncodedFormEncoder().encode(toEncode)
         XCTAssertEqual("dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0", resultForDefault)
-        
+
         let decodedDefault = try URLEncodedFormDecoder().decode(DateArrayCoding.self, from: resultForDefault)
         XCTAssertEqual(decodedDefault, toEncode)
-        
+
         let resultForTimeIntervalSince1970 = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .secondsSince1970)
         ).encode(toEncode)
         XCTAssertEqual("dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0", resultForDefault)
-        
+
         let decodedTimeIntervalSince1970 = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .secondsSince1970)
         ).decode(DateArrayCoding.self, from: resultForTimeIntervalSince1970)
         XCTAssertEqual(decodedTimeIntervalSince1970, toEncode)
-        
+
         let resultForInternetDateTime = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .iso8601)
         ).encode(toEncode)
-        XCTAssertEqual("dates[]=1970-01-01T00:00:00Z&dates[]=1970-01-01T02:46:40Z&dates[]=1970-01-01T05:33:20Z&dates[]=1970-01-01T08:20:00Z&dates[]=1970-01-01T11:06:40Z&dates[]=1970-01-01T13:53:20Z", resultForInternetDateTime)
-        
+        XCTAssertEqual("dates[]=1970-01-01T00%3A00%3A00Z&dates[]=1970-01-01T02%3A46%3A40Z&dates[]=1970-01-01T05%3A33%3A20Z&dates[]=1970-01-01T08%3A20%3A00Z&dates[]=1970-01-01T11%3A06%3A40Z&dates[]=1970-01-01T13%3A53%3A20Z", resultForInternetDateTime)
+
         let decodedInternetDateTime = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(DateArrayCoding.self, from: resultForInternetDateTime)
         XCTAssertEqual(decodedInternetDateTime, toEncode)
-        
+
         XCTAssertThrowsError(try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(DateArrayCoding.self, from: "dates=bad-date"))
-        
+
         class DateFormatterFactory {
             private var threadSpecificValue = ThreadSpecificVariable<DateFormatter>()
             var currentValue: DateFormatter {
-                get {
-                    guard let dateFormatter = threadSpecificValue.currentValue else {
-                        let threadSpecificDateFormatter = self.newDateFormatter
-                        threadSpecificValue.currentValue = threadSpecificDateFormatter
-                        return threadSpecificDateFormatter
-                    }
-                    return dateFormatter
+                guard let dateFormatter = threadSpecificValue.currentValue else {
+                    let threadSpecificDateFormatter = self.newDateFormatter
+                    threadSpecificValue.currentValue = threadSpecificDateFormatter
+                    return threadSpecificDateFormatter
                 }
+                return dateFormatter
             }
-            
+
             private var newDateFormatter: DateFormatter {
                 let dateFormatter = DateFormatter()
                 dateFormatter.locale = Locale(identifier: "en_US_POSIX")
@@ -226,22 +224,22 @@ final class URLEncodedFormTests: XCTestCase {
         }
         let factory = DateFormatterFactory()
         let resultCustom = try URLEncodedFormEncoder(
-            configuration: .init(dateEncodingStrategy: .custom({ (date, encoder) in
+            configuration: .init(dateEncodingStrategy: .custom { date, encoder in
                 var container = encoder.singleValueContainer()
                 try container.encode(factory.currentValue.string(from: date))
-            }))
+            })
         ).encode(toEncode)
-        XCTAssertEqual("dates[]=Date:%201970-01-01%20Time:%2000:00:00%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2002:46:40%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2005:33:20%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2008:20:00%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2011:06:40%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2013:53:20%20Timezone:%20Z", resultCustom)
-        
+        XCTAssertEqual("dates[]=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2002%3A46%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2005%3A33%3A20%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2008%3A20%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2011%3A06%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2013%3A53%3A20%20Timezone%3A%20Z", resultCustom)
+
         let decodedCustom = try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategy: .custom({ (decoder) -> Date in
+            configuration: .init(dateDecodingStrategy: .custom { decoder -> Date in
                 let container = try decoder.singleValueContainer()
                 let string = try container.decode(String.self)
                 guard let date = factory.currentValue.date(from: string) else {
                     throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to decode date from string '\(string)'")
                 }
                 return date
-            }))
+            })
         ).decode(DateArrayCoding.self, from: resultCustom)
         XCTAssertEqual(decodedCustom, toEncode)
     }
@@ -254,7 +252,7 @@ final class URLEncodedFormTests: XCTestCase {
 
         let resultForDefault = try URLEncodedFormEncoder().encode(toEncode)
         XCTAssertEqual("date=0.0", resultForDefault)
-        
+
         let decodedDefault = try URLEncodedFormDecoder().decode(DateCoding.self, from: resultForDefault)
         XCTAssertEqual(decodedDefault, toEncode)
 
@@ -262,16 +260,16 @@ final class URLEncodedFormTests: XCTestCase {
             configuration: .init(dateEncodingStrategy: .secondsSince1970)
         ).encode(toEncode)
         XCTAssertEqual("date=0.0", resultForTimeIntervalSince1970)
-        
+
         let decodedTimeIntervalSince1970 = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .secondsSince1970)
         ).decode(DateCoding.self, from: resultForTimeIntervalSince1970)
         XCTAssertEqual(decodedTimeIntervalSince1970, toEncode)
-        
+
         let resultForInternetDateTime = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .iso8601)
         ).encode(toEncode)
-        XCTAssertEqual("date=1970-01-01T00:00:00Z", resultForInternetDateTime)
+        XCTAssertEqual("date=1970-01-01T00%3A00%3A00Z", resultForInternetDateTime)
 
         let decodedInternetDateTime = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
@@ -281,20 +279,18 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertThrowsError(try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(DateCoding.self, from: "date=bad-date"))
-                
+
         class DateFormatterFactory {
             private var threadSpecificValue = ThreadSpecificVariable<DateFormatter>()
             var currentValue: DateFormatter {
-                get {
-                    guard let dateFormatter = threadSpecificValue.currentValue else {
-                        let threadSpecificDateFormatter = self.newDateFormatter
-                        threadSpecificValue.currentValue = threadSpecificDateFormatter
-                        return threadSpecificDateFormatter
-                    }
-                    return dateFormatter
+                guard let dateFormatter = threadSpecificValue.currentValue else {
+                    let threadSpecificDateFormatter = self.newDateFormatter
+                    threadSpecificValue.currentValue = threadSpecificDateFormatter
+                    return threadSpecificDateFormatter
                 }
+                return dateFormatter
             }
-            
+
             private var newDateFormatter: DateFormatter {
                 let dateFormatter = DateFormatter()
                 dateFormatter.locale = Locale(identifier: "en_US_POSIX")
@@ -305,29 +301,29 @@ final class URLEncodedFormTests: XCTestCase {
         }
         let factory = DateFormatterFactory()
         let resultCustom = try URLEncodedFormEncoder(
-            configuration: .init(dateEncodingStrategy: .custom({ (date, encoder) in
+            configuration: .init(dateEncodingStrategy: .custom { date, encoder in
                 var container = encoder.singleValueContainer()
                 try container.encode(factory.currentValue.string(from: date))
-            }))
+            })
         ).encode(toEncode)
-        XCTAssertEqual("date=Date:%201970-01-01%20Time:%2000:00:00%20Timezone:%20Z", resultCustom)
-        
+        XCTAssertEqual("date=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z", resultCustom)
+
         let decodedCustom = try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategy: .custom({ (decoder) -> Date in
+            configuration: .init(dateDecodingStrategy: .custom { decoder -> Date in
                 let container = try decoder.singleValueContainer()
                 let string = try container.decode(String.self)
                 guard let date = factory.currentValue.date(from: string) else {
                     throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to decode date from string '\(string)'")
                 }
                 return date
-            }))
+            })
         ).decode(DateCoding.self, from: resultCustom)
         XCTAssertEqual(decodedCustom, toEncode)
     }
 
     func testOptionalDateEncodingAndDecoding_GH2518() throws {
         let optionalDate: Date? = Date(timeIntervalSince1970: 0)
-        let dateString = "1970-01-01T00:00:00Z"
+        let dateString = "1970-01-01T00%3A00%3A00Z"
 
         let resultForDecodedOptionalDate = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
@@ -370,7 +366,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("nums=3.14"))
         XCTAssert(result.contains("isCool=true"))
     }
-    
+
     func testMultiObjectArrayEncode() throws {
         let tanner = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let ravneet = User(name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
@@ -385,7 +381,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("users[0][foos][]=baz"))
         XCTAssert(result.contains("users[0][nums][]=3.14"))
         XCTAssert(result.contains("users[0][isCool]=true"))
-        
+
         XCTAssert(result.contains("users[1][pets][]=Piku"))
         XCTAssert(result.contains("users[1][age]=33"))
         XCTAssert(result.contains("users[1][name]=Ravneet"))
@@ -396,7 +392,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("users[1][nums][]=3.14"))
         XCTAssert(result.contains("users[1][nums][]=144"))
         XCTAssert(result.contains("users[1][isCool]=true"))
-        
+
         let decodedUsers = try URLEncodedFormDecoder().decode(Users.self, from: result)
         XCTAssertEqual(decodedUsers, usersToEncode)
     }
@@ -417,7 +413,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("users[0][foos]=baz"))
         XCTAssert(result.contains("users[0][nums]=3.14"))
         XCTAssert(result.contains("users[0][isCool]=true"))
-        
+
         XCTAssert(result.contains("users[1][pets]=Piku"))
         XCTAssert(result.contains("users[1][age]=33"))
         XCTAssert(result.contains("users[1][name]=Ravneet"))
@@ -428,11 +424,11 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("users[1][nums]=3.14"))
         XCTAssert(result.contains("users[1][nums]=144"))
         XCTAssert(result.contains("users[1][isCool]=true"))
-        
+
         let decodedUsers = try URLEncodedFormDecoder().decode(Users.self, from: result)
         XCTAssertEqual(decodedUsers, usersToEncode)
     }
-    
+
     func testInheritanceCoding() throws {
         let toEncode = ChildClass()
         toEncode.baseField = "Base Value"
@@ -450,7 +446,7 @@ final class URLEncodedFormTests: XCTestCase {
         let decoded = try URLEncodedFormDecoder().decode([[User]].self, from: result)
         XCTAssertEqual(decoded, toEncode)
     }
-    
+
     func testMultiObjectArrayEncodeWithArraySeparator() throws {
         let tanner = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let ravneet = User(name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
@@ -466,7 +462,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("users[0][foos]=baz"))
         XCTAssert(result.contains("users[0][nums]=3.14"))
         XCTAssert(result.contains("users[0][isCool]=true"))
-        
+
         XCTAssert(result.contains("users[1][pets]=Piku"))
         XCTAssert(result.contains("users[1][age]=33"))
         XCTAssert(result.contains("users[1][name]=Ravneet"))
@@ -475,7 +471,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("users[1][foos]=baz,bar"))
         XCTAssert(result.contains("users[1][nums]=3.14,144"))
         XCTAssert(result.contains("users[1][isCool]=true"))
-        
+
         let decodedUsers = try URLEncodedFormDecoder().decode(Users.self, from: result)
         XCTAssertEqual(decodedUsers, usersToEncode)
     }
@@ -486,16 +482,16 @@ final class URLEncodedFormTests: XCTestCase {
         let b = try! URLEncodedFormDecoder().decode(User.self, from: body)
         XCTAssertEqual(a, b)
     }
-    
+
     func testDecodeIntArray() throws {
         let data = """
         array[]=1&array[]=2&array[]=3
         """
-        
+
         let content = try URLEncodedFormDecoder().decode([String: [Int]].self, from: data)
         XCTAssertEqual(content["array"], [1, 2, 3])
     }
-    
+
     func testRawEnum() throws {
         enum PetType: String, Codable {
             case cat, dog
@@ -552,63 +548,63 @@ final class URLEncodedFormTests: XCTestCase {
         let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag=1")
         XCTAssertEqual(foo.flag, true)
     }
-    
+
     // MARK: Parser
-    
+
     func testBasic() throws {
         let data = "hello=world&foo=bar"
         let form = try URLEncodedFormParser().parse(data)
         XCTAssertEqual(form, ["hello": "world", "foo": "bar"])
     }
-    
+
     func testBasicWithAmpersand() throws {
         let data = "hello=world&foo=bar%26bar"
         let form = try URLEncodedFormParser().parse(data)
         XCTAssertEqual(form, ["hello": "world", "foo": "bar&bar"])
     }
-    
+
     func testDictionary() throws {
         let data = "greeting[en]=hello&greeting[es]=hola"
         let form = try URLEncodedFormParser().parse(data)
         XCTAssertEqual(form, ["greeting": ["es": "hola", "en": "hello"]])
     }
-    
+
     func testArray() throws {
         let data = "greetings[]=hello&greetings[]=hola"
         let form = try URLEncodedFormParser().parse(data)
         XCTAssertEqual(form, ["greetings": ["": ["hello", "hola"]]])
     }
-  
+
     func testArrayWithoutBrackets() throws {
         let data = "greetings=hello&greetings=hola"
         let form = try URLEncodedFormParser().parse(data)
         XCTAssertEqual(form, ["greetings": ["hello", "hola"]])
     }
-  
+
     func testSubArray() throws {
         let data = "greetings[sub][]=hello&greetings[sub][]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings":["sub":["":["hello", "hola"]]]])
+        XCTAssertEqual(form, ["greetings": ["sub": ["": ["hello", "hola"]]]])
     }
 
     func testSubArray2() throws {
         let data = "greetings[sub]=hello&greetings[sub][]=hola"
         let form = try URLEncodedFormParser().parse(data)
         let expected: URLEncodedFormData = ["greetings": ["sub":
-            URLEncodedFormData(values: ["hello"], children: [
-                "": "hola"
-            ])
+                URLEncodedFormData(values: ["hello"], children: [
+                    "": "hola",
+                ]),
         ]]
         XCTAssertEqual(form, expected)
     }
-    
+
     func testSubArray3() throws {
         let data = "greetings[sub][]=hello&greetings[sub]=hola"
         let form = try URLEncodedFormParser().parse(data)
         let expected: URLEncodedFormData = ["greetings": ["sub":
-            URLEncodedFormData(values: ["hola"], children: [
-                "": "hello"
-            ])
+                URLEncodedFormData(values: ["hola"], children: [
+                    "": "hello",
+                ]),
         ]]
         XCTAssertEqual(form, expected)
     }
@@ -617,9 +613,9 @@ final class URLEncodedFormTests: XCTestCase {
         let data = "greetings[sub][]=hello&greetings[sub]=hola&greetings[sub]=bonjour"
         let form = try URLEncodedFormParser().parse(data)
         let expected: URLEncodedFormData = ["greetings": ["sub":
-            URLEncodedFormData(values: ["hola", "bonjour"], children: [
-            "": "hello"
-            ])
+                URLEncodedFormData(values: ["hola", "bonjour"], children: [
+                    "": "hello",
+                ]),
         ]]
         XCTAssertEqual(form, expected)
     }
@@ -633,24 +629,24 @@ final class URLEncodedFormTests: XCTestCase {
     func testSubArrayWithoutBrackets() throws {
         let data = "greetings[sub]=hello&greetings[sub]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings":["sub":["hello", "hola"]]])
+        XCTAssertEqual(form, ["greetings": ["sub": ["hello", "hola"]]])
     }
 
     func testFlags() throws {
         let data = "hello=&foo"
         let form = try URLEncodedFormParser().parse(data)
-        let expected = URLEncodedFormData(values: ["foo"], children:[
-            "hello": URLEncodedFormData("")
+        let expected = URLEncodedFormData(values: ["foo"], children: [
+            "hello": URLEncodedFormData(""),
         ])
         XCTAssertEqual(form, expected)
     }
-    
+
     func testPercentDecoding() throws {
         let data = "aaa%5B%5D=%2Bbbb%20+ccc&d[]=1&d[]=2"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["aaa": ["": "+bbb  ccc"], "d": ["": ["1","2"]]])
+        XCTAssertEqual(form, ["aaa": ["": "+bbb  ccc"], "d": ["": ["1", "2"]]])
     }
-    
+
     func testNestedParsing() throws {
         // a[][b]=c&a[][b]=c
         // [a:[[b:c],[b:c]]
@@ -658,9 +654,9 @@ final class URLEncodedFormTests: XCTestCase {
         let form = try URLEncodedFormParser().parse(data)
         XCTAssertEqual(form, ["a": ["b": ["c": ["d": ["hello": "world"]]]]])
     }
-    
+
     // MARK: Serializer
-    
+
     func testPercentEncoding() throws {
         let form: URLEncodedFormData = ["aaa]": "+bbb  ccc"]
         let data = try URLEncodedFormSerializer().serialize(form)
@@ -678,14 +674,14 @@ final class URLEncodedFormTests: XCTestCase {
         let data = try URLEncodedFormSerializer().serialize(form)
         XCTAssertEqual(data, "a[b][c][d][hello]=world")
     }
-    
+
     func testPercentEncodingSpecial() throws {
         let data = try URLEncodedFormSerializer().serialize([
-            "test": "&;!$'(),/:=?@~"
+            "test": "&;!$'(),/:=?@~",
         ])
-        XCTAssertEqual(data, "test=%26%3B!$'(),/:%3D%3F@~")
+        XCTAssertEqual(data, "test=%26%3B%21%24%27%28%29%2C%2F%3A%3D%3F%40%7E")
     }
-    
+
     func testHeavilyNestedArray() throws {
         var body = "x"
         body += String(repeating: "[]", count: 80000)
