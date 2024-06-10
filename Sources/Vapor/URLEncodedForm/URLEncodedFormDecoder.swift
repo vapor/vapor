@@ -212,7 +212,7 @@ private struct _Decoder: Decoder {
         var configuration: URLEncodedFormDecoder.Configuration
 
         var allKeys: [Key] {
-            self.data.children.keys.compactMap { Key(stringValue: String($0)) }
+            (self.data.children.keys + self.data.values.compactMap { try? $0.asUrlDecoded() }).compactMap { Key(stringValue: String($0)) }
         }
         
         init(
@@ -226,11 +226,11 @@ private struct _Decoder: Decoder {
         }
         
         func contains(_ key: Key) -> Bool {
-            self.data.children[key.stringValue] != nil
+            self.data.children[key.stringValue] != nil || self.data.values.contains(.init(stringLiteral: key.stringValue))
         }
         
         func decodeNil(forKey key: Key) throws -> Bool {
-            self.data.children[key.stringValue] == nil
+            self.data.children[key.stringValue] == nil && !self.data.values.contains(.init(stringLiteral: key.stringValue))
         }
         
         private func decodeDate(forKey key: Key, child: URLEncodedFormData) throws -> Date {

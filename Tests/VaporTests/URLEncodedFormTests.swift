@@ -515,6 +515,22 @@ final class URLEncodedFormTests: XCTestCase {
         let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag")
         XCTAssertEqual(foo.flag, true)
     }
+    
+    func testFlagDecodingAsOptionalBool() throws {
+        struct Foo: Codable {
+            var flag: Bool?
+        }
+        let foo1 = try URLEncodedFormDecoder().decode(Foo.self, from: "flag")
+        XCTAssertEqual(foo1.flag, true)
+        let foo2 = try URLEncodedFormDecoder().decode(Foo.self, from: "somethingelse")
+        XCTAssertEqual(foo2.flag, nil)
+        let foo3 = try URLEncodedFormDecoder().decode(Foo.self, from: "")
+        XCTAssertEqual(foo3.flag, nil)
+        let foo4 = try URLEncodedFormDecoder().decode(Foo.self, from: "flag=true")
+        XCTAssertEqual(foo4.flag, true)
+        let foo5 = try URLEncodedFormDecoder().decode(Foo.self, from: "flag=false")
+        XCTAssertEqual(foo5.flag, false)
+    }
 
     func testFlagIsOnDecodingAsBool() throws {
         struct Foo: Codable {
