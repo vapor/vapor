@@ -64,7 +64,7 @@ jobs:
           - swift
         runner:
           - macos-14
-          - ubuntu-24.04
+          - ubuntu-22.04
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Select latest stable Xcode
