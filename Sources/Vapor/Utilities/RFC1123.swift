@@ -14,8 +14,12 @@ import NIOPosix
 import NIOCore
 import NIOConcurrencyHelpers
 
+/// `ThreadSpecificVariable` is thread-safe so it can be used with multiple threads at the same time but the value
+/// returned by `currentValue` is defined per thread.
+extension ThreadSpecificVariable<RFC1123>: Sendable { }
+
 /// An internal helper that formats cookie dates as RFC1123
-private final class RFC1123 {
+private final class RFC1123: Sendable {
     /// Thread-specific RFC1123
     private static let thread: ThreadSpecificVariable<RFC1123> = .init()
     

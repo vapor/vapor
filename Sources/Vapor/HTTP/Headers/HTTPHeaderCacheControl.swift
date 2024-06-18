@@ -6,11 +6,11 @@ extension HTTPHeaders {
     /// Represents the HTTP `Cache-Control` header.
     /// - See Also:
     /// [Cache-Control docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
-    public struct CacheControl {
+    public struct CacheControl: Sendable {
         /// The max-stale option can be present with no value, or be present with a number of seconds.  By using
         /// a struct you can check the nullability of the `maxStale` variable as well as then check the nullability
         /// of the `seconds` to differentiate.
-        public struct MaxStale {
+        public struct MaxStale: Sendable {
             /// The upper limit of staleness the client will accept.
             public var seconds: Int?
         }
@@ -122,7 +122,7 @@ extension HTTPHeaders {
                 .forEach {
                     let str = String($0)
 
-                    if let keyPath = Self.exactMatch[str] {
+                    if let keyPath = Self.exactMatch[str]?.safeValue {
                         cache[keyPath: keyPath] = true
                         foundSomething = true
                         return
@@ -145,7 +145,7 @@ extension HTTPHeaders {
                         return
                     }
 
-                    guard let keyPath = Self.prefix[parts[0]] else {
+                    guard let keyPath = Self.prefix[parts[0]]?.safeValue else {
                         return
                     }
 
@@ -159,12 +159,18 @@ extension HTTPHeaders {
         /// Generates the header string for this instance.
         public func serialize() -> String {
             var options = Self.exactMatch
-                .filter { self[keyPath: $0.value] == true }
+                .filter {
+                    guard let path = $0.value.safeValue else { return false }
+                    return self[keyPath: path] == true
+                }
                 .map { $0.key }
 
             var optionsWithSeconds = Self.prefix
-                .filter { self[keyPath: $0.value] != nil }
-                .map { "\($0.key)=\(self[keyPath: $0.value]!)" }
+                .filter {
+                    guard let path = $0.value.safeValue else { return false }
+                    return self[keyPath: path] != nil
+                }
+                .map { "\($0.key)=\(String(describing: self[keyPath: $0.value.safeValue!]))" }
 
             if let maxStale = self.maxStale {
                 if let seconds = maxStale.seconds {
@@ -177,7 +183,7 @@ extension HTTPHeaders {
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
 
-        private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
+        private static let exactMatch: [String: LockedWritableKeyPath<Self, Bool>] = [
             "immutable": \.immutable,
             "must-revalidate": \.mustRevalidate,
             "no-cache": \.noCache,
@@ -187,15 +193,19 @@ extension HTTPHeaders {
             "private": \.isPrivate,
             "proxy-revalidate": \.proxyRevalidate,
             "only-if-cached": \.onlyIfCached
-        ]
+        ].mapValues { unsafeKayPath in
+            LockedWritableKeyPath(path: unsafeKayPath)
+        }
 
-        private static let prefix: [String: WritableKeyPath<Self, Int?>] = [
+        private static let prefix: [String: LockedWritableKeyPath<Self, Int?>] = [
             "max-age": \.maxAge,
             "s-maxage": \.sMaxAge,
             "min-fresh": \.minFresh,
             "stale-while-revalidate": \.staleWhileRevalidate,
             "stale-if-error": \.staleIfError
-        ]
+        ].mapValues { unsafeKayPath in
+            LockedWritableKeyPath(path: unsafeKayPath)
+        }
     }
 
     /// Gets the value of the `Cache-Control` header, if present.
