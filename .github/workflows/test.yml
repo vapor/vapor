@@ -53,7 +53,7 @@ jobs:
       - name: Run tests
         run: swift test --parallel
 
-  run-codeql:
+  run-codeql: 
     if: ${{ !(github.event.pull_request.draft || false) }}
     permissions: { security-events: write, packages: read, actions: read, contents: read }
     strategy:
