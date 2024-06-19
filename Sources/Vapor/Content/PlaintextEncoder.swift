@@ -49,7 +49,7 @@ public struct PlaintextEncoder: ContentEncoder {
 
 // MARK: Private
 
-private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
+private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer, @unchecked Sendable {
     public var codingPath: [CodingKey] = []
     fileprivate var userInfoSendable: [CodingUserInfoKey: Sendable]
     public var userInfo: [CodingUserInfoKey: Any] { self.userInfoSendable }

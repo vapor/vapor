@@ -16,18 +16,9 @@ import NIOConcurrencyHelpers
 
 /// An internal helper that formats cookie dates as RFC1123
 private final class RFC1123 {
-    /// Thread-specific RFC1123
-    private static let thread: ThreadSpecificVariable<RFC1123> = .init()
-    
     /// A static RFC1123 helper instance
     static var shared: RFC1123 {
-        if let existing = thread.currentValue {
-            return existing
-        } else {
-            let new = RFC1123()
-            thread.currentValue = new
-            return new
-        }
+        .init()
     }
     
     /// The RFC1123 formatter

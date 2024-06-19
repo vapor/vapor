@@ -239,7 +239,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
     }
 }
 
-extension HTTPPart: CustomStringConvertible {
+extension NIOHTTP1.HTTPPart: Swift.CustomStringConvertible {
     public var description: String {
         switch self {
         case .head(let head):

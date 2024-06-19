@@ -3,7 +3,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Conform a type to this protocol to make it usable for encoding data via Vapor's ``ContentConfiguration`` system.
-public protocol ContentEncoder {
+public protocol ContentEncoder: Sendable {
     /// Legacy "encode object" method. The provided encodable object's contents must be stored in the provided
     /// ``NIOCore/ByteBuffer``, and any appropriate headers for the type of the content may be stored in the provided
     /// ``NIOHTTP1/HTTPHeaders``.
@@ -26,7 +26,7 @@ public protocol ContentEncoder {
 }
 
 /// Conform a type to this protocol to make it usable for decoding data via Vapor's ``ContentConfiguration`` system.
-public protocol ContentDecoder {
+public protocol ContentDecoder: Sendable {
     /// Legacy "decode object" method. The provided ``NIOCore/ByteBuffer`` should be decoded as a value of the given
     /// type, optionally guided by the provided ``NIOHTTP1/HTTPHeaders``.
     ///

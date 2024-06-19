@@ -15,11 +15,11 @@ import NIOCore
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
 /// NOTE: This implementation of the encoder does not support encoding booleans to "flags".
-public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
+public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
     /// Used to capture URLForm Coding Configuration used for encoding.
-    public struct Configuration {
+    public struct Configuration: Sendable {
         /// Supported array encodings.
-        public enum ArrayEncoding {
+        public enum ArrayEncoding: Sendable {
             /// Arrays are serialized as separate values with bracket suffixed keys.
             /// For example, `foo = [1,2,3]` would be serialized as `foo[]=1&foo[]=2&foo[]=3`.
             case bracket
@@ -32,13 +32,13 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         }
 
         /// Supported date formats
-        public enum DateEncodingStrategy {
+        public enum DateEncodingStrategy: Sendable {
             /// Seconds since 1 January 1970 00:00:00 UTC (Unix Timestamp)
             case secondsSince1970
             /// ISO 8601 formatted date
             case iso8601
             /// Using custom callback
-            case custom((Date, Encoder) throws -> Void)
+            case custom(@Sendable (Date, Encoder) throws -> Void)
         }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
@@ -407,7 +407,7 @@ private extension URLEncodedFormEncoder.Configuration {
             return URLEncodedFormData(values: [date.urlQueryFragmentValue])
         case .iso8601:
             return URLEncodedFormData(values: [
-                ISO8601DateFormatter.threadSpecific.string(from: date).urlQueryFragmentValue
+                ISO8601DateFormatter().string(from: date).urlQueryFragmentValue
             ])
         case .custom(let callback):
             let newCodingPath = codingPath + (key.map { [$0] } ?? [])
