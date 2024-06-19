@@ -4,9 +4,6 @@ import NIOHTTP1
 
 /// Encodes data as plaintext, utf8.
 public struct PlaintextEncoder: ContentEncoder {
-    /// Private encoder.
-    private let encoder: _PlaintextEncoder
-    
     /// The specific plaintext `MediaType` to use.
     private let contentType: HTTPMediaType
     
@@ -15,7 +12,6 @@ public struct PlaintextEncoder: ContentEncoder {
     /// - parameters:
     ///     - contentType: Plaintext `MediaType` to use. Usually `.plainText` or `.html`.
     public init(_ contentType: HTTPMediaType = .plainText) {
-        self.encoder = .init()
         self.contentType = contentType
     }
     
@@ -29,17 +25,11 @@ public struct PlaintextEncoder: ContentEncoder {
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
         where E: Encodable
     {
-        let actualEncoder: _PlaintextEncoder
-        if !userInfo.isEmpty {  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
-            actualEncoder = _PlaintextEncoder(userInfo: self.encoder.userInfoSendable.merging(userInfo) { $1 })
-        } else {
-            actualEncoder = self.encoder
-        }
-
-        var container = actualEncoder.singleValueContainer()
+        let encoder = _PlaintextEncoder(userInfo: userInfo)
+        var container = encoder.singleValueContainer()
         try container.encode(encodable)
 
-        guard let string = actualEncoder.plaintext else {
+        guard let string = encoder.plaintext else {
             throw EncodingError.invalidValue(encodable, .init(codingPath: [], debugDescription: "Nothing was encoded!"))
         }
         headers.contentType = self.contentType
@@ -50,16 +40,16 @@ public struct PlaintextEncoder: ContentEncoder {
 // MARK: Private
 
 private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
-    public var codingPath: [CodingKey] = []
-    fileprivate var userInfoSendable: [CodingUserInfoKey: Sendable]
-    public var userInfo: [CodingUserInfoKey: Any] { self.userInfoSendable }
-    public var plaintext: String?
+    let codingPath: [CodingKey] = []
+    let userInfoSendable: [CodingUserInfoKey: Sendable]
+    var userInfo: [CodingUserInfoKey: Any] { self.userInfoSendable }
+    private(set) var plaintext: String?
+
+    init(userInfo: [CodingUserInfoKey: Sendable] = [:]) { self.userInfoSendable = userInfo }
     
-    public init(userInfo: [CodingUserInfoKey: Sendable] = [:]) { self.userInfoSendable = userInfo }
-    
-    public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
-    public func unkeyedContainer() -> UnkeyedEncodingContainer { FailureEncoder() }
-    public func singleValueContainer() -> SingleValueEncodingContainer { self }
+    func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
+    func unkeyedContainer() -> UnkeyedEncodingContainer { FailureEncoder() }
+    func singleValueContainer() -> SingleValueEncodingContainer { self }
 
     func encodeNil() throws { self.plaintext = nil }
     

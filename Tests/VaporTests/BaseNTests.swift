@@ -58,19 +58,19 @@ final class BaseNTests: XCTestCase {
     /// BMP, a single-codepoint emoji, an emoji with variation selector, two multi-selector complex
     /// emoji, and finally, three flags chosen for their various encoding complexities.
     static let vector = "foobar\u{0009}\u{00a0}þàøƀāƿᏮᨡᡢꓞ𐌜𐍈𐔂😀👍🏼👩‍👩‍👧‍👧👨‍👨‍👦‍👦🏳️🏳️‍🌈🇺🇳"
-    static let checks = chain(chain(BaseNTests.vector.windows(ofCount: 1), BaseNTests.vector.windows(ofCount: 2)), [BaseNTests.vector[...]])
+    let checks = chain(chain(BaseNTests.vector.windows(ofCount: 1), BaseNTests.vector.windows(ofCount: 2)), [BaseNTests.vector[...]])
 
     func testBaseN() throws {
         // Set this to true to regenerate the "expected" test comparison vectors at the bottom of this file.
         let printVectors = false
         
         func check(with instance: BaseNEncoding, name: String, expected: [String], file: StaticString = #fileID, line: UInt = #line) {
-            assert(Self.checks.count == expected.count)
+            assert(self.checks.count == expected.count)
 
             XCTAssertEqual(instance.encode([]), [], file: (file), line: line)
             
             if printVectors { print("let expected\(name) = [", terminator: "") }
-            for (elem, expected) in zip(Self.checks, expected) {
+            for (elem, expected) in zip(self.checks, expected) {
                 let encodedBytes = instance.encode(Array(elem.utf8)), encodedString = String(decoding: encodedBytes, as: Unicode.ASCII.self)
                 let decodedBytes = instance.decode(encodedBytes)
                 

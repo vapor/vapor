@@ -497,7 +497,7 @@ extension HTTPHeaders {
     }
 }
 
-extension HTTPHeaders: CustomDebugStringConvertible {
+extension NIOHTTP1.HTTPHeaders: Swift.CustomDebugStringConvertible {
     /// See `CustomDebugStringConvertible.debugDescription`
     public var debugDescription: String {
         var desc: [String] = []

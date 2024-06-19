@@ -194,7 +194,7 @@ extension Application {
     }
 }
 
-public protocol XCTApplicationTester {
+public protocol XCTApplicationTester: Sendable {
     @available(*, noasync, message: "Use the async method instead.")
     func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse
     func performTest(request: XCTHTTPRequest) async throws -> XCTHTTPResponse

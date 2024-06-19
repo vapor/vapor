@@ -1,9 +1,10 @@
 import NIOCore
 import NIOHTTP1
+import NIOConcurrencyHelpers
 import Vapor
 import XCTest
 
-public struct XCTHTTPResponse {
+public struct XCTHTTPResponse: Sendable {
     public var status: HTTPStatus
     public var headers: HTTPHeaders
     public var body: ByteBuffer

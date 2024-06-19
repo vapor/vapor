@@ -203,15 +203,9 @@ final class URLEncodedFormTests: XCTestCase {
             configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(DateArrayCoding.self, from: "dates=bad-date"))
 
-        class DateFormatterFactory {
-            private var threadSpecificValue = ThreadSpecificVariable<DateFormatter>()
+        final class DateFormatterFactory: Sendable {
             var currentValue: DateFormatter {
-                guard let dateFormatter = threadSpecificValue.currentValue else {
-                    let threadSpecificDateFormatter = self.newDateFormatter
-                    threadSpecificValue.currentValue = threadSpecificDateFormatter
-                    return threadSpecificDateFormatter
-                }
-                return dateFormatter
+                self.newDateFormatter
             }
 
             private var newDateFormatter: DateFormatter {
@@ -280,15 +274,9 @@ final class URLEncodedFormTests: XCTestCase {
             configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(DateCoding.self, from: "date=bad-date"))
 
-        class DateFormatterFactory {
-            private var threadSpecificValue = ThreadSpecificVariable<DateFormatter>()
+        final class DateFormatterFactory: Sendable {
             var currentValue: DateFormatter {
-                guard let dateFormatter = threadSpecificValue.currentValue else {
-                    let threadSpecificDateFormatter = self.newDateFormatter
-                    threadSpecificValue.currentValue = threadSpecificDateFormatter
-                    return threadSpecificDateFormatter
-                }
-                return dateFormatter
+                self.newDateFormatter
             }
 
             private var newDateFormatter: DateFormatter {

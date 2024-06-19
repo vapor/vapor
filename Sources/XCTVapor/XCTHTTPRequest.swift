@@ -1,13 +1,14 @@
 import NIOCore
 import NIOHTTP1
+import NIOConcurrencyHelpers
 import Vapor
 
-public struct XCTHTTPRequest {
+public struct XCTHTTPRequest: Sendable {
     public var method: HTTPMethod
     public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer
-    
+
     public init(method: HTTPMethod, url: URI, headers: HTTPHeaders, body: ByteBuffer) {
         self.method = method
         self.url = url

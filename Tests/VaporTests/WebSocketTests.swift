@@ -155,7 +155,7 @@ final class WebSocketTests: XCTestCase {
     }
 }
 
-extension WebSocket: Hashable {
+extension Vapor.WebSocket: Swift.Hashable {
     public static func == (lhs: WebSocket, rhs: WebSocket) -> Bool {
         lhs === rhs
     }

@@ -116,13 +116,13 @@ final class BodyStreamStateTests: XCTestCase {
     }
 }
 
-extension HTTPBodyStreamState.Result: Equatable {
+extension Vapor.HTTPBodyStreamState.Result: Swift.Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.action == rhs.action && lhs.callRead == rhs.callRead
     }
 }
 
-extension HTTPBodyStreamState.Result.Action: Equatable {
+extension Vapor.HTTPBodyStreamState.Result.Action: Swift.Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
         case (.nothing, .nothing):
