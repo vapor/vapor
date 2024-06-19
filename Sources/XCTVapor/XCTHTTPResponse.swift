@@ -1,12 +1,35 @@
 import NIOCore
 import NIOHTTP1
+import NIOConcurrencyHelpers
 import Vapor
 import XCTest
 
-public struct XCTHTTPResponse {
-    public var status: HTTPStatus
-    public var headers: HTTPHeaders
-    public var body: ByteBuffer
+public struct XCTHTTPResponse: Sendable {
+    private struct Box: Sendable {
+        var status: HTTPStatus
+        var headers: HTTPHeaders
+        var body: ByteBuffer
+    }
+    private let box: NIOLockedValueBox<Box>
+
+    init(status: HTTPStatus, headers: HTTPHeaders, body: ByteBuffer) {
+        self.box = .init(.init(status: status, headers: headers, body: body))
+    }
+
+    public var status: HTTPStatus {
+        get { self.box.withLockedValue { $0.status } }
+        set { self.box.withLockedValue { $0.status = newValue } }
+    }
+
+    public var headers: HTTPHeaders {
+        get { self.box.withLockedValue { $0.headers } }
+        set { self.box.withLockedValue { $0.headers = newValue } }
+    }
+
+    public var body: ByteBuffer {
+        get { self.box.withLockedValue { $0.body } }
+        set { self.box.withLockedValue { $0.body = newValue } }
+    }
 }
 
 extension XCTHTTPResponse {

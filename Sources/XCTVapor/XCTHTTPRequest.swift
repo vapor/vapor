@@ -1,18 +1,39 @@
 import NIOCore
 import NIOHTTP1
+import NIOConcurrencyHelpers
 import Vapor
 
-public struct XCTHTTPRequest {
-    public var method: HTTPMethod
-    public var url: URI
-    public var headers: HTTPHeaders
-    public var body: ByteBuffer
-    
+public struct XCTHTTPRequest: Sendable {
+    private struct Box: Sendable {
+        var method: HTTPMethod
+        var url: URI
+        var headers: HTTPHeaders
+        var body: ByteBuffer
+    }
+    private let box: NIOLockedValueBox<Box>
+
+    public var method: HTTPMethod {
+        get { self.box.withLockedValue { $0.method } }
+        set { self.box.withLockedValue { $0.method = newValue } }
+    }
+
+    public var url: URI {
+        get { self.box.withLockedValue { $0.url } }
+        set { self.box.withLockedValue { $0.url = newValue } }
+    }
+
+    public var headers: HTTPHeaders {
+        get { self.box.withLockedValue { $0.headers } }
+        set { self.box.withLockedValue { $0.headers = newValue } }
+    }
+
+    public var body: ByteBuffer {
+        get { self.box.withLockedValue { $0.body } }
+        set { self.box.withLockedValue { $0.body = newValue } }
+    }
+
     public init(method: HTTPMethod, url: URI, headers: HTTPHeaders, body: ByteBuffer) {
-        self.method = method
-        self.url = url
-        self.headers = headers
-        self.body = body
+        self.box = .init(.init(method: method, url: url, headers: headers, body: body))
     }
 
     private struct _ContentContainer: ContentContainer {
