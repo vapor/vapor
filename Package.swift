@@ -96,7 +96,10 @@ let package = Package(
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
             ],
-            swiftSettings: [.swiftLanguageVersion(.v6)]
+            swiftSettings: [
+                .swiftLanguageVersion(.v6),
+//                .enableUpcomingFeature("InferSendableFromCaptures")
+            ]
         ),
         
         // Development
