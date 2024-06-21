@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:6.0
 import PackageDescription
 import Foundation
 
@@ -95,7 +95,8 @@ let package = Package(
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
-            ]
+            ],
+            swiftSettings: [.swiftLanguageVersion(.v6)]
         ),
         
         // Development
@@ -104,7 +105,8 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
             ],
-            resources: [.copy("Resources")]
+            resources: [.copy("Resources")], 
+            swiftSettings: [.swiftLanguageVersion(.v6)]
         ),
 
         // Testing
@@ -112,7 +114,8 @@ let package = Package(
             name: "XCTVapor",
             dependencies: [
                 .target(name: "Vapor"),
-            ]
+            ],
+            swiftSettings: [.swiftLanguageVersion(.v6)]
         ),
         .testTarget(
             name: "VaporTests",
@@ -130,7 +133,8 @@ let package = Package(
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),
                 .copy("Utilities/long-test-file.txt"),
-            ]
+            ],
+            swiftSettings: [.swiftLanguageVersion(.v6)]
         ),
     ]
 )
