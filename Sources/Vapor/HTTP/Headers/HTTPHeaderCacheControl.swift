@@ -177,7 +177,7 @@ extension HTTPHeaders {
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
 
-        private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
+        private static let exactMatch: [String: WritableKeyPath<Self, Bool> & Sendable] = [
             "immutable": \.immutable,
             "must-revalidate": \.mustRevalidate,
             "no-cache": \.noCache,
@@ -189,7 +189,7 @@ extension HTTPHeaders {
             "only-if-cached": \.onlyIfCached
         ]
 
-        private static let prefix: [String: WritableKeyPath<Self, Int?>] = [
+        private static let prefix: [String: WritableKeyPath<Self, Int?> & Sendable] = [
             "max-age": \.maxAge,
             "s-maxage": \.sMaxAge,
             "min-fresh": \.minFresh,
