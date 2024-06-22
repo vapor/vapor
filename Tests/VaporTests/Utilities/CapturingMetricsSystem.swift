@@ -14,7 +14,7 @@
 // The license for the original work is reproduced below. See NOTICES.txt for
 // more.
 
-@preconcurrency import Metrics
+import Metrics
 import Foundation
 import NIOConcurrencyHelpers
 

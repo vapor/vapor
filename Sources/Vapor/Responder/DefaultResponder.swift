@@ -1,5 +1,5 @@
 import Foundation
-@preconcurrency import Metrics
+import Metrics
 @preconcurrency import RoutingKit
 import NIOCore
 import NIOHTTP1
