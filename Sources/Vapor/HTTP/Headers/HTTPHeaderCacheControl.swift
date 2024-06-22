@@ -6,11 +6,11 @@ extension HTTPHeaders {
     /// Represents the HTTP `Cache-Control` header.
     /// - See Also:
     /// [Cache-Control docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
-    public struct CacheControl {
+    public struct CacheControl: Sendable {
         /// The max-stale option can be present with no value, or be present with a number of seconds.  By using
         /// a struct you can check the nullability of the `maxStale` variable as well as then check the nullability
         /// of the `seconds` to differentiate.
-        public struct MaxStale {
+        public struct MaxStale: Sendable {
             /// The upper limit of staleness the client will accept.
             public var seconds: Int?
         }
@@ -177,6 +177,7 @@ extension HTTPHeaders {
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
 
+        #if swift(>=6)
         private static let exactMatch: [String: WritableKeyPath<Self, Bool> & Sendable] = [
             "immutable": \.immutable,
             "must-revalidate": \.mustRevalidate,
@@ -196,6 +197,27 @@ extension HTTPHeaders {
             "stale-while-revalidate": \.staleWhileRevalidate,
             "stale-if-error": \.staleIfError
         ]
+        #else
+        private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
+            "immutable": \.immutable,
+            "must-revalidate": \.mustRevalidate,
+            "no-cache": \.noCache,
+            "no-store": \.noStore,
+            "no-transform": \.noTransform,
+            "public": \.isPublic,
+            "private": \.isPrivate,
+            "proxy-revalidate": \.proxyRevalidate,
+            "only-if-cached": \.onlyIfCached
+        ]
+
+        private static let prefix: [String: WritableKeyPath<Self, Int?>] = [
+            "max-age": \.maxAge,
+            "s-maxage": \.sMaxAge,
+            "min-fresh": \.minFresh,
+            "stale-while-revalidate": \.staleWhileRevalidate,
+            "stale-if-error": \.staleIfError
+        ]
+        #endif
     }
 
     /// Gets the value of the `Cache-Control` header, if present.
