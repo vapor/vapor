@@ -49,7 +49,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
 
         // Swift metrics API
-        .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
+        .package(url: "https://github.com/apple/swift-metrics.git", from: "2.0.0"),
 
         // Swift collection algorithms
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
