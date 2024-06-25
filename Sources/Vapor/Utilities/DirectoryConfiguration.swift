@@ -45,11 +45,19 @@ public struct DirectoryConfiguration: Sendable {
 
         let workingDirectory: String
 
+        #if swift(>=6)
+        if let cwd = cwd, let string = String(validatingCString: cwd) {
+            workingDirectory = string
+        } else {
+            workingDirectory = "./"
+        }
+        #else
         if let cwd = cwd, let string = String(validatingUTF8: cwd) {
             workingDirectory = string
         } else {
             workingDirectory = "./"
         }
+        #endif
 
         #if Xcode
         if workingDirectory.contains("DerivedData") {
