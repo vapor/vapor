@@ -13,11 +13,7 @@ import Foundation
 import NIOPosix
 import NIOCore
 import NIOConcurrencyHelpers
-#if os(Linux)
-@preconcurrency import Foundation
-#else
 import Foundation
-#endif
 
 /// An internal helper that formats cookie dates as RFC1123
 private final class RFC1123: Sendable {
@@ -183,3 +179,7 @@ private let stringNumbers = [
 ]
 
 private let secondsInDay = 60 * 60 * 24
+
+#if os(Linux)
+extension DateFormatter: @retroactive @unchecked Sendable {}
+#endif

@@ -1,4 +1,4 @@
-#if os(Linux)
+#if os(Linux) && swift(<6.0)
 // Needed because DispatchQueue isn't Sendable on Linux
 @preconcurrency import Foundation
 #else
