@@ -2,7 +2,7 @@ import Logging
 import ConsoleKit
 
 extension LoggingSystem {
-    public static func bootstrap(from environment: inout Environment, _ factory: (Logger.Level) -> (String) -> LogHandler) throws {
+    public static func bootstrap(from environment: inout Environment, _ factory: @Sendable (Logger.Level) -> (@Sendable (String) -> LogHandler)) throws {
         let level = try Logger.Level.detect(from: &environment)
 
         // Bootstrap logger with a factory created by the factoryfactory.
