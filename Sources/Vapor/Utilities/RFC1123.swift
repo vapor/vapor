@@ -180,6 +180,8 @@ private let stringNumbers = [
 
 private let secondsInDay = 60 * 60 * 24
 
-#if os(Linux)
+#if os(Linux) && swift(>=6.0)
 extension DateFormatter: @retroactive @unchecked Sendable {}
+#elseif os(Linux) && swift(<6.0)
+extension DateFormatter: @unchecked Sendable {}
 #endif
