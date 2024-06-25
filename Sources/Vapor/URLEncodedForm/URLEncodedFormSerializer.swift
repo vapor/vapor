@@ -1,4 +1,8 @@
+#if os(Linux)
+@preconcurrency import struct Foundation.CharacterSet
+#else
 import struct Foundation.CharacterSet
+#endif
 
 struct URLEncodedFormSerializer: Sendable {
     let splitVariablesOn: Character
