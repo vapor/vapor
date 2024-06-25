@@ -1,5 +1,7 @@
 #if !canImport(Darwin) && swift(<6.0)
 @preconcurrency import Dispatch
+#elseif !canImport(Darwin)
+import Dispatch
 #endif
 import Foundation
 import XCTest

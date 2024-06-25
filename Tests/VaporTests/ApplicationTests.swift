@@ -6,6 +6,7 @@ import NIOCore
 import NIOEmbedded
 import NIOConcurrencyHelpers
 
+@MainActor
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
