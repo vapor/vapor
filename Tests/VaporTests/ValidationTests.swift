@@ -467,7 +467,9 @@ class ValidationTests: XCTestCase {
 
     func testEmail() {
         assert("tanner@vapor.codes", passes: .email)
+        assert("tanner@VAPOR.codes", passes: .email)
         assert("tanner@vapor.codes", fails: !.email, "is a valid email address")
+        assert("tanner@VAPOR.codes", fails: !.email, "is a valid email address")
         assert("tanner@vapor.codestanner@vapor.codes", fails: .email, "is not a valid email address")
         assert("tanner@vapor.codes.", fails: .email, "is not a valid email address")
         assert("tanner@@vapor.codes", fails: .email, "is not a valid email address")
