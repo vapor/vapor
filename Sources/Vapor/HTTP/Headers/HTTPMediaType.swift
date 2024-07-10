@@ -71,27 +71,27 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
     ///
     /// In the `MediaType` `"application/json; charset=utf8"`:
     ///
-    /// - type: `"application"`
-    /// - subtype: `"json"`
-    /// - parameters: ["charset": "utf8"]
+    /// - `type`: `"application"`
+    /// - `subtype`: `"json"`
+    /// - `parameters`: `["charset": "utf8"]` 
     public var type: String
     
     /// The `MediaType`'s specific type. Usually a unique string.
     ///
     /// In the `MediaType` `"application/json; charset=utf8"`:
     ///
-    /// - type: `"application"`
-    /// - subtype: `"json"`
-    /// - parameters: ["charset": "utf8"]
+    /// - `type`: `"application"`
+    /// - `subtype`: `"json"`
+    /// - `parameters`: `["charset": "utf8"]`
     public var subType: String
     
     /// The `MediaType`'s metadata. Zero or more key/value pairs.
     ///
     /// In the `MediaType` `"application/json; charset=utf8"`:
     ///
-    /// - type: `"application"`
-    /// - subtype: `"json"`
-    /// - parameters: ["charset": "utf8"]
+    /// - `type`: `"application"`
+    /// - `subtype`: `"json"`
+    /// - `parameters`: `["charset": "utf8"]`
     public var parameters: [String: String]
     
     /// Converts this `MediaType` into its string representation.
