@@ -1,5 +1,7 @@
-#if !canImport(Darwin)
+#if !canImport(Darwin) && swift(<6.0)
 @preconcurrency import Dispatch
+#elseif !canImport(Darwin)
+import Dispatch
 #endif
 import Foundation
 import Vapor
@@ -350,7 +352,6 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -467,7 +468,6 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -546,7 +546,6 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.get("compressed") { _ in compressiblePayload }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -627,7 +626,6 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.get("compressed") { _ in compressiblePayload }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,

@@ -60,6 +60,7 @@ final class BaseNTests: XCTestCase {
     static let vector = "foobar\u{0009}\u{00a0}þàøƀāƿᏮᨡᡢꓞ𐌜𐍈𐔂😀👍🏼👩‍👩‍👧‍👧👨‍👨‍👦‍👦🏳️🏳️‍🌈🇺🇳"
     let checks = chain(chain(BaseNTests.vector.windows(ofCount: 1), BaseNTests.vector.windows(ofCount: 2)), [BaseNTests.vector[...]])
 
+    @available(macOS 15.0, *)
     func testBaseN() throws {
         // Set this to true to regenerate the "expected" test comparison vectors at the bottom of this file.
         let printVectors = false
@@ -83,7 +84,11 @@ final class BaseNTests: XCTestCase {
                     XCTAssertEqual(Array(elem.utf8), decodedBytes, "byte decode", file: (file), line: line)
                     
                     let utf8ReadyBytes = decodedBytes.map { Array(chain($0.map(Int8.init(bitPattern:)), [0])) }
+                    #if swift(>=6)
+                    XCTAssertEqual(utf8ReadyBytes.flatMap { String(validating: $0, as: UTF8.self)?[...] }, elem, "\(name) - \(elem) - \(decodedBytes ?? [])")
+                    #else
                     XCTAssertEqual(utf8ReadyBytes.flatMap { String(validatingUTF8: $0)?[...] }, elem, "\(name) - \(elem) - \(decodedBytes ?? [])")
+                    #endif
                 }
             }
             if printVectors {
