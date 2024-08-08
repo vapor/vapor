@@ -480,6 +480,13 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(content["array"], [1, 2, 3])
     }
 
+    func testSparseArray() throws {
+        let data = """
+        array[0]=0&array[1]=1&array[3]=3
+        """
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode([String: [Int]].self, from: data))
+    }
+
     func testRawEnum() throws {
         enum PetType: String, Codable {
             case cat, dog
