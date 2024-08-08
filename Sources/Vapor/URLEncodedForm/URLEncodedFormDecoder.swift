@@ -357,6 +357,14 @@ private struct _Decoder: Decoder {
                         .split(omittingEmptySubsequences: false, whereSeparator: configuration.arraySeparators.contains)
                         .map { .urlEncoded(.init($0)) }
                 }
+
+                if self.values.isEmpty && !data.children.isEmpty {
+                    let context = DecodingError.Context(
+                        codingPath: codingPath,
+                        debugDescription: "Expected an array but could not parse the data as an array"
+                    )
+                    throw DecodingError.dataCorrupted(context)
+                }
             }
         }
         
