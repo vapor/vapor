@@ -508,3 +508,7 @@ extension NIOHTTP1.HTTPHeaders: Swift.CustomDebugStringConvertible {
     }
 }
 
+// MARK: Internal Vapor Marker Headers
+extension HTTPHeaders.Name {
+    public static let xVaporResponseCompression = Self("X-Vapor-Response-Compression")
+}
