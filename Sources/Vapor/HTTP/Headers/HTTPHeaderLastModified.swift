@@ -6,7 +6,7 @@ extension HTTPHeaders {
     /// - See Also:
     /// [Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Last-Modified)
     public struct LastModified {
-        public let value: Date
+        public var value: Date
 
         internal static func parse(_ dateString: String) -> LastModified? {
             let fmt = DateFormatter()
@@ -40,6 +40,13 @@ extension HTTPHeaders {
                 self.remove(name: .lastModified)
             }
         }
+    }
+}
+
+extension HTTPHeaders.LastModified {
+    /// Initialize a `Last-Modified` header with a date.
+    public init(_ date: Date) {
+        self.init(value: date)
     }
 }
 
