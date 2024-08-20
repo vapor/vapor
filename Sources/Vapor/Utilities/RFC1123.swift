@@ -2,7 +2,11 @@
 #if canImport(Darwin)
 @preconcurrency import Darwin
 #elseif canImport(Glibc)
+#if compiler(>=6.0)
+import Glibc
+#else
 @preconcurrency import Glibc
+#endif
 #elseif canImport(Musl)
 @preconcurrency import Musl
 #elseif canImport(WinSDK)
