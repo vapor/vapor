@@ -178,3 +178,8 @@ private let stringNumbers = [
 ]
 
 private let secondsInDay = 60 * 60 * 24
+
+#if compiler(>=6.0)
+extension tm: @retroactive @unchecked Sendable {}
+#endif
+
