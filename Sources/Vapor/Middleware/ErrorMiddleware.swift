@@ -49,6 +49,7 @@ public final class ErrorMiddleware: Middleware {
                 let encoder = try ContentConfiguration.global.requireEncoder(for: .json)
                 var byteBuffer = req.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(ErrorResponse(error: true, reason: reason), to: &byteBuffer, headers: &headers)
+                
                 body = .init(
                     buffer: byteBuffer,
                     byteBufferAllocator: req.byteBufferAllocator

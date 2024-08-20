@@ -114,6 +114,9 @@ final class ErrorTests: XCTestCase {
                 return
             }
         }
+        
+        // Clean up
+        ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)
     }
 }
 
