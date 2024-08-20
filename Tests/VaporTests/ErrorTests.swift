@@ -107,7 +107,12 @@ final class ErrorTests: XCTestCase {
         
         try app.test(.GET, "foo") { res in
             XCTAssertEqual(res.status, HTTPStatus.internalServerError)
-            XCTAssertEqual(res.body.string, "error=true&reason=Foo")
+            let option1 = "error=true&reason=Foo"
+            let option2 = "reason=Foo&error=true"
+            guard res.body.string == option1 || res.body.string == option2 else {
+                XCTFail("Response does not match")
+                return
+            }
         }
     }
 }
