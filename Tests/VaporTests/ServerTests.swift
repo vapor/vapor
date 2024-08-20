@@ -529,7 +529,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             XCTFail("Missing supportedCompressedResponse.body")
         }
         
-        try await app.server.shutdown()
+        await app.server.shutdown()
     }
     
     func testHTTP1ResponseDecompression() async throws {
@@ -547,7 +547,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         
         app.get("compressed") { _ in compressiblePayload }
         
-        try app.server.start(address: nil)
+        try await app.server.start(address: nil)
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -586,7 +586,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
         
-        try await app.server.shutdown()
+        await app.server.shutdown()
     }
     
     func testHTTP2ResponseDecompression() async throws {
@@ -668,7 +668,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
         
-        try await app.server.shutdown()
+        await app.server.shutdown()
     }
     
     func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() throws {
