@@ -111,7 +111,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     var app: Application!
     
     func assertCompressed(
-        _ configuration: HTTPServer.Configuration.CompressionConfiguration,
+        _ configuration: HTTPServer.Configuration.ResponseCompressionConfiguration,
         file: StaticString = #filePath,
         line: UInt = #line
     ) async throws {
@@ -133,7 +133,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     }
     
     func assertUncompressed(
-        _ configuration: HTTPServer.Configuration.CompressionConfiguration,
+        _ configuration: HTTPServer.Configuration.ResponseCompressionConfiguration,
         file: StaticString = #filePath,
         line: UInt = #line
     ) async throws {
