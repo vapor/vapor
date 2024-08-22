@@ -46,11 +46,14 @@ public final class ErrorMiddleware: Middleware {
             // attempt to serialize the error to json
             let body: Response.Body
             do {
+                let encoder = try ContentConfiguration.global.requireEncoder(for: .json)
+                var byteBuffer = req.byteBufferAllocator.buffer(capacity: 0)
+                try encoder.encode(ErrorResponse(error: true, reason: reason), to: &byteBuffer, headers: &headers)
+                
                 body = .init(
-                    buffer: try JSONEncoder().encodeAsByteBuffer(ErrorResponse(error: true, reason: reason), allocator: req.byteBufferAllocator),
+                    buffer: byteBuffer,
                     byteBufferAllocator: req.byteBufferAllocator
                 )
-                headers.contentType = .json
             } catch {
                 body = .init(string: "Oops: \(String(describing: error))\nWhile encoding error: \(reason)", byteBufferAllocator: req.byteBufferAllocator)
                 headers.contentType = .plainText
