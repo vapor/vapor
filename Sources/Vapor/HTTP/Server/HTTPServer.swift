@@ -87,66 +87,10 @@ public final class HTTPServer: Server, Sendable {
         public var tcpNoDelay: Bool
 
         /// Response compression configuration.
-        public var responseCompression: CompressionConfiguration
-
-        /// Supported HTTP compression options.
-        public struct CompressionConfiguration: Sendable {
-            /// Disables compression. This is the default.
-            public static var disabled: Self {
-                .init(storage: .disabled)
-            }
-
-            /// Enables compression with default configuration.
-            public static var enabled: Self {
-                .enabled(initialByteBufferCapacity: 1024)
-            }
-
-            /// Enables compression with custom configuration.
-            public static func enabled(
-                initialByteBufferCapacity: Int
-            ) -> Self {
-                .init(storage: .enabled(
-                    initialByteBufferCapacity: initialByteBufferCapacity
-                ))
-            }
-
-            enum Storage {
-                case disabled
-                case enabled(initialByteBufferCapacity: Int)
-            }
-
-            var storage: Storage
-        }
+        public var responseCompression: ResponseCompressionConfiguration
 
         /// Request decompression configuration.
-        public var requestDecompression: DecompressionConfiguration
-
-        /// Supported HTTP decompression options.
-        public struct DecompressionConfiguration: Sendable {
-            /// Disables decompression. This is the default option.
-            public static var disabled: Self {
-                .init(storage: .disabled)
-            }
-
-            /// Enables decompression with default configuration.
-            public static var enabled: Self {
-                .enabled(limit: .ratio(25))
-            }
-
-            /// Enables decompression with custom configuration.
-            public static func enabled(
-                limit: NIOHTTPDecompression.DecompressionLimit
-            ) -> Self {
-                .init(storage: .enabled(limit: limit))
-            }
-
-            enum Storage {
-                case disabled
-                case enabled(limit: NIOHTTPDecompression.DecompressionLimit)
-            }
-
-            var storage: Storage
-        }
+        public var requestDecompression: RequestDecompressionConfiguration
         
         /// When `true`, HTTP server will support pipelined requests.
         public var supportPipelining: Bool
@@ -186,8 +130,8 @@ public final class HTTPServer: Server, Sendable {
             backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
-            responseCompression: CompressionConfiguration = .disabled,
-            requestDecompression: DecompressionConfiguration = .enabled,
+            responseCompression: ResponseCompressionConfiguration = .disabled,
+            requestDecompression: RequestDecompressionConfiguration = .enabled,
             supportPipelining: Bool = true,
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
@@ -222,8 +166,8 @@ public final class HTTPServer: Server, Sendable {
             backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
-            responseCompression: CompressionConfiguration = .disabled,
-            requestDecompression: DecompressionConfiguration = .enabled,
+            responseCompression: ResponseCompressionConfiguration = .disabled,
+            requestDecompression: RequestDecompressionConfiguration = .enabled,
             supportPipelining: Bool = true,
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
@@ -604,16 +548,8 @@ extension ChannelPipeline {
         let http2 = HTTP2FramePayloadToHTTP1ServerCodec()
         handlers.append(http2)
         
-        /// Add response compressor if configured.
-        switch configuration.responseCompression.storage {
-        case .enabled(let initialByteBufferCapacity):
-            let responseCompressionHandler = HTTPResponseCompressor(
-                initialByteBufferCapacity: initialByteBufferCapacity
-            )
-            handlers.append(responseCompressionHandler)
-        case .disabled:
-            break
-        }
+        /// Add response compressor as configured.
+        handlers.append(configuration.responseCompression.makeCompressor())
         
         /// Add request decompressor if configured.
         switch configuration.requestDecompression.storage {
@@ -671,16 +607,8 @@ extension ChannelPipeline {
             handlers.append(pipelineHandler)
         }
         
-        /// Add response compressor if configured.
-        switch configuration.responseCompression.storage {
-        case .enabled(let initialByteBufferCapacity):
-            let responseCompressionHandler = HTTPResponseCompressor(
-                initialByteBufferCapacity: initialByteBufferCapacity
-            )
-            handlers.append(responseCompressionHandler)
-        case .disabled:
-            break
-        }
+        /// Add response compressor as configured.
+        handlers.append(configuration.responseCompression.makeCompressor())
 
         /// Add request decompressor if configured.
         switch configuration.requestDecompression.storage {
@@ -731,6 +659,55 @@ extension NIOSSLServerHandler {
             self.init(context: context, customVerificationCallback: callback)
         } else {
             self.init(context: context)
+        }
+    }
+}
+
+// MARK: Response Compression Helpers
+extension HTTPServer.Configuration.ResponseCompressionConfiguration {
+    func makeCompressor() -> HTTPResponseCompressor {
+        HTTPResponseCompressor(initialByteBufferCapacity: storage.initialByteBufferCapacity) { [storage] responseHeaders, isCompressionSupported in
+            defer {
+                /// Always remove this marker header.
+                responseHeaders.headers.remove(name: .xVaporResponseCompression)
+            }
+            
+            /// If compression isn't supported, skip any further processing.
+            guard isCompressionSupported else { return .doNotCompress }
+            
+            /// If we allow overrides, check for the response compression marker header value first before making any further checks:
+            if storage.allowRequestOverrides, let responseCompressionHeader = responseHeaders.headers.responseCompression.value {
+                switch responseCompressionHeader {
+                case .enable: return .compressIfPossible
+                case .disable: return .doNotCompress
+                case .useDefault: break
+                }
+            }
+            
+            switch storage {
+            case .enabled(_, let disallowedTypes, _):
+                /// If there were no explicit overrides, fallback to checking the content type against the disallowed set. If any type succeeds the check, disable compression:
+                let shouldDisable = responseHeaders.headers.parseDirectives(name: .contentType).contains { contentTypeDirectives in
+                    guard let mediaType = HTTPMediaType(directives: contentTypeDirectives)
+                    else { return false }
+                    
+                    return disallowedTypes.contains(mediaType)
+                }
+                
+                /// Return `.doNotCompress` if compression should be disabled, or `.compressIfPossible` to allow it.
+                return shouldDisable ? .doNotCompress : .compressIfPossible
+            case .disabled(_, let allowedTypes, _):
+                /// If there were no explicit overrides, fallback to checking the content type against the allowed set. If all types succeed the check, enable compression:
+                let shouldEnable = responseHeaders.headers.parseDirectives(name: .contentType).allSatisfy { contentTypeDirectives in
+                    guard let mediaType = HTTPMediaType(directives: contentTypeDirectives)
+                    else { return false }
+                    
+                    return allowedTypes.contains(mediaType)
+                }
+                
+                /// Return `.compressIfPossible` if compression should be enabled, or `.doNotCompress` to disallow it.
+                return shouldEnable ? .compressIfPossible : .doNotCompress
+            }
         }
     }
 }
