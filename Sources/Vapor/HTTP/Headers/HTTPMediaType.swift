@@ -167,6 +167,57 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
     }
 }
 
+/// A collection for efficiently determining if a set of types contains another type.
+public struct HTTPMediaTypeSet: Sendable {
+    let mediaTypeLookup: [String : [String : Set<HTTPMediaType>]]
+    let allowsAny: Bool
+    let allowsNone: Bool
+    
+    public init(mediaTypes: some Sequence<HTTPMediaType>) {
+        var mediaTypeLookup: [String : [String : Set<HTTPMediaType>]] = [:]
+        for mediaType in mediaTypes {
+            mediaTypeLookup[mediaType.type, default: [:]][mediaType.subType, default: Set()].insert(mediaType)
+        }
+        self.mediaTypeLookup = mediaTypeLookup
+        self.allowsAny = mediaTypeLookup["*"] != nil
+        self.allowsNone = mediaTypeLookup.isEmpty
+    }
+    
+    /// Check to see if a media type is contained within the set.
+    public func contains(_ mediaType: HTTPMediaType) -> Bool {
+        /// If we allow any type or no types, stop here. These are uncommon cases, so we cache the results ahead of time to avoid the extra dictionary checks.
+        if allowsAny { return true }
+        if allowsNone { return false }
+        
+        /// Make sure we have an entry for the specific type:
+        guard let mediaSubTypeLookup = mediaTypeLookup[mediaType.type]
+        else { return false }
+        
+        /// If we alow any of the subtypes, stop here.
+        if mediaSubTypeLookup["*"] != nil { return true }
+        
+        /// Make sure we have an entry for the specific sub type:
+        guard let mediaTypes = mediaSubTypeLookup[mediaType.subType]
+        else { return false }
+        
+        /// Check and return true if either the type as is (with potential parameters), or the parameter-less type is in the set:
+        return mediaTypes.contains(mediaType) || mediaTypes.contains(HTTPMediaType(type: mediaType.type, subType: mediaType.subType))
+    }
+    
+    /// The super set of all ``HTTPMediaType``s.
+    public static let all = HTTPMediaTypeSet(mediaTypes: [.any])
+    
+    /// The empty set of ``HTTPMediaType``s.
+    public static let none = HTTPMediaTypeSet(mediaTypes: [])
+}
+
+extension HTTPMediaTypeSet: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: HTTPMediaType...) {
+        self = HTTPMediaTypeSet(mediaTypes: elements)
+    }
+}
+
+// MARK: - Media Type Dataset
 public extension HTTPMediaType {
     /// Any media type (*/*).
     static let any = HTTPMediaType(type: "*", subType: "*")
@@ -242,7 +293,7 @@ public extension HTTPMediaType {
     static let mpeg = HTTPMediaType(type: "video", subType: "mpeg")
 }
 
-// MARK: Extensions
+// MARK: File Extensions
 let fileExtensionMediaTypeMapping: [String: HTTPMediaType] = [
     "ez": HTTPMediaType(type: "application", subType: "andrew-inset"),
     "anx": HTTPMediaType(type: "application", subType: "annodex"),
@@ -777,3 +828,102 @@ let fileExtensionMediaTypeMapping: [String: HTTPMediaType] = [
     "sisx": HTTPMediaType(type: "x-epoc", subType: "x-sisx-app"),
     "vrm": HTTPMediaType(type: "x-world", subType: "x-vrml"),
 ]
+
+// MARK: Compression Support
+extension HTTPMediaTypeSet {
+    /// A list of known compressible MIME types.
+    ///
+    /// If you know a type would almost always benefit from on-the-wire compression, please add it to this list!
+    public static let compressible: HTTPMediaTypeSet = [
+        HTTPMediaType(type: "application", subType: "atom+xml"),
+        HTTPMediaType(type: "application", subType: "atomcat+xml"),
+        HTTPMediaType(type: "application", subType: "atomserv+xml"),
+        HTTPMediaType(type: "application", subType: "davmount+xml"),
+        HTTPMediaType(type: "application", subType: "ecmascript"),
+        HTTPMediaType(type: "application", subType: "javascript"),
+        HTTPMediaType(type: "application", subType: "json"),
+        HTTPMediaType(type: "application", subType: "json-seq"),
+        HTTPMediaType(type: "application", subType: "rdf+xml"),
+        HTTPMediaType(type: "application", subType: "rtf"),
+        HTTPMediaType(type: "application", subType: "smil+xml"),
+        HTTPMediaType(type: "application", subType: "xhtml+xml"),
+        HTTPMediaType(type: "application", subType: "xml"),
+        HTTPMediaType(type: "application", subType: "xslt+xml"),
+        HTTPMediaType(type: "application", subType: "xspf+xml"),
+        HTTPMediaType(type: "application", subType: "vnd.api+json"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.calc"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.calc.template"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.draw"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.draw.template"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.impress"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.impress.template"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.math"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.writer"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.writer.global"),
+        HTTPMediaType(type: "application", subType: "vnd.sun.xml.writer.template"),
+        HTTPMediaType(type: "application", subType: "x-mpegURL"),
+        HTTPMediaType(type: "application", subType: "x-python-code"),
+        HTTPMediaType(type: "application", subType: "x-rss+xml"),
+        HTTPMediaType(type: "application", subType: "x-ruby"),
+        HTTPMediaType(type: "application", subType: "x-sh"),
+        HTTPMediaType(type: "application", subType: "x-www-form-urlencoded"),
+        HTTPMediaType(type: "image", subType: "svg+xml"),
+        HTTPMediaType(type: "model", subType: "vrml"),
+        HTTPMediaType(type: "model", subType: "x3d+vrml"),
+        HTTPMediaType(type: "model", subType: "x3d+xml"),
+        HTTPMediaType(type: "multipart", subType: "form-data"),
+        HTTPMediaType(type: "text", subType: "*"),
+    ]
+    
+    /// A list of known incompressible MIME types.
+    ///
+    /// If you know a type would almost never benefit from on-the-wire compression, please add it to this list!
+    public static let incompressible: HTTPMediaTypeSet = [
+        HTTPMediaType(type: "application", subType: "rar"),
+        HTTPMediaType(type: "application", subType: "zip"),
+        HTTPMediaType(type: "application", subType: "x-7z-compressed"),
+        HTTPMediaType(type: "application", subType: "x-apple-diskimage"),
+        HTTPMediaType(type: "application", subType: "x-gtar"),
+        HTTPMediaType(type: "application", subType: "x-gtar-compressed"),
+        HTTPMediaType(type: "application", subType: "x-lha"),
+        HTTPMediaType(type: "application", subType: "x-lzh"),
+        HTTPMediaType(type: "application", subType: "x-lzx"),
+        HTTPMediaType(type: "application", subType: "x-tar"),
+        HTTPMediaType(type: "audio", subType: "*"),
+        HTTPMediaType(type: "image", subType: "gif"),
+        HTTPMediaType(type: "image", subType: "ief"),
+        HTTPMediaType(type: "image", subType: "jp2"),
+        HTTPMediaType(type: "image", subType: "jpeg"),
+        HTTPMediaType(type: "image", subType: "jpm"),
+        HTTPMediaType(type: "image", subType: "jpx"),
+        HTTPMediaType(type: "image", subType: "pcx"),
+        HTTPMediaType(type: "image", subType: "png"),
+        HTTPMediaType(type: "image", subType: "tiff"),
+        HTTPMediaType(type: "image", subType: "webp"),
+        HTTPMediaType(type: "image", subType: "vnd.djvu"),
+        HTTPMediaType(type: "image", subType: "vnd.microsoft.icon"),
+        HTTPMediaType(type: "image", subType: "vnd.wap.wbmp"),
+        HTTPMediaType(type: "image", subType: "x-canon-cr2"),
+        HTTPMediaType(type: "image", subType: "x-canon-crw"),
+        HTTPMediaType(type: "image", subType: "x-cmu-raster"),
+        HTTPMediaType(type: "image", subType: "x-coreldraw"),
+        HTTPMediaType(type: "image", subType: "x-coreldrawpattern"),
+        HTTPMediaType(type: "image", subType: "x-coreldrawtemplate"),
+        HTTPMediaType(type: "image", subType: "x-epson-erf"),
+        HTTPMediaType(type: "image", subType: "x-jg"),
+        HTTPMediaType(type: "image", subType: "x-jng"),
+        HTTPMediaType(type: "image", subType: "x-ms-bmp"),
+        HTTPMediaType(type: "image", subType: "x-nikon-nef"),
+        HTTPMediaType(type: "image", subType: "x-olympus-orf"),
+        HTTPMediaType(type: "image", subType: "x-photoshop"),
+        HTTPMediaType(type: "image", subType: "x-portable-anymap"),
+        HTTPMediaType(type: "image", subType: "x-portable-bitmap"),
+        HTTPMediaType(type: "image", subType: "x-portable-graymap"),
+        HTTPMediaType(type: "image", subType: "x-portable-pixmap"),
+        HTTPMediaType(type: "image", subType: "x-rgb"),
+        HTTPMediaType(type: "image", subType: "x-xbitmap"),
+        HTTPMediaType(type: "image", subType: "x-xpixmap"),
+        HTTPMediaType(type: "image", subType: "x-xwindowdump"),
+        HTTPMediaType(type: "video", subType: "*"),
+    ]
+}
