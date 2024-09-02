@@ -8,7 +8,7 @@ import NIOConcurrencyHelpers
 ///     $ swift run Run serve
 ///     Server starting on http://localhost:8080
 ///
-public final class ServeCommand: Command, Sendable {
+public final class ServeCommand: AsyncCommand, Sendable {
     public struct Signature: CommandSignature, Sendable {
         @Option(name: "hostname", short: "H", help: "Set the hostname the server will run on.")
         var hostname: String?
