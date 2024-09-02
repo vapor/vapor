@@ -30,6 +30,10 @@ public actor Session: Sendable {
     public func destroy() {
         self.isValid = false
     }
+    
+    public func set(_ key: String, to value: String?) {
+        self.data[key] = value
+    }
 }
 
 public struct SessionID: Sendable, Equatable, Hashable {
