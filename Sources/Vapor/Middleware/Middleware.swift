@@ -45,7 +45,7 @@ private struct HTTPMiddlewareResponder: Responder {
     /// - parameters:
     ///     - request: The incoming `Request`.
     /// - returns: An asynchronous `Response`.
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        return self.middleware.respond(to: request, chainingTo: self.responder)
+    func respond(to request: Request) async throws -> Response {
+        return try await self.middleware.respond(to: request, chainingTo: self.responder)
     }
 }
