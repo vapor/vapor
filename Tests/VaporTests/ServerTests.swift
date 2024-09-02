@@ -1,3 +1,4 @@
+import Dispatch
 import Foundation
 import Vapor
 import XCTest
@@ -41,6 +42,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(res.body?.string, "bar")
     }
     
+    // `httpUnixDomainSocket` is currently broken in 6.0
+    #if compiler(<6.0)
     func testSocketPathOverride() throws {
         let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
         
@@ -61,6 +64,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         // no server should be bound to the port despite one being set on the configuration.
         XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }.wait())
     }
+    #endif
     
     func testIncompatibleStartupOptions() throws {
         func checkForError(_ app: Application) {
@@ -348,8 +352,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             )
         }
         
-        try app.server.start()
-        defer { app.server.shutdown() }
+        try await app.server.start(address: nil)
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -410,6 +413,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         } else {
             XCTFail("Missing supportedCompressedResponse.body")
         }
+        
+        await app.server.shutdown()
     }
     
     func testHTTP2RequestDecompression() async throws {
@@ -465,8 +470,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             )
         }
         
-        try app.server.start()
-        defer { app.server.shutdown() }
+        try await app.server.start(address: nil)
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -527,6 +531,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         } else {
             XCTFail("Missing supportedCompressedResponse.body")
         }
+        
+        await app.server.shutdown()
     }
     
     func testHTTP1ResponseDecompression() async throws {
@@ -544,8 +550,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         
         app.get("compressed") { _ in compressiblePayload }
         
-        try app.server.start()
-        defer { app.server.shutdown() }
+        try await app.server.start(address: nil)
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -583,6 +588,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(supportedCompressedResponse.headers.first(name: .contentEncoding), "gzip")
         XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
+        
+        await app.server.shutdown()
     }
     
     func testHTTP2ResponseDecompression() async throws {
@@ -625,7 +632,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         
         app.get("compressed") { _ in compressiblePayload }
         
-        try app.server.start()
+        try await app.server.start(address: nil)
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -664,7 +671,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
         
-        await app.shutdown()
+        await app.server.shutdown()
     }
     
     func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() throws {

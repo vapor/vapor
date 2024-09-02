@@ -6,11 +6,11 @@ extension HTTPHeaders {
     /// Represents the HTTP `Cache-Control` header.
     /// - See Also:
     /// [Cache-Control docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
-    public struct CacheControl {
+    public struct CacheControl: Sendable {
         /// The max-stale option can be present with no value, or be present with a number of seconds.  By using
         /// a struct you can check the nullability of the `maxStale` variable as well as then check the nullability
         /// of the `seconds` to differentiate.
-        public struct MaxStale {
+        public struct MaxStale: Sendable {
             /// The upper limit of staleness the client will accept.
             public var seconds: Int?
         }

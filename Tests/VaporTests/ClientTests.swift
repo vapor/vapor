@@ -1,3 +1,4 @@
+import Dispatch
 import Foundation
 import XCTest
 import Vapor

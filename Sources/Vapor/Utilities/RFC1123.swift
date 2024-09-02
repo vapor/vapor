@@ -2,7 +2,11 @@
 #if canImport(Darwin)
 @preconcurrency import Darwin
 #elseif canImport(Glibc)
+#if compiler(>=6.0)
+import Glibc
+#else
 @preconcurrency import Glibc
+#endif
 #elseif canImport(Musl)
 @preconcurrency import Musl
 #elseif canImport(WinSDK)
@@ -177,3 +181,8 @@ private let stringNumbers = [
 ]
 
 private let secondsInDay = 60 * 60 * 24
+
+#if compiler(>=6.0)
+extension tm: @retroactive @unchecked Sendable {}
+#endif
+
