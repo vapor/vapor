@@ -29,10 +29,7 @@ public struct AsyncPasswordHasher: Sendable {
     public func hash<Password>(_ password: Password) async throws -> [UInt8]
         where Password: DataProtocol & Sendable
     {
-#warning("TODO")
-        return try await self.threadPool.runIfActive(eventLoop: self.eventLoop) {
-            try self.hasher.hash(password)
-        }.get()
+        try await self.hasher.hash(password)
     }
     
     public func verify<Password, Digest>(
@@ -41,10 +38,7 @@ public struct AsyncPasswordHasher: Sendable {
     ) async throws -> Bool
         where Password: DataProtocol & Sendable, Digest: DataProtocol & Sendable
     {
-#warning("TODO")
-        return try await self.threadPool.runIfActive(eventLoop: self.eventLoop) {
-            try self.hasher.verify(password, created: digest)
-        }.get()
+        try await self.hasher.verify(password, created: digest)
     }
     
     public func hash(_ password: String) async throws -> String {

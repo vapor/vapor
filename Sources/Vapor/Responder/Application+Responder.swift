@@ -48,8 +48,8 @@ extension Application {
 
         public var `default`: Vapor.Responder {
             get async {
-                DefaultResponder(
-                    routes: await self.application.routes,
+                await DefaultResponder(
+                    routes: self.application.routes,
                     middleware: self.application.middleware.resolve(),
                     reportMetrics: self.application.http.server.configuration.reportMetrics
                 )
