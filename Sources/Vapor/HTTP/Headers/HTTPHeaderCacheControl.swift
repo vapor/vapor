@@ -210,3 +210,6 @@ extension HTTPHeaders {
         }
     }
 }
+
+#warning("Sort out")
+extension Swift.WritableKeyPath: @unchecked Swift.Sendable {}
