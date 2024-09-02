@@ -210,7 +210,3 @@ extension HTTPHeaders {
         }
     }
 }
-
-#if !$InferSendableFromCaptures
-extension Swift.WritableKeyPath: @unchecked Swift.Sendable {}
-#endif

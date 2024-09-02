@@ -1,8 +1,4 @@
-#if os(Linux) && compiler(<6.0)
-@preconcurrency import Foundation
-#else
 import Foundation
-#endif
 import NIOCore
 import NIOConcurrencyHelpers
 
