@@ -27,11 +27,12 @@ extension Environment {
     ///
     /// - Important: Do _not_ use `.wait()` if loading a secret at any time after the app has booted, such as while
     ///   handling a `Request`. Chain the result as you would any other future instead.
-    public static func secret(key: String, fileIO: NonBlockingFileIO, on eventLoop: EventLoop) -> EventLoopFuture<String?> {
+    public static func secret(key: String, fileIO: NonBlockingFileIO, on eventLoop: EventLoop) async throws -> String? {
         guard let filePath = self.get(key) else {
-            return eventLoop.future(nil)
+            return nil
         }
-        return self.secret(path: filePath, fileIO: fileIO, on: eventLoop)
+#warning("TODO")
+        return try await self.secret(path: filePath, fileIO: fileIO, on: eventLoop).get()
     }
 
 
@@ -45,8 +46,8 @@ extension Environment {
     /// - Returns:
     ///   - On success, a succeeded future with the loaded content of the file.
     ///   - On any kind of error, a succeeded future with a value of `nil`. It is not currently possible to get error details.
-    public static func secret(path: String, fileIO: NonBlockingFileIO, on eventLoop: EventLoop) -> EventLoopFuture<String?> {
-        return fileIO
+    public static func secret(path: String, fileIO: NonBlockingFileIO, on eventLoop: EventLoop) async throws -> String? {
+        return try await fileIO
             .openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
                 let handleWrapper = NIOLoopBound(handle, eventLoop: eventLoop)
@@ -61,6 +62,6 @@ extension Environment {
             }
             .recover { _ -> String? in
                 nil
-            }
+            }.get()
     }
 }
