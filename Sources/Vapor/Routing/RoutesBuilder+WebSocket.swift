@@ -26,7 +26,6 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
-    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: PathComponent...,
@@ -48,7 +47,6 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
-    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: [PathComponent],

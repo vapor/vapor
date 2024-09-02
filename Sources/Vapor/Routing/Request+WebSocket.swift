@@ -3,7 +3,7 @@ import WebSocketKit
 import NIOHTTP1
 
 extension Request {
-     @preconcurrency public func webSocket(
+    public func webSocket(
          maxFrameSize: WebSocketMaxFrameSize = .`default`,
          shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
              $0.eventLoop.makeSucceededFuture([:])

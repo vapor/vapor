@@ -36,7 +36,7 @@ public struct Validations: Sendable {
         self.storage.append(.init(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription))
     }
     
-    @preconcurrency public mutating func add(
+    public mutating func add(
         each key: ValidationKey,
         required: Bool = true,
         customFailureDescription: String? = nil,
