@@ -31,6 +31,7 @@ public actor Session: Sendable {
         self.isValid = false
     }
     
+#warning("There must be a better way to do this")
     public func set(_ key: String, to value: String?) {
         self.data[key] = value
     }
