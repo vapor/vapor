@@ -235,7 +235,7 @@ public final class HTTPServer: Server, Sendable {
                 oldValue.logger.warning("Cannot modify server configuration after server has been started.")
                 return
             }
-            self.application.storage[Application.HTTP.Server.ConfigurationKey.self] = newValue
+            self.application.storage.setFirstTime(Application.HTTP.Server.ConfigurationKey.self, to: newValue)
             _configuration.withLockedValue { $0 = newValue }
         }
     }

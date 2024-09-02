@@ -1,6 +1,4 @@
-#if os(Linux)
 @preconcurrency import Dispatch
-#endif
 import Foundation
 import ConsoleKit
 import NIOConcurrencyHelpers

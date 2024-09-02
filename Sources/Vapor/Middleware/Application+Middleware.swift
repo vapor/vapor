@@ -1,13 +1,13 @@
 extension Application {
     public var middleware: Middlewares {
-        get async {
+        get {
             if let existing = self.storage[MiddlewaresKey.self] {
                 return existing
             } else {
                 var new = Middlewares()
                 new.use(RouteLoggingMiddleware(logLevel: .info))
                 new.use(ErrorMiddleware.default(environment: self.environment))
-                await self.storage.set(MiddlewaresKey.self, to: new)
+                self.storage.setFirstTime(MiddlewaresKey.self, to: new)
                 return new
             }
         }

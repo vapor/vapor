@@ -115,7 +115,7 @@ public final class Application: Sendable {
     let passwordHasher: AsyncPasswordHasher
     
     public init(
-        environment: Environment = .development,
+        _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         
         // Override services here

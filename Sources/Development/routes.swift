@@ -332,25 +332,13 @@ struct TestError: AbortError, DebuggableError {
     }
 }
 
-struct TestAsyncMiddleware: AsyncMiddleware {
+struct TestMiddleware: Middleware {
     let number: Int
     
-    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
         request.logger.debug("In async middleware - \(number)")
         let response = try await next.respond(to: request)
         request.logger.debug("In async middleware way out - \(number)")
         return response
-    }
-}
-
-struct TestMiddleware: Middleware {
-    let number: Int
-    
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        request.logger.debug("In non-async middleware - \(number)")
-        return next.respond(to: request).map { response in
-            request.logger.debug("In non-async middleware way out - \(self.number)")
-            return response
-        }
     }
 }

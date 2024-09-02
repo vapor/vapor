@@ -40,7 +40,7 @@ extension Application {
         }
 
         func initialize() {
-            self.application.storage[Key.self] = .init()
+            self.application.storage.setFirstTime(Key.self, to: .init())
         }
 
         public func use(_ provider: Provider) {
@@ -57,7 +57,7 @@ extension Application {
                     return existing
                 } else {
                     let new = ServeCommand()
-                    self.application.storage.set(CommandKey.self, to: new) {
+                    self.application.storage.setFirstTime(CommandKey.self, to: new) {
                         await $0.shutdown()
                     }
                     return new

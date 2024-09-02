@@ -24,7 +24,7 @@ extension Application {
             struct SessionDriverFactory {
                 let factory: (@Sendable (Application) -> SessionDriver)?
             }
-            let memory: MemorySessions.Storage
+            let memory: MemorySessions
             let makeDriver: NIOLockedValueBox<SessionDriverFactory>
             let configuration: NIOLockedValueBox<SessionsConfiguration>
             init() {
@@ -64,7 +64,7 @@ extension Application {
         }
 
         public var memory: MemorySessions {
-            .init(storage: self.storage.memory)
+            .init()
         }
 
         public func use(_ provider: Provider) {
@@ -83,7 +83,7 @@ extension Application {
         }
 
         func initialize() {
-            self.application.storage[Key.self] = .init()
+            self.application.storage.setFirstTime(Key.self, to: .init())
         }
     }
 }
