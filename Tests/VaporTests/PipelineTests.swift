@@ -311,6 +311,39 @@ final class PipelineTests: XCTestCase {
         XCTAssertEqual(res.status, .ok)
     }
 
+    func testCorrectResponseOrder() async throws {
+        app.get("sleep", ":ms") { req -> String in
+            let ms = try req.parameters.require("ms", as: Int64.self)
+            try await Task.sleep(for: .milliseconds(ms))
+            return "slept \(ms)ms"
+        }
+
+        let channel = NIOAsyncTestingChannel()
+        let app = self.app!
+        _ = try await (channel.eventLoop as! NIOAsyncTestingEventLoop).executeInContext {
+            channel.pipeline.addVaporHTTP1Handlers(
+                application: app,
+                responder: app.responder,
+                configuration: app.http.server.configuration
+            )
+        }
+
+        try await channel.writeInbound(ByteBuffer(string: "GET /sleep/100 HTTP/1.1\r\n\r\nGET /sleep/50 HTTP/1.1\r\n\r\n"))
+
+        try await Task.sleep(for: .milliseconds(1000))
+
+        var responses: [String] = []
+        while let res = try await channel.readOutbound(as: ByteBuffer.self)?.string {
+            if res.contains("slept") {
+                responses.append(res)
+            }
+        }
+
+        XCTAssertEqual(responses.count, 2)
+        XCTAssertEqual(responses[0], "slept 100ms")
+        XCTAssertEqual(responses[1], "slept 50ms")
+    }
+
     override class func setUp() {
         XCTAssert(isLoggingConfigured)
     }
