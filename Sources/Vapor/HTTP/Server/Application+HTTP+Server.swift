@@ -24,7 +24,7 @@ extension Application.HTTP {
                     configuration: self.configuration,
                     on: self.application.eventLoopGroup
                 )
-                self.application.storage[Key.self] = new
+                self.application.storage.setFirstTime(Key.self, to: new)
                 return new
             }
         }
@@ -57,7 +57,7 @@ extension Application.HTTP {
                 if let server = self.application.storage[Key.self] {
                     server.configuration = newValue
                 } else {
-                    self.application.storage[ConfigurationKey.self] = newValue
+                    self.application.storage.setFirstTime(ConfigurationKey.self, to: newValue)
                 }
             }
         }

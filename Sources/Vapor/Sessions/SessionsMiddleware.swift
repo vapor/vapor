@@ -49,7 +49,7 @@ public final class SessionsMiddleware: Middleware {
                 await request._sessionCache.setSession(.init())
             }
             let response = try await next.respond(to: request)
-            return try await self.addCookies(to: res, for: request)
+            return try await self.addCookies(to: response, for: request)
         } else {
             // No cookie value exists, simply respond.
             let response = try await next.respond(to: request)
@@ -64,7 +64,7 @@ public final class SessionsMiddleware: Middleware {
             // A session exists or has been created. we must
             // set a cookie value on the response
             let sessionID: SessionID
-            if let id = session.id {
+            if let id = await session.id {
                 // A cookie exists, just update this session.
                 sessionID = try await self.session.updateSession(id, to: session.data, for: request)
             } else {
@@ -73,7 +73,7 @@ public final class SessionsMiddleware: Middleware {
             }
 
             // After create or update, set cookie on the response.
-            response.cookies[self.configuration.cookieName] = self.configuration.cookieFactory(id)
+            response.cookies[self.configuration.cookieName] = self.configuration.cookieFactory(sessionID)
             return response
         } else if let cookieValue = request.cookies[self.configuration.cookieName] {
             // The request had a session cookie, but now there is no valid session.

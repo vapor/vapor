@@ -20,7 +20,7 @@ extension Request {
             if let existing = await self._sessionCache.session {
                 return existing
             } else {
-                let new = Sesion()
+                let new = Session()
                 await self._sessionCache.setSession(new)
                 return new
             }
@@ -42,7 +42,7 @@ extension Request {
             return existing
         } else {
             let new = SessionCache()
-            self.storage[SessionCacheKey.self] = new
+            self.storage.setFirstTime(SessionCacheKey.self, to: new)
             return new
         }
     }
