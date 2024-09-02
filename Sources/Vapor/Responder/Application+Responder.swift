@@ -74,7 +74,7 @@ extension Application {
 }
 
 extension Application.Responder: Responder {
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
-        self.current.respond(to: request)
+    public func respond(to request: Request) async throws -> Response {
+        try await self.current.respond(to: request)
     }
 }
