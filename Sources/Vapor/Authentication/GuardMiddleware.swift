@@ -1,4 +1,5 @@
 import NIOCore
+import NIOHTTP1
 
 extension Authenticatable {
     /// This middleware ensures that an `Authenticatable` type `A` has been authenticated
@@ -42,7 +43,7 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
     }
 
     public func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
-        guard request.auth.has(A.self) else {
+        guard await request.auth.has(A.self) else {
             throw self.error
         }
         return try await next.respond(to: request)

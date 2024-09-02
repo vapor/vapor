@@ -8,6 +8,8 @@ import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOSSL
 import Atomics
+import NIOExtras
+import NIOHTTPCompression
 
 final class ServerTests: XCTestCase, @unchecked Sendable {
     var app: Application!
@@ -624,7 +626,6 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.get("compressed") { _ in compressiblePayload }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -662,6 +663,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(supportedCompressedResponse.headers.first(name: .contentEncoding), "gzip")
         XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
+        
+        await app.shutdown()
     }
     
     func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() throws {

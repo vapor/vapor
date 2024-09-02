@@ -1,9 +1,6 @@
 import NIOCore
 /// Codable key-value pair cache.
-public protocol Cache {
-    /// Creates a request-specific cache instance.
-    func `for`(_ request: Request) -> Self
-    
+public protocol Cache: Sendable {
     /// Gets a decodable value from the cache. Returns `nil` if not found.
     func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable
 
@@ -17,4 +14,18 @@ public protocol Cache {
 
     /// Gets a decodable value from the cache. Returns `nil` if not found.
     func get<T>(_ key: String) async throws -> T? where T: Decodable
+}
+
+extension Cache {
+    public func delete(_ key: String) async throws
+    {
+        return try await self.set(key, to: String?.none)
+    }
+    
+    /// Gets a decodable value from the cache. Returns `nil` if not found.
+    public func get<T>(_ key: String) async throws -> T?
+        where T: Decodable
+    {
+        return try await self.get(key, as: T.self)
+    }
 }

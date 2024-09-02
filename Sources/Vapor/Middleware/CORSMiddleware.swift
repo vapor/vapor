@@ -126,7 +126,7 @@ public final class CORSMiddleware: Middleware {
     public func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
         // Check if it's valid CORS request
         guard request.headers[.origin].first != nil else {
-            return next.respond(to: request)
+            return try await next.respond(to: request)
         }
         
         // Determine if the request is pre-flight.

@@ -33,7 +33,7 @@ public protocol BasicAuthenticator: RequestAuthenticator {
 extension BasicAuthenticator {
     public func authenticate(request: Request) async throws -> Void {
         guard let basicAuthorization = request.headers.basicAuthorization else {
-            return request.eventLoop.makeSucceededFuture(())
+            return
         }
         return try await self.authenticate(basic: basicAuthorization, for: request)
     }
@@ -49,7 +49,7 @@ public protocol BearerAuthenticator: RequestAuthenticator {
 extension BearerAuthenticator {
     public func authenticate(request: Request) async throws -> Void {
         guard let bearerAuthorization = request.headers.bearerAuthorization else {
-            return request.eventLoop.makeSucceededFuture(())
+            return
         }
         return try await self.authenticate(bearer: bearerAuthorization, for: request)
     }

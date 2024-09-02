@@ -60,8 +60,8 @@ extension Application {
             self.storage.makeRenderer.withLockedValue { $0 = .init(factory: makeRenderer) }
         }
 
-        func initialize() {
-            self.application.storage[Key.self] = .init()
+        func initialize() async {
+            await self.application.storage.set(Key.self, to: .init())
             self.use(.plaintext)
         }
 

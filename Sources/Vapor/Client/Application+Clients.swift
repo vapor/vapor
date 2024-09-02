@@ -35,8 +35,8 @@ extension Application {
             typealias Value = Storage
         }
 
-        func initialize() {
-            self.application.storage[Key.self] = .init()
+        func initialize() async {
+            await self.application.storage.set(Key.self, to: .init())
         }
         
         public func use(_ provider: Provider) {

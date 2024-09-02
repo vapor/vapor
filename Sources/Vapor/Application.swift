@@ -110,17 +110,17 @@ public final class Application: Sendable {
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
     
-    public convenience init(
-        _ environment: Environment = .development,
-        _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
-    ) async {
-        self.init(environment: environment, eventLoopGroupProvider)
-        self.commands.use(self.servers.command, as: "serve", isDefault: true)
-        await DotEnvFile.load(for: environment, fileio: self.fileio, logger: self.logger)
-    }
+    // New service stuff
+    let cache: Cache
     
-    // async flag here is just to stop the compiler from complaining about duplicates
-    private init(environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton) {
+    public init(
+        environment: Environment = .development,
+        _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
+        
+        // Override services here
+        cache: Cache = MemoryCache()
+    
+    ) async {
         self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
@@ -136,19 +136,25 @@ public final class Application: Sendable {
         self._storage = .init(.init(logger: logger))
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
+        
+        // Services
+        self.cache = cache
+        
+        
         self.core.initialize()
-        self.caches.initialize()
-        self.views.initialize()
+        await self.views.initialize()
         self.passwords.use(.bcrypt)
         self.sessions.initialize()
         self.sessions.use(.memory)
-        self.responder.initialize()
+        await self.responder.initialize()
         self.responder.use(.default)
         self.servers.initialize()
         self.servers.use(.http)
-        self.clients.initialize()
+        await self.clients.initialize()
         self.clients.use(.http)
         self.commands.use(RoutesCommand(), as: "routes")
+        self.commands.use(self.servers.command, as: "serve", isDefault: true)
+        await DotEnvFile.load(for: environment, fileio: self.fileio, logger: self.logger)
     }
     
     /// Starts the ``Application`` using the ``start()`` method, then waits for any running tasks
