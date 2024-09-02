@@ -10,7 +10,7 @@ public protocol Middleware: Sendable {
     ///     - request: The incoming `Request`.
     ///     - next: Next `Responder` in the chain, potentially another middleware or the main router.
     /// - returns: An asynchronous `Response`.
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response>
+    func respond(to request: Request, chainingTo next: Responder) async throws -> Response
 }
 
 extension Array where Element == Middleware {

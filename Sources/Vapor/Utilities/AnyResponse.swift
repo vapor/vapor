@@ -44,7 +44,7 @@ public struct AnyResponse: ResponseEncodable {
         self.encodable = encodable
     }
 
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+    public func encodeResponse(for request: Request) async throws -> Response {
         return self.encodable.encodeResponse(for: request)
     }
 }
