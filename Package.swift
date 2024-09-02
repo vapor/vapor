@@ -5,10 +5,10 @@ import Foundation
 let package = Package(
     name: "vapor",
     platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6)
+        .macOS(.v14),
+        .iOS(.v16),
+        .tvOS(.v16),
+        .watchOS(.v8)
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
