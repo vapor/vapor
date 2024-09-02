@@ -5,7 +5,7 @@ import ConsoleKit
 ///     $ swift run Run boot
 ///     Done.
 ///
-public final class BootCommand: Command {
+public final class BootCommand: AsyncCommand {
     // See `Command`.
     public struct Signature: CommandSignature {
         public init() { }
