@@ -330,18 +330,20 @@ public struct FileIO: Sendable {
     ///   - path: The file's path.
     ///   - lastModified: When the file was last modified.
     /// - Returns: An `EventLoopFuture<String>` which holds the ETag.
-    private func generateETagHash(path: String, lastModified: Date) -> EventLoopFuture<String> {
+    private func generateETagHash(path: String, lastModified: Date) async throws -> String {
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
-            return request.eventLoop.makeSucceededFuture(hash.digestHex)
+            return hash.digestHex
         } else {
-            return collectFile(at: path).map { buffer in
-                let digest = SHA256.hash(data: buffer.readableBytesView)
-                
-                // update hash in dictionary
-                request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
-                
-                return digest.hex
-            }
+            let buffer = try await collectFile(at: path)
+            let digest = SHA256.hash(data: buffer.readableBytesView)
+            
+#warning("Tidy all this up")
+            
+            // update hash in dictionary
+            var hashes = request.application.storage.get(FileMiddleware.ETagHashes.self)
+            hashes?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
+            await request.application.storage.set(FileMiddleware.ETagHashes.self, to: hashes)
+            return digest.hex
         }
     }
     
@@ -504,7 +506,7 @@ public struct FileIO: Sendable {
         let eTag: String
 
         if advancedETagComparison {
-            eTag = try await generateETagHash(path: path, lastModified: fileInfo.lastDataModificationTime.date).get()
+            eTag = try await generateETagHash(path: path, lastModified: fileInfo.lastDataModificationTime.date)
         } else {
             // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
             eTag = "\"\(fileInfo.lastDataModificationTime.seconds)-\(fileInfo.size)\""

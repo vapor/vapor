@@ -30,8 +30,7 @@ extension Environment {
         guard let filePath = self.get(key) else {
             return nil
         }
-#warning("TODO")
-        return try await self.secret(path: filePath, fileIO: fileIO, on: eventLoop).get()
+        return try await self.secret(path: filePath, fileIO: fileIO, on: eventLoop)
     }
 
 
