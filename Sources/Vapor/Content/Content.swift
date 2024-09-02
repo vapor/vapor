@@ -64,15 +64,6 @@ extension Content {
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
-    
-    public static func decodeRequest(_ request: Request) async throws -> Self {
-        try request.content.decode(Self.self)
-    }
-    
-    public func encodeResponse(for request: Request) async throws -> Response {
-        let response = Response()
-        try response.content.encode(self)
-    }
 
     public mutating func beforeEncode() throws { }
     public mutating func afterDecode() throws { }

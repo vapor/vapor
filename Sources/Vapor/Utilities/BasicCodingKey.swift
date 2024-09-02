@@ -41,7 +41,7 @@ public enum BasicCodingKey: CodingKey, Hashable {
         }
     }
     
-    public init(_ codingKeyRepresentable: Vapor.CodingKeyRepresentable) {
+    public init(_ codingKeyRepresentable: CodingKeyRepresentable) {
         self.init(codingKeyRepresentable.codingKey)
     }
 }
