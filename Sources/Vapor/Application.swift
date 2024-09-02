@@ -112,13 +112,15 @@ public final class Application: Sendable {
     
     // New service stuff
     let cache: Cache
+    let passwordHasher: AsyncPasswordHasher
     
     public init(
         environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         
         // Override services here
-        cache: Cache = MemoryCache()
+        cache: Cache = MemoryCache(),
+        passwordHasher: PasswordHasher = BcryptHasher(cost: 12)
     
     ) async {
         self._environment = .init(environment)
@@ -139,11 +141,11 @@ public final class Application: Sendable {
         
         // Services
         self.cache = cache
+#warning("Fix thread pool")
+        self.passwordHasher = .init(hasher: passwordHasher, threadPool: NIOThreadPool(numberOfThreads: 12), eventLoop: self.eventLoopGroup.any())
         
-        
-        self.core.initialize()
+        await self.core.initialize()
         await self.views.initialize()
-        self.passwords.use(.bcrypt)
         self.sessions.initialize()
         self.sessions.use(.memory)
         await self.responder.initialize()
@@ -154,6 +156,7 @@ public final class Application: Sendable {
         self.clients.use(.http)
         self.commands.use(RoutesCommand(), as: "routes")
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
+        
         await DotEnvFile.load(for: environment, fileio: self.fileio, logger: self.logger)
     }
     

@@ -33,7 +33,7 @@ extension Application {
                 fatalError("Cannot replace thread pool after application has booted")
             }
 
-#warning("Fix")
+#warning("Fix - we can't call sync shutdown")
             self.core.storage.threadPool.withLockedValue({
                 try! $0.syncShutdownGracefully()
                 $0 = newValue
@@ -67,7 +67,7 @@ extension Application {
     public struct Core: Sendable {
         final class Storage: Sendable {
             let console: NIOLockedValueBox<Console>
-            let commands: NIOLockedValueBox<Commands>
+            let commands: NIOLockedValueBox<AsyncCommands>
             let threadPool: NIOLockedValueBox<NIOThreadPool>
             let allocator: ByteBufferAllocator
             let running: Application.Running.Storage
@@ -75,7 +75,7 @@ extension Application {
 
             init() {
                 self.console = .init(Terminal())
-                var commands = Commands()
+                var commands = AsyncCommands()
                 commands.use(BootCommand(), as: "boot")
                 self.commands = .init(commands)
                 let threadPool = NIOThreadPool(numberOfThreads: System.coreCount)
@@ -110,8 +110,8 @@ extension Application {
             return storage
         }
 
-        func initialize() {
-            self.application.storage[Key.self] = .init()
+        func initialize() async {
+            await self.application.storage.set(Key.self, to: .init())
             self.application.lifecycle.use(LifecycleHandler())
         }
     }
