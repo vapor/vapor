@@ -39,6 +39,7 @@ extension Request {
             }
         }
         
+#warning("Fix")
         public func collect(max: Int? = 1 << 14) -> EventLoopFuture<ByteBuffer?> {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):

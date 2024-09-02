@@ -67,7 +67,7 @@ extension Response: ResponseEncodable {
 }
 
 extension StaticString: ResponseEncodable {
-    // See `AsyncResponseEncodable`.
+    // See `ResponseEncodable`.
     public func encodeResponse(for request: Request) async throws -> Response {
         let res = Response(headers: staticStringHeaders, body: .init(staticString: self))
         return res
@@ -75,7 +75,7 @@ extension StaticString: ResponseEncodable {
 }
 
 extension String: ResponseEncodable {
-    // See `AsyncResponseEncodable`.
+    // See `ResponseEncodable`.
     public func encodeResponse(for request: Request) async throws -> Response {
         let res = Response(headers: staticStringHeaders, body: .init(string: self))
         return res

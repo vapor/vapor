@@ -14,11 +14,6 @@ extension Application {
         set { self.core.storage.commands.withLockedValue { $0 = newValue } }
     }
 
-    public var asyncCommands: AsyncCommands {
-        get { self.core.storage.asyncCommands.withLockedValue { $0 } }
-        set { self.core.storage.asyncCommands.withLockedValue { $0 = newValue } }
-    }
-
     /// The application thread pool. Vapor provides a thread pool with 64 threads by default.
     ///
     /// It's possible to configure the thread pool size by overriding this value with your own thread pool.
@@ -38,6 +33,7 @@ extension Application {
                 fatalError("Cannot replace thread pool after application has booted")
             }
 
+#warning("Fix")
             self.core.storage.threadPool.withLockedValue({
                 do {
                     try $0.syncShutdownGracefully()
@@ -79,7 +75,6 @@ extension Application {
         final class Storage: Sendable {
             let console: NIOLockedValueBox<Console>
             let commands: NIOLockedValueBox<Commands>
-            let asyncCommands: NIOLockedValueBox<AsyncCommands>
             let threadPool: NIOLockedValueBox<NIOThreadPool>
             let allocator: ByteBufferAllocator
             let running: Application.Running.Storage
@@ -87,10 +82,9 @@ extension Application {
 
             init() {
                 self.console = .init(Terminal())
-                self.commands = .init(Commands())
-                var asyncCommands = AsyncCommands()
-                asyncCommands.use(BootCommand(), as: "boot")
-                self.asyncCommands = .init(AsyncCommands())
+                var commands = Commands()
+                commands.use(BootCommand(), as: "boot")
+                self.commands = .init(commands)
                 let threadPool = NIOSingletons.posixBlockingThreadPool
                 threadPool.start()
                 self.threadPool = .init(threadPool)
@@ -101,20 +95,7 @@ extension Application {
         }
 
         struct LifecycleHandler: Vapor.LifecycleHandler {
-            func shutdown(_ application: Application) {
-                do {
-                    try application.threadPool.syncShutdownGracefully()
-                } catch is NIOThreadPoolError.UnsupportedOperation {
-                    // ignore, singleton thread pool throws this error on shutdown attempts
-                    // see https://github.com/apple/swift-nio/blob/c51907a839e63ebf0ba2076bba73dd96436bd1b9/Sources/NIOPosix/NIOThreadPool.swift#L142-L147
-                } catch {
-                    application.logger.debug("Failed to shutdown thread pool", metadata: ["error": "\(error)"])
-                }
-            }
-        }
-        
-        struct AsyncLifecycleHandler: Vapor.LifecycleHandler {
-            func shutdownAsync(_ application: Application) async {
+            func shutdown(_ application: Application) async {
                 do {
                     try await application.threadPool.shutdownGracefully()
                 } catch is NIOThreadPoolError.UnsupportedOperation {
@@ -139,13 +120,9 @@ extension Application {
             return storage
         }
 
-        func initialize(asyncEnvironment: Bool) {
+        func initialize() {
             self.application.storage[Key.self] = .init()
-            if asyncEnvironment {
-                self.application.lifecycle.use(AsyncLifecycleHandler())
-            } else {
-                self.application.lifecycle.use(LifecycleHandler())
-            }
+            self.application.lifecycle.use(LifecycleHandler())
         }
     }
 }
