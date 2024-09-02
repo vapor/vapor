@@ -9,7 +9,7 @@ extension Application {
         public struct Provider: Sendable {
             let run: @Sendable (Application) -> ()
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -24,7 +24,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        @preconcurrency public func use(
+        public func use(
             _ makeVerifier: @Sendable @escaping (Application) -> (PasswordHasher)
         ) {
             self.storage.makeVerifier.withLockedValue { $0 = .init(factory: makeVerifier) }

@@ -3,11 +3,11 @@ import NIOHTTP1
 import WebSocketKit
 import RoutingKit
 import Foundation
+import NIOPosix
 
 extension Request {
 
     /// Upgrades an existing request to a websocket connection
-    @preconcurrency
     public func webSocket(
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
         shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
@@ -43,7 +43,6 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
-    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: PathComponent...,
@@ -63,7 +62,6 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
-    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: [PathComponent],
@@ -78,7 +76,6 @@ extension RoutesBuilder {
 }
 
 extension WebSocket {
-    @preconcurrency
     public static func connect(
         to url: String,
         headers: HTTPHeaders = [:],
@@ -98,7 +95,6 @@ extension WebSocket {
         )
     }
 
-    @preconcurrency
     public static func connect(
         to url: URL,
         headers: HTTPHeaders = [:],
@@ -119,7 +115,6 @@ extension WebSocket {
         )
     }
 
-    @preconcurrency
     public static func connect(
         scheme: String = "ws",
         host: String,
