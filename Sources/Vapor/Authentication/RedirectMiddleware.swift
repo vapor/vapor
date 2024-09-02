@@ -28,12 +28,11 @@ private final class RedirectMiddleware<A>: Middleware
         self.makePath = makePath
     }
 
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
         if request.auth.has(A.self) {
-            return next.respond(to: request)
+            return try await next.respond(to: request)
         }
 
-        let redirect = request.redirect(to: self.makePath(request))
-        return request.eventLoop.makeSucceededFuture(redirect)
+        return request.redirect(to: self.makePath(request))
     }
 }

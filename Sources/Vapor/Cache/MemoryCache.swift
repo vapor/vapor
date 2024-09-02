@@ -97,26 +97,22 @@ private struct MemoryCache: Cache {
         self.eventLoop = eventLoop
     }
     
-    func get<T>(_ key: String, as type: T.Type) -> EventLoopFuture<T?>
+    func get<T>(_ key: String, as type: T.Type) async throws -> T?
         where T: Decodable & Sendable
     {
-        self.eventLoop.makeFutureWithTask {
-            await self.storage.get(key)
-        }
+        await self.storage.get(key)
     }
     
-    func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
+    func set<T>(_ key: String, to value: T?) async throws -> Void
         where T: Encodable & Sendable
     {
-        self.set(key, to: value, expiresIn: nil)
+        try await self.set(key, to: value, expiresIn: nil)
     }
     
-    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
+    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws -> Void
         where T: Encodable & Sendable
     {
-        self.eventLoop.makeFutureWithTask {
-            await self.storage.set(key, to: value, expiresIn: expirationTime)
-        }
+        await self.storage.set(key, to: value, expiresIn: expirationTime)
     }
     
     func `for`(_ request: Request) -> MemoryCache {
