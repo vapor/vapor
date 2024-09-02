@@ -9,6 +9,7 @@ import Logging
 import NIOCore
 import NIOPosix
 
+#warning("Update this comment")
 /// Reads dotenv (`.env`) files and loads them into the current process.
 ///
 ///     let fileio: NonBlockingFileIO
@@ -29,165 +30,6 @@ import NIOPosix
 /// Single-quoted strings are parsed literally. Double-quoted strings may contain escaped newlines
 /// that will be converted to actual newlines.
 public struct DotEnvFile: Sendable {
-    /// Reads the dotenv files relevant to the environment and loads them into the process.
-    ///
-    ///     let environment: Environment
-    ///     let elgp: EventLoopGroupProvider
-    ///     let fileio: NonBlockingFileIO
-    ///     let logger: Logger
-    ///     try DotEnvFile.load(for: .development, on: elgp, fileio: fileio, logger: logger)
-    ///     print(Environment.process.FOO) // BAR
-    ///
-    /// - parameters:
-    ///     - environment: current environment, selects which .env file to use.
-    ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
-    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
-    ///     - logger: Optionally provide an existing logger.
-    @available(*, noasync, message: "Use an async version of load instead")
-    public static func load(
-        for environment: Environment = .development,
-        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
-        fileio: NonBlockingFileIO,
-        logger: Logger = Logger(label: "dot-env-logger")
-    ) {
-        let eventLoopGroup: EventLoopGroup
-
-        switch eventLoopGroupProvider {
-        case .shared(let group):
-            eventLoopGroup = group
-        case .createNew:
-            eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        }
-        defer {
-            switch eventLoopGroupProvider {
-            case .shared:
-                logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
-            case .createNew:
-                logger.trace("Shutting down EventLoopGroup")
-                do {
-                    try eventLoopGroup.syncShutdownGracefully()
-                } catch {
-                    logger.warning("Shutting down EventLoopGroup failed: \(error)")
-                }
-            }
-        }
-
-        // Load specific .env first since values are not overridden.
-        DotEnvFile.load(path: ".env.\(environment.name)", on: .shared(eventLoopGroup), fileio: fileio, logger: logger)
-        DotEnvFile.load(path: ".env", on: .shared(eventLoopGroup), fileio: fileio, logger: logger)
-    }
-
-    /// Reads the dotenv files relevant to the environment and loads them into the process.
-    ///
-    ///     let path: String
-    ///     let elgp: EventLoopGroupProvider
-    ///     let fileio: NonBlockingFileIO
-    ///     let logger: Logger
-    ///     try DotEnvFile.load(path: path, on: elgp, fileio: filio, logger: logger)
-    ///     print(Environment.process.FOO) // BAR
-    ///
-    /// - parameters:
-    ///     - path: Absolute or relative path of the dotenv file.
-    ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
-    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
-    ///     - logger: Optionally provide an existing logger.
-    @available(*, noasync, message: "Use an async version of load instead")
-    public static func load(
-        path: String,
-        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
-        fileio: NonBlockingFileIO,
-        logger: Logger = Logger(label: "dot-env-logger")
-    ) {
-        let eventLoopGroup: EventLoopGroup
-
-        switch eventLoopGroupProvider {
-        case .shared(let group):
-            eventLoopGroup = group
-        case .createNew:
-            eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        }
-        defer {
-            switch eventLoopGroupProvider {
-            case .shared:
-                logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
-            case .createNew:
-                logger.trace("Shutting down EventLoopGroup")
-                do {
-                    try eventLoopGroup.syncShutdownGracefully()
-                } catch {
-                    logger.warning("Shutting down EventLoopGroup failed: \(error)")
-                }
-            }
-        }
-
-        do {
-            try load(path: path, fileio: fileio, on: eventLoopGroup.next()).wait()
-        } catch {
-            logger.debug("Could not load \(path) file: \(error)")
-        }
-    }
-
-    /// Reads a dotenv file from the supplied path and loads it into the process.
-    ///
-    ///     let fileio: NonBlockingFileIO
-    ///     let elg: EventLoopGroup
-    ///     try DotEnvFile.load(path: ".env", fileio: fileio, on: elg.next()).wait()
-    ///     print(Environment.process.FOO) // BAR
-    ///
-    /// Use `DotEnvFile.read` to read the file without loading it.
-    ///
-    /// - parameters:
-    ///     - path: Absolute or relative path of the dotenv file.
-    ///     - fileio: File loader.
-    ///     - eventLoop: Eventloop to perform async work on.
-    ///     - overwrite: If `true`, values already existing in the process' env
-    ///                  will be overwritten. Defaults to `false`.
-    public static func load(
-        path: String,
-        fileio: NonBlockingFileIO,
-        on eventLoop: EventLoop,
-        overwrite: Bool = false
-    ) -> EventLoopFuture<Void> {
-        return self.read(path: path, fileio: fileio, on: eventLoop)
-            .map { $0.load(overwrite: overwrite) }
-    }
-
-    /// Reads a dotenv file from the supplied path.
-    ///
-    ///     let fileio: NonBlockingFileIO
-    ///     let elg: EventLoopGroup
-    ///     let file = try DotEnvFile.read(path: ".env", fileio: fileio, on: elg.next()).wait()
-    ///     for line in file.lines {
-    ///         print("\(line.key)=\(line.value)")
-    ///     }
-    ///     file.load(overwrite: true) // loads all lines into the process
-    ///     print(Environment.process.FOO) // BAR
-    ///
-    /// Use `DotEnvFile.load` to read and load with one method.
-    ///
-    /// - parameters:
-    ///     - path: Absolute or relative path of the dotenv file.
-    ///     - fileio: File loader.
-    ///     - eventLoop: Eventloop to perform async work on.
-    public static func read(
-        path: String,
-        fileio: NonBlockingFileIO,
-        on eventLoop: EventLoop
-    ) -> EventLoopFuture<DotEnvFile> {
-        return fileio.openFile(path: path, eventLoop: eventLoop).flatMapWithEventLoop { arg, eventLoop -> EventLoopFuture<ByteBuffer> in
-            let fileHandleWrapper = NIOLoopBound(arg.0, eventLoop: eventLoop)
-            return fileio.read(fileRegion: arg.1, allocator: .init(), eventLoop: eventLoop)
-                .flatMapThrowing
-            { buffer in
-                try fileHandleWrapper.value.close()
-                return buffer
-            }
-        }.map { buffer in
-            var parser = Parser(source: buffer)
-            return .init(lines: parser.parse())
-        }
-    }
-
     /// Represents a `KEY=VALUE` pair in a dotenv file.
     public struct Line: Sendable, CustomStringConvertible, Equatable {
         /// The key.
@@ -223,6 +65,7 @@ public struct DotEnvFile: Sendable {
             setenv(line.key, line.value, overwrite ? 1 : 0)
         }
     }
+#warning("Update to use NIOFileSystem")
     
     // MARK: - Concurrency
     /// Reads a dotenv file from the supplied path.
