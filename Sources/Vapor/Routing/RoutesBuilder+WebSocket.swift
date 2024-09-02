@@ -15,7 +15,6 @@ public struct WebSocketMaxFrameSize: Sendable, ExpressibleByIntegerLiteral {
     }
 }
 
-// Deprecated
 extension RoutesBuilder {
     /// Adds a route for opening a web socket connection
     /// - parameters:
@@ -30,9 +29,7 @@ extension RoutesBuilder {
     public func webSocket(
         _ path: PathComponent...,
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
-            $0.eventLoop.makeSucceededFuture([:])
-        },
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
         onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
     ) -> Route {
         return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
@@ -51,15 +48,15 @@ extension RoutesBuilder {
     public func webSocket(
         _ path: [PathComponent],
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
-            $0.eventLoop.makeSucceededFuture([:])
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in
+            [:]
         },
         onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
     ) -> Route {
         return self.on(.GET, path) { request -> Response in
             let res = Response(status: .switchingProtocols)
             res.upgrader = WebSocketUpgrader(maxFrameSize: maxFrameSize, shouldUpgrade: {
-                shouldUpgrade(request)                
+                try await shouldUpgrade(request)
             }, onUpgrade: { ws in
                 onUpgrade(request, ws)
             })
