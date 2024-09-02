@@ -25,7 +25,8 @@ extension Response {
             case none
             case buffer(ByteBuffer)
             case data(Data)
-            case dispatchData(DispatchData)
+#warning("TODO")
+//            case dispatchData(DispatchData)
             case staticString(StaticString)
             case string(String)
             case stream(BodyStream)
@@ -39,7 +40,7 @@ extension Response {
             switch self.storage {
             case .buffer(var buffer): return buffer.readString(length: buffer.readableBytes)
             case .data(let data): return String(decoding: data, as: UTF8.self)
-            case .dispatchData(let dispatchData): return String(decoding: dispatchData, as: UTF8.self)
+//            case .dispatchData(let dispatchData): return String(decoding: dispatchData, as: UTF8.self)
             case .staticString(let staticString): return staticString.description
             case .string(let string): return string
             default: return nil
@@ -51,7 +52,7 @@ extension Response {
         public var count: Int {
             switch self.storage {
             case .data(let data): return data.count
-            case .dispatchData(let data): return data.count
+//            case .dispatchData(let data): return data.count
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
             case .string(let string): return string.utf8.count
             case .buffer(let buffer): return buffer.readableBytes
@@ -66,7 +67,7 @@ extension Response {
             switch self.storage {
             case .buffer(var buffer): return buffer.readData(length: buffer.readableBytes)
             case .data(let data): return data
-            case .dispatchData(let dispatchData): return Data(dispatchData)
+//            case .dispatchData(let dispatchData): return Data(dispatchData)
             case .staticString(let staticString): return Data(bytes: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
             case .string(let string): return Data(string.utf8)
             case .none: return nil
@@ -81,9 +82,9 @@ extension Response {
             case .data(let data):
                 let buffer = self.byteBufferAllocator.buffer(bytes: data)
                 return buffer
-            case .dispatchData(let dispatchData):
-                let buffer = self.byteBufferAllocator.buffer(dispatchData: dispatchData)
-                return buffer
+//            case .dispatchData(let dispatchData):
+//                let buffer = self.byteBufferAllocator.buffer(dispatchData: dispatchData)
+//                return buffer
             case .staticString(let staticString):
                 let buffer = self.byteBufferAllocator.buffer(staticString: staticString)
                 return buffer
@@ -121,7 +122,7 @@ extension Response {
             case .none: return "<no body>"
             case .buffer(let buffer): return buffer.getString(at: 0, length: buffer.readableBytes) ?? "n/a"
             case .data(let data): return String(data: data, encoding: .ascii) ?? "n/a"
-            case .dispatchData(let data): return String(data: Data(data), encoding: .ascii) ?? "n/a"
+//            case .dispatchData(let data): return String(data: Data(data), encoding: .ascii) ?? "n/a"
             case .staticString(let string): return string.description
             case .string(let string): return string
             case .stream: return "<stream>"
@@ -144,11 +145,11 @@ extension Response {
             storage = .data(data)
         }
         
-        /// Create a new body wrapping `DispatchData`.
-        public init(dispatchData: DispatchData, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
-            storage = .dispatchData(dispatchData)
-        }
+//        /// Create a new body wrapping `DispatchData`.
+//        public init(dispatchData: DispatchData, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+//            self.byteBufferAllocator = byteBufferAllocator
+//            storage = .dispatchData(dispatchData)
+//        }
         
         /// Create a new body from the UTF8 representation of a `StaticString`.
         public init(staticString: StaticString, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
