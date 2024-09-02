@@ -1,9 +1,4 @@
-#if os(Linux)
-// Needed because DispatchQueue isn't Sendable on Linux
-@preconcurrency import Foundation
-#else
 import Foundation
-#endif
 import NIOCore
 import NIOConcurrencyHelpers
 

@@ -1,9 +1,4 @@
-#if os(Linux)
-// Needed because some stuff isn't Sendable on Linux
-@preconcurrency import Foundation
-#else
 import Foundation
-#endif
 
 extension Validator where T == String {
     /// Validates that all characters in a `String` are ASCII (bytes 0..<128).
