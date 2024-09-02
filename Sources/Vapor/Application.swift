@@ -4,10 +4,6 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 
-#if swift(<5.9)
-    import Backtrace
-#endif
-
 /// Core type representing a Vapor application.
 public final class Application: Sendable {
     public var environment: Environment {
@@ -126,9 +122,6 @@ public final class Application: Sendable {
     
     // async flag here is just to stop the compiler from complaining about duplicates
     private init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, async: Bool) {
-        #if swift(<5.9)
-            Backtrace.install()
-        #endif
         self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
