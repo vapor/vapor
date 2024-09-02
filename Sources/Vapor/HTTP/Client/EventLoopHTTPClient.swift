@@ -34,7 +34,7 @@ private struct EventLoopHTTPClient: Client {
             headers: client.headers,
             body: client.body.map { .byteBuffer($0) }
         )
-        return try self.http.execute(
+        return try await self.http.execute(
             request: request,
             eventLoop: .delegate(on: self.eventLoop),
             deadline: client.timeout.map { .now() + $0 },

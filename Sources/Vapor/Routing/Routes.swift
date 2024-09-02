@@ -60,7 +60,7 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
 }
 
 extension Application: RoutesBuilder {
-    public func add(_ route: Route) async {
-        await self.routes.add(route)
+    public func add(_ route: Route) {
+        self.routes.add(route)
     }
 }

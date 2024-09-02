@@ -81,8 +81,8 @@ private final class HTTPRoutesGroup: RoutesBuilder {
     }
     
     /// See `HTTPRoutesBuilder`.
-    func add(_ route: Route) async {
+    func add(_ route: Route) {
         route.path = self.path + route.path
-        await self.root.add(route)
+        self.root.add(route)
     }
 }
