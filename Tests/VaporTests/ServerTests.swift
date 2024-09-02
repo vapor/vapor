@@ -8,6 +8,8 @@ import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOSSL
 import Atomics
+import NIOExtras
+import NIOHTTPCompression
 
 final class ServerTests: XCTestCase, @unchecked Sendable {
     var app: Application!

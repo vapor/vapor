@@ -11,7 +11,7 @@ public struct Storage: Sendable {
     struct Value<T: Sendable>: AnyStorageValue {
         var value: T
         var onShutdown: (@Sendable (T) async throws -> ())?
-        func shutdown(logger: Logger) {
+        func shutdown(logger: Logger) async {
             do {
                 try await self.onShutdown?(self.value)
             } catch {
@@ -41,24 +41,6 @@ public struct Storage: Sendable {
         get {
             self.get(Key.self)
         }
-        set {
-            self.set(Key.self, to: newValue)
-        }
-    }
-
-    /// Read access to a value via keyed subscript, adding the provided default
-    /// value to the storage if the key does not already exist. Similar to
-    /// ``Swift/Dictionary/subscript(key:default:)``. The `defaultValue` autoclosure
-    /// is evaluated only when the key does not already exist in the container.
-    public subscript<Key>(_ key: Key.Type, default defaultValue: @autoclosure () -> Key.Value) -> Key.Value
-        where Key: StorageKey
-    {
-        mutating get {
-            if let existing = self[key] { return existing }
-            let new = defaultValue()
-            self.set(Key.self, to: new)
-            return new
-        }
     }
 
     /// Test whether the given key exists in the container.
@@ -83,7 +65,7 @@ public struct Storage: Sendable {
         _ key: Key.Type,
         to value: Key.Value?,
         onShutdown: (@Sendable (Key.Value) async throws -> ())? = nil
-    )
+    ) async
         where Key: StorageKey
     {
         let key = ObjectIdentifier(Key.self)
@@ -100,7 +82,7 @@ public struct Storage: Sendable {
     mutating func setFirstTime<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
-        onShutdown: (@Sendable (Key.Value) async throws -> ())? = nil,
+        onShutdown: (@Sendable (Key.Value) async throws -> ())? = nil
     )
         where Key: StorageKey
     {

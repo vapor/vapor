@@ -9,7 +9,7 @@ extension Application {
         set { self.core.storage.console.withLockedValue { $0 = newValue } }
     }
 
-    public var commands: Commands {
+    public var commands: AsyncCommands {
         get { self.core.storage.commands.withLockedValue { $0 } }
         set { self.core.storage.commands.withLockedValue { $0 = newValue } }
     }

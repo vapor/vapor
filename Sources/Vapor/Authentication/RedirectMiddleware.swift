@@ -29,7 +29,7 @@ private final class RedirectMiddleware<A>: Middleware
     }
 
     func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
-        if request.auth.has(A.self) {
+        if await request.auth.has(A.self) {
             return try await next.respond(to: request)
         }
 

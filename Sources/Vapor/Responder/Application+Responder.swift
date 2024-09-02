@@ -10,7 +10,7 @@ extension Application {
         public struct Provider: Sendable {
             public static var `default`: Self {
                 .init {
-                    $0.responder.use { $0.responder.default }
+                    $0.responder.use { await $0.responder.default }
                 }
             }
 
@@ -23,7 +23,7 @@ extension Application {
 
         final class Storage: Sendable {
             struct ResponderFactory {
-                let factory: (@Sendable (Application) -> Vapor.Responder)?
+                let factory: (@Sendable (Application) async -> Vapor.Responder)?
             }
             let factory: NIOLockedValueBox<ResponderFactory>
             init() {
@@ -38,25 +38,29 @@ extension Application {
         public let application: Application
 
         public var current: Vapor.Responder {
-            guard let factory = self.storage.factory.withLockedValue({ $0.factory }) else {
-                fatalError("No responder configured. Configure with app.responder.use(...)")
+            get async {
+                guard let factory = self.storage.factory.withLockedValue({ $0.factory }) else {
+                    fatalError("No responder configured. Configure with app.responder.use(...)")
+                }
+                return await factory(self.application)
             }
-            return factory(self.application)
         }
 
         public var `default`: Vapor.Responder {
-            DefaultResponder(
-                routes: self.application.routes,
-                middleware: self.application.middleware.resolve(),
-                reportMetrics: self.application.http.server.configuration.reportMetrics
-            )
+            get async {
+                DefaultResponder(
+                    routes: await self.application.routes,
+                    middleware: self.application.middleware.resolve(),
+                    reportMetrics: self.application.http.server.configuration.reportMetrics
+                )
+            }
         }
 
         public func use(_ provider: Provider) {
             provider.run(self.application)
         }
 
-        public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.Responder)) {
+        public func use(_ factory: @Sendable @escaping (Application) async -> (Vapor.Responder)) {
             self.storage.factory.withLockedValue { $0 = .init(factory: factory) }
         }
 
@@ -67,8 +71,8 @@ extension Application {
             return storage
         }
 
-        func initialize() {
-            self.application.storage[Key.self] = .init()
+        func initialize() async {
+            await self.application.storage.set(Key.self, to: .init())
         }
     }
 }

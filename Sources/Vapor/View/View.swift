@@ -9,7 +9,7 @@ public struct View: ResponseEncodable, Sendable {
 
     public func encodeResponse(for request: Request) async throws -> Response {
         let response = Response()
-        reponse.headers.contentType = .html
+        response.headers.contentType = .html
         response.body = .init(buffer: self.data, byteBufferAllocator: request.byteBufferAllocator)
         return response
     }

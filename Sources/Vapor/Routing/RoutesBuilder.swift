@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol RoutesBuilder {
-    func add(_ route: Route)
+    func add(_ route: Route) async
 }
 
 extension Foundation.UUID: Swift.LosslessStringConvertible {

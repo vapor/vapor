@@ -12,24 +12,24 @@ extension SessionAuthenticator {
     public func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
         // if the user has already been authenticated
         // by a previous middleware, continue
-        if request.auth.has(User.self) {
+        if await request.auth.has(User.self) {
             return try await next.respond(to: request)
         }
 
-        if let aID = request.session.authenticated(User.self) {
+        if let aID = try await request.session.authenticated(User.self) {
             // try to find user with id from session
             try await self.authenticate(sessionID: aID, for: request)
         }
         
         let response = try await next.respond(to: request)
 
-        if let user = request.auth.get(User.self) {
+        if let user = await request.auth.get(User.self) {
             // if a user has been authed (or is still authed), store in the session
-            request.session.authenticate(user)
-        } else if request.hasSession {
+            try await request.session.authenticate(user)
+        } else if await request.hasSession {
             // if no user is authed, it's possible they've been unauthed.
             // remove from session.
-            request.session.unauthenticate(User.self)
+            try await request.session.unauthenticate(User.self)
         }
         return response
     }
@@ -39,7 +39,7 @@ extension SessionAuthenticator {
 /// status cached using `SessionAuthenticator`.
 public protocol SessionAuthenticatable: Authenticatable {
     /// Session identifier type.
-    associatedtype SessionID: LosslessStringConvertible
+    associatedtype SessionID: LosslessStringConvertible, Sendable
 
     /// Unique session identifier.
     var sessionID: SessionID { get }
