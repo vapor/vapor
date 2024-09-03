@@ -38,6 +38,7 @@ final class AsyncWebSocketTests: XCTestCase {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
         let promise = elg.next().makePromise(of: String.self)
+#warning("TODO migrate")
         try await WebSocket.connect(
             to: "ws://localhost:\(port)/echo",
             on: elg.next()
@@ -47,7 +48,7 @@ final class AsyncWebSocketTests: XCTestCase {
                 promise.succeed(text)
                 ws.close().cascadeFailure(to: promise)
             }
-        }
+        }.get()
 
         let string = try await promise.futureResult.get()
         XCTAssertEqual(string, "Hello, world!")
@@ -78,10 +79,11 @@ final class AsyncWebSocketTests: XCTestCase {
         }
 
         do {
+#warning("TODO migrate")
             try await WebSocket.connect(
                 to: "ws://localhost:\(port)/foo",
                 on: app.eventLoopGroup.next()
-            ) { _ in  }
+            ) { _ in  }.get()
             XCTFail("should have failed")
         } catch {
             // pass

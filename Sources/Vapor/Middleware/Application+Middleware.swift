@@ -4,7 +4,7 @@ extension Application {
             if let existing = self.storage[MiddlewaresKey.self] {
                 return existing
             } else {
-                var new = Middlewares()
+                let new = Middlewares()
                 new.use(RouteLoggingMiddleware(logLevel: .info))
                 new.use(ErrorMiddleware.default(environment: self.environment))
                 self.storage.setFirstTime(MiddlewaresKey.self, to: new)

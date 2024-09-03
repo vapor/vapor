@@ -9,7 +9,7 @@ final class SessionTests: XCTestCase {
     
     override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application(test)
+        app = await Application(test)
     }
     
     override func tearDown() async throws {
@@ -56,11 +56,11 @@ final class SessionTests: XCTestCase {
         app.sessions.use { _ in cache }
         let sessions = app.routes.grouped(app.sessions.middleware)
         sessions.get("set") { req -> String in
-            try await req.session.set("foo", to: "bar")
+            await req.session.set("foo", to: "bar")
             return "set"
         }
         sessions.get("del") { req  -> String in
-            try await req.session.destroy()
+            await req.session.destroy()
             return "del"
         }
 
@@ -98,13 +98,13 @@ final class SessionTests: XCTestCase {
 
         // Adds data to the request session.
         app.get("set") { req -> HTTPStatus in
-            try await req.session.set("foo", to: "bar")
+            await req.session.set("foo", to: "bar")
             return .ok
         }
 
         // Fetches data from the request session.
         app.get("get") { req -> String in
-            guard let foo = try await req.session.data["foo"] else {
+            guard let foo = await req.session.data["foo"] else {
                 throw Abort(.badRequest)
             }
             return foo
