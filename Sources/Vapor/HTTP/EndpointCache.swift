@@ -1,5 +1,4 @@
 import Foundation
-import NIOConcurrencyHelpers
 import NIOCore
 import Logging
 import NIOHTTP1
@@ -10,11 +9,10 @@ public enum EndpointCacheError: Swift.Error {
 }
 
 /// Handles the complexities of HTTP caching.
-public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
-    private let cached: NIOLockedValueBox<(T?, Date?)>
-    private let request: NIOLockedValueBox<T?>
-    private let headers: NIOLockedValueBox<HTTPHeaders?>
-    private let sync: NIOLock
+public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
+    private var cached: (T?, Date?)
+    private var request: T?
+    private var headers: HTTPHeaders?
     private let uri: URI
     
     /// The designated initializer.
@@ -22,10 +20,9 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
     ///   - uri: The `URI` of the resource to be downloaded.
     public init(uri: URI) {
         self.uri = uri
-        self.sync = .init()
-        self.request = .init(nil)
-        self.headers = .init(nil)
-        self.cached = .init((nil, nil))
+        self.request = nil
+        self.headers = nil
+        self.cached = (nil, nil)
     }
     
     /// Downloads the resource.
@@ -40,54 +37,41 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
     /// - Parameters:
     ///   - eventLoop: The `EventLoop` to use for the download.
     ///   - client: The `Client` which will perform the download.
-    ///   - logger: An optional logger
-    public func get(using client: Client, logger: Logger? = nil, on eventLoop: EventLoop) async throws -> T {
-#warning("This all needs rewriting, probably actor?")
-        self.sync.lock()
-        defer { self.sync.unlock() }
-        
-        let cachedData = self.cached.withLockedValue { $0 }
-        if let cached = cachedData.0, let cacheUntil = cachedData.1, Date() < cacheUntil {
+    ///   - logger: `Logger` to output to
+    public func get(using client: Client, logger: Logger, on eventLoop: EventLoop) async throws -> T {
+        if let cachedData = self.cached.0, let cacheUntil = self.cached.1, Date() < cacheUntil {
             // If no-cache was set on the header, you *always* have to validate with the server.
             // must-revalidate does not require checking with the server until after it expires.
-            let cachedHeaders = self.headers.withLockedValue { $0 }
+            let cachedHeaders = self.headers
             if cachedHeaders == nil || cachedHeaders?.cacheControl == nil || cachedHeaders?.cacheControl?.noCache == false {
-                return cached
+                return cachedData
             }
         }
         
         // Don't make a new request if one is already running.
-        if let request = self.request.withLockedValue({ $0 }) {
+        if let request {
             return request
         }
         
-        logger?.debug("Requesting data from \(self.uri)")
+        logger.trace("Encpoint cache, requesting data", metadata: ["url": "\(self.uri)"])
         
         let request = try await self.download(on: eventLoop, using: client, logger: logger)
-        self.request.withLockedValue { $0 = request }
-        
         // Once the request finishes, clear the current request and return the data.
-        // Synchronize access to shared state
-        self.sync.lock()
-        defer { self.sync.unlock() }
-        self.request.withLockedValue { $0 = nil }
+        self.request = nil
         
         return request
     }
     
-    private func download(on eventLoop: EventLoop, using client: Client, logger: Logger?) async throws -> T {
+    private func download(on eventLoop: EventLoop, using client: Client, logger: Logger) async throws -> T {
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
         var headers: HTTPHeaders = [:]
-        self.headers.withLockedValue { cachedHeaders in
-            if let eTag = cachedHeaders?.first(name: .eTag) {
-                headers.add(name: .ifNoneMatch, value: eTag)
-            }
-            
-            if let lastModified = cachedHeaders?.lastModified {
-                // TODO: If using HTTP/1.0 then this should be .ifUnmodifiedSince instead. Don't know
-                // how to determine that right now.
-                headers.add(name: .ifModifiedSince, value: lastModified.serialize())
-            }
+        if let eTag = self.headers?.first(name: .eTag) {
+            headers.add(name: .ifNoneMatch, value: eTag)
+        }
+        if let lastModified = self.headers?.lastModified {
+            // TODO: If using HTTP/1.0 then this should be .ifUnmodifiedSince instead. Don't know
+            // how to determine that right now.
+            headers.add(name: .ifModifiedSince, value: lastModified.serialize())
         }
         
         // Cache-Control max-age is calculated against the request date.
@@ -99,25 +83,19 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
         }
         
         do {
-            // Synchronize access to shared state.
-            self.sync.lock()
-            defer { self.sync.unlock() }
-            
             if let cacheControl = response.headers.cacheControl, cacheControl.noStore == true {
                 // The server *shouldn't* give an expiration with no-store, but...
                 self.clearCache()
             } else {
-                self.headers.withLockedValue { headers in
-                    headers = response.headers
-                    self.cached.withLockedValue { $0.1 = headers?.expirationDate(requestSentAt: requestSentAt) }
-                }
+                self.headers = response.headers
+                self.cached.1 = headers.expirationDate(requestSentAt: requestSentAt)
             }
             
             switch response.status {
             case .notModified:
-                logger?.debug("Cached data is still valid.")
+                logger.trace("EndpointCache - cached data is still valid.")
                 
-                let cachedData = self.cached.withLockedValue({ $0 })
+                let cachedData = self.cached
                 guard let cached = cachedData.0 else {
                     // This shouldn't actually be possible, but just in case.
                     self.clearCache()
@@ -127,7 +105,7 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
                 return cached
                 
             case .ok:
-                logger?.debug("New data received")
+                logger.trace("EndpointCache - new data received")
                 
                 let data: T
                 
@@ -137,10 +115,8 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
                     throw EndpointCacheError.contentDecodeFailure(error)
                 }
                 
-                self.cached.withLockedValue { cachedData in
-                    if cachedData.1 != nil {
-                        cachedData.0 = data
-                    }
+                if self.cached.1 != nil {
+                    self.cached.0 = data
                 }
                 
                 return data
@@ -150,12 +126,8 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
                 throw Abort(.internalServerError)
             }
         } catch {
-            // Synchronize access to shared state.
-            self.sync.lock()
-            defer { self.sync.unlock() }
-            
-            let cachedData = self.cached.withLockedValue { $0 }
-            guard let headers = self.headers.withLockedValue({ $0 }), let cached = cachedData.0 else {
+            let cachedData = self.cached
+            guard let headers = self.headers, let cached = cachedData.0 else {
                 throw error
             }
             
@@ -179,7 +151,7 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
     }
     
     private func clearCache() {
-        self.cached.withLockedValue { $0 = (nil, nil) }
-        self.headers.withLockedValue { $0 = nil }
+        self.cached = (nil, nil)
+        self.headers = nil
     }
 }
