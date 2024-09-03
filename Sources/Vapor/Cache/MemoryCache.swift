@@ -2,7 +2,6 @@ import Foundation
 import NIOCore
 import NIOConcurrencyHelpers
 
-#warning("Flatten in Memory")
 actor MemoryCacheStorage: Sendable {
     struct CacheEntryBox<T> {
         var expiresAt: Date?
@@ -15,19 +14,14 @@ actor MemoryCacheStorage: Sendable {
     }
     
     private var storage: [String: Any]
-    private var lock: NIOLock
     
     init() {
         self.storage = [:]
-        self.lock = .init()
     }
     
     func get<T>(_ key: String) -> T?
         where T: Decodable
     {
-        self.lock.lock()
-        defer { self.lock.unlock() }
-        
         guard let box = self.storage[key] as? CacheEntryBox<T> else { return nil }
         if let expiresAt = box.expiresAt, expiresAt < Date() {
             self.storage.removeValue(forKey: key)
@@ -40,8 +34,6 @@ actor MemoryCacheStorage: Sendable {
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
         where T: Encodable
     {
-        self.lock.lock()
-        defer { self.lock.unlock() }
         if let value = value {
             var box = CacheEntryBox(value)
             if let expirationTime = expirationTime {
