@@ -182,7 +182,7 @@ public func routes(_ app: Application) throws {
     }
 
     app.get("secret") { req in
-        guard let secret = try await Environment.secret(key: "PASSWORD_SECRET", fileIO: req.application.fileio, on: req.eventLoop) else {
+        guard let secret = try await Environment.secret(key: "PASSWORD_SECRET", on: req.eventLoop) else {
             throw Abort(.badRequest)
         }
         return secret
