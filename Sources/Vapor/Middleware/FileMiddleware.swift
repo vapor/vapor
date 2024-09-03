@@ -80,7 +80,7 @@ public final class FileMiddleware: Middleware {
                         
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
-                            return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                            return try await request.fileio.streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
                         }
                     }
                 } else {
@@ -92,7 +92,7 @@ public final class FileMiddleware: Middleware {
                 }
             } else {
                 // file exists, stream it
-                return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                return try await request.fileio.streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
             }
         }
         
