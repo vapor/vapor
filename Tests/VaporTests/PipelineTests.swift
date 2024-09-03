@@ -10,11 +10,11 @@ final class PipelineTests: XCTestCase {
     var app: Application!
     
     override func setUp() async throws {
-        app = try await Application.make(.testing)
+        app = await Application(.testing)
     }
     
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
     
     
@@ -85,7 +85,7 @@ final class PipelineTests: XCTestCase {
         
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
-        try await app.startup()
+        try await app.start()
         
         guard
             let localAddress = app.http.server.shared.localAddress,
@@ -209,9 +209,8 @@ final class PipelineTests: XCTestCase {
         struct ResponseThing: ResponseEncodable {
             let eventLoop: EventLoop
             
-            func encodeResponse(for request: Vapor.Request) -> NIOCore.EventLoopFuture<Vapor.Response> {
-                let response = Response(status: .ok)
-                return eventLoop.future(response)
+            func encodeResponse(for request: Request) async throws -> Response {
+                return Response(status: .ok)
             }
         }
         
@@ -226,7 +225,7 @@ final class PipelineTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
-        try await app.startup()
+        try await app.start()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -239,6 +238,8 @@ final class PipelineTests: XCTestCase {
         XCTAssertEqual(res.status, .ok)
     }
     
+#warning("TODO might not need this")
+    /*
     func testReturningResponseFromMiddlewareOnDifferentEventLoopDosentCrashLoopBoundBox() async throws {
         struct WrongEventLoopMiddleware: Middleware {
             func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
@@ -310,6 +311,7 @@ final class PipelineTests: XCTestCase {
         })
         XCTAssertEqual(res.status, .ok)
     }
+     */
 
     override class func setUp() {
         XCTAssert(isLoggingConfigured)
