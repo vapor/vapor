@@ -92,8 +92,6 @@ public final class Application: Sendable {
     
     public enum EventLoopGroupProvider: Sendable {
         case shared(EventLoopGroup)
-        @available(*, deprecated, renamed: "singleton", message: "Use '.singleton' for a shared 'EventLoopGroup', for better performance")
-        case createNew
         
         public static var singleton: EventLoopGroupProvider {
             .shared(MultiThreadedEventLoopGroup.singleton)
@@ -128,8 +126,6 @@ public final class Application: Sendable {
         switch eventLoopGroupProvider {
         case .shared(let group):
             self.eventLoopGroup = group
-        case .createNew:
-            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
         self._locks = .init(.init())
         self._didShutdown = .init(false)
@@ -224,13 +220,6 @@ public final class Application: Sendable {
         switch self.eventLoopGroupProvider {
         case .shared:
             self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
-        case .createNew:
-            self.logger.trace("Shutting down EventLoopGroup")
-            do {
-                try await self.eventLoopGroup.shutdownGracefully()
-            } catch {
-                self.logger.warning("Shutting down EventLoopGroup failed: \(error)")
-            }
         }
 
         self._didShutdown.withLockedValue { $0 = true }
