@@ -18,7 +18,7 @@ final class EnvironmentSecretTests: XCTestCase {
         let path = "/" + folder + "/Utilities/non-existing-secret"
 
         let eventLoop = app.eventLoopGroup.next()
-        let secretContent = try await Environment.secret(path: path, fileIO: app.fileio, on: eventLoop)
+        let secretContent = try await Environment.secret(path: path, logger: app.logger)
         XCTAssertNil(secretContent)
     }
 
@@ -27,7 +27,7 @@ final class EnvironmentSecretTests: XCTestCase {
         let path = "/" + folder + "/Utilities/my-secret-env-content"
 
         let eventLoop = app.eventLoopGroup.next()
-        let secretContent = try await Environment.secret(path: path, fileIO: app.fileio, on: eventLoop)
+        let secretContent = try await Environment.secret(path: path, logger: app.logger)
         XCTAssertEqual(secretContent, "password")
     }
 
@@ -42,7 +42,7 @@ final class EnvironmentSecretTests: XCTestCase {
         }
 
         let eventLoop = app.eventLoopGroup.next()
-        let secretContent = try await Environment.secret(key: key, fileIO: app.fileio, on: eventLoop)
+        let secretContent = try await Environment.secret(key: key, logger: app.logger)
         XCTAssertEqual(secretContent, "password")
     }
 
@@ -50,7 +50,7 @@ final class EnvironmentSecretTests: XCTestCase {
         let key = "MY_NON_EXISTING_ENVIRONMENT_SECRET"
         
         let eventLoop = app.eventLoopGroup.next()
-        let secretContent = try await Environment.secret(key: key, fileIO: app.fileio, on: eventLoop)
+        let secretContent = try await Environment.secret(key: key, logger: app.logger)
         XCTAssertNil(secretContent)
     }
 }
