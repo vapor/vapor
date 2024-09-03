@@ -16,7 +16,7 @@ extension SessionAuthenticator {
             return try await next.respond(to: request)
         }
 
-        if let aID = try await request.session.authenticated(User.self) {
+        if let aID = await request.session.authenticated(User.self) {
             // try to find user with id from session
             try await self.authenticate(sessionID: aID, for: request)
         }
@@ -25,11 +25,11 @@ extension SessionAuthenticator {
 
         if let user = await request.auth.get(User.self) {
             // if a user has been authed (or is still authed), store in the session
-            try await request.session.authenticate(user)
+            await request.session.authenticate(user)
         } else if await request.hasSession {
             // if no user is authed, it's possible they've been unauthed.
             // remove from session.
-            try await request.session.unauthenticate(User.self)
+            await request.session.unauthenticate(User.self)
         }
         return response
     }

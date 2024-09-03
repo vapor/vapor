@@ -21,11 +21,11 @@ final class AsyncRequestTests: XCTestCase {
     var app: Application!
     
     override func setUp() async throws {
-        app = try await Application.make(.testing)
+        app = await Application(.testing)
     }
     
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
     
     func testStreamingRequest() async throws {

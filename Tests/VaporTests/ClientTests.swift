@@ -13,7 +13,7 @@ final class ClientTests: XCTestCase {
     var remoteApp: Application!
     
     override func setUp() async throws {
-        remoteApp = try await Application.make(.testing)
+        remoteApp = await Application(.testing)
         remoteApp.http.server.configuration.port = 0
         
         remoteApp.get("json") { _ in
@@ -46,8 +46,8 @@ final class ClientTests: XCTestCase {
         }
         
         remoteApp.environment.arguments = ["serve"]
-        try await remoteApp.asyncBoot()
-        try await remoteApp.startup()
+        try await remoteApp.boot()
+        try await remoteApp.start()
         
         XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
         guard let localAddress = remoteApp.http.server.shared.localAddress,
@@ -60,7 +60,7 @@ final class ClientTests: XCTestCase {
     }
     
     override func tearDown() async throws {
-        try await remoteApp.asyncShutdown()
+        try await remoteapp.shutdown()
     }
     
     func testClientConfigurationChange() throws {
