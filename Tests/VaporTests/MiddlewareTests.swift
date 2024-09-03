@@ -75,14 +75,14 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSMiddlewareVariedByRequestOrigin() throws {
+    func testCORSMiddlewareVariedByRequestOrigin() async throws {
         app.grouped(
             CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.GET], allowedHeaders: [.origin]))
         ).get("order") { req -> String in
             return "done"
         }
 
-        try app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+        try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
             XCTAssertEqual(res.headers[.vary], ["origin"])

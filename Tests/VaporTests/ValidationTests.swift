@@ -620,7 +620,7 @@ import NIOCore
 //        }
 //
 //        // Setup
-//        let app = Application(.testing)
+//        let app = await Application(.testing)
 //        defer { app.shutdown() }
 //
 //        // Converts validation errors to a custom response.

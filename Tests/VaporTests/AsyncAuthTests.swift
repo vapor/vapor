@@ -184,7 +184,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
-                    request.auth.login(test)
+                    await request.auth.login(test)
                 }
             }
         }
