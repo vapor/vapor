@@ -129,7 +129,9 @@ class MetricsTests: XCTestCase {
         let metrics = CapturingMetricsSystem()
         MetricsSystem.bootstrapInternal(metrics)
 
-        app.http.server.configuration.reportMetrics = false
+        var config = app.http.server.configuration
+        config.reportMetrics = true
+        await app.http.server.shared.updateConfiguration(config)
 
         struct User: Content {
             let id: Int

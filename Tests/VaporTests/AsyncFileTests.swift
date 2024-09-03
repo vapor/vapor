@@ -207,9 +207,14 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
             XCTAssertEqual(res.status, .partialContent)
 
             XCTAssertEqual(res.headers.first(name: .contentLength), "1")
-            let range = res.headers.first(name: .contentRange)!.split(separator: "/").first!.split(separator: " ").last!
-            XCTAssertEqual(range, "0-0")
-
+            
+            do {
+#warning("No idea why this isnt' working")
+                let range = try XCTUnwrap(res.headers.first(name: .contentRange)?.split(separator: "/").first!.split(separator: " ").last)
+                XCTAssertEqual(range, "0-0")
+            } catch {
+                XCTFail()
+            }
             XCTAssertEqual(res.body.readableBytes, 1)
         }
     }

@@ -17,7 +17,9 @@ final class WebSocketTests: XCTestCase {
     }
     
     func testWebSocketClient() async throws {
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
 
         app.webSocket("echo") { req, ws in
             ws.onText { ws.send($1) }
@@ -58,7 +60,9 @@ final class WebSocketTests: XCTestCase {
             ws.close(promise: nil)
         }
 
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
         app.environment.arguments = ["serve"]
 
         try await app.start()
@@ -88,7 +92,9 @@ final class WebSocketTests: XCTestCase {
             ws.close(promise: nil)
         }
         app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
 
         try await app.start()
         
@@ -114,7 +120,9 @@ final class WebSocketTests: XCTestCase {
     }
 
     func testManualUpgradeToWebSocket() async throws {
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
 
         app.get("foo") { req in
             return req.webSocket { req, ws in
