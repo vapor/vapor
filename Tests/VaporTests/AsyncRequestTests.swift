@@ -5,6 +5,7 @@ import NIOCore
 import AsyncHTTPClient
 import Atomics
 import NIOConcurrencyHelpers
+import NIOPosix
 
 fileprivate extension String {
     static func randomDigits(length: Int = 999) -> String {
@@ -46,7 +47,7 @@ final class AsyncRequestTests: XCTestCase {
         }
 
         app.environment.arguments = ["serve"]
-        try await app.startup()
+        try await app.start()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -79,7 +80,7 @@ final class AsyncRequestTests: XCTestCase {
         }
         
         app.environment.arguments = ["serve"]
-        try await app.startup()
+        try await app.start()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -140,7 +141,7 @@ final class AsyncRequestTests: XCTestCase {
         }
         
         app.environment.arguments = ["serve"]
-        try await app.startup()
+        try await app.start()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,

@@ -122,8 +122,8 @@ public final class Application: Sendable {
     private let _locks: NIOLockedValueBox<Locks>
     
     // New service stuff
-    let cache: Cache
-    let passwordHasher: AsyncPasswordHasher
+    public let cache: Cache
+    public let passwordHasher: AsyncPasswordHasher
     
     public init(
         _ environment: Environment = .development,
