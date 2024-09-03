@@ -21,20 +21,7 @@ extension Request {
 
 // MARK: FileIO
 
-/// `FileIO` is a convenience wrapper around SwiftNIO's `NIOFileSystem`.
-///
-/// It can read files, both in their entirety and chunked.
-///
-///
-///     let chunks = req.fileio.readFile(at: "/path/to/file.txt")
-///     for chunk in chunks {
-///         print(chunk) // part of file
-///     }
-///
-///     let file = try await req.fileio.collectFile(at: "/path/to/file.txt")
-///     print(file) // entire file
-///
-/// It can also create streaming HTTP responses.
+/// `FileIO` is a convenience wrapper to make it easy to stream files as a ``Response``. It supports chunked responses and `E-Tag`s.
 ///
 ///     app.get("file-stream") { req -> Response in
 ///         try await req.fileio.streamFile(at: "/path/to/file.txt", for: req)
@@ -67,7 +54,7 @@ public struct FileIO: Sendable {
     /// - Parameters:
     ///   - path: The file's path.
     ///   - lastModified: When the file was last modified.
-    /// - Returns: An `EventLoopFuture<String>` which holds the ETag.
+    /// - Returns: A `String` which holds the ETag.
     private func generateETagHash(path: String, lastModified: Date) async throws -> String {
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
             return hash.digestHex
