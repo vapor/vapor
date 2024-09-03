@@ -15,7 +15,10 @@ final class ClientTests: XCTestCase {
     
     override func setUp() async throws {
         remoteApp = await Application(.testing)
-        remoteApp.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
+
         
         app = await Application(.testing)
         
@@ -176,7 +179,10 @@ final class ClientTests: XCTestCase {
         }
 
         app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
+
         try await app.boot()
         try await app.start()
         

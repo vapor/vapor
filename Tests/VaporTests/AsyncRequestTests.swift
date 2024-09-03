@@ -30,8 +30,10 @@ final class AsyncRequestTests: XCTestCase {
     }
     
     func testStreamingRequest() async throws {
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.hostname = "127.0.0.1"
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
         
         let testValue = String.randomDigits()
 
@@ -67,8 +69,10 @@ final class AsyncRequestTests: XCTestCase {
     }
     
     func testStreamingRequestBodyCleansUp() async throws {
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.hostname = "127.0.0.1"
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
         
         let bytesTheServerRead = ManagedAtomic<Int>(0)
         
@@ -104,8 +108,10 @@ final class AsyncRequestTests: XCTestCase {
     // TODO: Re-enable once it reliably works and doesn't cause issues with trying to shut the application down
     // This may require some work in Vapor
     func _testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.hostname = "127.0.0.1"
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
         
         let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
         let bytesTheServerSaw = ManagedAtomic<Int>(0)

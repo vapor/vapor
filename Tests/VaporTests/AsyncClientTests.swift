@@ -14,7 +14,12 @@ final class AsyncClientTests: XCTestCase {
     
     override func setUp() async throws {
         remoteApp = await Application(.testing)
-        remoteApp.http.server.configuration.port = 0
+        
+        var config = remoteApp.http.server.configuration
+        config.port = 0
+        config.hostname = "127.0.0.1"
+        await remoteApp.http.server.shared.updateConfiguration(config)
+
         
         remoteApp.get("json") { _ in
             SomeJSON()
@@ -130,7 +135,9 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testBoilerplateClient() async throws {
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
         let remotePort = self.remoteAppPort!
 
         app.get("foo") { req async throws -> String in

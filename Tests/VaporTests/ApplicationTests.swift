@@ -22,7 +22,11 @@ final class ApplicationTests: XCTestCase {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = await Application(test)
         app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        config.hostname = "127.0.0.1"
+        await app.http.server.shared.updateConfiguration(config)
+
         try await app.start()
         guard let running = app.running else {
             XCTFail("app started without setting 'running'")
@@ -143,7 +147,10 @@ final class ApplicationTests: XCTestCase {
         }
 
         app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
+
         try await app.start()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
@@ -158,8 +165,10 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testAutomaticPortPickingWorks() async throws {
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        config.hostname = "127.0.0.1"
+        await app.http.server.shared.updateConfiguration(config)
 
         app.get("hello") { req in
             "Hello, world!"
@@ -186,8 +195,10 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
-        app.http.server.configuration.hostname = "0.0.0.0"
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        config.hostname = "0.0.0.0"
+        await app.http.server.shared.updateConfiguration(config)
         
         struct AddressConfig: Content {
             let hostname: String

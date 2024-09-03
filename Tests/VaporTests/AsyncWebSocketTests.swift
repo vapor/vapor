@@ -20,7 +20,9 @@ final class AsyncWebSocketTests: XCTestCase {
     func testWebSocketClient() async throws {
         let server = await Application(.testing)
 
-        server.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
 
         server.webSocket("echo") { req, ws in
             ws.onText { ws.send($1) }
@@ -56,7 +58,9 @@ final class AsyncWebSocketTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/1997
     func testWebSocket404() async throws {
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
 
         app.webSocket("bar") { req, ws in
             ws.close(promise: nil)
@@ -90,7 +94,9 @@ final class AsyncWebSocketTests: XCTestCase {
             ws.send("foo")
             ws.close(promise: nil)
         }
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
         app.environment.arguments = ["serve"]
 
         try await app.start()
@@ -118,7 +124,9 @@ final class AsyncWebSocketTests: XCTestCase {
     }
 
     func testManualUpgradeToWebSocket() async throws {
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
 
         app.get("foo") { req in
             return req.webSocket { req, ws in

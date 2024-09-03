@@ -51,15 +51,6 @@ extension Application.HTTP {
                     logger: self.application.logger
                 )
             }
-            nonmutating set {
-                /// If a server is available, configure it directly, otherwise cache a configuration instance
-                /// here to be used until the server is instantiated.
-                if let server = self.application.storage[Key.self] {
-                    server.configuration = newValue
-                } else {
-                    self.application.storage.setFirstTime(ConfigurationKey.self, to: newValue)
-                }
-            }
         }
 
         struct ConfigurationKey: StorageKey, Sendable {

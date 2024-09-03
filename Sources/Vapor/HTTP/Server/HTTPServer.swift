@@ -221,23 +221,24 @@ public final class HTTPServer: Server, Sendable {
     /// - ``Configuration-swift.struct/tcpNoDelay``
     public var configuration: Configuration {
         get { _configuration.withLockedValue { $0 } }
-        set {
-            let oldValue = _configuration.withLockedValue { $0 }
-            
-            let canBeUpdatedDynamically =
-                oldValue.address == newValue.address
-                && oldValue.backlog == newValue.backlog
-                && oldValue.connectionsPerServerTick == newValue.connectionsPerServerTick
-                && oldValue.reuseAddress == newValue.reuseAddress
-                && oldValue.tcpNoDelay == newValue.tcpNoDelay
-            
-            guard canBeUpdatedDynamically || !didStart.withLockedValue({ $0 }) else {
-                oldValue.logger.warning("Cannot modify server configuration after server has been started.")
-                return
-            }
-            self.application.storage.setFirstTime(Application.HTTP.Server.ConfigurationKey.self, to: newValue)
-            _configuration.withLockedValue { $0 = newValue }
+    }
+    
+    public func updateConfiguration(_ newConfig: Configuration) async {
+        let oldValue = _configuration.withLockedValue { $0 }
+        
+        let canBeUpdatedDynamically =
+            oldValue.address == newConfig.address
+            && oldValue.backlog == newConfig.backlog
+            && oldValue.connectionsPerServerTick == newConfig.connectionsPerServerTick
+            && oldValue.reuseAddress == newConfig.reuseAddress
+            && oldValue.tcpNoDelay == newConfig.tcpNoDelay
+        
+        guard canBeUpdatedDynamically || !didStart.withLockedValue({ $0 }) else {
+            oldValue.logger.warning("Cannot modify server configuration after server has been started.")
+            return
         }
+        await self.application.storage.set(Application.HTTP.Server.ConfigurationKey.self, to: newConfig)
+        _configuration.withLockedValue { $0 = newConfig }
     }
 
     private let responder: Responder
@@ -308,7 +309,7 @@ public final class HTTPServer: Server, Sendable {
         /// Log started message with the actual configuration.
         configuration.logger.notice("Server started on \(configuration.addressDescription)")
 
-        self.configuration = configuration
+        await self.updateConfiguration(configuration)
         self.didStart.withLockedValue { $0 = true }
     }
     

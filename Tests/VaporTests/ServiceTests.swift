@@ -32,7 +32,9 @@ final class ServiceTests: XCTestCase {
     }
 
     func testLifecycle() async throws {
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
 
         app.lifecycle.use(Hello())
         app.environment.arguments = ["serve"]
@@ -41,7 +43,9 @@ final class ServiceTests: XCTestCase {
     }
     
     func testAsyncLifecycleHandler() async throws {
-        app.http.server.configuration.port = 0
+        var config = app.http.server.configuration
+        config.port = 0
+        await app.http.server.shared.updateConfiguration(config)
         
         app.lifecycle.use(AsyncHello())
         app.environment.arguments = ["serve"]
