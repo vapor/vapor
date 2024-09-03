@@ -45,7 +45,8 @@ public struct FileIO: Sendable {
     /// ByteBufferAllocator to use for generating buffers.
     private let allocator: ByteBufferAllocator
     
-    public static let defaultChunkSize: Int64 = 128*1024
+    /// Default chunk size for reading files, 512kB
+    public static let defaultChunkSize: Int64 = 512*1024
     
     /// HTTP request context.
     let request: Request
