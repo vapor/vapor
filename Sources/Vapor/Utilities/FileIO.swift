@@ -32,11 +32,8 @@ public struct FileIO: Sendable {
     /// ByteBufferAllocator to use for generating buffers.
     private let allocator: ByteBufferAllocator
     
-    /// Default chunk size for reading files, 512kB
-    public static let defaultChunkSize: Int64 = 512*1024
-    
     /// HTTP request context.
-    let request: Request
+    private let request: Request
 
     /// The underlying ``FileSystem`` to use
     private let fileSystem: FileSystem
@@ -63,7 +60,7 @@ public struct FileIO: Sendable {
                 throw Abort(.internalServerError)
             }
             let chunks = try await fileSystem.withFileHandle(forReadingAt: .init(path)) { fileHandle in
-                fileHandle.readChunks(in: 0..<(fileSize), chunkLength: .bytes(FileIO.defaultChunkSize))
+                fileHandle.readChunks(in: 0..<(fileSize))
             }
             let buffer = try await chunks.collect(upTo: Int(fileSize))
             let digest = SHA256.hash(data: buffer.readableBytesView)
@@ -89,19 +86,14 @@ public struct FileIO: Sendable {
     ///         return req.fileio.streamFile(at: "/path/to/file.txt")
     ///     }
     ///
-    /// Async equivalent of ``streamFile(at:chunkSize:mediaType:advancedETagComparison:onCompleted:)`` using Swift Concurrency
-    /// functions under the hood
-    ///
     /// - parameters:
     ///     - path: Path to file on the disk.
-    ///     - chunkSize: Maximum size for the file data chunks.
     ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
     ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
     ///     - onCompleted: Closure to be run on completion of stream.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
     public func streamFile(
         at path: String,
-        chunkSize: Int64 = FileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool = false,
         onCompleted: @escaping @Sendable (Result<Void, Error>) async throws -> () = { _ in }
@@ -187,7 +179,7 @@ public struct FileIO: Sendable {
         response.body = .init(asyncStream: { stream in
             do {
                 let chunks = try await fileSystem.withFileHandle(forReadingAt: .init(path)) { fileHandle in
-                    fileHandle.readChunks(in: offset..<(offset + Int64(byteCount)), chunkLength: .bytes(Int64(chunkSize)))
+                    fileHandle.readChunks(in: offset..<(offset + Int64(byteCount)))
                 }
                 for try await chunk in chunks {
                     try await stream.writeBuffer(chunk)
