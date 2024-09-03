@@ -45,6 +45,8 @@ public struct FileIO: Sendable {
     /// ByteBufferAllocator to use for generating buffers.
     private let allocator: ByteBufferAllocator
     
+    public static let defaultChunkSize: Int64 = 128*1024
+    
     /// HTTP request context.
     let request: Request
 
@@ -72,7 +74,9 @@ public struct FileIO: Sendable {
             guard let fileSize = try await FileSystem.shared.info(forFileAt: .init(path))?.size else {
                 throw Abort(.internalServerError)
             }
-            let chunks = try await self.readFile(at: path, offset: 0, byteCount: Int(fileSize))
+            let chunks = try await fileSystem.withFileHandle(forReadingAt: .init(path)) { fileHandle in
+                fileHandle.readChunks(in: 0..<(fileSize), chunkLength: .bytes(FileIO.defaultChunkSize))
+            }
             let buffer = try await chunks.collect(upTo: Int(fileSize))
             let digest = SHA256.hash(data: buffer.readableBytesView)
             
@@ -83,42 +87,6 @@ public struct FileIO: Sendable {
             hashes?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
             await request.application.storage.set(FileMiddleware.ETagHashes.self, to: hashes)
             return digest.hex
-        }
-    }
-
-    /// Reads the contents of a file at the supplied path in chunks.
-    ///
-    ///    for try await chunk in try await req.fileio.readFile(at: "/path/to/file.txt") {
-    ///        print("chunk: \(data)")
-    ///    }
-    ///
-    /// - parameters:
-    ///     - path: Path to file on the disk.
-    ///     - chunkSize: Maximum size for the file data chunks.
-    /// - returns: `FileChunks` containing the file data chunks.
-    private func readFile(
-        at path: String,
-        chunkSize: Int = 128*1024,
-        offset: Int64? = nil,
-        byteCount: Int? = nil
-    ) async throws -> FileChunks {
-#warning("Flatten into stream file")
-        let filePath = FilePath(path)
-        
-        return try await fileSystem.withFileHandle(forReadingAt: filePath) { fileHandle in
-            let chunks: _NIOFileSystem.FileChunks
-            
-            if let offset {
-                if let byteCount {
-                    chunks = fileHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(Int64(chunkSize)))
-                } else {
-                    chunks = fileHandle.readChunks(in: offset..., chunkLength: .bytes(Int64(chunkSize)))
-                }
-            } else {
-                chunks = fileHandle.readChunks(chunkLength: .bytes(Int64(chunkSize)))
-            }
-                        
-            return chunks
         }
     }
     
@@ -145,7 +113,7 @@ public struct FileIO: Sendable {
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
     public func streamFile(
         at path: String,
-        chunkSize: Int = 128 * 1024,
+        chunkSize: Int64 = FileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool = false,
         onCompleted: @escaping @Sendable (Result<Void, Error>) async throws -> () = { _ in }
@@ -230,7 +198,9 @@ public struct FileIO: Sendable {
         
         response.body = .init(asyncStream: { stream in
             do {
-                let chunks = try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount)
+                let chunks = try await fileSystem.withFileHandle(forReadingAt: .init(path)) { fileHandle in
+                    fileHandle.readChunks(in: offset..<(offset + Int64(byteCount)), chunkLength: .bytes(Int64(chunkSize)))
+                }
                 for try await chunk in chunks {
                     try await stream.writeBuffer(chunk)
                 }
