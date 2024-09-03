@@ -10,7 +10,7 @@ final class AsyncWebSocketTests: XCTestCase {
     
     override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application.make(test)
+        app = await Application(test)
     }
     
     override func tearDown() async throws {
@@ -18,7 +18,7 @@ final class AsyncWebSocketTests: XCTestCase {
     }
     
     func testWebSocketClient() async throws {
-        let server = try await Application.make(.testing)
+        let server = await Application(.testing)
 
         server.http.server.configuration.port = 0
 
@@ -26,7 +26,7 @@ final class AsyncWebSocketTests: XCTestCase {
             ws.onText { ws.send($1) }
         }
         server.environment.arguments = ["serve"]
-        try await server.startup()
+        try await server.start()
 
         guard let localAddress = server.http.server.shared.localAddress, let port = localAddress.port else {
             XCTFail("couldn't get port from \(server.http.server.shared.localAddress.debugDescription)")
@@ -50,7 +50,7 @@ final class AsyncWebSocketTests: XCTestCase {
         let string = try await promise.futureResult.get()
         XCTAssertEqual(string, "Hello, world!")
         
-        try await server.asyncShutdown()
+        try await server.shutdown()
     }
 
 
