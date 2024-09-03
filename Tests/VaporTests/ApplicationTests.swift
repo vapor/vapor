@@ -121,7 +121,7 @@ final class ApplicationTests: XCTestCase {
         enum Static {
             static let app: NIOLockedValueBox<Application?> = .init(nil)
         }
-        Static.app.withLockedValue { $0 = Application(.testing) }
+        Static.app.withLockedValue { $0 = await Application(.testing) }
         Static.app.withLockedValue { $0 = nil }
     }
 */
