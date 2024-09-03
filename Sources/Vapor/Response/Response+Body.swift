@@ -274,6 +274,7 @@ private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWrit
         let promise = self.eventLoop.makePromise(of: Void.self)
         
         self.eventLoop.execute { self.write(result, promise: promise) }
+#warning("TODO - search for all `.get()`s")
         try await promise.futureResult.get()
     }
 }
