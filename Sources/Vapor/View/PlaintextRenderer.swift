@@ -25,7 +25,7 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     public func render<E>(_ name: String, _ context: E) async throws -> View
         where E: Encodable
     {
-        self.logger.trace("Rendering plaintext view \(name) with \(context)")
+        self.logger.trace("Rendering plaintext view", metadata: ["name": "\(name)", "context": "\(context)"])
         let path = name.hasPrefix("/")
             ? name
             : self.viewsDirectory + name
