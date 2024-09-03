@@ -16,8 +16,6 @@ final class EnvironmentSecretTests: XCTestCase {
     func testNonExistingSecretFile() async throws {
         let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/non-existing-secret"
-
-        let eventLoop = app.eventLoopGroup.next()
         let secretContent = try await Environment.secret(path: path, logger: app.logger)
         XCTAssertNil(secretContent)
     }
@@ -25,8 +23,6 @@ final class EnvironmentSecretTests: XCTestCase {
     func testExistingSecretFile() async throws {
         let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/my-secret-env-content"
-
-        let eventLoop = app.eventLoopGroup.next()
         let secretContent = try await Environment.secret(path: path, logger: app.logger)
         XCTAssertEqual(secretContent, "password")
     }
@@ -41,15 +37,12 @@ final class EnvironmentSecretTests: XCTestCase {
             unsetenv(key)
         }
 
-        let eventLoop = app.eventLoopGroup.next()
         let secretContent = try await Environment.secret(key: key, logger: app.logger)
         XCTAssertEqual(secretContent, "password")
     }
 
     func testLoadingSecretFromEnvKeyWhichDoesNotExist() async throws {
         let key = "MY_NON_EXISTING_ENVIRONMENT_SECRET"
-        
-        let eventLoop = app.eventLoopGroup.next()
         let secretContent = try await Environment.secret(key: key, logger: app.logger)
         XCTAssertNil(secretContent)
     }

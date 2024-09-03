@@ -245,7 +245,7 @@ final class RouteTests: XCTestCase {
     func testInvalidCookie() async throws {
         app.grouped(SessionsMiddleware(session: app.sessions.driver))
             .get("get") { req -> String in
-                return try await req.session.data["name"] ?? "n/a"
+                return await req.session.data["name"] ?? "n/a"
             }
 
         var headers = HTTPHeaders()
