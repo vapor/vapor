@@ -328,12 +328,18 @@ final class PipelineTests: XCTestCase {
             )
         }
 
-        try await channel.writeInbound(ByteBuffer(string: "GET /sleep/100 HTTP/1.1\r\n\r\nGET /sleep/50 HTTP/1.1\r\n\r\n"))
+        try await channel.writeInbound(ByteBuffer(string: "GET /sleep/100 HTTP/1.1\r\n\r\nGET /sleep/0 HTTP/1.1\r\n\r\n"))
 
-        try await Task.sleep(for: .milliseconds(1000))
-
+        // We expect 6 responses to be there, however if there are less
+        // we need to have a timeout to avoid hanging the test
+        let deadline = NIODeadline.now() + .milliseconds(200)
         var responses: [String] = []
-        while let res = try await channel.readOutbound(as: ByteBuffer.self)?.string {
+        for _ in 0..<6 {
+            guard NIODeadline.now() < deadline else {
+                XCTFail("Timed out waiting for responses")
+                return
+            }
+            let res = try await channel.waitForOutboundWrite(as: ByteBuffer.self).string
             if res.contains("slept") {
                 responses.append(res)
             }
@@ -341,7 +347,7 @@ final class PipelineTests: XCTestCase {
 
         XCTAssertEqual(responses.count, 2)
         XCTAssertEqual(responses[0], "slept 100ms")
-        XCTAssertEqual(responses[1], "slept 50ms")
+        XCTAssertEqual(responses[1], "slept 0ms")
     }
 
     override class func setUp() {
