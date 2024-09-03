@@ -9,7 +9,7 @@ extension Request {
     /// - note: `SessionsMiddleware` must be added and enabled.
     /// - returns: `Session` for this `Request`.
     public var session: Session {
-        get async throws {
+        get async {
             if await !self._sessionCache.middlewareFlag {
                 // No `SessionsMiddleware` was detected on your app.
                 // Suggested solutions:

@@ -10,11 +10,11 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     var app: Application!
     
     override func setUp() async throws {
-        app = try await Application.make(.testing)
+        app = await Application(.testing)
     }
     
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
     
     func testStreamFile() async throws {
