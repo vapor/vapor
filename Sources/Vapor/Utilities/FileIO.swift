@@ -69,10 +69,14 @@ public struct FileIO: Sendable {
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
             return hash.digestHex
         } else {
-            let buffer = try await collectFile(at: path)
+            guard let fileSize = try await FileSystem.shared.info(forFileAt: .init(path))?.size else {
+                throw Abort(.internalServerError)
+            }
+            let chunks = try await self.readFile(at: path, offset: 0, byteCount: Int(fileSize))
+            let buffer = try await chunks.collect(upTo: Int(fileSize))
             let digest = SHA256.hash(data: buffer.readableBytesView)
             
-#warning("Tidy all this up")
+#warning("Tidy all this up with storage")
             
             // update hash in dictionary
             var hashes = request.application.storage.get(FileMiddleware.ETagHashes.self)
@@ -80,23 +84,6 @@ public struct FileIO: Sendable {
             await request.application.storage.set(FileMiddleware.ETagHashes.self, to: hashes)
             return digest.hex
         }
-    }
-    
-    // MARK: - Concurrency
-    /// Reads the contents of a file at the supplied path.
-    ///
-    ///     let data = try await req.fileio.collectFile(file: "/path/to/file.txt")
-    ///     print(data) // file data
-    ///
-    /// - parameters:
-    ///     - path: Path to file on the disk.
-    /// - returns: `ByteBuffer` containing the file data.
-    public func collectFile(at path: String) async throws -> ByteBuffer {
-        guard let fileSize = try await FileSystem.shared.info(forFileAt: .init(path))?.size else {
-            throw Abort(.internalServerError)
-        }
-        let chunks = try await self.readFile(at: path, offset: 0, byteCount: Int(fileSize))
-        return try await chunks.collect(upTo: Int(fileSize))
     }
 
     /// Reads the contents of a file at the supplied path in chunks.
@@ -109,12 +96,13 @@ public struct FileIO: Sendable {
     ///     - path: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: `FileChunks` containing the file data chunks.
-    public func readFile(
+    private func readFile(
         at path: String,
         chunkSize: Int = 128*1024,
         offset: Int64? = nil,
         byteCount: Int? = nil
     ) async throws -> FileChunks {
+#warning("Flatten into stream file")
         let filePath = FilePath(path)
         
         return try await fileSystem.withFileHandle(forReadingAt: filePath) { fileHandle in
@@ -131,22 +119,6 @@ public struct FileIO: Sendable {
             }
                         
             return chunks
-        }
-    }
-    
-    /// Write the contents of buffer to a file at the supplied path.
-    ///
-    ///     let data = ByteBuffer(string: "ByteBuffer")
-    ///     try await req.fileio.writeFile(data, at: "/path/to/file.txt")
-    ///
-    /// - parameters:
-    ///     - path: Path to file on the disk.
-    ///     - buffer: The `ByteBuffer` to write.
-    /// - returns: `Void` when the file write is finished.
-    public func writeFile(_ buffer: ByteBuffer, at path: String) async throws {
-        let filePath = FilePath(path)
-        return try await fileSystem.withFileHandle(forWritingAt: filePath, options: .modifyFile(createIfNecessary: true)) { handle in
-            try await handle.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
     }
     
