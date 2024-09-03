@@ -11,10 +11,13 @@ import Crypto
 import _NIOFileSystemFoundationCompat
 
 extension Request {
+#warning("Fix")
     public var fileio: FileIO {
         return .init(
             allocator: self.application.allocator,
-            request: self
+            request: self,
+//            storage: self.application.storage
+            storage: NewStorage()
         )
     }
 }
@@ -37,14 +40,18 @@ public struct FileIO: Sendable {
 
     /// The underlying ``FileSystem`` to use
     private let fileSystem: FileSystem
+    
+    /// A cache to store e-tags in
+    private let storage: NewStorage
 
     /// Creates a new `FileIO`.
     ///
     /// See `Request.fileio()` to create one.
-    internal init(allocator: ByteBufferAllocator, request: Request) {
+    internal init(allocator: ByteBufferAllocator, request: Request, storage: NewStorage) {
         self.allocator = allocator
         self.request = request
         self.fileSystem = .shared
+        self.storage = storage
     }
 
     /// Generates a fresh ETag for a file or returns its currently cached one.
@@ -64,13 +71,11 @@ public struct FileIO: Sendable {
             }
             let buffer = try await chunks.collect(upTo: Int(fileSize))
             let digest = SHA256.hash(data: buffer.readableBytesView)
-            
-#warning("Tidy all this up with storage")
-            
+                        
             // update hash in dictionary
-            var hashes = request.application.storage.get(FileMiddleware.ETagHashes.self)
+            var hashes = await self.storage.get(FileMiddleware.ETagHashes.self)
             hashes?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
-            await request.application.storage.set(FileMiddleware.ETagHashes.self, to: hashes)
+            await self.storage.set(FileMiddleware.ETagHashes.self, to: hashes)
             return digest.hex
         }
     }

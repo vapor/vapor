@@ -1,5 +1,40 @@
 import Logging
 
+public actor NewStorage {
+    var storage: [ObjectIdentifier: Sendable]
+    
+    public init() {
+        self.storage = [:]
+    }
+    
+    /// Get the value of the given key if it exists and is of the proper type.
+    public func get<Key>(_ key: Key.Type) -> Key.Value?
+        where Key: StorageKey
+    {
+        guard let value = self.storage[ObjectIdentifier(Key.self)] as? Key.Value else {
+            return nil
+        }
+        return value
+    }
+
+    /// Set or remove a value for a given key, optionally providing a shutdown closure for the value.
+    ///
+    /// If a key that has a shutdown closure is removed by this method, the closure **is** invoked.
+    public func set<Key>(
+        _ key: Key.Type,
+        to value: Key.Value?
+    ) async
+        where Key: StorageKey
+    {
+        let key = ObjectIdentifier(Key.self)
+        if let value = value {
+            self.storage[key] = value
+        } else if let existing = self.storage[key] {
+            self.storage[key] = nil
+        }
+    }
+}
+
 /// A container providing arbitrary storage for extensions of an existing type, designed to obviate
 /// the problem of being unable to add stored properties to a type in an extension. Each stored item
 /// is keyed by a type conforming to ``StorageKey`` protocol.
