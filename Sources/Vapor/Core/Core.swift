@@ -48,11 +48,7 @@ extension Application {
             })
         }
     }
-
-    public var fileio: NonBlockingFileIO {
-        .init(threadPool: self.threadPool)
-    }
-
+    
     public var allocator: ByteBufferAllocator {
         self.core.storage.allocator
     }
