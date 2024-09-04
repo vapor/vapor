@@ -1,5 +1,5 @@
 @testable import Vapor
-import NIOHTTP1
+import enum NIOHTTP1.HTTPParserError
 import XCTest
 import AsyncHTTPClient
 import NIOEmbedded
