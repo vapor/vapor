@@ -1,5 +1,9 @@
 #if !canImport(Darwin)
+#if compiler(>=6.0)
+import Dispatch
+#else
 @preconcurrency import Dispatch
+#endif
 #endif
 import Foundation
 import XCTest
