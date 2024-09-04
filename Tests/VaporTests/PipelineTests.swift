@@ -382,7 +382,8 @@ final class PipelineTests: XCTestCase {
             var sleeps = 0
             for try await chunk in inbound {
                 data.writeImmutableBuffer(chunk)
-                data.writeImmutableBuffer(ByteBuffer(string: "\r\n"))
+                data.writeString("\r\n")
+                
                 if String(decoding: chunk.readableBytesView, as: UTF8.self).components(separatedBy: "\r\n").contains(where: { $0.hasPrefix("slept") }) {
                     sleeps += 1
                 }
