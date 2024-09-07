@@ -1,5 +1,4 @@
-#if os(Linux)
-// Needed because DispatchQueue isn't Sendable on Linux
+#if os(Linux) && compiler(<6.0)
 @preconcurrency import Foundation
 #else
 import Foundation
