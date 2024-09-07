@@ -331,7 +331,7 @@ final class PipelineTests: XCTestCase {
 
         try await channel.writeInbound(ByteBuffer(string: "GET /sleep/100 HTTP/1.1\r\n\r\nGET /sleep/0 HTTP/1.1\r\n\r\n"))
 
-        // We expect 6 responses to be there, however if there are less
+        // We expect 6 writes to be there - three parts (the head, body and separator for each request). However, if there are less
         // we need to have a timeout to avoid hanging the test
         let deadline = NIODeadline.now() + .milliseconds(200)
         var responses: [String] = []
