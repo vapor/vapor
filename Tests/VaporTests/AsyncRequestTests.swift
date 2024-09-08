@@ -219,7 +219,7 @@ final class AsyncRequestTests: XCTestCase {
             return
         }
 
-        let fiftyMB = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
+        let bigBody = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/upload")
         request.method = .POST
         request.body = .bytes(fiftyMB)
