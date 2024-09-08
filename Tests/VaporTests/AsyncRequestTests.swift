@@ -222,13 +222,13 @@ final class AsyncRequestTests: XCTestCase {
         let bigBody = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/upload")
         request.method = .POST
-        request.body = .bytes(fiftyMB)
+        request.body = .bytes(bigBody)
 
         for _ in 0..<10 {
             let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
             XCTAssertEqual(response.status, .ok)
             let body = try await response.body.collect(upTo: 1024 * 1024)
-            XCTAssertEqual(body.string, "Received \(fiftyMB.readableBytes) bytes")
+            XCTAssertEqual(body.string, "Received \(bigBody.readableBytes) bytes")
         }
     }
 }
