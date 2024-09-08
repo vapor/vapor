@@ -18,20 +18,17 @@ extension Request.Body {
             case terminated
         }
 
-        private let box: NIOLockedValueBox<State> = .init(.notCalledYet)
+        private let box: NIOLoopBoundBox<State>
         private var _state: State {
-            get {
-                return self.box.withLockedValue{ $0 }
-            }
-            set {
-                self.box.withLockedValue { $0 = newValue }
-            }
+            get { self.box.value }
+            set { self.box.value = newValue}
         }
 
         private let eventLoop: any EventLoop
 
         init(eventLoop: any EventLoop) {
             self.eventLoop = eventLoop
+            self.box = .init(.notCalledYet, eventLoop: eventLoop)
         }
 
         private func produceMore0() {
