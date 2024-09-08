@@ -10,7 +10,7 @@ extension Request.Body {
     ///
     /// `AsyncSequenceDelegate` can be created and **must be retained**
     /// in `Request.Body/makeAsyncIterator()` method.
-    fileprivate final class AsyncSequenceDelegate: Sendable, NIOAsyncSequenceProducerDelegate {
+    fileprivate final class AsyncSequenceDelegate: @unchecked Sendable, NIOAsyncSequenceProducerDelegate {
         private enum State {
             case notCalledYet
             case noSignalReceived
@@ -18,17 +18,12 @@ extension Request.Body {
             case terminated
         }
 
-        private let box: NIOLoopBoundBox<State>
-        private var _state: State {
-            get { self.box.value }
-            set { self.box.value = newValue}
-        }
+        private var _state: State = .notCalledYet
 
         private let eventLoop: any EventLoop
 
         init(eventLoop: any EventLoop) {
             self.eventLoop = eventLoop
-            self.box = .init(.notCalledYet, eventLoop: eventLoop)
         }
 
         private func produceMore0() {
