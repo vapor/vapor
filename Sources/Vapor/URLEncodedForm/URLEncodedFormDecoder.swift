@@ -367,6 +367,14 @@ private struct _Decoder: Decoder {
         mutating func decode<T: Decodable>(_: T.Type) throws -> T {
             defer { self.currentIndex += 1 }
             
+            guard !isAtEnd else {
+                let context = DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Unkeyed container is at end."
+                )
+                throw DecodingError.valueNotFound(T.self, context)
+            }
+            
             if self.allChildKeysAreNumbers {
                 // We can force-unwrap because we already checked data.allChildKeysAreNumbers in the initializer.
                 let childData = self.data.children[String(self.currentIndex)]!
