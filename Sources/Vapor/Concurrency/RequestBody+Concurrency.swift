@@ -29,9 +29,11 @@ extension Request.Body {
         private func produceMore0() {
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
-                case .notCalledYet, .noSignalReceived:
+                case .notCalledYet:
                     // We can just return here to signal to the producer that we want more data
-                    self._state = .noSignalReceived
+                    break
+                case .noSignalReceived:
+                    preconditionFailure()
                 case .waitingForSignalFromConsumer(let promise):
                     // We are waiting for a signal, so we need to fulfill the promise
                     self._state = .noSignalReceived
@@ -69,10 +71,12 @@ extension Request.Body {
         }
 
         func didTerminate() {
+            print("Producer: didTerminate - \(self._state)")
             self.eventLoop.execute { self.didTerminate0() }
         }
 
         func produceMore() {
+            print("Producer: produceMore - \(self._state)")
             self.eventLoop.execute { self.produceMore0() }
         }
     }
@@ -149,6 +153,7 @@ extension Request.Body: AsyncSequence {
             case .buffer(let buffer):
                 // Send the buffer to the async sequence
                 let result = source.yield(buffer)
+                print("Consumer: yield - \(result)")
                 // Inspect the source view and handle outcomes
                 switch result {
                 case .dropped:
