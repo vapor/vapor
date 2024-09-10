@@ -41,7 +41,12 @@ public final class ErrorMiddleware: Middleware {
             }
             
             // Report the error
-            req.logger.report(error: error, file: source.file, function: source.function, line: source.line)
+            req.logger.report(error: error,
+                              metadata: ["method" : .string(req.method.string),
+                                         "url" : .string(req.url.string)],
+                              file: source.file,
+                              function: source.function,
+                              line: source.line)
             
             // attempt to serialize the error to json
             let body: Response.Body
