@@ -168,6 +168,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     }
     
     override func tearDown() async throws {
+        await app.server.shutdown()
         try await app.asyncShutdown()
     }
     
@@ -175,7 +176,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         app.get("resource") { _ in compressiblePayload }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -206,7 +206,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -237,7 +236,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -268,7 +266,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -299,7 +296,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -331,7 +327,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertCompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -363,7 +358,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -395,7 +389,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertCompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -427,7 +420,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -458,7 +450,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertCompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -489,7 +480,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -520,7 +510,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -551,7 +540,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -583,7 +571,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -615,7 +602,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -646,7 +632,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -677,7 +662,6 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         }
         
         try app.server.start()
-        defer { app.server.shutdown() }
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
