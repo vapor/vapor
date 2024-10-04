@@ -19,7 +19,7 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:6
+    container: swift:6.0
     steps: 
       - name: Check out Vapor
         uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
   test-parallel:
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
-    container: swift:5.10
+    container: swift:6.0
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v4
