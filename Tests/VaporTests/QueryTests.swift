@@ -310,13 +310,12 @@ final class QueryTests: XCTestCase {
         XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
     }
     
-    func testNotCrashingWhenUnkeyedContainerIsAtEnd() {
+    func testNotCrashingWhenUnkeyedContainerIsAtEnd() async throws {
         struct Query: Decodable {
             let closedRange: ClosedRange<Double>
         }
         
-        let app = Application()
-        defer { app.shutdown() }
+        let app = await Application()
         
         let request = Request(application: app, on: app.eventLoopGroup.next())
         request.headers.contentType = .json
@@ -330,5 +329,7 @@ final class QueryTests: XCTestCase {
                 XCTFail("Caught error \"\(error)\", but not the expected: \"DecodingError.valueNotFound\"")
             }
         }
+        
+        try await app.shutdown()
     }
 }
