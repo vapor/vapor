@@ -1,8 +1,4 @@
-#if !canImport(Darwin) && swift(<5.9)
-@preconcurrency import Foundation
-#else
 import Foundation
-#endif
 import NIOHTTP1
 
 extension HTTPHeaders {
