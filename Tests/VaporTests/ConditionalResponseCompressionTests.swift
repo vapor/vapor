@@ -196,7 +196,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testUnknownType() async throws {
@@ -228,7 +228,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testImage() async throws {
@@ -260,7 +260,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testVideo() async throws {
@@ -292,7 +292,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testText() async throws {
@@ -324,7 +324,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testEnabledByResponse() async throws {
@@ -357,7 +357,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testDisabledByResponse() async throws {
@@ -390,7 +390,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testForceEnabledByResponse() async throws {
@@ -423,7 +423,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testForceDisabledByResponse() async throws {
@@ -456,7 +456,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testEnabledByRoute() async throws {
@@ -488,7 +488,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testDisabledByRoute() async throws {
@@ -520,7 +520,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testDisabledByRouteButReset() async throws {
@@ -552,7 +552,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testEnabledByRouteButReset() async throws {
@@ -584,7 +584,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testDisabledByRouteResetByResponse() async throws {
@@ -617,7 +617,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testEnabledByRouteResetByResponse() async throws {
@@ -650,7 +650,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testNoopsDisabledByRouteButReset() async throws {
@@ -682,7 +682,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
     
     func testNoopsEnabledByRouteButReset() async throws {
@@ -714,7 +714,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
         
-        try await app.asyncShutdown()
+        await app.server.shutdown()
     }
 }
 
