@@ -25,7 +25,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.14.0"),
         
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "5.0.0"),
         
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.9.0"),
@@ -102,7 +102,8 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
             ],
-            resources: [.copy("Resources")]
+            resources: [.copy("Resources")],
+            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
         ),
         
         // Testing

@@ -2,7 +2,7 @@ import Foundation
 import NIOCore
 import NIOHTTP1
 
-#if compiler(<6.0)
+#if swift(<6.0)
 extension Foundation.JSONEncoder: @unchecked Swift.Sendable {}
 extension Foundation.JSONDecoder: @unchecked Swift.Sendable {}
 #endif

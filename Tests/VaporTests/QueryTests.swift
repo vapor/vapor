@@ -309,4 +309,26 @@ final class QueryTests: XCTestCase {
         XCTAssertFalse(try req.query.decode(BarStruct.self).bar)
         XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
     }
+    
+    func testNotCrashingWhenUnkeyedContainerIsAtEnd() {
+        struct Query: Decodable {
+            let closedRange: ClosedRange<Double>
+        }
+        
+        let app = Application()
+        defer { app.shutdown() }
+        
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        request.headers.contentType = .json
+        request.url.path = "/"
+        request.url.query = "closedRange=1"
+        
+        XCTAssertThrowsError(try request.query.decode(Query.self)) { error in
+            if case .valueNotFound(_, let context) = error as? DecodingError {
+                XCTAssertEqual(context.debugDescription, "Unkeyed container is at end.")
+            } else {
+                XCTFail("Caught error \"\(error)\", but not the expected: \"DecodingError.valueNotFound\"")
+            }
+        }
+    }
 }
