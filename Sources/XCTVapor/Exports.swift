@@ -1,2 +1,2 @@
-@_documentation(visibility: internal) import XCTest
-@_documentation(visibility: internal) import Vapor
+@_documentation(visibility: internal) @_exported import XCTest
+@_documentation(visibility: internal) @_exported import Vapor
