@@ -41,6 +41,10 @@ jobs:
     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
     with:
       with_tsan: false
+      with_musl: true
+      extra_musl_flags: --target Vapor
+      ios_xcodebuild_action: ''
+      ios_scheme_name: Vapor
     secrets: inherit
 
   test-parallel:
