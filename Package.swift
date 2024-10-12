@@ -119,6 +119,7 @@ let package = Package(
             dependencies: [
                 .product(name: "NIOTestUtils", package: "swift-nio"),
                 .target(name: "XCTVapor"),
+                "Vapor",
             ],
             resources: [
                 .copy("Utilities/foo.txt"),
