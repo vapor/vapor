@@ -53,6 +53,18 @@ jobs:
       - name: Run tests
         run: swift test --parallel
 
+  test-musl:
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v4
+      - name: Install SDK
+        run: swift sdk install https://download.swift.org/swift-6.0.1-release/static-sdk/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE_static-linux-0.0.1.artifactbundle.tar.gz --checksum d4f46ba40e11e697387468e18987ee622908bc350310d8af54eb5e17c2ff5481
+      - name: Build
+        run: swift build --swift-sdk x86_64-swift-linux-musl
+
   run-codeql: 
     if: ${{ !(github.event.pull_request.draft || false) }}
     permissions: { security-events: write, packages: read, actions: read, contents: read }
