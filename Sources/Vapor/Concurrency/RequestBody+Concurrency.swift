@@ -15,9 +15,11 @@ extension Request.Body {
             case notCalledYet
             case noSignalReceived
             case waitingForSignalFromConsumer(EventLoopPromise<Void>)
+            case terminated
         }
 
         private var _state: State = .notCalledYet
+
         private let eventLoop: any EventLoop
 
         init(eventLoop: any EventLoop) {
@@ -27,29 +29,32 @@ extension Request.Body {
         private func produceMore0() {
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
-            case .notCalledYet:
-                // We can just return here to sign to the producer that we want more data
-                break
-            case .noSignalReceived:
-                preconditionFailure()
-            case .waitingForSignalFromConsumer(let promise):
-                self._state = .noSignalReceived
-                promise.succeed(())
+                case .notCalledYet, .noSignalReceived:
+                    // We can just return here to signal to the producer that we want more data
+                    self._state = .noSignalReceived
+                case .waitingForSignalFromConsumer(let promise):
+                    // We are waiting for a signal, so we need to fulfill the promise
+                    self._state = .noSignalReceived
+                    promise.succeed(())
+                case .terminated:
+                    // We are terminated, so we can just return
+                    break
             }
         }
 
         private func didTerminate0() {
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
-            case .notCalledYet:
-                // Means didn't hit the backpressure limits, so just return
-                break
-            case .noSignalReceived:
-                // we will inform the producer, since the next write will fail.
-                break
-            case .waitingForSignalFromConsumer(let promise):
-                self._state = .noSignalReceived
-                promise.fail(CancellationError())
+                case .notCalledYet, .noSignalReceived:
+                    // We are not waiting for a signal, so we can just return
+                    self._state = .terminated
+                case .waitingForSignalFromConsumer(let promise):
+                    // We are waiting for a signal, so we need to fail the promise
+                    self._state = .terminated
+                    promise.fail(CancellationError())
+                case .terminated:
+                    // We are terminated, so we can just return
+                    break
             }
         }
 
@@ -58,8 +63,8 @@ extension Request.Body {
             switch self._state {
             case .noSignalReceived, .notCalledYet:
                 self._state = .waitingForSignalFromConsumer(promise)
-            case .waitingForSignalFromConsumer:
-                preconditionFailure()
+            case .waitingForSignalFromConsumer, .terminated:
+                preconditionFailure("registerBackpressurePromise called in invalid state")
             }
         }
 
@@ -83,7 +88,12 @@ extension Request.Body: AsyncSequence {
     public struct AsyncIterator: AsyncIteratorProtocol {
         public typealias Element = ByteBuffer
 
-        fileprivate typealias Underlying = NIOThrowingAsyncSequenceProducer<ByteBuffer, any Error, NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark, Request.Body.AsyncSequenceDelegate>.AsyncIterator
+        fileprivate typealias Underlying = NIOThrowingAsyncSequenceProducer<
+            ByteBuffer, 
+            any Error, 
+            NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark, 
+            Request.Body.AsyncSequenceDelegate
+        >.AsyncIterator
 
         private var underlying: Underlying
 
@@ -105,15 +115,13 @@ extension Request.Body: AsyncSequence {
     /// Example: app.on(.POST, "/upload", body: .stream) { ... }
     private func checkBodyStorage() {
         switch request.bodyStorage.withLockedValue({ $0 }) {
-        case .stream(_):
-            break
-        case .collected(_):
+        case .stream(_), .collected(_):
             break
         default:
             preconditionFailure("""
             AsyncSequence streaming should use a body of type .stream()
             Example: app.on(.POST, "/upload", body: .stream) { ... }
-           """)
+            """)
         }
     }
     
