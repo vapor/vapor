@@ -38,7 +38,7 @@ jobs:
         run: swift test --package-path ./provider
 
   unit-tests:
-    uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
+    uses: MahdiBM/ci/.github/workflows/run-unit-tests.yml@patch-5
     with:
       with_tsan: false
       with_musl: true
