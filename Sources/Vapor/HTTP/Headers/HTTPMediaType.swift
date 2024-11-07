@@ -277,6 +277,10 @@ public extension HTTPMediaType {
     static let tiff = HTTPMediaType(type: "image", subType: "tiff")
     /// WebP image.
     static let webp = HTTPMediaType(type: "image", subType: "webp")
+    /// JPEG XL image.
+    static let jxl = HTTPMediaType(type: "image", subType: "jxl")
+    /// AVIF image.
+    static let avif = HTTPMediaType(type: "image", subType: "avif")
     /// Basic audio.
     static let audio = HTTPMediaType(type: "audio", subType: "basic")
     /// MIDI audio.
@@ -694,6 +698,8 @@ let fileExtensionMediaTypeMapping: [String: HTTPMediaType] = [
     "tiff": HTTPMediaType(type: "image", subType: "tiff"),
     "tif": HTTPMediaType(type: "image", subType: "tiff"),
     "webp": HTTPMediaType(type: "image", subType: "webp"),
+    "jxl": HTTPMediaType(type: "image", subType: "jxl"),
+    "avif": HTTPMediaType(type: "image", subType: "avif"),
     "djvu": HTTPMediaType(type: "image", subType: "vnd.djvu"),
     "djv": HTTPMediaType(type: "image", subType: "vnd.djvu"),
     "ico": HTTPMediaType(type: "image", subType: "vnd.microsoft.icon"),
@@ -900,6 +906,8 @@ extension HTTPMediaTypeSet {
         HTTPMediaType(type: "image", subType: "png"),
         HTTPMediaType(type: "image", subType: "tiff"),
         HTTPMediaType(type: "image", subType: "webp"),
+        HTTPMediaType(type: "image", subType: "jxl"),
+        HTTPMediaType(type: "image", subType: "avif"),
         HTTPMediaType(type: "image", subType: "vnd.djvu"),
         HTTPMediaType(type: "image", subType: "vnd.microsoft.icon"),
         HTTPMediaType(type: "image", subType: "vnd.wap.wbmp"),
