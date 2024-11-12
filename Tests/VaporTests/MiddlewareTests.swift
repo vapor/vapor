@@ -2,6 +2,7 @@ import XCTVapor
 import XCTest
 import Vapor
 import NIOCore
+import Tracing
 
 final class MiddlewareTests: XCTestCase {
     var app: Application!
@@ -144,4 +145,112 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(error, .publicDirectoryIsNotAFolder)
         }
     }
+    
+    func testTracingMiddleware() async throws {
+        let tracer = TestTracer()
+        InstrumentationSystem.bootstrap(tracer)
+        app.grouped(TracingMiddleware()).get("testTracing") { req -> String in
+            return "done"
+        }
+
+        try await app.testable().test(.GET, "/testTracing") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "done")
+        }
+        
+        let span = try XCTUnwrap(tracer.spans.first)
+        XCTAssertEqual(span.operationName, "GET /testTracing")
+        
+        XCTAssertEqual(span.attributes["http.request.method"]?.toSpanAttribute(), "GET")
+        XCTAssertEqual(span.attributes["url.path"]?.toSpanAttribute(), "/testTracing")
+        XCTAssertEqual(span.attributes["url.scheme"]?.toSpanAttribute(), nil)
+        
+        XCTAssertEqual(span.attributes["http.route"]?.toSpanAttribute(), "/testTracing")
+        XCTAssertEqual(span.attributes["network.protocol.name"]?.toSpanAttribute(), "http")
+        XCTAssertEqual(span.attributes["server.address"]?.toSpanAttribute(), "127.0.0.1")
+        XCTAssertEqual(span.attributes["server.port"]?.toSpanAttribute(), 8080)
+        XCTAssertEqual(span.attributes["url.query"]?.toSpanAttribute(), nil)
+        
+        XCTAssertEqual(span.attributes["client.address"]?.toSpanAttribute(), nil)
+        XCTAssertEqual(span.attributes["network.peer.address"]?.toSpanAttribute(), nil)
+        XCTAssertEqual(span.attributes["network.peer.port"]?.toSpanAttribute(), nil)
+        XCTAssertEqual(span.attributes["network.protocol.version"]?.toSpanAttribute(), "1.1")
+        
+        XCTAssertEqual(span.attributes["user_agent.original"]?.toSpanAttribute(), nil)
+        
+        XCTAssertEqual(span.attributes["http.response.status_code"]?.toSpanAttribute(), 200)
+    }
 }
+
+final class TestTracer: Tracer {
+    typealias Span = TestSpan
+    
+    var spans: [TestSpan] = []
+    
+    func startSpan(
+        _ operationName: String,
+        context: @autoclosure () -> ServiceContext,
+        ofKind kind: SpanKind,
+        at instant: @autoclosure () -> some TracerInstant,
+        function: String,
+        file fileID: String,
+        line: UInt
+    ) -> TestSpan {
+        let span = TestSpan(
+            operationName,
+            context: context()
+        )
+        self.spans.append(span)
+        return span
+    }
+    
+    func forceFlush() {
+        return
+    }
+    
+    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContextModule.ServiceContext, using extractor: Extract) where Carrier == Extract.Carrier, Extract : Instrumentation.Extractor {
+        return
+    }
+    
+    func inject<Carrier, Inject>(_ context: ServiceContextModule.ServiceContext, into carrier: inout Carrier, using injector: Inject) where Carrier == Inject.Carrier, Inject : Instrumentation.Injector {
+        return
+    }
+}
+
+final class TestSpan: Span {
+    let context: ServiceContext
+    var operationName: String
+    var attributes: Tracing.SpanAttributes = .init()
+    var isRecording: Bool = true
+    
+    private var status: SpanStatus?
+    private var events: [SpanEvent] = []
+    
+    init (_ operationName: String, context: ServiceContext) {
+        self.operationName = operationName
+        self.context = context
+    }
+    
+    func setStatus(_ status: SpanStatus) {
+        self.status = status
+    }
+    
+    func addEvent(_ event: SpanEvent) {
+        events.append(event)
+    }
+    
+    func recordError<Instant>(_ error: any Error, attributes: Tracing.SpanAttributes, at instant: @autoclosure () -> Instant) where Instant : Tracing.TracerInstant {
+        return
+    }
+    
+    func addLink(_ link: Tracing.SpanLink) {
+        return
+    }
+    
+    func end<Instant>(at instant: @autoclosure () -> Instant) where Instant : Tracing.TracerInstant {
+        isRecording = false
+    }
+}
+
+extension TestTracer: @unchecked Sendable {}
+extension TestSpan: @unchecked Sendable {}
