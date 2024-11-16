@@ -17,9 +17,10 @@ final class AsyncSessionTests: XCTestCase {
     
     func testSessionDestroy() async throws {
         actor MockKeyedCache: AsyncSessionDriver {
+            
             var ops: [String] = []
             init() { }
-
+            
             func getOps() -> [String] {
                 ops
             }
@@ -27,30 +28,30 @@ final class AsyncSessionTests: XCTestCase {
             func resetOps() {
                 self.ops = []
             }
-
-            func createSession(_ data: SessionData, for request: Request) async throws -> SessionID {
+            
+            func createSession(_ sessionID: SessionID? = nil, _ data: SessionData, for request: Request) async throws -> SessionID {
                 self.ops.append("create \(data)")
                 return .init(string: "a")
             }
-
+            
             func readSession(_ sessionID: SessionID, for request: Request) async throws -> SessionData? {
                 self.ops.append("read \(sessionID)")
                 return SessionData()
             }
-
+            
             func updateSession(_ sessionID: SessionID, to data: SessionData, for request: Request) async throws -> SessionID {
                 self.ops.append("update \(sessionID) to \(data)")
                 return sessionID
             }
-
+            
             func deleteSession(_ sessionID: SessionID, for request: Request) async throws {
                 self.ops.append("delete \(sessionID)")
                 return
             }
         }
-
+        
         var cookie: HTTPCookies.Value?
-
+        
         let cache = MockKeyedCache()
         app.sessions.use { _ in cache }
         let sessions = app.routes.grouped(app.sessions.middleware)
@@ -62,7 +63,7 @@ final class AsyncSessionTests: XCTestCase {
             req.session.destroy()
             return "del"
         }
-
+        
         try await app.testable().test(.GET, "/set") { res in
             XCTAssertEqual(res.body.string, "set")
             cookie = res.headers.setCookie?["vapor-session"]
@@ -73,9 +74,9 @@ final class AsyncSessionTests: XCTestCase {
             ])
             await cache.resetOps()
         }
-
+        
         XCTAssertEqual(cookie?.string, "a")
-
+        
         var headers = HTTPHeaders()
         var cookies = HTTPCookies()
         cookies["vapor-session"] = cookie
@@ -94,13 +95,13 @@ final class AsyncSessionTests: XCTestCase {
         // Configure sessions.
         app.sessions.use(.memory)
         app.middleware.use(app.sessions.middleware)
-
+        
         // Adds data to the request session.
         app.get("set") { req -> HTTPStatus in
             req.session.data["foo"] = "bar"
             return .ok
         }
-
+        
         // Fetches data from the request session.
         app.get("get") { req -> String in
             guard let foo = req.session.data["foo"] else {
@@ -108,13 +109,13 @@ final class AsyncSessionTests: XCTestCase {
             }
             return foo
         }
-
-
+        
+        
         // Test accessing session with no cookie.
         try await app.test(.GET, "get") { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
-
+        
         // Test setting session with invalid cookie.
         var newCookie: HTTPCookies.Value?
         try await app.test(.GET, "set", beforeRequest: { req async in
@@ -127,7 +128,7 @@ final class AsyncSessionTests: XCTestCase {
             XCTAssertNotEqual(newCookie?.string, "foo")
             XCTAssertEqual(res.status, .ok)
         })
-
+        
         // Test accessing newly created session.
         try await app.test(.GET, "get", beforeRequest: { req async in
             // Pass cookie from previous request.
@@ -138,7 +139,7 @@ final class AsyncSessionTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         })
     }
-
+    
     func testCookieQuotes() async throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)

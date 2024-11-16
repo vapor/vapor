@@ -29,7 +29,7 @@ final class SessionTests: XCTestCase {
                 self.ops = []
             }
 
-            func createSession(_ data: SessionData, for request: Request) async throws -> SessionID {
+            func createSession(_ sessionID: SessionID? = nil, _ data: SessionData, for request: Request) async throws -> SessionID {
                 self.ops.append("create \(data)")
                 return .init(string: "a")
             }

@@ -4,17 +4,17 @@ import NIOCore
 ///
 /// This is an async version of `SessionDriver`
 public protocol AsyncSessionDriver: SessionDriver {
-    func createSession(_ data: SessionData, for request: Request) async throws -> SessionID
+    func createSession(_ sessionID: SessionID?, _ data: SessionData, for request: Request) async throws -> SessionID
     func readSession(_ sessionID: SessionID, for request: Request) async throws -> SessionData?
     func updateSession(_ sessionID: SessionID, to data: SessionData, for request: Request) async throws -> SessionID
     func deleteSession(_ sessionID: SessionID, for request: Request) async throws
 }
 
 extension AsyncSessionDriver {
-    public func createSession(_ data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
+  public func createSession(_ sessionID: SessionID? = nil, _ data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
         let promise = request.eventLoop.makePromise(of: SessionID.self)
         promise.completeWithTask {
-            try await self.createSession(data, for: request)
+            try await self.createSession(sessionID, data, for: request)
         }
         return promise.futureResult
     }
