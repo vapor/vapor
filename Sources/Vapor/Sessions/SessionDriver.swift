@@ -3,6 +3,7 @@ import NIOCore
 /// Capable of managing CRUD operations for `Session`s.
 public protocol SessionDriver: Sendable {
     func createSession(
+        _ sessionID: SessionID?,
         _ data: SessionData,
         for request: Request
     ) -> EventLoopFuture<SessionID>

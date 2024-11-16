@@ -71,7 +71,7 @@ public final class SessionsMiddleware: Middleware {
                 createOrUpdate = self.session.updateSession(id, to: session.data, for: request)
             } else {
                 // No cookie, this is a new session.
-                createOrUpdate = self.session.createSession(session.data, for: request)
+                createOrUpdate = self.session.createSession(nil, session.data, for: request)
             }
 
             // After create or update, set cookie on the response.
