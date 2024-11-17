@@ -1,6 +1,5 @@
 Packages
 .build
-.index-build
 .DS_Store
 *.xcodeproj
 DerivedData/
