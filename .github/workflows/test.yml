@@ -20,14 +20,14 @@ jobs:
           - vapor/apns
     runs-on: ubuntu-latest
     container: swift:6.0
-    steps: 
+    steps:
       - name: Check out Vapor
         uses: actions/checkout@v4
         with:
           path: vapor
       - name: Check out provider
         uses: actions/checkout@v4
-        with: 
+        with:
           repository: ${{ matrix.provider }}
           path: provider
       - name: Use local Vapor
@@ -40,6 +40,7 @@ jobs:
   unit-tests:
     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
     with:
+      with_release_mode_testing: true
       with_tsan: false
       with_musl: true
       extra_musl_flags: --target Vapor
@@ -57,7 +58,7 @@ jobs:
       - name: Run tests
         run: swift test --parallel
 
-  run-codeql: 
+  run-codeql:
     if: ${{ !(github.event.pull_request.draft || false) }}
     permissions: { security-events: write, packages: read, actions: read, contents: read }
     strategy:
