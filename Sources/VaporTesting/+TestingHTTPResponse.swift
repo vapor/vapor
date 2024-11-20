@@ -4,10 +4,19 @@ import Testing
 public func expectContent<D>(
     _ type: D.Type,
     _ res: TestingHTTPResponse,
-    sourceLocation: Testing.SourceLocation = #_sourceLocation,
+    fileID: String = #fileID,
+    filePath: String = #filePath,
+    line: Int = #line,
+    column: Int = #column,
     _ closure: (D) throws -> ()
 ) rethrows where D: Decodable {
     guard let contentType = res.headers.contentType else {
+        let sourceLocation = Testing.SourceLocation(
+            fileID: fileID,
+            filePath: filePath,
+            line: line,
+            column: column
+        )
         Issue.record("response does not contain content type", sourceLocation: sourceLocation)
         return
     }
@@ -18,6 +27,12 @@ public func expectContent<D>(
         let decoder = try ContentConfiguration.global.requireDecoder(for: contentType)
         content = try decoder.decode(D.self, from: res.body, headers: res.headers)
     } catch {
+        let sourceLocation = Testing.SourceLocation(
+            fileID: fileID,
+            filePath: filePath,
+            line: line,
+            column: column
+        )
         Issue.record("could not decode body: \(error)", sourceLocation: sourceLocation)
         return
     }
@@ -28,8 +43,17 @@ public func expectContent<D>(
 public func expectContains(
     _ haystack: String?,
     _ needle: String?,
-    sourceLocation: Testing.SourceLocation = #_sourceLocation
+    fileID: String = #fileID,
+    filePath: String = #filePath,
+    line: Int = #line,
+    column: Int = #column
 ) {
+    let sourceLocation = Testing.SourceLocation(
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column
+    )
     switch (haystack, needle) {
     case (.some(let haystack), .some(let needle)):
         #expect(haystack.contains(needle), "\(haystack) does not contain \(needle)", sourceLocation: sourceLocation)
@@ -45,11 +69,20 @@ public func expectContains(
 public func expectJSONEquals<T>(
     _ data: String?,
     _ test: T,
-    sourceLocation: Testing.SourceLocation = #_sourceLocation
+    fileID: String = #fileID,
+    filePath: String = #filePath,
+    line: Int = #line,
+    column: Int = #column
 )
 where T: Codable & Equatable
 {
     guard let data = data else {
+        let sourceLocation = Testing.SourceLocation(
+            fileID: fileID,
+            filePath: filePath,
+            line: line,
+            column: column
+        )
         Issue.record("nil does not equal \(test)", sourceLocation: sourceLocation)
         return
     }
@@ -57,6 +90,12 @@ where T: Codable & Equatable
         let decoded = try JSONDecoder().decode(T.self, from: Data(data.utf8))
         #expect(decoded == test, sourceLocation: sourceLocation)
     } catch {
+        let sourceLocation = Testing.SourceLocation(
+            fileID: fileID,
+            filePath: filePath,
+            line: line,
+            column: column
+        )
         Issue.record("could not decode \(T.self): \(error)", sourceLocation: sourceLocation)
     }
 }

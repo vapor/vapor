@@ -1,5 +1,6 @@
 #if compiler(>=6.0)
 import NIOHTTP1
+import NIOCore
 import Testing
 
 extension TestingApplicationTester {
@@ -9,7 +10,10 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        sourceLocation: Testing.SourceLocation = #_sourceLocation,
+        fileID: String = #fileID,
+        filePath: String = #filePath,
+        line: Int = #line,
+        column: Int = #column,
         afterResponse: (TestingHTTPResponse) async throws -> ()
     ) async throws -> TestingApplicationTester {
         try await self.test(
@@ -17,7 +21,10 @@ extension TestingApplicationTester {
             path,
             headers: headers,
             body: body,
-            sourceLocation: sourceLocation,
+            fileID: fileID,
+            filePath: filePath,
+            line: line,
+            column: column,
             beforeRequest: { _ in },
             afterResponse: afterResponse
         )
@@ -29,7 +36,10 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        sourceLocation: Testing.SourceLocation = #_sourceLocation,
+        fileID: String = #fileID,
+        filePath: String = #filePath,
+        line: Int = #line,
+        column: Int = #column,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in },
         afterResponse: (TestingHTTPResponse) async throws -> () = { _ in }
     ) async throws -> TestingApplicationTester {
@@ -44,6 +54,12 @@ extension TestingApplicationTester {
             let response = try await self.performTest(request: request)
             try await afterResponse(response)
         } catch {
+            let sourceLocation = Testing.SourceLocation(
+                fileID: fileID,
+                filePath: filePath,
+                line: line,
+                column: column
+            )
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
         }
@@ -55,7 +71,10 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        sourceLocation: Testing.SourceLocation = #_sourceLocation,
+        fileID: String = #fileID,
+        filePath: String = #filePath,
+        line: Int = #line,
+        column: Int = #column,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in }
     ) async throws -> TestingHTTPResponse {
         var request = TestingHTTPRequest(
@@ -68,6 +87,12 @@ extension TestingApplicationTester {
         do {
             return try await self.performTest(request: request)
         } catch {
+            let sourceLocation = Testing.SourceLocation(
+                fileID: fileID,
+                filePath: filePath,
+                line: line,
+                column: column
+            )
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
         }
@@ -80,14 +105,20 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        sourceLocation: Testing.SourceLocation = #_sourceLocation,
+        fileID: String = #fileID,
+        filePath: String = #filePath,
+        line: Int = #line,
+        column: Int = #column,
         afterResponse: (TestingHTTPResponse) throws -> ()
     ) throws -> TestingApplicationTester {
         try self.test(
             method,
             path,
             headers: headers,
-            sourceLocation: sourceLocation,
+            fileID: fileID,
+            filePath: filePath,
+            line: line,
+            column: column,
             beforeRequest: { _ in },
             afterResponse: afterResponse
         )
@@ -100,7 +131,10 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        sourceLocation: Testing.SourceLocation = #_sourceLocation,
+        fileID: String = #fileID,
+        filePath: String = #filePath,
+        line: Int = #line,
+        column: Int = #column,
         beforeRequest: (inout TestingHTTPRequest) throws -> () = { _ in },
         afterResponse: (TestingHTTPResponse) throws -> () = { _ in }
     ) throws -> TestingApplicationTester {
@@ -115,6 +149,12 @@ extension TestingApplicationTester {
             let response = try self.performTest(request: request)
             try afterResponse(response)
         } catch {
+            let sourceLocation = Testing.SourceLocation(
+                fileID: fileID,
+                filePath: filePath,
+                line: line,
+                column: column
+            )
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
         }
@@ -127,7 +167,10 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        sourceLocation: Testing.SourceLocation = #_sourceLocation,
+        fileID: String = #fileID,
+        filePath: String = #filePath,
+        line: Int = #line,
+        column: Int = #column,
         beforeRequest: (inout TestingHTTPRequest) throws -> () = { _ in }
     ) throws -> TestingHTTPResponse {
         var request = TestingHTTPRequest(
@@ -140,6 +183,12 @@ extension TestingApplicationTester {
         do {
             return try self.performTest(request: request)
         } catch {
+            let sourceLocation = Testing.SourceLocation(
+                fileID: fileID,
+                filePath: filePath,
+                line: line,
+                column: column
+            )
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
         }
