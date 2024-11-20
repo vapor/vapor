@@ -76,13 +76,13 @@ public func expectJSONEquals<T>(
 )
 where T: Codable & Equatable
 {
+    let sourceLocation = Testing.SourceLocation(
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column
+    )
     guard let data = data else {
-        let sourceLocation = Testing.SourceLocation(
-            fileID: fileID,
-            filePath: filePath,
-            line: line,
-            column: column
-        )
         Issue.record("nil does not equal \(test)", sourceLocation: sourceLocation)
         return
     }
@@ -90,12 +90,6 @@ where T: Codable & Equatable
         let decoded = try JSONDecoder().decode(T.self, from: Data(data.utf8))
         #expect(decoded == test, sourceLocation: sourceLocation)
     } catch {
-        let sourceLocation = Testing.SourceLocation(
-            fileID: fileID,
-            filePath: filePath,
-            line: line,
-            column: column
-        )
         Issue.record("could not decode \(T.self): \(error)", sourceLocation: sourceLocation)
     }
 }
