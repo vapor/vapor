@@ -40,8 +40,6 @@ public final class TracingMiddleware: AsyncMiddleware {
                 attributes["network.peer.port"] = request.remoteAddress?.port
                 attributes["network.protocol.version"] = "\(request.version.major).\(request.version.minor)"
                 attributes["user_agent.original"] = request.headers[.userAgent].first
-                
-                // Opt-in
             }
             
             let response = try await next.respond(to: request)
