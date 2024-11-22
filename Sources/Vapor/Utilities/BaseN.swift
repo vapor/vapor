@@ -55,11 +55,7 @@ public struct BaseNEncoding: Sendable {
                 p[n] = table[(buf &<< (bits &- bufBits)) & mask]; n &+= 1
                 if let pad = pad {
                     let pn = p.baseAddress!.advanced(by: n)
-#if swift(<5.8)
-                    pn.assign(repeating: pad, count: padding)
-#else
                     pn.update(repeating: pad, count: padding)
-#endif
                     n &+= padding
                 }
             }

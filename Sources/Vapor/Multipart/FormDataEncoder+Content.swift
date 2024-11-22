@@ -10,7 +10,7 @@ extension FormDataEncoder: ContentEncoder {
     public func encode<E: Encodable>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws {
         let boundary = "----vaporBoundary\(randomBoundaryData())"
 
-        headers.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
+        headers.contentType = HTTPMediaType.formData(boundary: boundary)
         if !userInfo.isEmpty {
             var actualEncoder = self  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
 

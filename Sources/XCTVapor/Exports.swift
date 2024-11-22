@@ -1,6 +1,2 @@
-#if !BUILDING_DOCC
-
-@_exported import XCTest
-@_exported import Vapor
-
-#endif
+@_documentation(visibility: internal) @_exported import XCTest
+@_documentation(visibility: internal) @_exported import Vapor
