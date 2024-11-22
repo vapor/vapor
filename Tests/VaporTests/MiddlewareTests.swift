@@ -153,10 +153,17 @@ final class MiddlewareTests: XCTestCase {
             return "done"
         }
 
-        try await app.testable().test(.GET, "/testTracing") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "done")
-        }
+        try await app.testable(method: .running(hostname: "127.0.0.1", port: 8080)).test(
+            .GET,
+            "/testTracing?foo=bar",
+            beforeRequest: { request in
+                request.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
+            },
+            afterResponse: { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body.string, "done")
+            }
+        )
         
         let span = try XCTUnwrap(tracer.spans.first)
         XCTAssertEqual(span.operationName, "GET /testTracing")
@@ -169,14 +176,13 @@ final class MiddlewareTests: XCTestCase {
         XCTAssertEqual(span.attributes["network.protocol.name"]?.toSpanAttribute(), "http")
         XCTAssertEqual(span.attributes["server.address"]?.toSpanAttribute(), "127.0.0.1")
         XCTAssertEqual(span.attributes["server.port"]?.toSpanAttribute(), 8080)
-        XCTAssertEqual(span.attributes["url.query"]?.toSpanAttribute(), nil)
+        XCTAssertEqual(span.attributes["url.query"]?.toSpanAttribute(), "foo=bar")
         
-        XCTAssertEqual(span.attributes["client.address"]?.toSpanAttribute(), nil)
-        XCTAssertEqual(span.attributes["network.peer.address"]?.toSpanAttribute(), nil)
-        XCTAssertEqual(span.attributes["network.peer.port"]?.toSpanAttribute(), nil)
+        XCTAssertEqual(span.attributes["client.address"]?.toSpanAttribute(), "127.0.0.1")
+        XCTAssertEqual(span.attributes["network.peer.address"]?.toSpanAttribute(), "127.0.0.1")
+        XCTAssertNotNil(span.attributes["network.peer.port"]?.toSpanAttribute())
         XCTAssertEqual(span.attributes["network.protocol.version"]?.toSpanAttribute(), "1.1")
-        
-        XCTAssertEqual(span.attributes["user_agent.original"]?.toSpanAttribute(), nil)
+        XCTAssertEqual(span.attributes["user_agent.original"]?.toSpanAttribute(), "test")
         
         XCTAssertEqual(span.attributes["http.response.status_code"]?.toSpanAttribute(), 200)
     }
