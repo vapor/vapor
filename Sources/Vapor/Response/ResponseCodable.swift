@@ -1,5 +1,6 @@
 import NIOCore
 import NIOHTTP1
+import ServiceContextModule
 
 /// Can convert `self` to a `Response`.
 ///
@@ -89,7 +90,9 @@ extension EventLoopFuture: ResponseEncodable where Value: ResponseEncodable {
     // See `ResponseEncodable`.
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
         return self.flatMap { t in
-            return t.encodeResponse(for: request)
+            return ServiceContext.withValue(request.serviceContext) {
+                t.encodeResponse(for: request)
+            }
         }
     }
 }

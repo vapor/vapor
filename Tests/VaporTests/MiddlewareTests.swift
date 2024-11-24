@@ -149,9 +149,25 @@ final class MiddlewareTests: XCTestCase {
     func testTracingMiddleware() async throws {
         let tracer = TestTracer()
         InstrumentationSystem.bootstrap(tracer)
-        app.grouped(TracingMiddleware()).get("testTracing") { req -> String in
+        
+        struct TestServiceContextMiddleware: Middleware {
+            func respond(to request: Request, chainingTo next: any Responder) -> EventLoopFuture<Response> {
+                XCTAssertNotNil(ServiceContext.current)
+                return next.respond(to: request)
+            }
+        }
+        
+        app.grouped(
+            TracingMiddleware()
+        ).grouped(
+            TestServiceContextMiddleware()
+        ).get("testTracing") { req -> String in
             // Validates that TracingMiddleware sets the serviceContext
             XCTAssertNotNil(req.serviceContext)
+            // Validates that the span's service context is propogated into the
+            // Task.local storage of the responder closure, thereby ensuring that
+            // spans created in the closure are nested under the request span.
+            XCTAssertNotNil(ServiceContext.current)
             return "done"
         }
 
