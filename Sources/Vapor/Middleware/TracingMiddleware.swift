@@ -7,11 +7,20 @@ public final class TracingMiddleware: AsyncMiddleware {
     public init() {}
     
     public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+        let parentContext = request.serviceContext
         return try await withSpan(
             // Name: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
             request.route?.description ?? "vapor_route_undefined",
+            context: parentContext,
             ofKind: .server
         ) { span in
+            // Set the request.serviceContext for the duration of this middleware & then reset it to parent
+            // Using this pattern in `withSpan` allows spans to nest across sequential future chains
+            request.serviceContext = span.context
+            defer {
+                request.serviceContext = parentContext
+            }
+            
             // Attributes: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#http-server-semantic-conventions
             span.updateAttributes { attributes in
                 // Required
@@ -41,7 +50,6 @@ public final class TracingMiddleware: AsyncMiddleware {
                 attributes["network.protocol.version"] = "\(request.version.major).\(request.version.minor)"
                 attributes["user_agent.original"] = request.headers[.userAgent].first
             }
-            
             let response = try await next.respond(to: request)
             
             span.updateAttributes { attributes in

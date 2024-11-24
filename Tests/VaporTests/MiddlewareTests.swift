@@ -150,6 +150,8 @@ final class MiddlewareTests: XCTestCase {
         let tracer = TestTracer()
         InstrumentationSystem.bootstrap(tracer)
         app.grouped(TracingMiddleware()).get("testTracing") { req -> String in
+            // Validates that TracingMiddleware sets the serviceContext
+            XCTAssertNotNil(req.serviceContext)
             return "done"
         }
 
