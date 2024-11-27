@@ -357,6 +357,14 @@ private struct _Decoder: Decoder {
                         .split(omittingEmptySubsequences: false, whereSeparator: configuration.arraySeparators.contains)
                         .map { .urlEncoded(.init($0)) }
                 }
+
+                if self.values.isEmpty && !data.children.isEmpty {
+                    let context = DecodingError.Context(
+                        codingPath: codingPath,
+                        debugDescription: "Expected an array but could not parse the data as an array"
+                    )
+                    throw DecodingError.dataCorrupted(context)
+                }
             }
         }
         
@@ -366,6 +374,14 @@ private struct _Decoder: Decoder {
 
         mutating func decode<T: Decodable>(_: T.Type) throws -> T {
             defer { self.currentIndex += 1 }
+            
+            guard !isAtEnd else {
+                let context = DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Unkeyed container is at end."
+                )
+                throw DecodingError.valueNotFound(T.self, context)
+            }
             
             if self.allChildKeysAreNumbers {
                 // We can force-unwrap because we already checked data.allChildKeysAreNumbers in the initializer.
