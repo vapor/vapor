@@ -1,4 +1,4 @@
-// swift-tools-version:5.8
+// swift-tools-version:5.9
 import PackageDescription
 import Foundation
 
@@ -25,16 +25,13 @@ let package = Package(
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.14.0"),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "5.0.0"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.9.0"),
 
-        // 💥 Backtraces for Swift on Linux
-        .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),
-
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.67.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.77.0"),
 
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
@@ -66,35 +63,38 @@ let package = Package(
     targets: [
         // C helpers
         .target(name: "CVaporBcrypt"),
-
+        
         // Vapor
-        .target(name: "Vapor", dependencies: [
-            .product(name: "AsyncHTTPClient", package: "async-http-client"),
-            .product(name: "AsyncKit", package: "async-kit"),
-            .product(name: "Backtrace", package: "swift-backtrace"),
-            .target(name: "CVaporBcrypt"),
-            .product(name: "ConsoleKit", package: "console-kit"),
-            .product(name: "Logging", package: "swift-log"),
-            .product(name: "Metrics", package: "swift-metrics"),
-            .product(name: "NIO", package: "swift-nio"),
-            .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
-            .product(name: "NIOCore", package: "swift-nio"),
-            .product(name: "NIOExtras", package: "swift-nio-extras"),
-            .product(name: "NIOFoundationCompat", package: "swift-nio"),
-            .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
-            .product(name: "NIOHTTP1", package: "swift-nio"),
-            .product(name: "NIOHTTP2", package: "swift-nio-http2"),
-            .product(name: "NIOSSL", package: "swift-nio-ssl"),
-            .product(name: "NIOWebSocket", package: "swift-nio"),
-            .product(name: "Crypto", package: "swift-crypto"),
-            .product(name: "Algorithms", package: "swift-algorithms"),
-            .product(name: "RoutingKit", package: "routing-kit"),
-            .product(name: "WebSocketKit", package: "websocket-kit"),
-            .product(name: "MultipartKit", package: "multipart-kit"),
-            .product(name: "Atomics", package: "swift-atomics"),
-            .product(name: "_NIOFileSystem", package: "swift-nio"),
-            .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
-        ]),
+        .target(
+            name: "Vapor",
+            dependencies: [
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncKit", package: "async-kit"),
+                .target(name: "CVaporBcrypt"),
+                .product(name: "ConsoleKit", package: "console-kit"),
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "Metrics", package: "swift-metrics"),
+                .product(name: "NIO", package: "swift-nio"),
+                .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOExtras", package: "swift-nio-extras"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
+                .product(name: "NIOHTTP2", package: "swift-nio-http2"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOWebSocket", package: "swift-nio"),
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "Algorithms", package: "swift-algorithms"),
+                .product(name: "RoutingKit", package: "routing-kit"),
+                .product(name: "WebSocketKit", package: "websocket-kit"),
+                .product(name: "MultipartKit", package: "multipart-kit"),
+                .product(name: "Atomics", package: "swift-atomics"),
+                .product(name: "_NIOFileSystem", package: "swift-nio"),
+                .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
+            ],
+            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+        ),
 
         // Development
         .executableTarget(
@@ -102,26 +102,40 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
             ],
-            resources: [.copy("Resources")]
+            resources: [.copy("Resources")],
+            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
         ),
 
         // Testing
-        .target(name: "XCTVapor", dependencies: [
-            .target(name: "Vapor"),
-        ]),
-        .testTarget(name: "VaporTests", dependencies: [
-            .product(name: "NIOTestUtils", package: "swift-nio"),
-            .target(name: "XCTVapor"),
-        ], resources: [
-            .copy("Utilities/foo.txt"),
-            .copy("Utilities/index.html"),
-            .copy("Utilities/SubUtilities/"),
-            .copy("Utilities/foo bar.html"),
-            .copy("Utilities/test.env"),
-            .copy("Utilities/my-secret-env-content"),
-            .copy("Utilities/expired.crt"),
-            .copy("Utilities/expired.key"),
-            .copy("Utilities/long-test-file.txt"),
-        ]),
+        .target(
+            name: "XCTVapor",
+            dependencies: [
+                .target(name: "Vapor"),
+            ],
+            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+        ),
+        .testTarget(
+            name: "VaporTests",
+            dependencies: [
+                .product(name: "NIOTestUtils", package: "swift-nio"),
+                .target(name: "XCTVapor"),
+                "Vapor",
+            ],
+            resources: [
+                .copy("Utilities/foo.txt"),
+                .copy("Utilities/index.html"),
+                .copy("Utilities/SubUtilities/"),
+                .copy("Utilities/foo bar.html"),
+                .copy("Utilities/test.env"),
+                .copy("Utilities/my-secret-env-content"),
+                .copy("Utilities/expired.crt"),
+                .copy("Utilities/expired.key"),
+                .copy("Utilities/long-test-file.txt"),
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("BareSlashRegexLiterals"),
+                .enableExperimentalFeature("StrictConcurrency=complete"),
+            ]
+        ),
     ]
 )

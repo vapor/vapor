@@ -333,7 +333,7 @@ final class PipelineTests: XCTestCase {
 
         // We expect 6 writes to be there - three parts (the head, body and separator for each request). However, if there are less
         // we need to have a timeout to avoid hanging the test
-        let deadline = NIODeadline.now() + .milliseconds(200)
+        let deadline = NIODeadline.now() + .seconds(5)
         var responses: [String] = []
         for _ in 0..<6 {
             guard NIODeadline.now() < deadline else {
