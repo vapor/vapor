@@ -8,6 +8,7 @@ extension Logger {
     ///     - error: `Error` to log.
     public func report(
         error: Error,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
@@ -37,6 +38,7 @@ extension Logger {
         self.log(
             level: level,
             .init(stringLiteral: reason),
+            metadata: metadata(),
             file: source?.file ?? file,
             function: source?.function ?? function,
             line: numericCast(source?.line ?? line)
