@@ -127,7 +127,7 @@ public struct ContentConfiguration: Sendable {
     ///     
     public func requireDecoder(for mediaType: HTTPMediaType) throws -> ContentDecoder {
         guard let decoder = self.decoders[mediaType] else {
-            throw Abort(.unsupportedMediaType, reason: "Support for reading media type '\(mediaType) has not been configured.")
+            throw Abort(.unsupportedMediaType, reason: "Support for reading media type '\(mediaType)' has not been configured.")
         }
         
         return decoder
