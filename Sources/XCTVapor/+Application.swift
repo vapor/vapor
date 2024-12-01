@@ -1,8 +1,7 @@
 import NIOConcurrencyHelpers
 import Vapor
 
-/// We recommend configuring this in your XCTest class's `override func setUp()` or
-/// SwiftTesting suite's initializers.
+/// We recommend configuring this in your XCTest class's `override func setUp()`.
 public var app: (@Sendable () throws -> Application)! {
     get {
         appBox.withLockedValue({ $0 })
