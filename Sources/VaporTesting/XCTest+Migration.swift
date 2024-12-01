@@ -20,3 +20,10 @@ where T: Codable & Equatable
 {
     fatalError("Renamed to 'expectEqualJSON(_:_:fileID:filePath:line:column:)'")
 }
+
+@available(*, unavailable, renamed: "TestingHTTPRequest")
+public typealias XCTHTTPRequest = TestingHTTPRequest
+@available(*, unavailable, renamed: "TestingHTTPRequest")
+public typealias XCTHTTPResponse = TestingHTTPResponse
+@available(*, unavailable, renamed: "TestingHTTPResponse")
+public typealias XCTApplicationTester = TestingApplicationTester
