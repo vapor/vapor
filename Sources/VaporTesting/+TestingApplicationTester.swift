@@ -6,7 +6,7 @@ import Testing
 extension TestingApplicationTester {
     @discardableResult
     public func test(
-        _ method: HTTPMethod,
+        method: HTTPMethod,
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
@@ -17,7 +17,7 @@ extension TestingApplicationTester {
         afterResponse: (TestingHTTPResponse) async throws -> ()
     ) async throws -> TestingApplicationTester {
         try await self.test(
-            method,
+            method: method,
             path,
             headers: headers,
             body: body,
@@ -32,7 +32,7 @@ extension TestingApplicationTester {
 
     @discardableResult
     public func test(
-        _ method: HTTPMethod,
+        method: HTTPMethod,
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
@@ -67,7 +67,7 @@ extension TestingApplicationTester {
     }
 
     public func sendRequest(
-        _ method: HTTPMethod,
+        method: HTTPMethod,
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
