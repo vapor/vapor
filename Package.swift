@@ -49,7 +49,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
         
         // Swift tracing API
-        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.1.0"),
         
         // Swift service context
         .package(url: "https://github.com/apple/swift-service-context.git", from: "1.0.0"),
