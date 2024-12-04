@@ -55,15 +55,15 @@ class ValidationTests: XCTestCase {
                 v.add("email", as: String?.self, is: .email || .nil) // test other way
                 v.add(
                     "email",
-                        as: String?.self,
+                    as: String?.self,
                     is: .custom(
                         validationDescription: "Validates whether email domain is 'tanner.xyz'."
                     ) { email in
-                            if let email {
-                                let parts = email.split(separator: "@")
-                                return parts[parts.count-1] == "tanner.xyz"
-                            }
-                            return true
+                        if let email {
+                            let parts = email.split(separator: "@")
+                            return parts[parts.count-1] == "tanner.xyz"
+                        }
+                        return true
                     }
                 )
                 // validate that the lucky number is nil or is 5 or 7
