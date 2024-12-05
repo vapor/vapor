@@ -61,8 +61,7 @@ class ValidationTests: XCTestCase {
                     "email",
                     as: String?.self,
                     is: .custom(
-                        validationDescription:
-                            "Validates whether email domain is 'tanner.xyz'."
+                        "Validates whether email domain is 'tanner.xyz'."
                     ) { email in
                         if let email {
                             let parts = email.split(separator: "@")
@@ -924,25 +923,38 @@ class ValidationTests: XCTestCase {
             not: Bool = false
         )
         where T: Decodable & Sendable & Equatable {
+            let validationDescription = "test \'\(value)'"
             if not == true {
                 assert(
                     value,
-                    passes: !.custom(
-                        validationDescription: "test \'\(value)'"
-                    ) { x in
+                    fails: !.custom(validationDescription) { x in
+                        return x == value
+                    },
+                    "is successfully validated for custom validation '\(validationDescription)'."
+                )
+                
+                assert(
+                    value,
+                    passes: !.custom(validationDescription) { x in
                         return x != value
                     }
                 )
             } else {
                 assert(
                     value,
-                    passes: .custom(
-                        validationDescription: "test \'\(value)'"
-                    ) { x in
+                    fails: .custom(validationDescription) { x in
+                        return x != value
+                    },
+                    "is not successfully validated for custom validation '\(validationDescription)'."
+                )
+                assert(
+                    value,
+                    passes: .custom(validationDescription) { x in
                         return x == value
                     }
                 )
             }
+
         }
         custom("email")
         custom(true)
@@ -1046,6 +1058,9 @@ private func assert<T>(
     line: UInt = #line
 ) {
     let result = validator.validate(data)
+    print(result.successDescription ?? "none")
+    print(result.failureDescription ?? "none")
+
     XCTAssert(
         result.isFailure, result.successDescription ?? "n/a", file: file,
         line: line)
