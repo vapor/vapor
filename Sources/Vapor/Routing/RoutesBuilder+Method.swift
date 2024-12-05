@@ -1,5 +1,6 @@
 import RoutingKit
 import NIOHTTP1
+import ServiceContextModule
 
 /// Determines how an incoming HTTP request's body is collected.
 public enum HTTPBodyStreamStrategy: Sendable {
@@ -167,11 +168,14 @@ extension RoutesBuilder {
                 return request.body.collect(
                     max: max?.value ?? request.application.routes.defaultMaxBodySize.value
                 ).flatMapThrowing { _ in
-                    try closure(request)
+                    try ServiceContext.withValue(request.serviceContext) {
+                        try closure(request)
+                    }
                 }.encodeResponse(for: request)
             } else {
-                return try closure(request)
-                    .encodeResponse(for: request)
+                return try ServiceContext.withValue(request.serviceContext) {
+                    try closure(request)
+                }.encodeResponse(for: request)
             }
         }
         let route = Route(

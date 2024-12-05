@@ -4,6 +4,7 @@ import NIOHTTP1
 import Logging
 import RoutingKit
 import NIOConcurrencyHelpers
+import ServiceContextModule
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {
@@ -185,6 +186,15 @@ public final class Request: CustomStringConvertible, Sendable {
         }
     }
     
+    public var serviceContext: ServiceContext {
+        get {
+            self._serviceContext.withLockedValue { $0 }
+        }
+        set {
+            self._serviceContext.withLockedValue { $0 = newValue }
+        }
+    }
+    
     public var body: Body {
         return Body(self)
     }
@@ -269,6 +279,7 @@ public final class Request: CustomStringConvertible, Sendable {
     let requestBox: NIOLockedValueBox<RequestBox>
     private let _storage: NIOLockedValueBox<Storage>
     private let _logger: NIOLockedValueBox<Logger>
+    private let _serviceContext: NIOLockedValueBox<ServiceContext>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     
     public convenience init(
@@ -323,6 +334,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var logger = logger
         logger[metadataKey: "request-id"] = .string(requestId)
         self._logger = .init(logger)
+        self._serviceContext = .init(.topLevel)
         
         let storageBox = RequestBox(
             method: method,
