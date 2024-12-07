@@ -53,6 +53,19 @@ class ValidationTests: XCTestCase {
                 // validate the email is valid or is nil
                 v.add("email", as: String?.self, is: .nil || .email)
                 v.add("email", as: String?.self, is: .email || .nil) // test other way
+                v.add(
+                    "email",
+                    as: String?.self,
+                    is: .custom(
+                        "Validates whether email domain is 'tanner.xyz'."
+                    ) { email in
+                        if let email {
+                            let parts = email.split(separator: "@")
+                            return parts[parts.count - 1] == "tanner.xyz"
+                        }
+                        return true
+                    }
+                )
                 // validate that the lucky number is nil or is 5 or 7
                 v.add("luckyNumber", as: Int?.self, is: .nil || .in(5, 7))
                 // validate that the profile picture is nil or a valid URL
@@ -780,6 +793,56 @@ class ValidationTests: XCTestCase {
         }
     }
     
+    func testCustomValidator() {
+        func custom<T>(
+            _ value: T,
+            not: Bool = false
+        )
+        where T: Decodable & Sendable & Equatable {
+            let validationDescription = "test \'\(value)'"
+            if not == true {
+                assert(
+                    value,
+                    fails: !.custom(validationDescription) { x in
+                        return x == value
+                    },
+                    "is successfully validated for custom validation '\(validationDescription)'."
+                )
+                
+                assert(
+                    value,
+                    passes: !.custom(validationDescription) { x in
+                        return x != value
+                    }
+                )
+            } else {
+                assert(
+                    value,
+                    fails: .custom(validationDescription) { x in
+                        return x != value
+                    },
+                    "is not successfully validated for custom validation '\(validationDescription)'."
+                )
+                assert(
+                    value,
+                    passes: .custom(validationDescription) { x in
+                        return x == value
+                    }
+                )
+            }
+
+        }
+        custom("email")
+        custom(true)
+        custom("123")
+        custom([1, 2, 3])
+        custom(Date.init())
+        custom(Date.init(), not: true)
+        custom("some random string", not: true)
+        custom(true, not: true)
+        custom("123", not: true)
+    }
+
     func testCustomFailureDescriptions() throws {
         struct User: Validatable {
             var name: String
