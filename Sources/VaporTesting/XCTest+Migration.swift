@@ -23,7 +23,7 @@ where T: Codable & Equatable
 
 @available(*, unavailable, renamed: "TestingHTTPRequest")
 public typealias XCTHTTPRequest = TestingHTTPRequest
-@available(*, unavailable, renamed: "TestingHTTPRequest")
-public typealias XCTHTTPResponse = TestingHTTPResponse
 @available(*, unavailable, renamed: "TestingHTTPResponse")
+public typealias XCTHTTPResponse = TestingHTTPResponse
+@available(*, unavailable, renamed: "TestingApplicationTester")
 public typealias XCTApplicationTester = TestingApplicationTester
