@@ -13,12 +13,18 @@ public enum VaporTestingContext {
         let shouldWarn = VaporTestingContext.emitWarningIfCurrentTestInfoIsUnavailable ?? true
         let isNotInSwiftTesting = Test.current == nil
         if shouldWarn, isNotInSwiftTesting {
+            let sourceLocation = Testing.SourceLocation(
+                fileID: fileID,
+                filePath: filePath,
+                line: line,
+                column: column
+            )
             print("""
             swift-testing function triggered in a non-swift-testing context.
             This can result in test failures not being reported.
             This warning can be incorrect if you're in a detached task.
             In that case, use `VaporTestingContext.$emitWarningIfCurrentTestInfoIsUnavailable.withValue(true) { /* Execute your tests here */ }` to avoid this warning.
-            Location: (fileID: \(fileID), filePath: \(filePath), line: \(line), column: \(column))
+            Location: \(sourceLocation.debugDescription)
             """)
             fflush(stdout)
         }
