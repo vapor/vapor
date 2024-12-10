@@ -77,6 +77,13 @@ extension TestingApplicationTester {
         column: Int = #column,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in }
     ) async throws -> TestingHTTPResponse {
+        VaporTestingContext.warnIfNotInSwiftTestingContext(
+            fileID: fileID,
+            filePath: filePath,
+            line: line,
+            column: column
+        )
+        
         var request = TestingHTTPRequest(
             method: method,
             url: .init(path: path),

@@ -10,6 +10,13 @@ public func expectContent<D>(
     column: Int = #column,
     _ closure: (D) throws -> ()
 ) rethrows where D: Decodable {
+    VaporTestingContext.warnIfNotInSwiftTestingContext(
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column
+    )
+    
     guard let contentType = res.headers.contentType else {
         let sourceLocation = Testing.SourceLocation(
             fileID: fileID,
@@ -48,6 +55,13 @@ public func expectContains(
     line: Int = #line,
     column: Int = #column
 ) {
+    VaporTestingContext.warnIfNotInSwiftTestingContext(
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column
+    )
+
     let sourceLocation = Testing.SourceLocation(
         fileID: fileID,
         filePath: filePath,
@@ -76,6 +90,13 @@ public func expectJSONEquals<T>(
 )
 where T: Codable & Equatable
 {
+    VaporTestingContext.warnIfNotInSwiftTestingContext(
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column
+    )
+
     let sourceLocation = Testing.SourceLocation(
         fileID: fileID,
         filePath: filePath,
