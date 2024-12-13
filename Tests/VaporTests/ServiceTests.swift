@@ -50,7 +50,7 @@ final class ServiceTests: XCTestCase {
     func testLocks() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         app.sync.withLock {
             // Do something.
         }
