@@ -1,3 +1,5 @@
+import NIOConcurrencyHelpers
+
 public extension Application {
     struct Service<ServiceType> {
 
@@ -10,14 +12,16 @@ public extension Application {
         public struct Provider {
             let run: (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @escaping @Sendable (Application) -> ()) {
                 self.run = run
             }
         }
 
-        final class Storage {
-            var makeService: ((Application) -> ServiceType)?
-            init() { }
+        final class Storage: Sendable {
+            let makeService: NIOLockedValueBox<(@Sendable (Application) -> ServiceType)?>
+            init() {
+                self.makeService = .init(nil)
+            }
         }
 
         struct Key: StorageKey {
@@ -25,7 +29,7 @@ public extension Application {
         }
 
         public var service: ServiceType {
-            guard let makeService = self.storage.makeService else {
+            guard let makeService = self.storage.makeService.withLockedValue({ $0 }) else {
                 fatalError("No service configured for \(ServiceType.self)")
             }
             return makeService(self.application)
@@ -35,8 +39,8 @@ public extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeService: @escaping (Application) -> ServiceType) {
-            self.storage.makeService = makeService
+        public func use(_ makeService: @escaping @Sendable (Application) -> ServiceType) {
+            self.storage.makeService.withLockedValue { $0 = makeService }
         }
 
         func initialize() {
