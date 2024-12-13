@@ -7,6 +7,8 @@ public func XCTAssertContent<D>(
     line: UInt = #line,
     _ closure: (D) throws -> ()
 ) rethrows where D: Decodable {
+    XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
+
     guard let contentType = res.headers.contentType else {
         XCTFail("response does not contain content type", file: file, line: line)
         return
@@ -26,6 +28,8 @@ public func XCTAssertContent<D>(
 }
 
 public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: StaticString = #filePath, line: UInt = #line) {
+    XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
+
     let file = (file)
     switch (haystack, needle) {
     case (.some(let haystack), .some(let needle)):
@@ -42,6 +46,8 @@ public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: Stat
 public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = #filePath, line: UInt = #line)
 where T: Codable & Equatable
 {
+    XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
+
     guard let data = data else {
         XCTFail("nil does not equal \(test)", file: file, line: line)
         return

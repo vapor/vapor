@@ -58,6 +58,8 @@ extension XCTApplicationTester {
         beforeRequest: (inout XCTHTTPRequest) async throws -> () = { _ in },
         afterResponse: (XCTHTTPResponse) async throws -> () = { _ in }
     ) async throws -> XCTApplicationTester {
+        XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
+
         var request = XCTHTTPRequest(
             method: method,
             url: .init(path: path),
@@ -87,6 +89,8 @@ extension XCTApplicationTester {
         beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in },
         afterResponse: (XCTHTTPResponse) throws -> () = { _ in }
     ) throws -> XCTApplicationTester {
+        XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
+
         var request = XCTHTTPRequest(
             method: method,
             url: .init(path: path),
@@ -113,6 +117,8 @@ extension XCTApplicationTester {
         line: UInt = #line,
         beforeRequest: (inout XCTHTTPRequest) async throws -> () = { _ in }
     ) async throws -> XCTHTTPResponse {
+        XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
+
         var request = XCTHTTPRequest(
             method: method,
             url: .init(path: path),
@@ -138,6 +144,8 @@ extension XCTApplicationTester {
         line: UInt = #line,
         beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in }
     ) throws -> XCTHTTPResponse {
+        XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
+
         var request = XCTHTTPRequest(
             method: method,
             url: .init(path: path),
