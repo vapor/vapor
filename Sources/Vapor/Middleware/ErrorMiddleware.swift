@@ -42,7 +42,7 @@ public final class ErrorMiddleware: Middleware {
             
             // Report the error
             req.logger.report(error: error,
-                              metadata: ["method" : "\(req.method.string)",
+                              metadata: ["method" : "\(req.method.rawValue)",
                                          "url" : "\(req.url.string)",
                                          "userAgent" : .array(req.headers["User-Agent"].map { "\($0)" })],
                               file: source.file,
