@@ -1,5 +1,4 @@
 import NIOCore
-import ServiceContextModule
 
 /// `Middleware` is placed between the server and your router. It is capable of
 /// mutating both incoming requests and outgoing responses. `Middleware` can choose
@@ -48,7 +47,7 @@ private struct HTTPMiddlewareResponder: Responder {
     ///     - request: The incoming `Request`.
     /// - returns: An asynchronous `Response`.
     func respond(to request: Request) -> EventLoopFuture<Response> {
-        return ServiceContext.withValue(request.serviceContext) {
+        return request.propagateTracingIfEnabled {
             self.middleware.respond(to: request, chainingTo: self.responder)
         }
     }

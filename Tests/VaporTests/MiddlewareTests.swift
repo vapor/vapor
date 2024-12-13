@@ -147,6 +147,7 @@ final class MiddlewareTests: XCTestCase {
     }
     
     func testTracingMiddleware() async throws {
+        app.traceAutoPropagation = true
         let tracer = TestTracer()
         InstrumentationSystem.bootstrap(tracer)
         
@@ -164,9 +165,10 @@ final class MiddlewareTests: XCTestCase {
         ).get("testTracing") { req -> String in
             // Validates that TracingMiddleware sets the serviceContext
             XCTAssertNotNil(req.serviceContext)
-            // Validates that the span's service context is propogated into the
+            // Validates that the span's service context is propagated into the
             // Task.local storage of the responder closure, thereby ensuring that
             // spans created in the closure are nested under the request span.
+            // Requires Application.traceAutoPropagation to be enabled
             XCTAssertNotNil(ServiceContext.current)
             return "done"
         }
