@@ -1,7 +1,7 @@
 @testable import Vapor
 import enum NIOHTTP1.HTTPParserError
 import XCTest
-@preconcurrency import AsyncHTTPClient
+import AsyncHTTPClient
 import NIOEmbedded
 import NIOCore
 import NIOConcurrencyHelpers

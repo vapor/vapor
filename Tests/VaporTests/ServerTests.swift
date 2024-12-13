@@ -8,7 +8,7 @@ import Dispatch
 import Foundation
 import Vapor
 import XCTest
-@preconcurrency import AsyncHTTPClient
+import AsyncHTTPClient
 import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers

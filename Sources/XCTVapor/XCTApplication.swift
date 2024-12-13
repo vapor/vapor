@@ -1,4 +1,4 @@
-@preconcurrency import AsyncHTTPClient
+import AsyncHTTPClient
 import NIOCore
 import NIOHTTP1
 import XCTest
