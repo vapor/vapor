@@ -93,7 +93,7 @@ final class AsyncRequestTests: XCTestCase {
         let oneMB = try XCTUnwrap(oneMBBB.readData(length: oneMBBB.readableBytes))
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
         request.method = .POST
-        request.body = .stream(oneMB.async, length: .known(oneMB.count))
+        request.body = .stream(oneMB.async, length: .known(Int64(oneMB.count)))
         if let response = try? await app.http.client.shared.execute(request, timeout: .seconds(5)) {
             XCTAssertGreaterThan(bytesTheServerRead.load(ordering: .relaxed), 0)
             XCTAssertEqual(response.status, .internalServerError)

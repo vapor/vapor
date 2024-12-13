@@ -30,7 +30,7 @@ public final class RoutesCommand: AsyncCommand {
         let includeDescription = !routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
         let pathSeparator = "/".consoleText()
         context.console.outputASCIITable(routes.all.map { route -> [ConsoleText] in
-            var column = [route.method.string.consoleText()]
+            var column = [route.method.rawValue.consoleText()]
             if route.path.isEmpty {
                 column.append(pathSeparator)
             } else {
