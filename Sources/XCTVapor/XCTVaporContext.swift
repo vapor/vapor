@@ -19,10 +19,12 @@ public enum XCTVaporContext {
         let isInSwiftTesting = Test.current != nil
         if shouldWarn, isInSwiftTesting {
             print("""
+            🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻
             XCTVapor function triggered in a swift-testing context.
             This can result in test failures not being reported.
             Use `XCTVaporContext.$emitWarningIfCurrentTestInfoIsAvailable.withValue(false) { /* Execute your tests here */ }` to avoid this warning.
             Location: \(file):\(line)
+            🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺
             """)
             fflush(stdout)
         }
