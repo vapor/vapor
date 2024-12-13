@@ -1,7 +1,7 @@
 import NIOConcurrencyHelpers
 
-public extension Application {
-    struct Service<ServiceType> {
+extension Application {
+    public struct Service<ServiceType> {
 
         let application: Application
 
@@ -43,15 +43,18 @@ public extension Application {
             self.storage.makeService.withLockedValue { $0 = makeService }
         }
 
-        func initialize() {
-            self.application.storage[Key.self] = .init()
+        func initialize() -> Storage {
+            let new = Storage()
+            self.application.storage[Key.self] = new
+            return new
         }
 
         private var storage: Storage {
-            if self.application.storage[Key.self] == nil {
-                self.initialize()
+            if let storage = application.storage[Key.self] {
+                return storage
+            } else {
+                return self.initialize()
             }
-            return self.application.storage[Key.self]!
         }
     }
 }
