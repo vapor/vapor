@@ -14,21 +14,21 @@ struct VaporTestingTests {
         struct FooDecodable: Decodable, Equatable {
             var message: String = "hi"
         }
-
+        
         try await withApp { app in
             app.routes.post("decode") { req async throws -> String in
                 #expect(try req.content.decode(FooContent.self) == FooContent())
                 #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
-
-            try await app.testable().test(method: .POST, "/decode") { req in
+            
+            try await app.testable().test(.POST, "/decode") { req in
                 try req.content.encode(FooContent())
             } afterResponse: { res in
                 #expect(res.status == .ok)
                 expectContains(res.body.string, "decoded!")
             }
-
+            
             app.routes.post("decode-bad-header") { req async throws -> String in
                 #expect(req.headers.contentType == .audio)
                 #expect(
@@ -46,8 +46,8 @@ struct VaporTestingTests {
                 #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
-
-            try await app.testable().test(method: .POST, "/decode-bad-header") { req in
+            
+            try await app.testable().test(.POST, "/decode-bad-header") { req in
                 try req.content.encode(FooContent())
                 req.headers.contentType = .audio
             } afterResponse: { res in
