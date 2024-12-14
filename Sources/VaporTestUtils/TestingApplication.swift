@@ -1,23 +1,6 @@
 import AsyncHTTPClient
 import Vapor
 
-extension Application: TestingApplicationTester {
-    @available(*, noasync, message: "Use the async method instead.")
-    public func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse {
-        try self.testable().performTest(request: request)
-    }
-
-    public func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
-        try await self.testable().performTest(request: request)
-    }
-}
-
-public protocol TestingApplicationTester: Sendable {
-    @available(*, noasync, message: "Use the async method instead.")
-    func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse
-    func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
-}
-
 extension Application {
     public enum Method {
         case inMemory
@@ -31,29 +14,19 @@ extension Application {
         case running(hostname: String, port: Int)
     }
 
-    public func testable(method: Method = .inMemory) throws -> TestingApplicationTester {
-        try self.boot()
-        switch method {
-        case .inMemory:
-            return try InMemory(app: self)
-        case let .running(hostname, port):
-            return try Live(app: self, hostname: hostname, port: port)
-        }
-    }
-
-    private struct Live: TestingApplicationTester {
+    package struct Live {
         let app: Application
         let port: Int
         let hostname: String
 
-        init(app: Application, hostname: String = "localhost", port: Int) throws {
+        package init(app: Application, hostname: String = "localhost", port: Int) throws {
             self.app = app
             self.hostname = hostname
             self.port = port
         }
 
         @available(*, noasync, message: "Use the async method instead.")
-        func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse {
+        package func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse {
             try app.server.start(address: .hostname(self.hostname, port: self.port))
             defer { app.server.shutdown() }
 
@@ -91,7 +64,7 @@ extension Application {
             )
         }
 
-        func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
+        package func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
             try await app.server.start(address: .hostname(self.hostname, port: self.port))
             let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
 
@@ -136,15 +109,15 @@ extension Application {
         }
     }
 
-    private struct InMemory: TestingApplicationTester {
+    package struct InMemory {
         let app: Application
-        init(app: Application) throws {
+        package init(app: Application) throws {
             self.app = app
         }
 
         @available(*, noasync, message: "Use the async method instead.")
         @discardableResult
-        public func performTest(
+        package func performTest(
             request: TestingHTTPRequest
         ) throws -> TestingHTTPResponse {
             var headers = request.headers
@@ -171,7 +144,7 @@ extension Application {
         }
 
         @discardableResult
-        public func performTest(
+        package func performTest(
             request: TestingHTTPRequest
         ) async throws -> TestingHTTPResponse {
             var headers = request.headers

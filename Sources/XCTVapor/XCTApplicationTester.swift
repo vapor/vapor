@@ -1,6 +1,36 @@
 import NIOHTTP1
 import XCTest
 
+public protocol XCTApplicationTester: Sendable {
+    @available(*, noasync, message: "Use the async method instead.")
+    func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse
+    func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
+}
+
+extension Application.Live: XCTApplicationTester {}
+extension Application.InMemory: XCTApplicationTester {}
+
+extension Application: XCTApplicationTester {
+    public func testable(method: Method = .inMemory) throws -> XCTApplicationTester {
+        try self.boot()
+        switch method {
+        case .inMemory:
+            return try InMemory(app: self)
+        case let .running(hostname, port):
+            return try Live(app: self, hostname: hostname, port: port)
+        }
+    }
+
+    @available(*, noasync, message: "Use the async method instead.")
+    public func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse {
+        try self.testable().performTest(request: request)
+    }
+
+    public func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
+        try await self.testable().performTest(request: request)
+    }
+}
+
 extension XCTApplicationTester {
     @discardableResult
     public func test(

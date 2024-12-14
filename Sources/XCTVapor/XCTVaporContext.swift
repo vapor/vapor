@@ -22,6 +22,7 @@ public enum XCTVaporContext {
             🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻
             XCTVapor function triggered in a swift-testing context.
             This will result in test failures not being reported.
+            Use 'app.testable()' instead of 'app.testing()' in XCTest tests.
             Use `XCTVaporContext.$emitWarningIfCurrentTestInfoIsAvailable.withValue(false) { /* Execute your tests here */ }` to avoid this warning.
             Location: \(file):\(line)
             🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺

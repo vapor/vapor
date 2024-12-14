@@ -24,6 +24,7 @@ public enum VaporTestingContext {
             🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻
             swift-testing function triggered in a non-swift-testing context.
             This will result in test failures not being reported.
+            Use 'app.testing()' instead of 'app.testable()' in swift-testing tests.
             This warning can be incorrect if you're in a detached task.
             In that case, use `VaporTestingContext.$emitWarningIfCurrentTestInfoIsUnavailable.withValue(false) { /* Execute your tests here */ }` to avoid this warning.
             Location: \(sourceLocation.debugDescription)

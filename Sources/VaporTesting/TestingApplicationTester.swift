@@ -3,6 +3,36 @@ import NIOHTTP1
 import NIOCore
 import Testing
 
+public protocol TestingApplicationTester: Sendable {
+    @available(*, noasync, message: "Use the async method instead.")
+    func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse
+    func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
+}
+
+extension Application.Live: TestingApplicationTester {}
+extension Application.InMemory: TestingApplicationTester {}
+
+extension Application: TestingApplicationTester {
+    public func testing(method: Method = .inMemory) throws -> TestingApplicationTester {
+        try self.boot()
+        switch method {
+        case .inMemory:
+            return try InMemory(app: self)
+        case let .running(hostname, port):
+            return try Live(app: self, hostname: hostname, port: port)
+        }
+    }
+
+    @available(*, noasync, message: "Use the async method instead.")
+    public func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse {
+        try self.testing().performTest(request: request)
+    }
+
+    public func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
+        try await self.testing().performTest(request: request)
+    }
+}
+
 extension TestingApplicationTester {
     @discardableResult
     public func test(
