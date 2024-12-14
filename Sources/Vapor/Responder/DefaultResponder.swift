@@ -39,7 +39,7 @@ internal struct DefaultResponder: Responder {
                 }
             }
             
-            router.register(cached, at: [.constant(route.method.string)] + path)
+            router.register(cached, at: [.constant(route.method.rawValue)] + path)
         }
         self.router = router
         self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
@@ -82,7 +82,7 @@ internal struct DefaultResponder: Responder {
         
         // If it's a HEAD request and a HEAD route exists, return that route...
         if request.method == .HEAD, let route = self.router.route(
-            path: [HTTPMethod.HEAD.string] + pathComponents,
+            path: [HTTPMethod.HEAD.rawValue] + pathComponents,
             parameters: &request.parameters
         ) {
             return route
@@ -92,7 +92,7 @@ internal struct DefaultResponder: Responder {
         let method = (request.method == .HEAD) ? .GET : request.method
         
         return self.router.route(
-            path: [method.string] + pathComponents,
+            path: [method.rawValue] + pathComponents,
             parameters: &request.parameters
         )
     }
@@ -108,7 +108,7 @@ internal struct DefaultResponder: Responder {
         if let route = request.route {
             // We don't use route.description here to avoid duplicating the method in the path
             pathForMetrics = "/\(route.path.map { "\($0)" }.joined(separator: "/"))"
-            methodForMetrics = request.method.string
+            methodForMetrics = request.method.rawValue
         } else {
             // If the route is undefined (i.e. a 404 and not something like /users/:userID
             // We rewrite the path and the method to undefined to avoid DOSing the
