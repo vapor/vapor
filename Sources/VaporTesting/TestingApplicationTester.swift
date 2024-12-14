@@ -1,7 +1,8 @@
-#if compiler(>=6.0)
 import NIOHTTP1
 import NIOCore
+#if compiler(>=6.0)
 import Testing
+#endif
 
 public protocol TestingApplicationTester: Sendable {
     @available(*, noasync, message: "Use the async method instead.")
@@ -33,6 +34,7 @@ extension Application: TestingApplicationTester {
     }
 }
 
+#if compiler(>=6.0)
 extension TestingApplicationTester {
     @discardableResult
     public func test(
