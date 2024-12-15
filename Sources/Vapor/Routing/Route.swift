@@ -69,7 +69,7 @@ public final class Route: CustomStringConvertible, Sendable {
     public var description: String {
         let box = self.sendableBox.withLockedValue { $0 }
         let path = box.path.map { "\($0)" }.joined(separator: "/")
-        return "\(box.method.string) /\(path)"
+        return "\(box.method.rawValue) /\(path)"
     }
     
     let sendableBox: NIOLockedValueBox<SendableBox>
