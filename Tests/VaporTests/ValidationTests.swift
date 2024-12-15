@@ -794,13 +794,21 @@ class ValidationTests: XCTestCase {
     }
     
     func testCustomValidator() {
-        func custom<T>(
+        // Function to validate value using the .costum validator.
+        // When not is equal to true, it will use the not operator (!),
+        // e.g. "!.custom()"
+        func validate_value<T>(
             _ value: T,
             not: Bool = false
         )
         where T: Decodable & Sendable & Equatable {
             let validationDescription = "test \'\(value)'"
+
+            // x == value in all of the closures of the .custom function
             if not == true {
+                // expect assertion to fail
+                // x == true results to true
+                // the "!" function before ".custom" inverts the true to be false
                 assert(
                     value,
                     fails: !.custom(validationDescription) { x in
@@ -809,6 +817,9 @@ class ValidationTests: XCTestCase {
                     "is successfully validated for custom validation '\(validationDescription)'."
                 )
                 
+                // expect assertion to pass
+                // x != value is false
+                // the "!" function before ".custom" inverts the false to be true
                 assert(
                     value,
                     passes: !.custom(validationDescription) { x in
@@ -816,6 +827,8 @@ class ValidationTests: XCTestCase {
                     }
                 )
             } else {
+                // expect assertion to fail
+                // x != true results to false
                 assert(
                     value,
                     fails: .custom(validationDescription) { x in
@@ -823,6 +836,9 @@ class ValidationTests: XCTestCase {
                     },
                     "is not successfully validated for custom validation '\(validationDescription)'."
                 )
+
+                // expect assertion to pass
+                // x == true results to true
                 assert(
                     value,
                     passes: .custom(validationDescription) { x in
@@ -832,15 +848,15 @@ class ValidationTests: XCTestCase {
             }
 
         }
-        custom("email")
-        custom(true)
-        custom("123")
-        custom([1, 2, 3])
-        custom(Date.init())
-        custom(Date.init(), not: true)
-        custom("some random string", not: true)
-        custom(true, not: true)
-        custom("123", not: true)
+        validate_value("email")
+        validate_value(true)
+        validate_value("123")
+        validate_value([1, 2, 3])
+        validate_value(Date.init())
+        validate_value(Date.init(), not: true)
+        validate_value("some random string", not: true)
+        validate_value(true, not: true)
+        validate_value("123", not: true)
     }
 
     func testCustomFailureDescriptions() throws {
