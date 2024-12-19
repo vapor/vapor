@@ -23,7 +23,9 @@ public struct BasicResponder: Responder {
     /// See `Responder`.
     public func respond(to request: Request) -> EventLoopFuture<Response> {
         do {
-            return try closure(request)
+            return try request.propagateTracingIfEnabled {
+                try closure(request)
+            }
         } catch {
             return request.eventLoop.makeFailedFuture(error)
         }
