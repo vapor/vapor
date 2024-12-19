@@ -235,6 +235,9 @@ public final class Request: CustomStringConvertible, Sendable {
     ///  If this is difficult or awkward to guarantee, use `EventLoopFuture.hop(to:)` to jump to this event loop.
     public let eventLoop: EventLoop
     
+    /// Whether Vapor should automatically propagate trace spans for this request. See `Application.traceAutoPropagation`
+    let traceAutoPropagation: Bool
+    
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters {
@@ -349,6 +352,7 @@ public final class Request: CustomStringConvertible, Sendable {
         self.requestBox = .init(storageBox)
         self.id = requestId
         self.application = application
+        self.traceAutoPropagation = application.traceAutoPropagation
         
         self.remoteAddress = remoteAddress
         self.eventLoop = eventLoop
@@ -358,7 +362,7 @@ public final class Request: CustomStringConvertible, Sendable {
     
     /// Automatically restores tracing serviceContext around the provided closure
     func propagateTracingIfEnabled<T>(_ closure: () throws -> T) rethrows -> T {
-        if self.application.traceAutoPropagation {
+        if self.traceAutoPropagation {
             return try ServiceContext.withValue(self.serviceContext) {
                 try closure()
             }
