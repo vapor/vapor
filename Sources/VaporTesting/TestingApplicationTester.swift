@@ -5,8 +5,6 @@ import Testing
 #endif
 
 public protocol TestingApplicationTester: Sendable {
-    @available(*, noasync, message: "Use the async method instead.")
-    func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
 }
 
@@ -22,11 +20,6 @@ extension Application: TestingApplicationTester {
         case let .running(hostname, port):
             return try Live(app: self, hostname: hostname, port: port)
         }
-    }
-
-    @available(*, noasync, message: "Use the async method instead.")
-    public func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse {
-        try self.testing().performTest(request: request)
     }
 
     public func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
