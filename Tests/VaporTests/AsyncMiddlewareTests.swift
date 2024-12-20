@@ -100,7 +100,7 @@ final class AsyncMiddlewareTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
             XCTAssertEqual(res.headers[.vary], [])
-            XCTAssertEqual(res.headers[.accessControlAllowOrigin], [""])
+            XCTAssertEqual(res.headers[.accessControlAllowOrigin], [])
             XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
         }
     }

@@ -2,6 +2,7 @@ import XCTVapor
 import XCTest
 import Vapor
 import NIOCore
+import Tracing
 
 final class MiddlewareTests: XCTestCase {
     var app: Application!
@@ -102,7 +103,7 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
             XCTAssertEqual(res.headers[.vary], [])
-            XCTAssertEqual(res.headers[.accessControlAllowOrigin], [""])
+            XCTAssertEqual(res.headers[.accessControlAllowOrigin], [])
             XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
         }
     }
@@ -140,5 +141,66 @@ final class MiddlewareTests: XCTestCase {
             }
             XCTAssertEqual(error, .publicDirectoryIsNotAFolder)
         }
+    }
+    
+    func testTracingMiddleware() async throws {
+        app.traceAutoPropagation = true
+        let tracer = TestTracer()
+        InstrumentationSystem.bootstrap(tracer)
+        
+        struct TestServiceContextMiddleware: Middleware {
+            func respond(to request: Request, chainingTo next: any Responder) -> EventLoopFuture<Response> {
+                XCTAssertNotNil(ServiceContext.current)
+                return next.respond(to: request)
+            }
+        }
+        
+        app.grouped(
+            TracingMiddleware()
+        ).grouped(
+            TestServiceContextMiddleware()
+        ).get("testTracing") { req -> String in
+            // Validates that TracingMiddleware sets the serviceContext
+            XCTAssertNotNil(req.serviceContext)
+            // Validates that the span's service context is propagated into the
+            // Task.local storage of the responder closure, thereby ensuring that
+            // spans created in the closure are nested under the request span.
+            // Requires Application.traceAutoPropagation to be enabled
+            XCTAssertNotNil(ServiceContext.current)
+            return "done"
+        }
+
+        try await app.testable(method: .running(hostname: "127.0.0.1", port: 8080)).test(
+            .GET,
+            "/testTracing?foo=bar",
+            beforeRequest: { request in
+                request.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
+            },
+            afterResponse: { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body.string, "done")
+            }
+        )
+        
+        let span = try XCTUnwrap(tracer.spans.first)
+        XCTAssertEqual(span.operationName, "GET /testTracing")
+        
+        XCTAssertEqual(span.attributes["http.request.method"]?.toSpanAttribute(), "GET")
+        XCTAssertEqual(span.attributes["url.path"]?.toSpanAttribute(), "/testTracing")
+        XCTAssertEqual(span.attributes["url.scheme"]?.toSpanAttribute(), nil)
+        
+        XCTAssertEqual(span.attributes["http.route"]?.toSpanAttribute(), "/testTracing")
+        XCTAssertEqual(span.attributes["network.protocol.name"]?.toSpanAttribute(), "http")
+        XCTAssertEqual(span.attributes["server.address"]?.toSpanAttribute(), "127.0.0.1")
+        XCTAssertEqual(span.attributes["server.port"]?.toSpanAttribute(), 8080)
+        XCTAssertEqual(span.attributes["url.query"]?.toSpanAttribute(), "foo=bar")
+        
+        XCTAssertEqual(span.attributes["client.address"]?.toSpanAttribute(), "127.0.0.1")
+        XCTAssertEqual(span.attributes["network.peer.address"]?.toSpanAttribute(), "127.0.0.1")
+        XCTAssertNotNil(span.attributes["network.peer.port"]?.toSpanAttribute())
+        XCTAssertEqual(span.attributes["network.protocol.version"]?.toSpanAttribute(), "1.1")
+        XCTAssertEqual(span.attributes["user_agent.original"]?.toSpanAttribute(), "test")
+        
+        XCTAssertEqual(span.attributes["http.response.status_code"]?.toSpanAttribute(), 200)
     }
 }

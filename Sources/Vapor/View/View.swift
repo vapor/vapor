@@ -1,6 +1,6 @@
 import NIOCore
 
-public struct View: ResponseEncodable {
+public struct View: ResponseEncodable, Sendable {
     public var data: ByteBuffer
 
     public init(data: ByteBuffer) {

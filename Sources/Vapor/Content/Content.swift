@@ -18,7 +18,7 @@ import NIOCore
 ///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
-public protocol Content: Codable, RequestDecodable, ResponseEncodable {
+public protocol Content: Codable, RequestDecodable, ResponseEncodable, Sendable {
     /// The default `MediaType` to use when _encoding_ content. This can always be overridden at the encode call.
     ///
     /// Default implementation is `MediaType.json` for all types.
