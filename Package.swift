@@ -16,7 +16,7 @@ let package = Package(
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.19.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.24.0"),
 
         // Sugary extensions for the SwiftNIO library
         .package(url: "https://github.com/vapor/async-kit.git", from: "1.15.0"),
@@ -31,7 +31,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.9.0"),
 
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.67.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.77.0"),
 
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),

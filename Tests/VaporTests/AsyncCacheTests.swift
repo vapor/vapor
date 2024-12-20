@@ -62,7 +62,7 @@ struct FooCache: Cache {
     }
 
     func get<T>(_ key: String, as type: T.Type) -> EventLoopFuture<T?>
-        where T : Decodable
+        where T : Decodable & Sendable
     {
         let value: T?
         if key == "foo" {
@@ -73,15 +73,15 @@ struct FooCache: Cache {
         return self.eventLoop.makeSucceededFuture(value)
     }
     
-    func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable {
+    func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable & Sendable {
         return key == "foo" ? "bar" as? T : nil
     }
 
-    func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void> where T : Encodable {
+    func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void> where T : Encodable & Sendable {
         return self.eventLoop.makeSucceededFuture(())
     }
     
-    func set<T>(_ key: String, to value: T?) async throws where T: Encodable {
+    func set<T>(_ key: String, to value: T?) async throws where T: Encodable & Sendable {
         return
     }
 

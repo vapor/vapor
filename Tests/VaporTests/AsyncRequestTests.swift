@@ -93,7 +93,7 @@ final class AsyncRequestTests: XCTestCase {
         let oneMB = try XCTUnwrap(oneMBBB.readData(length: oneMBBB.readableBytes))
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
         request.method = .POST
-        request.body = .stream(oneMB.async, length: .known(oneMB.count))
+        request.body = .stream(oneMB.async, length: .known(Int64(oneMB.count)))
         if let response = try? await app.http.client.shared.execute(request, timeout: .seconds(5)) {
             XCTAssertGreaterThan(bytesTheServerRead.load(ordering: .relaxed), 0)
             XCTAssertEqual(response.status, .internalServerError)
@@ -194,6 +194,42 @@ final class AsyncRequestTests: XCTestCase {
         
         requestHandlerTask.withLockedValue { $0?.cancel() }
         try await httpClient.shutdown()
+    }
+
+    // https://github.com/vapor/vapor/issues/2985
+    func testLargeBodyCollectionDoesntCrash() async throws {
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+
+        app.on(.POST, "upload", body: .stream, use: { request async throws -> String  in
+            let buffer = try await request.body.collect(upTo: Int.max)
+            return "Received \(buffer.readableBytes) bytes"
+        })
+
+        app.environment.arguments = ["serve"]
+        try await app.startup()
+
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard 
+            let localAddress = app.http.server.shared.localAddress,
+            let ip = localAddress.ipAddress,
+            let port = localAddress.port 
+        else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        let fiftyMB = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
+        var request = HTTPClientRequest(url: "http://\(ip):\(port)/upload")
+        request.method = .POST
+        request.body = .bytes(fiftyMB)
+
+        for _ in 0..<10 {
+            let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
+            XCTAssertEqual(response.status, .ok)
+            let body = try await response.body.collect(upTo: 1024 * 1024)
+            XCTAssertEqual(body.string, "Received \(fiftyMB.readableBytes) bytes")
+        }
     }
 }
 
