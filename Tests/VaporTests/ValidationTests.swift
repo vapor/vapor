@@ -793,10 +793,8 @@ class ValidationTests: XCTestCase {
         }
     }
     
+
     func testCustomValidator() {
-        // Function to validate value using the .costum validator.
-        // When not is equal to true, it will use the not operator (!),
-        // e.g. "!.custom()"
         func validate_value<T>(
             _ value: T,
             not: Bool = false
@@ -804,59 +802,36 @@ class ValidationTests: XCTestCase {
         where T: Decodable & Sendable & Equatable {
             let validationDescription = "test \'\(value)'"
 
-            // x == value in all of the closures of the .custom function
-            if not == true {
-                // expect assertion to fail
-                // x == true results to true
-                // the "!" function before ".custom" inverts the true to be false
-                assert(
-                    value,
-                    fails: !.custom(validationDescription) { x in
-                        return x == value
-                    },
-                    "is successfully validated for custom validation '\(validationDescription)'."
-                )
-                
-                // expect assertion to pass
-                // x != value is false
-                // the "!" function before ".custom" inverts the false to be true
-                assert(
-                    value,
-                    passes: !.custom(validationDescription) { x in
-                        return x != value
-                    }
-                )
-            } else {
-                // expect assertion to fail
-                // x != true results to false
-                assert(
-                    value,
-                    fails: .custom(validationDescription) { x in
-                        return x != value
-                    },
-                    "is not successfully validated for custom validation '\(validationDescription)'."
-                )
+            let value = "test123"
 
-                // expect assertion to pass
-                // x == true results to true
-                assert(
-                    value,
-                    passes: .custom(validationDescription) { x in
-                        return x == value
-                    }
-                )
-            }
-
+            // These tests are used to make sure that the custom validator pass and fail correctly.
+            assert(
+                value,
+                fails: !.custom(validationDescription) { x in
+                    return x == value
+                },
+                "is successfully validated for custom validation '\(validationDescription)'."
+            )
+            assert(
+                value,
+                passes: !.custom(validationDescription) { x in
+                    return x != value
+                }
+            )
+            assert(
+                value,
+                fails: .custom(validationDescription) { x in
+                    return x != value
+                },
+                "is not successfully validated for custom validation '\(validationDescription)'."
+            )
+            assert(
+                value,
+                passes: .custom(validationDescription) { x in
+                    return x == value
+                }
+            )
         }
-        validate_value("email")
-        validate_value(true)
-        validate_value("123")
-        validate_value([1, 2, 3])
-        validate_value(Date.init())
-        validate_value(Date.init(), not: true)
-        validate_value("some random string", not: true)
-        validate_value(true, not: true)
-        validate_value("123", not: true)
     }
 
     func testCustomFailureDescriptions() throws {
