@@ -167,11 +167,14 @@ extension RoutesBuilder {
                 return request.body.collect(
                     max: max?.value ?? request.application.routes.defaultMaxBodySize.value
                 ).flatMapThrowing { _ in
-                    try closure(request)
+                    try request.propagateTracingIfEnabled {
+                        try closure(request)
+                    }
                 }.encodeResponse(for: request)
             } else {
-                return try closure(request)
-                    .encodeResponse(for: request)
+                return try request.propagateTracingIfEnabled {
+                    try closure(request)
+                }.encodeResponse(for: request)
             }
         }
         let route = Route(
