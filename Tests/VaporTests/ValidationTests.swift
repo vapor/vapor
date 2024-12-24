@@ -795,43 +795,36 @@ class ValidationTests: XCTestCase {
     
 
     func testCustomValidator() {
-        func validate_value<T>(
-            _ value: T,
-            not: Bool = false
+        let value = "test123"
+        let validationDescription = "test \'\(value)'"
+
+        // These tests are used to make sure that the custom validator pass and fail correctly.
+        assert(
+            value,
+            fails: !.custom(validationDescription) { x in
+                return x == value
+            },
+            "is successfully validated for custom validation '\(validationDescription)'."
         )
-        where T: Decodable & Sendable & Equatable {
-            let validationDescription = "test \'\(value)'"
-
-            let value = "test123"
-
-            // These tests are used to make sure that the custom validator pass and fail correctly.
-            assert(
-                value,
-                fails: !.custom(validationDescription) { x in
-                    return x == value
-                },
-                "is successfully validated for custom validation '\(validationDescription)'."
-            )
-            assert(
-                value,
-                passes: !.custom(validationDescription) { x in
-                    return x != value
-                }
-            )
-            assert(
-                value,
-                fails: .custom(validationDescription) { x in
-                    return x != value
-                },
-                "is not successfully validated for custom validation '\(validationDescription)'."
-            )
-            assert(
-                value,
-                passes: .custom(validationDescription) { x in
-                    return x == value
-                }
-            )
-        }
+        assert(
+            value,
+            passes: !.custom(validationDescription) { x in
+                return x != value
+            }
+        )
+        assert(
+            value,
+            fails: .custom(validationDescription) { x in
+                return x != value
+            },
+            "is not successfully validated for custom validation '\(validationDescription)'."
+        )
+        assert(
+            value,
+            passes: .custom(validationDescription) { x in
+                return x == value
+            }
+        )
     }
 
     func testCustomFailureDescriptions() throws {
