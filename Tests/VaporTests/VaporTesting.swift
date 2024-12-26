@@ -21,6 +21,7 @@ struct VaporTestingTests {
                 #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
+
             try await app.testing().test(.POST, "/decode") { req in
                 try req.content.encode(FooContent())
             } afterResponse: { res in
