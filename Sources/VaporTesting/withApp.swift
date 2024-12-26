@@ -8,7 +8,7 @@ import Vapor
 /// @Test
 /// func helloWorld() async throws {
 ///     try await withApp(/* whatever set up needed*/) { app in
-///         try await self.app.test(.GET, "hello", afterResponse: { res async in
+///         try await self.app.testing().test(.GET, "hello", afterResponse: { res async in
 ///             #expect(res.status == .ok)
 ///             #expect(res.body.string == "Hello, world!")
 ///         })
