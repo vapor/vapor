@@ -8,7 +8,7 @@ import Vapor
 /// @Test
 /// func helloWorld() async throws {
 ///     try await withApp(/* whatever set up needed*/) { app in
-///         try await self.app.test(.GET, "hello", afterResponse: { res async in
+///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
 ///             #expect(res.status == .ok)
 ///             #expect(res.body.string == "Hello, world!")
 ///         })
@@ -17,7 +17,13 @@ import Vapor
 /// ```
 public func withApp<T>(_ block: (Application) async throws -> T) async throws -> T {
     let app = try await Application.make(.testing)
-    let result = try await block(app)
+    let result: T
+    do {
+        result = try await block(app)
+    } catch {
+        try? await app.asyncShutdown()
+        throw error
+    }
     try await app.asyncShutdown()
     return result
 }
