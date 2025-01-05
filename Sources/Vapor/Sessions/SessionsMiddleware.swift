@@ -77,7 +77,7 @@ public final class SessionsMiddleware: Middleware {
             // After create or update, set cookie on the response.
             return createOrUpdate.map { id in
                 // the session has an id, set the cookie
-                response.cookies[self.configuration.cookieName] = self.configuration.cookieFactory(id)
+                response.cookies[self.configuration.cookieName] = self.configuration.cookieFactory(id, session)
                 return response
             }
         } else if let cookieValue = request.cookies[self.configuration.cookieName] {
