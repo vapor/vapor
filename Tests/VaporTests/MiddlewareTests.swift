@@ -159,7 +159,9 @@ final class MiddlewareTests: XCTestCase {
         }
         
         app.grouped(
-            TracingMiddleware()
+            TracingMiddleware() { attributes, _ in
+                attributes["custom"] = "custom"
+            }
         ).grouped(
             TestServiceContextMiddleware()
         ).get("testTracing") { req -> String in
@@ -203,6 +205,8 @@ final class MiddlewareTests: XCTestCase {
         XCTAssertNotNil(span.attributes["network.peer.port"]?.toSpanAttribute())
         XCTAssertEqual(span.attributes["network.protocol.version"]?.toSpanAttribute(), "1.1")
         XCTAssertEqual(span.attributes["user_agent.original"]?.toSpanAttribute(), "test")
+        
+        XCTAssertEqual(span.attributes["custom"]?.toSpanAttribute(), "custom")
         
         XCTAssertEqual(span.attributes["http.response.status_code"]?.toSpanAttribute(), 200)
     }

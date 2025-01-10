@@ -4,7 +4,16 @@ import Tracing
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-spans/
 public final class TracingMiddleware: AsyncMiddleware {
-    public init() {}
+    private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
+    
+    /// Create a TracingMiddleware
+    /// - Parameter setCustomAttributes: Closure that allows setting custom span attributes for a particular request. A custom span attribute could be extracted from a request
+    /// header, for example. This closure is called during span creation on every request, so should be lightweight.
+    public init(
+        setCustomAttributes: @escaping @Sendable (inout SpanAttributes, Request) -> Void = { _, _ in }
+    ) {
+        self.setCustomAttributes = setCustomAttributes
+    }
     
     public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         let parentContext = request.serviceContext
@@ -49,6 +58,9 @@ public final class TracingMiddleware: AsyncMiddleware {
                 attributes["network.peer.port"] = request.remoteAddress?.port
                 attributes["network.protocol.version"] = "\(request.version.major).\(request.version.minor)"
                 attributes["user_agent.original"] = request.headers[.userAgent].first
+                
+                // Custom defined
+                setCustomAttributes(&attributes, request)
             }
             let response = try await next.respond(to: request)
             
