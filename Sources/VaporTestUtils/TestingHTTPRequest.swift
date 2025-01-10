@@ -3,7 +3,7 @@ import NIOHTTP1
 import NIOConcurrencyHelpers
 import Vapor
 
-public struct XCTHTTPRequest: Sendable {
+public struct TestingHTTPRequest: Sendable {
     public var method: HTTPMethod
     public var url: URI
     public var headers: HTTPHeaders

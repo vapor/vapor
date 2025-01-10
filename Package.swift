@@ -13,6 +13,7 @@ let package = Package(
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
         .library(name: "XCTVapor", targets: ["XCTVapor"]),
+        .library(name: "VaporTesting", targets: ["VaporTesting"]),
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
@@ -117,15 +118,36 @@ let package = Package(
         ),
         
         // Testing
-        .target(name: "XCTVapor", dependencies: [
-            .target(name: "Vapor"),
-        ]),
+        .target(
+            name: "VaporTestUtils",
+            dependencies: [
+                .target(name: "Vapor"),
+            ],
+            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+        ),
+        .target(
+            name: "VaporTesting",
+            dependencies: [
+                .target(name: "VaporTestUtils"),
+                .target(name: "Vapor"),
+            ],
+            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+        ),
+        .target(
+            name: "XCTVapor",
+            dependencies: [
+                .target(name: "VaporTestUtils"),
+                .target(name: "Vapor"),
+            ],
+            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+        ),
         .testTarget(
             name: "VaporTests",
             dependencies: [
                 .product(name: "NIOTestUtils", package: "swift-nio"),
                 .target(name: "XCTVapor"),
-                "Vapor",
+                .target(name: "VaporTesting"),
+                .target(name: "Vapor"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),
