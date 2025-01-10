@@ -167,6 +167,8 @@ final class MiddlewareTests: XCTestCase {
         ).get("testTracing") { req -> String in
             // Validates that TracingMiddleware sets the serviceContext
             XCTAssertNotNil(req.serviceContext)
+            // Validates that TracingMiddleware exposes header extraction to backend
+            XCTAssertEqual(req.serviceContext.extracted, "extracted")
             // Validates that the span's service context is propagated into the
             // Task.local storage of the responder closure, thereby ensuring that
             // spans created in the closure are nested under the request span.
@@ -180,6 +182,7 @@ final class MiddlewareTests: XCTestCase {
             "/testTracing?foo=bar",
             beforeRequest: { request async in
                 request.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
+                request.headers.add(name: TestTracer.extractKey, value: "extracted")
             },
             afterResponse: { response async in
                 XCTAssertEqual(response.status, .ok)

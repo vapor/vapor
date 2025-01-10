@@ -16,7 +16,9 @@ public final class TracingMiddleware: AsyncMiddleware {
     }
     
     public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
-        let parentContext = request.serviceContext
+        var parentContext = request.serviceContext
+        InstrumentationSystem.instrument.extract(request.headers, into: &parentContext, using: HTTPHeadersExtractor())
+        
         return try await withSpan(
             // Name: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
             request.route?.description ?? "vapor_route_undefined",
@@ -75,6 +77,20 @@ public final class TracingMiddleware: AsyncMiddleware {
             }
             
             return response
+        }
+    }
+}
+
+// Allows backends to extract information from the request headers. For example, in OTel W3C, this allows frontend/backend
+// correlation using the `traceparent` and `tracestate` headers. For more information, see
+// https://swiftpackageindex.com/apple/swift-distributed-tracing/main/documentation/tracing/instrumentyourlibrary#Handling-inbound-requests
+private struct HTTPHeadersExtractor: Extractor {
+    func extract(key name: String, from headers: HTTPHeaders) -> String? {
+        let headerValue = headers[name]
+        if headerValue.isEmpty {
+            return nil
+        } else {
+            return headerValue.joined(separator: ";")
         }
     }
 }
