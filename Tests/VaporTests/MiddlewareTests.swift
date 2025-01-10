@@ -178,10 +178,10 @@ final class MiddlewareTests: XCTestCase {
         try await app.testable(method: .running(hostname: "127.0.0.1", port: 8080)).test(
             .GET,
             "/testTracing?foo=bar",
-            beforeRequest: { request in
+            beforeRequest: { request async in
                 request.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
             },
-            afterResponse: { response in
+            afterResponse: { response async in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(response.body.string, "done")
             }
