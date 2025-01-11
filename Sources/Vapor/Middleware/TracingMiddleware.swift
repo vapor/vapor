@@ -7,10 +7,15 @@ public final class TracingMiddleware: AsyncMiddleware {
     private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
     
     /// Create a TracingMiddleware
+    public init() {
+        self.setCustomAttributes = { _, _ in }
+    }
+    
+    /// Create a TracingMiddleware
     /// - Parameter setCustomAttributes: Closure that allows setting custom span attributes for a particular request. A custom span attribute could be extracted from a request
     /// header, for example. This closure is called during span creation on every request, so should be lightweight.
     public init(
-        setCustomAttributes: @escaping @Sendable (inout SpanAttributes, Request) -> Void = { _, _ in }
+        setCustomAttributes: @escaping @Sendable (inout SpanAttributes, Request) -> Void
     ) {
         self.setCustomAttributes = setCustomAttributes
     }
