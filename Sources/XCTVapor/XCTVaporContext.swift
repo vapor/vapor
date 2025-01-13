@@ -1,9 +1,9 @@
-#if compiler(>=6.0)
+#if compiler(>=6.0) && canImport(Testing)
 import Testing
 #endif
 
 public enum XCTVaporContext {
-#if compiler(>=6.0)
+#if compiler(>=6.0) && canImport(Testing)
     @TaskLocal public static var emitWarningIfCurrentTestInfoIsAvailable: Bool?
 #endif
 
@@ -14,7 +14,7 @@ public enum XCTVaporContext {
         file: StaticString,
         line: UInt
     ) {
-#if compiler(>=6.0)
+#if compiler(>=6.0) && canImport(Testing)
         let shouldWarn = XCTVaporContext.emitWarningIfCurrentTestInfoIsAvailable ?? true
         var isInSwiftTesting: Bool { Test.current != nil }
         if shouldWarn, isInSwiftTesting {

@@ -3,6 +3,9 @@ import XCTest
 import Vapor
 import NIOCore
 import NIOPosix
+#if canImport(Android)
+import func Android.sleep
+#endif
 
 final class AuthenticationTests: XCTestCase {
     func testBearerAuthenticator() throws {

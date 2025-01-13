@@ -2,6 +2,9 @@ import XCTVapor
 import XCTest
 import Vapor
 import NIOCore
+#if canImport(Android)
+import func Android.sleep
+#endif
 
 final class AsyncCacheTests: XCTestCase {
     var app: Application!
