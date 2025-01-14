@@ -150,8 +150,12 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         self.eventLoop.assertInEventLoop() // Only check in debug, just in case...
 
-        func finishStream() {
+        func finishStream(finishedNormally: Bool) {
             self.isComplete.withLockedValue { $0 = true }
+            guard finishedNormally else {
+                self.contextBox.value.fireUserInboundEventTriggered(ChannelShouldQuiesceEvent())
+                return
+            }
             self.contextBox.value.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
             // Don't forward the current promise (if any) to the write completion of the end-response signal, as we
             // will be notified of errors through other paths and can get spurious I/O errors from this write that
@@ -175,7 +179,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
             }
         case .end:
             if !self.isComplete.withLockedValue({ $0 }) { // Don't send the response end events more than once.
-                finishStream()
+                finishStream(finishedNormally: true)
                 // check this only after sending the stream end; we want to make send that regardless
                 if let count = self.count, self.currentCount.value < count {
                     self.promise?.fail(Error.notEnoughBytes)
@@ -189,7 +193,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
             }
         case .error(let error):
             if !self.isComplete.withLockedValue({ $0 }) { // Don't send the response end events more than once.
-                finishStream()
+                finishStream(finishedNormally: false)
                 self.promise?.fail(error)
             }
             promise?.fail(error) // We want to fail the local promise regardless. Echo the error back.
