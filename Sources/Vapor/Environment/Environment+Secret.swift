@@ -1,6 +1,7 @@
 import NIOCore
 import NIOPosix
 import AsyncKit
+import _NIOFileSystem
 
 extension Environment {
     /// Reads a file's content for a secret. The secret key is the name of the environment variable that is expected to
@@ -27,6 +28,7 @@ extension Environment {
     ///
     /// - Important: Do _not_ use `.wait()` if loading a secret at any time after the app has booted, such as while
     ///   handling a `Request`. Chain the result as you would any other future instead.
+    @available(*, deprecated, message: "Use an async version of load instead")
     public static func secret(key: String, fileIO: NonBlockingFileIO, on eventLoop: EventLoop) -> EventLoopFuture<String?> {
         guard let filePath = self.get(key) else {
             return eventLoop.future(nil)
@@ -45,6 +47,7 @@ extension Environment {
     /// - Returns:
     ///   - On success, a succeeded future with the loaded content of the file.
     ///   - On any kind of error, a succeeded future with a value of `nil`. It is not currently possible to get error details.
+    @available(*, deprecated, message: "Use an async version of load instead")
     public static func secret(path: String, fileIO: NonBlockingFileIO, on eventLoop: EventLoop) -> EventLoopFuture<String?> {
         return fileIO
             .openFile(path: path, eventLoop: eventLoop)
@@ -62,5 +65,26 @@ extension Environment {
             .recover { _ -> String? in
                 nil
             }
+    }
+
+    /// Load the content of a file at a given path as a secret.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file containing the secret
+    ///
+    /// - Returns:
+    ///   - On success, the loaded content of the file.
+    ///   - On any kind of error `nil`. It is not currently possible to get error details.
+    public static func secret(path: String) async throws -> String? {
+        do {
+            return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
+                let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
+                return buffer
+                    .getString(at: buffer.readerIndex, length: buffer.readableBytes)!
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        } catch {
+            return nil
+        }
     }
 }

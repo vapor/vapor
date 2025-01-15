@@ -8,6 +8,7 @@ import Darwin
 import Logging
 import NIOCore
 import NIOPosix
+import _NIOFileSystem
 
 /// Reads dotenv (`.env`) files and loads them into the current process.
 ///
@@ -142,6 +143,7 @@ public struct DotEnvFile: Sendable {
     ///     - eventLoop: Eventloop to perform async work on.
     ///     - overwrite: If `true`, values already existing in the process' env
     ///                  will be overwritten. Defaults to `false`.
+    @available(*, deprecated, message: "Use an async version of load instead")
     public static func load(
         path: String,
         fileio: NonBlockingFileIO,
@@ -169,6 +171,7 @@ public struct DotEnvFile: Sendable {
     ///     - path: Absolute or relative path of the dotenv file.
     ///     - fileio: File loader.
     ///     - eventLoop: Eventloop to perform async work on.
+    @available(*, deprecated, message: "Migrate to async API")
     public static func read(
         path: String,
         fileio: NonBlockingFileIO,
@@ -244,8 +247,8 @@ public struct DotEnvFile: Sendable {
         path: String,
         fileio: NonBlockingFileIO
     ) async throws -> DotEnvFile {
-        try await fileio.withFileRegion(path: path) { fileRegion in
-            let buffer = try await fileio.read(fileRegion: fileRegion, allocator: .init())
+        try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
+            let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
             var parser = Parser(source: buffer)
             return DotEnvFile(lines: parser.parse())
         }
