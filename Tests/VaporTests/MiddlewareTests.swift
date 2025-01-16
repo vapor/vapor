@@ -8,8 +8,7 @@ final class MiddlewareTests: XCTestCase {
     var app: Application!
     
     override func setUp() async throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application.make(test)
+        app = try await Application.make(.testing)
     }
     
     override func tearDown() async throws {
@@ -177,19 +176,20 @@ final class MiddlewareTests: XCTestCase {
             return "done"
         }
 
-        try await app.testable(method: .running(hostname: "127.0.0.1", port: 8080)).test(
-            .GET,
-            "/testTracing?foo=bar",
-            beforeRequest: { request async in
-                request.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
-                request.headers.add(name: TestTracer.extractKey, value: "extracted")
-            },
-            afterResponse: { response async in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body.string, "done")
-            }
-        )
-        
+        try await app.server.start(address: .hostname("127.0.0.1", port: 0))
+
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
+
+        let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
+            req.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
+        }
+
+        XCTAssertEqual(response.status, .ok)
+        XCTAssertEqual(response.body?.string, "done")
+
         let span = try XCTUnwrap(tracer.spans.first)
         XCTAssertEqual(span.operationName, "GET /testTracing")
         
@@ -200,7 +200,7 @@ final class MiddlewareTests: XCTestCase {
         XCTAssertEqual(span.attributes["http.route"]?.toSpanAttribute(), "/testTracing")
         XCTAssertEqual(span.attributes["network.protocol.name"]?.toSpanAttribute(), "http")
         XCTAssertEqual(span.attributes["server.address"]?.toSpanAttribute(), "127.0.0.1")
-        XCTAssertEqual(span.attributes["server.port"]?.toSpanAttribute(), 8080)
+        XCTAssertEqual(span.attributes["server.port"]?.toSpanAttribute(), port.toSpanAttribute())
         XCTAssertEqual(span.attributes["url.query"]?.toSpanAttribute(), "foo=bar")
         
         XCTAssertEqual(span.attributes["client.address"]?.toSpanAttribute(), "127.0.0.1")
@@ -212,5 +212,7 @@ final class MiddlewareTests: XCTestCase {
         XCTAssertEqual(span.attributes["custom"]?.toSpanAttribute(), "custom")
         
         XCTAssertEqual(span.attributes["http.response.status_code"]?.toSpanAttribute(), 200)
+
+        await app.server.shutdown()
     }
 }
