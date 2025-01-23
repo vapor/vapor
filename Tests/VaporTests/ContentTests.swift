@@ -154,6 +154,32 @@ final class ContentTests: XCTestCase {
         }
     }
 
+    func testContentContainerDecodeEmptyBody() throws {
+        struct FooContent: Content, Equatable {
+            var message: String?
+        }
+        struct FooDecodable: Decodable, Equatable {
+            var message: String?
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.post("decode") { req async throws -> String in
+            XCTAssertEqual(try req.content.decode(FooContent.self), FooContent())
+            XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .urlEncodedForm), FooDecodable())
+            return "decoded!"
+        }
+
+        // INFO: The .inMemory tester cannot make requests with an empty body
+        try app.testable(method: .running(port: 0)).test(.POST, "/decode") { req in
+            req.headers.contentType = .urlEncodedForm
+        } afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertContains(res.body.string, "decoded!")
+        }
+    }
+
     func testMultipartDecode() throws {
         let data = """
         --123\r
