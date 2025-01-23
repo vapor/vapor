@@ -766,7 +766,21 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             XCTAssertEqual(res.status, .ok)
         }
     }
-    
+
+    func testEmptyBody() throws {
+        app.on(.POST, "empty", body: .collect) { req -> HTTPStatus in
+            guard let data = req.body.data else {
+                throw Abort(.internalServerError)
+            }
+            XCTAssertEqual(data.readableBytes, 0)
+            return .ok
+        }
+
+        try app.testable(method: .running(port: 0)).test(.POST, "empty", body: ByteBuffer()) { res in
+            XCTAssertEqual(res.status, .ok)
+        }
+    }
+
     func testCollectedResponseBodyEnd() throws {
         app.post("drain") { req -> EventLoopFuture<HTTPStatus> in
             let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
@@ -791,7 +805,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     }
     
     // https://github.com/vapor/vapor/issues/1786
-    func testMissingBody() throws {
+    func testNoContentType() throws {
         struct User: Content { }
         
         app.get("user") { req -> User in
