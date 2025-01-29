@@ -10,5 +10,5 @@ jobs:
      secrets: inherit
      with:
        package_name: vapor
-       modules: Vapor,XCTVapor
+       modules: Vapor,XCTVapor,VaporTesting
        pathsToInvalidate: /vapor/* /xctvapor/*
