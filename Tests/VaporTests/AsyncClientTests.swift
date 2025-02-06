@@ -40,7 +40,11 @@ final class AsyncClientTests: XCTestCase, @unchecked Sendable {
             
             return AnythingResponse(headers: headers, json: jsonResponse)
         }
-        
+
+        remoteApp.get("stalling") {
+            $0.eventLoop.scheduleTask(in: .seconds(5)) { SomeJSON() }.futureResult
+        }
+
         remoteApp.environment.arguments = ["serve"]
         try await remoteApp.asyncBoot()
         try await remoteApp.startup()
