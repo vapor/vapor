@@ -4,7 +4,17 @@ import Vapor
 import NIOCore
 
 final class EndpointCacheTests: XCTestCase {
-    
+
+    var app: Application!
+
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+
     actor CurrentActor {
         var current = 0
         
@@ -19,9 +29,6 @@ final class EndpointCacheTests: XCTestCase {
     
     
     func testEndpointCacheNoCache() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         let currentActor = CurrentActor()
         struct Test: Content {
             let number: Int
@@ -55,9 +62,6 @@ final class EndpointCacheTests: XCTestCase {
     }
 
     func testEndpointCacheMaxAge() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         let currentActor = CurrentActor()
         struct Test: Content {
             let number: Int

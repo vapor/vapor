@@ -305,8 +305,9 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         }
     }
-    
-    func testFileWrite() throws {
+
+    @available(*, deprecated, message: "Test future API")
+    func testFileWriteFuture() throws {
         let request = Request(application: app, on: app.eventLoopGroup.next())
         
         let data = "Hello"
@@ -315,6 +316,19 @@ final class FileTests: XCTestCase {
         try request.fileio.writeFile(ByteBuffer(string: data), at: path).wait()
         defer { try? FileManager.default.removeItem(atPath: path) }
         
+        let result = try String(contentsOfFile: path)
+        XCTAssertEqual(result, data)
+    }
+
+    func testFileWrite() async throws {
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+
+        let data = "Hello"
+        let path = "/tmp/fileio_write.txt"
+
+        try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
+        defer { try? FileManager.default.removeItem(atPath: path) }
+
         let result = try String(contentsOfFile: path)
         XCTAssertEqual(result, data)
     }
