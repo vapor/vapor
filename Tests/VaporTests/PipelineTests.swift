@@ -155,7 +155,7 @@ final class PipelineTests: XCTestCase {
         let client = HTTPClient()
 
         do {
-            try await client.post(url: "http://localhost:\(port)/fail").get()
+            _ = try await client.post(url: "http://localhost:\(port)/fail").get()
             XCTFail("Client has failed to detect broken server response")
         } catch {
             if let error = error as? HTTPParserError {

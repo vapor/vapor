@@ -3,6 +3,7 @@ import XCTest
 import Vapor
 import NIOCore
 
+@available(*, deprecated, message: "Test old future APIs")
 final class RequestTests: XCTestCase {
     
     func testCustomHostAddress() throws {
