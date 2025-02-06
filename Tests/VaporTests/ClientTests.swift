@@ -14,6 +14,7 @@ import AsyncHTTPClient
 import NIOEmbedded
 import NIOConcurrencyHelpers
 
+@available(*, deprecated, message: "Testing deprecated future APIs")
 final class ClientTests: XCTestCase {
     var remoteAppPort: Int!
     var remoteApp: Application!
