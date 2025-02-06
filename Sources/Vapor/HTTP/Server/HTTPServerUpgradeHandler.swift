@@ -29,15 +29,19 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         self.httpHandlers = httpHandlers
     }
     
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) throws {
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let req = self.unwrapInboundIn(data)
         
         // check if request is upgrade
         let connectionHeaders = Set(req.headers[canonicalForm: "connection"].map { $0.lowercased() })
         if connectionHeaders.contains("upgrade") {
             let buffer = UpgradeBufferHandler()
-            _ = try context.channel.pipeline.syncOperations.addHandler(buffer, position: .before(self.httpRequestDecoder))
-            self.upgradeState = .pending(req, buffer)
+            do {
+                _ = try context.channel.pipeline.syncOperations.addHandler(buffer, position: .before(self.httpRequestDecoder))
+                self.upgradeState = .pending(req, buffer)
+            } catch {
+                self.errorCaught(context: context, error: error)
+            }
         }
         
         context.fireChannelRead(data)
@@ -95,9 +99,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     return sendableBox.protocolUpgrader.upgrade(context: sendableBox.context, upgradeRequest: head)
                 }.flatMap {
                     let sendableBox = box.value
-                    return sendableBox.context.eventLoop.makeCompletedFuture {
-                        sendableBox.context.pipeline.syncOperations.removeHandler(sendableBox.buffer)
-                    }
+                    return sendableBox.context.pipeline.syncOperations.removeHandler(sendableBox.buffer)
                 }.cascadeFailure(to: promise)
             } else {
                 // reset handlers
