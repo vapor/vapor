@@ -4,6 +4,7 @@ import Vapor
 import NIOCore
 import NIOPosix
 
+@available(*, deprecated, message: "Test old future APIs")
 final class AuthenticationTests: XCTestCase {
     func testBearerAuthenticator() throws {
         struct Test: Authenticatable {
