@@ -42,7 +42,7 @@ final class AsyncClientTests: XCTestCase, @unchecked Sendable {
         }
 
         remoteApp.get("stalling") {
-            $0.eventLoop.scheduleTask(in: .seconds(5)) { SomeJSON() }.futureResult
+            $0.eventLoop.scheduleTask(in: .seconds(1)) { SomeJSON() }.futureResult
         }
 
         remoteApp.environment.arguments = ["serve"]
@@ -144,7 +144,7 @@ final class AsyncClientTests: XCTestCase, @unchecked Sendable {
         try await app.asyncBoot()
 
         XCTAssertNoThrow(try app.client.get("http://localhost:\(remoteAppPort!)/json") { $0.timeout = .seconds(1) }.wait())
-        XCTAssertThrowsError(try app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .seconds(1) }.wait()) {
+        XCTAssertThrowsError(try app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .milliseconds(200) }.wait()) {
             XCTAssertTrue(type(of: $0) == HTTPClientError.self, "\(type(of: $0)) is not a \(HTTPClientError.self)")
             XCTAssertEqual($0 as? HTTPClientError, .deadlineExceeded)
         }

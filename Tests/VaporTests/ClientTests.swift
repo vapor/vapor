@@ -49,7 +49,7 @@ final class ClientTests: XCTestCase {
         }
 
         remoteApp.get("stalling") {
-            $0.eventLoop.scheduleTask(in: .seconds(5)) { SomeJSON() }.futureResult
+            $0.eventLoop.scheduleTask(in: .seconds(2)) { SomeJSON() }.futureResult
         }
         
         remoteApp.environment.arguments = ["serve"]
