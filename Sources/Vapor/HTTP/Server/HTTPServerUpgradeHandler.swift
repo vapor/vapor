@@ -29,14 +29,14 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         self.httpHandlers = httpHandlers
     }
     
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) throws {
         let req = self.unwrapInboundIn(data)
         
         // check if request is upgrade
         let connectionHeaders = Set(req.headers[canonicalForm: "connection"].map { $0.lowercased() })
         if connectionHeaders.contains("upgrade") {
             let buffer = UpgradeBufferHandler()
-            _ = context.channel.pipeline.addHandler(buffer, position: .before(self.httpRequestDecoder))
+            _ = try context.channel.pipeline.syncOperations.addHandler(buffer, position: .before(self.httpRequestDecoder))
             self.upgradeState = .pending(req, buffer)
         }
         
@@ -88,19 +88,21 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     let sendableBox = box.value
                     let handlers: [RemovableChannelHandler] = [sendableBox.handler] + sendableBox.handler.httpHandlers
                     return .andAllComplete(handlers.map { handler in
-                        return sendableBox.context.pipeline.removeHandler(handler)
+                        sendableBox.context.pipeline.syncOperations.removeHandler(handler)
                     }, on: box.value.context.eventLoop)
                 }.flatMap {
                     let sendableBox = box.value
                     return sendableBox.protocolUpgrader.upgrade(context: sendableBox.context, upgradeRequest: head)
                 }.flatMap {
                     let sendableBox = box.value
-                    return sendableBox.context.pipeline.removeHandler(sendableBox.buffer)
+                    return sendableBox.context.eventLoop.makeCompletedFuture {
+                        sendableBox.context.pipeline.syncOperations.removeHandler(sendableBox.buffer)
+                    }
                 }.cascadeFailure(to: promise)
             } else {
                 // reset handlers
                 self.upgradeState = .ready
-                context.channel.pipeline.removeHandler(buffer, promise: nil)
+                context.channel.pipeline.syncOperations.removeHandler(buffer, promise: nil)
                 context.write(self.wrapOutboundOut(res), promise: promise)
             }
         case .ready, .upgraded:
