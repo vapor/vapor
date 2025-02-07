@@ -1,4 +1,3 @@
-#if compiler(>=6.0)
 import Testing
 
 public enum VaporTestingContext {
@@ -34,4 +33,3 @@ public enum VaporTestingContext {
         }
     }
 }
-#endif

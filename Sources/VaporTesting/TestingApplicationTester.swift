@@ -1,8 +1,6 @@
 import NIOHTTP1
 import NIOCore
-#if compiler(>=6.0)
 import Testing
-#endif
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
@@ -27,7 +25,6 @@ extension Application: TestingApplicationTester {
     }
 }
 
-#if compiler(>=6.0)
 extension TestingApplicationTester {
     @discardableResult
     public func test(
@@ -130,4 +127,3 @@ extension TestingApplicationTester {
         }
     }
 }
-#endif

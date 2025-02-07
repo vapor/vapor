@@ -1,4 +1,3 @@
-#if compiler(>=6.0)
 import Testing
 
 public func expectContent<D>(
@@ -114,4 +113,3 @@ where T: Codable & Equatable
         Issue.record("could not decode \(T.self): \(error)", sourceLocation: sourceLocation)
     }
 }
-#endif

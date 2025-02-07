@@ -1,4 +1,3 @@
-#if compiler(>=6.0)
 import VaporTesting
 import Testing
 
@@ -57,4 +56,3 @@ struct VaporTestingTests {
         }
     }
 }
-#endif
