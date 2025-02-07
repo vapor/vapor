@@ -1,3 +1,5 @@
+import NIOHTTPCompression
+
 extension HTTPServer.Configuration {
     /// Supported HTTP decompression options.
     public struct RequestDecompressionConfiguration: Sendable {

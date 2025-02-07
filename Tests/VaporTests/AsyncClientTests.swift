@@ -1,3 +1,4 @@
+import AsyncHTTPClient
 import Vapor
 import XCTest
 import XCTVapor

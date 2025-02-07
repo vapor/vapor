@@ -1,7 +1,9 @@
+import NIOCore
 import XCTVapor
 import XCTest
 import Vapor
 import NIOHTTP1
+import WebSocketKit
 
 final class AsyncRouteTests: XCTestCase {
     var app: Application!
@@ -403,7 +405,7 @@ final class AsyncRouteTests: XCTestCase {
     }
 }
 
-extension Vapor.WebSocket: Swift.Hashable {
+extension WebSocket: Swift.Hashable {
     public static func == (lhs: WebSocket, rhs: WebSocket) -> Bool {
         lhs === rhs
     }

@@ -5,6 +5,9 @@ import NIOCore
 import NIOHTTP1
 import _NIOFileSystem
 import Crypto
+import Vapor
+import XCTVapor
+import VaporTestUtils
 
 final class AsyncFileTests: XCTestCase, @unchecked Sendable {
     var app: Application!

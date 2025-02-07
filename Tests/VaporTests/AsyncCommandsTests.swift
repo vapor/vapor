@@ -1,3 +1,4 @@
+import ConsoleKit
 import XCTest
 import Vapor
 

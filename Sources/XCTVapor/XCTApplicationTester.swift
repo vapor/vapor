@@ -1,5 +1,9 @@
 import NIOHTTP1
 import XCTest
+import VaporTestUtils
+import Vapor
+import NIOCore
+import Foundation
 
 public protocol XCTApplicationTester: Sendable {
     @available(*, noasync, message: "Use the async method instead.")

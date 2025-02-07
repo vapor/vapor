@@ -1,4 +1,4 @@
-import struct Foundation.URLComponents
+import Foundation
 
 // MARK: - URI
 

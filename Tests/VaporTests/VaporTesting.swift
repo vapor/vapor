@@ -1,3 +1,4 @@
+import Vapor
 import VaporTesting
 import Testing
 

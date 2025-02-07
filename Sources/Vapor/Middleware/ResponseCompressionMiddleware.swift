@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 /// Overrides the response compression settings for a route.
 ///
 /// This is useful when a set of static routes does not need compression, or a set of dynamic routes does.

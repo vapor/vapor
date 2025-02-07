@@ -1,5 +1,7 @@
 import AsyncHTTPClient
 import Vapor
+import NIOPosix
+import NIOCore
 
 extension Application {
     public enum Method {

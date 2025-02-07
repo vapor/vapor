@@ -1,3 +1,5 @@
+import NIOCore
+import NIOPosix
 import XCTVapor
 import Vapor
 import XCTest

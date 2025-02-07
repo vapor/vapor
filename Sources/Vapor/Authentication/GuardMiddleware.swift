@@ -1,4 +1,5 @@
 import NIOCore
+import NIOHTTP1
 
 extension Authenticatable {
     /// This middleware ensures that an `Authenticatable` type `A` has been authenticated

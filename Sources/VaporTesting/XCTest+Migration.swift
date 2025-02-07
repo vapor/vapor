@@ -1,3 +1,5 @@
+import VaporTestUtils
+
 @available(*, unavailable, renamed: "expectContent(_:_:fileID:filePath:line:column:_:)")
 public func XCTAssertContent<D>(
     _ type: D.Type,

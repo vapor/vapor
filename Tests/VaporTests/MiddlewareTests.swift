@@ -1,3 +1,4 @@
+import NIOHTTP1
 import XCTVapor
 import XCTest
 import Vapor
