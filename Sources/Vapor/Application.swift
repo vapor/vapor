@@ -207,10 +207,10 @@ public final class Application: Sendable {
         }
 
         for handler in self.lifecycle.handlers {
-            try await handler.willBootAsync(self)
+            try await handler.willBoot(self)
         }
         for handler in self.lifecycle.handlers {
-            try await handler.didBootAsync(self)
+            try await handler.didBoot(self)
         }
     }
     
@@ -220,12 +220,12 @@ public final class Application: Sendable {
 
         self.logger.trace("Shutting down providers")
         for handler in self.lifecycle.handlers.reversed()  {
-            await handler.shutdownAsync(self)
+            await handler.shutdown(self)
         }
         self.lifecycle.handlers = []
 
         self.logger.trace("Clearing Application storage")
-        await self.storage.asyncShutdown()
+        await self.storage.shutdown()
         self.storage.clear()
 
         switch self.eventLoopGroupProvider {

@@ -146,7 +146,7 @@ public struct Storage: Sendable {
     
     /// For every key in the container having a shutdown closure, invoke the closure. Designed to
     /// be invoked during an explicit app shutdown process or in a reference type's `deinit`.
-    public func asyncShutdown() async {
+    public func shutdown() async {
         for value in self.storage.values {
             await value.asyncShutdown(logger: self.logger)
         }
