@@ -1,11 +1,11 @@
 import NIOCore
 
-public extension ViewRenderer {
-    func render<E>(_ name: String, _ context: E) async throws -> View where E: Encodable {
+extension ViewRenderer {
+    public func render<E>(_ name: String, _ context: E) async throws -> View where E: Encodable {
         try await self.render(name, context).get()
     }
 
-    func render(_ name: String) async throws -> View {
+    public func render(_ name: String) async throws -> View {
         try await self.render(name).get()
     }
 }

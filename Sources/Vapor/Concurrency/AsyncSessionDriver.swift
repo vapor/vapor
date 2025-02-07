@@ -18,7 +18,7 @@ extension AsyncSessionDriver {
         }
         return promise.futureResult
     }
-    
+
     public func readSession(_ sessionID: SessionID, for request: Request) -> EventLoopFuture<SessionData?> {
         let promise = request.eventLoop.makePromise(of: SessionData?.self)
         promise.completeWithTask {
@@ -26,7 +26,7 @@ extension AsyncSessionDriver {
         }
         return promise.futureResult
     }
-    
+
     public func updateSession(_ sessionID: SessionID, to data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
         let promise = request.eventLoop.makePromise(of: SessionID.self)
         promise.completeWithTask {
@@ -34,7 +34,7 @@ extension AsyncSessionDriver {
         }
         return promise.futureResult
     }
-    
+
     public func deleteSession(_ sessionID: SessionID, for request: Request) -> EventLoopFuture<Void> {
         let promise = request.eventLoop.makePromise(of: Void.self)
         promise.completeWithTask {

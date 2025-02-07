@@ -1,9 +1,9 @@
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 
 // MARK: - Request.Body.AsyncSequenceDelegate
 extension Request.Body {
-    
+
     /// `Request.Body.AsyncSequenceDelegate` bridges between EventLoop
     /// and AsyncSequence. Crucially, this type handles backpressure
     /// by synchronizing bytes on the `EventLoop`
@@ -76,14 +76,16 @@ extension Request.Body {
 // MARK: - Request.Body.AsyncSequence
 extension Request.Body: AsyncSequence {
     public typealias Element = ByteBuffer
-    
+
     /// This wrapper generalizes our implementation.
     /// `RequestBody.AsyncIterator` is the override point for
     /// using another implementation
     public struct AsyncIterator: AsyncIteratorProtocol {
         public typealias Element = ByteBuffer
 
-        fileprivate typealias Underlying = NIOThrowingAsyncSequenceProducer<ByteBuffer, any Error, NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark, Request.Body.AsyncSequenceDelegate>.AsyncIterator
+        fileprivate typealias Underlying = NIOThrowingAsyncSequenceProducer<
+            ByteBuffer, any Error, NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark, Request.Body.AsyncSequenceDelegate
+        >.AsyncIterator
 
         private var underlying: Underlying
 
@@ -95,7 +97,7 @@ extension Request.Body: AsyncSequence {
             return try await self.underlying.next()
         }
     }
-    
+
     /// Checks that the request has a body suitable for an AsyncSequence
     ///
     /// AsyncSequence streaming should use a body of type .stream().
@@ -110,13 +112,14 @@ extension Request.Body: AsyncSequence {
         case .collected(_):
             break
         default:
-            preconditionFailure("""
-            AsyncSequence streaming should use a body of type .stream()
-            Example: app.on(.POST, "/upload", body: .stream) { ... }
-           """)
+            preconditionFailure(
+                """
+                 AsyncSequence streaming should use a body of type .stream()
+                 Example: app.on(.POST, "/upload", body: .stream) { ... }
+                """)
         }
     }
-    
+
     /// Generates an `AsyncIterator` to stream the body’s content as
     /// `ByteBuffer` sequences. This implementation supports backpressure using
     /// `NIOAsyncSequenceProducerBackPressureStrategies`
@@ -124,18 +127,19 @@ extension Request.Body: AsyncSequence {
     /// `ByteBuffer` sequence
     public func makeAsyncIterator() -> AsyncIterator {
         let delegate = AsyncSequenceDelegate(eventLoop: request.eventLoop)
-        
+
         let producer = NIOThrowingAsyncSequenceProducer.makeSequence(
             elementType: ByteBuffer.self,
             failureType: Error.self,
-            backPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies
+            backPressureStrategy:
+                NIOAsyncSequenceProducerBackPressureStrategies
                 .HighLowWatermark(lowWatermark: 5, highWatermark: 20),
             finishOnDeinit: true,
             delegate: delegate
         )
-        
+
         let source = producer.source
-        
+
         self.drain { streamResult in
             switch streamResult {
             case .buffer(let buffer):
@@ -170,7 +174,7 @@ extension Request.Body: AsyncSequence {
                 return request.eventLoop.makeSucceededVoidFuture()
             }
         }
-        
+
         return AsyncIterator(underlying: producer.sequence.makeAsyncIterator())
     }
 }

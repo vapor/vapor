@@ -24,11 +24,8 @@ extension Authenticatable {
     }
 }
 
-
-
 private final class GuardAuthenticationMiddleware<A>: Middleware
-    where A: Authenticatable
-{
+where A: Authenticatable {
     /// Error to throw when guard fails.
     private let error: Error
 

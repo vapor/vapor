@@ -20,13 +20,13 @@ extension Application {
                 }
             }
 
-            let run: @Sendable (Application) -> ()
+            let run: @Sendable (Application) -> Void
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> Void) {
                 self.run = run
             }
         }
-        
+
         final class Storage: Sendable {
             struct ViewRendererFactory {
                 let factory: (@Sendable (Application) -> ViewRenderer)?

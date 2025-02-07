@@ -1,5 +1,5 @@
-import Foundation
 import Crypto
+import Foundation
 
 /// Supported OTP output sizes.
 public enum OTPDigits: Int {
@@ -9,7 +9,7 @@ public enum OTPDigits: Int {
     case seven = 7
     /// Eight digits OTP.
     case eight = 8
-    
+
     /// Returns 10^digit.
     fileprivate var pow: UInt32 {
         switch self {
@@ -39,7 +39,7 @@ internal protocol OTP {
     var digest: OTPDigest { get }
 }
 
-internal extension OTP {
+extension OTP {
     /// Generate the OTP based on a counter.
     /// - Parameter counter: The counter to generate the OTP for.
     /// - Returns: The generated OTP as `String`.
@@ -47,26 +47,26 @@ internal extension OTP {
         _ h: H,
         counter: UInt64
     ) -> String {
-        let hmac = Array(HMAC<H>.authenticationCode(
-            for: /*counter.bigEndian.data */Data([
-                UInt8(truncatingIfNeeded: counter >> 56), UInt8(truncatingIfNeeded: counter >> 48),
-                UInt8(truncatingIfNeeded: counter >> 40), UInt8(truncatingIfNeeded: counter >> 32),
-                UInt8(truncatingIfNeeded: counter >> 24), UInt8(truncatingIfNeeded: counter >> 16),
-                UInt8(truncatingIfNeeded: counter >>  8), UInt8(truncatingIfNeeded: counter >> 0),
-            ]),
-            using: self.key
-        ))
+        let hmac = Array(
+            HMAC<H>.authenticationCode(
+                for: /*counter.bigEndian.data */ Data([
+                    UInt8(truncatingIfNeeded: counter >> 56), UInt8(truncatingIfNeeded: counter >> 48),
+                    UInt8(truncatingIfNeeded: counter >> 40), UInt8(truncatingIfNeeded: counter >> 32),
+                    UInt8(truncatingIfNeeded: counter >> 24), UInt8(truncatingIfNeeded: counter >> 16),
+                    UInt8(truncatingIfNeeded: counter >> 8), UInt8(truncatingIfNeeded: counter >> 0),
+                ]),
+                using: self.key
+            ))
         // Get the last 4 bits of the HMAC for use as offset
         let offset = Int((hmac.last ?? 0x00) & 0x0f)
         // Convert to UInt32, removing MSB, then to String
-        let number = String((
-            (UInt32(hmac[offset + 0] & 0x7f) << 24) | (UInt32(hmac[offset + 1]) << 16) |
-            (UInt32(hmac[offset + 2])        <<  8) |  UInt32(hmac[offset + 3])
-        ) % self.digits.pow)
+        let number = String(
+            ((UInt32(hmac[offset + 0] & 0x7f) << 24) | (UInt32(hmac[offset + 1]) << 16) | (UInt32(hmac[offset + 2]) << 8)
+                | UInt32(hmac[offset + 3])) % self.digits.pow)
 
         return String(repeatElement("0", count: self.digits.rawValue - number.count)) + number
     }
-    
+
     /// Generates a range of OTP's.
     /// - Note: This function will automatically wrap the counter by using integer overflow.
     /// - Parameters:
@@ -79,10 +79,10 @@ internal extension OTP {
         range: Int
     ) -> [String] {
         precondition(range > 0, "Cannot generate range of OTP's for range \(range). Range must be greater than 0")
-        
-        return (-range ... range).map { self.generate(h, counter: UInt64(Int64(counter) &+ Int64($0))) }
+
+        return (-range...range).map { self.generate(h, counter: UInt64(Int64(counter) &+ Int64($0))) }
     }
-    
+
     /// Generate the HOTP based on the counter.
     /// - Parameter counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
@@ -95,7 +95,7 @@ internal extension OTP {
         case .sha512: return generate(SHA512(), counter: counter)
         }
     }
-    
+
     /// Generates several TOTP's for a range.
     /// - Note: This function will automatically wrap the counter by using integer overflow. This might provide some odd behaviour when near the start time or near the max time.
     /// - Parameters:
@@ -126,7 +126,7 @@ public struct HOTP: OTP {
     let key: SymmetricKey
     let digits: OTPDigits
     let digest: OTPDigest
-    
+
     /// Initialize the HOTP object.
     /// - Parameters:
     ///   - key: The key.
@@ -141,7 +141,7 @@ public struct HOTP: OTP {
         self.digits = digits
         self.digest = digest
     }
-    
+
     /// Generate the HOTP based on the counter.
     /// - Parameter counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
@@ -150,7 +150,7 @@ public struct HOTP: OTP {
     ) -> String {
         _generate(counter: counter)
     }
-    
+
     /// Generates several HOTP's for a range.
     /// - Note: This function will automatically wrap the counter by using integer overflow.
     /// - Parameters:
@@ -164,7 +164,7 @@ public struct HOTP: OTP {
     ) -> [String] {
         _generate(counter: counter, range: range)
     }
-    
+
     /// Compute the HOTP for the key and the counter.
     /// - Parameters:
     ///   - key: The key.
@@ -196,7 +196,7 @@ public struct TOTP: OTP {
     let digest: OTPDigest
     /// The time interval to generate the TOTP on.
     let interval: Int
-    
+
     /// Initialize the TOTP object.
     /// - Parameters:
     ///   - key: The key.
@@ -215,7 +215,7 @@ public struct TOTP: OTP {
         self.digest = digest
         self.interval = interval
     }
-    
+
     /// Generate the TOTP based on a time.
     /// - Parameter time: The time to generate the TOTP for.
     /// - Returns: The generated TOTP as `String`.
@@ -225,7 +225,7 @@ public struct TOTP: OTP {
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
         return _generate(counter: UInt64(counter))
     }
-    
+
     /// Generates several TOTP's for a range.
     /// - Note: This function will automatically create the previous and next TOTP's for a range based on the interval. For example, if the interval is `30` and the range is `2`, the result will be calculated for `[-1min, -30sec, 0, 30sec, 1min]`.
     /// - Note: This function will automatically wrap the counter by using integer overflow. This might provide some odd behaviour when near the start time or near the max time.
@@ -241,7 +241,7 @@ public struct TOTP: OTP {
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
         return _generate(counter: UInt64(counter), range: range)
     }
-    
+
     /// Compute the TOTP for the key, time interval and time.
     /// - Parameters:
     ///   - key: The key.
@@ -261,9 +261,9 @@ public struct TOTP: OTP {
     }
 }
 
-fileprivate extension FixedWidthInteger {
+extension FixedWidthInteger {
     /// The raw data representing the integer.
-    var data: Data {
+    fileprivate var data: Data {
         var copy = self
         return .init(bytes: &copy, count: MemoryLayout<Self>.size)
     }

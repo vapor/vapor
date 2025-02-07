@@ -1,13 +1,14 @@
-#if canImport(Glibc)
-import Glibc
-#elseif canImport(Musl)
-import Musl
-#else
-import Darwin
-#endif
 import Logging
 import NIOCore
 import NIOPosix
+
+#if canImport(Glibc)
+    import Glibc
+#elseif canImport(Musl)
+    import Musl
+#else
+    import Darwin
+#endif
 
 /// Reads dotenv (`.env`) files and loads them into the current process.
 ///
@@ -177,11 +178,10 @@ public struct DotEnvFile: Sendable {
         return fileio.openFile(path: path, eventLoop: eventLoop).flatMapWithEventLoop { arg, eventLoop -> EventLoopFuture<ByteBuffer> in
             let fileHandleWrapper = NIOLoopBound(arg.0, eventLoop: eventLoop)
             return fileio.read(fileRegion: arg.1, allocator: .init(), eventLoop: eventLoop)
-                .flatMapThrowing
-            { buffer in
-                try fileHandleWrapper.value.close()
-                return buffer
-            }
+                .flatMapThrowing { buffer in
+                    try fileHandleWrapper.value.close()
+                    return buffer
+                }
         }.map { buffer in
             var parser = Parser(source: buffer)
             return .init(lines: parser.parse())
@@ -223,7 +223,7 @@ public struct DotEnvFile: Sendable {
             setenv(line.key, line.value, overwrite ? 1 : 0)
         }
     }
-    
+
     // MARK: - Concurrency
     /// Reads a dotenv file from the supplied path.
     ///
@@ -250,7 +250,7 @@ public struct DotEnvFile: Sendable {
             return DotEnvFile(lines: parser.parse())
         }
     }
-    
+
     /// Reads a dotenv file from the supplied path and loads it into the process.
     ///
     ///     let fileio: NonBlockingFileIO
@@ -272,7 +272,7 @@ public struct DotEnvFile: Sendable {
         let file = try await self.read(path: path, fileio: fileio)
         file.load(overwrite: overwrite)
     }
-    
+
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let path: String
@@ -296,7 +296,7 @@ public struct DotEnvFile: Sendable {
             logger.debug("Could not load \(path) file: \(error)")
         }
     }
-    
+
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let environment: Environment
@@ -350,7 +350,7 @@ extension DotEnvFile {
                 return self.parseNext()
             case .newLine:
                 // empty line, skip
-                self.pop() // \n
+                self.pop()  // \n
                 // then parse next
                 return self.parseNext()
             default:
@@ -362,7 +362,7 @@ extension DotEnvFile {
         private mutating func skipComment() {
             let commentLength: Int
             if let toNewLine = self.countDistance(to: .newLine) {
-                commentLength = toNewLine + 1 // include newline
+                commentLength = toNewLine + 1  // include newline
             } else {
                 commentLength = self.source.readableBytes
             }
@@ -376,7 +376,7 @@ extension DotEnvFile {
             guard let key = self.source.readString(length: keyLength) else {
                 return nil
             }
-            self.pop() // =
+            self.pop()  // =
             guard let value = self.parseLineValue() else {
                 return nil
             }
@@ -447,20 +447,20 @@ extension DotEnvFile {
     }
 }
 
-private extension UInt8 {
-    static var newLine: UInt8 {
+extension UInt8 {
+    fileprivate static var newLine: UInt8 {
         return 0xA
     }
 
-    static var space: UInt8 {
+    fileprivate static var space: UInt8 {
         return 0x20
     }
 
-    static var octothorpe: UInt8 {
+    fileprivate static var octothorpe: UInt8 {
         return 0x23
     }
 
-    static var equal: UInt8 {
+    fileprivate static var equal: UInt8 {
         return 0x3D
     }
 }

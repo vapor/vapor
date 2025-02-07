@@ -1,8 +1,8 @@
-import XCTVapor
-import XCTest
-import Vapor
 import NIOCore
 import NIOHTTP1
+import Vapor
+import XCTVapor
+import XCTest
 
 final class QueryTests: XCTestCase {
     func testQuery() throws {
@@ -186,7 +186,8 @@ final class QueryTests: XCTestCase {
             return .ok
         }
 
-        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(
+            withAllowedCharacters: .urlQueryAllowed)!
         try app.testable().test(.GET, "/urlencodedform?\(data)") { res in
             XCTAssertEqual(res.status.code, 200)
         }
@@ -205,11 +206,13 @@ final class QueryTests: XCTestCase {
         }
 
         try app.testable().test(.GET, "/custom-encode") { res in
-            XCTAssertEqual(res.body.string, """
-            {
-              "hello" : "world"
-            }
-            """)
+            XCTAssertEqual(
+                res.body.string,
+                """
+                {
+                  "hello" : "world"
+                }
+                """)
         }
     }
 
@@ -310,10 +313,10 @@ final class QueryTests: XCTestCase {
             url: URI(string: "/"),
             on: app.eventLoopGroup.next()
         )
-        struct BarStruct : Content {
+        struct BarStruct: Content {
             let bar: Bool
         }
-        struct OptionalBarStruct : Content {
+        struct OptionalBarStruct: Content {
             let bar: Bool?
             let baz: String?
         }
@@ -338,20 +341,20 @@ final class QueryTests: XCTestCase {
         XCTAssertFalse(try req.query.decode(BarStruct.self).bar)
         XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
     }
-    
+
     func testNotCrashingWhenUnkeyedContainerIsAtEnd() {
         struct Query: Decodable {
             let closedRange: ClosedRange<Double>
         }
-        
+
         let app = Application()
         defer { app.shutdown() }
-        
+
         let request = Request(application: app, on: app.eventLoopGroup.next())
         request.headers.contentType = .json
         request.url.path = "/"
         request.url.query = "closedRange=1"
-        
+
         XCTAssertThrowsError(try request.query.decode(Query.self)) { error in
             if case .valueNotFound(_, let context) = error as? DecodingError {
                 XCTAssertEqual(context.debugDescription, "Unkeyed container is at end.")

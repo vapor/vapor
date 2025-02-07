@@ -2,13 +2,13 @@ import Foundation
 
 public protocol PasswordHasher: Sendable {
     func hash<Password>(_ password: Password) throws -> [UInt8]
-        where Password: DataProtocol
+    where Password: DataProtocol
 
     func verify<Password, Digest>(
         _ password: Password,
         created digest: Digest
     ) throws -> Bool
-        where Password: DataProtocol, Digest: DataProtocol
+    where Password: DataProtocol, Digest: DataProtocol
 }
 
 extension PasswordHasher {

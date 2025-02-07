@@ -151,7 +151,7 @@ extension HTTPHeaders {
 
                     cache[keyPath: keyPath] = seconds
                     foundSomething = true
-            }
+                }
 
             return foundSomething ? cache : nil
         }
@@ -173,7 +173,7 @@ extension HTTPHeaders {
                     options.append("max-stale")
                 }
             }
-            
+
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
 
@@ -186,7 +186,7 @@ extension HTTPHeaders {
             "public": \.isPublic,
             "private": \.isPrivate,
             "proxy-revalidate": \.proxyRevalidate,
-            "only-if-cached": \.onlyIfCached
+            "only-if-cached": \.onlyIfCached,
         ]
 
         private static let prefix: [String: WritableKeyPath<Self, Int?>] = [
@@ -194,7 +194,7 @@ extension HTTPHeaders {
             "s-maxage": \.sMaxAge,
             "min-fresh": \.minFresh,
             "stale-while-revalidate": \.staleWhileRevalidate,
-            "stale-if-error": \.staleIfError
+            "stale-if-error": \.staleIfError,
         ]
     }
 
@@ -212,5 +212,5 @@ extension HTTPHeaders {
 }
 
 #if !$InferSendableFromCaptures
-extension Swift.WritableKeyPath: @unchecked Swift.Sendable {}
+    extension Swift.WritableKeyPath: @unchecked Swift.Sendable {}
 #endif

@@ -38,7 +38,7 @@ public enum RangeResult<T>: Equatable where T: Comparable {
     }
 
     /// initialize a range result
-    /// 
+    ///
     /// in case the provided value is not comparable (e.g. Float.nan) a `RangeResultError.notComparable` will be thrown
     init(min: T?, max: T?, value: T) throws {
         precondition(min != nil || max != nil, "Either `min` or `max` has to be non-nil")

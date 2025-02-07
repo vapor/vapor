@@ -6,7 +6,7 @@ import NIOHTTP1
 public struct PlaintextEncoder: ContentEncoder {
     /// The specific plaintext `MediaType` to use.
     private let contentType: HTTPMediaType
-    
+
     /// Creates a new `PlaintextEncoder`.
     ///
     /// - parameters:
@@ -14,17 +14,16 @@ public struct PlaintextEncoder: ContentEncoder {
     public init(_ contentType: HTTPMediaType = .plainText) {
         self.contentType = contentType
     }
-    
+
     /// `ContentEncoder` conformance.
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
-        where E: Encodable
-    {
+    where E: Encodable {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
-    
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
-        where E: Encodable
-    {
+
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable])
+        throws
+    where E: Encodable {
         let encoder = _PlaintextEncoder(userInfo: userInfo)
         var container = encoder.singleValueContainer()
         try container.encode(encodable)
@@ -46,13 +45,13 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     private(set) var plaintext: String?
 
     init(userInfo: [CodingUserInfoKey: Sendable] = [:]) { self.userInfoSendable = userInfo }
-    
+
     func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
     func unkeyedContainer() -> UnkeyedEncodingContainer { FailureEncoder() }
     func singleValueContainer() -> SingleValueEncodingContainer { self }
 
     func encodeNil() throws { self.plaintext = nil }
-    
+
     // N.B.: Implementing the individual "primitive" coding methods on a container rather than forwarding through
     // each type's Codable implementation yields substantial speedups.
     func encode(_ value: Bool) throws { self.plaintext = value.description }
@@ -69,7 +68,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func encode(_ value: UInt32) throws { self.plaintext = value.description }
     func encode(_ value: UInt64) throws { self.plaintext = value.description }
     func encode(_ value: Float) throws { self.plaintext = value.description }
-    
+
     func encode<T>(_ value: T) throws where T: Encodable {
         if let data = value as? Data {
             // special case for data
@@ -87,8 +86,11 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     /// This ridiculously is a workaround for the inability of encoders to throw errors in various places. It's still better than fatalError()ing.
     struct FailureEncoder<K: CodingKey>: Encoder, KeyedEncodingContainerProtocol, UnkeyedEncodingContainer, SingleValueEncodingContainer {
         let codingPath = [CodingKey](), userInfo = [CodingUserInfoKey: Any](), count = 0
-        var error: EncodingError { .invalidValue((), .init(codingPath: [], debugDescription: "Plaintext encoding does not support nesting.")) }
-        init() {}; init() where K == BasicCodingKey {}
+        var error: EncodingError {
+            .invalidValue((), .init(codingPath: [], debugDescription: "Plaintext encoding does not support nesting."))
+        }
+        init() {}
+        init() where K == BasicCodingKey {}
         func encodeNil() throws { throw self.error }
         func encodeNil(forKey: K) throws { throw self.error }
         func encode<T: Encodable>(_: T) throws { throw self.error }

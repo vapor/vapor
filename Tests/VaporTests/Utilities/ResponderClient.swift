@@ -1,5 +1,5 @@
-import Vapor
 import NIOCore
+import Vapor
 
 struct ResponderClient: Client {
     let responder: Responder
@@ -14,17 +14,19 @@ struct ResponderClient: Client {
     }
 
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
-        self.responder.respond(to: .init(
-            application: self.application,
-            method: request.method,
-            url: request.url,
-            version: .init(major: 1, minor: 1),
-            headersNoUpdate: request.headers,
-            collectedBody: request.body,
-            remoteAddress: nil,
-            logger: application.logger,
-            on: application.eventLoopGroup.next()
-        )).map { res in
+        self.responder.respond(
+            to: .init(
+                application: self.application,
+                method: request.method,
+                url: request.url,
+                version: .init(major: 1, minor: 1),
+                headersNoUpdate: request.headers,
+                collectedBody: request.body,
+                remoteAddress: nil,
+                logger: application.logger,
+                on: application.eventLoopGroup.next()
+            )
+        ).map { res in
             ClientResponse(status: res.status, headers: res.headers, body: res.body.buffer)
         }
     }

@@ -26,11 +26,11 @@ extension ValidatorResults.Pattern: ValidatorResult {
         /// The input is valid for the pattern
         !self.isValidPattern
     }
-    
+
     public var successDescription: String? {
         "is a valid pattern"
     }
-    
+
     public var failureDescription: String? {
         "is not a valid pattern \(self.pattern)"
     }

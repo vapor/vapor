@@ -12,7 +12,7 @@ extension HTTPHeaders {
                 return "Directive(value: \(self.value.debugDescription))"
             }
         }
-        
+
         init(value: String, parameter: String? = nil) {
             self.value = .init(value)
             self.parameter = parameter.flatMap { .init($0) }
@@ -55,8 +55,7 @@ extension HTTPHeaders {
         var current: Substring
 
         init<S>(string: S)
-            where S: StringProtocol
-        {
+        where S: StringProtocol {
             self.current = .init(string)
         }
 
@@ -216,9 +215,9 @@ extension HTTPHeaders {
     }
 }
 
-private extension Substring {
+extension Substring {
     /// Converts all `\"` to `"`.
-    func unescapingDoubleQuotes() -> Substring {
+    fileprivate func unescapingDoubleQuotes() -> Substring {
         self.split(separator: "\\").reduce(into: "") { (result, part) in
             if result.isEmpty || part.first == "\"" {
                 result += part
@@ -229,29 +228,28 @@ private extension Substring {
     }
 
     /// Converts all `"` to `\"`.
-    func escapingDoubleQuotes() -> String {
+    fileprivate func escapingDoubleQuotes() -> String {
         self.split(separator: "\"").joined(separator: "\\\"")
     }
 }
 
-
-private extension Character {
-    static var doubleQuote: Self {
+extension Character {
+    fileprivate static var doubleQuote: Self {
         .init(Unicode.Scalar(0x22))
     }
-    static var semicolon: Self {
+    fileprivate static var semicolon: Self {
         .init(";")
     }
-    static var equals: Self {
+    fileprivate static var equals: Self {
         .init("=")
     }
-    static var comma: Self {
+    fileprivate static var comma: Self {
         .init(",")
     }
-    static var space: Self {
+    fileprivate static var space: Self {
         .init(" ")
     }
-    
+
     /// The characters defined in RFC2616.
     ///
     /// Description from [RFC2616](https://tools.ietf.org/html/rfc2616):
@@ -260,10 +258,10 @@ private extension Character {
     ///                | "," | ";" | ":" | "\" | <">
     ///                | "/" | "[" | "]" | "?" | "="
     ///                | "{" | "}" | SP | HT
-    static var separators: [Self] {
+    fileprivate static var separators: [Self] {
         ["(", ")", "<", ">", "@", ",", ":", ";", "\\", "\"", "/", "[", "]", "?", "=", "{", "}", " ", "\t"]
     }
-    
+
     /// Check if this is valid character for token.
     ///
     /// Description from [RFC2616](]https://tools.ietf.org/html/rfc2616):
@@ -272,7 +270,7 @@ private extension Character {
     /// CHAR           = <any US-ASCII character (octets 0 - 127)>
     /// CTL            = <any US-ASCII control character
     ///                  (octets 0 - 31) and DEL (127)>
-    var isTokenCharacter: Bool {
+    fileprivate var isTokenCharacter: Bool {
         guard let asciiValue = self.asciiValue else {
             return false
         }
@@ -283,15 +281,14 @@ private extension Character {
     }
 }
 
-
-private extension Character {
-    var isLinearWhitespace: Bool {
+extension Character {
+    fileprivate var isLinearWhitespace: Bool {
         self == " " || self == "\t"
     }
 }
 
-private extension Substring {
-    func trimLinearWhitespace() -> Substring {
+extension Substring {
+    fileprivate func trimLinearWhitespace() -> Substring {
         var me = self
         while me.first?.isLinearWhitespace == .some(true) {
             me = me.dropFirst()

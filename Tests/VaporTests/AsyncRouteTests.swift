@@ -1,19 +1,19 @@
+import NIOHTTP1
+import Vapor
 import XCTVapor
 import XCTest
-import Vapor
-import NIOHTTP1
 
 final class AsyncRouteTests: XCTestCase {
     var app: Application!
-    
+
     override func setUp() async throws {
         app = try await Application.make(.testing)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
+
     func testEnumResponse() async throws {
         enum IntOrString: AsyncResponseEncodable {
             case int(Int)
@@ -57,14 +57,19 @@ final class AsyncRouteTests: XCTestCase {
                 .encodeResponse(status: .created, for: req)
         }
 
-        try await app.testable().test(.POST, "/users", beforeRequest: { req async throws in
-            try req.content.encode(["name": "vapor"], as: .json)
-        }) { res in
+        try await app.testable().test(
+            .POST, "/users",
+            beforeRequest: { req async throws in
+                try req.content.encode(["name": "vapor"], as: .json)
+            }
+        ) { res in
             XCTAssertEqual(res.status, .created)
             XCTAssertEqual(res.headers.contentType, .json)
-            XCTAssertEqual(res.body.string, """
-            {"name":"vapor"}
-            """)
+            XCTAssertEqual(
+                res.body.string,
+                """
+                {"name":"vapor"}
+                """)
         }
     }
 
@@ -72,16 +77,21 @@ final class AsyncRouteTests: XCTestCase {
         let testMarkerHeaderKey = "TestMarker"
         let testMarkerHeaderValue = "addedInShouldUpgrade"
 
-        app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
-            [testMarkerHeaderKey: testMarkerHeaderValue]
-        }, onUpgrade: { _, _ in })
+        app.routes.webSocket(
+            "customshouldupgrade",
+            shouldUpgrade: { req in
+                [testMarkerHeaderKey: testMarkerHeaderValue]
+            }, onUpgrade: { _, _ in })
 
-        try await app.testable(method: .running(port: 0)).test(.GET, "customshouldupgrade", beforeRequest: { req async in
-            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
-            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
-            req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
-            req.headers.replaceOrAdd(name: .upgrade, value: "websocket")
-        }) { res in
+        try await app.testable(method: .running(port: 0)).test(
+            .GET, "customshouldupgrade",
+            beforeRequest: { req async in
+                req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
+                req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
+                req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
+                req.headers.replaceOrAdd(name: .upgrade, value: "websocket")
+            }
+        ) { res in
             XCTAssertEqual(res.headers.first(name: testMarkerHeaderKey), testMarkerHeaderValue)
         }
     }

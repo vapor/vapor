@@ -1,7 +1,7 @@
-import NIOCore
-import NIOHTTP1
-import NIOFoundationCompat
 import NIOConcurrencyHelpers
+import NIOCore
+import NIOFoundationCompat
+import NIOHTTP1
 
 /// An HTTP response from a server back to the client.
 ///
@@ -21,7 +21,7 @@ public final class Response: CustomStringConvertible, Sendable {
             self.responseBox.withLockedValue { $0.version = newValue }
         }
     }
-    
+
     /// The HTTP response status.
     public var status: HTTPResponseStatus {
         get {
@@ -31,7 +31,7 @@ public final class Response: CustomStringConvertible, Sendable {
             self.responseBox.withLockedValue { $0.status = newValue }
         }
     }
-    
+
     /// The header fields for this HTTP response.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
@@ -43,7 +43,7 @@ public final class Response: CustomStringConvertible, Sendable {
             self.responseBox.withLockedValue { $0.headers = newValue }
         }
     }
-    
+
     /// The `Body`. Updating this property will also update the associated transport headers.
     ///
     ///     res.body = Response.Body(string: "Hello, world!")
@@ -80,7 +80,7 @@ public final class Response: CustomStringConvertible, Sendable {
             self._storage.withLockedValue { $0 = newValue }
         }
     }
-    
+
     /// Get and set `HTTPCookies` for this `Response`.
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
@@ -95,7 +95,7 @@ public final class Response: CustomStringConvertible, Sendable {
             }
         }
     }
-    
+
     /// See `CustomStringConvertible`
     public var description: String {
         var desc: [String] = []
@@ -116,7 +116,7 @@ public final class Response: CustomStringConvertible, Sendable {
             return self.response.headers.contentType
         }
 
-        func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E: Encodable {
             try self.response.responseBox.withLockedValue { box in
                 var body = box.body.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(encodable, to: &body, headers: &box.headers)
@@ -124,7 +124,7 @@ public final class Response: CustomStringConvertible, Sendable {
             }
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D: Decodable {
             try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
                     throw Abort(.unprocessableEntity)
@@ -133,7 +133,7 @@ public final class Response: CustomStringConvertible, Sendable {
             }
         }
 
-        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C: Content {
             var content = content
             try content.beforeEncode()
             try self.response.responseBox.withLockedValue { box in
@@ -143,7 +143,7 @@ public final class Response: CustomStringConvertible, Sendable {
             }
         }
 
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C: Content {
             var decoded = try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
                     throw Abort(.unprocessableEntity)
@@ -163,7 +163,7 @@ public final class Response: CustomStringConvertible, Sendable {
             // ignore since Request is a reference type
         }
     }
-    
+
     struct ResponseBox: Sendable {
         var version: HTTPVersion
         var status: HTTPResponseStatus
@@ -178,12 +178,12 @@ public final class Response: CustomStringConvertible, Sendable {
         var forHeadRequest: Bool
 
     }
-    
+
     let responseBox: NIOLockedValueBox<ResponseBox>
     private let _storage: NIOLockedValueBox<Storage>
-    
+
     // MARK: Init
-    
+
     /// Creates a new `Response`.
     ///
     ///     let res = Response(status: .ok)
@@ -210,8 +210,7 @@ public final class Response: CustomStringConvertible, Sendable {
         )
         self.headers.updateContentLength(body.count)
     }
-    
-    
+
     /// Internal init that creates a new `Response` without sanitizing headers.
     public init(
         status: HTTPResponseStatus,
@@ -223,7 +222,6 @@ public final class Response: CustomStringConvertible, Sendable {
         self.responseBox = .init(.init(version: version, status: status, headers: headers, body: body, forHeadRequest: false))
     }
 }
-
 
 extension HTTPHeaders {
     mutating func updateContentLength(_ contentLength: Int) {

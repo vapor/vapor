@@ -1,6 +1,6 @@
+import NIOConcurrencyHelpers
 import NIOHTTP1
 import RoutingKit
-import NIOConcurrencyHelpers
 
 public final class Route: CustomStringConvertible, Sendable {
     public var method: HTTPMethod {
@@ -11,7 +11,7 @@ public final class Route: CustomStringConvertible, Sendable {
             self.sendableBox.withLockedValue { $0.method = newValue }
         }
     }
-    
+
     public var path: [PathComponent] {
         get {
             self.sendableBox.withLockedValue { $0.path }
@@ -20,7 +20,7 @@ public final class Route: CustomStringConvertible, Sendable {
             self.sendableBox.withLockedValue { $0.path = newValue }
         }
     }
-    
+
     public var responder: Responder {
         get {
             self.sendableBox.withLockedValue { $0.responder }
@@ -29,7 +29,7 @@ public final class Route: CustomStringConvertible, Sendable {
             self.sendableBox.withLockedValue { $0.responder = newValue }
         }
     }
-    
+
     public var requestType: Any.Type {
         get {
             self.sendableBox.withLockedValue { $0.requestType }
@@ -38,7 +38,7 @@ public final class Route: CustomStringConvertible, Sendable {
             self.sendableBox.withLockedValue { $0.requestType = newValue }
         }
     }
-    
+
     public var responseType: Any.Type {
         get {
             self.sendableBox.withLockedValue { $0.responseType }
@@ -47,7 +47,7 @@ public final class Route: CustomStringConvertible, Sendable {
             self.sendableBox.withLockedValue { $0.responseType = newValue }
         }
     }
-    
+
     struct SendableBox: Sendable {
         var method: HTTPMethod
         var path: [PathComponent]
@@ -56,7 +56,7 @@ public final class Route: CustomStringConvertible, Sendable {
         var responseType: Any.Type
         var userInfo: [AnySendableHashable: Sendable]
     }
-    
+
     public var userInfo: [AnySendableHashable: Sendable] {
         get {
             self.sendableBox.withLockedValue { $0.userInfo }
@@ -71,9 +71,9 @@ public final class Route: CustomStringConvertible, Sendable {
         let path = box.path.map { "\($0)" }.joined(separator: "/")
         return "\(box.method.rawValue) /\(path)"
     }
-    
+
     let sendableBox: NIOLockedValueBox<SendableBox>
-    
+
     public init(
         method: HTTPMethod,
         path: [PathComponent],
@@ -90,7 +90,7 @@ public final class Route: CustomStringConvertible, Sendable {
             userInfo: [:])
         self.sendableBox = .init(box)
     }
-       
+
     @discardableResult
     public func description(_ string: String) -> Route {
         self.userInfo["description"] = string

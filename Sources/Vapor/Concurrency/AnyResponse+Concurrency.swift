@@ -48,4 +48,3 @@ public struct AnyAsyncResponse: AsyncResponseEncodable {
         return try await self.encodable.encodeResponse(for: request)
     }
 }
-

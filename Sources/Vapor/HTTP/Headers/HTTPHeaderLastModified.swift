@@ -49,4 +49,3 @@ extension HTTPHeaders.LastModified {
         self.init(value: date)
     }
 }
-

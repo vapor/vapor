@@ -10,7 +10,7 @@ extension File: MultipartPartConvertible {
         part.filename = self.filename
         return part
     }
-    
+
     public init?(multipart: MultipartPart) {
         guard let filename = multipart.filename else {
             return nil
@@ -32,7 +32,7 @@ extension MultipartPart {
             }
         }
     }
-    
+
     public var filename: String? {
         get {
             self.contentDisposition?.filename
@@ -46,7 +46,7 @@ extension MultipartPart {
             }
         }
     }
-    
+
     public var contentDisposition: HTTPHeaders.ContentDisposition? {
         get {
             self.headers.contentDisposition

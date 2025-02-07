@@ -1,17 +1,17 @@
 @preconcurrency import Dispatch
 import Foundation
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 
 extension Response {
     struct BodyStream: Sendable {
         let count: Int
-        let callback: @Sendable (BodyStreamWriter) -> ()
+        let callback: @Sendable (BodyStreamWriter) -> Void
     }
-    
+
     struct AsyncBodyStream {
         let count: Int
-        let callback: @Sendable (AsyncBodyStreamWriter) async throws -> ()
+        let callback: @Sendable (AsyncBodyStreamWriter) async throws -> Void
     }
 
     /// Represents a `Response`'s body.
@@ -32,10 +32,10 @@ extension Response {
             case stream(BodyStream)
             case asyncStream(AsyncBodyStream)
         }
-        
+
         /// An empty `Response.Body`.
         public static let empty: Body = .init()
-        
+
         public var string: String? {
             switch self.storage {
             case .buffer(var buffer): return buffer.readString(length: buffer.readableBytes)
@@ -46,7 +46,7 @@ extension Response {
             default: return nil
             }
         }
-        
+
         /// The size of the HTTP body's data.
         /// `-1` is a chunked stream.
         public var count: Int {
@@ -61,7 +61,7 @@ extension Response {
             case .asyncStream(let stream): return stream.count
             }
         }
-        
+
         /// Returns static data if not streaming.
         public var data: Data? {
             switch self.storage {
@@ -75,7 +75,7 @@ extension Response {
             case .asyncStream: return nil
             }
         }
-        
+
         public var buffer: ByteBuffer? {
             switch self.storage {
             case .buffer(let buffer): return buffer
@@ -115,7 +115,7 @@ extension Response {
                 return eventLoop.makeSucceededFuture(self.buffer)
             }
         }
-        
+
         /// See `CustomDebugStringConvertible`.
         public var description: String {
             switch storage {
@@ -129,111 +129,129 @@ extension Response {
             case .asyncStream: return "<async stream>"
             }
         }
-        
+
         internal var storage: Storage
         internal let byteBufferAllocator: ByteBufferAllocator
-        
+
         /// Creates an empty body. Useful for `GET` requests where HTTP bodies are forbidden.
         public init(byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .none
         }
-        
+
         /// Create a new body wrapping `Data`.
         public init(data: Data, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             storage = .data(data)
         }
-        
+
         /// Create a new body wrapping `DispatchData`.
         public init(dispatchData: DispatchData, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             storage = .dispatchData(dispatchData)
         }
-        
+
         /// Create a new body from the UTF8 representation of a `StaticString`.
         public init(staticString: StaticString, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             storage = .staticString(staticString)
         }
-        
+
         /// Create a new body from the UTF8 representation of a `String`.
         public init(string: String, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .string(string)
         }
-        
+
         /// Create a new body from a Swift NIO `ByteBuffer`.
         public init(buffer: ByteBuffer, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .buffer(buffer)
         }
-        
+
         @preconcurrency
-        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(
+            stream: @Sendable @escaping (BodyStreamWriter) -> Void, count: Int,
+            byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        ) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .stream(.init(count: count, callback: stream))
         }
 
         @preconcurrency
-        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(
+            stream: @Sendable @escaping (BodyStreamWriter) -> Void, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        ) {
             self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
-        
+
         /// Creates a chunked HTTP ``Response`` steam using ``AsyncBodyStreamWriter``.
         ///
         /// - Parameters:
         ///   - asyncStream: The closure that will generate the results. **MUST** call `.end` or `.error` when terminating the stream
         ///   - count: The amount of bytes that will be written. The `asyncStream` **MUST** produce exactly `count` bytes.
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(asyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(
+            asyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> Void, count: Int,
+            byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        ) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .asyncStream(.init(count: count, callback: asyncStream))
         }
-        
+
         /// Creates a chunked HTTP ``Response`` steam using ``AsyncBodyStreamWriter``.
         ///
         /// - Parameters:
         ///   - asyncStream: The closure that will generate the results. **MUST** call `.end` or `.error` when terminating the stream
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(asyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(
+            asyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> Void,
+            byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        ) {
             self.init(asyncStream: asyncStream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
-        
+
         /// Creates a _managed_ chunked HTTP ``Response`` steam using ``AsyncBodyStreamWriter`` that automtically closes or fails based if the closure throws an error or returns.
         ///
         /// - Parameters:
         ///   - asyncStream: The closure that will generate the results, which **MUST NOT** call `.end` or `.error` when terminating the stream.
         ///   - count: The amount of bytes that will be written. The `asyncStream` **MUST** produce exactly `count` bytes.
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(managedAsyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(
+            managedAsyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> Void, count: Int,
+            byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        ) {
             self.byteBufferAllocator = byteBufferAllocator
-            self.storage = .asyncStream(.init(count: count) { writer in
-                do {
-                    try await managedAsyncStream(writer)
-                    try await writer.write(.end)
-                } catch {
-                    try await writer.write(.error(error))
-                }
-            })
+            self.storage = .asyncStream(
+                .init(count: count) { writer in
+                    do {
+                        try await managedAsyncStream(writer)
+                        try await writer.write(.end)
+                    } catch {
+                        try await writer.write(.error(error))
+                    }
+                })
         }
-        
+
         /// Creates a _managed_ chunked HTTP ``Response`` steam using ``AsyncBodyStreamWriter`` that automtically closes or fails based if the closure throws an error or returns.
         ///
         /// - Parameters:
         ///   - asyncStream: The closure that will generate the results, which **MUST NOT** call `.end` or `.error` when terminating the stream.
         ///   - count: The amount of bytes that will be written
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(managedAsyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(
+            managedAsyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> Void,
+            byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        ) {
             self.init(managedAsyncStream: managedAsyncStream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
-        
+
         /// `ExpressibleByStringLiteral` conformance.
         public init(stringLiteral value: String) {
             self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .string(value)
         }
-        
+
         /// Internal init.
         internal init(storage: Storage, byteBufferAllocator: ByteBufferAllocator) {
             self.byteBufferAllocator = byteBufferAllocator
@@ -271,10 +289,10 @@ private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWrit
         // Fixes an issue where errors in the stream should fail the individual write promise.
         if let promise { future.cascade(to: promise) }
     }
-    
+
     func write(_ result: BodyStreamResult) async throws {
         let promise = self.eventLoop.makePromise(of: Void.self)
-        
+
         self.eventLoop.execute { self.write(result, promise: promise) }
         try await promise.futureResult.get()
     }

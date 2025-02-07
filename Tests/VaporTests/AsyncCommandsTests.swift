@@ -1,17 +1,17 @@
-import XCTest
 import Vapor
+import XCTest
 
 final class AsyncCommandsTests: XCTestCase {
     var app: Application!
-    
+
     override func setUp() async throws {
         app = try await Application.make(.testing)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
+
     func testAsyncCommands() async throws {
         app.asyncCommands.use(FooCommand(), as: "foo")
 

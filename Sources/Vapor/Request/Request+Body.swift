@@ -3,18 +3,18 @@ import NIOCore
 extension Request {
     public struct Body: CustomStringConvertible, Sendable {
         let request: Request
-        
+
         init(_ request: Request) {
             self.request = request
         }
-        
+
         public var data: ByteBuffer? {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .collected(let buffer): return buffer
             case .none, .stream: return nil
             }
         }
-        
+
         public var string: String? {
             if var data = self.data {
                 return data.readString(length: data.readableBytes)
@@ -22,7 +22,7 @@ extension Request {
                 return nil
             }
         }
-        
+
         @preconcurrency public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
@@ -38,7 +38,7 @@ extension Request {
                 _ = handler(.end)
             }
         }
-        
+
         public func collect(max: Int? = 1 << 14) -> EventLoopFuture<ByteBuffer?> {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
@@ -52,10 +52,11 @@ extension Request {
                 return self.request.eventLoop.makeSucceededFuture(nil)
             }
         }
-        
+
         public var description: String {
             if var data = self.data,
-               let description = data.readString(length: data.readableBytes) {
+                let description = data.readString(length: data.readableBytes)
+            {
                 return description
             } else {
                 return ""

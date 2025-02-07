@@ -4,7 +4,7 @@ extension Application {
     public var clients: Clients {
         .init(application: self)
     }
-    
+
     public var client: Client {
         guard let makeClient = self.clients.storage.makeClient.withLockedValue({ $0.factory }) else {
             fatalError("No client configured. Configure with app.clients.use(...)")
@@ -14,13 +14,13 @@ extension Application {
 
     public struct Clients: Sendable {
         public struct Provider {
-            let run: @Sendable (Application) -> ()
+            let run: @Sendable (Application) -> Void
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> Void) {
                 self.run = run
             }
         }
-        
+
         final class Storage: Sendable {
             struct ClientFactory {
                 let factory: (@Sendable (Application) -> Client)?
@@ -30,7 +30,7 @@ extension Application {
                 self.makeClient = .init(.init(factory: nil))
             }
         }
-        
+
         struct Key: StorageKey, Sendable {
             typealias Value = Storage
         }
@@ -38,7 +38,7 @@ extension Application {
         func initialize() {
             self.application.storage[Key.self] = .init()
         }
-        
+
         public func use(_ provider: Provider) {
             provider.run(self.application)
         }
@@ -48,7 +48,7 @@ extension Application {
         }
 
         public let application: Application
-        
+
         var storage: Storage {
             guard let storage = self.application.storage[Key.self] else {
                 fatalError("Clients not initialized. Initialize with app.clients.initialize()")

@@ -6,12 +6,12 @@ public struct ValidatorResults {
     public struct NestedEach {
         public let results: [[ValidatorResult]]
     }
-    
-    public struct Skipped { }
 
-    public struct Missing { }
+    public struct Skipped {}
 
-    public struct NotFound { }
+    public struct Missing {}
+
+    public struct NotFound {}
 
     public struct Codable {
         public let error: Error
@@ -30,13 +30,13 @@ extension ValidatorResults.Nested: ValidatorResult {
     public var isFailure: Bool {
         !self.results.filter { $0.isFailure }.isEmpty
     }
-    
+
     public var successDescription: String? {
         self.results.filter { !$0.isFailure }
             .compactMap { $0.successDescription }
             .joined(separator: " and ")
     }
-    
+
     public var failureDescription: String? {
         self.results.filter { $0.isFailure }
             .compactMap { $0.failureDescription }
@@ -49,7 +49,7 @@ extension ValidatorResults.NestedEach: ValidatorResult {
         !self.results.flatMap { $0 }
             .filter { $0.isFailure }.isEmpty
     }
-    
+
     public var successDescription: String? {
         self.results.enumerated().compactMap { (index, results) -> String? in
             let successes = results.filter { !$0.isFailure }
@@ -61,7 +61,7 @@ extension ValidatorResults.NestedEach: ValidatorResult {
             return "at index \(index) \(description)"
         }.joined(separator: " and ")
     }
-    
+
     public var failureDescription: String? {
         self.results.enumerated().compactMap { (index, results) -> String? in
             let failures = results.filter { $0.isFailure }
@@ -79,11 +79,11 @@ extension ValidatorResults.Skipped: ValidatorResult {
     public var isFailure: Bool {
         false
     }
-    
+
     public var successDescription: String? {
         nil
     }
-    
+
     public var failureDescription: String? {
         nil
     }
@@ -93,11 +93,11 @@ extension ValidatorResults.Missing: ValidatorResult {
     public var isFailure: Bool {
         true
     }
-    
+
     public var successDescription: String? {
         nil
     }
-    
+
     public var failureDescription: String? {
         "is required"
     }
@@ -131,7 +131,6 @@ extension ValidatorResults.NotFound: ValidatorResult {
     }
 }
 
-
 extension ValidatorResults.TypeMismatch: ValidatorResult {
     public var isFailure: Bool {
         true
@@ -150,11 +149,11 @@ extension ValidatorResults.Codable: ValidatorResult {
     public var isFailure: Bool {
         true
     }
-    
+
     public var successDescription: String? {
         nil
     }
-    
+
     public var failureDescription: String? {
         "failed to decode: \(error)"
     }

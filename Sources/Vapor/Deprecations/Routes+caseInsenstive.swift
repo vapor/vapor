@@ -9,4 +9,3 @@ extension Routes {
         }
     }
 }
-

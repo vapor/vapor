@@ -8,7 +8,7 @@ extension Validator where T: Collection {
     public static func count(_ range: PartialRangeThrough<Int>) -> Validator<T> {
         .count(min: nil, max: range.upperBound)
     }
-    
+
     /// Validates that the data's count is less than the supplied upper bound using `PartialRangeUpTo`.
     public static func count(_ range: PartialRangeUpTo<Int>) -> Validator {
         .count(min: nil, max: range.upperBound.advanced(by: -1))
@@ -23,7 +23,7 @@ extension Validator where T: Collection {
     public static func count(_ range: Swift.Range<Int>) -> Validator<T> {
         .count(min: range.lowerBound, max: range.upperBound.advanced(by: -1))
     }
-    
+
     static func count(min: Int?, max: Int?) -> Validator<T> {
         let suffix: String
         if T.self is String.Type {

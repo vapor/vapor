@@ -29,7 +29,7 @@ public final class Session: Sendable {
 
     /// `true` if this session is still valid.
     let isValid: NIOLockedValueBox<Bool>
-    
+
     private let _id: NIOLockedValueBox<SessionID?>
     private let _data: NIOLockedValueBox<SessionData>
 

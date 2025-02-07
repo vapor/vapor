@@ -1,19 +1,19 @@
+import Vapor
 import XCTVapor
 import XCTest
-import Vapor
 
 final class AsyncPasswordTests: XCTestCase {
     var app: Application!
-    
+
     override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         app = try await Application.make(test)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
+
     func testAsyncBCryptRequestPassword() async throws {
         try await assertAsyncRequestPasswordVerifies(.bcrypt, on: app)
     }
@@ -78,8 +78,10 @@ final class AsyncPasswordTests: XCTestCase {
             return result ? "true" : "false"
         }
 
-        try await app.test(.GET, "test", afterResponse: { res async in
-            XCTAssertEqual(res.body.string, "true", file: file, line: line)
-        })
+        try await app.test(
+            .GET, "test",
+            afterResponse: { res async in
+                XCTAssertEqual(res.body.string, "true", file: file, line: line)
+            })
     }
 }

@@ -1,22 +1,23 @@
-#if swift(>=5.10)
-#if canImport(Darwin)
-@preconcurrency import Darwin
-#elseif canImport(Glibc)
-#if compiler(>=6.0)
-import Glibc
-#else
-@preconcurrency import Glibc
-#endif
-#elseif canImport(Musl)
-@preconcurrency import Musl
-#elseif canImport(WinSDK)
-@preconcurrency import WinSDK
-#endif
-#endif
 import Foundation
-import NIOPosix
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
+import NIOPosix
+
+#if swift(>=5.10)
+    #if canImport(Darwin)
+        @preconcurrency import Darwin
+    #elseif canImport(Glibc)
+        #if compiler(>=6.0)
+            import Glibc
+        #else
+            @preconcurrency import Glibc
+        #endif
+    #elseif canImport(Musl)
+        @preconcurrency import Musl
+    #elseif canImport(WinSDK)
+        @preconcurrency import WinSDK
+    #endif
+#endif
 
 /// An internal helper that formats cookie dates as RFC1123
 private final class RFC1123: Sendable {
@@ -24,10 +25,10 @@ private final class RFC1123: Sendable {
     static var shared: RFC1123 {
         .init()
     }
-    
+
     /// The RFC1123 formatter
     private let formatter: DateFormatter
-    
+
     /// Creates a new RFC1123 helper
     private init() {
         let formatter = DateFormatter()
@@ -38,11 +39,11 @@ private final class RFC1123: Sendable {
         formatter.calendar = Calendar(identifier: .gregorian)
         self.formatter = formatter
     }
-    
+
     func string(from date: Date) -> String {
         self.formatter.string(from: date)
     }
-    
+
     func date(from string: String) -> Date? {
         self.formatter.date(from: string)
     }
@@ -53,13 +54,13 @@ extension Date {
     public var rfc1123: String {
         RFC1123.shared.string(from: self)
     }
-    
+
     /// Creates a `Date` from an RFC1123 string
     public init?(rfc1123: String) {
         guard let date = RFC1123.shared.date(from: rfc1123) else {
             return nil
         }
-        
+
         self = date
     }
 }
@@ -68,7 +69,7 @@ extension Date {
 internal final class RFC1123DateCache: Sendable {
     static func eventLoop(_ eventLoop: EventLoop) -> RFC1123DateCache {
         assert(eventLoop.inEventLoop)
-        
+
         if let existing = thread.currentValue {
             return existing
         } else {
@@ -82,36 +83,36 @@ internal final class RFC1123DateCache: Sendable {
             return new
         }
     }
-    
+
     /// Thread-specific RFC1123
     private static let thread: ThreadSpecificVariable<RFC1123DateCache> = .init()
-    
+
     /// Currently cached time components and timestamp
     private let cachedTimestampAndComponents: NIOLockedValueBox<((key: time_t, components: tm)?, String)>
-    
+
     /// Creates a new `RFC1123DateCache`.
     private init() {
         self.cachedTimestampAndComponents = .init((nil, ""))
         self.updateTimestamp()
     }
-    
+
     func currentTimestamp() -> String {
         self.cachedTimestampAndComponents.withLockedValue { $0.1 }
     }
-    
+
     /// Updates the current RFC 1123 date string.
     func updateTimestamp() {
         // get the current time
         var date = time(nil)
-        
+
         // generate a key used for caching
         // this key is a unique id for each day
         let key = date / secondsInDay
-        
+
         self.cachedTimestampAndComponents.withLockedValue { cachedValues in
             // get time components
             let dateComponents: tm
-            
+
             if let cachedTimeComponents = cachedValues.0, cachedTimeComponents.key == key {
                 dateComponents = cachedTimeComponents.components
             } else {
@@ -120,19 +121,19 @@ internal final class RFC1123DateCache: Sendable {
                 dateComponents = tc
                 cachedValues.0 = (key: key, components: tc)
             }
-            
+
             // parse components
-            let year: Int = numericCast(dateComponents.tm_year) + 1900 // years since 1900
-            let month: Int = numericCast(dateComponents.tm_mon) // months since January [0-11]
-            let monthDay: Int = numericCast(dateComponents.tm_mday) // day of the month [1-31]
-            let weekDay: Int = numericCast(dateComponents.tm_wday) // days since Sunday [0-6]
-            
+            let year: Int = numericCast(dateComponents.tm_year) + 1900  // years since 1900
+            let month: Int = numericCast(dateComponents.tm_mon)  // months since January [0-11]
+            let monthDay: Int = numericCast(dateComponents.tm_mday)  // day of the month [1-31]
+            let weekDay: Int = numericCast(dateComponents.tm_wday)  // days since Sunday [0-6]
+
             // get basic time info
             let t: Int = date % secondsInDay
             let hours: Int = numericCast(t / 3600)
             let minutes: Int = numericCast((t / 60) % 60)
             let seconds: Int = numericCast(t % 60)
-            
+
             // generate the RFC 1123 formatted string
             var rfc1123 = ""
             rfc1123.reserveCapacity(30)
@@ -151,7 +152,7 @@ internal final class RFC1123DateCache: Sendable {
             rfc1123.append(":")
             rfc1123.append(stringNumbers[seconds])
             rfc1123.append(" GMT")
-            
+
             // cache the new timestamp
             cachedValues.1 = rfc1123
         }
@@ -161,11 +162,11 @@ internal final class RFC1123DateCache: Sendable {
 // MARK: Private
 
 private let dayNames = [
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
 ]
 
 private let monthNames = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ]
 
 private let stringNumbers = [
@@ -178,12 +179,11 @@ private let stringNumbers = [
     "60", "61", "62", "63", "64", "65", "66", "67", "68", "69",
     "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
     "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
-    "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"
+    "90", "91", "92", "93", "94", "95", "96", "97", "98", "99",
 ]
 
 private let secondsInDay = 60 * 60 * 24
 
 #if compiler(>=6.0)
-extension tm: @retroactive @unchecked Sendable {}
+    extension tm: @retroactive @unchecked Sendable {}
 #endif
-

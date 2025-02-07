@@ -10,8 +10,8 @@ public struct Storage: Sendable {
     /// A container for a stored value and an associated optional `deinit`-like closure.
     struct Value<T: Sendable>: AnyStorageValue {
         var value: T
-        var onShutdown: (@Sendable (T) throws -> ())?
-        var onAsyncShutdown: (@Sendable (T) async throws -> ())?
+        var onShutdown: (@Sendable (T) throws -> Void)?
+        var onAsyncShutdown: (@Sendable (T) async throws -> Void)?
         func shutdown(logger: Logger) {
             do {
                 try self.onShutdown?(self.value)
@@ -31,7 +31,7 @@ public struct Storage: Sendable {
             }
         }
     }
-    
+
     /// The logger provided to shutdown closures.
     let logger: Logger
 
@@ -48,7 +48,7 @@ public struct Storage: Sendable {
 
     /// Read/write access to values via keyed subscript.
     public subscript<Key>(_ key: Key.Type) -> Key.Value?
-        where Key: StorageKey
+    where Key: StorageKey
     {
         get {
             self.get(Key.self)
@@ -63,7 +63,7 @@ public struct Storage: Sendable {
     /// ``Swift/Dictionary/subscript(key:default:)``. The `defaultValue` autoclosure
     /// is evaluated only when the key does not already exist in the container.
     public subscript<Key>(_ key: Key.Type, default defaultValue: @autoclosure () -> Key.Value) -> Key.Value
-        where Key: StorageKey
+    where Key: StorageKey
     {
         mutating get {
             if let existing = self[key] { return existing }
@@ -80,8 +80,7 @@ public struct Storage: Sendable {
 
     /// Get the value of the given key if it exists and is of the proper type.
     public func get<Key>(_ key: Key.Type) -> Key.Value?
-        where Key: StorageKey
-    {
+    where Key: StorageKey {
         guard let value = self.storage[ObjectIdentifier(Key.self)] as? Value<Key.Value> else {
             return nil
         }
@@ -95,10 +94,9 @@ public struct Storage: Sendable {
     public mutating func set<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
-        onShutdown: (@Sendable (Key.Value) throws -> ())? = nil
+        onShutdown: (@Sendable (Key.Value) throws -> Void)? = nil
     )
-        where Key: StorageKey
-    {
+    where Key: StorageKey {
         let key = ObjectIdentifier(Key.self)
         if let value = value {
             self.storage[key] = Value(value: value, onShutdown: onShutdown)
@@ -107,17 +105,16 @@ public struct Storage: Sendable {
             existing.shutdown(logger: self.logger)
         }
     }
-    
+
     /// Set or remove a value for a given key, optionally providing an async shutdown closure for the value.
     ///
     /// If a key that has a shutdown closure is removed by this method, the closure **is** invoked.
     public mutating func setWithAsyncShutdown<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
-        onShutdown: (@Sendable (Key.Value) async throws -> ())? = nil
+        onShutdown: (@Sendable (Key.Value) async throws -> Void)? = nil
     ) async
-        where Key: StorageKey
-    {
+    where Key: StorageKey {
         let key = ObjectIdentifier(Key.self)
         if let value = value {
             self.storage[key] = Value(value: value, onShutdown: nil, onAsyncShutdown: onShutdown)
@@ -126,17 +123,16 @@ public struct Storage: Sendable {
             await existing.asyncShutdown(logger: self.logger)
         }
     }
-    
+
     // Provides a way to set an async shutdown with an async call to avoid breaking the API
     // This must not be called when a value alraedy exists in storage
     mutating func setFirstTime<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
-        onShutdown: (@Sendable (Key.Value) throws -> ())? = nil,
-        onAsyncShutdown: (@Sendable (Key.Value) async throws -> ())? = nil
+        onShutdown: (@Sendable (Key.Value) throws -> Void)? = nil,
+        onAsyncShutdown: (@Sendable (Key.Value) async throws -> Void)? = nil
     )
-        where Key: StorageKey
-    {
+    where Key: StorageKey {
         let key = ObjectIdentifier(Key.self)
         precondition(self.storage[key] == nil, "You must not call this when a value already exists in storage")
         if let value {
@@ -152,7 +148,7 @@ public struct Storage: Sendable {
             $0.shutdown(logger: self.logger)
         }
     }
-    
+
     /// For every key in the container having a shutdown closure, invoke the closure. Designed to
     /// be invoked during an explicit app shutdown process or in a reference type's `deinit`.
     public func asyncShutdown() async {

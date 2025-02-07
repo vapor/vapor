@@ -1,6 +1,5 @@
 // swift-tools-version:5.9
 import PackageDescription
-import Foundation
 
 let package = Package(
     name: "vapor",
@@ -8,7 +7,7 @@ let package = Package(
         .macOS(.v10_15),
         .iOS(.v13),
         .tvOS(.v13),
-        .watchOS(.v6)
+        .watchOS(.v6),
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -26,7 +25,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.14.0"),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "5.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"5.0.0"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.9.0"),
@@ -48,10 +47,10 @@ let package = Package(
 
         // Swift metrics API
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
-        
+
         // Swift tracing API
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.1.0"),
-        
+
         // Swift service context
         .package(url: "https://github.com/apple/swift-service-context.git", from: "1.0.0"),
 
@@ -70,7 +69,7 @@ let package = Package(
     targets: [
         // C helpers
         .target(name: "CVaporBcrypt"),
-        
+
         // Vapor
         .target(
             name: "Vapor",
@@ -109,7 +108,7 @@ let package = Package(
         .executableTarget(
             name: "Development",
             dependencies: [
-                .target(name: "Vapor"),
+                .target(name: "Vapor")
             ],
             resources: [.copy("Resources")],
             swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
@@ -119,7 +118,7 @@ let package = Package(
         .target(
             name: "VaporTestUtils",
             dependencies: [
-                .target(name: "Vapor"),
+                .target(name: "Vapor")
             ],
             swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
         ),

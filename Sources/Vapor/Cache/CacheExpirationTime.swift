@@ -4,7 +4,7 @@ public enum CacheExpirationTime: Sendable {
     case minutes(Int)
     case hours(Int)
     case days(Int)
-    
+
     /// Returns the amount of time in seconds.
     public var seconds: Int {
         switch self {

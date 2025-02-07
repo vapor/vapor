@@ -1,20 +1,20 @@
-import NIOCore
 import Logging
+import NIOCore
 
 final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = Request
     typealias OutboundOut = Response
-    
+
     let responder: Responder
     let logger: Logger
     var isShuttingDown: Bool
-    
+
     init(responder: Responder, logger: Logger) {
         self.responder = responder
         self.logger = logger
         self.isShuttingDown = false
     }
-    
+
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
         let request = self.unwrapInboundIn(data)
@@ -24,7 +24,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             handler.serialize(response, for: request, context: context)
         }
     }
-    
+
     func serialize(_ response: Result<Response, Error>, for request: Request, context: ChannelHandlerContext) {
         switch response {
         case .failure(let error):
@@ -36,7 +36,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             self.serialize(response, for: request, context: context)
         }
     }
-    
+
     func serialize(_ response: Response, for request: Request, context: ChannelHandlerContext) {
         switch request.version.major {
         case 2:
@@ -69,7 +69,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             }
         }
     }
-    
+
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
         case is ChannelShouldQuiesceEvent:
@@ -81,14 +81,14 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     }
 }
 
-fileprivate struct ErrorBodyStreamWriter: BodyStreamWriter, AsyncBodyStreamWriter {
+private struct ErrorBodyStreamWriter: BodyStreamWriter, AsyncBodyStreamWriter {
     let eventLoop: EventLoop
     let error: Error
-    
+
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         promise?.fail(error)
     }
-    
+
     func write(_ result: BodyStreamResult) async throws {
         throw error
     }

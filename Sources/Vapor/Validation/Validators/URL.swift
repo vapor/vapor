@@ -31,11 +31,11 @@ extension ValidatorResults.URL: ValidatorResult {
     public var isFailure: Bool {
         !self.isValidURL
     }
-    
+
     public var successDescription: String? {
         "is a valid URL"
     }
-    
+
     public var failureDescription: String? {
         "is an invalid URL"
     }

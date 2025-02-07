@@ -13,15 +13,17 @@ public final class FileMiddleware: AsyncMiddleware {
     private let advancedETagComparison: Bool
 
     public struct BundleSetupError: Equatable, Error {
-        
+
         /// The description of this error.
         let description: String
-        
+
         /// Cannot generate Bundle Resource URL
-        public static let bundleResourceURLIsNil: Self = .init(description: "Cannot generate Bundle Resource URL: Bundle Resource URL is nil")
-        
+        public static let bundleResourceURLIsNil: Self = .init(
+            description: "Cannot generate Bundle Resource URL: Bundle Resource URL is nil")
+
         /// Cannot find any actual folder for the given Public Directory
-        public static let publicDirectoryIsNotAFolder: Self = .init(description: "Cannot find any actual folder for the given Public Directory")
+        public static let publicDirectoryIsNotAFolder: Self = .init(
+            description: "Cannot find any actual folder for the given Public Directory")
     }
 
     struct ETagHashes: StorageKey {
@@ -41,13 +43,15 @@ public final class FileMiddleware: AsyncMiddleware {
     ///     an absolute path from the public directory root. If `nil`, no default files are served.
     ///     - directoryAction: Determines the action to take when the request doesn't have a trailing slash but matches a directory.
     ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
-    public init(publicDirectory: String, defaultFile: String? = nil, directoryAction: DirectoryAction = .none, advancedETagComparison: Bool = false) {
+    public init(
+        publicDirectory: String, defaultFile: String? = nil, directoryAction: DirectoryAction = .none, advancedETagComparison: Bool = false
+    ) {
         self.publicDirectory = publicDirectory.addTrailingSlash()
         self.defaultFile = defaultFile
         self.directoryAction = directoryAction
         self.advancedETagComparison = advancedETagComparison
     }
-    
+
     public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {
@@ -64,7 +68,7 @@ public final class FileMiddleware: AsyncMiddleware {
 
         // create absolute path
         var absPath = self.publicDirectory + path
-        
+
         if let fileInfo = try await FileSystem.shared.info(forFileAt: .init(absPath)) {
             // path exists, check for directory or file
             if fileInfo.type == .directory {
@@ -77,7 +81,7 @@ public final class FileMiddleware: AsyncMiddleware {
                         } else {
                             absPath = absPath + defaultFile
                         }
-                        
+
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
                             return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
@@ -95,7 +99,7 @@ public final class FileMiddleware: AsyncMiddleware {
                 return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
             }
         }
-        
+
         return try await next.respond(to: request)
     }
 
@@ -122,24 +126,24 @@ public final class FileMiddleware: AsyncMiddleware {
         guard (try? publicDirectoryURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
             throw BundleSetupError.publicDirectoryIsNotAFolder
         }
-        
+
         self.init(publicDirectory: publicDirectoryURL.path, defaultFile: defaultFile, directoryAction: directoryAction)
     }
-    
+
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory
     public struct DirectoryAction: Sendable {
         let kind: Kind
-        
+
         /// Indicates that the request should be passed through the middleware
         public static var none: DirectoryAction {
             return Self(kind: .none)
         }
-        
+
         /// Indicates that a redirect to the same url with a trailing slash should be returned.
         public static var redirect: DirectoryAction {
             return Self(kind: .redirect)
         }
-        
+
         enum Kind {
             case none
             case redirect
@@ -147,14 +151,14 @@ public final class FileMiddleware: AsyncMiddleware {
     }
 }
 
-fileprivate extension String {
+extension String {
     /// Determines if input path is absolute based on a leading slash
-    func isAbsolute() -> Bool {
+    fileprivate func isAbsolute() -> Bool {
         return self.hasPrefix("/")
     }
 
     /// Makes a path relative by removing all leading slashes
-    func removeLeadingSlashes() -> String {
+    fileprivate func removeLeadingSlashes() -> String {
         var newPath = self
         while newPath.hasPrefix("/") {
             newPath.removeFirst()
@@ -163,7 +167,7 @@ fileprivate extension String {
     }
 
     /// Adds a trailing slash to the path if one is not already present
-    func addTrailingSlash() -> String {
+    fileprivate func addTrailingSlash() -> String {
         var newPath = self
         if !newPath.hasSuffix("/") {
             newPath += "/"

@@ -1,6 +1,7 @@
-@testable import Vapor
 import XCTVapor
 import XCTest
+
+@testable import Vapor
 
 final class EnvironmentSecretTests: XCTestCase {
     func testNonExistingSecretFile() throws {

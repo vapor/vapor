@@ -4,7 +4,7 @@ public func XCTAssertContent<D>(
     _ res: TestingHTTPResponse,
     file: StaticString = #filePath,
     line: UInt = #line,
-    _ closure: (D) throws -> ()
+    _ closure: (D) throws -> Void
 ) rethrows where D: Decodable {
     fatalError("Renamed to 'expectContent(_:_:fileID:filePath:line:column:_:)'")
 }
@@ -16,8 +16,7 @@ public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: Stat
 
 @available(*, unavailable, renamed: "expectJSONEquals(_:_:fileID:filePath:line:column:)")
 public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = #filePath, line: UInt = #line)
-where T: Codable & Equatable
-{
+where T: Codable & Equatable {
     fatalError("Renamed to 'expectEqualJSON(_:_:fileID:filePath:line:column:)'")
 }
 

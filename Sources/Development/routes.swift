@@ -1,8 +1,9 @@
-import class Foundation.Bundle
-import Vapor
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
-import NIOConcurrencyHelpers
+import Vapor
+
+import class Foundation.Bundle
 
 struct Creds: Content {
     var email: String
@@ -13,7 +14,6 @@ public func routes(_ app: Application) throws {
     app.on(.GET, "ping") { req -> StaticString in
         return "123" as StaticString
     }
-
 
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
     app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
@@ -39,7 +39,7 @@ public func routes(_ app: Application) throws {
             // manually return pre-completed future
             // this should balloon in memory
             // return req.eventLoop.makeSucceededFuture(())
-            
+
             // return real future that indicates bytes were handled
             // this should use very little memory
             return promise.futureResult
@@ -55,20 +55,20 @@ public func routes(_ app: Application) throws {
     app.post("test", "head") { req -> String in
         return "OK!"
     }
-    
+
     app.post("login") { req -> String in
         let creds = try req.content.decode(Creds.self)
         return "\(creds)"
     }
-    
+
     app.on(.POST, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
-        return req.body.data?.readableBytes.description  ?? "none"
+        return req.body.data?.readableBytes.description ?? "none"
     }
 
     app.get("json") { req -> [String: String] in
         return ["foo": "bar"]
     }.description("returns some test json")
-    
+
     app.webSocket("ws") { req, ws in
         ws.onText { ws, text in
             ws.send(text.reversed())
@@ -80,7 +80,7 @@ public func routes(_ app: Application) throws {
         let ip = req.remoteAddress?.description ?? "<no ip>"
         ws.send("Hello 👋 \(ip)")
     }
-    
+
     app.on(.POST, "file", body: .stream) { req -> EventLoopFuture<String> in
         let promise = req.eventLoop.makePromise(of: String.self)
         req.body.drain { result in
@@ -160,7 +160,7 @@ public func routes(_ app: Application) throws {
             .flatMapThrowing { try $0.content.decode(HTTPBinResponse.self) }
             .map { $0.slideshow.title }
     }
-    
+
     let users = app.grouped("users")
     users.get { req in
         return "users"
@@ -168,7 +168,7 @@ public func routes(_ app: Application) throws {
     users.get(":userID") { req in
         return req.parameters.get("userID") ?? "no id"
     }
-    
+
     app.directory.viewsDirectory = "/Users/tanner/Desktop"
     app.get("view") { req in
         req.view.render("hello.txt", ["name": "world"])
@@ -179,7 +179,8 @@ public func routes(_ app: Application) throws {
     }
 
     app.get("secret") { (req) -> EventLoopFuture<String> in
-        return Environment
+        return
+            Environment
             .secret(key: "PASSWORD_SECRET", fileIO: req.application.fileio, on: req.eventLoop)
             .unwrap(or: Abort(.badRequest))
     }
@@ -195,7 +196,7 @@ public func routes(_ app: Application) throws {
             case fileHandleClosedFailure(Error)
             case multipleFailures([BodyStreamWritingToDiskError])
         }
-        
+
         return req.application.fileio.openFile(
             path: Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? "",
             mode: .write,
@@ -218,10 +219,11 @@ public func routes(_ app: Application) throws {
                         try fileHandle.close()
                         promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
                     } catch {
-                        promise.fail(BodyStreamWritingToDiskError.multipleFailures([
-                            .fileHandleClosedFailure(error),
-                            .streamFailure(drainError)
-                        ]))
+                        promise.fail(
+                            BodyStreamWritingToDiskError.multipleFailures([
+                                .fileHandleClosedFailure(error),
+                                .streamFailure(drainError),
+                            ]))
                     }
                     return req.eventLoop.makeSucceededFuture(())
                 case .end:
@@ -254,36 +256,38 @@ public func routes(_ app: Application) throws {
         }
         return String(buffer: body)
     }
-    
+
     asyncRoutes.get("content") { req in
         Creds(email: "name", password: "password")
     }
-    
+
     asyncRoutes.get("content2") { req async throws -> Creds in
         return Creds(email: "name", password: "password")
     }
-    
+
     asyncRoutes.get("contentArray") { req async throws -> [Creds] in
         let cred1 = Creds(email: "name", password: "password")
         return [cred1]
     }
-    
+
     @Sendable
     func opaqueRouteTester(_ req: Request) async throws -> some AsyncResponseEncodable {
         "Hello World"
     }
     asyncRoutes.get("opaque", use: opaqueRouteTester)
-    
+
     // Make sure jumping between multiple different types of middleware works
-    asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
+    asyncRoutes.grouped(
+        TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)
+    ).get("middleware") { req async throws -> String in
         return "OK"
     }
-    
+
     let basicAuthRoutes = asyncRoutes.grouped(Test.authenticator(), Test.guardMiddleware())
     basicAuthRoutes.get("auth") { req async throws -> String in
         return try req.auth.require(Test.self).name
     }
-    
+
     struct Test: Authenticatable {
         static func authenticator() -> AsyncAuthenticator {
             TestAuthenticator()
@@ -334,7 +338,7 @@ struct TestError: AbortError, DebuggableError {
 
 struct TestAsyncMiddleware: AsyncMiddleware {
     let number: Int
-    
+
     func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         request.logger.debug("In async middleware - \(number)")
         let response = try await next.respond(to: request)
@@ -345,7 +349,7 @@ struct TestAsyncMiddleware: AsyncMiddleware {
 
 struct TestMiddleware: Middleware {
     let number: Int
-    
+
     func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         request.logger.debug("In non-async middleware - \(number)")
         return next.respond(to: request).map { response in

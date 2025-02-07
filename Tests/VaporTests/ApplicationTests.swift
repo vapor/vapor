@@ -1,10 +1,10 @@
-import Vapor
-import XCTVapor
 import AsyncHTTPClient
-import XCTest
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOEmbedded
-import NIOConcurrencyHelpers
+import Vapor
+import XCTVapor
+import XCTest
 
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
@@ -39,15 +39,15 @@ final class ApplicationTests: XCTestCase {
                 self.willBootAsyncFlag = .init(false)
                 self.shutdownAsyncFlag = .init(false)
             }
-            
+
             func willBootAsync(_ application: Application) async throws {
                 self.willBootAsyncFlag.withLockedValue { $0 = true }
             }
-            
+
             func didBootAsync(_ application: Application) async throws {
                 self.didBootAsyncFlag.withLockedValue { $0 = true }
             }
-            
+
             func shutdownAsync(_ application: Application) async {
                 self.shutdownAsyncFlag.withLockedValue { $0 = true }
             }
@@ -64,7 +64,7 @@ final class ApplicationTests: XCTestCase {
                 self.shutdownFlag.withLockedValue { $0 = true }
             }
         }
-        
+
         let app = Application(.testing)
 
         let foo = Foo()
@@ -95,7 +95,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), false)
         XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
     }
-    
+
     func testLifecycleHandlerAsync() async throws {
         final class Foo: LifecycleHandler {
             let willBootFlag: NIOLockedValueBox<Bool>
@@ -117,15 +117,15 @@ final class ApplicationTests: XCTestCase {
             func willBootAsync(_ application: Application) async throws {
                 self.willBootAsyncFlag.withLockedValue { $0 = true }
             }
-            
+
             func didBootAsync(_ application: Application) async throws {
                 self.didBootAsyncFlag.withLockedValue { $0 = true }
             }
-            
+
             func shutdownAsync(_ application: Application) async {
                 self.shutdownAsyncFlag.withLockedValue { $0 = true }
             }
-            
+
             func willBoot(_ application: Application) throws {
                 self.willBootFlag.withLockedValue { $0 = true }
             }
@@ -138,7 +138,7 @@ final class ApplicationTests: XCTestCase {
                 self.shutdownFlag.withLockedValue { $0 = true }
             }
         }
-        
+
         let app = try await Application.make(.testing)
 
         let foo = Foo()
@@ -173,44 +173,44 @@ final class ApplicationTests: XCTestCase {
     func testBootDoesNotTriggerLifecycleHandlerMultipleTimes() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         final class Handler: LifecycleHandler, Sendable {
             let bootCount = NIOLockedValueBox(0)
             func willBoot(_ application: Application) throws {
                 bootCount.withLockedValue { $0 += 1 }
             }
         }
-        
+
         let handler = Handler()
         app.lifecycle.use(handler)
-        
+
         try app.boot()
         try app.boot()
 
         XCTAssertEqual(handler.bootCount.withLockedValue({ $0 }), 1)
     }
-    
+
     func testAsyncBootDoesNotTriggerLifecycleHandlerMultipleTimes() async throws {
         let app = try await Application.make(.testing)
-        
+
         final class Handler: LifecycleHandler, Sendable {
             let bootCount = NIOLockedValueBox(0)
             func willBoot(_ application: Application) throws {
                 bootCount.withLockedValue { $0 += 1 }
             }
         }
-        
+
         let handler = Handler()
         app.lifecycle.use(handler)
-        
+
         try await app.asyncBoot()
         try await app.asyncBoot()
 
         XCTAssertEqual(handler.bootCount.withLockedValue({ $0 }), 1)
-        
+
         try await app.asyncShutdown()
     }
-    
+
     func testThrowDoesNotCrash() throws {
         enum Static {
             static let app: NIOLockedValueBox<Application?> = .init(nil)
@@ -220,11 +220,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testSwiftError() throws {
-        struct Foo: Error { }
-        
+        struct Foo: Error {}
+
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         app.get("error") { req -> String in
             throw Foo()
         }
@@ -258,10 +258,11 @@ final class ApplicationTests: XCTestCase {
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
         try app.start()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
@@ -287,8 +288,9 @@ final class ApplicationTests: XCTestCase {
 
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
-              let port = localAddress.port else {
+            let ip = localAddress.ipAddress,
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
@@ -296,8 +298,9 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual("127.0.0.1", ip)
         XCTAssertGreaterThan(port, 0)
 
-        XCTAssertEqual("Hello, world!",
-                       try app.client.get("http://localhost:\(port)/hello").wait().body?.string)
+        XCTAssertEqual(
+            "Hello, world!",
+            try app.client.get("http://localhost:\(port)/hello").wait().body?.string)
     }
 
     func testConfigurationAddressDetailsReflectedAfterBeingSet() throws {
@@ -305,14 +308,15 @@ final class ApplicationTests: XCTestCase {
         app.http.server.configuration.hostname = "0.0.0.0"
         app.http.server.configuration.port = 0
         defer { app.shutdown() }
-        
+
         struct AddressConfig: Content {
             let hostname: String
             let port: Int
         }
-        
+
         app.get("hello") { req -> AddressConfig in
-            let config = AddressConfig(hostname: req.application.http.server.configuration.hostname, port: req.application.http.server.configuration.port)
+            let config = AddressConfig(
+                hostname: req.application.http.server.configuration.hostname, port: req.application.http.server.configuration.port)
             return config
         }
 
@@ -322,10 +326,11 @@ final class ApplicationTests: XCTestCase {
         XCTAssertNotNil(app.http.server.shared.localAddress)
         XCTAssertEqual("0.0.0.0", app.http.server.configuration.hostname)
         XCTAssertEqual(app.http.server.shared.localAddress?.port, app.http.server.configuration.port)
-        
+
         guard let localAddress = app.http.server.shared.localAddress,
-              localAddress.ipAddress != nil,
-              let port = localAddress.port else {
+            localAddress.ipAddress != nil,
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
@@ -345,7 +350,8 @@ final class ApplicationTests: XCTestCase {
         }
 
         app.get("hello") { req -> AddressConfig in
-            let config = AddressConfig(hostname: req.application.http.server.configuration.hostname, port: req.application.http.server.configuration.port)
+            let config = AddressConfig(
+                hostname: req.application.http.server.configuration.hostname, port: req.application.http.server.configuration.port)
             return config
         }
 
@@ -357,8 +363,9 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(3000, app.http.server.configuration.port)
 
         guard let localAddress = app.http.server.shared.localAddress,
-              localAddress.ipAddress != nil,
-              let port = localAddress.port else {
+            localAddress.ipAddress != nil,
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }

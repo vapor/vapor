@@ -1,66 +1,67 @@
-import Vapor
-import XCTest
-import XCTVapor
+import Logging
 import NIOConcurrencyHelpers
 import NIOCore
-import Logging
 import NIOEmbedded
+import Vapor
+import XCTVapor
+import XCTest
 
 final class AsyncClientTests: XCTestCase {
-    
+
     var remoteAppPort: Int!
     var remoteApp: Application!
     var app: Application!
-    
+
     override func setUp() async throws {
         remoteApp = try await Application.make(.testing)
         remoteApp.http.server.configuration.port = 0
-        
+
         remoteApp.get("json") { _ in
             SomeJSON()
         }
-        
+
         remoteApp.get("status", ":status") { req -> HTTPStatus in
             let status = try req.parameters.require("status", as: Int.self)
             return HTTPStatus(statusCode: status)
         }
-        
+
         remoteApp.post("anything") { req -> AnythingResponse in
             let headers = req.headers.reduce(into: [String: String]()) {
                 $0[$1.0] = $1.1
             }
-            
-            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
+
+            guard let json: [String: Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String: Any] else {
                 throw Abort(.badRequest)
             }
-            
+
             let jsonResponse = json.mapValues {
                 return "\($0)"
             }
-            
+
             return AnythingResponse(headers: headers, json: jsonResponse)
         }
-        
+
         remoteApp.environment.arguments = ["serve"]
         try await remoteApp.asyncBoot()
         try await remoteApp.startup()
-        
+
         XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
         guard let localAddress = remoteApp.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
             return
         }
-        
+
         self.remoteAppPort = port
-        
+
         app = try await Application.make(.testing)
     }
-    
+
     override func tearDown() async throws {
         try await remoteApp.asyncShutdown()
     }
-    
+
     func testClientConfigurationChange() async throws {
         app.http.client.configuration.redirectConfiguration = .disallow
 
@@ -69,7 +70,7 @@ final class AsyncClientTests: XCTestCase {
         }
 
         try await app.server.start(address: .hostname("localhost", port: 0))
-        
+
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port for app")
             return
@@ -78,7 +79,7 @@ final class AsyncClientTests: XCTestCase {
         let res = try await app.client.get("http://localhost:\(port)/redirect")
 
         XCTAssertEqual(res.status, .seeOther)
-        
+
         await app.server.shutdown()
     }
 
@@ -90,7 +91,7 @@ final class AsyncClientTests: XCTestCase {
         }
 
         try await app.server.start(address: .hostname("localhost", port: 0))
-        
+
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port for app")
             return
@@ -101,7 +102,7 @@ final class AsyncClientTests: XCTestCase {
         app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
         let res = try await app.client.get("http://localhost:\(port)/redirect")
         XCTAssertEqual(res.status, .seeOther)
-        
+
         await app.server.shutdown()
     }
 
@@ -145,10 +146,11 @@ final class AsyncClientTests: XCTestCase {
         app.environment.arguments = ["serve"]
         try await app.asyncBoot()
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
@@ -178,14 +180,11 @@ final class AsyncClientTests: XCTestCase {
     }
 }
 
-
 final class CustomClient: Client, Sendable {
     let eventLoop: any EventLoop
     let _requests: NIOLockedValueBox<[ClientRequest]>
     var requests: [ClientRequest] {
-        get {
-            self._requests.withLockedValue { $0 }
-        }
+        self._requests.withLockedValue { $0 }
     }
 
     init(eventLoop: any EventLoop, _requests: [ClientRequest] = []) {
@@ -227,9 +226,8 @@ extension Application.Clients.Provider {
     }
 }
 
-
 final class TestLogHandler: LogHandler {
-    
+
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get { self.metadata[key] }
         set { self.metadata[key] = newValue }
@@ -243,7 +241,7 @@ final class TestLogHandler: LogHandler {
             self._metadata.withLockedValue { $0 = newValue }
         }
     }
-    
+
     var logLevel: Logger.Level {
         get {
             _logLevel
@@ -252,7 +250,7 @@ final class TestLogHandler: LogHandler {
             // We don't use this anywhere
         }
     }
-    
+
     var messages: [Logger.Message] {
         get {
             self._messages.withLockedValue { $0 }
@@ -261,7 +259,7 @@ final class TestLogHandler: LogHandler {
             self._messages.withLockedValue { $0 = newValue }
         }
     }
-    
+
     let _logLevel: Logger.Level
     let _metadata: NIOLockedValueBox<Logger.Metadata>
     let _messages: NIOLockedValueBox<[Logger.Message]>
@@ -305,12 +303,14 @@ final class TestLogHandler: LogHandler {
 
 struct SomeJSON: Content {
     let vapor: SomeNestedJSON
-    
+
     init() {
-        vapor = SomeNestedJSON(name: "The Vapor Project", age: 7, repos: [
-            VaporRepoJSON(name: "WebsocketKit", url: "https://github.com/vapor/websocket-kit"),
-            VaporRepoJSON(name: "PostgresNIO", url: "https://github.com/vapor/postgres-nio")
-        ])
+        vapor = SomeNestedJSON(
+            name: "The Vapor Project", age: 7,
+            repos: [
+                VaporRepoJSON(name: "WebsocketKit", url: "https://github.com/vapor/websocket-kit"),
+                VaporRepoJSON(name: "PostgresNIO", url: "https://github.com/vapor/postgres-nio"),
+            ])
     }
 }
 

@@ -2,7 +2,7 @@ import NIOHTTP1
 
 public struct ValidationsResult: Sendable {
     public let results: [ValidationResult]
-    
+
     public var error: ValidationsError? {
         let failures = self.results.filter { $0.result.isFailure }
         if !failures.isEmpty {
@@ -11,7 +11,7 @@ public struct ValidationsResult: Sendable {
             return nil
         }
     }
-    
+
     public func assert() throws {
         if let error = self.error {
             throw error

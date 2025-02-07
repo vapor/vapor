@@ -1,5 +1,5 @@
-import NIOHTTP1
 import NIOCore
+import NIOHTTP1
 
 /// Helper for encoding and decoding data from an HTTP request query string.
 ///
@@ -18,7 +18,7 @@ extension URLQueryContainer {
         var content = content
         try self.encode(&content)
     }
-    
+
     /// Serialize a ``Content`` object to the container without copying it.
     public mutating func encode<C: Content>(_ content: inout C) throws {
         try content.beforeEncode()
@@ -29,7 +29,7 @@ extension URLQueryContainer {
     public mutating func encode<E: Encodable>(_ encodable: E) throws {
         try self.encode(encodable, using: self.configuredEncoder())
     }
-    
+
     // MARK: - Decoding helpers
 
     /// Parse a ``Content`` object from the container.
@@ -64,14 +64,14 @@ extension URLQueryContainer {
     public subscript<D: Decodable>(_: D.Type = D.self, at path: [CodingKeyRepresentable]) -> D? {
         try? self.get(D.self, at: path)
     }
-    
+
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String = try req.query.get(at: "user", "name")
     public func get<D: Decodable>(_: D.Type = D.self, at path: CodingKeyRepresentable...) throws -> D {
         try self.get(at: path)
     }
-    
+
     /// Fetch a single ``Decodable`` value at the supplied keypath in this container.
     ///
     ///     let name = try req.query.get(String.self, at: ["user", "name"])
@@ -83,10 +83,13 @@ extension URLQueryContainer {
 
     /// Execute a "get at coding key path" operation.
     private func get<D: Decodable>(_: D.Type = D.self, path: [CodingKey]) throws -> D {
-        try self.decode(ContainerGetPathExecutor<D>.self, using: ForwardingURLQueryDecoder(
-            base: self.configuredDecoder(),
-            info: ContainerGetPathExecutor<D>.userInfo(for: path)
-        )).result
+        try self.decode(
+            ContainerGetPathExecutor<D>.self,
+            using: ForwardingURLQueryDecoder(
+                base: self.configuredDecoder(),
+                info: ContainerGetPathExecutor<D>.userInfo(for: path)
+            )
+        ).result
     }
 
     /// Look up a ``URLQueryDecoder``.
@@ -97,9 +100,9 @@ extension URLQueryContainer {
 }
 
 /// Injects coder userInfo into a ``URLQueryDecoder`` so we don't have to add passthroughs to ``URLQueryContainer``.
-fileprivate struct ForwardingURLQueryDecoder: URLQueryDecoder {
+private struct ForwardingURLQueryDecoder: URLQueryDecoder {
     let base: URLQueryDecoder, info: [CodingUserInfoKey: Sendable]
-    
+
     func decode<D: Decodable>(_: D.Type, from url: URI) throws -> D { try self.base.decode(D.self, from: url, userInfo: self.info) }
     func decode<D: Decodable>(_: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
         try self.base.decode(D.self, from: url, userInfo: userInfo.merging(self.info) { $1 })

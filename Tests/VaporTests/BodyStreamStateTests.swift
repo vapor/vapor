@@ -1,6 +1,7 @@
-@testable import Vapor
-import XCTest
 import NIOCore
+import XCTest
+
+@testable import Vapor
 
 final class BodyStreamStateTests: XCTestCase {
     func testSynchronous() throws {
@@ -60,7 +61,7 @@ final class BodyStreamStateTests: XCTestCase {
     func testErrorDuringWrite() throws {
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("Hello, world!")
-        struct Test: Error { }
+        struct Test: Error {}
 
         var state = HTTPBodyStreamState()
         XCTAssertEqual(
@@ -90,7 +91,7 @@ final class BodyStreamStateTests: XCTestCase {
         a.writeString("a")
         var b = ByteBufferAllocator().buffer(capacity: 0)
         b.writeString("b")
-        struct Test: Error { }
+        struct Test: Error {}
 
         var state = HTTPBodyStreamState()
         XCTAssertEqual(

@@ -1,11 +1,11 @@
+import Crypto
 import Foundation
+import Logging
+import NIOConcurrencyHelpers
 import NIOCore
-import _NIOFileSystem
 import NIOHTTP1
 import NIOPosix
-import Logging
-import Crypto
-import NIOConcurrencyHelpers
+import _NIOFileSystem
 import _NIOFileSystemFoundationCompat
 
 extension Request {
@@ -46,7 +46,7 @@ public struct FileIO: Sendable {
 
     /// ByteBufferAllocator to use for generating buffers.
     private let allocator: ByteBufferAllocator
-    
+
     /// HTTP request context.
     let request: Request
 
@@ -127,7 +127,7 @@ public struct FileIO: Sendable {
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
-        onCompleted: @Sendable @escaping (Result<Void, Error>) -> () = { _ in }
+        onCompleted: @Sendable @escaping (Result<Void, Error>) -> Void = { _ in }
     ) -> Response {
         // Get file attributes for this file.
         guard
@@ -200,25 +200,25 @@ public struct FileIO: Sendable {
         }
         // Set Content-Type header based on the media type
         // Only set Content-Type if file not modified and returned above.
-        if
-            let fileExtension = path.components(separatedBy: ".").last,
+        if let fileExtension = path.components(separatedBy: ".").last,
             let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
         {
             response.headers.contentType = type
         }
-        response.body = .init(stream: { stream in
-            self.read(path: path, fromOffset: offset, byteCount: byteCount, chunkSize: chunkSize) { chunk in
-                return stream.write(.buffer(chunk))
-            }.whenComplete { result in
-                switch result {
-                case .failure(let error):
-                    stream.write(.error(error), promise: nil)
-                case .success:
-                    stream.write(.end, promise: nil)
+        response.body = .init(
+            stream: { stream in
+                self.read(path: path, fromOffset: offset, byteCount: byteCount, chunkSize: chunkSize) { chunk in
+                    return stream.write(.buffer(chunk))
+                }.whenComplete { result in
+                    switch result {
+                    case .failure(let error):
+                        stream.write(.error(error), promise: nil)
+                    case .success:
+                        stream.write(.end, promise: nil)
+                    }
+                    onCompleted(result)
                 }
-                onCompleted(result)
-            }
-        }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
+            }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
 
         return response
     }
@@ -246,11 +246,13 @@ public struct FileIO: Sendable {
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool,
-        onCompleted: @escaping @Sendable (Result<Void, Error>) -> () = { _ in }
+        onCompleted: @escaping @Sendable (Result<Void, Error>) -> Void = { _ in }
     ) -> EventLoopFuture<Response> {
         // Get file attributes for this file.
         self.request.eventLoop.makeFutureWithTask {
-            try await self.asyncStreamFile(at: path, chunkSize: chunkSize, mediaType: mediaType, advancedETagComparison: advancedETagComparison, onCompleted: onCompleted)
+            try await self.asyncStreamFile(
+                at: path, chunkSize: chunkSize, mediaType: mediaType, advancedETagComparison: advancedETagComparison,
+                onCompleted: onCompleted)
         }
     }
 
@@ -286,7 +288,7 @@ public struct FileIO: Sendable {
             }
         }
     }
-    
+
     /// Async version of `read(path:fromOffset:byteCount:chunkSize:onRead)`
     private func read(
         path: String,
@@ -299,7 +301,7 @@ public struct FileIO: Sendable {
         }
         return try await self.io.read(fileHandle: fd, fromOffset: offset, byteCount: byteCount, allocator: allocator)
     }
-    
+
     /// Write the contents of buffer to a file at the supplied path.
     ///
     ///     let data = ByteBuffer(string: "ByteBuffer")
@@ -336,15 +338,16 @@ public struct FileIO: Sendable {
         } else {
             return collectFile(at: path).map { buffer in
                 let digest = SHA256.hash(data: buffer.readableBytesView)
-                
+
                 // update hash in dictionary
-                request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
-                
+                request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(
+                    lastModified: lastModified, digestHex: digest.hex)
+
                 return digest.hex
             }
         }
     }
-    
+
     // MARK: - Concurrency
     /// Reads the contents of a file at the supplied path.
     ///
@@ -360,7 +363,7 @@ public struct FileIO: Sendable {
         }
         return try await self.read(path: path, fromOffset: 0, byteCount: Int(fileSize))
     }
-    
+
     /// Wrapper around `NIOFileSystem.FileChunks`.
     /// This can be removed once `NIOFileSystem` reaches a stable API.
     public struct FileChunks: AsyncSequence {
@@ -377,7 +380,8 @@ public struct FileIO: Sendable {
             private var iterator: _NIOFileSystem.FileChunks.AsyncIterator
             private let fileHandle: _NIOFileSystem.FileHandleProtocol
 
-            fileprivate init(wrapping iterator: _NIOFileSystem.FileChunks.AsyncIterator, fileHandle: some _NIOFileSystem.FileHandleProtocol) {
+            fileprivate init(wrapping iterator: _NIOFileSystem.FileChunks.AsyncIterator, fileHandle: some _NIOFileSystem.FileHandleProtocol)
+            {
                 self.iterator = iterator
                 self.fileHandle = fileHandle
             }
@@ -391,7 +395,7 @@ public struct FileIO: Sendable {
                 return chunk
             }
         }
-        
+
         public func closeHandle() async throws {
             try await self.fileHandle.close()
         }
@@ -418,14 +422,14 @@ public struct FileIO: Sendable {
         byteCount: Int? = nil
     ) async throws -> FileChunks {
         let filePath = FilePath(path)
-        
+
         let readHandle = try await fileSystem.openFile(forReadingAt: filePath)
-        
+
         let chunks: _NIOFileSystem.FileChunks
-        
+
         if let offset {
             if let byteCount {
-                chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(Int64(chunkSize)))
+                chunks = readHandle.readChunks(in: offset..<(offset + Int64(byteCount)), chunkLength: .bytes(Int64(chunkSize)))
             } else {
                 chunks = readHandle.readChunks(in: offset..., chunkLength: .bytes(Int64(chunkSize)))
             }
@@ -435,7 +439,7 @@ public struct FileIO: Sendable {
 
         return FileChunks(fileChunks: chunks, fileHandle: readHandle)
     }
-    
+
     /// Write the contents of buffer to a file at the supplied path.
     ///
     ///     let data = ByteBuffer(string: "ByteBuffer")
@@ -452,7 +456,7 @@ public struct FileIO: Sendable {
         }
         try await self.io.write(fileHandle: fd, buffer: buffer)
     }
-    
+
     /// Generates a chunked `Response` for the specified file. This method respects values in
     /// the `"ETag"` header and is capable of responding `304 Not Modified` if the file in question
     /// has not been modified since last served. If `advancedETagComparison` is set to true,
@@ -479,7 +483,7 @@ public struct FileIO: Sendable {
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool = false,
-        onCompleted: @escaping @Sendable (Result<Void, Error>) async throws -> () = { _ in }
+        onCompleted: @escaping @Sendable (Result<Void, Error>) async throws -> Void = { _ in }
     ) async throws -> Response {
         // Get file attributes for this file.
         guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(path)) else {
@@ -509,7 +513,7 @@ public struct FileIO: Sendable {
             // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
             eTag = "\"\(fileInfo.lastDataModificationTime.seconds)-\(fileInfo.size)\""
         }
-        
+
         // Create empty headers array.
         var headers: HTTPHeaders = [:]
 
@@ -552,64 +556,64 @@ public struct FileIO: Sendable {
         }
         // Set Content-Type header based on the media type
         // Only set Content-Type if file not modified and returned above.
-        if
-            let fileExtension = path.components(separatedBy: ".").last,
+        if let fileExtension = path.components(separatedBy: ".").last,
             let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
         {
             response.headers.contentType = type
         }
-        
-        response.body = .init(asyncStream: { stream in
-            do {
-                let chunks = try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount)
+
+        response.body = .init(
+            asyncStream: { stream in
                 do {
-                    for try await chunk in chunks {
-                        try await stream.writeBuffer(chunk)
+                    let chunks = try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount)
+                    do {
+                        for try await chunk in chunks {
+                            try await stream.writeBuffer(chunk)
+                        }
+                        try? await chunks.closeHandle()
+                    } catch {
+                        try? await chunks.closeHandle()
+                        throw error
                     }
-                    try? await chunks.closeHandle()
+                    try await stream.write(.end)
+                    try await onCompleted(.success(()))
                 } catch {
-                    try? await chunks.closeHandle()
-                    throw error
+                    try? await stream.write(.error(error))
+                    try await onCompleted(.failure(error))
                 }
-                try await stream.write(.end)
-                try await onCompleted(.success(()))
-            } catch {
-                try? await stream.write(.error(error))
-                try await onCompleted(.failure(error))
-            }
-        }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
+            }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
 
         return response
     }
 }
 
 extension HTTPHeaders.Range.Value {
-    
+
     fileprivate func asByteBufferBounds(withMaxSize size: Int, logger: Logger) throws -> (offset: Int64, byteCount: Int) {
         switch self {
-            case .start(let value):
-                guard value <= size, value >= 0 else {
-                    logger.debug("Requested range start was invalid: \(value)")
-                    throw Abort(.badRequest)
-                }
-                return (offset: numericCast(value), byteCount: size - value)
-            case .tail(let value):
-                guard value <= size, value >= 0 else {
-                    logger.debug("Requested range end was invalid: \(value)")
-                    throw Abort(.badRequest)
-                }
-                return (offset: numericCast(size - value), byteCount: value)
-            case .within(let start, let end):
-                guard start >= 0, end >= 0, start <= end, start <= size, end <= size else {
-                    logger.debug("Requested range was invalid: \(start)-\(end)")
-                    throw Abort(.badRequest)
-                }
-                let (byteCount, overflow) =  (end - start).addingReportingOverflow(1)
-                guard !overflow else {
-                    logger.debug("Requested range was invalid: \(start)-\(end)")
-                    throw Abort(.badRequest)
-                }
-                return (offset: numericCast(start), byteCount: byteCount)
+        case .start(let value):
+            guard value <= size, value >= 0 else {
+                logger.debug("Requested range start was invalid: \(value)")
+                throw Abort(.badRequest)
+            }
+            return (offset: numericCast(value), byteCount: size - value)
+        case .tail(let value):
+            guard value <= size, value >= 0 else {
+                logger.debug("Requested range end was invalid: \(value)")
+                throw Abort(.badRequest)
+            }
+            return (offset: numericCast(size - value), byteCount: value)
+        case .within(let start, let end):
+            guard start >= 0, end >= 0, start <= end, start <= size, end <= size else {
+                logger.debug("Requested range was invalid: \(start)-\(end)")
+                throw Abort(.badRequest)
+            }
+            let (byteCount, overflow) = (end - start).addingReportingOverflow(1)
+            guard !overflow else {
+                logger.debug("Requested range was invalid: \(start)-\(end)")
+                throw Abort(.badRequest)
+            }
+            return (offset: numericCast(start), byteCount: byteCount)
         }
     }
 }

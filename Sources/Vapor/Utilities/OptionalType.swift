@@ -26,7 +26,7 @@ extension EventLoopFuture where Value: OptionalType {
 ///     let futureInt = maybeFutureInt ?? 0
 ///     print(futureInt) // Future<Int>
 ///
-public func ??<T: Sendable>(lhs: EventLoopFuture<T?>, rhs: T) -> EventLoopFuture<T> {
+public func ?? <T: Sendable>(lhs: EventLoopFuture<T?>, rhs: T) -> EventLoopFuture<T> {
     return lhs.map { value in
         return value ?? rhs
     }
@@ -39,10 +39,10 @@ public func ??<T: Sendable>(lhs: EventLoopFuture<T?>, rhs: T) -> EventLoopFuture
 public protocol OptionalType: AnyOptionalType {
     /// Underlying wrapped type.
     associatedtype WrappedType
-    
+
     /// Returns the wrapped type, if it exists.
     var wrapped: WrappedType? { get }
-    
+
     /// Creates this optional type from an optional wrapped type.
     static func makeOptionalType(_ wrapped: WrappedType?) -> Self
 }
@@ -52,7 +52,7 @@ public protocol OptionalType: AnyOptionalType {
 extension Optional: OptionalType {
     /// See `OptionalType.WrappedType`
     public typealias WrappedType = Wrapped
-    
+
     /// See `OptionalType.wrapped`
     public var wrapped: Wrapped? {
         switch self {
@@ -60,9 +60,9 @@ extension Optional: OptionalType {
         case .some(let w): return w
         }
     }
-    
+
     /// See `OptionalType.makeOptionalType`
-    public static func makeOptionalType(_ wrapped: Wrapped?) -> Optional<Wrapped> {
+    public static func makeOptionalType(_ wrapped: Wrapped?) -> Wrapped? {
         return wrapped
     }
 }
@@ -71,7 +71,7 @@ extension Optional: OptionalType {
 public protocol AnyOptionalType {
     /// Returns the wrapped type, if it exists.
     var anyWrapped: Any? { get }
-    
+
     /// Returns the wrapped type, if it exists.
     static var anyWrappedType: Any.Type { get }
 }
@@ -79,7 +79,7 @@ public protocol AnyOptionalType {
 extension AnyOptionalType where Self: OptionalType {
     /// See `AnyOptionalType.anyWrapped`
     public var anyWrapped: Any? { return wrapped }
-    
+
     /// See `AnyOptionalType.anyWrappedType`
     public static var anyWrappedType: Any.Type { return WrappedType.self }
 }

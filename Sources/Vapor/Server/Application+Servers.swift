@@ -14,9 +14,9 @@ extension Application {
 
     public struct Servers: Sendable {
         public struct Provider {
-            let run: @Sendable (Application) -> ()
+            let run: @Sendable (Application) -> Void
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> Void) {
                 self.run = run
             }
         }
@@ -63,7 +63,7 @@ extension Application {
                 return new
             }
         }
-        
+
         public var asyncCommand: ServeCommand {
             get async {
                 if let existing = self.application.storage.get(CommandKey.self) {

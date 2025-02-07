@@ -1,8 +1,8 @@
+import Foundation
 import NIOCore
 import NIOHTTP1
-import WebSocketKit
 import RoutingKit
-import Foundation
+import WebSocketKit
 
 extension Request {
 
@@ -11,7 +11,7 @@ extension Request {
     public func webSocket(
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
         shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
-        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
+        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> Void
     ) -> Response {
         webSocket(
             maxFrameSize: maxFrameSize,
@@ -49,7 +49,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
         shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
-        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
+        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> Void
     ) -> Route {
         return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
     }
@@ -69,7 +69,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
         shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
-        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
+        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> Void
     ) -> Route {
         return self.on(.GET, path) { request -> Response in
             return request.webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
@@ -84,7 +84,7 @@ extension WebSocket {
         headers: HTTPHeaders = [:],
         configuration: WebSocketClient.Configuration = .init(),
         on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
-        onUpgrade: @Sendable @escaping (WebSocket) -> ()
+        onUpgrade: @Sendable @escaping (WebSocket) -> Void
     ) async throws {
         guard let url = URL(string: url) else {
             throw WebSocketClient.Error.invalidURL
@@ -104,8 +104,8 @@ extension WebSocket {
         headers: HTTPHeaders = [:],
         configuration: WebSocketClient.Configuration = .init(),
         on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
-        onUpgrade: @Sendable @escaping (WebSocket) -> ()
-    ) async throws  {
+        onUpgrade: @Sendable @escaping (WebSocket) -> Void
+    ) async throws {
         let scheme = url.scheme ?? "ws"
         return try await self.connect(
             scheme: scheme,
@@ -128,8 +128,8 @@ extension WebSocket {
         headers: HTTPHeaders = [:],
         configuration: WebSocketClient.Configuration = .init(),
         on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
-        onUpgrade: @Sendable @escaping (WebSocket) -> ()
-    ) async throws  {
+        onUpgrade: @Sendable @escaping (WebSocket) -> Void
+    ) async throws {
         return try await WebSocketClient(
             eventLoopGroupProvider: .shared(eventLoopGroup),
             configuration: configuration

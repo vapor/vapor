@@ -1,12 +1,12 @@
 import NIOCore
 
 /// Capable of being authenticated.
-public protocol Authenticatable { }
+public protocol Authenticatable {}
 
 /// Helper for creating authentication middleware.
 ///
 /// See `RequestAuthenticator` and `SessionAuthenticator` for more information.
-public protocol Authenticator: Middleware { }
+public protocol Authenticator: Middleware {}
 
 /// Help for creating authentication middleware based on `Request`.
 ///

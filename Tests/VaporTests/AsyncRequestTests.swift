@@ -1,13 +1,13 @@
-import XCTVapor
-import XCTest
-import Vapor
-import NIOCore
 import AsyncHTTPClient
 import Atomics
 import NIOConcurrencyHelpers
+import NIOCore
+import Vapor
+import XCTVapor
+import XCTest
 
-fileprivate extension String {
-    static func randomDigits(length: Int = 999) -> String {
+extension String {
+    fileprivate static func randomDigits(length: Int = 999) -> String {
         var string = ""
         for _ in 0...999 {
             string += String(Int.random(in: 0...9))
@@ -17,21 +17,21 @@ fileprivate extension String {
 }
 
 final class AsyncRequestTests: XCTestCase {
-    
+
     var app: Application!
-    
+
     override func setUp() async throws {
         app = try await Application.make(.testing)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
+
     func testStreamingRequest() async throws {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
-        
+
         let testValue = String.randomDigits()
 
         app.on(.POST, "stream", body: .stream) { req in
@@ -47,48 +47,50 @@ final class AsyncRequestTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
-              let port = localAddress.port else {
+            let ip = localAddress.ipAddress,
+            let port = localAddress.port
+        else {
             return XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
         }
-        
+
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/stream")
         request.method = .POST
         request.body = .stream(testValue.utf8.async, length: .unknown)
-        
+
         let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
         XCTAssertEqual(response.status, .ok)
         let body = try await response.body.collect(upTo: 1024 * 1024)
         XCTAssertEqual(body.string, testValue)
     }
-    
+
     func testStreamingRequestBodyCleansUp() async throws {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
-        
+
         let bytesTheServerRead = ManagedAtomic<Int>(0)
-        
+
         app.on(.POST, "hello", body: .stream) { req async throws -> Response in
             var bodyIterator = req.body.makeAsyncIterator()
             let firstChunk = try await bodyIterator.next()
             bytesTheServerRead.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .relaxed)
             throw Abort(.internalServerError)
         }
-        
+
         app.environment.arguments = ["serve"]
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
-              let port = localAddress.port else {
+            let ip = localAddress.ipAddress,
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        
+
         var oneMBBB = ByteBuffer(repeating: 0x41, count: 1024 * 1024)
         let oneMB = try XCTUnwrap(oneMBBB.readData(length: oneMBBB.readableBytes))
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
@@ -99,38 +101,38 @@ final class AsyncRequestTests: XCTestCase {
             XCTAssertEqual(response.status, .internalServerError)
         }
     }
-    
+
     // TODO: Re-enable once it reliably works and doesn't cause issues with trying to shut the application down
     // This may require some work in Vapor
     func _testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
-        
+
         let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
         let bytesTheServerSaw = ManagedAtomic<Int>(0)
         let bytesTheClientSent = ManagedAtomic<Int>(0)
         let serverSawEnd = ManagedAtomic<Bool>(false)
         let serverSawRequest = ManagedAtomic<Bool>(false)
-        
+
         let requestHandlerTask: NIOLockedValueBox<Task<Response, Error>?> = .init(nil)
-        
+
         app.on(.POST, "hello", body: .stream) { req async throws -> Response in
             requestHandlerTask.withLockedValue {
                 $0 = Task {
                     XCTAssertTrue(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged)
                     var bodyIterator = req.body.makeAsyncIterator()
-                    let firstChunk = try await bodyIterator.next() // read only first chunk
+                    let firstChunk = try await bodyIterator.next()  // read only first chunk
                     numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .sequentiallyConsistent)
                     bytesTheServerSaw.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .sequentiallyConsistent)
                     defer {
-                        _ = bodyIterator // make sure to not prematurely cancelling the sequence
+                        _ = bodyIterator  // make sure to not prematurely cancelling the sequence
                     }
-                    try await Task.sleep(nanoseconds: 10_000_000_000) // wait "forever"
+                    try await Task.sleep(nanoseconds: 10_000_000_000)  // wait "forever"
                     serverSawEnd.store(true, ordering: .sequentiallyConsistent)
                     return Response(status: .ok)
                 }
             }
-            
+
             do {
                 let task = requestHandlerTask.withLockedValue { $0 }
                 return try await task!.value
@@ -138,60 +140,66 @@ final class AsyncRequestTests: XCTestCase {
                 throw Abort(.internalServerError)
             }
         }
-        
+
         app.environment.arguments = ["serve"]
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
-              let port = localAddress.port else {
+            let ip = localAddress.ipAddress,
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        
+
         final class ResponseDelegate: HTTPClientResponseDelegate {
             typealias Response = Void
-            
+
             private let bytesTheClientSent: ManagedAtomic<Int>
-            
+
             init(bytesTheClientSent: ManagedAtomic<Int>) {
                 self.bytesTheClientSent = bytesTheClientSent
             }
-            
+
             func didFinishRequest(task: HTTPClient.Task<Response>) throws -> Response {
                 return ()
             }
-            
+
             func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
                 self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .sequentiallyConsistent)
             }
         }
-        
+
         let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
-        let request = try! HTTPClient.Request(url: "http://\(ip):\(port)/hello",
-                                              method: .POST,
-                                              headers: [:],
-                                              body: .byteBuffer(tenMB))
+        let request = try! HTTPClient.Request(
+            url: "http://\(ip):\(port)/hello",
+            method: .POST,
+            headers: [:],
+            body: .byteBuffer(tenMB))
         let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
         let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
-        XCTAssertThrowsError(try httpClient.execute(request: request,
-                                                                delegate: delegate,
-                                                                deadline: .now() + .milliseconds(500)).wait()) { error in
+        XCTAssertThrowsError(
+            try httpClient.execute(
+                request: request,
+                delegate: delegate,
+                deadline: .now() + .milliseconds(500)
+            ).wait()
+        ) { error in
             if let error = error as? HTTPClientError {
                 XCTAssert(error == .readTimeout || error == .deadlineExceeded)
             } else {
                 XCTFail("unexpected error: \(error)")
             }
         }
-        
+
         XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load(ordering: .sequentiallyConsistent))
         XCTAssertGreaterThanOrEqual(tenMB.readableBytes, bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
         XCTAssertGreaterThanOrEqual(tenMB.readableBytes, bytesTheClientSent.load(ordering: .sequentiallyConsistent))
-        XCTAssertEqual(0, bytesTheClientSent.load(ordering: .sequentiallyConsistent)) // We'd only see this if we sent the full 10 MB.
+        XCTAssertEqual(0, bytesTheClientSent.load(ordering: .sequentiallyConsistent))  // We'd only see this if we sent the full 10 MB.
         XCTAssertFalse(serverSawEnd.load(ordering: .sequentiallyConsistent))
         XCTAssertTrue(serverSawRequest.load(ordering: .sequentiallyConsistent))
-        
+
         requestHandlerTask.withLockedValue { $0?.cancel() }
         try await httpClient.shutdown()
     }
@@ -201,19 +209,21 @@ final class AsyncRequestTests: XCTestCase {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
 
-        app.on(.POST, "upload", body: .stream, use: { request async throws -> String  in
-            let buffer = try await request.body.collect(upTo: Int.max)
-            return "Received \(buffer.readableBytes) bytes"
-        })
+        app.on(
+            .POST, "upload", body: .stream,
+            use: { request async throws -> String in
+                let buffer = try await request.body.collect(upTo: Int.max)
+                return "Received \(buffer.readableBytes) bytes"
+            })
 
         app.environment.arguments = ["serve"]
         try await app.startup()
 
         XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard 
+        guard
             let localAddress = app.http.server.shared.localAddress,
             let ip = localAddress.ipAddress,
-            let port = localAddress.port 
+            let port = localAddress.port
         else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return

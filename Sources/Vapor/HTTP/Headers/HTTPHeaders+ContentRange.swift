@@ -2,13 +2,13 @@ import Foundation
 import NIOHTTP1
 
 extension HTTPHeaders {
-    
+
     /// The unit in which `ContentRange`s and `Range`s are specified. This is usually `bytes`.
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
     public enum RangeUnit: Sendable, Equatable {
         case bytes
         case custom(value: String)
-        
+
         public func serialize() -> String {
             switch self {
             case .bytes:
@@ -18,18 +18,18 @@ extension HTTPHeaders {
             }
         }
     }
-    
+
     /// Represents the HTTP `Range` request header.
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
     public struct Range: Sendable, Equatable {
         public let unit: RangeUnit
         public let ranges: [HTTPHeaders.Range.Value]
-        
+
         public init(unit: RangeUnit, ranges: [HTTPHeaders.Range.Value]) {
             self.unit = unit
             self.ranges = ranges
         }
-        
+
         init?(directives: [HTTPHeaders.Directive]) {
             let rangeCandidates: [HTTPHeaders.Range.Value] = directives.enumerated().compactMap {
                 if $0.0 == 0, let parameter = $0.1.parameter {
@@ -42,23 +42,24 @@ extension HTTPHeaders {
             }
             self.ranges = rangeCandidates
             let lowerCasedUnit = directives[0].value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            self.unit = lowerCasedUnit == "bytes"
+            self.unit =
+                lowerCasedUnit == "bytes"
                 ? RangeUnit.bytes
                 : RangeUnit.custom(value: lowerCasedUnit)
         }
-        
+
         public func serialize() -> String {
             return "\(unit.serialize())=\(ranges.map { $0.serialize() }.joined(separator: ", "))"
         }
     }
-    
+
     /// Represents the HTTP `Content-Range` response header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
     public struct ContentRange: Equatable {
         public let unit: RangeUnit
         public let range: HTTPHeaders.ContentRange.Value
-        
+
         init?(directive: HTTPHeaders.Directive) {
             let splitResult = directive.value.split(separator: " ")
             guard splitResult.count == 2 else {
@@ -69,30 +70,31 @@ extension HTTPHeaders {
             guard let contentRange = HTTPHeaders.ContentRange.Value.from(responseStr: rangeStr) else {
                 return nil
             }
-            self.unit = lowerCasedUnit == "bytes"
+            self.unit =
+                lowerCasedUnit == "bytes"
                 ? RangeUnit.bytes
                 : RangeUnit.custom(value: lowerCasedUnit)
             self.range = contentRange
         }
-        
+
         public init(unit: RangeUnit, range: HTTPHeaders.ContentRange.Value) {
             self.unit = unit
             self.range = range
         }
-        
+
         init?(directives: [Directive]) {
             guard directives.count == 1 else {
                 return nil
             }
             self.init(directive: directives[0])
         }
-        
+
         public func serialize() -> String {
             return "\(unit.serialize()) \(range.serialize())"
         }
-        
+
     }
-    
+
     /// Convenience for accessing the Content-Range response header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
@@ -110,7 +112,7 @@ extension HTTPHeaders {
             self.add(name: .contentRange, value: newValue.serialize())
         }
     }
-    
+
     /// Convenience for accessing the `Range` request header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
@@ -141,7 +143,7 @@ extension HTTPHeaders.Range {
         case tail(value: Int)
         ///Two integers with single dash in between, e.g. `20-25`
         case within(start: Int, end: Int)
-        
+
         ///Parses a string representing a requested range in one of the following formats:
         ///
         ///- `<range-start>-<range-end>`
@@ -156,7 +158,7 @@ extension HTTPHeaders.Range {
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             let count = ranges.count
             guard count <= 2 else { return nil }
-    
+
             switch (count > 0 ? Int(ranges[0]) : nil, count > 1 ? Int(ranges[1]) : nil) {
             case (nil, nil):
                 return nil
@@ -168,7 +170,7 @@ extension HTTPHeaders.Range {
                 return .within(start: start, end: end)
             }
         }
-        
+
         ///Serializes `HTTPHeaders.Range.Value` to a string for use within the HTTP `Range` header.
         public func serialize() -> String {
             switch self {
@@ -187,11 +189,11 @@ extension HTTPHeaders.ContentRange {
     /// Represents the value of the `Content-Range` request header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
-    public enum Value : Equatable {
+    public enum Value: Equatable {
         case within(start: Int, end: Int)
         case withinWithLimit(start: Int, end: Int, limit: Int)
         case any(size: Int)
-        
+
         ///Parses a string representing a response range in one of the following formats:
         ///
         ///- `<range-start>-<range-end>/<size>`
@@ -201,7 +203,7 @@ extension HTTPHeaders.ContentRange {
         /// - parameters:
         ///     - requestStr: String representing the response range
         /// - returns: A `HTTPHeaders.ContentRange.Value` if the `responseStr` is valid, `nil` otherwise.
-        public static func from<T>(responseStr: T) -> HTTPHeaders.ContentRange.Value? where T : StringProtocol {
+        public static func from<T>(responseStr: T) -> HTTPHeaders.ContentRange.Value? where T: StringProtocol {
             let ranges = responseStr.split(separator: "-", omittingEmptySubsequences: false)
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -210,8 +212,9 @@ extension HTTPHeaders.ContentRange {
                 let anyRangeOfSize = ranges[0].split(separator: "/", omittingEmptySubsequences: false)
                 guard anyRangeOfSize.count == 2,
                     anyRangeOfSize[0] == "*",
-                    let size = Int(anyRangeOfSize[1]) else {
-                        return nil
+                    let size = Int(anyRangeOfSize[1])
+                else {
+                    return nil
                 }
                 return .any(size: size)
             case 2:
@@ -232,7 +235,7 @@ extension HTTPHeaders.ContentRange {
             default: return nil
             }
         }
-        
+
         ///Serializes `HTTPHeaders.Range.Value` to a string for use within the HTTP `Content-Range` header.
         public func serialize() -> String {
             switch self {
@@ -248,7 +251,7 @@ extension HTTPHeaders.ContentRange {
 }
 
 extension HTTPHeaders.Range.Value {
-    
+
     ///Converts this `HTTPHeaders.Range.Value` to a `HTTPHeaders.ContentRange.Value` with the given `limit`.
     public func asResponseContentRange(limit: Int) throws -> HTTPHeaders.ContentRange.Value {
         switch self {
@@ -266,7 +269,7 @@ extension HTTPHeaders.Range.Value {
             guard start >= 0, end >= 0, start <= end, start <= limit, end <= limit else {
                 throw Abort(.badRequest)
             }
-            
+
             return .withinWithLimit(start: start, end: end, limit: limit)
         }
     }

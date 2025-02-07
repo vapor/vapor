@@ -1,6 +1,6 @@
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
-import NIOConcurrencyHelpers
 import Vapor
 
 public struct TestingHTTPRequest: Sendable {
@@ -24,15 +24,15 @@ public struct TestingHTTPRequest: Sendable {
             return self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E: Encodable {
             try encoder.encode(encodable, to: &self.body, headers: &self.headers)
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D: Decodable {
             fatalError("Decoding from test request is not supported.")
         }
 
-        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C: Content {
             var content = content
             try content.beforeEncode()
             try encoder.encode(content, to: &self.body, headers: &self.headers)
@@ -54,14 +54,12 @@ public struct TestingHTTPRequest: Sendable {
         var url: URI
 
         func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
-            where D: Decodable
-        {
+        where D: Decodable {
             fatalError("Decoding from test request is not supported.")
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: URLQueryEncoder) throws
-            where E: Encodable
-        {
+        where E: Encodable {
             try encoder.encode(encodable, to: &self.url)
         }
     }

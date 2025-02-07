@@ -1,7 +1,7 @@
+import Foundation
 import Logging
 import NIOCore
 import NIOHTTP1
-import Foundation
 
 final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = HTTPServerRequestPart
@@ -23,13 +23,13 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         self.application.logger
     }
     var application: Application
-    
+
     init(application: Application) {
         self.application = application
         self.requestState = .ready
         self.bodyStreamState = .init()
     }
-    
+
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         assert(context.channel.eventLoop.inEventLoop)
         let part = self.unwrapInboundIn(data)
@@ -304,11 +304,12 @@ struct HTTPBodyStreamState: CustomStringConvertible {
     mutating func didReadBytes(_ buffer: ByteBuffer) -> Result {
         switch self.state {
         case .idle:
-            self.state = .writing(.init(
-                bufferedWrites: .init(),
-                heldUpRead: false,
-                hasClosed: false
-            ))
+            self.state = .writing(
+                .init(
+                    bufferedWrites: .init(),
+                    heldUpRead: false,
+                    hasClosed: false
+                ))
             return .init(action: .write(buffer), callRead: false)
         case .writing(var buffers):
             buffers.append(buffer)

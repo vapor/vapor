@@ -14,8 +14,8 @@
 // The license for the original work is reproduced below. See NOTICES.txt for
 // more.
 
-import Metrics
 import Foundation
+import Metrics
 import NIOConcurrencyHelpers
 
 /// Metrics factory which allows inspecting recorded metrics programmatically.
@@ -41,7 +41,9 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
         return self.lock.withLock { self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init) }
     }
 
-    private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
+    private func make<Item>(
+        label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item
+    ) -> Item {
         let item = maker(label, dimensions)
         registry[label] = item
         return item

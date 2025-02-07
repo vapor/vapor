@@ -57,7 +57,7 @@ public protocol DebuggableError: LocalizedError, CustomDebugStringConvertible, C
     /// Provide a custom implementation to a list of pertinent issues.
     var gitHubIssues: [String] { get }
 
-    /// Which log level this error should report as. 
+    /// Which log level this error should report as.
     /// Defaults to `.warning`.
     var logLevel: Logger.Level { get }
 }
@@ -108,7 +108,7 @@ extension DebuggableError {
         nil
     }
 
-    public var logLevel: Logger.Level { 
+    public var logLevel: Logger.Level {
         .warning
     }
 }
@@ -148,7 +148,6 @@ extension DebuggableError {
         self.documentationLinks.first
     }
 }
-
 
 // MARK: Representations
 /// Available formatting options for generating debug info for `Debuggable` errors.
@@ -208,9 +207,8 @@ extension DebuggableError {
     }
 }
 
-
 extension Sequence where Iterator.Element == String {
     var bulletedList: String {
-        self.map { "\n- \($0)" } .joined()
+        self.map { "\n- \($0)" }.joined()
     }
 }

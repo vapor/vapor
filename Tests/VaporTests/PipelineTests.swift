@@ -1,38 +1,40 @@
-@testable import Vapor
-import enum NIOHTTP1.HTTPParserError
-import XCTest
 import AsyncHTTPClient
-import NIOEmbedded
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
+import NIOEmbedded
+import XCTest
+
+import enum NIOHTTP1.HTTPParserError
 import class NIOPosix.ClientBootstrap
+
+@testable import Vapor
 
 final class PipelineTests: XCTestCase {
     var app: Application!
-    
+
     override func setUp() async throws {
         app = try await Application.make(.testing)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
-    
+
     func testEchoHandlers() throws {
         app.on(.POST, "echo", body: .stream) { request -> Response in
-            Response(body: .init(stream: { writer in
-                request.body.drain { body in
-                    switch body {
-                    case .buffer(let buffer):
-                        return writer.write(.buffer(buffer))
-                    case .error(let error):
-                        return writer.write(.error(error))
-                    case .end:
-                        return writer.write(.end)
+            Response(
+                body: .init(stream: { writer in
+                    request.body.drain { body in
+                        switch body {
+                        case .buffer(let buffer):
+                            return writer.write(.buffer(buffer))
+                        case .error(let error):
+                            return writer.write(.error(error))
+                        case .end:
+                            return writer.write(.end)
+                        }
                     }
-                }
-            }))
+                }))
         }
 
         let channel = EmbeddedChannel()
@@ -72,22 +74,23 @@ final class PipelineTests: XCTestCase {
     func testAsyncEchoHandlers() async throws {
         app.on(.POST, "echo", body: .stream) { request async throws -> Response in
             var buffers = [ByteBuffer]()
-            
+
             for try await buffer in request.body {
                 buffers.append(buffer)
             }
-            
-            return Response(body: .init(managedAsyncStream: { [buffers] writer in
-                for buffer in buffers {
-                    try await writer.writeBuffer(buffer)
-                }
-            }))
+
+            return Response(
+                body: .init(managedAsyncStream: { [buffers] writer in
+                    for buffer in buffers {
+                        try await writer.writeBuffer(buffer)
+                    }
+                }))
         }
-        
+
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
         try await app.startup()
-        
+
         guard
             let localAddress = app.http.server.shared.localAddress,
             let port = localAddress.port
@@ -95,9 +98,9 @@ final class PipelineTests: XCTestCase {
             XCTFail("couldn't get port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        
+
         let client = HTTPClient()
-        
+
         let chunks = [
             "1\r\n",
             "a",
@@ -109,35 +112,39 @@ final class PipelineTests: XCTestCase {
             "c",
             "\r\n",
         ]
-        
-        let response = try await client.post(url: "http://localhost:\(port)/echo", body: .stream { writer in
-            let box = UnsafeMutableTransferBox(writer)
-            @Sendable func write(chunks: [String]) -> EventLoopFuture<Void> {
-                var chunks = chunks
-                let chunk = chunks.removeFirst()
-                
-                if chunks.isEmpty {
-                    return box.wrappedValue.write(.byteBuffer(ByteBuffer(string: chunk)))
-                } else {
-                    return box.wrappedValue.write(.byteBuffer(ByteBuffer(string: chunk))).flatMap { [chunks] in
-                        return write(chunks: chunks)
+
+        let response = try await client.post(
+            url: "http://localhost:\(port)/echo",
+            body: .stream { writer in
+                let box = UnsafeMutableTransferBox(writer)
+                @Sendable func write(chunks: [String]) -> EventLoopFuture<Void> {
+                    var chunks = chunks
+                    let chunk = chunks.removeFirst()
+
+                    if chunks.isEmpty {
+                        return box.wrappedValue.write(.byteBuffer(ByteBuffer(string: chunk)))
+                    } else {
+                        return box.wrappedValue.write(.byteBuffer(ByteBuffer(string: chunk))).flatMap { [chunks] in
+                            return write(chunks: chunks)
+                        }
                     }
                 }
+
+                return write(chunks: chunks)
             }
-            
-            return write(chunks: chunks)
-        }).get()
-        
+        ).get()
+
         XCTAssertEqual(response.body?.string, chunks.joined(separator: ""))
         try await client.shutdown()
     }
 
     func testAsyncFailingHandlers() async throws {
         app.on(.POST, "fail", body: .stream) { request async throws -> Response in
-            return Response(body: .init(managedAsyncStream: { writer in
-                try await writer.writeBuffer(.init(string: "foo"))
-                throw Abort(.internalServerError)
-            }))
+            return Response(
+                body: .init(managedAsyncStream: { writer in
+                    try await writer.writeBuffer(.init(string: "foo"))
+                    throw Abort(.internalServerError)
+                }))
         }
 
         app.environment.arguments = ["serve"]
@@ -170,18 +177,19 @@ final class PipelineTests: XCTestCase {
 
     func testEOFFraming() throws {
         app.on(.POST, "echo", body: .stream) { request -> Response in
-            Response(body: .init(stream: { writer in
-                request.body.drain { body in
-                    switch body {
-                    case .buffer(let buffer):
-                        return writer.write(.buffer(buffer))
-                    case .error(let error):
-                        return writer.write(.error(error))
-                    case .end:
-                        return writer.write(.end)
+            Response(
+                body: .init(stream: { writer in
+                    request.body.drain { body in
+                        switch body {
+                        case .buffer(let buffer):
+                            return writer.write(.buffer(buffer))
+                        case .error(let error):
+                            return writer.write(.error(error))
+                        case .end:
+                            return writer.write(.end)
+                        }
                     }
-                }
-            }))
+                }))
         }
 
         let channel = EmbeddedChannel()
@@ -197,10 +205,12 @@ final class PipelineTests: XCTestCase {
 
     func testBadStreamLength() throws {
         app.on(.POST, "echo", body: .stream) { request -> Response in
-            Response(body: .init(stream: { writer in
-                writer.write(.buffer(.init(string: "a")), promise: nil)
-                writer.write(.end, promise: nil)
-            }, count: 2))
+            Response(
+                body: .init(
+                    stream: { writer in
+                        writer.write(.buffer(.init(string: "a")), promise: nil)
+                        writer.write(.end, promise: nil)
+                    }, count: 2))
         }
 
         let channel = EmbeddedChannel()
@@ -219,7 +229,7 @@ final class PipelineTests: XCTestCase {
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "a")
         try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
     }
-    
+
     func testInvalidHttp() throws {
         let channel = EmbeddedChannel()
         try channel.connect(to: .init(unixDomainSocketPath: "/foo")).wait()
@@ -241,22 +251,22 @@ final class PipelineTests: XCTestCase {
         XCTAssertEqual(channel.isActive, false)
         try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
     }
-    
+
     func testReturningResponseOnDifferentEventLoopDosentCrashLoopBoundBox() async throws {
         struct ResponseThing: ResponseEncodable {
             let eventLoop: EventLoop
-            
+
             func encodeResponse(for request: Vapor.Request) -> NIOCore.EventLoopFuture<Vapor.Response> {
                 let response = Response(status: .ok)
                 return eventLoop.future(response)
             }
         }
-        
+
         let eventLoop = app!.eventLoopGroup.next()
         app.get("dont-crash") { req in
             return ResponseThing(eventLoop: eventLoop)
         }
-        
+
         try await app.test(.GET, "dont-crash") { res async in
             XCTAssertEqual(res.status, .ok)
         }
@@ -264,10 +274,11 @@ final class PipelineTests: XCTestCase {
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
@@ -275,18 +286,18 @@ final class PipelineTests: XCTestCase {
         let res = try await app.client.get("http://localhost:\(port)/dont-crash")
         XCTAssertEqual(res.status, .ok)
     }
-    
+
     func testReturningResponseFromMiddlewareOnDifferentEventLoopDosentCrashLoopBoundBox() async throws {
         struct WrongEventLoopMiddleware: Middleware {
             func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
                 next.respond(to: request).hop(to: request.application.eventLoopGroup.next())
             }
         }
-        
+
         app.grouped(WrongEventLoopMiddleware()).get("dont-crash") { req in
             return "OK"
         }
-        
+
         try await app.test(.GET, "dont-crash") { res async in
             XCTAssertEqual(res.status, .ok)
         }
@@ -294,10 +305,11 @@ final class PipelineTests: XCTestCase {
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
@@ -305,46 +317,50 @@ final class PipelineTests: XCTestCase {
         let res = try await app.client.get("http://localhost:\(port)/dont-crash")
         XCTAssertEqual(res.status, .ok)
     }
-    
+
     func testStreamingOffEventLoop() async throws {
         let eventLoop = app.eventLoopGroup.next()
         app.on(.POST, "stream", body: .stream) { request -> Response in
-            Response(body: .init(stream: { writer in
-                request.body.drain { body in
-                    switch body {
-                    case .buffer(let buffer):
-                        return writer.write(.buffer(buffer)).hop(to: eventLoop)
-                    case .error(let error):
-                        return writer.write(.error(error)).hop(to: eventLoop)
-                    case .end:
-                        return writer.write(.end).hop(to: eventLoop)
+            Response(
+                body: .init(stream: { writer in
+                    request.body.drain { body in
+                        switch body {
+                        case .buffer(let buffer):
+                            return writer.write(.buffer(buffer)).hop(to: eventLoop)
+                        case .error(let error):
+                            return writer.write(.error(error)).hop(to: eventLoop)
+                        case .end:
+                            return writer.write(.end).hop(to: eventLoop)
+                        }
                     }
-                }
-            }))
+                }))
         }
-        
+
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        
+
         struct ABody: Content {
             let hello: String
-            
+
             init() {
                 self.hello = "hello"
             }
         }
 
-        let res = try await app.client.post("http://localhost:\(port)/stream", beforeSend: {
-            try $0.content.encode(ABody())
-        })
+        let res = try await app.client.post(
+            "http://localhost:\(port)/stream",
+            beforeSend: {
+                try $0.content.encode(ABody())
+            })
         XCTAssertEqual(res.status, .ok)
     }
 
@@ -419,8 +435,10 @@ final class PipelineTests: XCTestCase {
             for try await chunk in inbound {
                 data.writeImmutableBuffer(chunk)
                 data.writeString("\r\n")
-                
-                if String(decoding: chunk.readableBytesView, as: UTF8.self).components(separatedBy: "\r\n").contains(where: { $0.hasPrefix("slept") }) {
+
+                if String(decoding: chunk.readableBytesView, as: UTF8.self).components(separatedBy: "\r\n").contains(where: {
+                    $0.hasPrefix("slept")
+                }) {
                     sleeps += 1
                 }
                 if sleeps == 2 {
@@ -428,7 +446,9 @@ final class PipelineTests: XCTestCase {
                 }
             }
 
-            let sleptLines = String(decoding: data.readableBytesView, as: UTF8.self).components(separatedBy: "\r\n").filter { $0.contains("slept") }
+            let sleptLines = String(decoding: data.readableBytesView, as: UTF8.self).components(separatedBy: "\r\n").filter {
+                $0.contains("slept")
+            }
             XCTAssertEqual(sleptLines, ["slept 100ms", "slept 0ms"])
             return sleptLines
         }

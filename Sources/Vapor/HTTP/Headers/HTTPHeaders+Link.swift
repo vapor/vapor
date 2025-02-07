@@ -17,7 +17,7 @@ extension HTTPHeaders {
             }
         }
     }
-    
+
     // TODO: Support multiple relations in a single `rel` attribute, as permitted by spec.
     public struct Link {
         /// See https://www.iana.org/assignments/link-relations/link-relations.xhtml
@@ -62,7 +62,7 @@ extension HTTPHeaders {
             public static let p3pv1 = Relation("P3Pv1")
             public static let prev = Relation("prev")
             public static let preview = Relation("preview")
-            public static let previous = Relation("prev") // not a typo; `previous` is a synonym of `prev`
+            public static let previous = Relation("prev")  // not a typo; `previous` is a synonym of `prev`
             public static let privacyPolicy = Relation("privacy-policy")
             public static let related = Relation("related")
             public static let section = Relation("section")
@@ -77,49 +77,49 @@ extension HTTPHeaders {
             public static let type = Relation("type")
             public static let up = Relation("up")
             public static let via = Relation("via")
-            
+
             public let rawValue: String
-            
+
             public init<S: StringProtocol>(_ rel: S) {
                 self.rawValue = String(rel)
             }
-            
+
             public init?(rawValue: String) {
                 self.init(rawValue)
             }
         }
-        
+
         public var uri: String
         public var relation: Relation
         public var attributes: [String: String]
-        
+
         public init(uri: String, relation: Relation, attributes: [String: String]) {
             self.uri = uri
             self.relation = relation
             self.attributes = attributes
         }
-        
+
         init?(directives: [Directive]) {
             guard let uriDirective = directives.first, uriDirective.parameter == nil,
-                  uriDirective.value.hasPrefix("<"), uriDirective.value.hasSuffix(">"),
-                  directives.dropFirst().allSatisfy({ $0.parameter != nil }),
-                  let relDirective = directives.first(where: { $0.value == "rel" })
+                uriDirective.value.hasPrefix("<"), uriDirective.value.hasSuffix(">"),
+                directives.dropFirst().allSatisfy({ $0.parameter != nil }),
+                let relDirective = directives.first(where: { $0.value == "rel" })
             else {
                 return nil
             }
             let remainingDirectives = directives.dropFirst().filter { $0.value != "rel" }
-            
+
             self.init(
                 uri: String(uriDirective.value.dropFirst().dropLast()),
                 relation: .init(relDirective.parameter!),
                 attributes: .init(remainingDirectives.map { (String($0.value), String($0.parameter!)) }) { a, _ in a }
             )
         }
-        
+
         var directives: [Directive] {
             return [
                 .init(value: "<\(self.uri)>", parameter: nil),
-                .init(value: "rel", parameter: self.relation.rawValue)
+                .init(value: "rel", parameter: self.relation.rawValue),
             ] + self.attributes.map { .init(value: $0, parameter: $1) }
         }
     }

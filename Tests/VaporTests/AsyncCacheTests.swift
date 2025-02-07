@@ -1,19 +1,19 @@
+import NIOCore
+import Vapor
 import XCTVapor
 import XCTest
-import Vapor
-import NIOCore
 
 final class AsyncCacheTests: XCTestCase {
     var app: Application!
-    
+
     override func setUp() async throws {
         app = try await Application.make(.testing)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
+
     func testInMemoryCache() async throws {
         let value1 = try await app.cache.get("foo", as: String.self)
         XCTAssertNil(value1)
@@ -29,7 +29,7 @@ final class AsyncCacheTests: XCTestCase {
         sleep(1)
         let value4 = try await app.cache.get("foo2", as: String.self)
         XCTAssertNil(value4)
-        
+
         // Test reset value
         try await app.cache.set("foo3", to: "bar3")
         let value5: String? = try await app.cache.get("foo3")
@@ -62,8 +62,7 @@ struct FooCache: Cache {
     }
 
     func get<T>(_ key: String, as type: T.Type) -> EventLoopFuture<T?>
-        where T : Decodable & Sendable
-    {
+    where T: Decodable & Sendable {
         let value: T?
         if key == "foo" {
             value = "bar" as? T
@@ -72,15 +71,15 @@ struct FooCache: Cache {
         }
         return self.eventLoop.makeSucceededFuture(value)
     }
-    
+
     func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable & Sendable {
         return key == "foo" ? "bar" as? T : nil
     }
 
-    func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void> where T : Encodable & Sendable {
+    func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void> where T: Encodable & Sendable {
         return self.eventLoop.makeSucceededFuture(())
     }
-    
+
     func set<T>(_ key: String, to value: T?) async throws where T: Encodable & Sendable {
         return
     }

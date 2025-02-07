@@ -1,22 +1,22 @@
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
-import NIOConcurrencyHelpers
 
 final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelHandler {
     typealias OutboundIn = Response
     typealias OutboundOut = HTTPServerResponsePart
-    
+
     /// Optional server header.
     private let serverHeader: String?
     private let dateCache: RFC1123DateCache
 
-    struct ResponseEndSentEvent { }
-    
+    struct ResponseEndSentEvent {}
+
     init(serverHeader: String?, dateCache: RFC1123DateCache) {
         self.serverHeader = serverHeader
         self.dateCache = dateCache
     }
-    
+
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let response = self.unwrapOutboundIn(data)
         var headOrNoContentRequest = false
@@ -27,16 +27,16 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
             if let server = self.serverHeader {
                 box.headers.add(name: "server", value: server)
             }
-            
+
             // begin serializing
             let responseHead = HTTPResponseHead(version: box.version, status: box.status, headers: box.headers)
             context.write(wrapOutboundOut(.head(responseHead)), promise: nil)
-            
+
             if box.status == .noContent || box.forHeadRequest {
                 headOrNoContentRequest = true
             }
         }
-        
+
         if headOrNoContentRequest {
             // don't send bodies for 204 (no content) responses
             // or HEAD requests
@@ -76,7 +76,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                     promise: promise,
                     count: stream.count == -1 ? nil : stream.count
                 )
-                
+
                 Task {
                     do {
                         try await stream.callback(channelStream)
@@ -92,7 +92,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
             }
         }
     }
-    
+
     /// Writes a `ByteBuffer` to the context.
     private func writeAndflush(buffer: ByteBuffer, context: ChannelHandlerContext, promise: EventLoopPromise<Void>?) {
         if buffer.readableBytes > 0 {
@@ -115,7 +115,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
     enum Error: Swift.Error {
         case tooManyBytes
         case notEnoughBytes
-        case apiMisuse // tried to send a buffer or end indication after already ending or erroring the stream
+        case apiMisuse  // tried to send a buffer or end indication after already ending or erroring the stream
     }
 
     init(
@@ -125,7 +125,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
         count: Int?
     ) {
         context.eventLoop.assertInEventLoop()
-        
+
         self.contextBox = .init(context, eventLoop: context.eventLoop)
         self.handlerBox = .init(handler, eventLoop: context.eventLoop)
         self.promise = promise
@@ -134,21 +134,21 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
         self.isComplete = .init(false)
         self.eventLoop = context.eventLoop
     }
-    
+
     func write(_ result: BodyStreamResult) async throws {
         let promise = self.eventLoop.makePromise(of: Void.self)
-        
+
         self.eventLoop.execute { self.write(result, promise: promise) }
         try await promise.futureResult.get()
     }
-    
+
     /// > Note: `self.promise` is the promise that completes the original write to `HTTPServerResponseEncoder` that
     /// > triggers the streaming response; it should only be succeeded when the stream ends. The `promise` parameter
     /// > of this method is specific to the particular invocation and signals that a buffer has finished writing or
     /// > that the stream has been fully completed, and should always be completed or pending completion by the time
     /// > this method returns. Both promises should be failed when an error occurs, unless otherwise specifically noted.
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-        self.eventLoop.assertInEventLoop() // Only check in debug, just in case...
+        self.eventLoop.assertInEventLoop()  // Only check in debug, just in case...
 
         func finishStream(finishedNormally: Bool) {
             self.isComplete.withLockedValue { $0 = true }
@@ -166,8 +166,8 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
         // See https://github.com/vapor/vapor/issues/2976 for why we do some of these checks.
         switch result {
         case .buffer(let buffer):
-            guard !self.isComplete.withLockedValue({ $0 }) else { // Don't try to send data if we already ended
-                return promise?.fail(Error.apiMisuse) ?? () // self.promise is already completed, so fail the local one and bail
+            guard !self.isComplete.withLockedValue({ $0 }) else {  // Don't try to send data if we already ended
+                return promise?.fail(Error.apiMisuse) ?? ()  // self.promise is already completed, so fail the local one and bail
             }
             if let count = self.count, (self.currentCount.value + buffer.readableBytes) > count {
                 self.promise?.fail(Error.tooManyBytes)
@@ -178,7 +178,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
                 self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
             }
         case .end:
-            if !self.isComplete.withLockedValue({ $0 }) { // Don't send the response end events more than once.
+            if !self.isComplete.withLockedValue({ $0 }) {  // Don't send the response end events more than once.
                 finishStream(finishedNormally: true)
                 // check this only after sending the stream end; we want to make send that regardless
                 if let count = self.count, self.currentCount.value < count {
@@ -189,14 +189,14 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
                     promise?.succeed()
                 }
             } else {
-                promise?.fail(Error.apiMisuse) // If we already ended, fail the local promise with API misuse
+                promise?.fail(Error.apiMisuse)  // If we already ended, fail the local promise with API misuse
             }
         case .error(let error):
-            if !self.isComplete.withLockedValue({ $0 }) { // Don't send the response end events more than once.
+            if !self.isComplete.withLockedValue({ $0 }) {  // Don't send the response end events more than once.
                 finishStream(finishedNormally: false)
                 self.promise?.fail(error)
             }
-            promise?.fail(error) // We want to fail the local promise regardless. Echo the error back.
+            promise?.fail(error)  // We want to fail the local promise regardless. Echo the error back.
         }
     }
 

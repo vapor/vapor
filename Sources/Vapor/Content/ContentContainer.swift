@@ -1,5 +1,5 @@
-import NIOHTTP1
 import NIOCore
+import NIOHTTP1
 
 public protocol ContentContainer {
     /// The type of data stored in the container.
@@ -57,7 +57,7 @@ extension ContentContainer {
         var content = content
         try self.encode(&content, as: contentType)
     }
-    
+
     /// Serialize a ``Content`` object to the container without copying it, specifying an
     /// explicit content type.
     public mutating func encode<C: Content>(_ content: inout C, as contentType: HTTPMediaType) throws {
@@ -71,7 +71,7 @@ extension ContentContainer {
     }
 
     // MARK: - Key path helpers
-    
+
     /// Legacy alias for ``subscript(_:at:)-90mrm``.
     public subscript<D: Decodable>(_ path: CodingKeyRepresentable...) -> D? {
         self[D.self, at: path]
@@ -90,36 +90,39 @@ extension ContentContainer {
     public subscript<D: Decodable>(_: D.Type = D.self, at path: [CodingKeyRepresentable]) -> D? {
         try? self.get(D.self, at: path)
     }
-    
+
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String = try req.content.get(at: "user", "name")
     public func get<D: Decodable>(_: D.Type = D.self, at path: CodingKeyRepresentable...) throws -> D {
         try self.get(at: path)
     }
-    
+
     /// Fetch a single ``Decodable`` value at the supplied keypath in this container.
     ///
     ///     let name = try req.content.get(String.self, at: ["user", "name"])
     public func get<D: Decodable>(_: D.Type = D.self, at path: [CodingKeyRepresentable]) throws -> D {
         try self.get(D.self, path: path.map(\.codingKey))
     }
-    
+
     // MARK: - Private
-    
+
     /// Execute a "get at coding key path" operation.
     private func get<D: Decodable>(_: D.Type = D.self, path: [CodingKey]) throws -> D {
-        try self.decode(ContainerGetPathExecutor<D>.self, using: ForwardingContentDecoder(
-            base: self.configuredDecoder(),
-            info: ContainerGetPathExecutor<D>.userInfo(for: path)
-        )).result
+        try self.decode(
+            ContainerGetPathExecutor<D>.self,
+            using: ForwardingContentDecoder(
+                base: self.configuredDecoder(),
+                info: ContainerGetPathExecutor<D>.userInfo(for: path)
+            )
+        ).result
     }
 
     /// Look up a ``ContentEncoder`` for the supplied ``HTTPMediaType``.
     private func configuredEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
         try ContentConfiguration.global.requireEncoder(for: mediaType)
     }
-    
+
     /// Look up a ``ContentDecoder`` for the container's ``contentType``.
     private func configuredDecoder(for mediaType: HTTPMediaType? = nil) throws -> ContentDecoder {
         guard let contentType = mediaType ?? self.contentType else {
@@ -130,9 +133,9 @@ extension ContentContainer {
 }
 
 /// Injects coder userInfo into a ``ContentDecoder`` so we don't have to add passthroughs to ``ContentContainer``.
-fileprivate struct ForwardingContentDecoder: ContentDecoder {
+private struct ForwardingContentDecoder: ContentDecoder {
     let base: ContentDecoder, info: [CodingUserInfoKey: Sendable]
-    
+
     func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: self.info)
     }

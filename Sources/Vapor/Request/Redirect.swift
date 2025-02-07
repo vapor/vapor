@@ -20,7 +20,7 @@ extension Request {
         }
         return response
     }
-    
+
     /// Creates a redirect `Response`.
     ///
     ///     router.get("redirect") { req in
@@ -70,26 +70,26 @@ public enum RedirectType {
 /// Specifies the type of redirect that the client should receive.
 public struct Redirect {
     let kind: Kind
-    
+
     /// A cacheable redirect. Not all user-agents preserve request method and body, so
     /// this should only be used for GET or HEAD requests
     /// `301 permanent`
     public static var permanent: Redirect {
         return Self(kind: .permanent)
     }
-    
+
     /// Forces the redirect to come with a GET, regardless of req method.
     /// `303 see other`
     public static var normal: Redirect {
         return Self(kind: .normal)
     }
-    
+
     /// Maintains original request method, ie: PUT will call PUT on redirect.
     /// `307 Temporary`
     public static var temporary: Redirect {
         return Self(kind: .temporary)
     }
-    
+
     /// Redirect where the request method and the body will not be altered. This should
     /// be used for POST redirects.
     /// `308 Permanent Redirect`
@@ -106,7 +106,7 @@ public struct Redirect {
         case .permanentPost: return .permanentRedirect
         }
     }
-    
+
     enum Kind {
         case permanent
         case normal

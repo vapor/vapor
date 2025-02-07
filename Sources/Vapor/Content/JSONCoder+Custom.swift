@@ -28,9 +28,9 @@ extension JSONEncoder {
         if let dataStrategy = dataStrategy {
             json.dataEncodingStrategy = dataStrategy
         }
-         if let keyStrategy = keyStrategy {
-             json.keyEncodingStrategy = keyStrategy
-         }
+        if let keyStrategy = keyStrategy {
+            json.keyEncodingStrategy = keyStrategy
+        }
         if let outputFormatting = outputFormatting {
             json.outputFormatting = outputFormatting
         }
@@ -70,9 +70,9 @@ extension JSONDecoder {
         if let dataStrategy = dataStrategy {
             json.dataDecodingStrategy = dataStrategy
         }
-         if let keyStrategy = keyStrategy {
-             json.keyDecodingStrategy = keyStrategy
-         }
+        if let keyStrategy = keyStrategy {
+            json.keyDecodingStrategy = keyStrategy
+        }
         if let floatStrategy = floatStrategy {
             json.nonConformingFloatDecodingStrategy = floatStrategy
         }

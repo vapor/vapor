@@ -24,12 +24,13 @@ extension HTTPHeaders {
             let hosts = self[canonicalForm: .xForwardedHost]
             let protos = self[canonicalForm: .xForwardedProto]
             for i in 0..<[bys.count, fors.count, hosts.count, protos.count].max()! {
-                forwarded.append(.init(
-                    by: bys[safe: i].flatMap(String.init),
-                    for: fors[safe: i].flatMap(String.init),
-                    host: hosts[safe: i].flatMap(String.init),
-                    proto: protos[safe: i].flatMap(String.init)
-                ))
+                forwarded.append(
+                    .init(
+                        by: bys[safe: i].flatMap(String.init),
+                        for: fors[safe: i].flatMap(String.init),
+                        host: hosts[safe: i].flatMap(String.init),
+                        proto: protos[safe: i].flatMap(String.init)
+                    ))
             }
 
             return forwarded

@@ -1,5 +1,5 @@
-import Foundation
 import ConsoleKit
+import Foundation
 
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have
 /// an `Environment` that can be used to dynamically register and configure services.
@@ -16,7 +16,7 @@ import ConsoleKit
 ///
 public struct Environment: Sendable, Equatable {
     // MARK: - Detection
-    
+
     /// Detects the environment from `CommandLine.arguments`. Invokes `detect(from:)`.
     /// - parameters:
     ///     - arguments: Command line arguments to detect environment from.
@@ -25,7 +25,7 @@ public struct Environment: Sendable, Equatable {
         var commandInput = CommandInput(arguments: arguments)
         return try Environment.detect(from: &commandInput)
     }
-    
+
     /// Detects the environment from `CommandInput`. Parses the `--env` flag, with the
     /// `VAPOR_ENV` environment variable as a fallback.
     /// - parameters:
@@ -33,53 +33,53 @@ public struct Environment: Sendable, Equatable {
     /// - returns: The detected environment, or default env.
     public static func detect(from commandInput: inout CommandInput) throws -> Environment {
         self.sanitize(commandInput: &commandInput)
-        
+
         struct EnvironmentSignature: CommandSignature {
             @Option(name: "env", short: "e", help: "Change the application's environment")
             var environment: String?
         }
 
         var env: Environment
-        switch try EnvironmentSignature(from: &commandInput).environment ??
-            Environment.process.VAPOR_ENV
+        switch try EnvironmentSignature(from: &commandInput).environment ?? Environment.process.VAPOR_ENV
         {
-            case "prod", "production": env = .production
-            case "dev", "development", .none: env = .development
-            case "test", "testing": env = .testing
-            case .some(let name): env = .init(name: name)
+        case "prod", "production": env = .production
+        case "dev", "development", .none: env = .development
+        case "test", "testing": env = .testing
+        case .some(let name): env = .init(name: name)
         }
         env.commandInput = commandInput
         return env
     }
-    
+
     /// Performs stripping of user defaults overrides where and when appropriate.
     private static func sanitize(commandInput: inout CommandInput) {
         #if Xcode
-        // Strip all leading arguments matching the pattern for assignment to the `NSArgumentsDomain`
-        // of `UserDefaults`. Matching this pattern means being prefixed by `-NS` or `-Apple` and being
-        // followed by a value argument. Since this is mainly just to get around Xcode's habit of
-        // passing a bunch of these when no other arguments are specified in a test scheme, we ignore
-        // any that don't match the Apple patterns and assume the app knows what it's doing.
-        while (commandInput.arguments.first?.prefix(6) == "-Apple" || commandInput.arguments.first?.prefix(3) == "-NS"),
-              commandInput.arguments.count > 1 {
-            commandInput.arguments.removeFirst(2)
-        }
-        #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-        // When tests are invoked directly through SwiftPM using `--filter`, SwiftPM will pass `-XCTest <filter>` to the
-        // runner binary, and also the test bundle path unconditionally. These must be stripped for Vapor to be satisfied
-        // with the validity of the arguments. We detect this case reliably the hard way, by looking for the `xctest`
-        // runner executable and a leading argument with the `.xctest` bundle suffix.
-        if commandInput.executable.hasSuffix("/usr/bin/xctest") {
-            if commandInput.arguments.first?.lowercased() == "-xctest" && commandInput.arguments.count > 1 {
+            // Strip all leading arguments matching the pattern for assignment to the `NSArgumentsDomain`
+            // of `UserDefaults`. Matching this pattern means being prefixed by `-NS` or `-Apple` and being
+            // followed by a value argument. Since this is mainly just to get around Xcode's habit of
+            // passing a bunch of these when no other arguments are specified in a test scheme, we ignore
+            // any that don't match the Apple patterns and assume the app knows what it's doing.
+            while commandInput.arguments.first?.prefix(6) == "-Apple" || commandInput.arguments.first?.prefix(3) == "-NS",
+                commandInput.arguments.count > 1
+            {
                 commandInput.arguments.removeFirst(2)
             }
-            if commandInput.arguments.first?.hasSuffix(".xctest") ?? false {
-                commandInput.arguments.removeFirst()
+        #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+            // When tests are invoked directly through SwiftPM using `--filter`, SwiftPM will pass `-XCTest <filter>` to the
+            // runner binary, and also the test bundle path unconditionally. These must be stripped for Vapor to be satisfied
+            // with the validity of the arguments. We detect this case reliably the hard way, by looking for the `xctest`
+            // runner executable and a leading argument with the `.xctest` bundle suffix.
+            if commandInput.executable.hasSuffix("/usr/bin/xctest") {
+                if commandInput.arguments.first?.lowercased() == "-xctest" && commandInput.arguments.count > 1 {
+                    commandInput.arguments.removeFirst(2)
+                }
+                if commandInput.arguments.first?.hasSuffix(".xctest") ?? false {
+                    commandInput.arguments.removeFirst()
+                }
             }
-        }
         #endif
     }
-    
+
     /// Invokes `sanitize(commandInput:)` over a set of raw arguments and returns the
     /// resulting arguments, including the executable path.
     private static func sanitizeArguments(_ arguments: [String] = ProcessInfo.processInfo.arguments) -> [String] {
@@ -87,7 +87,7 @@ public struct Environment: Sendable, Equatable {
         sanitize(commandInput: &commandInput)
         return commandInput.executablePath + commandInput.arguments
     }
-    
+
     // MARK: - Presets
 
     /// An environment for deploying your application to consumers.
@@ -117,11 +117,11 @@ public struct Environment: Sendable, Equatable {
     public static var process: Process {
         return Process()
     }
-    
+
     // MARK: - Equatable
 
     /// See `Equatable`
-    public static func ==(lhs: Environment, rhs: Environment) -> Bool {
+    public static func == (lhs: Environment, rhs: Environment) -> Bool {
         return lhs.name == rhs.name
     }
 
@@ -150,7 +150,7 @@ public struct Environment: Sendable, Equatable {
         get { return CommandInput(arguments: arguments) }
         set { arguments = newValue.executablePath + newValue.arguments }
     }
-    
+
     // MARK: - Init
 
     /// Create a new `Environment`.

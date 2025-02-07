@@ -3,13 +3,13 @@ import Foundation
 /// Here be dragons! _stdlib_demangleImpl is linked into the stdlib. Use at your own risk!
 @_silgen_name("swift_demangle")
 public
-func _stdlib_demangleImpl(
-    mangledName: UnsafePointer<CChar>?,
-    mangledNameLength: UInt,
-    outputBuffer: UnsafeMutablePointer<CChar>?,
-    outputBufferSize: UnsafeMutablePointer<UInt>?,
-    flags: UInt32
-) -> UnsafeMutablePointer<CChar>?
+    func _stdlib_demangleImpl(
+        mangledName: UnsafePointer<CChar>?,
+        mangledNameLength: UInt,
+        outputBuffer: UnsafeMutablePointer<CChar>?,
+        outputBufferSize: UnsafeMutablePointer<UInt>?,
+        flags: UInt32
+    ) -> UnsafeMutablePointer<CChar>?
 
 func _stdlib_demangleName(_ mangledName: String) -> String {
     return mangledName.utf8CString.withUnsafeBufferPointer { mangledNameUTF8CStr in

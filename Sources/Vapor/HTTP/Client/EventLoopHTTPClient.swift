@@ -1,7 +1,7 @@
-import NIOCore
 import AsyncHTTPClient
-import Logging
 import Foundation
+import Logging
+import NIOCore
 
 extension HTTPClient {
     func delegating(to eventLoop: EventLoop, logger: Logger, byteBufferAllocator: ByteBufferAllocator) -> Client {
@@ -59,10 +59,12 @@ private struct EventLoopHTTPClient: Client {
     }
 
     func logging(to logger: Logger) -> Client {
-        return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: logger, byteBufferAllocator: self.byteBufferAllocator)
+        return EventLoopHTTPClient(
+            http: self.http, eventLoop: self.eventLoop, logger: logger, byteBufferAllocator: self.byteBufferAllocator)
     }
 
     func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
-        return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: self.logger, byteBufferAllocator: byteBufferAllocator)
+        return EventLoopHTTPClient(
+            http: self.http, eventLoop: self.eventLoop, logger: self.logger, byteBufferAllocator: byteBufferAllocator)
     }
 }

@@ -1,5 +1,5 @@
-import NIOHTTP1
 import NIOCore
+import NIOHTTP1
 
 /// Middleware that adds support for CORS settings in request responses.
 /// For configuration of this middleware please use the `CORSMiddleware.Configuration` object.
@@ -23,7 +23,7 @@ public final class CORSMiddleware: Middleware {
 
         /// Uses wildcard to allow any origin.
         case all
-        
+
         /// A list of allowable origins.
         case any([String])
 
@@ -49,7 +49,6 @@ public final class CORSMiddleware: Middleware {
             }
         }
     }
-
 
     /// Configuration used for populating headers in response for CORS requests.
     public struct Configuration: Sendable {
@@ -113,7 +112,7 @@ public final class CORSMiddleware: Middleware {
 
     /// Configuration used for populating headers in response for CORS requests.
     public let configuration: Configuration
-    
+
     /// Creates a CORS middleware with the specified configuration.
     ///
     /// - parameters:
@@ -128,13 +127,14 @@ public final class CORSMiddleware: Middleware {
         guard request.headers[.origin].first != nil else {
             return next.respond(to: request)
         }
-        
+
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
-        let response = request.isPreflight
+        let response =
+            request.isPreflight
             ? request.eventLoop.makeSucceededFuture(.init())
             : next.respond(to: request)
-        
+
         return response.map { response in
             // Modify response headers based on CORS settings
             let originBasedAccessControlAllowHeader = self.configuration.allowedOrigin.header(forRequest: request)
@@ -145,15 +145,15 @@ public final class CORSMiddleware: Middleware {
 
                 box.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
                 box.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
-                
+
                 if let exposedHeaders = self.configuration.exposedHeaders {
                     box.headers.replaceOrAdd(name: .accessControlExpose, value: exposedHeaders)
                 }
-                
+
                 if let cacheExpiration = self.configuration.cacheExpiration {
                     box.headers.replaceOrAdd(name: .accessControlMaxAge, value: String(cacheExpiration))
                 }
-                
+
                 if self.configuration.allowCredentials {
                     box.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
                 }
@@ -169,10 +169,9 @@ public final class CORSMiddleware: Middleware {
 
 // MARK: Private
 
-private extension Request {
+extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
-    var isPreflight: Bool {
+    fileprivate var isPreflight: Bool {
         return self.method == .OPTIONS && self.headers[.accessControlRequestMethod].first != nil
     }
 }
-

@@ -1,31 +1,29 @@
 public protocol URLQueryDecoder: Sendable {
     func decode<D>(_ decodable: D.Type, from url: URI) throws -> D
-        where D: Decodable
+    where D: Decodable
 
     func decode<D>(_ decodable: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
-        where D: Decodable
+    where D: Decodable
 }
 
 public protocol URLQueryEncoder: Sendable {
     func encode<E>(_ encodable: E, to url: inout URI) throws
-        where E: Encodable
+    where E: Encodable
 
     func encode<E>(_ encodable: E, to url: inout URI, userInfo: [CodingUserInfoKey: Sendable]) throws
-        where E: Encodable
+    where E: Encodable
 }
 
 extension URLQueryEncoder {
     public func encode<E>(_ encodable: E, to url: inout URI, userInfo: [CodingUserInfoKey: Sendable]) throws
-        where E: Encodable
-    {
+    where E: Encodable {
         try self.encode(encodable, to: &url)
     }
 }
 
 extension URLQueryDecoder {
     public func decode<D>(_ decodable: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
-        where D: Decodable
-    {
+    where D: Decodable {
         try self.decode(decodable, from: url)
     }
 }

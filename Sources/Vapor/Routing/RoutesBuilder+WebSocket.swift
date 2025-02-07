@@ -1,7 +1,7 @@
-import RoutingKit
-import WebSocketKit
 import NIOCore
 import NIOHTTP1
+import RoutingKit
+import WebSocketKit
 
 public struct WebSocketMaxFrameSize: Sendable, ExpressibleByIntegerLiteral {
     let value: Int
@@ -34,7 +34,7 @@ extension RoutesBuilder {
         shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
             $0.eventLoop.makeSucceededFuture([:])
         },
-        onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
+        onUpgrade: @Sendable @escaping (Request, WebSocket) -> Void
     ) -> Route {
         return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
     }
@@ -56,15 +56,18 @@ extension RoutesBuilder {
         shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
             $0.eventLoop.makeSucceededFuture([:])
         },
-        onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
+        onUpgrade: @Sendable @escaping (Request, WebSocket) -> Void
     ) -> Route {
         return self.on(.GET, path) { request -> Response in
             let res = Response(status: .switchingProtocols)
-            res.upgrader = WebSocketUpgrader(maxFrameSize: maxFrameSize, shouldUpgrade: {
-                shouldUpgrade(request)                
-            }, onUpgrade: { ws in
-                onUpgrade(request, ws)
-            })
+            res.upgrader = WebSocketUpgrader(
+                maxFrameSize: maxFrameSize,
+                shouldUpgrade: {
+                    shouldUpgrade(request)
+                },
+                onUpgrade: { ws in
+                    onUpgrade(request, ws)
+                })
             return res
         }
     }

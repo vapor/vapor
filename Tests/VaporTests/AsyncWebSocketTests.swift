@@ -1,22 +1,22 @@
-import XCTVapor
-import Vapor
-import XCTest
-import WebSocketKit
 import NIOCore
 import NIOPosix
+import Vapor
+import WebSocketKit
+import XCTVapor
+import XCTest
 
 final class AsyncWebSocketTests: XCTestCase {
     var app: Application!
-    
+
     override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         app = try await Application.make(test)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
+
     func testWebSocketClient() async throws {
         let server = try await Application.make(.testing)
 
@@ -49,10 +49,9 @@ final class AsyncWebSocketTests: XCTestCase {
 
         let string = try await promise.futureResult.get()
         XCTAssertEqual(string, "Hello, world!")
-        
+
         try await server.asyncShutdown()
     }
-
 
     // https://github.com/vapor/vapor/issues/1997
     func testWebSocket404() async throws {
@@ -65,10 +64,11 @@ final class AsyncWebSocketTests: XCTestCase {
         app.environment.arguments = ["serve"]
 
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
@@ -77,7 +77,7 @@ final class AsyncWebSocketTests: XCTestCase {
             try await WebSocket.connect(
                 to: "ws://localhost:\(port)/foo",
                 on: app.eventLoopGroup.next()
-            ) { _ in  }
+            ) { _ in }
             XCTFail("should have failed")
         } catch {
             // pass
@@ -94,14 +94,15 @@ final class AsyncWebSocketTests: XCTestCase {
         app.environment.arguments = ["serve"]
 
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        
+
         let promise = app.eventLoopGroup.next().makePromise(of: String.self)
         WebSocket.connect(
             to: "ws://localhost:\(port)/foo",
@@ -130,14 +131,15 @@ final class AsyncWebSocketTests: XCTestCase {
         app.environment.arguments = ["serve"]
 
         try await app.startup()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        
+
         let promise = app.eventLoopGroup.next().makePromise(of: String.self)
         WebSocket.connect(
             to: "ws://localhost:\(port)/foo",

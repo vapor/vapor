@@ -14,7 +14,7 @@ public final class Application: Sendable {
             self._environment.withLockedValue { $0 = newValue }
         }
     }
-    
+
     public var storage: Storage {
         get {
             self._storage.withLockedValue { $0 }
@@ -23,11 +23,11 @@ public final class Application: Sendable {
             self._storage.withLockedValue { $0 = newValue }
         }
     }
-    
+
     public var didShutdown: Bool {
         self._didShutdown.withLockedValue { $0 }
     }
-    
+
     public var logger: Logger {
         get {
             self._logger.withLockedValue { $0 }
@@ -36,7 +36,7 @@ public final class Application: Sendable {
             self._logger.withLockedValue { $0 = newValue }
         }
     }
-    
+
     /// If enabled, tracing propagation is automatically handled by restoring & setting `request.serviceContext` automatically across Vapor-internal EventLoopFuture boundaries.
     /// If disabled, traces will not automatically nest, and the user should restore & set `request.serviceContext` manually where needed.
     /// There are performance implications to enabling this feature.
@@ -48,18 +48,18 @@ public final class Application: Sendable {
             self._traceAutoPropagation.withLockedValue { $0 = newValue }
         }
     }
-    
+
     public struct Lifecycle: Sendable {
         var handlers: [LifecycleHandler]
         init() {
             self.handlers = []
         }
-        
+
         public mutating func use(_ handler: LifecycleHandler) {
             self.handlers.append(handler)
         }
     }
-    
+
     public var lifecycle: Lifecycle {
         get {
             self._lifecycle.withLockedValue { $0 }
@@ -68,17 +68,17 @@ public final class Application: Sendable {
             self._lifecycle.withLockedValue { $0 = newValue }
         }
     }
-    
+
     public final class Locks: Sendable {
         public let main: NIOLock
         // Is there a type we can use to make this Sendable but reuse the existing lock we already have?
         private let storage: NIOLockedValueBox<[ObjectIdentifier: NIOLock]>
-        
+
         init() {
             self.main = .init()
             self.storage = .init([:])
         }
-        
+
         public func lock<Key>(for key: Key.Type) -> NIOLock
         where Key: LockKey {
             self.main.withLock {
@@ -88,7 +88,7 @@ public final class Application: Sendable {
             }
         }
     }
-    
+
     public var locks: Locks {
         get {
             self._locks.withLockedValue { $0 }
@@ -97,21 +97,21 @@ public final class Application: Sendable {
             self._locks.withLockedValue { $0 = newValue }
         }
     }
-    
+
     public var sync: NIOLock {
         self.locks.main
     }
-    
+
     public enum EventLoopGroupProvider: Sendable {
         case shared(EventLoopGroup)
         @available(*, deprecated, renamed: "singleton", message: "Use '.singleton' for a shared 'EventLoopGroup', for better performance")
         case createNew
-        
+
         public static var singleton: EventLoopGroupProvider {
             .shared(MultiThreadedEventLoopGroup.singleton)
         }
     }
-    
+
     public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
     internal let isBooted: NIOLockedValueBox<Bool>
@@ -122,7 +122,7 @@ public final class Application: Sendable {
     private let _traceAutoPropagation: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
-    
+
     @available(*, noasync, message: "This initialiser cannot be used in async contexts, use Application.make(_:_:) instead")
     public convenience init(
         _ environment: Environment = .development,
@@ -132,7 +132,7 @@ public final class Application: Sendable {
         self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
-    
+
     // async flag here is just to stop the compiler from complaining about duplicates
     private init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, async: Bool) {
         self._environment = .init(environment)
@@ -165,8 +165,10 @@ public final class Application: Sendable {
         self.clients.use(.http)
         self.asyncCommands.use(RoutesCommand(), as: "routes")
     }
-    
-    public static func make(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton) async throws -> Application {
+
+    public static func make(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton)
+        async throws -> Application
+    {
         let app = Application(environment, eventLoopGroupProvider, async: true)
         await app.asyncCommands.use(app.servers.asyncCommand, as: "serve", isDefault: true)
         await DotEnvFile.load(for: app.environment, fileio: app.fileio, logger: app.logger)
@@ -190,7 +192,7 @@ public final class Application: Sendable {
             throw error
         }
     }
-    
+
     /// Starts the ``Application`` asynchronous using the ``startup()`` method, then waits for any running tasks
     /// to complete. If your application is started without arguments, the default argument is used.
     ///
@@ -218,7 +220,7 @@ public final class Application: Sendable {
     public func start() throws {
         try self.eventLoopGroup.any().makeFutureWithTask { try await self.startup() }.wait()
     }
-    
+
     /// When called, this will asynchronously execute the startup command provided through an argument. If no startup
     /// command is provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
     ///
@@ -239,8 +241,9 @@ public final class Application: Sendable {
         try await self.console.run(combinedCommands, with: context)
     }
 
-    
-    @available(*, noasync, message: "This can potentially block the thread and should not be called in an async context", renamed: "asyncBoot()")
+    @available(
+        *, noasync, message: "This can potentially block the thread and should not be called in an async context", renamed: "asyncBoot()"
+    )
     /// Called when the applications starts up, will trigger the lifecycle handlers
     public func boot() throws {
         try self.isBooted.withLockedValue { booted in
@@ -252,15 +255,17 @@ public final class Application: Sendable {
             try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
         }
     }
-    
+
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
     public func asyncBoot() async throws {
         /// Skip the boot process if already booted
-        guard !self.isBooted.withLockedValue({
-            var result = true
-            swap(&$0, &result)
-            return result
-        }) else {
+        guard
+            !self.isBooted.withLockedValue({
+                var result = true
+                swap(&$0, &result)
+                return result
+            })
+        else {
             return
         }
 
@@ -300,13 +305,13 @@ public final class Application: Sendable {
         self._didShutdown.withLockedValue { $0 = true }
         self.logger.trace("Application shutdown complete")
     }
-    
+
     public func asyncShutdown() async throws {
         assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
 
         self.logger.trace("Shutting down providers")
-        for handler in self.lifecycle.handlers.reversed()  {
+        for handler in self.lifecycle.handlers.reversed() {
             await handler.shutdownAsync(self)
         }
         self.lifecycle.handlers = []

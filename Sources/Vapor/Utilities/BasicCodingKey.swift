@@ -1,20 +1,20 @@
 #if os(Linux)
-public typealias CodingKeyRepresentable = Swift.CodingKeyRepresentable
+    public typealias CodingKeyRepresentable = Swift.CodingKeyRepresentable
 #else
-/// This is an unwelcome stand-in for the ``Swift/CodingKeyRepresentable`` protocol that appeared in Swift 5.6.
-public protocol CodingKeyRepresentable {
-    var codingKey: CodingKey { get }
-}
+    /// This is an unwelcome stand-in for the ``Swift/CodingKeyRepresentable`` protocol that appeared in Swift 5.6.
+    public protocol CodingKeyRepresentable {
+        var codingKey: CodingKey { get }
+    }
 
-/// This conformance is provided by the stdlib when ``CodingKeyRepresentable`` is available.
-extension String: Vapor.CodingKeyRepresentable {
-    public var codingKey: CodingKey { BasicCodingKey.key(self) }
-}
+    /// This conformance is provided by the stdlib when ``CodingKeyRepresentable`` is available.
+    extension String: Vapor.CodingKeyRepresentable {
+        public var codingKey: CodingKey { BasicCodingKey.key(self) }
+    }
 
-/// This conformance is provided by the stdlib when ``CodingKeyRepresentable`` is available.
-extension Int: Vapor.CodingKeyRepresentable {
-    public var codingKey: CodingKey { BasicCodingKey.index(self) }
-}
+    /// This conformance is provided by the stdlib when ``CodingKeyRepresentable`` is available.
+    extension Int: Vapor.CodingKeyRepresentable {
+        public var codingKey: CodingKey { BasicCodingKey.index(self) }
+    }
 #endif
 
 extension Array where Element == CodingKey {
@@ -25,7 +25,7 @@ extension Array where Element == CodingKey {
 public enum BasicCodingKey: CodingKey, Hashable {
     case key(String)
     case index(Int)
-    
+
     /// See `CodingKey`.
     public var stringValue: String {
         switch self {
@@ -33,7 +33,7 @@ public enum BasicCodingKey: CodingKey, Hashable {
         case .key(let key): return key
         }
     }
-    
+
     /// See `CodingKey`.
     public var intValue: Int? {
         switch self {
@@ -41,12 +41,12 @@ public enum BasicCodingKey: CodingKey, Hashable {
         case .key(let key): return Int(key)
         }
     }
-    
+
     /// See `CodingKey`.
     public init?(stringValue: String) {
         self = .key(stringValue)
     }
-    
+
     /// See `CodingKey`.
     public init?(intValue: Int) {
         self = .index(intValue)
@@ -59,7 +59,7 @@ public enum BasicCodingKey: CodingKey, Hashable {
             self = .key(codingKey.stringValue)
         }
     }
-    
+
     public init(_ codingKeyRepresentable: Vapor.CodingKeyRepresentable) {
         self.init(codingKeyRepresentable.codingKey)
     }

@@ -1,5 +1,5 @@
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 
 extension Application {
     public var responder: Responder {
@@ -14,9 +14,9 @@ extension Application {
                 }
             }
 
-            let run: @Sendable (Application) -> ()
+            let run: @Sendable (Application) -> Void
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> Void) {
                 self.run = run
             }
         }

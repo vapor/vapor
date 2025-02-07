@@ -1,7 +1,7 @@
 #if os(Linux) && compiler(<6.0)
-@preconcurrency import Foundation
+    @preconcurrency import Foundation
 #else
-import Foundation
+    import Foundation
 #endif
 
 extension Validator where T == String {
@@ -28,7 +28,7 @@ extension ValidatorResults {
     public struct CharacterSet {
         /// The validated string.
         public let string: String
-        
+
         /// The set of characters the input is allowed to contain.
         public let characterSet: Foundation.CharacterSet
 
@@ -36,12 +36,12 @@ extension ValidatorResults {
         var invalidRange: Swift.Range<String.Index>? {
             self.string.rangeOfCharacter(from: self.characterSet.inverted)
         }
-        
+
         public var invalidSlice: String? {
             self.invalidRange.flatMap { self.string[$0] }
-                .map { .init($0 )}
+                .map { .init($0) }
         }
-        
+
         var allowedCharacterString: String {
             self.characterSet.traits.joined(separator: ", ")
         }
@@ -52,11 +52,11 @@ extension ValidatorResults.CharacterSet: ValidatorResult {
     public var isFailure: Bool {
         self.invalidRange != nil
     }
-    
+
     public var successDescription: String? {
         "contains only \(self.allowedCharacterString)"
     }
-    
+
     public var failureDescription: String? {
         self.invalidSlice.map {
             "contains '\($0)' (allowed: \(self.allowedCharacterString))"
@@ -88,7 +88,7 @@ extension ValidatorResults {
     public struct CollectionCharacterSet {
         /// The validated string.
         public let strings: [String]
-        
+
         /// The set of characters the input is allowed to contain.
         public let characterSet: Foundation.CharacterSet
 
@@ -101,7 +101,7 @@ extension ValidatorResults {
                 return nil
             }
         }
-        
+
         var allowedCharacterString: String {
             self.characterSet.traits.joined(separator: ", ")
         }
@@ -112,11 +112,11 @@ extension ValidatorResults.CollectionCharacterSet: ValidatorResult {
     public var isFailure: Bool {
         !self.invalidRanges.isEmpty
     }
-    
+
     public var successDescription: String? {
         "contains only \(self.allowedCharacterString)"
     }
-    
+
     public var failureDescription: String? {
         let disallowedCharacters = self.invalidRanges.compactMap { $0 }
             .map { (invalidSlice) in
@@ -130,18 +130,18 @@ extension ValidatorResults.CollectionCharacterSet: ValidatorResult {
 ///
 ///     .characterSet(.alphanumerics + .whitespaces)
 ///
-public func +(lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
+public func + (lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
     lhs.union(rhs)
 }
 
-private extension CharacterSet {
+extension CharacterSet {
     /// ASCII (byte 0..<128) character set.
-    static var ascii: CharacterSet {
+    fileprivate static var ascii: CharacterSet {
         .init((0..<128).map(Unicode.Scalar.init))
     }
 
     /// Returns an array of strings describing the contents of this `CharacterSet`.
-    var traits: [String] {
+    fileprivate var traits: [String] {
         var desc: [String] = []
         if isSuperset(of: .newlines) {
             desc.append("newlines")

@@ -8,7 +8,7 @@ import ConsoleKit
 public final class BootCommand: AsyncCommand {
     // See `AsyncCommand`.
     public struct Signature: CommandSignature {
-        public init() { }
+        public init() {}
     }
 
     // See `AsyncCommand`.
@@ -17,7 +17,7 @@ public final class BootCommand: AsyncCommand {
     }
 
     /// Create a new `BootCommand`.
-    public init() { }
+    public init() {}
 
     // See `AsyncCommand`.
     public func run(using context: ConsoleKitCommands.CommandContext, signature: Signature) async throws {

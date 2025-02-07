@@ -5,15 +5,15 @@ import NIOCore
 public struct File: Codable, Equatable, Sendable {
     /// Name of the file, including extension.
     public var filename: String
-    
+
     /// The file's data.
     public var data: ByteBuffer
-    
+
     /// Associated `MediaType` for this file's extension, if it has one.
     public var contentType: HTTPMediaType? {
         return self.extension.flatMap { HTTPMediaType.fileExtension($0.lowercased()) }
     }
-    
+
     /// The file extension, if it has one.
     public var `extension`: String? {
         let parts = self.filename.split(separator: ".")
@@ -23,11 +23,11 @@ public struct File: Codable, Equatable, Sendable {
             return nil
         }
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case data, filename
     }
-    
+
     /// `Decodable` conformance.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -37,7 +37,7 @@ public struct File: Codable, Equatable, Sendable {
         let filename = try container.decode(String.self, forKey: .filename)
         self.init(data: buffer, filename: filename)
     }
-    
+
     /// `Encodable` conformance.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
@@ -45,7 +45,7 @@ public struct File: Codable, Equatable, Sendable {
         try container.encode(data, forKey: .data)
         try container.encode(self.filename, forKey: .filename)
     }
-    
+
     /// Creates a new `File`.
     ///
     ///     let file = File(data: "hello", filename: "foo.txt")
@@ -57,7 +57,7 @@ public struct File: Codable, Equatable, Sendable {
         let buffer = ByteBufferAllocator().buffer(string: data)
         self.init(data: buffer, filename: filename)
     }
-    
+
     /// Creates a new `File`.
     ///
     ///     let file = File(data: "hello", filename: "foo.txt")

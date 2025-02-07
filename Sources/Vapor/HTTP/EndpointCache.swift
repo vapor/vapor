@@ -1,7 +1,7 @@
 import Foundation
+import Logging
 import NIOConcurrencyHelpers
 import NIOCore
-import Logging
 import NIOHTTP1
 
 public enum EndpointCacheError: Swift.Error {
@@ -166,7 +166,8 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
 
             if let cacheControl = headers.cacheControl, let cacheUntil = cachedData.1 {
                 if let staleIfError = cacheControl.staleIfError,
-                    cacheUntil.addingTimeInterval(Double(staleIfError)) > Date() {
+                    cacheUntil.addingTimeInterval(Double(staleIfError)) > Date()
+                {
                     // Can use the data for staleIfError seconds past expiration when the server is non-responsive
                     return eventLoop.makeSucceededFuture(cached)
                 } else if cacheControl.noCache == true && cacheUntil > Date() {

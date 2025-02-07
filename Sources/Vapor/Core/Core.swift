@@ -1,7 +1,7 @@
 import ConsoleKit
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
-import NIOConcurrencyHelpers
 
 extension Application {
     public var console: Console {
@@ -98,7 +98,7 @@ extension Application {
                 try! application.threadPool.syncShutdownGracefully()
             }
         }
-        
+
         struct AsyncLifecycleHandler: Vapor.LifecycleHandler {
             func shutdownAsync(_ application: Application) async {
                 do {

@@ -1,74 +1,76 @@
-#if !canImport(Darwin)
-#if compiler(>=6.0)
-import Dispatch
-#else
-@preconcurrency import Dispatch
-#endif
-#endif
-import Foundation
-import XCTest
-import Vapor
-import NIOCore
-import Logging
 import AsyncHTTPClient
-import NIOEmbedded
+import Foundation
+import Logging
 import NIOConcurrencyHelpers
+import NIOCore
+import NIOEmbedded
+import Vapor
+import XCTest
+
+#if !canImport(Darwin)
+    #if compiler(>=6.0)
+        import Dispatch
+    #else
+        @preconcurrency import Dispatch
+    #endif
+#endif
 
 final class ClientTests: XCTestCase {
     var remoteAppPort: Int!
     var remoteApp: Application!
-    
+
     override func setUp() async throws {
         remoteApp = try await Application.make(.testing)
         remoteApp.http.server.configuration.port = 0
-        
+
         remoteApp.get("json") { _ in
             SomeJSON()
         }
-        
+
         remoteApp.get("status", ":status") { req -> HTTPStatus in
             let status = try req.parameters.require("status", as: Int.self)
             return HTTPStatus(statusCode: status)
         }
-        
+
         remoteApp.post("anything") { req -> AnythingResponse in
             let headers = req.headers.reduce(into: [String: String]()) {
                 $0[$1.0] = $1.1
             }
-            
-            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
+
+            guard let json: [String: Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String: Any] else {
                 throw Abort(.badRequest)
             }
-            
+
             let jsonResponse = json.mapValues {
                 return "\($0)"
             }
-            
+
             return AnythingResponse(headers: headers, json: jsonResponse)
         }
 
         remoteApp.get("stalling") {
             $0.eventLoop.scheduleTask(in: .seconds(5)) { SomeJSON() }.futureResult
         }
-        
+
         remoteApp.environment.arguments = ["serve"]
         try await remoteApp.asyncBoot()
         try await remoteApp.startup()
-        
+
         XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
         guard let localAddress = remoteApp.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
             return
         }
-        
+
         self.remoteAppPort = port
     }
-    
+
     override func tearDown() async throws {
         try await remoteApp.asyncShutdown()
     }
-    
+
     func testClientConfigurationChange() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -81,7 +83,7 @@ final class ClientTests: XCTestCase {
 
         try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
-        
+
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port for app")
             return
@@ -91,7 +93,7 @@ final class ClientTests: XCTestCase {
 
         XCTAssertEqual(res.status, .seeOther)
     }
-    
+
     func testClientConfigurationCantBeChangedAfterClientHasBeenUsed() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -104,14 +106,14 @@ final class ClientTests: XCTestCase {
 
         try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
-        
+
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port for app")
             return
         }
 
         _ = try app.client.get("http://localhost:\(port)/redirect").wait()
-        
+
         app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
         let res = try app.client.get("http://localhost:\(port)/redirect").wait()
         XCTAssertEqual(res.status, .seeOther)
@@ -125,15 +127,15 @@ final class ClientTests: XCTestCase {
 
         let encoded = try JSONEncoder().encode(res)
         let decoded = try JSONDecoder().decode(ClientResponse.self, from: encoded)
-        
+
         XCTAssertEqual(res, decoded)
     }
-    
+
     func testClientBeforeSend() throws {
         let app = Application()
         defer { app.shutdown() }
         try app.boot()
-        
+
         let res = try app.client.post("http://localhost:\(remoteAppPort!)/anything") { req in
             try req.content.encode(["hello": "world"])
         }.wait()
@@ -142,12 +144,12 @@ final class ClientTests: XCTestCase {
         XCTAssertEqual(data.json, ["hello": "world"])
         XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
     }
-    
+
     func testClientContent() throws {
         let app = Application()
         defer { app.shutdown() }
         try app.boot()
-        
+
         let res = try app.client.post("http://localhost:\(remoteAppPort!)/anything", content: ["hello": "world"]).wait()
 
         let data = try res.content.decode(AnythingResponse.self)
@@ -166,11 +168,11 @@ final class ClientTests: XCTestCase {
             XCTAssertEqual($0 as? HTTPClientError, .deadlineExceeded)
         }
     }
-    
+
     func testBoilerplateClient() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         let remotePort = self.remoteAppPort!
 
         app.get("foo") { req -> EventLoopFuture<String> in
@@ -188,10 +190,11 @@ final class ClientTests: XCTestCase {
         app.http.server.configuration.port = 0
         try app.boot()
         try app.start()
-        
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
+            let port = localAddress.port
+        else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
@@ -201,7 +204,7 @@ final class ClientTests: XCTestCase {
 
         try app.running?.onStop.wait()
     }
-    
+
     func testApplicationClientThreadSafety() throws {
         let app = Application(.testing)
         defer { app.shutdown() }

@@ -14,7 +14,7 @@ public struct StackTrace: Sendable {
     }
     public static var isCaptureEnabled: Bool {
         get { false }
-        set { }
+        set {}
     }
     public static func capture(skip: Int = 0) -> Self? { nil }
     public var frames: [Frame] { [] }

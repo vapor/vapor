@@ -1,6 +1,6 @@
+import NIOHTTP1
 import Vapor
 import XCTest
-import NIOHTTP1
 
 class HTTPCacheTests: XCTestCase {
     func testNoStoreWithExpires() {

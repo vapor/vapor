@@ -2,7 +2,7 @@ import RoutingKit
 
 extension RoutesBuilder {
     // MARK: Path
-    
+
     /// Creates a new `Router` that will automatically prepend the supplied path components.
     ///
     ///     let users = router.grouped("user")
@@ -45,7 +45,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - path: Group path components separated by commas.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ path: PathComponent..., configure: (RoutesBuilder) throws -> ()) rethrows {
+    public func group(_ path: PathComponent..., configure: (RoutesBuilder) throws -> Void) rethrows {
         return try group(path, configure: configure)
     }
 
@@ -61,7 +61,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - path: Array of group path components.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ path: [PathComponent], configure: (RoutesBuilder) throws -> ()) rethrows {
+    public func group(_ path: [PathComponent], configure: (RoutesBuilder) throws -> Void) rethrows {
         try configure(HTTPRoutesGroup(root: self, path: path))
     }
 }
@@ -70,7 +70,7 @@ extension RoutesBuilder {
 private final class HTTPRoutesGroup: RoutesBuilder {
     /// Router to cascade to.
     let root: RoutesBuilder
-    
+
     /// Additional components.
     let path: [PathComponent]
 
@@ -79,7 +79,7 @@ private final class HTTPRoutesGroup: RoutesBuilder {
         self.root = root
         self.path = path
     }
-    
+
     /// See `HTTPRoutesBuilder`.
     func add(_ route: Route) {
         route.path = self.path + route.path

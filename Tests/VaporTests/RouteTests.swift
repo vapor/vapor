@@ -1,8 +1,8 @@
-import XCTVapor
-import XCTest
-import Vapor
 import NIOCore
 import NIOHTTP1
+import Vapor
+import XCTVapor
+import XCTest
 
 final class RouteTests: XCTestCase {
     func testParameter() throws {
@@ -75,7 +75,7 @@ final class RouteTests: XCTestCase {
         defer { app.shutdown() }
 
         app.routes.get("") { req -> String in
-                return "root"
+            return "root"
         }
         app.routes.get("foo") { req -> String in
             return "foo"
@@ -89,13 +89,13 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.body.string, "foo")
         }
     }
-    
+
     func testInsensitiveRoutes() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         app.routes.caseInsensitive = true
-        
+
         app.routes.get("foo") { req -> String in
             return "foo"
         }
@@ -121,14 +121,20 @@ final class RouteTests: XCTestCase {
             }
         }
 
-        try app.testable().test(.GET, "/foo", beforeRequest: { req in
-            try req.query.encode(["number": "true"])
-        }) { res in
+        try app.testable().test(
+            .GET, "/foo",
+            beforeRequest: { req in
+                try req.query.encode(["number": "true"])
+            }
+        ) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "42")
-        }.test(.GET, "/foo", beforeRequest: { req in
-            try req.query.encode(["number": "false"])
-        }) { res in
+        }.test(
+            .GET, "/foo",
+            beforeRequest: { req in
+                try req.query.encode(["number": "false"])
+            }
+        ) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "string")
         }
@@ -187,18 +193,22 @@ final class RouteTests: XCTestCase {
             return try req.content.decode(User.self)
         }
 
-        try app.testable().test(.POST, "/users", beforeRequest: { req in
-            try req.content.encode([
-                "name": "vapor",
-                "email": "foo"
-            ], as: .json)
-        }) { res in
+        try app.testable().test(
+            .POST, "/users",
+            beforeRequest: { req in
+                try req.content.encode(
+                    [
+                        "name": "vapor",
+                        "email": "foo",
+                    ], as: .json)
+            }
+        ) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "email is not a valid email address")
         }.test(.POST, "/users") { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
             XCTAssertContains(res.body.string.replacingOccurrences(of: "\\", with: ""), "Missing \"Content-Type\" header")
-        }.test(.POST, "/users", headers: ["Content-Type":"application/json"]) { res in
+        }.test(.POST, "/users", headers: ["Content-Type": "application/json"]) { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
             XCTAssertContains(res.body.string, "Empty Body")
         }
@@ -218,14 +228,19 @@ final class RouteTests: XCTestCase {
                 .encodeResponse(status: .created, for: req)
         }
 
-        try app.testable().test(.POST, "/users", beforeRequest: { req in
-            try req.content.encode(["name": "vapor"], as: .json)
-        }) { res in
+        try app.testable().test(
+            .POST, "/users",
+            beforeRequest: { req in
+                try req.content.encode(["name": "vapor"], as: .json)
+            }
+        ) { res in
             XCTAssertEqual(res.status, .created)
             XCTAssertEqual(res.headers.contentType, .json)
-            XCTAssertEqual(res.body.string, """
-            {"name":"vapor"}
-            """)
+            XCTAssertEqual(
+                res.body.string,
+                """
+                {"name":"vapor"}
+                """)
         }
     }
 
@@ -263,7 +278,7 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.body.readableBytes, 0)
         }
     }
-    
+
     func testInvalidCookie() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -303,10 +318,10 @@ final class RouteTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("api","addresses") { req in
+        app.get("api", "addresses") { req in
             "a"
         }
-        app.get("api", "addresses","search", ":id") { req in
+        app.get("api", "addresses", "search", ":id") { req in
             "b"
         }
 
@@ -325,9 +340,10 @@ final class RouteTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        XCTAssertThrowsError(try app.routes.group("foo") { router in
-            throw Abort(.internalServerError, reason: "Test")
-        })
+        XCTAssertThrowsError(
+            try app.routes.group("foo") { router in
+                throw Abort(.internalServerError, reason: "Test")
+            })
     }
 
     func testCollection() throws {
@@ -379,28 +395,33 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         }
     }
-    
+
     func testWebsocketUpgrade() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         let testMarkerHeaderKey = "TestMarker"
         let testMarkerHeaderValue = "addedInShouldUpgrade"
-        
-        app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
-            return req.eventLoop.future([testMarkerHeaderKey: testMarkerHeaderValue])
-        }, onUpgrade: { _, _ in })
-        
-        try app.testable(method: .running(port: 0)).test(.GET, "customshouldupgrade", beforeRequest: { req in
-            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
-            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
-            req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
-            req.headers.replaceOrAdd(name: .upgrade, value: "websocket")
-        }) { res in
+
+        app.routes.webSocket(
+            "customshouldupgrade",
+            shouldUpgrade: { req in
+                return req.eventLoop.future([testMarkerHeaderKey: testMarkerHeaderValue])
+            }, onUpgrade: { _, _ in })
+
+        try app.testable(method: .running(port: 0)).test(
+            .GET, "customshouldupgrade",
+            beforeRequest: { req in
+                req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
+                req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
+                req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
+                req.headers.replaceOrAdd(name: .upgrade, value: "websocket")
+            }
+        ) { res in
             XCTAssertEqual(res.headers.first(name: testMarkerHeaderKey), testMarkerHeaderValue)
         }
     }
-    
+
     // https://github.com/vapor/vapor/issues/2716
     func testGH2716() throws {
         let app = Application(.testing)
@@ -409,22 +430,22 @@ final class RouteTests: XCTestCase {
         app.get("client") { req in
             return req.client.get("http://localhost/status/2 1").map { $0.description }
         }
-        
+
         try app.testable(method: .running(port: 0)).test(.GET, "/client") { res in
             XCTAssertEqual(res.status.code, 500)
         }
     }
-    
+
     // https://github.com/vapor/vapor/issues/3137
     // https://github.com/vapor/vapor/issues/3142
     func testDoubleSlashRouteAccess() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         app.get(":foo", ":bar", "buz") { req -> String in
             "\(try req.parameters.require("foo"))\(try req.parameters.require("bar"))"
         }
-        
+
         try app.testable(method: .running(port: 0)).test(.GET, "/foop/barp/buz") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "foopbarp")

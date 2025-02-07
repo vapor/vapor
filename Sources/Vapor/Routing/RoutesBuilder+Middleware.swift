@@ -24,7 +24,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - middleware: Variadic `Middleware` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ middleware: Middleware..., configure: (RoutesBuilder) throws -> ()) rethrows {
+    public func group(_ middleware: Middleware..., configure: (RoutesBuilder) throws -> Void) rethrows {
         return try self.group(middleware, configure: configure)
     }
 
@@ -54,7 +54,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - middleware: Array of `[Middleware]` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ middleware: [Middleware], configure: (RoutesBuilder) throws -> ()) rethrows {
+    public func group(_ middleware: [Middleware], configure: (RoutesBuilder) throws -> Void) rethrows {
         try configure(MiddlewareGroup(root: self, middleware: middleware))
     }
 }
@@ -74,7 +74,7 @@ private final class MiddlewareGroup: RoutesBuilder {
         self.root = root
         self.middleware = middleware
     }
-    
+
     /// See `HTTPRoutesBuilder`.
     func add(_ route: Route) {
         route.responder = self.middleware.makeResponder(chainingTo: route.responder)

@@ -47,9 +47,10 @@ extension Array where Element == CodingKey {
         if count < 1 {
             return ""
         }
-        return try self[0].stringValue.urlEncoded(codingPath: self) + self[1...].map { (key: CodingKey) -> String in
-            try "[" + key.stringValue.urlEncoded(codingPath: self) + "]"
-        }.joined()
+        return try self[0].stringValue.urlEncoded(codingPath: self)
+            + self[1...].map { (key: CodingKey) -> String in
+                try "[" + key.stringValue.urlEncoded(codingPath: self) + "]"
+            }.joined()
     }
 }
 
@@ -58,13 +59,17 @@ extension Array where Element == CodingKey {
 extension String {
     /// Prepares a `String` for inclusion in form-urlencoded data.
     func urlEncoded(codingPath: [CodingKey] = []) throws -> String {
-        guard let result = self.addingPercentEncoding(
-            withAllowedCharacters: Characters.allowedCharacters
-        ) else {
-            throw EncodingError.invalidValue(self, EncodingError.Context(
-                codingPath: codingPath,
-                debugDescription: "Unable to add percent encoding to \(self)"
-            ))
+        guard
+            let result = self.addingPercentEncoding(
+                withAllowedCharacters: Characters.allowedCharacters
+            )
+        else {
+            throw EncodingError.invalidValue(
+                self,
+                EncodingError.Context(
+                    codingPath: codingPath,
+                    debugDescription: "Unable to add percent encoding to \(self)"
+                ))
         }
         return result
     }

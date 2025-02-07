@@ -1,23 +1,22 @@
+import NIOCore
+import Vapor
 import XCTVapor
 import XCTest
-import Vapor
-import NIOCore
 
 final class EndpointCacheTests: XCTestCase {
-    
+
     actor CurrentActor {
         var current = 0
-        
+
         func increment() {
             self.current += 1
         }
-        
+
         func getCurrent() -> Int {
             self.current
         }
     }
-    
-    
+
     func testEndpointCacheNoCache() throws {
         let app = Application(.testing)
         defer { app.shutdown() }

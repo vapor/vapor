@@ -88,7 +88,8 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
     ///     extend.set("foo", to: foo)
     ///
     public mutating func set<T>(_ key: String, to newValue: T) {
-        return self[key] = newValue
+        self[key] = newValue
+        return
     }
 
     /// Allow subscripting by `String` key. This is a type-erased alternative to

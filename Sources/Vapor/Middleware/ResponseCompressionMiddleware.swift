@@ -16,12 +16,12 @@ public struct ResponseCompressionMiddleware: AsyncMiddleware {
     ///
     /// - Note: Middleware that come after this one, or responses with a ``HTTPHeaders/ResponseCompression`` header, will take priority over the override set here, unless ``shouldForce`` is set to true.
     public var responseCompressionOverride: HTTPHeaders.ResponseCompression
-    
+
     /// A flag to force the override atop whatever the response or output of middleware that process the response before this one.
     public var shouldForce: Bool
-    
+
     /// Initialize a response compression middleware with an override.
-    /// 
+    ///
     /// - Parameters:
     ///   - override: The compression preference to apply if none is already set.
     ///   - shouldForce: Wether to force the compression preference over what the response prefers.
@@ -31,7 +31,7 @@ public struct ResponseCompressionMiddleware: AsyncMiddleware {
         self.responseCompressionOverride = override
         self.shouldForce = shouldForce
     }
-    
+
     public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         let response = try await next.respond(to: request)
         /// Only set the header if it is unset, and prefer the next responder's header over our own override, as _it_ is overriding ours.
@@ -44,9 +44,9 @@ public struct ResponseCompressionMiddleware: AsyncMiddleware {
 
 extension RoutesBuilder {
     /// Override the response compression settings for a route.
-    /// 
+    ///
     /// This is useful when a set of static routes does not need compression, or a set of dynamic routes does.
-    /// 
+    ///
     /// When the ``HTTPServer/Configuration-swift.struct/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPHeaders/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPHeaders/ResponseCompression/disable`` can be set to explicitly disable compression.
     ///
     /// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPHeaders/ResponseCompression/useDefault``.

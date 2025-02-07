@@ -1,24 +1,24 @@
-import XCTest
-import Vapor
 import Logging
+import Vapor
+import XCTest
 
 final class ErrorTests: XCTestCase {
     func testPrintable() throws {
         let expectedPrintable = """
-        FooError.noFoo: You do not have a `foo`.
-        Here are some possible causes:
-        - You did not set the flongwaffle.
-        - The session ended before a `Foo` could be made.
-        - The universe conspires against us all.
-        - Computers are hard.
-        These suggestions could address the issue:
-        - You really want to use a `Bar` here.
-        - Take up the guitar and move to the beach.
-        Vapor's documentation talks about this:
-        - http://documentation.com/Foo
-        - http://documentation.com/foo/noFoo
+            FooError.noFoo: You do not have a `foo`.
+            Here are some possible causes:
+            - You did not set the flongwaffle.
+            - The session ended before a `Foo` could be made.
+            - The universe conspires against us all.
+            - Computers are hard.
+            These suggestions could address the issue:
+            - You really want to use a `Bar` here.
+            - Take up the guitar and move to the beach.
+            Vapor's documentation talks about this:
+            - http://documentation.com/Foo
+            - http://documentation.com/foo/noFoo
 
-        """
+            """
         XCTAssertEqual(FooError.noFoo.debugDescription, expectedPrintable)
     }
 
@@ -38,31 +38,37 @@ final class ErrorTests: XCTestCase {
     }
 
     func testCausesAndSuggestions() {
-        XCTAssertEqual(FooError.noFoo.possibleCauses, [
-            "You did not set the flongwaffle.",
-            "The session ended before a `Foo` could be made.",
-            "The universe conspires against us all.",
-            "Computers are hard."
-        ])
+        XCTAssertEqual(
+            FooError.noFoo.possibleCauses,
+            [
+                "You did not set the flongwaffle.",
+                "The session ended before a `Foo` could be made.",
+                "The universe conspires against us all.",
+                "Computers are hard.",
+            ])
 
-        XCTAssertEqual(FooError.noFoo.suggestedFixes, [
-            "You really want to use a `Bar` here.",
-            "Take up the guitar and move to the beach."
-        ])
+        XCTAssertEqual(
+            FooError.noFoo.suggestedFixes,
+            [
+                "You really want to use a `Bar` here.",
+                "Take up the guitar and move to the beach.",
+            ])
 
-        XCTAssertEqual(FooError.noFoo.documentationLinks, [
-            "http://documentation.com/Foo",
-            "http://documentation.com/foo/noFoo"
-        ])
+        XCTAssertEqual(
+            FooError.noFoo.documentationLinks,
+            [
+                "http://documentation.com/Foo",
+                "http://documentation.com/foo/noFoo",
+            ])
     }
 
     func testMinimumConformance() {
         let minimum = MinimumError.alpha
         let description = minimum.debugDescription
         let expectation = """
-        MinimumError.alpha: Not enabled
-        
-        """
+            MinimumError.alpha: Not enabled
+
+            """
         XCTAssertEqual(description, expectation)
     }
 
@@ -86,25 +92,28 @@ final class ErrorTests: XCTestCase {
             XCTAssertEqual(res.status, .internalServerError)
             let abort = try res.content.decode(AbortResponse.self)
             XCTAssertEqual(abort.reason, "Foo")
-        }.test(.POST, "foo", beforeRequest: { req in
-            try req.content.encode(Foo(bar: 42))
-        }, afterResponse: { res in
-            XCTAssertEqual(res.status, .internalServerError)
-            let abort = try res.content.decode(AbortResponse.self)
-            XCTAssertEqual(abort.reason, "After decode")
-        })
+        }.test(
+            .POST, "foo",
+            beforeRequest: { req in
+                try req.content.encode(Foo(bar: 42))
+            },
+            afterResponse: { res in
+                XCTAssertEqual(res.status, .internalServerError)
+                let abort = try res.content.decode(AbortResponse.self)
+                XCTAssertEqual(abort.reason, "After decode")
+            })
     }
-    
+
     func testErrorMiddlewareUsesContentConfiguration() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         app.get("foo") { req -> String in
             throw Abort(.internalServerError, reason: "Foo")
         }
-        
+
         ContentConfiguration.global.use(encoder: URLEncodedFormEncoder(), for: .json)
-        
+
         try app.test(.GET, "foo") { res in
             XCTAssertEqual(res.status, HTTPStatus.internalServerError)
             let option1 = "error=true&reason=Foo"
@@ -114,7 +123,7 @@ final class ErrorTests: XCTestCase {
                 return
             }
         }
-        
+
         // Clean up
         ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)
     }
@@ -161,12 +170,12 @@ private enum MinimumError: String, DebuggableError {
     ///     }
     var reason: String {
         switch self {
-            case .alpha:
-                return "Not enabled"
-            case .bravo:
-                return "Enabled, but I'm not configured"
-            case .charlie:
-                return "Broken beyond repair"
+        case .alpha:
+            return "Not enabled"
+        case .bravo:
+            return "Enabled, but I'm not configured"
+        case .charlie:
+            return "Broken beyond repair"
         }
     }
 
@@ -185,7 +194,6 @@ private enum MinimumError: String, DebuggableError {
         return []
     }
 }
-
 
 private enum FooError: String, DebuggableError {
     case noFoo
@@ -212,7 +220,7 @@ private enum FooError: String, DebuggableError {
                 "You did not set the flongwaffle.",
                 "The session ended before a `Foo` could be made.",
                 "The universe conspires against us all.",
-                "Computers are hard."
+                "Computers are hard.",
             ]
         }
     }
@@ -222,7 +230,7 @@ private enum FooError: String, DebuggableError {
         case .noFoo:
             return [
                 "You really want to use a `Bar` here.",
-                "Take up the guitar and move to the beach."
+                "Take up the guitar and move to the beach.",
             ]
         }
     }
@@ -232,7 +240,7 @@ private enum FooError: String, DebuggableError {
         case .noFoo:
             return [
                 "http://documentation.com/Foo",
-                "http://documentation.com/foo/noFoo"
+                "http://documentation.com/foo/noFoo",
             ]
         }
     }

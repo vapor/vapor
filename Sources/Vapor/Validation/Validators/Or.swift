@@ -1,5 +1,5 @@
 /// Combines two `Validator`s, succeeding if either of the `Validator`s does not fail.
-public func ||<T> (lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
+public func || <T>(lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
     .init {
         ValidatorResults.Or(left: lhs.validate($0), right: rhs.validate($0))
     }
@@ -21,7 +21,7 @@ extension ValidatorResults.Or: ValidatorResult {
     public var isFailure: Bool {
         self.left.isFailure && self.right.isFailure
     }
-    
+
     public var successDescription: String? {
         switch (self.left.isFailure, self.right.isFailure) {
         case (false, false):
@@ -38,7 +38,7 @@ extension ValidatorResults.Or: ValidatorResult {
             return nil
         }
     }
-    
+
     public var failureDescription: String? {
         switch (left.isFailure, right.isFailure) {
         case (true, true):

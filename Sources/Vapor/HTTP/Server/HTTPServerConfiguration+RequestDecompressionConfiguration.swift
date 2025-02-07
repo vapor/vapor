@@ -25,7 +25,9 @@ extension HTTPServer.Configuration {
 
         var storage: Storage
     }
-    
-    @available(*, deprecated, renamed: "RequestDecompressionConfiguration", message: "Renamed to RequestDecompressionConfiguration for clarity.")
+
+    @available(
+        *, deprecated, renamed: "RequestDecompressionConfiguration", message: "Renamed to RequestDecompressionConfiguration for clarity."
+    )
     public typealias DecompressionConfiguration = RequestDecompressionConfiguration
 }

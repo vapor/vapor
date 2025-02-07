@@ -1,19 +1,19 @@
-import XCTVapor
 import Vapor
+import XCTVapor
 import XCTest
 
 final class AsyncAuthenticationTests: XCTestCase {
-    
+
     var app: Application!
-    
+
     override func setUp() async throws {
         app = try await Application.make(.testing)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
+
     func testBearerAuthenticator() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
@@ -33,7 +33,7 @@ final class AsyncAuthenticationTests: XCTestCase {
         }
 
         app.routes.grouped([
-            Test.authenticator(), Test.guardMiddleware()
+            Test.authenticator(), Test.guardMiddleware(),
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }
@@ -72,7 +72,7 @@ final class AsyncAuthenticationTests: XCTestCase {
         }
 
         app.routes.grouped([
-            Test.authenticator(), Test.guardMiddleware()
+            Test.authenticator(), Test.guardMiddleware(),
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }
@@ -108,9 +108,9 @@ final class AsyncAuthenticationTests: XCTestCase {
                 }
             }
         }
-        
+
         app.routes.grouped([
-            Test.authenticator(), Test.guardMiddleware()
+            Test.authenticator(), Test.guardMiddleware(),
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }
@@ -149,7 +149,7 @@ final class AsyncAuthenticationTests: XCTestCase {
         }
 
         app.routes.grouped([
-            Test.authenticator(), redirectMiddleware
+            Test.authenticator(), redirectMiddleware,
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }

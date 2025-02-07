@@ -1,6 +1,6 @@
 import Foundation
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 
 extension Application.Caches {
     /// In-memory cache. Thread safe.
@@ -41,39 +41,37 @@ private actor MemoryCacheStorage: Sendable {
     struct CacheEntryBox<T> {
         var expiresAt: Date?
         var value: T
-        
+
         init(_ value: T) {
             self.expiresAt = nil
             self.value = value
         }
     }
-    
+
     private var storage: [String: Any]
     private var lock: NIOLock
-    
+
     init() {
         self.storage = [:]
         self.lock = .init()
     }
-    
+
     func get<T>(_ key: String) -> T?
-        where T: Decodable
-    {
+    where T: Decodable {
         self.lock.lock()
         defer { self.lock.unlock() }
-        
+
         guard let box = self.storage[key] as? CacheEntryBox<T> else { return nil }
         if let expiresAt = box.expiresAt, expiresAt < Date() {
             self.storage.removeValue(forKey: key)
             return nil
         }
-        
+
         return box.value
     }
-    
+
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
-        where T: Encodable
-    {
+    where T: Encodable {
         self.lock.lock()
         defer { self.lock.unlock() }
         if let value = value {
@@ -91,34 +89,31 @@ private actor MemoryCacheStorage: Sendable {
 private struct MemoryCache: Cache {
     let storage: MemoryCacheStorage
     let eventLoop: EventLoop
-    
+
     init(storage: MemoryCacheStorage, on eventLoop: EventLoop) {
         self.storage = storage
         self.eventLoop = eventLoop
     }
-    
+
     func get<T>(_ key: String, as type: T.Type) -> EventLoopFuture<T?>
-        where T: Decodable & Sendable
-    {
+    where T: Decodable & Sendable {
         self.eventLoop.makeFutureWithTask {
             await self.storage.get(key)
         }
     }
-    
+
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
-        where T: Encodable & Sendable
-    {
+    where T: Encodable & Sendable {
         self.set(key, to: value, expiresIn: nil)
     }
-    
+
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
-        where T: Encodable & Sendable
-    {
+    where T: Encodable & Sendable {
         self.eventLoop.makeFutureWithTask {
             await self.storage.set(key, to: value, expiresIn: expirationTime)
         }
     }
-    
+
     func `for`(_ request: Request) -> MemoryCache {
         .init(storage: self.storage, on: request.eventLoop)
     }

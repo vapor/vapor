@@ -28,7 +28,7 @@ public struct SessionsConfiguration: Sendable {
             return HTTPCookies.Value(
                 string: sessionID.string,
                 expires: Date(
-                    timeIntervalSinceNow: 60 * 60 * 24 * 7 // one week
+                    timeIntervalSinceNow: 60 * 60 * 24 * 7  // one week
                 ),
                 maxAge: nil,
                 domain: nil,

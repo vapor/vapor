@@ -22,7 +22,7 @@ public struct Abort: AbortError, DebuggableError {
         headers.replaceOrAdd(name: .location, value: location)
         return .init(type.status, headers: headers)
     }
-    
+
     /// Creates a redirecting `Abort` error.
     ///
     ///     throw Abort.redirect(to: "https://vapor.codes")

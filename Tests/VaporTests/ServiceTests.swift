@@ -1,7 +1,7 @@
+import NIOCore
+import Vapor
 import XCTVapor
 import XCTest
-import Vapor
-import NIOCore
 
 final class ServiceTests: XCTestCase {
     func testReadOnly() throws {
@@ -36,11 +36,11 @@ final class ServiceTests: XCTestCase {
         try app.start()
         app.running?.stop()
     }
-    
+
     func testAsyncLifecycleHandler() async throws {
         let app = try await Application.make(.testing)
         app.http.server.configuration.port = 0
-        
+
         app.lifecycle.use(AsyncHello())
         app.environment.arguments = ["serve"]
         try await app.startup()
@@ -55,34 +55,36 @@ final class ServiceTests: XCTestCase {
             // Do something.
         }
 
-        struct TestKey: LockKey { }
+        struct TestKey: LockKey {}
 
         let test = app.locks.lock(for: TestKey.self)
         test.withLock {
             // Do something.
         }
     }
-    
+
     func testServiceHelpers() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         let testString = "This is a test - \(Int.random())"
         let myFakeServicce = MyTestService(cannedResponse: testString, eventLoop: app.eventLoopGroup.next(), logger: app.logger)
-        
+
         app.services.myService.use { _ in
             myFakeServicce
         }
-        
+
         app.get("myService") { req -> String in
             let thing = req.services.myService.doSomething()
             return thing
         }
-        
-        try app.test(.GET, "myService", afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, testString)
-        })
+
+        try app.test(
+            .GET, "myService",
+            afterResponse: { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, testString)
+            })
     }
 }
 
@@ -107,11 +109,11 @@ struct MyTestService: MyService {
     let cannedResponse: String
     let eventLoop: EventLoop
     let logger: Logger
-    
+
     func `for`(_ request: Vapor.Request) -> MyService {
         return MyTestService(cannedResponse: self.cannedResponse, eventLoop: request.eventLoop, logger: request.logger)
     }
-    
+
     func doSomething() -> String {
         return cannedResponse
     }
@@ -125,8 +127,8 @@ private struct ReadOnly {
     }
 }
 
-private extension Request {
-    var readOnly: ReadOnly {
+extension Request {
+    fileprivate var readOnly: ReadOnly {
         .init(client: self.client)
     }
 }
@@ -135,11 +137,11 @@ private struct Writable {
     var apiKey: String
 }
 
-private extension Application {
+extension Application {
     private struct WritableKey: StorageKey {
         typealias Value = Writable
     }
-    var writable: Writable? {
+    fileprivate var writable: Writable? {
         get {
             self.storage[WritableKey.self]
         }
@@ -148,7 +150,6 @@ private extension Application {
         }
     }
 }
-
 
 private struct Hello: LifecycleHandler {
     func willBoot(_ app: Application) throws {

@@ -5,7 +5,7 @@ public func XCTAssertContent<D>(
     _ res: XCTHTTPResponse,
     file: StaticString = #filePath,
     line: UInt = #line,
-    _ closure: (D) throws -> ()
+    _ closure: (D) throws -> Void
 ) rethrows where D: Decodable {
     XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
 
@@ -44,8 +44,7 @@ public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: Stat
 }
 
 public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = #filePath, line: UInt = #line)
-where T: Codable & Equatable
-{
+where T: Codable & Equatable {
     XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
 
     guard let data = data else {

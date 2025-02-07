@@ -1,5 +1,5 @@
-import XCTVapor
 import Vapor
+import XCTVapor
 import XCTest
 
 final class LoggingTests: XCTestCase {

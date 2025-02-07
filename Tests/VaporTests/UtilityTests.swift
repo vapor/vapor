@@ -1,6 +1,7 @@
 import XCTVapor
-@testable import Vapor
 import XCTest
+
+@testable import Vapor
 
 final class UtilityTests: XCTestCase {
     func testHexEncoding() throws {
@@ -17,7 +18,7 @@ final class UtilityTests: XCTestCase {
         XCTAssertEqual(bytes.hexEncodedString(), "012a80f0")
         XCTAssertEqual(bytes.hexEncodedString(uppercase: true), "012A80F0")
     }
-    
+
     func testByteCount() throws {
         let twoKbUpper: ByteCount = "2 KB"
         XCTAssertEqual(twoKbUpper.value, 2_048)

@@ -53,8 +53,8 @@ public protocol SessionAuthenticatable: Authenticatable {
     var sessionID: SessionID { get }
 }
 
-private extension SessionAuthenticatable {
-    static var sessionName: String {
+extension SessionAuthenticatable {
+    fileprivate static var sessionName: String {
         return "\(Self.self)"
     }
 }
@@ -62,23 +62,20 @@ private extension SessionAuthenticatable {
 extension Session {
     /// Authenticates the model into the session.
     public func authenticate<A>(_ a: A)
-        where A: SessionAuthenticatable
-    {
+    where A: SessionAuthenticatable {
         self.data["_" + A.sessionName + "Session"] = a.sessionID.description
     }
 
     /// Un-authenticates the model from the session.
     public func unauthenticate<A>(_ a: A.Type)
-        where A: SessionAuthenticatable
-    {
+    where A: SessionAuthenticatable {
         self.data["_" + A.sessionName + "Session"] = nil
     }
 
     /// Returns the authenticatable type's ID if it exists
     /// in the session data.
     public func authenticated<A>(_ a: A.Type) -> A.SessionID?
-        where A: SessionAuthenticatable
-    {
+    where A: SessionAuthenticatable {
         self.data["_" + A.sessionName + "Session"]
             .flatMap { A.SessionID.init($0) }
     }

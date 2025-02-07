@@ -26,14 +26,12 @@ extension Application {
             _ password: Password,
             created digest: Digest
         ) throws -> Bool
-            where Password: DataProtocol, Digest: DataProtocol
-        {
+        where Password: DataProtocol, Digest: DataProtocol {
             try self.sync.verify(password, created: digest)
         }
 
         public func hash<Password>(_ password: Password) throws -> [UInt8]
-            where Password: DataProtocol
-        {
+        where Password: DataProtocol {
             try self.sync.hash(password)
         }
     }

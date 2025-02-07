@@ -1,9 +1,9 @@
 import Foundation
+import Logging
 import Metrics
-@preconcurrency import RoutingKit
 import NIOCore
 import NIOHTTP1
-import Logging
+@preconcurrency import RoutingKit
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
@@ -18,17 +18,16 @@ internal struct DefaultResponder: Responder {
 
     /// Creates a new `ApplicationResponder`
     public init(routes: Routes, middleware: [Middleware] = [], reportMetrics: Bool = true) {
-        let options = routes.caseInsensitive ?
-            Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
+        let options = routes.caseInsensitive ? Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
         let router = TrieRouter(CachedRoute.self, options: options)
-        
+
         for route in routes.all {
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
                 route: route,
                 responder: middleware.makeResponder(chainingTo: route.responder)
             )
-            
+
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
@@ -38,7 +37,7 @@ internal struct DefaultResponder: Responder {
                     return true
                 }
             }
-            
+
             router.register(cached, at: [.constant(route.method.rawValue)] + path)
         }
         self.router = router
@@ -73,24 +72,26 @@ internal struct DefaultResponder: Responder {
             }
         }
     }
-    
+
     /// Gets a `Route` from the underlying `TrieRouter`.
     private func getRoute(for request: Request) -> CachedRoute? {
         let pathComponents = request.url.path
             .split(separator: "/")
             .map(String.init)
-        
+
         // If it's a HEAD request and a HEAD route exists, return that route...
-        if request.method == .HEAD, let route = self.router.route(
-            path: [HTTPMethod.HEAD.rawValue] + pathComponents,
-            parameters: &request.parameters
-        ) {
+        if request.method == .HEAD,
+            let route = self.router.route(
+                path: [HTTPMethod.HEAD.rawValue] + pathComponents,
+                parameters: &request.parameters
+            )
+        {
             return route
         }
 
         // ...otherwise forward HEAD requests to GET route
         let method = (request.method == .HEAD) ? .GET : request.method
-        
+
         return self.router.route(
             path: [method.rawValue] + pathComponents,
             parameters: &request.parameters
@@ -143,14 +144,14 @@ private struct NotFoundResponder: Responder {
 
 struct RouteNotFound: Error {}
 
-extension RouteNotFound: AbortError {    
+extension RouteNotFound: AbortError {
     var status: HTTPResponseStatus {
         .notFound
     }
 }
 
 extension RouteNotFound: DebuggableError {
-    var logLevel: Logger.Level { 
+    var logLevel: Logger.Level {
         .debug
     }
 }

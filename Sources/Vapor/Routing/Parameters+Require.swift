@@ -19,8 +19,7 @@ extension Parameters {
     ///     - name: The name of the parameter.
     ///     - type: The required parameter value type.
     public func require<T>(_ name: String, as type: T.Type = T.self) throws -> T
-        where T: LosslessStringConvertible
-    {
+    where T: LosslessStringConvertible {
         guard let stringValue: String = get(name) else {
             self.logger.debug("The parameter \(name) does not exist")
             throw Abort(.internalServerError, reason: "The parameter provided does not exist")

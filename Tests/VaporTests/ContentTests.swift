@@ -2,8 +2,8 @@ import NIOCore
 import NIOEmbedded
 import NIOHTTP1
 import Vapor
-import XCTest
 import XCTVapor
+import XCTest
 
 final class ContentTests: XCTestCase {
     func testContent() throws {
@@ -25,33 +25,33 @@ final class ContentTests: XCTestCase {
 
         // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
         let complexJSON = """
-        {
-            "id": "0001",
-            "type": "donut",
-            "name": "Cake",
-            "ppu": 0.55,
-            "batters":
-                {
-                    "batter":
-                        [
-                            { "id": "1001", "type": "Regular" },
-                            { "id": "1002", "type": "Chocolate" },
-                            { "id": "1003", "type": "Blueberry" },
-                            { "id": "1004", "type": "Devil's Food" }
-                        ]
-                },
-            "topping":
-                [
-                    { "id": "5001", "type": "None" },
-                    { "id": "5002", "type": "Glazed" },
-                    { "id": "5005", "type": "Sugar" },
-                    { "id": "5007", "type": "Powdered Sugar" },
-                    { "id": "5006", "type": "Chocolate with Sprinkles" },
-                    { "id": "5003", "type": "Chocolate" },
-                    { "id": "5004", "type": "Maple" }
-                ]
-        }
-        """
+            {
+                "id": "0001",
+                "type": "donut",
+                "name": "Cake",
+                "ppu": 0.55,
+                "batters":
+                    {
+                        "batter":
+                            [
+                                { "id": "1001", "type": "Regular" },
+                                { "id": "1002", "type": "Chocolate" },
+                                { "id": "1003", "type": "Blueberry" },
+                                { "id": "1004", "type": "Devil's Food" }
+                            ]
+                    },
+                "topping":
+                    [
+                        { "id": "5001", "type": "None" },
+                        { "id": "5002", "type": "Glazed" },
+                        { "id": "5005", "type": "Sugar" },
+                        { "id": "5007", "type": "Powdered Sugar" },
+                        { "id": "5006", "type": "Chocolate with Sprinkles" },
+                        { "id": "5003", "type": "Chocolate" },
+                        { "id": "5004", "type": "Maple" }
+                    ]
+            }
+            """
         let request = Request(
             application: app,
             collectedBody: .init(string: complexJSON),
@@ -63,8 +63,8 @@ final class ContentTests: XCTestCase {
 
     func testGH1534() throws {
         let data = """
-        {"name":"hi","bar":"asdf"}
-        """
+            {"name":"hi","bar":"asdf"}
+            """
 
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -156,21 +156,21 @@ final class ContentTests: XCTestCase {
 
     func testMultipartDecode() throws {
         let data = """
-        --123\r
-        Content-Disposition: form-data; name="name"\r
-        \r
-        Vapor\r
-        --123\r
-        Content-Disposition: form-data; name="age"\r
-        \r
-        4\r
-        --123\r
-        Content-Disposition: form-data; name="image"; filename="droplet.png"\r
-        \r
-        <contents of image>\r
-        --123--\r
+            --123\r
+            Content-Disposition: form-data; name="name"\r
+            \r
+            Vapor\r
+            --123\r
+            Content-Disposition: form-data; name="age"\r
+            \r
+            4\r
+            --123\r
+            Content-Disposition: form-data; name="image"; filename="droplet.png"\r
+            \r
+            <contents of image>\r
+            --123--\r
 
-        """
+            """
         let expected = User(
             name: "Vapor",
             age: 4,
@@ -192,9 +192,12 @@ final class ContentTests: XCTestCase {
             return decoded
         }
 
-        try app.testable().test(.GET, "/multipart", headers: [
-            "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
+        try app.testable().test(
+            .GET, "/multipart",
+            headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)
+        ) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqualJSON(res.body.string, expected)
         }
@@ -202,9 +205,9 @@ final class ContentTests: XCTestCase {
 
     func testMultipartDecodedEmptyMultipartForm() throws {
         let data = """
-        --123\r
-        --123--\r
-        """
+            --123\r
+            --123--\r
+            """
         let expected = User(
             name: "Vapor"
         )
@@ -222,9 +225,12 @@ final class ContentTests: XCTestCase {
             return decoded
         }
 
-        try app.testable().test(.GET, "/multipart", headers: [
-            "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
+        try app.testable().test(
+            .GET, "/multipart",
+            headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)
+        ) { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
         }
     }
@@ -248,30 +254,33 @@ final class ContentTests: XCTestCase {
             return decoded
         }
 
-        try app.testable().test(.GET, "/multipart", headers: [
-            "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
+        try app.testable().test(
+            .GET, "/multipart",
+            headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)
+        ) { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
         }
     }
 
     func testMultipartDecodeUnicode() throws {
         let data = """
-        --123\r
-        Content-Disposition: form-data; name="name"\r
-        \r
-        Vapor\r
-        --123\r
-        Content-Disposition: form-data; name="age"\r
-        \r
-        4\r
-        --123\r
-        Content-Disposition: form-data; name="image"; filename="她在吃水果.png"; filename*="UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png"\r
-        \r
-        <contents of image>\r
-        --123--\r
+            --123\r
+            Content-Disposition: form-data; name="name"\r
+            \r
+            Vapor\r
+            --123\r
+            Content-Disposition: form-data; name="age"\r
+            \r
+            4\r
+            --123\r
+            Content-Disposition: form-data; name="image"; filename="她在吃水果.png"; filename*="UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png"\r
+            \r
+            <contents of image>\r
+            --123--\r
 
-        """
+            """
         let expected = User(
             name: "Vapor",
             age: 4,
@@ -293,9 +302,12 @@ final class ContentTests: XCTestCase {
             return decoded
         }
 
-        try app.testable().test(.GET, "/multipart", headers: [
-            "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
+        try app.testable().test(
+            .GET, "/multipart",
+            headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)
+        ) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqualJSON(res.body.string, expected)
         }
@@ -417,9 +429,12 @@ final class ContentTests: XCTestCase {
             "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
 
-        try app.test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
-            try req.content.encode(["foo": "bar"], as: .json)
-        }) { res in
+        try app.test(
+            .GET, "/check", headers: ["X-Test-Value": "PRESENT"],
+            beforeRequest: { req in
+                try req.content.encode(["foo": "bar"], as: .json)
+            }
+        ) { res in
             XCTAssertEqual(res.body.string, "PRESENT.application/json; charset=utf-8")
         }
     }
@@ -434,12 +449,16 @@ final class ContentTests: XCTestCase {
         // Me and my sadistic sense of humor.
         ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
 
-        try app.testable().test(.GET, "/check", headers: [
-            "X-Test-Value": "PRESENT"
-        ], beforeRequest: { req in
-            try req.content.encode(["foo": "bar"], as: .json)
-            req.headers.contentType = .xml
-        }) { res in
+        try app.testable().test(
+            .GET, "/check",
+            headers: [
+                "X-Test-Value": "PRESENT"
+            ],
+            beforeRequest: { req in
+                try req.content.encode(["foo": "bar"], as: .json)
+                req.headers.contentType = .xml
+            }
+        ) { res in
             XCTAssertEqual(res.body.string, "PRESENT.application/xml; charset=utf-8")
         }
     }
@@ -537,11 +556,16 @@ final class ContentTests: XCTestCase {
         }
 
         var request = ClientRequest(url: .init(scheme: "https", host: "example.com", path: "/api"))
-        try request.query.encode(Foo(status:
-            "⬆️ taylorswift just released swift-mongodb v0.10.1 – use BSON and MongoDB in pure Swift\n\nhttps://swiftpackageindex.com/tayloraswift/swift-mongodb#releases"
-        ))
+        try request.query.encode(
+            Foo(
+                status:
+                    "⬆️ taylorswift just released swift-mongodb v0.10.1 – use BSON and MongoDB in pure Swift\n\nhttps://swiftpackageindex.com/tayloraswift/swift-mongodb#releases"
+            ))
 
-        XCTAssertEqual(request.url.string, "https://example.com/api?status=%E2%AC%86%EF%B8%8F%20taylorswift%20just%20released%20swift-mongodb%20v0.10.1%20%E2%80%93%20use%20BSON%20and%20MongoDB%20in%20pure%20Swift%0A%0Ahttps%3A%2F%2Fswiftpackageindex.com%2Ftayloraswift%2Fswift-mongodb%23releases")
+        XCTAssertEqual(
+            request.url.string,
+            "https://example.com/api?status=%E2%AC%86%EF%B8%8F%20taylorswift%20just%20released%20swift-mongodb%20v0.10.1%20%E2%80%93%20use%20BSON%20and%20MongoDB%20in%20pure%20Swift%0A%0Ahttps%3A%2F%2Fswiftpackageindex.com%2Ftayloraswift%2Fswift-mongodb%23releases"
+        )
     }
 
     func testSnakeCaseCodingKeyError() throws {
@@ -549,13 +573,15 @@ final class ContentTests: XCTestCase {
         defer { app.shutdown() }
 
         let req = Request(application: app, on: app.eventLoopGroup.any())
-        try req.content.encode([
-            "title": "The title"
-        ], as: .json)
+        try req.content.encode(
+            [
+                "title": "The title"
+            ], as: .json)
 
         struct PostInput: Content {
             enum CodingKeys: String, CodingKey {
-                case id, title, isFree = "is_free"
+                case id, title
+                case isFree = "is_free"
             }
 
             let id: UUID?
@@ -588,15 +614,15 @@ final class ContentTests: XCTestCase {
         }
         XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
             #if compiler(>=6.0)
-            XCTAssertContains(
-                (error as? AbortError)?.reason,
-                #"Data corrupted at path ''. The given data was not valid JSON"#
-            )
+                XCTAssertContains(
+                    (error as? AbortError)?.reason,
+                    #"Data corrupted at path ''. The given data was not valid JSON"#
+                )
             #else
-            XCTAssertContains(
-                (error as? AbortError)?.reason,
-                #"Data corrupted at path ''. The given data was not valid JSON. Underlying error: "#
-            )
+                XCTAssertContains(
+                    (error as? AbortError)?.reason,
+                    #"Data corrupted at path ''. The given data was not valid JSON. Underlying error: "#
+                )
             #endif
         }
     }
@@ -606,9 +632,10 @@ final class ContentTests: XCTestCase {
         defer { app.shutdown() }
 
         let req = Request(application: app, on: app.eventLoopGroup.any())
-        try req.content.encode([
-            "items": ["1"]
-        ], as: .json)
+        try req.content.encode(
+            [
+                "items": ["1"]
+            ], as: .json)
 
         struct DecodeModel: Content {
             struct Item: Content {
@@ -635,11 +662,12 @@ final class ContentTests: XCTestCase {
         defer { app.shutdown() }
 
         let req = Request(application: app, on: app.eventLoopGroup.any())
-        try req.content.encode([
-            "item": [
-                "title": "The title"
-            ]
-        ], as: .json)
+        try req.content.encode(
+            [
+                "item": [
+                    "title": "The title"
+                ]
+            ], as: .json)
 
         struct DecodeModel: Content {
             struct Item: Content {
@@ -699,10 +727,10 @@ final class ContentTests: XCTestCase {
         }
 
         let body = """
-        {
-          "example": "example"
-        }
-        """
+            {
+              "example": "example"
+            }
+            """
 
         let byteBuffer = ByteBuffer(string: body)
         var headers = HTTPHeaders()

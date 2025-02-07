@@ -1,6 +1,6 @@
+import AsyncKit
 import NIOCore
 import NIOPosix
-import AsyncKit
 
 extension Environment {
     /// Reads a file's content for a secret. The secret key is the name of the environment variable that is expected to
@@ -34,7 +34,6 @@ extension Environment {
         return self.secret(path: filePath, fileIO: fileIO, on: eventLoop)
     }
 
-
     /// Load the content of a file at a given path as a secret.
     ///
     /// - Parameters:
@@ -46,16 +45,19 @@ extension Environment {
     ///   - On success, a succeeded future with the loaded content of the file.
     ///   - On any kind of error, a succeeded future with a value of `nil`. It is not currently possible to get error details.
     public static func secret(path: String, fileIO: NonBlockingFileIO, on eventLoop: EventLoop) -> EventLoopFuture<String?> {
-        return fileIO
+        return
+            fileIO
             .openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
                 let handleWrapper = NIOLoopBound(handle, eventLoop: eventLoop)
-                return fileIO
+                return
+                    fileIO
                     .read(fileRegion: region, allocator: .init(), eventLoop: eventLoop)
                     .always { _ in try? handleWrapper.value.close() }
             }
             .map { buffer -> String in
-                return buffer
+                return
+                    buffer
                     .getString(at: buffer.readerIndex, length: buffer.readableBytes)!
                     .trimmingCharacters(in: .whitespacesAndNewlines)
             }

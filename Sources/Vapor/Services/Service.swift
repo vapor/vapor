@@ -10,9 +10,9 @@ extension Application {
         }
 
         public struct Provider {
-            let run: (Application) -> ()
+            let run: (Application) -> Void
 
-            public init(_ run: @escaping @Sendable (Application) -> ()) {
+            public init(_ run: @escaping @Sendable (Application) -> Void) {
                 self.run = run
             }
         }

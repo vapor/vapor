@@ -15,11 +15,11 @@ extension ValidatorResults.Not: ValidatorResult {
     public var isFailure: Bool {
         !self.result.isFailure
     }
-    
+
     public var successDescription: String? {
         self.result.failureDescription
     }
-    
+
     public var failureDescription: String? {
         return self.result.successDescription
     }

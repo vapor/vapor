@@ -8,7 +8,7 @@ extension Authenticatable {
     public static func redirectMiddleware(path: String) -> Middleware {
         self.redirectMiddleware(makePath: { _ in path })
     }
-    
+
     /// Basic middleware to redirect unauthenticated requests to the supplied path
     ///
     /// - parameters:
@@ -18,12 +18,10 @@ extension Authenticatable {
     }
 }
 
-
 private final class RedirectMiddleware<A>: Middleware
-    where A: Authenticatable
-{
+where A: Authenticatable {
     let makePath: @Sendable (Request) -> String
-    
+
     @preconcurrency init(_ authenticatableType: A.Type = A.self, makePath: @Sendable @escaping (Request) -> String) {
         self.makePath = makePath
     }

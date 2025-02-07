@@ -1,29 +1,29 @@
+import NIOHTTP1
+import Vapor
 import XCTVapor
 import XCTest
-import Vapor
-import NIOHTTP1
 
 final class AsyncSessionTests: XCTestCase {
     var app: Application!
-    
+
     override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         app = try await Application.make(test)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
+
     func testSessionDestroy() async throws {
         actor MockKeyedCache: AsyncSessionDriver {
             var ops: [String] = []
-            init() { }
+            init() {}
 
             func getOps() -> [String] {
                 ops
             }
-            
+
             func resetOps() {
                 self.ops = []
             }
@@ -58,7 +58,7 @@ final class AsyncSessionTests: XCTestCase {
             req.session.data["foo"] = "bar"
             return "set"
         }
-        sessions.get("del") { req  -> String in
+        sessions.get("del") { req -> String in
             req.session.destroy()
             return "del"
         }
@@ -68,9 +68,11 @@ final class AsyncSessionTests: XCTestCase {
             cookie = res.headers.setCookie?["vapor-session"]
             XCTAssertNotNil(cookie)
             let ops = await cache.ops
-            XCTAssertEqual(ops, [
-                #"create SessionData(storage: ["foo": "bar"])"#,
-            ])
+            XCTAssertEqual(
+                ops,
+                [
+                    #"create SessionData(storage: ["foo": "bar"])"#
+                ])
             await cache.resetOps()
         }
 
@@ -83,13 +85,15 @@ final class AsyncSessionTests: XCTestCase {
         try await app.testable().test(.GET, "/del", headers: headers) { res in
             XCTAssertEqual(res.body.string, "del")
             let ops = await cache.ops
-            XCTAssertEqual(ops, [
-                #"read SessionID(string: "a")"#,
-                #"delete SessionID(string: "a")"#
-            ])
+            XCTAssertEqual(
+                ops,
+                [
+                    #"read SessionID(string: "a")"#,
+                    #"delete SessionID(string: "a")"#,
+                ])
         }
     }
-    
+
     func testInvalidCookie() async throws {
         // Configure sessions.
         app.sessions.use(.memory)
@@ -109,7 +113,6 @@ final class AsyncSessionTests: XCTestCase {
             return foo
         }
 
-
         // Test accessing session with no cookie.
         try await app.test(.GET, "get") { res async in
             XCTAssertEqual(res.status, .badRequest)
@@ -117,26 +120,32 @@ final class AsyncSessionTests: XCTestCase {
 
         // Test setting session with invalid cookie.
         var newCookie: HTTPCookies.Value?
-        try await app.test(.GET, "set", beforeRequest: { req async in
-            req.headers.cookie = ["vapor-session": "foo"]
-        }, afterResponse: { res in
-            // We should get a new cookie back.
-            newCookie = res.headers.setCookie?["vapor-session"]
-            XCTAssertNotNil(newCookie)
-            // That is not the same as the invalid cookie we sent.
-            XCTAssertNotEqual(newCookie?.string, "foo")
-            XCTAssertEqual(res.status, .ok)
-        })
+        try await app.test(
+            .GET, "set",
+            beforeRequest: { req async in
+                req.headers.cookie = ["vapor-session": "foo"]
+            },
+            afterResponse: { res in
+                // We should get a new cookie back.
+                newCookie = res.headers.setCookie?["vapor-session"]
+                XCTAssertNotNil(newCookie)
+                // That is not the same as the invalid cookie we sent.
+                XCTAssertNotEqual(newCookie?.string, "foo")
+                XCTAssertEqual(res.status, .ok)
+            })
 
         // Test accessing newly created session.
-        try await app.test(.GET, "get", beforeRequest: { req async in
-            // Pass cookie from previous request.
-            req.headers.cookie = ["vapor-session": newCookie!]
-        }, afterResponse: { res in
-            // Session access should be successful.
-            XCTAssertEqual(res.body.string, "bar")
-            XCTAssertEqual(res.status, .ok)
-        })
+        try await app.test(
+            .GET, "get",
+            beforeRequest: { req async in
+                // Pass cookie from previous request.
+                req.headers.cookie = ["vapor-session": newCookie!]
+            },
+            afterResponse: { res in
+                // Session access should be successful.
+                XCTAssertEqual(res.body.string, "bar")
+                XCTAssertEqual(res.status, .ok)
+            })
     }
 
     func testCookieQuotes() async throws {

@@ -1,6 +1,6 @@
+import Foundation
 import NIOCore
 import NIOHTTP1
-import Foundation
 
 public struct ClientResponse: Sendable {
     public var status: HTTPStatus
@@ -8,7 +8,10 @@ public struct ClientResponse: Sendable {
     public var body: ByteBuffer?
     private let byteBufferAllocator: ByteBufferAllocator
 
-    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+    public init(
+        status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil,
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+    ) {
         self.status = status
         self.headers = headers
         self.body = body
@@ -26,20 +29,20 @@ extension ClientResponse {
             return self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E: Encodable {
             var body = self.allocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
             self.body = body
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D: Decodable {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: body, headers: self.headers)
         }
 
-        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C: Content {
             var body = self.allocator.buffer(capacity: 0)
             var content = content
             try content.beforeEncode()
@@ -47,7 +50,7 @@ extension ClientResponse {
             self.body = body
         }
 
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C: Content {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }

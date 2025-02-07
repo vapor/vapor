@@ -1,5 +1,5 @@
-import Vapor
 import Logging
+import Vapor
 
 @main
 struct Entrypoint {
@@ -18,4 +18,3 @@ struct Entrypoint {
         }
     }
 }
-

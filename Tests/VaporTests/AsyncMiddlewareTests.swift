@@ -1,30 +1,30 @@
+import Vapor
 import XCTVapor
 import XCTest
-import Vapor
 
 final class AsyncMiddlewareTests: XCTestCase {
     var app: Application!
-    
+
     override func setUp() async throws {
         app = try await Application.make(.testing)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
+
     actor OrderStore {
         var order: [String] = []
-        
+
         func addOrder(_ orderValue: String) {
             self.order.append(orderValue)
         }
-        
+
         func getOrder() -> [String] {
             self.order
         }
     }
-    
+
     final class OrderMiddleware: AsyncMiddleware {
         let pos: String
         let store: OrderStore
@@ -104,7 +104,7 @@ final class AsyncMiddlewareTests: XCTestCase {
             XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
         }
     }
-    
+
     func testFileMiddlewareFromBundleInvalidPublicDirectory() async throws {
         XCTAssertThrowsError(try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")) { error in
             guard let error = error as? FileMiddleware.BundleSetupError else {

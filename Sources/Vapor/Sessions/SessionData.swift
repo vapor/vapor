@@ -16,7 +16,7 @@ public struct SessionData: Sendable {
     public var snapshot: [String: String] { self.storage }
 
     private var storage: [String: String]
-    
+
     /// Creates a new empty session data container.
     public init() { self.storage = [:] }
 
@@ -32,7 +32,7 @@ public struct SessionData: Sendable {
 
 // MARK: Equatable
 extension SessionData {
-    public static func ==(lhs: SessionData, rhs: SessionData) -> Bool {
+    public static func == (lhs: SessionData, rhs: SessionData) -> Bool {
         return lhs.storage == rhs.storage
     }
 }

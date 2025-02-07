@@ -12,8 +12,7 @@ extension Application.Passwords.Provider {
 
 private struct PlaintextHasher: PasswordHasher {
     func hash<Password>(_ password: Password) throws -> [UInt8]
-        where Password: DataProtocol
-    {
+    where Password: DataProtocol {
         password.copyBytes()
     }
 
@@ -21,8 +20,7 @@ private struct PlaintextHasher: PasswordHasher {
         _ password: Password,
         created digest: Digest
     ) throws -> Bool
-        where Password: DataProtocol, Digest: DataProtocol
-    {
+    where Password: DataProtocol, Digest: DataProtocol {
         password.copyBytes() == digest.copyBytes()
     }
 }

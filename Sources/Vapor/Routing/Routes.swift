@@ -13,7 +13,7 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
             }
         }
     }
-    
+
     /// Default value used by `HTTPBodyStreamStrategy.collect` when `maxSize` is `nil`.
     public var defaultMaxBodySize: ByteCount {
         get {
@@ -23,7 +23,7 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
             self.sendableBox.withLockedValue { $0.defaultMaxBodySize = newValue }
         }
     }
-    
+
     /// Default routing behavior of `DefaultResponder` is case-sensitive; configure to `true` prior to
     /// Application start handle `Constant` `PathComponents` in a case-insensitive manner.
     public var caseInsensitive: Bool {
@@ -38,13 +38,13 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
     public var description: String {
         return self.all.description
     }
-    
+
     struct SendableBox: Sendable {
         var all: [Route]
         var defaultMaxBodySize: ByteCount
         var caseInsensitive: Bool
     }
-    
+
     let sendableBox: NIOLockedValueBox<SendableBox>
 
     public init() {

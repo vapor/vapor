@@ -16,37 +16,40 @@ import RoutingKit
 /// The path will be displayed with the same syntax that is used to register a route.
 public final class RoutesCommand: AsyncCommand {
     public struct Signature: CommandSignature {
-        public init() { }
+        public init() {}
     }
 
     public var help: String {
         return "Displays all registered routes."
     }
 
-    init() { }
-    
+    init() {}
+
     public func run(using context: ConsoleKitCommands.CommandContext, signature: Signature) async throws {
         let routes = context.application.routes
         let includeDescription = !routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
         let pathSeparator = "/".consoleText()
-        context.console.outputASCIITable(routes.all.map { route -> [ConsoleText] in
-            var column = [route.method.rawValue.consoleText()]
-            if route.path.isEmpty {
-                column.append(pathSeparator)
-            } else {
-                column.append(route.path
-                    .map { pathSeparator + $0.consoleText() }
-                    .reduce("".consoleText(), +)
-                )
-            }
-            if includeDescription {
-                let desc = route.userInfo["description"]
-                    .flatMap { $0 as? String }
-                    .flatMap { $0.consoleText() } ?? ""
-                column.append(desc)
-            }
-            return column
-        })
+        context.console.outputASCIITable(
+            routes.all.map { route -> [ConsoleText] in
+                var column = [route.method.rawValue.consoleText()]
+                if route.path.isEmpty {
+                    column.append(pathSeparator)
+                } else {
+                    column.append(
+                        route.path
+                            .map { pathSeparator + $0.consoleText() }
+                            .reduce("".consoleText(), +)
+                    )
+                }
+                if includeDescription {
+                    let desc =
+                        route.userInfo["description"]
+                        .flatMap { $0 as? String }
+                        .flatMap { $0.consoleText() } ?? ""
+                    column.append(desc)
+                }
+                return column
+            })
     }
 }
 
@@ -76,7 +79,7 @@ extension Console {
                 }
             }
         }
-        
+
         func hr() {
             var text: ConsoleText = ""
             for columnWidth in columnWidths {
@@ -90,7 +93,7 @@ extension Console {
             text += "+"
             self.output(text)
         }
-        
+
         for row in rows {
             hr()
             var text: ConsoleText = ""
@@ -105,7 +108,7 @@ extension Console {
             text += "|"
             self.output(text)
         }
-        
+
         hr()
     }
 }

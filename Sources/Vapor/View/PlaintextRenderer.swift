@@ -1,6 +1,6 @@
+import Logging
 import NIOCore
 import NIOPosix
-import Logging
 
 public struct PlaintextRenderer: ViewRenderer, Sendable {
     public let eventLoopGroup: EventLoopGroup
@@ -19,7 +19,7 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
         self.logger = logger
         self.eventLoopGroup = eventLoopGroup
     }
-    
+
     public func `for`(_ request: Request) -> ViewRenderer {
         PlaintextRenderer(
             fileio: request.application.fileio,
@@ -30,11 +30,11 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     }
 
     public func render<E>(_ name: String, _ context: E) -> EventLoopFuture<View>
-        where E: Encodable
-    {
+    where E: Encodable {
         self.logger.trace("Rendering plaintext view \(name) with \(context)")
         let eventLoop = self.eventLoopGroup.next()
-        let path = name.hasPrefix("/")
+        let path =
+            name.hasPrefix("/")
             ? name
             : self.viewsDirectory + name
         return self.fileio.openFile(path: path, eventLoop: eventLoop).flatMap { (handle, region) in

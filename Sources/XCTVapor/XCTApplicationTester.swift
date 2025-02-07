@@ -40,7 +40,7 @@ extension XCTApplicationTester {
         body: ByteBuffer? = nil,
         file: StaticString = #filePath,
         line: UInt = #line,
-        afterResponse: (XCTHTTPResponse) async throws -> ()
+        afterResponse: (XCTHTTPResponse) async throws -> Void
     ) async throws -> XCTApplicationTester {
         try await self.test(
             method,
@@ -63,7 +63,7 @@ extension XCTApplicationTester {
         body: ByteBuffer? = nil,
         file: StaticString = #filePath,
         line: UInt = #line,
-        afterResponse: (XCTHTTPResponse) throws -> ()
+        afterResponse: (XCTHTTPResponse) throws -> Void
     ) throws -> XCTApplicationTester {
         try self.test(
             method,
@@ -85,8 +85,8 @@ extension XCTApplicationTester {
         body: ByteBuffer? = nil,
         file: StaticString = #filePath,
         line: UInt = #line,
-        beforeRequest: (inout XCTHTTPRequest) async throws -> () = { _ in },
-        afterResponse: (XCTHTTPResponse) async throws -> () = { _ in }
+        beforeRequest: (inout XCTHTTPRequest) async throws -> Void = { _ in },
+        afterResponse: (XCTHTTPResponse) async throws -> Void = { _ in }
     ) async throws -> XCTApplicationTester {
         XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
 
@@ -116,8 +116,8 @@ extension XCTApplicationTester {
         body: ByteBuffer? = nil,
         file: StaticString = #filePath,
         line: UInt = #line,
-        beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in },
-        afterResponse: (XCTHTTPResponse) throws -> () = { _ in }
+        beforeRequest: (inout XCTHTTPRequest) throws -> Void = { _ in },
+        afterResponse: (XCTHTTPResponse) throws -> Void = { _ in }
     ) throws -> XCTApplicationTester {
         XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
 
@@ -137,7 +137,7 @@ extension XCTApplicationTester {
         }
         return self
     }
-    
+
     public func sendRequest(
         _ method: HTTPMethod,
         _ path: String,
@@ -145,7 +145,7 @@ extension XCTApplicationTester {
         body: ByteBuffer? = nil,
         file: StaticString = #filePath,
         line: UInt = #line,
-        beforeRequest: (inout XCTHTTPRequest) async throws -> () = { _ in }
+        beforeRequest: (inout XCTHTTPRequest) async throws -> Void = { _ in }
     ) async throws -> XCTHTTPResponse {
         XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
 
@@ -172,7 +172,7 @@ extension XCTApplicationTester {
         body: ByteBuffer? = nil,
         file: StaticString = #filePath,
         line: UInt = #line,
-        beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in }
+        beforeRequest: (inout XCTHTTPRequest) throws -> Void = { _ in }
     ) throws -> XCTHTTPResponse {
         XCTVaporContext.warnIfInSwiftTestingContext(file: file, line: line)
 

@@ -43,7 +43,7 @@ extension BodyStreamResult: CustomDebugStringConvertible {
 public protocol BodyStreamWriter: Sendable {
     /// The eventloop upon which writes must be sent
     var eventLoop: EventLoop { get }
-    
+
     /// Writes an event to a streaming HTTP body. If the `result` is `.end` or `.error`, the stream ends.
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?)
 }
@@ -60,7 +60,7 @@ extension BodyStreamWriter {
             }
         }
     }
-    
+
     private func write0(_ result: BodyStreamResult) -> EventLoopFuture<Void> {
         let promise = self.eventLoop.makePromise(of: Void.self)
         self.write(result, promise: promise)
@@ -72,7 +72,7 @@ extension BodyStreamWriter {
 public protocol AsyncBodyStreamWriter: Sendable {
     /// Writes an event to a streaming HTTP body. If the `result` is `.end` or `.error`, the stream ends.
     func write(_ result: BodyStreamResult) async throws
-    
+
     /// Writes a `ByteBuffer` to the stream. Provides a default implementation that calls itself using `BodyStreamResult`
     func writeBuffer(_ buffer: ByteBuffer) async throws
 }

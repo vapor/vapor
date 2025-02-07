@@ -5,7 +5,7 @@ import NIOCore
 /// See `AsyncRequestAuthenticator` and `AsyncSessionAuthenticator` for more information.
 ///
 /// This is an async version of `Authenticator`
-public protocol AsyncAuthenticator: AsyncMiddleware { }
+public protocol AsyncAuthenticator: AsyncMiddleware {}
 
 /// Help for creating authentication middleware based on `Request`.
 ///
@@ -104,7 +104,7 @@ extension AsyncSessionAuthenticator {
             // try to find user with id from session
             try await self.authenticate(sessionID: aID, for: request)
         }
-        
+
         // respond to the request
         let response = try await next.respond(to: request)
         if let user = request.auth.get(User.self) {

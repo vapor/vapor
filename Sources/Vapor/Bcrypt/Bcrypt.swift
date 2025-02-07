@@ -1,5 +1,5 @@
-import Foundation
 import CVaporBcrypt
+import Foundation
 
 // MARK: BCrypt
 
@@ -19,7 +19,6 @@ public var Bcrypt: BCryptDigest {
     return .init()
 }
 
-
 /// Creates and verifies BCrypt hashes. Normally you will not need to initialize one of these classes and you will
 /// use the global `BCrypt` convenience instead.
 ///
@@ -28,7 +27,7 @@ public var Bcrypt: BCryptDigest {
 /// See `BCrypt` for more information.
 public final class BCryptDigest {
     /// Creates a new `BCryptDigest`. Use the global `BCrypt` convenience variable.
-    public init() { }
+    public init() {}
 
     /// Creates a new BCrypt hash with a randomly generated salt.
     /// The result can be stored in a database.
@@ -81,7 +80,7 @@ public final class BCryptDigest {
         }
         return originalAlgorithm.rawValue
             + String(cString: hashedBytes)
-                .dropFirst(originalAlgorithm.revisionCount)
+            .dropFirst(originalAlgorithm.revisionCount)
     }
 
     /// Verifies an existing BCrypt hash matches the supplied plaintext value. Verification works by parsing the salt and version from
@@ -142,10 +141,8 @@ public final class BCryptDigest {
         let encodedSalt = base64Encode(randomData)
 
         return
-            algorithm.rawValue +
-            (cost < 10 ? "0\(cost)" : "\(cost)" ) + // 0 padded
-            "$" +
-            encodedSalt
+            algorithm.rawValue + (cost < 10 ? "0\(cost)" : "\(cost)")  // 0 padded
+            + "$" + encodedSalt
     }
 
     /// Checks whether the provided salt is valid or not

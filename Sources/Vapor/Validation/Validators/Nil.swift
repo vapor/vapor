@@ -15,7 +15,7 @@ extension ValidatorResults.Nil: ValidatorResult {
     public var isFailure: Bool {
         !self.isNil
     }
-    
+
     public var successDescription: String? {
         switch self.isNil {
         case true:
@@ -24,7 +24,7 @@ extension ValidatorResults.Nil: ValidatorResult {
             return "is null"
         }
     }
-    
+
     public var failureDescription: String? {
         switch self.isNil {
         case true:

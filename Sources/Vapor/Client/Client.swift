@@ -1,5 +1,5 @@
-import NIOCore
 import Logging
+import NIOCore
 import NIOHTTP1
 
 public protocol Client: Sendable {
@@ -26,26 +26,36 @@ extension Client {
 }
 
 extension Client {
-    public func get(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) -> EventLoopFuture<ClientResponse> {
+    public func get(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in }) -> EventLoopFuture<
+        ClientResponse
+    > {
         return self.send(.GET, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    public func post(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) -> EventLoopFuture<ClientResponse> {
+    public func post(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in })
+        -> EventLoopFuture<ClientResponse>
+    {
         return self.send(.POST, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    public func patch(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) -> EventLoopFuture<ClientResponse> {
+    public func patch(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in })
+        -> EventLoopFuture<ClientResponse>
+    {
         return self.send(.PATCH, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    public func put(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) -> EventLoopFuture<ClientResponse> {
+    public func put(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in }) -> EventLoopFuture<
+        ClientResponse
+    > {
         return self.send(.PUT, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    public func delete(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) -> EventLoopFuture<ClientResponse> {
+    public func delete(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in })
+        -> EventLoopFuture<ClientResponse>
+    {
         return self.send(.DELETE, headers: headers, to: url, beforeSend: beforeSend)
     }
-    
+
     public func post<T>(_ url: URI, headers: HTTPHeaders = [:], content: T) -> EventLoopFuture<ClientResponse> where T: Content {
         return self.post(url, headers: headers, beforeSend: { try $0.content.encode(content) })
     }
@@ -62,7 +72,7 @@ extension Client {
         _ method: HTTPMethod,
         headers: HTTPHeaders = [:],
         to url: URI,
-        beforeSend: (inout ClientRequest) throws -> () = { _ in }
+        beforeSend: (inout ClientRequest) throws -> Void = { _ in }
     ) -> EventLoopFuture<ClientResponse> {
         var request = ClientRequest(method: method, url: url, headers: headers, body: nil, byteBufferAllocator: self.byteBufferAllocator)
         do {

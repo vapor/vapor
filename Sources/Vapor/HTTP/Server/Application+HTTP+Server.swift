@@ -10,7 +10,7 @@ extension Application.HTTP {
     public var server: Server {
         .init(application: self.application)
     }
-    
+
     public struct Server: Sendable {
         let application: Application
 
@@ -37,7 +37,7 @@ extension Application.HTTP {
         ///
         /// Although the configuration can be changed after the server has started, a warning will be logged
         /// and the configuration will be discarded if an option will no longer be considered.
-        /// 
+        ///
         /// These include the following properties, which are only read once when the server starts:
         /// - ``HTTPServer/Configuration-swift.struct/address``
         /// - ``HTTPServer/Configuration-swift.struct/hostname``
@@ -47,9 +47,10 @@ extension Application.HTTP {
         /// - ``HTTPServer/Configuration-swift.struct/tcpNoDelay``
         public var configuration: HTTPServer.Configuration {
             get {
-                self.application.storage[ConfigurationKey.self] ?? .init(
-                    logger: self.application.logger
-                )
+                self.application.storage[ConfigurationKey.self]
+                    ?? .init(
+                        logger: self.application.logger
+                    )
             }
             nonmutating set {
                 /// If a server is available, configure it directly, otherwise cache a configuration instance
