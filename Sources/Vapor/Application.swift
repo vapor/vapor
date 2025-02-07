@@ -120,15 +120,13 @@ public final class Application: Sendable {
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
     
-    @available(*, noasync, message: "This initialiser cannot be used in async contexts, use Application.make(_:_:) instead")
-    @available(*, deprecated, message: "Migrate to using the async APIs. Use use Application.make(_:_:) instead")
     public convenience init(
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
-    ) {
-        self.init(environment, eventLoopGroupProvider, async: false)
-        self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
-        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
+    ) async throws {
+        self.init(environment, eventLoopGroupProvider, async: true)
+        await self.asyncCommands.use(self.servers.asyncCommand, as: "serve", isDefault: true)
+        await DotEnvFile.load(for: self.environment, fileio: self.fileio, logger: self.logger)
     }
     
     // async flag here is just to stop the compiler from complaining about duplicates
@@ -160,13 +158,6 @@ public final class Application: Sendable {
         self.clients.initialize()
         self.clients.use(.http)
         self.asyncCommands.use(RoutesCommand(), as: "routes")
-    }
-    
-    public static func make(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton) async throws -> Application {
-        let app = Application(environment, eventLoopGroupProvider, async: true)
-        await app.asyncCommands.use(app.servers.asyncCommand, as: "serve", isDefault: true)
-        await DotEnvFile.load(for: app.environment, fileio: app.fileio, logger: app.logger)
-        return app
     }
 
     /// Starts the ``Application`` using the ``start()`` method, then waits for any running tasks to complete.

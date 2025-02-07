@@ -156,7 +156,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     
     override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application.make(test)
+        app = try await Application(test)
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
         
@@ -691,7 +691,7 @@ final class ConditionalResponseCompressionRouteTests: XCTestCase, @unchecked Sen
     
     override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application.make(test)
+        app = try await Application(test)
     }
     
     override func tearDown() async throws {

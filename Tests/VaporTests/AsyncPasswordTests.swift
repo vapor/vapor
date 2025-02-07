@@ -7,7 +7,7 @@ final class AsyncPasswordTests: XCTestCase {
     
     override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application.make(test)
+        app = try await Application(test)
     }
     
     override func tearDown() async throws {

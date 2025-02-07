@@ -7,7 +7,7 @@ final class PasswordTests: XCTestCase {
     var app: Application!
 
     override func setUp() async throws {
-        app = try await Application.make(.testing)
+        app = try await Application(.testing)
     }
 
     override func tearDown() async throws {

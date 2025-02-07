@@ -16,7 +16,7 @@ import Vapor
 /// }
 /// ```
 public func withApp<T>(_ block: (Application) async throws -> T) async throws -> T {
-    let app = try await Application.make(.testing)
+    let app = try await Application(.testing)
     let result: T
     do {
         result = try await block(app)

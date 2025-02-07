@@ -8,7 +8,7 @@ final class ServiceTests: XCTestCase {
     var app: Application!
 
     override func setUp() async throws {
-        app = try await Application.make(.testing)
+        app = try await Application(.testing)
     }
 
     override func tearDown() async throws {
@@ -41,7 +41,7 @@ final class ServiceTests: XCTestCase {
     }
     
     func testAsyncLifecycleHandler() async throws {
-        let app = try await Application.make(.testing)
+        let app = try await Application(.testing)
         app.http.server.configuration.port = 0
         
         app.lifecycle.use(AsyncHello())

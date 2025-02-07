@@ -17,7 +17,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     
     override func setUp() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application.make(test)
+        app = try await Application(test)
     }
     
     override func tearDown() async throws {
@@ -30,7 +30,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             arguments: ["vapor", "serve", "--port", "8123"]
         )
         
-        let app = try await Application.make(env)
+        let app = try await Application(env)
         
         app.get("foo") { req in
             return "bar"
@@ -52,7 +52,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             arguments: ["vapor", "serve", "--unix-socket", socketPath]
         )
         
-        let app = try await Application.make(env)
+        let app = try await Application(env)
 
         app.get("foo") { _ in "bar" }
         try await app.startup()
@@ -80,55 +80,55 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             try await app.asyncShutdown()
         }
         
-        var app = try await Application.make(Environment(
+        var app = try await Application(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", "/path/to/socket"]
         ))
         try await checkForError(app)
 
-        app = try await Application.make(Environment(
+        app = try await Application(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--hostname", "localhost", "--unix-socket", "/path/to/socket"]
         ))
         try await checkForError(app)
 
-        app = try await Application.make(Environment(
+        app = try await Application(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--unix-socket", "/path/to/socket"]
         ))
         try await checkForError(app)
 
-        app = try await Application.make(Environment(
+        app = try await Application(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4"]
         ))
         try await checkForError(app)
 
-        app = try await Application.make(Environment(
+        app = try await Application(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081"]
         ))
         try await checkForError(app)
 
-        app = try await Application.make(Environment(
+        app = try await Application(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081", "--unix-socket", "/path/to/socket"]
         ))
         try await checkForError(app)
 
-        app = try await Application.make(Environment(
+        app = try await Application(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--unix-socket", "/path/to/socket"]
         ))
         try await checkForError(app)
 
-        app = try await Application.make(Environment(
+        app = try await Application(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
         ))
         try await checkForError(app)
 
-        app = try await Application.make(Environment(
+        app = try await Application(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
         ))
@@ -823,7 +823,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     
     func testSkipStreaming() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let app = try await Application.make(.testing, .shared(eventLoopGroup))
+        let app = try await Application(.testing, .shared(eventLoopGroup))
         
         app.on(.POST, "echo", body: .stream) { request in
             "hello, world"
