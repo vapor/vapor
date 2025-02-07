@@ -143,8 +143,9 @@ final class PipelineTests: XCTestCase {
         }
 
         app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
-        try await app.startup()
+#warning("Fix")
+//        app.http.server.configuration.port = 0
+        try await app.start()
 
         guard
             let localAddress = app.http.server.shared.localAddress,

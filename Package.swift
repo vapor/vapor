@@ -32,7 +32,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.9.0"),
 
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.77.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", branch: "main"),
 
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
@@ -72,33 +72,38 @@ let package = Package(
         .target(name: "CVaporBcrypt"),
         
         // Vapor
-        .target(name: "Vapor", dependencies: [
-            .product(name: "AsyncHTTPClient", package: "async-http-client"),
-            .product(name: "AsyncKit", package: "async-kit"),
-            .target(name: "CVaporBcrypt"),
-            .product(name: "ConsoleKit", package: "console-kit"),
-            .product(name: "Logging", package: "swift-log"),
-            .product(name: "Metrics", package: "swift-metrics"),
-            .product(name: "NIO", package: "swift-nio"),
-            .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
-            .product(name: "NIOCore", package: "swift-nio"),
-            .product(name: "NIOExtras", package: "swift-nio-extras"),
-            .product(name: "NIOFoundationCompat", package: "swift-nio"),
-            .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
-            .product(name: "NIOHTTP1", package: "swift-nio"),
-            .product(name: "NIOHTTP2", package: "swift-nio-http2"),
-            .product(name: "NIOSSL", package: "swift-nio-ssl"),
-            .product(name: "NIOWebSocket", package: "swift-nio"),
-            .product(name: "Crypto", package: "swift-crypto"),
-            .product(name: "Algorithms", package: "swift-algorithms"),
-            .product(name: "RoutingKit", package: "routing-kit"),
-            .product(name: "WebSocketKit", package: "websocket-kit"),
-            .product(name: "MultipartKit", package: "multipart-kit"),
-            .product(name: "Atomics", package: "swift-atomics"),
-            .product(name: "_NIOFileSystem", package: "swift-nio"),
-            .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
-        ]),
-        
+        .target(
+            name: "Vapor",
+            dependencies: [
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncKit", package: "async-kit"),
+                .target(name: "CVaporBcrypt"),
+                .product(name: "ConsoleKit", package: "console-kit"),
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "Metrics", package: "swift-metrics"),
+                .product(name: "NIO", package: "swift-nio"),
+                .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOExtras", package: "swift-nio-extras"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
+                .product(name: "NIOHTTP2", package: "swift-nio-http2"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOWebSocket", package: "swift-nio"),
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "Algorithms", package: "swift-algorithms"),
+                .product(name: "RoutingKit", package: "routing-kit"),
+                .product(name: "WebSocketKit", package: "websocket-kit"),
+                .product(name: "MultipartKit", package: "multipart-kit"),
+                .product(name: "Atomics", package: "swift-atomics"),
+                .product(name: "_NIOFileSystem", package: "swift-nio"),
+                .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
+                .product(name: "Tracing", package: "swift-distributed-tracing"),
+                .product(name: "ServiceContextModule", package: "swift-service-context"),
+            ]
+        ),
+
         // Development
         .executableTarget(
             name: "Development",

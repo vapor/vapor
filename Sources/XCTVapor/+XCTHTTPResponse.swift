@@ -1,3 +1,4 @@
+import Vapor
 import XCTest
 
 public func XCTAssertContent<D>(

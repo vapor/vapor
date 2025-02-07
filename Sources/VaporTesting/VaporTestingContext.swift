@@ -1,5 +1,5 @@
-#if compiler(>=6.0)
 import Testing
+import Foundation
 
 public enum VaporTestingContext {
     @TaskLocal public static var emitWarningIfCurrentTestInfoIsUnavailable: Bool?
@@ -34,4 +34,3 @@ public enum VaporTestingContext {
         }
     }
 }
-#endif

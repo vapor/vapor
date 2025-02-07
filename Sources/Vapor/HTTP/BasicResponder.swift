@@ -1,4 +1,5 @@
 import NIOCore
+import ServiceContextModule
 
 /// A basic, closure-based `Responder`.
 public struct BasicResponder: Responder {
@@ -21,7 +22,7 @@ public struct BasicResponder: Responder {
 
     // See `Responder`.
     public func respond(to request: Request) async throws -> Response {
-        return try request.propagateTracingIfEnabled {
+        return try await ServiceContext.withValue(request.serviceContext) {
             try await closure(request)
         }
     }

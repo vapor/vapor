@@ -152,17 +152,9 @@ extension RoutesBuilder {
     {
         let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                return request.body.collect(
+                _ = try await request.body.collect(
                     max: max?.value ?? request.application.routes.defaultMaxBodySize.value
-                ).flatMapThrowing { _ in
-                    try request.propagateTracingIfEnabled {
-                        try closure(request)
-                    }
-                }.encodeResponse(for: request)
-            } else {
-                return try request.propagateTracingIfEnabled {
-                    try closure(request)
-                }.encodeResponse(for: request)
+                ).get()
             }
             return try await closure(request).encodeResponse(for: request)
         }

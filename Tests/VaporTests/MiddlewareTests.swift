@@ -3,6 +3,7 @@ import XCTest
 import Vapor
 import NIOCore
 import Tracing
+import NIOHTTP1
 
 final class MiddlewareTests: XCTestCase {
     var app: Application!
@@ -149,9 +150,9 @@ final class MiddlewareTests: XCTestCase {
         InstrumentationSystem.bootstrap(tracer)
         
         struct TestServiceContextMiddleware: Middleware {
-            func respond(to request: Request, chainingTo next: any Responder) -> EventLoopFuture<Response> {
+            func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
                 XCTAssertNotNil(ServiceContext.current)
-                return next.respond(to: request)
+                return try await next.respond(to: request)
             }
         }
         

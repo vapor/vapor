@@ -16,14 +16,14 @@ import Vapor
 /// }
 /// ```
 public func withApp<T>(_ block: (Application) async throws -> T) async throws -> T {
-    let app = try await Application.make(.testing)
+    let app = await Application(.testing)
     let result: T
     do {
         result = try await block(app)
     } catch {
-        try? await app.asyncShutdown()
+        try? await app.shutdown()
         throw error
     }
-    try await app.asyncShutdown()
+    try await app.shutdown()
     return result
 }

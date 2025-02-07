@@ -359,15 +359,4 @@ public final class Request: CustomStringConvertible, Sendable {
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
     }
-    
-    /// Automatically restores tracing serviceContext around the provided closure
-    func propagateTracingIfEnabled<T>(_ closure: () throws -> T) rethrows -> T {
-        if self.traceAutoPropagation {
-            return try ServiceContext.withValue(self.serviceContext) {
-                try closure()
-            }
-        } else {
-            return try closure()
-        }
-    }
 }

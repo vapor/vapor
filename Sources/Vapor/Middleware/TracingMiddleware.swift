@@ -1,9 +1,10 @@
 import Tracing
+import NIOHTTP1
 
 /// Creates a trace and metadata for every request
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-spans/
-public final class TracingMiddleware: AsyncMiddleware {
+public final class TracingMiddleware: Middleware {
     private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
     
     /// Create a TracingMiddleware
@@ -20,7 +21,7 @@ public final class TracingMiddleware: AsyncMiddleware {
         self.setCustomAttributes = setCustomAttributes
     }
     
-    public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         var parentContext = request.serviceContext
         InstrumentationSystem.instrument.extract(request.headers, into: &parentContext, using: HTTPHeadersExtractor())
         

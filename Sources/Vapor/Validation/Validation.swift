@@ -10,7 +10,7 @@ public struct Validation: Sendable {
     let customFailureDescription: String?
     let run: @Sendable (Decoder) -> ValidatorResult
     
-    init<T>(key: ValidationKey, required: Bool, validator: Validator<T>, customFailureDescription: String?) {
+    init<T>(key: BasicCodingKey, required: Bool, validator: Validator<T>, customFailureDescription: String?) {
         self.init(
             key: key,
             valuelessKeyBehavior: required ? .missing : .skipAlways,
