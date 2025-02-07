@@ -6,21 +6,18 @@ import NIOConcurrencyHelpers
 public struct MemorySessions: SessionDriver, Sendable {
     public let storage: Storage
     
-    public final class Storage: Sendable {
-        public var sessions: [SessionID: SessionData] {
-            get {
-                self._sessions.withLockedValue { $0 }
-            }
-            set {
-                self._sessions.withLockedValue { $0 = newValue }
-            }
-        }
-        
-        public let queue: DispatchQueue
-        private let _sessions: NIOLockedValueBox<[SessionID: SessionData]>
+    public actor Storage {
+        private var sessions: [SessionID: SessionData]
         public init() {
-            self._sessions = .init([:])
-            self.queue = DispatchQueue(label: "MemorySessions.Storage")
+            self.sessions = [:]
+        }
+
+        public func get(_ sessionID: SessionID) -> SessionData? {
+            self.sessions[sessionID]
+        }
+
+        public func set(_ sessionID: SessionID, to data: SessionData?) {
+            self.sessions[sessionID] = data
         }
     }
 
@@ -31,37 +28,33 @@ public struct MemorySessions: SessionDriver, Sendable {
     public func createSession(
         _ data: SessionData,
         for request: Request
-    ) -> EventLoopFuture<SessionID> {
+    ) async throws -> SessionID {
         let sessionID = self.generateID()
-        self.storage.queue.sync {
-            self.storage.sessions[sessionID] = data
-        }
-        return request.eventLoop.makeSucceededFuture(sessionID)
+        await self.storage.set(sessionID, to: data)
+        return sessionID
     }
     
     public func readSession(
         _ sessionID: SessionID,
         for request: Request
-    ) -> EventLoopFuture<SessionData?> {
-        let session = self.storage.queue.sync { self.storage.sessions[sessionID] }
-        return request.eventLoop.makeSucceededFuture(session)
+    ) async throws -> SessionData? {
+        await self.storage.get(sessionID)
     }
     
     public func updateSession(
         _ sessionID: SessionID,
         to data: SessionData,
         for request: Request
-    ) -> EventLoopFuture<SessionID> {
-        self.storage.queue.sync { self.storage.sessions[sessionID] = data }
-        return request.eventLoop.makeSucceededFuture(sessionID)
+    ) async throws -> SessionID {
+        await self.storage.set(sessionID, to: data)
+        return sessionID
     }
     
     public func deleteSession(
         _ sessionID: SessionID,
         for request: Request
-    ) -> EventLoopFuture<Void> {
-        self.storage.queue.sync { self.storage.sessions[sessionID] = nil }
-        return request.eventLoop.makeSucceededFuture(())
+    ) async throws {
+        await self.storage.set(sessionID, to: nil)
     }
     
     private func generateID() -> SessionID {

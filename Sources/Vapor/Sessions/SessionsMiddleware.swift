@@ -12,7 +12,7 @@ import NIOCore
 ///     app.middleware.use(app.sessions.middleware)
 ///
 /// See `SessionsConfig` and `Sessions` for more information.
-public final class SessionsMiddleware: Middleware {
+public final class SessionsMiddleware: AsyncMiddleware {
     /// The cookie to work with
     let configuration: SessionsConfiguration
 
@@ -32,7 +32,7 @@ public final class SessionsMiddleware: Middleware {
         self.configuration = configuration
     }
 
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         // Signal middleware has been added.
         request._sessionCache.middlewareFlag.withLockedValue { $0 = true }
 
@@ -40,57 +40,40 @@ public final class SessionsMiddleware: Middleware {
         if let cookieValue = request.cookies[self.configuration.cookieName] {
             // A cookie value exists, get the session for it.
             let id = SessionID(string: cookieValue.string)
-            return self.session.readSession(id, for: request).flatMap { data in
-                if let data = data {
-                    // Session found, restore data and id.
-                    request._sessionCache.session.withLockedValue { $0 = .init(id: id, data: data) }
-                } else {
-                    // Session id not found, create new session.
-                    request._sessionCache.session.withLockedValue { $0 = .init() }
-                }
-                return next.respond(to: request).flatMap { res in
-                    return self.addCookies(to: res, for: request)
-                }
-            }
-        } else {
-            // No cookie value exists, simply respond.
-            return next.respond(to: request).flatMap { response in
-                return self.addCookies(to: response, for: request)
+            if let data = try await self.session.readSession(id, for: request) {
+                // Session found, restore data and id.
+                request._sessionCache.session.withLockedValue { $0 = .init(id: id, data: data) }
+            } else {
+                // Session id not found, create new session.
+                request._sessionCache.session.withLockedValue { $0 = .init() }
             }
         }
+
+        let response = try await next.respond(to: request)
+        return try await self.addCookies(to: response, for: request)
     }
 
     /// Adds session cookie to response or clears if session was deleted.
-    private func addCookies(to response: Response, for request: Request) -> EventLoopFuture<Response> {
+    private func addCookies(to response: Response, for request: Request) async throws -> Response {
         if let session = request._sessionCache.session.withLockedValue({ $0 }), session.isValid.withLockedValue({ $0 }) {
             // A session exists or has been created. we must
             // set a cookie value on the response
-            let createOrUpdate: EventLoopFuture<SessionID>
+            let sessionID: SessionID
             if let id = session.id {
                 // A cookie exists, just update this session.
-                createOrUpdate = self.session.updateSession(id, to: session.data, for: request)
+                sessionID = try await self.session.updateSession(id, to: session.data, for: request)
             } else {
                 // No cookie, this is a new session.
-                createOrUpdate = self.session.createSession(session.data, for: request)
+                sessionID = try await self.session.createSession(session.data, for: request)
             }
-
-            // After create or update, set cookie on the response.
-            return createOrUpdate.map { id in
-                // the session has an id, set the cookie
-                response.cookies[self.configuration.cookieName] = self.configuration.cookieFactory(id)
-                return response
-            }
+            response.cookies[self.configuration.cookieName] = self.configuration.cookieFactory(sessionID)
         } else if let cookieValue = request.cookies[self.configuration.cookieName] {
             // The request had a session cookie, but now there is no valid session.
             // we need to perform cleanup.
             let id = SessionID(string: cookieValue.string)
-            return self.session.deleteSession(id, for: request).map {
-                response.cookies[self.configuration.cookieName] = .expired
-                return response
-            }
-        } else {
-            // no session or existing cookie
-            return request.eventLoop.makeSucceededFuture(response)
+            try await self.session.deleteSession(id, for: request)
+            response.cookies[self.configuration.cookieName] = .expired
         }
+        return response
     }
 }

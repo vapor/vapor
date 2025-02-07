@@ -17,7 +17,7 @@ final class SessionTests: XCTestCase {
     }
     
     func testSessionDestroy() async throws {
-        actor MockKeyedCache: AsyncSessionDriver {
+        actor MockKeyedCache: SessionDriver {
             var ops: [String] = []
             init() { }
 
