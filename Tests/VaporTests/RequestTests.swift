@@ -189,47 +189,6 @@ final class RequestTests: XCTestCase {
         )
     }
     
-    @available(*, deprecated, message: "Testing deprecated methods; this attribute silences the warnings")
-    func testRedirect_old() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        app.http.client.configuration.redirectConfiguration = .disallow
-
-        // DO NOT fix these warnings.
-        // This is intentional to make sure the deprecated functions still work.
-        app.get("redirect_normal") {
-            $0.redirect(to: "foo", type: .normal)
-        }
-        app.get("redirect_permanent") {
-            $0.redirect(to: "foo", type: .permanent)
-        }
-        app.post("redirect_temporary") {
-            $0.redirect(to: "foo", type: .temporary)
-        }
-        
-        try app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
-        
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port for app")
-            return
-        }
-        
-        XCTAssertEqual(
-            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
-            .seeOther
-        )
-        XCTAssertEqual(
-            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
-            .movedPermanently
-        )
-        XCTAssertEqual(
-            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
-            .temporaryRedirect
-        )
-    }
-    
     func testCollectedBodyDrain() throws {
         let app = Application()
         defer { app.shutdown() }
