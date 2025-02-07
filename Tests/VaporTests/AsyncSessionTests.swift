@@ -12,7 +12,7 @@ final class AsyncSessionTests: XCTestCase {
     }
     
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
     
     func testSessionDestroy() async throws {

@@ -21,9 +21,9 @@ public func withApp<T>(_ block: (Application) async throws -> T) async throws ->
     do {
         result = try await block(app)
     } catch {
-        try? await app.asyncShutdown()
+        try? await app.shutdown()
         throw error
     }
-    try await app.asyncShutdown()
+    try await app.shutdown()
     return result
 }

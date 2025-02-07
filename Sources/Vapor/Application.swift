@@ -214,7 +214,7 @@ public final class Application: Sendable {
         }
     }
     
-    public func asyncShutdown() async throws {
+    public func shutdown() async throws {
         assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
 

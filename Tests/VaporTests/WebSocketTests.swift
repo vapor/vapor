@@ -14,7 +14,7 @@ final class WebSocketTests: XCTestCase {
     }
 
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testWebSocketClient() async throws {
@@ -50,7 +50,7 @@ final class WebSocketTests: XCTestCase {
         let string = try await promise.futureResult.get()
         XCTAssertEqual(string, "Hello, world!")
 
-        try await server.asyncShutdown()
+        try await server.shutdown()
     }
 
 

@@ -17,7 +17,7 @@ final class FileTests: XCTestCase, @unchecked Sendable {
     }
 
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testStreamFile() async throws {

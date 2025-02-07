@@ -13,7 +13,7 @@ final class AsyncAuthenticationTests: XCTestCase {
     }
 
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testBearerAuthenticator() async throws {

@@ -26,7 +26,7 @@ final class RequestTests: XCTestCase {
     }
 
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testStreamingRequest() async throws {

@@ -11,9 +11,9 @@ struct Entrypoint {
         do {
             try configure(app)
             try await app.execute()
-            try await app.asyncShutdown()
+            try await app.shutdown()
         } catch {
-            try? await app.asyncShutdown()
+            try? await app.shutdown()
             throw error
         }
     }

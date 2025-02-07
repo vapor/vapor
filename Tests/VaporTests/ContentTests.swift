@@ -13,7 +13,7 @@ final class ContentTests: XCTestCase {
     }
 
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testContent() throws {

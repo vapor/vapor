@@ -705,7 +705,7 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual(content.errors.count, 1)
         })
 
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testValidateNullWhenNotRequired() throws {

@@ -169,7 +169,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     
     override func tearDown() async throws {
         await app.server.shutdown()
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
     
     func testAutoDetectedType() async throws {
@@ -695,7 +695,7 @@ final class ConditionalResponseCompressionRouteTests: XCTestCase, @unchecked Sen
     }
     
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
     
     func assertResponseCompression(

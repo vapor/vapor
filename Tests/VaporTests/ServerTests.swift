@@ -21,7 +21,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     }
     
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
     
     func testPortOverride() async throws {
@@ -40,7 +40,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         let res = try await app.client.get("http://127.0.0.1:8123/foo")
         XCTAssertEqual(res.body?.string, "bar")
 
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
     
 
@@ -63,7 +63,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         // no server should be bound to the port despite one being set on the configuration.
         XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }.wait())
 
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testIncompatibleStartupOptions() async throws {
@@ -77,7 +77,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
                 
                 XCTAssertEqual(ServeCommand.Error.incompatibleFlags, serveError)
             }
-            try await app.asyncShutdown()
+            try await app.shutdown()
         }
         
         var app = try await Application(Environment(
@@ -861,7 +861,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         let b = try await app.http.client.shared.execute(request: request).get()
         XCTAssertEqual(b.status, .ok)
 
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
     
     func testStartWithValidSocketFile() async throws {

@@ -63,7 +63,7 @@ final class ClientTests: XCTestCase, @unchecked Sendable {
     }
 
     override func tearDown() async throws {
-        try await remoteApp.asyncShutdown()
+        try await remoteApp.shutdown()
     }
 
     func testClientConfigurationChange() async throws {

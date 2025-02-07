@@ -14,7 +14,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testApplicationStop() async throws {
@@ -93,7 +93,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), true)
         XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
 
-        try await app.asyncShutdown()
+        try await app.shutdown()
 
         XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), false)
         XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), false)
@@ -121,7 +121,7 @@ final class ApplicationTests: XCTestCase {
 
         XCTAssertEqual(handler.bootCount.withLockedValue({ $0 }), 1)
         
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testSwiftError() async throws {
