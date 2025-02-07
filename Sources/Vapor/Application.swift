@@ -239,7 +239,7 @@ public final class Application: Sendable {
 
     deinit {
         self.logger.trace("Application deinitialized, goodbye!")
-        assert(!self.didShutdown, "Application.shutdown() was not called before Application deinitialized.")
+        assert(self.didShutdown, "Application.shutdown() was not called before Application deinitialized.")
     }
 }
 
