@@ -1,14 +1,13 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 import PackageDescription
-import Foundation
 
 let package = Package(
     name: "vapor",
     platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6)
+        .macOS(.v15),
+        .iOS(.v18),
+        .tvOS(.v18),
+        .watchOS(.v11),
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -101,8 +100,7 @@ let package = Package(
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
-            ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            ]
         ),
 
         // Development
@@ -111,8 +109,7 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
             ],
-            resources: [.copy("Resources")],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            resources: [.copy("Resources")]
         ),
 
         // Testing
@@ -120,24 +117,21 @@ let package = Package(
             name: "VaporTestUtils",
             dependencies: [
                 .target(name: "Vapor"),
-            ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            ]
         ),
         .target(
             name: "VaporTesting",
             dependencies: [
                 .target(name: "VaporTestUtils"),
                 .target(name: "Vapor"),
-            ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            ]
         ),
         .target(
             name: "XCTVapor",
             dependencies: [
                 .target(name: "VaporTestUtils"),
                 .target(name: "Vapor"),
-            ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            ]
         ),
         .testTarget(
             name: "VaporTests",
@@ -157,10 +151,6 @@ let package = Package(
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),
                 .copy("Utilities/long-test-file.txt"),
-            ],
-            swiftSettings: [
-                .enableUpcomingFeature("BareSlashRegexLiterals"),
-                .enableExperimentalFeature("StrictConcurrency=complete"),
             ]
         ),
     ]
