@@ -39,7 +39,13 @@ extension Application {
             }
 
             self.core.storage.threadPool.withLockedValue({
-                try! $0.syncShutdownGracefully()
+                do {
+                    try $0.syncShutdownGracefully()
+                } catch is NIOThreadPoolError.UnsupportedOperation {
+                    // ignore, singleton thread pool throws this error on shutdown attempts
+                } catch {
+                    fatalError("Unexpected error shutting down old thread pool")
+                }
                 $0 = newValue
                 $0.start()
             })
