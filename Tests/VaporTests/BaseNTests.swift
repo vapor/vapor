@@ -83,7 +83,8 @@ final class BaseNTests: XCTestCase {
                     XCTAssertEqual(Array(elem.utf8), decodedBytes, "byte decode", file: (file), line: line)
 
                     let utf8ReadyBytes = decodedBytes.map { Array(chain($0.map(Int8.init(bitPattern:)), [0])) }
-                    XCTAssertEqual(utf8ReadyBytes.flatMap { String(validatingUTF8: $0)?[...] }, elem, "\(name) - \(elem) - \(decodedBytes ?? [])")
+                    let utf8ReadyBytesWithoutNullTermination = utf8ReadyBytes?.dropLast()
+                    XCTAssertEqual(utf8ReadyBytesWithoutNullTermination.flatMap { String(validating: $0, as: UTF8.self)?[...] }, elem, "\(name) - \(elem) - \(decodedBytes ?? [])")
                 }
             }
             if printVectors {
