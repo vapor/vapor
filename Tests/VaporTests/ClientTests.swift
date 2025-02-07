@@ -47,7 +47,7 @@ final class ClientTests: XCTestCase, @unchecked Sendable {
         }
 
         remoteApp.environment.arguments = ["serve"]
-        try await remoteApp.asyncBoot()
+        try await remoteApp.boot()
         try await remoteApp.startup()
 
         XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
@@ -120,7 +120,7 @@ final class ClientTests: XCTestCase, @unchecked Sendable {
     }
 
     func testClientBeforeSend() async throws {
-        try await app.asyncBoot()
+        try await app.boot()
 
         let res = try await app.client.post("http://localhost:\(remoteAppPort!)/anything") { req in
             try req.content.encode(["hello": "world"])
@@ -132,7 +132,7 @@ final class ClientTests: XCTestCase, @unchecked Sendable {
     }
 
     func testClientContent() async throws {
-        try await app.asyncBoot()
+        try await app.boot()
 
         let res = try await app.client.post("http://localhost:\(remoteAppPort!)/anything", content: ["hello": "world"])
 
@@ -142,7 +142,7 @@ final class ClientTests: XCTestCase, @unchecked Sendable {
     }
 
     func testClientTimeout() async throws {
-        try await app.asyncBoot()
+        try await app.boot()
 
         XCTAssertNoThrow(try app.client.get("http://localhost:\(remoteAppPort!)/json") { $0.timeout = .seconds(1) }.wait())
         XCTAssertThrowsError(try app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .milliseconds(200) }.wait()) {
@@ -168,7 +168,7 @@ final class ClientTests: XCTestCase, @unchecked Sendable {
         }
 
         app.environment.arguments = ["serve"]
-        try await app.asyncBoot()
+        try await app.boot()
         try await app.startup()
 
         XCTAssertNotNil(app.http.server.shared.localAddress)

@@ -84,7 +84,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), false)
         XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
 
-        try await app.asyncBoot()
+        try await app.boot()
 
         XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), false)
         XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), false)
@@ -116,8 +116,8 @@ final class ApplicationTests: XCTestCase {
         let handler = Handler()
         app.lifecycle.use(handler)
         
-        try await app.asyncBoot()
-        try await app.asyncBoot()
+        try await app.boot()
+        try await app.boot()
 
         XCTAssertEqual(handler.bootCount.withLockedValue({ $0 }), 1)
         

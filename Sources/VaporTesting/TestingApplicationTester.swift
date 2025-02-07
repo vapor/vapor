@@ -13,7 +13,7 @@ extension Application.InMemory: TestingApplicationTester {}
 
 extension Application: TestingApplicationTester {
     public func testing(method: Method = .inMemory) async throws -> TestingApplicationTester {
-        try await self.asyncBoot()
+        try await self.boot()
         switch method {
         case .inMemory:
             return try InMemory(app: self)

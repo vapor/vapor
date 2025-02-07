@@ -14,7 +14,7 @@ extension Application.InMemory: XCTApplicationTester {}
 
 extension Application: XCTApplicationTester {
     public func testable(method: Method = .inMemory) async throws -> XCTApplicationTester {
-        try await self.asyncBoot()
+        try await self.boot()
         switch method {
         case .inMemory:
             return try InMemory(app: self)

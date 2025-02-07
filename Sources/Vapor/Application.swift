@@ -182,7 +182,7 @@ public final class Application: Sendable {
     /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
     /// use ``execute()`` instead.
     public func startup() async throws {
-        try await self.asyncBoot()
+        try await self.boot()
 
         let combinedCommands = AsyncCommands(
             commands: self.asyncCommands.commands.merging(self.commands.commands) { $1 },
@@ -196,7 +196,7 @@ public final class Application: Sendable {
     }
     
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
-    public func asyncBoot() async throws {
+    public func boot() async throws {
         /// Skip the boot process if already booted
         guard !self.isBooted.withLockedValue({
             var result = true
