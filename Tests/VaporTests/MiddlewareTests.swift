@@ -185,6 +185,7 @@ final class MiddlewareTests: XCTestCase {
 
         let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
             req.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
+            req.headers.add(name: TestTracer.extractKey, value: "extracted")
         }
 
         XCTAssertEqual(response.status, .ok)
