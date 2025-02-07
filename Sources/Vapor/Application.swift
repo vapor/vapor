@@ -213,28 +213,6 @@ public final class Application: Sendable {
             try await handler.didBootAsync(self)
         }
     }
-
-    @available(*, noasync, message: "This can block the thread and should not be called in an async context", renamed: "asyncShutdown()")
-    public func shutdown() {
-        assert(!self.didShutdown, "Application has already shut down")
-        self.logger.debug("Application shutting down")
-
-        self.logger.trace("Shutting down providers")
-        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
-        self.lifecycle.handlers = []
-
-        self.logger.trace("Clearing Application storage")
-        self.storage.shutdown()
-        self.storage.clear()
-
-        switch self.eventLoopGroupProvider {
-        case .shared:
-            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
-        }
-
-        self._didShutdown.withLockedValue { $0 = true }
-        self.logger.trace("Application shutdown complete")
-    }
     
     public func asyncShutdown() async throws {
         assert(!self.didShutdown, "Application has already shut down")
@@ -261,10 +239,7 @@ public final class Application: Sendable {
 
     deinit {
         self.logger.trace("Application deinitialized, goodbye!")
-        if !self.didShutdown {
-            self.logger.error("Application.shutdown() was not called before Application deinitialized.")
-            self.shutdown()
-        }
+        assert(!self.didShutdown, "Application.shutdown() was not called before Application deinitialized.")
     }
 }
 

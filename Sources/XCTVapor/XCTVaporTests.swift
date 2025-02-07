@@ -37,9 +37,9 @@ open class XCTVaporTests: XCTestCase {
         }
     }
 
-    open override func tearDown() {
-        super.tearDown()
-        self.app?.shutdown()
+    open override func tearDown() async throws {
+        try await super.tearDown()
+        try await self.app?.asyncShutdown()
         self.app = nil
     }
 }
