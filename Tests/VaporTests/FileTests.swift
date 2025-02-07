@@ -329,7 +329,7 @@ final class FileTests: XCTestCase {
         try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
         defer { try? FileManager.default.removeItem(atPath: path) }
 
-        let result = try String(contentsOfFile: path)
+        let result = try String(contentsOfFile: path, encoding: .utf8)
         XCTAssertEqual(result, data)
     }
 
@@ -503,7 +503,7 @@ final class FileTests: XCTestCase {
         try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
         defer { try? FileManager.default.removeItem(atPath: path) }
         
-        let result = try String(contentsOfFile: path)
+        let result = try String(contentsOfFile: path, encoding: .utf8)
         XCTAssertEqual(result, data)
     }
 
@@ -512,7 +512,7 @@ final class FileTests: XCTestCase {
 
         let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/long-test-file.txt"
 
-        let content = try String(contentsOfFile: path)
+        let content = try String(contentsOfFile: path, encoding: .utf8)
 
         var readContent = ""
         let file = try await request.fileio.readFile(at: path, chunkSize: 16 * 1024) // 32Kb, ~5 chunks

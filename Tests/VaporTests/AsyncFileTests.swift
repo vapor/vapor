@@ -280,7 +280,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
             
             try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
             
-            let result = try String(contentsOfFile: path)
+            let result = try String(contentsOfFile: path, encoding: .utf8)
             XCTAssertEqual(result, data)
         } catch {
             try await FileSystem.shared.removeItem(at: .init(path))
@@ -341,7 +341,7 @@ final class AsyncFileTests: XCTestCase, @unchecked Sendable {
 
         let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/long-test-file.txt"
 
-        let content = try String(contentsOfFile: path)
+        let content = try String(contentsOfFile: path, encoding: .utf8)
 
         var readContent = ""
         let file = try await request.fileio.readFile(at: path, chunkSize: 16 * 1024) // 32Kb, ~5 chunks
