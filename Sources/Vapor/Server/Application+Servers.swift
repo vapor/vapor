@@ -50,19 +50,6 @@ extension Application {
         @preconcurrency public func use(_ makeServer: @Sendable @escaping (Application) -> (Server)) {
             self.storage.makeServer.withLockedValue { $0 = .init(factory: makeServer) }
         }
-
-        @available(*, noasync, renamed: "asyncCommand", message: "Use the async property instead.")
-        public var command: ServeCommand {
-            if let existing = self.application.storage.get(CommandKey.self) {
-                return existing
-            } else {
-                let new = ServeCommand()
-                self.application.storage.set(CommandKey.self, to: new) {
-                    $0.shutdown()
-                }
-                return new
-            }
-        }
         
         public var asyncCommand: ServeCommand {
             get async {

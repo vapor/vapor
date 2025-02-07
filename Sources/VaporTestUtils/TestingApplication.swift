@@ -28,45 +28,6 @@ extension Application {
             self.port = port
         }
 
-        @available(*, noasync, message: "Use the async method instead.")
-        package func performTest(request: TestingHTTPRequest) throws -> TestingHTTPResponse {
-            try app.server.start(address: .hostname(self.hostname, port: self.port))
-            defer { app.server.shutdown() }
-
-            let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
-            defer { try! client.syncShutdown() }
-            var path = request.url.path
-            path = path.hasPrefix("/") ? path : "/\(path)"
-
-            let actualPort: Int
-
-            if self.port == 0 {
-                guard let portAllocated = app.http.server.shared.localAddress?.port else {
-                    throw Abort(.internalServerError, reason: "Failed to get port from local address")
-                }
-                actualPort = portAllocated
-            } else {
-                actualPort = self.port
-            }
-
-            var url = "http://\(self.hostname):\(actualPort)\(path)"
-            if let query = request.url.query {
-                url += "?\(query)"
-            }
-            var clientRequest = try HTTPClient.Request(
-                url: url,
-                method: request.method,
-                headers: request.headers
-            )
-            clientRequest.body = .byteBuffer(request.body)
-            let response = try client.execute(request: clientRequest).wait()
-            return TestingHTTPResponse(
-                status: response.status,
-                headers: response.headers,
-                body: response.body ?? ByteBufferAllocator().buffer(capacity: 0)
-            )
-        }
-
         package func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
             try await app.server.start(address: .hostname(self.hostname, port: self.port))
             let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
@@ -116,34 +77,6 @@ extension Application {
         let app: Application
         package init(app: Application) throws {
             self.app = app
-        }
-
-        @available(*, noasync, message: "Use the async method instead.")
-        @discardableResult
-        package func performTest(
-            request: TestingHTTPRequest
-        ) throws -> TestingHTTPResponse {
-            var headers = request.headers
-            headers.replaceOrAdd(
-                name: .contentLength,
-                value: request.body.readableBytes.description
-            )
-            let request = Request(
-                application: app,
-                method: request.method,
-                url: request.url,
-                headers: headers,
-                collectedBody: request.body.readableBytes == 0 ? nil : request.body,
-                remoteAddress: nil,
-                logger: app.logger,
-                on: self.app.eventLoopGroup.next()
-            )
-            let res = try self.app.responder.respond(to: request).wait()
-            return try TestingHTTPResponse(
-                status: res.status,
-                headers: res.headers,
-                body: res.body.collect(on: request.eventLoop).wait() ?? ByteBufferAllocator().buffer(capacity: 0)
-            )
         }
 
         @discardableResult
