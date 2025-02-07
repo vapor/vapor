@@ -57,20 +57,11 @@ public struct DotEnvFile: Sendable {
         switch eventLoopGroupProvider {
         case .shared(let group):
             eventLoopGroup = group
-        case .createNew:
-            eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
         defer {
             switch eventLoopGroupProvider {
             case .shared:
                 logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
-            case .createNew:
-                logger.trace("Shutting down EventLoopGroup")
-                do {
-                    try eventLoopGroup.syncShutdownGracefully()
-                } catch {
-                    logger.warning("Shutting down EventLoopGroup failed: \(error)")
-                }
             }
         }
 
@@ -106,20 +97,11 @@ public struct DotEnvFile: Sendable {
         switch eventLoopGroupProvider {
         case .shared(let group):
             eventLoopGroup = group
-        case .createNew:
-            eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
         defer {
             switch eventLoopGroupProvider {
             case .shared:
                 logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
-            case .createNew:
-                logger.trace("Shutting down EventLoopGroup")
-                do {
-                    try eventLoopGroup.syncShutdownGracefully()
-                } catch {
-                    logger.warning("Shutting down EventLoopGroup failed: \(error)")
-                }
             }
         }
 
