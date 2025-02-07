@@ -2,7 +2,7 @@
 import XCTVapor
 import XCTest
 
-final class AsyncEnvironmentSecretTests: XCTestCase {
+final class EnvironmentSecretTests: XCTestCase {
     var app: Application!
 
     override func setUp() async throws {

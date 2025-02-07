@@ -211,7 +211,6 @@ public struct DotEnvFile: Sendable {
         }
     }
     
-    // MARK: - Concurrency
     /// Reads a dotenv file from the supplied path.
     ///
     ///     let fileio: NonBlockingFileIO
