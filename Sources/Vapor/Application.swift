@@ -125,7 +125,7 @@ public final class Application: Sendable {
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) async throws {
         self.init(environment, eventLoopGroupProvider, async: true)
-        await self.asyncCommands.use(self.servers.asyncCommand, as: "serve", isDefault: true)
+        await self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         await DotEnvFile.load(for: self.environment, fileio: self.fileio, logger: self.logger)
     }
     
