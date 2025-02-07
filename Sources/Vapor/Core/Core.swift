@@ -43,6 +43,7 @@ extension Application {
                     try $0.syncShutdownGracefully()
                 } catch is NIOThreadPoolError.UnsupportedOperation {
                     // ignore, singleton thread pool throws this error on shutdown attempts
+                    // see https://github.com/apple/swift-nio/blob/c51907a839e63ebf0ba2076bba73dd96436bd1b9/Sources/NIOPosix/NIOThreadPool.swift#L142-L147
                 } catch {
                     fatalError("Unexpected error shutting down old thread pool")
                 }
@@ -105,6 +106,7 @@ extension Application {
                     try application.threadPool.syncShutdownGracefully()
                 } catch is NIOThreadPoolError.UnsupportedOperation {
                     // ignore, singleton thread pool throws this error on shutdown attempts
+                    // see https://github.com/apple/swift-nio/blob/c51907a839e63ebf0ba2076bba73dd96436bd1b9/Sources/NIOPosix/NIOThreadPool.swift#L142-L147
                 } catch {
                     application.logger.debug("Failed to shutdown thread pool", metadata: ["error": "\(error)"])
                 }
@@ -117,6 +119,7 @@ extension Application {
                     try await application.threadPool.shutdownGracefully()
                 } catch is NIOThreadPoolError.UnsupportedOperation {
                     // ignore, singleton thread pool throws this error on shutdown attempts
+                    // see https://github.com/apple/swift-nio/blob/c51907a839e63ebf0ba2076bba73dd96436bd1b9/Sources/NIOPosix/NIOThreadPool.swift#L142-L147
                 } catch {
                     application.logger.debug("Failed to shutdown thread pool", metadata: ["error": "\(error)"])
                 }
