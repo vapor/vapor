@@ -191,55 +191,6 @@ public func routes(_ app: Application) throws {
         return .ok
     }
 
-    @available(*, deprecated, message: "Testing deprecated functions")
-    func deprecatedUploadHandler(_ req: Request) -> EventLoopFuture<HTTPStatus> {
-        enum BodyStreamWritingToDiskError: Error {
-            case streamFailure(Error)
-            case fileHandleClosedFailure(Error)
-            case multipleFailures([BodyStreamWritingToDiskError])
-        }
-
-        return req.application.fileio.openFile(
-            path: Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? "",
-            mode: .write,
-            flags: .allowFileCreation(),
-            eventLoop: req.eventLoop
-        ).flatMap { fileHandle in
-            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
-            let fileHandleBox = NIOLoopBound(fileHandle, eventLoop: req.eventLoop)
-            req.body.drain { part in
-                let fileHandle = fileHandleBox.value
-                switch part {
-                case .buffer(let buffer):
-                    return req.application.fileio.write(
-                        fileHandle: fileHandle,
-                        buffer: buffer,
-                        eventLoop: req.eventLoop
-                    )
-                case .error(let drainError):
-                    do {
-                        try fileHandle.close()
-                        promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
-                    } catch {
-                        promise.fail(BodyStreamWritingToDiskError.multipleFailures([
-                            .fileHandleClosedFailure(error),
-                            .streamFailure(drainError)
-                        ]))
-                    }
-                    return req.eventLoop.makeSucceededFuture(())
-                case .end:
-                    do {
-                        try fileHandle.close()
-                        promise.succeed(.ok)
-                    } catch {
-                        promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))
-                    }
-                    return req.eventLoop.makeSucceededFuture(())
-                }
-            }
-            return promise.futureResult
-        }
-    }
     app.on(.POST, "upload", body: .stream) { req -> HTTPStatus in
         return try await FileSystem.shared.withFileHandle(
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
