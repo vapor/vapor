@@ -45,6 +45,7 @@ public struct DotEnvFile: Sendable {
     ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
     ///     - logger: Optionally provide an existing logger.
     @available(*, noasync, message: "Use an async version of load instead")
+    @available(*, deprecated, message: "Use an async version of load instead")
     public static func load(
         for environment: Environment = .development,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
@@ -93,6 +94,7 @@ public struct DotEnvFile: Sendable {
     ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
     ///     - logger: Optionally provide an existing logger.
     @available(*, noasync, message: "Use an async version of load instead")
+    @available(*, deprecated, message: "Use an async version of load instead")
     public static func load(
         path: String,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,

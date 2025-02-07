@@ -6,8 +6,8 @@ import NIOCore
 import Logging
 import NIOEmbedded
 
-final class AsyncClientTests: XCTestCase {
-    
+final class AsyncClientTests: XCTestCase, @unchecked Sendable {
+
     var remoteAppPort: Int!
     var remoteApp: Application!
     var app: Application!
@@ -40,7 +40,11 @@ final class AsyncClientTests: XCTestCase {
             
             return AnythingResponse(headers: headers, json: jsonResponse)
         }
-        
+
+        remoteApp.get("stalling") {
+            $0.eventLoop.scheduleTask(in: .seconds(1)) { SomeJSON() }.futureResult
+        }
+
         remoteApp.environment.arguments = ["serve"]
         try await remoteApp.asyncBoot()
         try await remoteApp.startup()
@@ -126,6 +130,26 @@ final class AsyncClientTests: XCTestCase {
         XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
     }
 
+    func testClientContent() async throws {
+        try await app.asyncBoot()
+
+        let res = try await app.client.post("http://localhost:\(remoteAppPort!)/anything", content: ["hello": "world"])
+
+        let data = try res.content.decode(AnythingResponse.self)
+        XCTAssertEqual(data.json, ["hello": "world"])
+        XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
+    }
+
+    func testClientTimeout() async throws {
+        try await app.asyncBoot()
+
+        XCTAssertNoThrow(try app.client.get("http://localhost:\(remoteAppPort!)/json") { $0.timeout = .seconds(1) }.wait())
+        XCTAssertThrowsError(try app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .milliseconds(200) }.wait()) {
+            XCTAssertTrue(type(of: $0) == HTTPClientError.self, "\(type(of: $0)) is not a \(HTTPClientError.self)")
+            XCTAssertEqual($0 as? HTTPClientError, .deadlineExceeded)
+        }
+    }
+
     func testBoilerplateClient() async throws {
         app.http.server.configuration.port = 0
         let remotePort = self.remoteAppPort!
@@ -157,6 +181,31 @@ final class AsyncClientTests: XCTestCase {
         XCTAssertEqual(res.body?.string, "bar")
 
         try await app.running?.onStop.get()
+    }
+
+    func testApplicationClientThreadSafety() throws {
+        let startingPistol = DispatchGroup()
+        startingPistol.enter()
+        startingPistol.enter()
+
+        let finishLine = DispatchGroup()
+        finishLine.enter()
+        Thread.async {
+            startingPistol.leave()
+            startingPistol.wait()
+            XCTAssert(type(of: self.app.http.client.shared) == HTTPClient.self)
+            finishLine.leave()
+        }
+
+        finishLine.enter()
+        Thread.async {
+            startingPistol.leave()
+            startingPistol.wait()
+            XCTAssert(type(of: self.app.http.client.shared) == HTTPClient.self)
+            finishLine.leave()
+        }
+
+        finishLine.wait()
     }
 
     func testCustomClient() async throws {

@@ -4,10 +4,17 @@ import Vapor
 import NIOCore
 
 final class ServiceTests: XCTestCase {
-    func testReadOnly() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
+    var app: Application!
 
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+
+    func testReadOnly() throws {
         app.get("test") { req in
             req.readOnly.foos()
         }
@@ -19,16 +26,11 @@ final class ServiceTests: XCTestCase {
     }
 
     func testWritable() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.writable = .init(apiKey: "foo")
         XCTAssertEqual(app.writable?.apiKey, "foo")
     }
 
     func testLifecycle() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
         app.http.server.configuration.port = 0
 
         app.lifecycle.use(Hello())
@@ -48,9 +50,6 @@ final class ServiceTests: XCTestCase {
     }
 
     func testLocks() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.sync.withLock {
             // Do something.
         }
@@ -64,9 +63,6 @@ final class ServiceTests: XCTestCase {
     }
     
     func testServiceHelpers() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
         let testString = "This is a test - \(Int.random())"
         let myFakeServicce = MyTestService(cannedResponse: testString, eventLoop: app.eventLoopGroup.next(), logger: app.logger)
         

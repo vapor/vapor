@@ -3,10 +3,17 @@ import Vapor
 import XCTest
 
 final class LoggingTests: XCTestCase {
-    func testChangeRequestLogLevel() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
+    var app: Application!
 
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+
+    func testChangeRequestLogLevel() throws {
         app.get("trace") { req -> String in
             req.logger.logLevel = .trace
             req.logger.trace("foo")

@@ -447,13 +447,15 @@ public struct FileIO: Sendable {
     ///     let data = ByteBuffer(string: "ByteBuffer")
     ///     try await req.fileio.writeFile(data, at: "/path/to/file.txt")
     ///
+    /// **WARNING**: this will overwrite the file if it already exists.
+    ///
     /// - parameters:
     ///     - path: Path to file on the disk.
     ///     - buffer: The `ByteBuffer` to write.
     /// - returns: `Void` when the file write is finished.
     public func writeFile(_ buffer: ByteBuffer, at path: String) async throws {
         // This returns the number of bytes written which we don't need
-        _ = try await FileSystem.shared.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: false)) { handle in
+        _ = try await FileSystem.shared.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: true)) { handle in
             try await handle.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
     }

@@ -6,10 +6,17 @@ import XCTest
 import XCTVapor
 
 final class ContentTests: XCTestCase {
-    func testContent() throws {
-        let app = Application()
-        defer { app.shutdown() }
+    var app: Application!
 
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+
+    func testContent() throws {
         let request = Request(
             application: app,
             collectedBody: .init(string: #"{"hello": "world"}"#),
@@ -20,9 +27,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testComplexContent() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
         let complexJSON = """
         {
@@ -66,9 +70,6 @@ final class ContentTests: XCTestCase {
         {"name":"hi","bar":"asdf"}
         """
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.get("decode_error") { _ -> String in
             struct Foo: Decodable {
                 var name: String
@@ -92,9 +93,6 @@ final class ContentTests: XCTestCase {
             var message: String = "hi"
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.get("encode") { _ -> Response in
             let res = Response()
             try res.content.encode(FooContent())
@@ -116,9 +114,6 @@ final class ContentTests: XCTestCase {
         struct FooDecodable: Decodable, Equatable {
             var message: String = "hi"
         }
-
-        let app = Application(.testing)
-        defer { app.shutdown() }
 
         app.routes.post("decode") { req async throws -> String in
             XCTAssertEqual(try req.content.decode(FooContent.self), FooContent())
@@ -183,9 +178,6 @@ final class ContentTests: XCTestCase {
             var image: File
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.get("multipart") { req -> User in
             let decoded = try req.content.decode(User.self)
             XCTAssertEqual(decoded, expected)
@@ -213,9 +205,6 @@ final class ContentTests: XCTestCase {
             var name: String
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.get("multipart") { req -> User in
             let decoded = try req.content.decode(User.self)
             XCTAssertEqual(decoded, expected)
@@ -238,9 +227,6 @@ final class ContentTests: XCTestCase {
         struct User: Content, Equatable {
             var name: String
         }
-
-        let app = Application(.testing)
-        defer { app.shutdown() }
 
         app.routes.get("multipart") { req -> User in
             let decoded = try req.content.decode(User.self)
@@ -284,9 +270,6 @@ final class ContentTests: XCTestCase {
             var image: File
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.get("multipart") { req -> User in
             let decoded = try req.content.decode(User.self)
             XCTAssertEqual(decoded, expected)
@@ -308,9 +291,6 @@ final class ContentTests: XCTestCase {
             var age: Int
             var image: File
         }
-
-        let app = Application(.testing)
-        defer { app.shutdown() }
 
         app.get("multipart") { _ -> User in
             User(
@@ -337,9 +317,6 @@ final class ContentTests: XCTestCase {
             var image: File
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.get("multipart") { _ -> User in
             User(
                 name: "Vapor",
@@ -363,9 +340,6 @@ final class ContentTests: XCTestCase {
             var age: Int
             var luckyNumbers: [Int]
         }
-
-        let app = Application(.testing)
-        defer { app.shutdown() }
 
         app.get("urlencodedform") { req -> HTTPStatus in
             let foo = try req.content.decode(User.self)
@@ -393,9 +367,6 @@ final class ContentTests: XCTestCase {
             var luckyNumbers: [Int]
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.get("urlencodedform") { _ -> User in
             User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
         }
@@ -410,9 +381,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testJSONPreservesHTTPHeaders() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.get("check") { (req: Request) -> String in
             "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
@@ -425,9 +393,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testJSONAllowsContentTypeOverride() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.get("check") { (req: Request) -> String in
             "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
@@ -456,9 +421,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testAfterContentEncode() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString(#"{"name": "before decode"}"#)
 
@@ -475,9 +437,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testSupportsJsonApi() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString(#"{"data": ["entity0", "entity1"], "meta": {}}"#)
 
@@ -494,9 +453,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testQueryHooks() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         let request = Request(
             application: app,
             collectedBody: .init(string: ""),
@@ -513,9 +469,6 @@ final class ContentTests: XCTestCase {
 
     /// https://github.com/vapor/vapor/issues/3135
     func testDecodePercentEncodedQuery() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         let request = Request(
             application: app,
             collectedBody: .init(string: ""),
@@ -529,9 +482,6 @@ final class ContentTests: XCTestCase {
 
     /// https://github.com/vapor/vapor/issues/3133
     func testEncodePercentEncodedQuery() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         struct Foo: Content {
             var status: String
         }
@@ -545,9 +495,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testSnakeCaseCodingKeyError() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         let req = Request(application: app, on: app.eventLoopGroup.any())
         try req.content.encode([
             "title": "The title"
@@ -571,9 +518,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testDataCorruptionError() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         let req = Request(
             application: app,
             method: .GET,
@@ -602,9 +546,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testValueNotFoundError() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         let req = Request(application: app, on: app.eventLoopGroup.any())
         try req.content.encode([
             "items": ["1"]
@@ -631,9 +572,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testTypeMismatchError() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
         let req = Request(application: app, on: app.eventLoopGroup.any())
         try req.content.encode([
             "item": [
@@ -658,9 +596,6 @@ final class ContentTests: XCTestCase {
 
     func testPlaintextDecode() throws {
         let data = "255"
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.get("plaintext") { _ -> Response in
             let res = Response()
             try res.content.encode(data, as: .plainText)
@@ -686,9 +621,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testPlaintextDecoderDoesntCrash() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         struct WrongType: Content {
             let example: String
         }
@@ -715,9 +647,6 @@ final class ContentTests: XCTestCase {
     }
 
     func testContentIsBool() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.routes.get("success") { _ in
             true
         }
