@@ -43,9 +43,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         try await app.asyncShutdown()
     }
     
-    // `httpUnixDomainSocket` is currently broken in 6.0
-    #if compiler(<6.0)
-    func testSocketPathOverride() throws {
+
+    func testSocketPathOverride() async throws {
         let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
         
         let env = Environment(
@@ -53,20 +52,20 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             arguments: ["vapor", "serve", "--unix-socket", socketPath]
         )
         
-        let app = Application(env)
-        defer { app.shutdown() }
-        
+        let app = try await Application.make(env)
+
         app.get("foo") { _ in "bar" }
-        try app.start()
-        
-        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }.wait()
+        try await app.startup()
+
+        let res = try await app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }.get()
         XCTAssertEqual(res.body?.string, "bar")
         
         // no server should be bound to the port despite one being set on the configuration.
         XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }.wait())
+
+        try await app.asyncShutdown()
     }
-    #endif
-    
+
     func testIncompatibleStartupOptions() async throws {
         func checkForError(_ app: Application) async throws {
             XCTAssertThrowsError(try app.start()) { error in
