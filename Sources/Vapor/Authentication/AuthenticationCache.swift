@@ -18,22 +18,19 @@ extension Request {
 
 extension Request.Authentication {
     /// Authenticates the supplied instance for this request.
-    public func login<A>(_ instance: A)
-    where A: Authenticatable {
+    public func login<A>(_ instance: A) where A: Authenticatable {
         self.cache[A.self] = UnsafeAuthenticationBox(instance)
     }
 
     /// Unauthenticates an authenticatable type.
-    public func logout<A>(_ type: A.Type = A.self)
-    where A: Authenticatable {
+    public func logout<A>(_ type: A.Type = A.self) where A: Authenticatable {
         self.cache[A.self] = nil
     }
 
     /// Returns an instance of the supplied type. Throws if no
     /// instance of that type has been authenticated or if there
     /// was a problem.
-    @discardableResult public func require<A>(_ type: A.Type = A.self) throws -> A
-    where A: Authenticatable {
+    @discardableResult public func require<A>(_ type: A.Type = A.self) throws -> A where A: Authenticatable {
         guard let a = self.get(A.self) else {
             throw Abort(.unauthorized)
         }
@@ -42,14 +39,12 @@ extension Request.Authentication {
 
     /// Returns the authenticated instance of the supplied type.
     /// - note: `nil` if no type has been authed.
-    public func get<A>(_ type: A.Type = A.self) -> A?
-    where A: Authenticatable {
+    public func get<A>(_ type: A.Type = A.self) -> A? where A: Authenticatable {
         return self.cache[A.self]?.authenticated
     }
 
     /// Returns `true` if the type has been authenticated.
-    public func has<A>(_ type: A.Type = A.self) -> Bool
-    where A: Authenticatable {
+    public func has<A>(_ type: A.Type = A.self) -> Bool where A: Authenticatable {
         return self.get(A.self) != nil
     }
 
@@ -60,8 +55,7 @@ extension Request.Authentication {
             self.storage = .init([:])
         }
 
-        internal subscript<A>(_ type: A.Type) -> UnsafeAuthenticationBox<A>?
-        where A: Authenticatable
+        internal subscript<A>(_ type: A.Type) -> UnsafeAuthenticationBox<A>? where A: Authenticatable
         {
             get {
                 storage.withLockedValue { $0[ObjectIdentifier(A.self)] as? UnsafeAuthenticationBox<A> }
