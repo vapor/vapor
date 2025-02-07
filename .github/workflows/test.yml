@@ -46,6 +46,7 @@ jobs:
       extra_musl_flags: --target Vapor
       ios_xcodebuild_action: ''
       ios_scheme_name: Vapor
+      with_linting: true
     secrets: inherit
 
   test-parallel:
