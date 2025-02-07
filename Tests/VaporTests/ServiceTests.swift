@@ -30,18 +30,8 @@ final class ServiceTests: XCTestCase {
         app.writable = .init(apiKey: "foo")
         XCTAssertEqual(app.writable?.apiKey, "foo")
     }
-
-    func testLifecycle() throws {
-        app.http.server.configuration.port = 0
-
-        app.lifecycle.use(Hello())
-        app.environment.arguments = ["serve"]
-        try app.start()
-        app.running?.stop()
-    }
     
-    func testAsyncLifecycleHandler() async throws {
-        let app = try await Application(.testing)
+    func testLifecycleHandler() async throws {
         app.http.server.configuration.port = 0
         
         app.lifecycle.use(AsyncHello())

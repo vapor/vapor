@@ -17,19 +17,6 @@ final class ApplicationTests: XCTestCase {
         try await app.asyncShutdown()
     }
 
-    @available(*, deprecated, message: "Test future APIs")
-    func testApplicationStopFuture() throws {
-        app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
-        try app.start()
-        guard let running = app.running else {
-            XCTFail("app started without setting 'running'")
-            return
-        }
-        running.stop()
-        try running.onStop.wait()
-    }
-
     func testApplicationStop() async throws {
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
@@ -162,15 +149,15 @@ final class ApplicationTests: XCTestCase {
         try XCTAssertEqual(c.wait(), [1, 2])
     }
 
-    func testBoilerplate() throws {
+    func testBoilerplate() async throws {
         app.get("hello") { req in
             "Hello, world!"
         }
 
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
-        try app.start()
-        
+        try await app.startup()
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
               let port = localAddress.port else {
@@ -178,11 +165,11 @@ final class ApplicationTests: XCTestCase {
             return
         }
 
-        let res = try app.client.get("http://localhost:\(port)/hello").wait()
+        let res = try await app.client.get("http://localhost:\(port)/hello")
         XCTAssertEqual(res.body?.string, "Hello, world!")
     }
 
-    func testAutomaticPortPickingWorks() {
+    func testAutomaticPortPickingWorks() async {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
 
@@ -193,7 +180,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertNil(app.http.server.shared.localAddress)
 
         app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
+        await XCTAssertAsyncNoThrow(try await app.startup())
 
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -210,7 +197,7 @@ final class ApplicationTests: XCTestCase {
                        try app.client.get("http://localhost:\(port)/hello").wait().body?.string)
     }
 
-    func testConfigurationAddressDetailsReflectedAfterBeingSet() throws {
+    func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
         app.http.server.configuration.hostname = "0.0.0.0"
         app.http.server.configuration.port = 0
 
@@ -225,7 +212,7 @@ final class ApplicationTests: XCTestCase {
         }
 
         app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
+        await XCTAssertAsyncNoThrow(try await app.startup())
 
         XCTAssertNotNil(app.http.server.shared.localAddress)
         XCTAssertEqual("0.0.0.0", app.http.server.configuration.hostname)
@@ -237,13 +224,13 @@ final class ApplicationTests: XCTestCase {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        let response = try app.client.get("http://localhost:\(port)/hello").wait()
+        let response = try await app.client.get("http://localhost:\(port)/hello")
         let returnedConfig = try response.content.decode(AddressConfig.self)
         XCTAssertEqual(returnedConfig.hostname, "0.0.0.0")
         XCTAssertEqual(returnedConfig.port, port)
     }
 
-    func testConfigurationAddressDetailsReflectedWhenProvidedThroughServeCommand() throws {
+    func testConfigurationAddressDetailsReflectedWhenProvidedThroughServeCommand() async throws {
         struct AddressConfig: Content {
             let hostname: String
             let port: Int
@@ -255,7 +242,7 @@ final class ApplicationTests: XCTestCase {
         }
 
         app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
-        XCTAssertNoThrow(try app.start())
+        await XCTAssertAsyncNoThrow(try await app.startup())
 
         XCTAssertNotNil(app.http.server.shared.localAddress)
         XCTAssertEqual("0.0.0.0", app.http.server.configuration.hostname)
@@ -267,9 +254,17 @@ final class ApplicationTests: XCTestCase {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        let response = try app.client.get("http://localhost:\(port)/hello").wait()
+        let response = try await app.client.get("http://localhost:\(port)/hello")
         let returnedConfig = try response.content.decode(AddressConfig.self)
         XCTAssertEqual(returnedConfig.hostname, "0.0.0.0")
         XCTAssertEqual(returnedConfig.port, 3000)
+    }
+}
+
+func XCTAssertAsyncNoThrow<T>(_ expression: @autoclosure () async throws -> T, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) async {
+    do {
+        _ = try await expression()
+    } catch {
+        XCTFail("Unexpected error: \(error)", file: file, line: line)
     }
 }

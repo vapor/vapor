@@ -68,7 +68,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
 
     func testIncompatibleStartupOptions() async throws {
         func checkForError(_ app: Application) async throws {
-            XCTAssertThrowsError(try app.start()) { error in
+            await XCTAssertAsyncThrowsError(try await app.startup()) { error in
                 XCTAssertNotNil(error as? ServeCommand.Error)
                 guard let serveError = error as? ServeCommand.Error else {
                     XCTFail("\(error) is not a ServeCommandError")
@@ -566,7 +566,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         await app.server.shutdown()
     }
     
-    func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() throws {
+    func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() async throws {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
         
@@ -587,8 +587,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         }
         
         app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
-        
+        await XCTAssertAsyncNoThrow(try await app.startup())
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
@@ -598,11 +598,11 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         let numberOfClients = 100
         
         for _ in 0 ..< numberOfClients {
-            let client = try ClientBootstrap(group: app.eventLoopGroup)
+            let client = try await ClientBootstrap(group: app.eventLoopGroup)
                 .connect(to: localAddress)
-                .wait()
-            try client.writeAndFlush(ByteBuffer(string: "GET / HTTP/1.1\r\nhost: foo\r\n\r\n")).wait()
-            try client.close().wait()
+                .get()
+            try await client.writeAndFlush(ByteBuffer(string: "GET / HTTP/1.1\r\nhost: foo\r\n\r\n"))
+            try await client.close()
         }
         
         for clientNumber in 0 ..< numberOfClients {
@@ -692,9 +692,9 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     }
     
     // https://github.com/vapor/vapor/issues/2245
-    func testTooLargePort() throws {
+    func testTooLargePort() async throws {
         app.http.server.configuration.port = .max
-        XCTAssertThrowsError(try app.start())
+        await XCTAssertAsyncThrowsError(try await app.startup())
     }
     
     func testEarlyExitStreamingRequest() throws {
@@ -735,7 +735,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     }
     
     @available(*, deprecated, message: "To avoid deprecation warnings")
-    func testEchoServer() throws {
+    func testEchoServer() async throws {
         final class Context: Sendable {
             let server: NIOLockedValueBox<[String]>
             let client: NIOLockedValueBox<[String]>
@@ -764,8 +764,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         
         app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
-        try app.start()
-        
+        try await app.startup()
+
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port")
             return
@@ -810,11 +810,11 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             }
         }
         let response = ResponseDelegate(context: context)
-        _ = try app.http.client.shared.execute(
+        _ = try await app.http.client.shared.execute(
             request: request,
             delegate: response
-        ).wait()
-        
+        ).get()
+
         let server = context.server.withLockedValue { $0 }
         let client = context.client.withLockedValue { $0 }
         XCTAssertEqual(server, ["foo", "bar", "baz"])
@@ -864,31 +864,31 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         try await app.asyncShutdown()
     }
     
-    func testStartWithValidSocketFile() throws {
+    func testStartWithValidSocketFile() async throws {
         let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
         
         app.http.server.configuration.address = .unixDomainSocket(path: socketPath)
         app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
+        await XCTAssertAsyncNoThrow(try await app.startup())
     }
     
-    func testStartWithUnsupportedSocketFile() throws {
+    func testStartWithUnsupportedSocketFile() async throws {
         app.http.server.configuration.address = .unixDomainSocket(path: "/tmp")
         
-        XCTAssertThrowsError(try app.start())
+        await XCTAssertAsyncThrowsError(try await app.startup())
     }
     
-    func testStartWithInvalidSocketFilePath() throws {
+    func testStartWithInvalidSocketFilePath() async throws {
         app.http.server.configuration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
         
-        XCTAssertThrowsError(try app.start())
+        await XCTAssertAsyncThrowsError(try await app.startup())
     }
     
-    func testStartWithDefaultHostnameConfiguration() throws {
+    func testStartWithDefaultHostnameConfiguration() async throws {
         app.http.server.configuration.address = .hostname(nil, port: nil)
         app.environment.arguments = ["serve"]
         
-        XCTAssertNoThrow(try app.start())
+        await XCTAssertAsyncNoThrow(try await app.startup())
     }
 
     func testAddressConfigurations() throws {
@@ -954,15 +954,15 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(configuration.address, .hostname(nil, port: nil))
     }
     
-    func testQuiesceKeepAliveConnections() throws {
+    func testQuiesceKeepAliveConnections() async throws {
         app.get("hello") { req in
             "world"
         }
         
         app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
-        try app.start()
-        
+        try await app.startup()
+
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port")
             return
@@ -973,11 +973,11 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             method: .GET,
             headers: ["connection": "keep-alive"]
         )
-        let a = try app.http.client.shared.execute(request: request).wait()
+        let a = try await app.http.client.shared.execute(request: request).get()
         XCTAssertEqual(a.headers.connection, .keepAlive)
     }
     
-    func testRequestBodyStreamGetsFinalisedEvenIfClientDisappears() {
+    func testRequestBodyStreamGetsFinalisedEvenIfClientDisappears() async {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
         
@@ -1003,8 +1003,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         }
         
         app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
-        
+        await XCTAssertAsyncNoThrow(try await app.startup())
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
               let ip = localAddress.ipAddress,
@@ -1031,7 +1031,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         }
     }
     
-    func testRequestBodyBackpressureWorks() {
+    func testRequestBodyBackpressureWorks() async {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
         
@@ -1064,8 +1064,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         }
         
         app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
-        
+        await XCTAssertAsyncNoThrow(try await app.startup())
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
               let ip = localAddress.ipAddress,
@@ -1118,7 +1118,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         allDonePromise.succeed(())
     }
     
-    func testCanOverrideCertValidation() throws {
+    func testCanOverrideCertValidation() async throws {
         guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
               let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
             XCTFail("Cannot load expired cert and associated key")
@@ -1155,8 +1155,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             "world"
         }
         
-        try app.start()
-        
+        try await app.startup()
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
               let ip = localAddress.ipAddress,
@@ -1169,11 +1169,11 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             url: "https://\(ip):\(port)/hello",
             method: .GET
         )
-        let a = try app.http.client.shared.execute(request: request).wait()
+        let a = try await app.http.client.shared.execute(request: request).get()
         XCTAssertEqual(a.body, ByteBuffer(string: "world"))
     }
     
-    func testCanChangeConfigurationDynamically() throws {
+    func testCanChangeConfigurationDynamically() async throws {
         guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
               let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
             XCTFail("Cannot load expired cert and associated key")
@@ -1201,8 +1201,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             "world"
         }
         
-        try app.start()
-        
+        try await app.startup()
+
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
               let ip = localAddress.ipAddress,
@@ -1212,12 +1212,12 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         }
         
         /// Make a regular request
-        let a = try app.http.client.shared.execute(
+        let a = try await app.http.client.shared.execute(
             request: try HTTPClient.Request(
                 url: "http://\(ip):\(port)/hello",
                 method: .GET
             )
-        ).wait()
+        ).get()
         XCTAssertEqual(a.headers[.server], ["Old"])
         XCTAssertEqual(a.body, ByteBuffer(string: "world"))
         
@@ -1235,12 +1235,12 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         }
         
         /// Make a TLS request this time around
-        let b = try app.http.client.shared.execute(
+        let b = try await app.http.client.shared.execute(
             request: try HTTPClient.Request(
                 url: "https://\(ip):\(port)/hello",
                 method: .GET
             )
-        ).wait()
+        ).get()
         XCTAssertEqual(b.headers[.server], ["New"])
         XCTAssertEqual(b.body, ByteBuffer(string: "world"))
         
@@ -1255,10 +1255,10 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         }
     }
     
-    func testConfigurationHasActualPortAfterStart() throws {
+    func testConfigurationHasActualPortAfterStart() async throws {
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
-        try app.start()
+        try await app.startup()
 
         XCTAssertNotEqual(app.http.server.configuration.port, 0)
         XCTAssertEqual(app.http.server.configuration.port, app.http.server.shared.localAddress?.port)
@@ -1328,5 +1328,19 @@ private extension ByteBuffer {
         var buffer = ByteBufferAllocator().buffer(capacity: decoded.count)
         buffer.writeBytes(decoded)
         self = buffer
+    }
+}
+
+func XCTAssertAsyncThrowsError<T>(_ expression: @autoclosure () async throws -> T, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line, _ errorHandler: (_ error: Error) -> Void = { _ in }) async {
+    do {
+        _ = try await expression()
+        let customMessage = message()
+        if customMessage.isEmpty {
+            XCTFail("Asynchronous call did not throw an error.", file: file, line: line)
+        } else {
+            XCTFail(customMessage, file: file, line: line)
+        }
+    } catch {
+        errorHandler(error)
     }
 }
