@@ -175,8 +175,8 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     func testAutoDetectedType() async throws {
         app.get("resource") { _ in compressiblePayload }
         
-        try app.server.start()
-        
+        try await app.server.start()
+
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
         try await assertUncompressed(.disabled)
@@ -205,8 +205,8 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
-        
+        try await app.server.start()
+
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
         try await assertUncompressed(.disabled)
@@ -235,8 +235,8 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
-        
+        try await app.server.start()
+
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
         try await assertUncompressed(.disabled)
@@ -265,8 +265,8 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
-        
+        try await app.server.start()
+
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
         try await assertUncompressed(.disabled)
@@ -295,8 +295,8 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
-        
+        try await app.server.start()
+
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
         try await assertUncompressed(.disabled)
@@ -326,8 +326,8 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
-        
+        try await app.server.start()
+
         try await assertCompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
         try await assertCompressed(.disabled)
@@ -357,7 +357,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -388,7 +388,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertCompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -419,7 +419,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -449,7 +449,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertCompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -479,7 +479,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -509,7 +509,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -539,7 +539,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -570,7 +570,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -601,7 +601,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -631,7 +631,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)
@@ -661,7 +661,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
-        try app.server.start()
+        try await app.server.start()
         
         try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
         try await assertUncompressed(.forceDisabled)

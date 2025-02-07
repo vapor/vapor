@@ -344,7 +344,7 @@ final class RequestTests: XCTestCase {
         }
     }
 
-    func testRedirect() throws {
+    func testRedirect() async throws {
         app.http.client.configuration.redirectConfiguration = .disallow
 
         app.get("redirect_normal") {
@@ -360,8 +360,7 @@ final class RequestTests: XCTestCase {
             $0.redirect(to: "foo", redirectType: .permanentPost)
         }
 
-        try app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
+        try await app.server.start(address: .hostname("localhost", port: 0))
 
         guard let port = app.http.server.shared.localAddress?.port else {
             XCTFail("Failed to get port for app")
@@ -384,6 +383,8 @@ final class RequestTests: XCTestCase {
             try app.client.post("http://localhost:\(port)/redirect_permanentPost").wait().status,
             .permanentRedirect
         )
+
+        await app.server.shutdown()
     }
 
     func testCollectedBodyDrain() throws {
