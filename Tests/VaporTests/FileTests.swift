@@ -3,42 +3,26 @@ import XCTest
 import Vapor
 import NIOCore
 import NIOHTTP1
+import _NIOFileSystem
 import Crypto
+import Vapor
+import XCTVapor
+import VaporTestUtils
 
-final class FileTests: XCTestCase {
+final class FileTests: XCTestCase, @unchecked Sendable {
     var app: Application!
-    
+
     override func setUp() async throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application.make(test)
+        app = try await Application.make(.testing)
     }
-    
+
     override func tearDown() async throws {
         try await app.asyncShutdown()
     }
-    
-    func testStreamFile() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch { 
-                    XCTFail("File Stream should have succeeded")
-                }
-            }
-        }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
-            let test = "the quick brown fox"
-            XCTAssertNotNil(res.headers.first(name: .eTag))
-            XCTAssertContains(res.body.string, test)
-        }
-    }
-
-    @available(*, deprecated)
-    func testLegacyStreamFile() throws {
-        app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #filePath) { result in
+    func testStreamFile() async throws {
+        app.get("file-stream") { req -> Response in
+            return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -47,51 +31,55 @@ final class FileTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res async in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
         }
     }
 
-    func testStreamFileConnectionClose() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+    func testStreamFileConnectionClose() async throws {
+        app.get("file-stream") { req -> Response in
+            return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
         }
 
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .connection, value: "close")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
         }
     }
 
-    func testStreamFileNull() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
+    func testStreamFileNull() async throws {
+        app.get("file-stream") { req -> Response in
             var tmpPath: String
             repeat {
-                tmpPath = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
-            } while (FileManager.default.fileExists(atPath: tmpPath))
+                tmpPath = try await FileSystem.shared.temporaryDirectory.appending(UUID().uuidString).string
+            } while try await self.fileExists(at: tmpPath)
 
-            return req.fileio.streamFile(at: tmpPath, advancedETagComparison: true) { result in
+            return try await req.fileio.streamFile(at: tmpPath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                     XCTFail("File Stream should have failed")
-                } catch { 
+                } catch {
                 }
             }
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res async in
             XCTAssertEqual(res.status, .internalServerError)
         }
     }
 
-    func testAdvancedETagHeaders() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+    private func fileExists(at path: String) async throws -> Bool {
+        return try await FileSystem.shared.info(forFileAt: .init(path)) != nil
+    }
+
+    func testAdvancedETagHeaders() async throws {
+        app.get("file-stream") { req -> Response in
+            return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -100,7 +88,7 @@ final class FileTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res async throws in
             let fileData = try Data(contentsOf: URL(fileURLWithPath: #filePath))
             let digest = SHA256.hash(data: fileData)
             let eTag = res.headers.first(name: "etag")
@@ -108,9 +96,9 @@ final class FileTests: XCTestCase {
         }
     }
 
-    func testSimpleETagHeaders() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { result in
+    func testSimpleETagHeaders() async throws {
+        app.get("file-stream") { req -> Response in
+            return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { result in
                 do {
                     try result.get()
                 } catch {
@@ -119,19 +107,19 @@ final class FileTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
-            let attributes = try FileManager.default.attributesOfItem(atPath: #filePath)
-            let modifiedAt = attributes[.modificationDate] as! Date
-            let fileSize = (attributes[.size] as? NSNumber)!.intValue
-            let fileETag = "\"\(Int(modifiedAt.timeIntervalSince1970))-\(fileSize)\""
-
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
+            guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(#filePath)) else {
+                XCTFail("Missing File Info")
+                return
+            }
+            let fileETag = "\"\(Int(fileInfo.lastDataModificationTime.date.timeIntervalSince1970))-\(fileInfo.size)\""
             XCTAssertEqual(res.headers.first(name: .eTag), fileETag)
         }
     }
-    
-    func testStreamFileContentHeaderTail() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+
+    func testStreamFileContentHeaderTail() async throws {
+        app.get("file-stream") { req -> Response in
+            return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -139,27 +127,27 @@ final class FileTests: XCTestCase {
                 }
             }
         }
-        
+
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
-            
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
+
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
-            
+
             let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
             let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
-            
+
             let range = upperRange - lowerRange + 1
             let length = Int(contentLength!)!
 
             XCTAssertTrue(range == length)
         }
     }
-    
-    func testStreamFileContentHeaderStart() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+
+    func testStreamFileContentHeaderStart() async throws {
+        app.get("file-stream") { req -> Response in
+            return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -170,42 +158,38 @@ final class FileTests: XCTestCase {
 
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
-            
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
+
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
-            
+
             let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
             let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
-            
+
             let range = upperRange - lowerRange + 1
             let length = Int(contentLength!)!
 
             XCTAssertTrue(range == length)
         }
     }
-    
-    func testStreamFileContentHeadersWithin() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+
+    func testStreamFileContentHeadersWithin() async throws {
+        app.get("file-stream") { req -> Response in
+            try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
-        
+
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
-            
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
+
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
-            
+
             let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
             let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
-            
+
             let range = upperRange - lowerRange + 1
             let length = Int(contentLength!)!
 
@@ -215,12 +199,8 @@ final class FileTests: XCTestCase {
 
     func testStreamFileContentHeadersOnlyFirstByte() async throws {
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+            try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
 
@@ -236,102 +216,81 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.body.readableBytes, 1)
         }
     }
-    
-    func testStreamFileContentHeadersWithinFail() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+
+    func testStreamFileContentHeadersWithinFail() async throws {
+        app.get("file-stream") { req -> Response in
+            try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
-        
+
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: -20, end: 25)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 10, end: 100000000)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
-    
-    func testStreamFileContentHeadersStartFail() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+
+    func testStreamFileContentHeadersStartFail() async throws {
+        app.get("file-stream") { req -> Response in
+            try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
-        
+
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: -20)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 100000000)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
-    
-    func testStreamFileContentHeadersTailFail() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
-                do {
-                    try result.get()
-                } catch {
-                    XCTFail("File Stream should have succeeded")
-                }
+
+    func testStreamFileContentHeadersTailFail() async throws {
+        app.get("file-stream") { req -> Response in
+            try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                XCTAssertNoThrow(try result.get())
             }
         }
-        
+
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: -20)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 100000000)])
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
 
-    @available(*, deprecated, message: "Test future API")
-    func testFileWriteFuture() throws {
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-        
-        let data = "Hello"
-        let path = "/tmp/fileio_write.txt"
-        
-        try request.fileio.writeFile(ByteBuffer(string: data), at: path).wait()
-        defer { try? FileManager.default.removeItem(atPath: path) }
-        
-        let result = try String(contentsOfFile: path)
-        XCTAssertEqual(result, data)
-    }
-
     func testFileWrite() async throws {
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-
         let data = "Hello"
         let path = "/tmp/fileio_write.txt"
 
-        try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
-        defer { try? FileManager.default.removeItem(atPath: path) }
+        do {
+            let request = Request(application: app, on: app.eventLoopGroup.next())
 
-        let result = try String(contentsOfFile: path, encoding: .utf8)
-        XCTAssertEqual(result, data)
+            try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
+
+            let result = try String(contentsOfFile: path, encoding: .utf8)
+            XCTAssertEqual(result, data)
+        } catch {
+            try await FileSystem.shared.removeItem(at: .init(path))
+            throw error
+        }
     }
+
 
     func testPercentDecodedFilePath() async throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
@@ -354,7 +313,7 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.body.string, "bar\n")
         }
     }
-    
+
     func testDefaultFileRelative() async throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
@@ -367,7 +326,7 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.body.string, "<h1>Subdirectory Default</h1>\n")
         }
     }
-    
+
     func testDefaultFileAbsolute() async throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
@@ -380,7 +339,7 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.body.string, "<h1>Root Default</h1>\n")
         }
     }
-    
+
     func testNoDefaultFile() throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
@@ -389,7 +348,7 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.status, .notFound)
         }
     }
-    
+
     func testRedirect() throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(
@@ -406,7 +365,7 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.status, .movedPermanently)
         }
     }
-    
+
     func testRedirectWithQueryParams() throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(
@@ -428,7 +387,7 @@ final class FileTests: XCTestCase {
             XCTAssertEqual( res.headers.first(name: .location), "/Utilities/SubUtilities/?vaporTest=test#vapor")
         }
     }
-    
+
     func testNoRedirect() throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(
@@ -445,64 +404,64 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.status, .notFound)
         }
     }
-    
+
     // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
-    func testInvalidRangeHeaderDoesNotCrash() throws {
-        app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+    func testInvalidRangeHeaderDoesNotCrash() async throws {
+        app.get("file-stream") { req -> Response in
+            try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
         }
 
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
-        
+
         headers.replaceOrAdd(name: .range, value: "bytes=-1-10")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
-        
+
         headers.replaceOrAdd(name: .range, value: "bytes=100-10")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
-        
+
         headers.replaceOrAdd(name: .range, value: "bytes=10--100")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
-        
+
         headers.replaceOrAdd(name: .range, value: "bytes=9223372036854775808-")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
-        
+
         headers.replaceOrAdd(name: .range, value: "bytes=922337203-")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
-        
+
         headers.replaceOrAdd(name: .range, value: "bytes=-922337203")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
-        
+
         headers.replaceOrAdd(name: .range, value: "bytes=-9223372036854775808")
-        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
-    
+
     func testAsyncFileWrite() async throws {
         let request = Request(application: app, on: app.eventLoopGroup.next())
-        
+
         let data = "Hello"
         let path = "/tmp/fileio_write.txt"
-        
+
         try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
         defer { try? FileManager.default.removeItem(atPath: path) }
-        
+
         let result = try String(contentsOfFile: path, encoding: .utf8)
         XCTAssertEqual(result, data)
     }

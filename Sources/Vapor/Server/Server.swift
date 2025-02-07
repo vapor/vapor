@@ -1,5 +1,6 @@
 import NIOCore
 
+#warning("TODO")
 // TODO: Remove these deprecated methods along with ServerStartError in the major release.
 public protocol Server: Sendable {
     var onShutdown: EventLoopFuture<Void> { get }
