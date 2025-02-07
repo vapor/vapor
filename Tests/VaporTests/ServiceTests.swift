@@ -15,12 +15,12 @@ final class ServiceTests: XCTestCase {
         try await app.asyncShutdown()
     }
 
-    func testReadOnly() throws {
+    func testReadOnly() async throws {
         app.get("test") { req in
             req.readOnly.foos()
         }
 
-        try app.test(.GET, "test") { res in
+        try await app.test(.GET, "test") { res in
             XCTAssertEqual(res.status, .ok)
             try XCTAssertEqual(res.content.decode([String].self), ["foo"])
         }
@@ -53,7 +53,7 @@ final class ServiceTests: XCTestCase {
         }
     }
     
-    func testServiceHelpers() throws {
+    func testServiceHelpers() async throws {
         let testString = "This is a test - \(Int.random())"
         let myFakeServicce = MyTestService(cannedResponse: testString, eventLoop: app.eventLoopGroup.next(), logger: app.logger)
         
@@ -66,7 +66,7 @@ final class ServiceTests: XCTestCase {
             return thing
         }
         
-        try app.test(.GET, "myService", afterResponse: { res in
+        try await app.test(.GET, "myService", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, testString)
         })

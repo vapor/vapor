@@ -32,12 +32,12 @@ final class PasswordTests: XCTestCase {
         XCTAssertTrue(result)
     }
     
-    func testAsyncBCryptRequestPassword() throws {
-        try assertAsyncRequestPasswordVerifies(.bcrypt, on: app)
+    func testAsyncBCryptRequestPassword() async throws {
+        try await assertAsyncRequestPasswordVerifies(.bcrypt, on: app)
     }
     
-    func testAsyncPlaintextRequestPassword() throws {
-        try assertAsyncRequestPasswordVerifies(.plaintext, on: app)
+    func testAsyncPlaintextRequestPassword() async throws {
+        try await assertAsyncRequestPasswordVerifies(.plaintext, on: app)
     }
     
     func testAsyncBCryptApplicationPassword() throws {
@@ -89,7 +89,7 @@ final class PasswordTests: XCTestCase {
         on app: Application,
         file: StaticString = #filePath,
         line: UInt = #line
-    ) throws {
+    ) async throws {
         app.passwords.use(provider)
         
         app.get("test") { req -> EventLoopFuture<String> in
@@ -105,7 +105,7 @@ final class PasswordTests: XCTestCase {
             .map { $0 ? "true" : "false" }
         }
         
-        try app.test(.GET, "test", afterResponse: { res in
+        try await app.test(.GET, "test", afterResponse: { res in
             XCTAssertEqual(res.body.string, "true", file: file, line: line)
         })
     }

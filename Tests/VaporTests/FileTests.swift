@@ -340,16 +340,16 @@ final class FileTests: XCTestCase, @unchecked Sendable {
         }
     }
 
-    func testNoDefaultFile() throws {
+    func testNoDefaultFile() async throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-        try app.test(.GET, "Utilities/") { res in
+        try await app.test(.GET, "Utilities/") { res in
             XCTAssertEqual(res.status, .notFound)
         }
     }
 
-    func testRedirect() throws {
+    func testRedirect() async throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(
             FileMiddleware(
@@ -359,14 +359,14 @@ final class FileTests: XCTestCase, @unchecked Sendable {
             )
         )
 
-        try app.test(.GET, "Utilities") { res in
+        try await app.test(.GET, "Utilities") { res in
             XCTAssertEqual(res.status, .movedPermanently)
         }.test(.GET, "Utilities/SubUtilities") { res in
             XCTAssertEqual(res.status, .movedPermanently)
         }
     }
 
-    func testRedirectWithQueryParams() throws {
+    func testRedirectWithQueryParams() async throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(
             FileMiddleware(
@@ -376,7 +376,7 @@ final class FileTests: XCTestCase, @unchecked Sendable {
             )
         )
 
-        try app.test(.GET, "Utilities?vaporTest=test") { res in
+        try await app.test(.GET, "Utilities?vaporTest=test") { res in
             XCTAssertEqual(res.status, .movedPermanently)
             XCTAssertEqual(res.headers.first(name: .location), "/Utilities/?vaporTest=test")
         }.test(.GET, "Utilities/SubUtilities?vaporTest=test") { res in
@@ -388,7 +388,7 @@ final class FileTests: XCTestCase, @unchecked Sendable {
         }
     }
 
-    func testNoRedirect() throws {
+    func testNoRedirect() async throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(
             FileMiddleware(
@@ -398,7 +398,7 @@ final class FileTests: XCTestCase, @unchecked Sendable {
             )
         )
 
-        try app.test(.GET, "Utilities") { res in
+        try await app.test(.GET, "Utilities") { res in
             XCTAssertEqual(res.status, .notFound)
         }.test(.GET, "Utilities/SubUtilities") { res in
             XCTAssertEqual(res.status, .notFound)

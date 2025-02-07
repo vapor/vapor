@@ -76,7 +76,7 @@ final class ErrorTests: XCTestCase {
         XCTAssertEqual(description, expectation)
     }
 
-    func testAbortError() throws {
+    func testAbortError() async throws {
         app.get("foo") { req -> String in
             throw Abort(.internalServerError, reason: "Foo")
         }
@@ -89,7 +89,7 @@ final class ErrorTests: XCTestCase {
             var reason: String
         }
 
-        try app.test(.GET, "foo") { res in
+        try await app.test(.GET, "foo") { res in
             XCTAssertEqual(res.status, .internalServerError)
             let abort = try res.content.decode(AbortResponse.self)
             XCTAssertEqual(abort.reason, "Foo")
@@ -102,14 +102,14 @@ final class ErrorTests: XCTestCase {
         })
     }
     
-    func testErrorMiddlewareUsesContentConfiguration() throws {
+    func testErrorMiddlewareUsesContentConfiguration() async throws {
         app.get("foo") { req -> String in
             throw Abort(.internalServerError, reason: "Foo")
         }
         
         ContentConfiguration.global.use(encoder: URLEncodedFormEncoder(), for: .json)
         
-        try app.test(.GET, "foo") { res in
+        try await app.test(.GET, "foo") { res in
             XCTAssertEqual(res.status, HTTPStatus.internalServerError)
             let option1 = "error=true&reason=Foo"
             let option2 = "reason=Foo&error=true"

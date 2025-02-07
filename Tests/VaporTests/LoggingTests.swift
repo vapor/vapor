@@ -13,14 +13,14 @@ final class LoggingTests: XCTestCase {
         try await app.asyncShutdown()
     }
 
-    func testChangeRequestLogLevel() throws {
+    func testChangeRequestLogLevel() async throws {
         app.get("trace") { req -> String in
             req.logger.logLevel = .trace
             req.logger.trace("foo")
             return "done"
         }
 
-        try app.testable().test(.GET, "trace") { res in
+        try await app.testable().test(.GET, "trace") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
         }

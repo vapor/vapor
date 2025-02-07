@@ -109,18 +109,18 @@ final class QueryTests: XCTestCase {
     }
 
     // https://github.com/vapor/vapor/issues/1537
-    func testQueryStringRunning() throws {
+    func testQueryStringRunning() async throws {
         app.routes.get("todos") { req in
             return "hi"
         }
 
-        try app.testable().test(.GET, "/todos?a=b") { res in
+        try await app.testable().test(.GET, "/todos?a=b") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "hi")
         }
     }
 
-    func testURLEncodedFormDecodeQuery() throws {
+    func testURLEncodedFormDecodeQuery() async throws {
         struct User: Content {
             var name: String
             var age: Int
@@ -144,12 +144,12 @@ final class QueryTests: XCTestCase {
         }
 
         let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3"
-        try app.testable().test(.GET, "/urlencodedform?\(data)") { res in
+        try await app.testable().test(.GET, "/urlencodedform?\(data)") { res in
             XCTAssertEqual(res.status.code, 200)
         }
     }
 
-    func testURLPercentEncodedFormDecodeQuery() throws {
+    func testURLPercentEncodedFormDecodeQuery() async throws {
         struct User: Content {
             var name: String
             var age: Int
@@ -173,12 +173,12 @@ final class QueryTests: XCTestCase {
         }
 
         let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        try app.testable().test(.GET, "/urlencodedform?\(data)") { res in
+        try await app.testable().test(.GET, "/urlencodedform?\(data)") { res in
             XCTAssertEqual(res.status.code, 200)
         }
     }
 
-    func testCustomEncode() throws {
+    func testCustomEncode() async throws {
         app.get("custom-encode") { req -> Response in
             let res = Response(status: .ok)
             let jsonEncoder = JSONEncoder()
@@ -187,7 +187,7 @@ final class QueryTests: XCTestCase {
             return res
         }
 
-        try app.testable().test(.GET, "/custom-encode") { res in
+        try await app.testable().test(.GET, "/custom-encode") { res in
             XCTAssertEqual(res.body.string, """
             {
               "hello" : "world"
@@ -197,7 +197,7 @@ final class QueryTests: XCTestCase {
     }
 
     // https://github.com/vapor/vapor/issues/1609
-    func testGH1609() throws {
+    func testGH1609() async throws {
         struct DecodeFail: Content {
             var here: String
             var missing: String
@@ -214,7 +214,7 @@ final class QueryTests: XCTestCase {
         headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
         headers.contentType = .json
 
-        try app.testable().test(.POST, "/decode-fail", headers: headers, body: body) { res in
+        try await app.testable().test(.POST, "/decode-fail", headers: headers, body: body) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "missing")
         }

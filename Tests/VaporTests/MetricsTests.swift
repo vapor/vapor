@@ -15,7 +15,7 @@ class MetricsTests: XCTestCase {
         try await app.asyncShutdown()
     }
 
-    func testMetricsIncreasesCounter() {
+    func testMetricsIncreasesCounter() async{
         let metrics = CapturingMetricsSystem()
         MetricsSystem.bootstrapInternal(metrics)
 
@@ -33,7 +33,7 @@ class MetricsTests: XCTestCase {
             }
         }
 
-        XCTAssertNoThrow(try app.testable().test(.GET, "/users/1") { res in
+        await XCTAssertAsyncNoThrow(try await app.testable().test(.GET, "/users/1") { res in
             XCTAssertEqual(res.status, .ok)
             let resData = try res.content.decode(User.self)
             XCTAssertEqual(resData.id, 1)
@@ -57,7 +57,7 @@ class MetricsTests: XCTestCase {
         })
     }
 
-    func testID404DoesntSpamMetrics() {
+    func testID404DoesntSpamMetrics() async {
         let metrics = CapturingMetricsSystem()
         MetricsSystem.bootstrapInternal(metrics)
 
@@ -75,7 +75,7 @@ class MetricsTests: XCTestCase {
             }
         }
 
-        XCTAssertNoThrow(try app.testable().test(.GET, "/users/2") { res in
+        await XCTAssertAsyncNoThrow(try await app.testable().test(.GET, "/users/2") { res in
             XCTAssertEqual(res.status, .notFound)
             let counter = metrics.counters["http_requests_total"] as! TestCounter
             let pathDimension = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "path"}))
@@ -98,11 +98,11 @@ class MetricsTests: XCTestCase {
         })
     }
 
-    func test404RewritesPathForMetricsToAvoidDOSAttack()  {
+    func test404RewritesPathForMetricsToAvoidDOSAttack() async {
         let metrics = CapturingMetricsSystem()
         MetricsSystem.bootstrapInternal(metrics)
 
-        XCTAssertNoThrow(try app.testable().test(.GET, "/not/found") { res in
+        await XCTAssertAsyncNoThrow(try await app.testable().test(.GET, "/not/found") { res in
             XCTAssertEqual(res.status, .notFound)
             XCTAssertEqual(metrics.counters.count, 1)
             let counter = metrics.counters["http_requests_total"] as! TestCounter
@@ -124,7 +124,7 @@ class MetricsTests: XCTestCase {
         })
     }
 
-    func testMetricsDisabled() {
+    func testMetricsDisabled() async {
         let metrics = CapturingMetricsSystem()
         MetricsSystem.bootstrapInternal(metrics)
 
@@ -144,7 +144,7 @@ class MetricsTests: XCTestCase {
             }
         }
 
-        XCTAssertNoThrow(try app.testable().test(.GET, "/users/1") { res in
+        await XCTAssertAsyncNoThrow(try await app.testable().test(.GET, "/users/1") { res in
             XCTAssertEqual(res.status, .ok)
             let resData = try res.content.decode(User.self)
             XCTAssertEqual(resData.id, 1)

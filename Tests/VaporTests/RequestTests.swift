@@ -233,13 +233,13 @@ final class RequestTests: XCTestCase {
         }
     }
 
-    func testCustomHostAddress() throws {
+    func testCustomHostAddress() async throws {
         app.get("vapor", "is", "fun") {
             return $0.remoteAddress?.hostname ?? "n/a"
         }
 
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "vapor/is/fun") { res in
+        try await app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "vapor/is/fun") { res in
             XCTAssertEqual(res.body.string, ipV4Hostname)
         }
     }
@@ -260,7 +260,7 @@ final class RequestTests: XCTestCase {
         XCTAssertEqual(string, request.id)
     }
 
-    func testRequestPeerAddressForwarded() throws {
+    func testRequestPeerAddressForwarded() async throws {
         app.get("remote") { req -> String in
             req.headers.add(name: .forwarded, value: "for=192.0.2.60; proto=http; by=203.0.113.43")
             guard let peerAddress = req.peerAddress else {
@@ -269,12 +269,12 @@ final class RequestTests: XCTestCase {
             return peerAddress.description
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
         }
     }
 
-    func testRequestPeerAddressXForwardedFor() throws {
+    func testRequestPeerAddressXForwardedFor() async throws {
         app.get("remote") { req -> String in
             req.headers.add(name: .xForwardedFor, value: "5.6.7.8")
             guard let peerAddress = req.peerAddress else {
@@ -283,12 +283,12 @@ final class RequestTests: XCTestCase {
             return peerAddress.description
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]5.6.7.8:80")
         }
     }
 
-    func testRequestPeerAddressRemoteAddress() throws {
+    func testRequestPeerAddressRemoteAddress() async throws {
         app.get("remote") { req -> String in
             guard let peerAddress = req.peerAddress else {
                 return "n/a"
@@ -297,12 +297,12 @@ final class RequestTests: XCTestCase {
         }
 
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
+        try await app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
             XCTAssertContains(res.body.string, "[IPv4]\(ipV4Hostname)")
         }
     }
 
-    func testRequestPeerAddressMultipleHeadersOrder() throws {
+    func testRequestPeerAddressMultipleHeadersOrder() async throws {
         app.get("remote") { req -> String in
             req.headers.add(name: .xForwardedFor, value: "5.6.7.8")
             req.headers.add(name: .forwarded, value: "for=192.0.2.60; proto=http; by=203.0.113.43")
@@ -313,12 +313,12 @@ final class RequestTests: XCTestCase {
         }
 
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
+        try await app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
         }
     }
 
-    func testRequestIdForwarding() throws {
+    func testRequestIdForwarding() async throws {
          app.get("remote") {
             if case .string(let string) = $0.logger[metadataKey: "request-id"], string == $0.id {
                 return string
@@ -327,19 +327,19 @@ final class RequestTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "remote", beforeRequest: { req in
+        try await app.testable(method: .running(port: 0)).test(.GET, "remote", beforeRequest: { req in
             req.headers.add(name: .xRequestId, value: "test")
         }, afterResponse: { res in
             XCTAssertEqual(res.body.string, "test")
         })
     }
 
-    func testRequestRemoteAddress() throws {
+    func testRequestRemoteAddress() async throws {
         app.get("remote") {
             $0.remoteAddress?.description ?? "n/a"
         }
 
-        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
+        try await app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertContains(res.body.string, "IP")
         }
     }

@@ -124,14 +124,14 @@ final class ApplicationTests: XCTestCase {
         try await app.asyncShutdown()
     }
 
-    func testSwiftError() throws {
+    func testSwiftError() async throws {
         struct Foo: Error { }
         
         app.get("error") { req -> String in
             throw Foo()
         }
 
-        try app.testable().test(.GET, "/error") { res in
+        try await app.testable().test(.GET, "/error") { res in
             XCTAssertEqual(res.status, .internalServerError)
         }
     }

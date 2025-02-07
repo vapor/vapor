@@ -65,7 +65,7 @@ final class ContentTests: XCTestCase {
         try XCTAssertEqual(request.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
     }
 
-    func testGH1534() throws {
+    func testGH1534() async throws {
         let data = """
         {"name":"hi","bar":"asdf"}
         """
@@ -79,13 +79,13 @@ final class ContentTests: XCTestCase {
             return foo.name
         }
 
-        try app.testable().test(.GET, "/decode_error") { res in
+        try await app.testable().test(.GET, "/decode_error") { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, #"Value was not of type 'Int' at path 'bar'. Expected to decode Int but found a string"#)
         }
     }
 
-    func testContentContainerEncode() throws {
+    func testContentContainerEncode() async throws {
         struct FooContent: Content {
             var message: String = "hi"
         }
@@ -101,13 +101,13 @@ final class ContentTests: XCTestCase {
             return res
         }
 
-        try app.testable().test(.GET, "/encode") { res in
+        try await app.testable().test(.GET, "/encode") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "hi")
         }
     }
 
-    func testContentContainerDecode() throws {
+    func testContentContainerDecode() async throws {
         struct FooContent: Content, Equatable {
             var message: String = "hi"
         }
@@ -121,7 +121,7 @@ final class ContentTests: XCTestCase {
             return "decoded!"
         }
 
-        try app.testable().test(.POST, "/decode") { req in
+        try await app.testable().test(.POST, "/decode") { req in
             try req.content.encode(FooContent())
         } afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
@@ -140,7 +140,7 @@ final class ContentTests: XCTestCase {
             return "decoded!"
         }
 
-        try app.testable().test(.POST, "/decode-bad-header") { req in
+        try await app.testable().test(.POST, "/decode-bad-header") { req in
             try req.content.encode(FooContent())
             req.headers.contentType = .audio
         } afterResponse: { res in
@@ -149,7 +149,7 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testMultipartDecode() throws {
+    func testMultipartDecode() async throws {
         let data = """
         --123\r
         Content-Disposition: form-data; name="name"\r
@@ -184,7 +184,7 @@ final class ContentTests: XCTestCase {
             return decoded
         }
 
-        try app.testable().test(.GET, "/multipart", headers: [
+        try await app.testable().test(.GET, "/multipart", headers: [
             "Content-Type": "multipart/form-data; boundary=123"
         ], body: .init(string: data)) { res in
             XCTAssertEqual(res.status, .ok)
@@ -192,7 +192,7 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testMultipartDecodedEmptyMultipartForm() throws {
+    func testMultipartDecodedEmptyMultipartForm() async throws {
         let data = """
         --123\r
         --123--\r
@@ -211,14 +211,14 @@ final class ContentTests: XCTestCase {
             return decoded
         }
 
-        try app.testable().test(.GET, "/multipart", headers: [
+        try await app.testable().test(.GET, "/multipart", headers: [
             "Content-Type": "multipart/form-data; boundary=123"
         ], body: .init(string: data)) { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
         }
     }
 
-    func testMultipartDecodedEmptyBody() throws {
+    func testMultipartDecodedEmptyBody() async throws {
         let data = ""
         let expected = User(
             name: "Vapor"
@@ -234,14 +234,14 @@ final class ContentTests: XCTestCase {
             return decoded
         }
 
-        try app.testable().test(.GET, "/multipart", headers: [
+        try await app.testable().test(.GET, "/multipart", headers: [
             "Content-Type": "multipart/form-data; boundary=123"
         ], body: .init(string: data)) { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
         }
     }
 
-    func testMultipartDecodeUnicode() throws {
+    func testMultipartDecodeUnicode() async throws {
         let data = """
         --123\r
         Content-Disposition: form-data; name="name"\r
@@ -276,7 +276,7 @@ final class ContentTests: XCTestCase {
             return decoded
         }
 
-        try app.testable().test(.GET, "/multipart", headers: [
+        try await app.testable().test(.GET, "/multipart", headers: [
             "Content-Type": "multipart/form-data; boundary=123"
         ], body: .init(string: data)) { res in
             XCTAssertEqual(res.status, .ok)
@@ -284,7 +284,7 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testMultipartEncode() throws {
+    func testMultipartEncode() async throws {
         struct User: Content {
             static let defaultContentType: HTTPMediaType = .formData
             var name: String
@@ -299,7 +299,7 @@ final class ContentTests: XCTestCase {
                 image: File(data: "<contents of image>", filename: "droplet.png")
             )
         }
-        try app.testable().test(.GET, "/multipart") { res in
+        try await app.testable().test(.GET, "/multipart") { res in
             XCTAssertEqual(res.status, .ok)
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
@@ -309,7 +309,7 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testMultiPartEncodeUnicode() throws {
+    func testMultiPartEncodeUnicode() async throws {
         struct User: Content {
             static let defaultContentType: HTTPMediaType = .formData
             var name: String
@@ -324,7 +324,7 @@ final class ContentTests: XCTestCase {
                 image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
             )
         }
-        try app.testable().test(.GET, "/multipart") { res in
+        try await app.testable().test(.GET, "/multipart") { res in
             XCTAssertEqual(res.status, .ok)
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
@@ -334,7 +334,7 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testURLEncodedFormDecode() throws {
+    func testURLEncodedFormDecode() async throws {
         struct User: Content {
             var name: String
             var age: Int
@@ -354,12 +354,12 @@ final class ContentTests: XCTestCase {
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
 
-        try app.testable().test(.GET, "/urlencodedform", headers: headers, body: body) { res in
+        try await app.testable().test(.GET, "/urlencodedform", headers: headers, body: body) { res in
             XCTAssertEqual(res.status.code, 200)
         }
     }
 
-    func testURLEncodedFormEncode() throws {
+    func testURLEncodedFormEncode() async throws {
         struct User: Content {
             static let defaultContentType: HTTPMediaType = .urlEncodedForm
             var name: String
@@ -370,7 +370,7 @@ final class ContentTests: XCTestCase {
         app.get("urlencodedform") { _ -> User in
             User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
         }
-        try app.testable().test(.GET, "/urlencodedform") { res in
+        try await app.testable().test(.GET, "/urlencodedform") { res in
             XCTAssertEqual(res.status.code, 200)
             XCTAssertEqual(res.headers.contentType, .urlEncodedForm)
             XCTAssertContains(res.body.string, "luckyNumbers[]=5")
@@ -380,26 +380,26 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testJSONPreservesHTTPHeaders() throws {
+    func testJSONPreservesHTTPHeaders() async throws {
         app.get("check") { (req: Request) -> String in
             "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
 
-        try app.test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
+        try await app.test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
             try req.content.encode(["foo": "bar"], as: .json)
         }) { res in
             XCTAssertEqual(res.body.string, "PRESENT.application/json; charset=utf-8")
         }
     }
 
-    func testJSONAllowsContentTypeOverride() throws {
+    func testJSONAllowsContentTypeOverride() async throws {
         app.get("check") { (req: Request) -> String in
             "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
         // Me and my sadistic sense of humor.
         ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
 
-        try app.testable().test(.GET, "/check", headers: [
+        try await app.testable().test(.GET, "/check", headers: [
             "X-Test-Value": "PRESENT"
         ], beforeRequest: { req in
             try req.content.encode(["foo": "bar"], as: .json)
@@ -587,7 +587,7 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testPlaintextDecode() throws {
+    func testPlaintextDecode() async throws {
         let data = "255"
         app.routes.get("plaintext") { _ -> Response in
             let res = Response()
@@ -601,19 +601,19 @@ final class ContentTests: XCTestCase {
             return res
         }
 
-        try app.testable().test(.GET, "/plaintext") { res in
+        try await app.testable().test(.GET, "/plaintext") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(try res.content.decode(UInt8.self), 255)
             XCTAssertEqual(try res.content.decode(String.self), "255")
         }
 
-        try app.testable().test(.GET, "/empty-plaintext") { res in
+        try await app.testable().test(.GET, "/empty-plaintext") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(try res.content.decode(String.self), "")
         }
     }
 
-    func testPlaintextDecoderDoesntCrash() throws {
+    func testPlaintextDecoderDoesntCrash() async throws {
         struct WrongType: Content {
             let example: String
         }
@@ -633,18 +633,18 @@ final class ContentTests: XCTestCase {
         var headers = HTTPHeaders()
         headers.add(name: .contentType, value: "text/plain")
 
-        try app.testable().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
+        try await app.testable().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
             // This should return a 400 Bad Request and not crash
             XCTAssertEqual(res.status, .badRequest)
         }
     }
 
-    func testContentIsBool() throws {
+    func testContentIsBool() async throws {
         app.routes.get("success") { _ in
             true
         }
 
-        try app.testable().test(.GET, "/success") { res in
+        try await app.testable().test(.GET, "/success") { res in
             XCTAssertEqual(try res.content.decode(Bool.self), true)
         }
     }

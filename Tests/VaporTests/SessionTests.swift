@@ -91,7 +91,7 @@ final class SessionTests: XCTestCase {
         }
     }
 
-    func testInvalidCookie() throws {
+    func testInvalidCookie() async throws {
         // Configure sessions.
         app.sessions.use(.memory)
         app.middleware.use(app.sessions.middleware)
@@ -112,13 +112,13 @@ final class SessionTests: XCTestCase {
 
 
         // Test accessing session with no cookie.
-        try app.test(.GET, "get") { res in
+        try await app.test(.GET, "get") { res in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         // Test setting session with invalid cookie.
         var newCookie: HTTPCookies.Value?
-        try app.test(.GET, "set", beforeRequest: { req in
+        try await app.test(.GET, "set", beforeRequest: { req in
             req.headers.cookie = ["vapor-session": "foo"]
         }, afterResponse: { res in
             // We should get a new cookie back.
@@ -130,7 +130,7 @@ final class SessionTests: XCTestCase {
         })
 
         // Test accessing newly created session.
-        try app.test(.GET, "get", beforeRequest: { req in
+        try await app.test(.GET, "get", beforeRequest: { req in
             // Pass cookie from previous request.
             req.headers.cookie = ["vapor-session": newCookie!]
         }, afterResponse: { res in

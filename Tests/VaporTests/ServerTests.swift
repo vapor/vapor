@@ -611,12 +611,12 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(numberOfClients * 2, numRequests.load(ordering: .relaxed))
     }
     
-    func testLiveServer() throws {
+    func testLiveServer() async throws {
         app.routes.get("ping") { req -> String in
             return "123"
         }
         
-        try app.testable().test(.GET, "/ping") { res in
+        try await app.testable().test(.GET, "/ping") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "123")
         }
@@ -636,7 +636,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), true)
     }
     
-    func testMultipleChunkBody() throws {
+    func testMultipleChunkBody() async throws {
         let payload = [UInt8].random(count: 1 << 20)
         
         app.on(.POST, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPStatus in
@@ -650,12 +650,12 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         
         var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
         buffer.writeBytes(payload)
-        try app.testable(method: .running(port: 0)).test(.POST, "payload", body: buffer) { res in
+        try await app.testable(method: .running(port: 0)).test(.POST, "payload", body: buffer) { res in
             XCTAssertEqual(res.status, .ok)
         }
     }
     
-    func testCollectedResponseBodyEnd() throws {
+    func testCollectedResponseBodyEnd() async throws {
         app.post("drain") { req -> EventLoopFuture<HTTPStatus> in
             let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
             req.body.drain { result in
@@ -671,7 +671,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             return promise.futureResult
         }
         
-        try app.testable(method: .running(port: 0)).test(.POST, "drain", beforeRequest: { req in
+        try await app.testable(method: .running(port: 0)).test(.POST, "drain", beforeRequest: { req in
             try req.content.encode(["hello": "world"])
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
@@ -679,14 +679,14 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     }
     
     // https://github.com/vapor/vapor/issues/1786
-    func testMissingBody() throws {
+    func testMissingBody() async throws {
         struct User: Content { }
         
         app.get("user") { req -> User in
             return try req.content.decode(User.self)
         }
         
-        try app.testable().test(.GET, "/user") { res in
+        try await app.testable().test(.GET, "/user") { res in
             XCTAssertEqual(res.status, .unsupportedMediaType)
         }
     }
@@ -697,7 +697,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         await XCTAssertAsyncThrowsError(try await app.startup())
     }
     
-    func testEarlyExitStreamingRequest() throws {
+    func testEarlyExitStreamingRequest() async throws {
         app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<Int> in
             guard req.headers.first(name: "test") != nil else {
                 return req.eventLoop.makeFailedFuture(Abort(.badRequest))
@@ -722,7 +722,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)
         buffer.writeString(String(repeating: "a", count: 10_000_000))
         
-        try app.testable(method: .running(port: 0)).test(.POST, "upload", beforeRequest: { req in
+        try await app.testable(method: .running(port: 0)).test(.POST, "upload", beforeRequest: { req in
             req.body = buffer
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .badRequest)
