@@ -147,19 +147,20 @@ public func routes(_ app: Application) throws {
     }
 
     app.get("client") { req in
-        return req.client.get("http://httpbin.org/status/201").map { $0.description }
+        let response = try await req.client.get("http://httpbin.org/status/201")
+        return response.description
     }
 
-    app.get("client-json") { req -> EventLoopFuture<String> in
+    app.get("client-json") { req in
         struct HTTPBinResponse: Decodable {
             struct Slideshow: Decodable {
                 var title: String
             }
             var slideshow: Slideshow
         }
-        return req.client.get("http://httpbin.org/json")
-            .flatMapThrowing { try $0.content.decode(HTTPBinResponse.self) }
-            .map { $0.slideshow.title }
+        let response = try await req.client.get("http://httpbin.org/json")
+        let data = try response.content.decode(HTTPBinResponse.self)
+        return data.slideshow.title
     }
     
     let users = app.grouped("users")

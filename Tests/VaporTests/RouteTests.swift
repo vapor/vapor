@@ -362,7 +362,8 @@ final class RouteTests: XCTestCase {
     // https://github.com/vapor/vapor/issues/2716
     func testGH2716() async throws {
         app.get("client") { req in
-            return req.client.get("http://localhost/status/2 1").map { $0.description }
+            let response = try await req.client.get("http://localhost/status/2 1")
+            return response.description
         }
 
         try await app.testable(method: .running(port: 0)).test(.GET, "/client") { res in

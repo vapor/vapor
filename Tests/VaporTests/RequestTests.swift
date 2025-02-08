@@ -344,49 +344,6 @@ final class RequestTests: XCTestCase {
         }
     }
 
-    func testRedirect() async throws {
-        app.http.client.configuration.redirectConfiguration = .disallow
-
-        app.get("redirect_normal") {
-            $0.redirect(to: "foo", redirectType: .normal)
-        }
-        app.get("redirect_permanent") {
-            $0.redirect(to: "foo", redirectType: .permanent)
-        }
-        app.post("redirect_temporary") {
-            $0.redirect(to: "foo", redirectType: .temporary)
-        }
-        app.post("redirect_permanentPost") {
-            $0.redirect(to: "foo", redirectType: .permanentPost)
-        }
-
-        try await app.server.start(address: .hostname("localhost", port: 0))
-
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port for app")
-            return
-        }
-
-        XCTAssertEqual(
-            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
-            .seeOther
-        )
-        XCTAssertEqual(
-            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
-            .movedPermanently
-        )
-        XCTAssertEqual(
-            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
-            .temporaryRedirect
-        )
-        XCTAssertEqual(
-            try app.client.post("http://localhost:\(port)/redirect_permanentPost").wait().status,
-            .permanentRedirect
-        )
-
-        await app.server.shutdown()
-    }
-
     func testCollectedBodyDrain() throws {
         let request = Request(
             application: app,

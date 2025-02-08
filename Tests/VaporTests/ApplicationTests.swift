@@ -142,7 +142,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(res.body?.string, "Hello, world!")
     }
 
-    func testAutomaticPortPickingWorks() async {
+    func testAutomaticPortPickingWorks() async throws {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
 
@@ -166,8 +166,8 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual("127.0.0.1", ip)
         XCTAssertGreaterThan(port, 0)
 
-        XCTAssertEqual("Hello, world!",
-                       try app.client.get("http://localhost:\(port)/hello").wait().body?.string)
+        let response = try await app.client.get("http://localhost:\(port)/hello")
+        XCTAssertEqual("Hello, world!", response.body?.string)
     }
 
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {

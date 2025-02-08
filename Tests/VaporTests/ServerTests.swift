@@ -57,11 +57,11 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.get("foo") { _ in "bar" }
         try await app.startup()
 
-        let res = try await app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }.get()
+        let res = try await app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }
         XCTAssertEqual(res.body?.string, "bar")
         
         // no server should be bound to the port despite one being set on the configuration.
-        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }.wait())
+        await XCTAssertAsyncThrowsError(try await app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) })
 
         try await app.shutdown()
     }
@@ -160,7 +160,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
             req.headers.replaceOrAdd(name: .contentType, value: "application/json")
             req.body = jsonPayload
-        }.get()
+        }
 
         if let body = res.body {
             // Validate that we received a valid JSON object
@@ -199,7 +199,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         let res = try await app.client.post("http://localhost:\(port)/gzip") { req in
             req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
             req.body = smallBody
-        }.get()
+        }
         XCTAssertEqual(res.body?.string, smallOrigString)
         
         // Big payload should be hard-rejected. We can't test for the raw NIOHTTPDecompression.DecompressionError.limit error here because
@@ -208,7 +208,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             _ = try await app.client.post("http://localhost:\(port)/gzip") { req in
                 req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
                 req.body = bigBody
-            }.get()
+            }
         } catch let error as HTTPClientError {
             XCTAssertEqual(error, HTTPClientError.remoteConnectionClosed)
         } catch {

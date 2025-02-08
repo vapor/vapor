@@ -144,8 +144,8 @@ final class ClientTests: XCTestCase, @unchecked Sendable {
     func testClientTimeout() async throws {
         try await app.boot()
 
-        XCTAssertNoThrow(try app.client.get("http://localhost:\(remoteAppPort!)/json") { $0.timeout = .seconds(1) }.wait())
-        XCTAssertThrowsError(try app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .milliseconds(200) }.wait()) {
+        await XCTAssertAsyncNoThrow(try await app.client.get("http://localhost:\(remoteAppPort!)/json") { $0.timeout = .seconds(1) })
+        await XCTAssertAsyncThrowsError(try await app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .milliseconds(200) }) {
             XCTAssertTrue(type(of: $0) == HTTPClientError.self, "\(type(of: $0)) is not a \(HTTPClientError.self)")
             XCTAssertEqual($0 as? HTTPClientError, .deadlineExceeded)
         }
@@ -243,9 +243,9 @@ final class CustomClient: Client, Sendable {
         self._requests = .init(_requests)
     }
 
-    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+    func send(_ request: ClientRequest) async throws -> ClientResponse {
         self._requests.withLockedValue { $0.append(request) }
-        return self.eventLoop.makeSucceededFuture(ClientResponse())
+        return ClientResponse()
     }
 
     func delegating(to eventLoop: any EventLoop) -> Client {

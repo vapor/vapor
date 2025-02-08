@@ -78,108 +78,105 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
     }
 
     private func download(on eventLoop: EventLoop, using client: Client, logger: Logger?) -> EventLoopFuture<T> {
-        // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
-        var headers: HTTPHeaders = [:]
-        self.headers.withLockedValue { cachedHeaders in
-            if let eTag = cachedHeaders?.first(name: .eTag) {
-                headers.add(name: .ifNoneMatch, value: eTag)
-            }
+        return eventLoop.makeFutureWithTask {
+            // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
+            var headers: HTTPHeaders = [:]
+            self.headers.withLockedValue { cachedHeaders in
+                if let eTag = cachedHeaders?.first(name: .eTag) {
+                    headers.add(name: .ifNoneMatch, value: eTag)
+                }
 
-            if let lastModified = cachedHeaders?.lastModified {
-                // TODO: If using HTTP/1.0 then this should be .ifUnmodifiedSince instead. Don't know
-                // how to determine that right now.
-                headers.add(name: .ifModifiedSince, value: lastModified.serialize())
-            }
-        }
-
-        // Cache-Control max-age is calculated against the request date.
-        let requestSentAt = Date()
-
-        return client.get(
-            self.uri, headers: headers
-        ).flatMapThrowing { response -> ClientResponse in
-            if !(response.status == .notModified || response.status == .ok) {
-                throw EndpointCacheError.unexpctedResponseStatus(response.status, uri: self.uri)
-            }
-
-            return response
-        }.flatMap { response -> EventLoopFuture<T> in
-            // Synchronize access to shared state.
-            self.sync.lock()
-            defer { self.sync.unlock() }
-
-            if let cacheControl = response.headers.cacheControl, cacheControl.noStore == true {
-                // The server *shouldn't* give an expiration with no-store, but...
-                self.clearCache()
-            } else {
-                self.headers.withLockedValue { headers in
-                    headers = response.headers
-                    self.cached.withLockedValue { $0.1 = headers?.expirationDate(requestSentAt: requestSentAt) }
+                if let lastModified = cachedHeaders?.lastModified {
+                    // TODO: If using HTTP/1.0 then this should be .ifUnmodifiedSince instead. Don't know
+                    // how to determine that right now.
+                    headers.add(name: .ifModifiedSince, value: lastModified.serialize())
                 }
             }
 
-            switch response.status {
-            case .notModified:
-                logger?.debug("Cached data is still valid.")
+            // Cache-Control max-age is calculated against the request date.
+            let requestSentAt = Date()
 
-                let cachedData = self.cached.withLockedValue({ $0 })
-                guard let cached = cachedData.0 else {
-                    // This shouldn't actually be possible, but just in case.
+            do {
+                let response = try await client.get(self.uri, headers: headers)
+                if !(response.status == .notModified || response.status == .ok) {
+                    throw EndpointCacheError.unexpctedResponseStatus(response.status, uri: self.uri)
+                }
+                // Synchronize access to shared state.
+                self.sync.lock()
+                defer { self.sync.unlock() }
+
+                if let cacheControl = response.headers.cacheControl, cacheControl.noStore == true {
+                    // The server *shouldn't* give an expiration with no-store, but...
                     self.clearCache()
-                    return self.download(on: eventLoop, using: client, logger: logger)
-                }
-
-                return eventLoop.makeSucceededFuture(cached)
-
-            case .ok:
-                logger?.debug("New data received")
-
-                let data: T
-
-                do {
-                    data = try response.content.decode(T.self)
-                } catch {
-                    return eventLoop.makeFailedFuture(EndpointCacheError.contentDecodeFailure(error))
-                }
-
-                self.cached.withLockedValue { cachedData in
-                    if cachedData.1 != nil {
-                        cachedData.0 = data
+                } else {
+                    self.headers.withLockedValue { headers in
+                        headers = response.headers
+                        self.cached.withLockedValue { $0.1 = headers?.expirationDate(requestSentAt: requestSentAt) }
                     }
                 }
 
-                return eventLoop.makeSucceededFuture(data)
+                switch response.status {
+                case .notModified:
+                    logger?.debug("Cached data is still valid.")
 
-            default:
-                // This shouldn't ever happen due to the previous flatMapThrowing
-                return eventLoop.makeFailedFuture(Abort(.internalServerError))
-            }
-        }.flatMapError { error -> EventLoopFuture<T> in
-            // Synchronize access to shared state.
-            self.sync.lock()
-            defer { self.sync.unlock() }
+                    let cachedData = self.cached.withLockedValue({ $0 })
+                    guard let cached = cachedData.0 else {
+                        // This shouldn't actually be possible, but just in case.
+                        self.clearCache()
+                        return try await self.download(on: eventLoop, using: client, logger: logger).get()
+                    }
 
-            let cachedData = self.cached.withLockedValue { $0 }
-            guard let headers = self.headers.withLockedValue({ $0 }), let cached = cachedData.0 else {
-                return eventLoop.makeFailedFuture(error)
-            }
+                    return cached
 
-            if let cacheControl = headers.cacheControl, let cacheUntil = cachedData.1 {
-                if let staleIfError = cacheControl.staleIfError,
-                    cacheUntil.addingTimeInterval(Double(staleIfError)) > Date() {
-                    // Can use the data for staleIfError seconds past expiration when the server is non-responsive
-                    return eventLoop.makeSucceededFuture(cached)
-                } else if cacheControl.noCache == true && cacheUntil > Date() {
-                    // The spec isn't very clear here.  If no-cache is present you're supposed to validate with the
-                    // server. However, if the server doesn't respond, but I'm still within the expiration time, I'm
-                    // opting to say that the cache should be considered usable.
-                    return eventLoop.makeSucceededFuture(cached)
+                case .ok:
+                    logger?.debug("New data received")
+
+                    let data: T
+
+                    do {
+                        data = try response.content.decode(T.self)
+                    } catch {
+                        throw EndpointCacheError.contentDecodeFailure(error)
+                    }
+
+                    self.cached.withLockedValue { cachedData in
+                        if cachedData.1 != nil {
+                            cachedData.0 = data
+                        }
+                    }
+
+                    return data
+
+                default:
+                    // This shouldn't ever happen
+                    throw Abort(.internalServerError)
                 }
+            } catch {
+                // Synchronize access to shared state.
+                self.sync.lock()
+                defer { self.sync.unlock() }
+
+                let cachedData = self.cached.withLockedValue { $0 }
+                guard let headers = self.headers.withLockedValue({ $0 }), let cached = cachedData.0 else {
+                    throw error
+                }
+
+                if let cacheControl = headers.cacheControl, let cacheUntil = cachedData.1 {
+                    if let staleIfError = cacheControl.staleIfError,
+                        cacheUntil.addingTimeInterval(Double(staleIfError)) > Date() {
+                        // Can use the data for staleIfError seconds past expiration when the server is non-responsive
+                        return cached
+                    } else if cacheControl.noCache == true && cacheUntil > Date() {
+                        // The spec isn't very clear here.  If no-cache is present you're supposed to validate with the
+                        // server. However, if the server doesn't respond, but I'm still within the expiration time, I'm
+                        // opting to say that the cache should be considered usable.
+                        return cached
+                    }
+                }
+
+                self.clearCache()
+                throw error
             }
-
-            self.clearCache()
-
-            return eventLoop.makeFailedFuture(error)
         }
     }
 
