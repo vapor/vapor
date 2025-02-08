@@ -6,37 +6,36 @@ public protocol Authenticatable { }
 /// Helper for creating authentication middleware.
 ///
 /// See `RequestAuthenticator` and `SessionAuthenticator` for more information.
-public protocol Authenticator: Middleware { }
+public protocol Authenticator: AsyncMiddleware { }
 
 /// Help for creating authentication middleware based on `Request`.
 ///
 /// `Authenticator`'s use the incoming request to check for authentication information.
 /// If valid authentication credentials are present, the authenticated user is added to `req.auth`.
-public protocol RequestAuthenticator: Authenticator {
-    func authenticate(request: Request) -> EventLoopFuture<Void>
+public protocol RequestAuthenticator: AsyncAuthenticator {
+    func authenticate(request: Request) async throws
 }
 
 extension RequestAuthenticator {
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        return self.authenticate(request: request).flatMap {
-            next.respond(to: request)
-        }
+    public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+        try await self.authenticate(request: request)
+        return try await next.respond(to: request)
     }
 }
 
 // MARK: Basic
 
 /// Helper for creating authentication middleware using the Basic authorization header.
-public protocol BasicAuthenticator: RequestAuthenticator {
-    func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void>
+public protocol BasicAuthenticator: AsyncRequestAuthenticator {
+    func authenticate(basic: BasicAuthorization, for request: Request) async throws
 }
 
 extension BasicAuthenticator {
-    public func authenticate(request: Request) -> EventLoopFuture<Void> {
+    public func authenticate(request: Request) async throws {
         guard let basicAuthorization = request.headers.basicAuthorization else {
-            return request.eventLoop.makeSucceededFuture(())
+            return
         }
-        return self.authenticate(basic: basicAuthorization, for: request)
+        return try await self.authenticate(basic: basicAuthorization, for: request)
     }
 }
 

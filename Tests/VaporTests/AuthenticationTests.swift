@@ -129,7 +129,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Empty Password")
     func basicAuthenticatorWithEmptyPassword() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
@@ -139,12 +139,12 @@ struct AuthenticationTests {
         struct TestAuthenticator: BasicAuthenticator {
             typealias User = Test
 
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
+                return
             }
         }
 
