@@ -170,7 +170,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             XCTFail("Missing response.body")
         }
 
-        await app.server.shutdown()
+        try await app.server.shutdown()
     }
     
     func testConfigureHTTPDecompressionLimit() async throws {
@@ -215,7 +215,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             XCTFail("\(error)")
         }
 
-        await app.server.shutdown()
+        try await app.server.shutdown()
     }
     
     func testHTTP1RequestDecompression() async throws {
@@ -308,7 +308,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             XCTFail("Missing supportedCompressedResponse.body")
         }
         
-        await app.server.shutdown()
+        try await app.server.shutdown()
     }
     
     func testHTTP2RequestDecompression() async throws {
@@ -426,7 +426,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             XCTFail("Missing supportedCompressedResponse.body")
         }
         
-        await app.server.shutdown()
+        try await app.server.shutdown()
     }
     
     func testHTTP1ResponseDecompression() async throws {
@@ -483,7 +483,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
         
-        await app.server.shutdown()
+        try await app.server.shutdown()
     }
     
     func testHTTP2ResponseDecompression() async throws {
@@ -565,7 +565,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
         
-        await app.server.shutdown()
+        try await app.server.shutdown()
     }
     
     func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() async throws {
@@ -633,7 +633,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
         XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), false)
         
-        await app.server.shutdown()
+        try await app.server.shutdown()
         XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
         XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), true)
     }
@@ -886,54 +886,54 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     }
 
     func testAddressConfigurations() throws {
-        var configuration = HTTPServer.Configuration()
-        XCTAssertEqual(configuration.address, .hostname(HTTPServer.Configuration.defaultHostname, port: HTTPServer.Configuration.defaultPort))
-        
-        configuration = HTTPServer.Configuration(hostname: "1.2.3.4", port: 123)
+        var configuration = HTTPServerOld.Configuration()
+        XCTAssertEqual(configuration.address, .hostname(HTTPServerOld.Configuration.defaultHostname, port: HTTPServerOld.Configuration.defaultPort))
+
+        configuration = HTTPServerOld.Configuration(hostname: "1.2.3.4", port: 123)
         XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
         XCTAssertEqual(configuration.hostname, "1.2.3.4")
         XCTAssertEqual(configuration.port, 123)
         
-        configuration = HTTPServer.Configuration(address: .hostname("1.2.3.4", port: 123))
+        configuration = HTTPServerOld.Configuration(address: .hostname("1.2.3.4", port: 123))
         XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
         XCTAssertEqual(configuration.hostname, "1.2.3.4")
         XCTAssertEqual(configuration.port, 123)
         
-        configuration = HTTPServer.Configuration(address: .hostname("1.2.3.4", port: nil))
+        configuration = HTTPServerOld.Configuration(address: .hostname("1.2.3.4", port: nil))
         XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: nil))
         XCTAssertEqual(configuration.hostname, "1.2.3.4")
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
-        
-        configuration = HTTPServer.Configuration(address: .hostname(nil, port: 123))
+        XCTAssertEqual(configuration.port, HTTPServerOld.Configuration.defaultPort)
+
+        configuration = HTTPServerOld.Configuration(address: .hostname(nil, port: 123))
         XCTAssertEqual(configuration.address, .hostname(nil, port: 123))
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.hostname, HTTPServerOld.Configuration.defaultHostname)
         XCTAssertEqual(configuration.port, 123)
         
-        configuration = HTTPServer.Configuration(address: .hostname(nil, port: nil))
+        configuration = HTTPServerOld.Configuration(address: .hostname(nil, port: nil))
         XCTAssertEqual(configuration.address, .hostname(nil, port: nil))
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
-        
-        configuration = HTTPServer.Configuration(address: .unixDomainSocket(path: "/path"))
+        XCTAssertEqual(configuration.hostname, HTTPServerOld.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, HTTPServerOld.Configuration.defaultPort)
+
+        configuration = HTTPServerOld.Configuration(address: .unixDomainSocket(path: "/path"))
         XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
         
         
         // Test mutating a config that was originally a socket path
-        configuration = HTTPServer.Configuration(address: .unixDomainSocket(path: "/path"))
+        configuration = HTTPServerOld.Configuration(address: .unixDomainSocket(path: "/path"))
         XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
         
         configuration.hostname = "1.2.3.4"
         XCTAssertEqual(configuration.hostname, "1.2.3.4")
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        XCTAssertEqual(configuration.port, HTTPServerOld.Configuration.defaultPort)
         XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: nil))
         
         configuration.address = .unixDomainSocket(path: "/path")
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        XCTAssertEqual(configuration.hostname, HTTPServerOld.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, HTTPServerOld.Configuration.defaultPort)
         XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
         
         configuration.port = 123
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.hostname, HTTPServerOld.Configuration.defaultHostname)
         XCTAssertEqual(configuration.port, 123)
         XCTAssertEqual(configuration.address, .hostname(nil, port: 123))
         
@@ -943,8 +943,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
         
         configuration.address = .hostname(nil, port: nil)
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        XCTAssertEqual(configuration.hostname, HTTPServerOld.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, HTTPServerOld.Configuration.defaultPort)
         XCTAssertEqual(configuration.address, .hostname(nil, port: nil))
     }
     
@@ -1299,19 +1299,11 @@ final class CustomServer: Server, Sendable {
         self.didShutdown = .init(false)
     }
     
-    func start(address: BindAddress?) throws {
-        self.didStart.withLockedValue { $0 = true }
-    }
-    
     func start(address: BindAddress?) async throws {
         self.didStart.withLockedValue { $0 = true }
     }
     
-    func shutdown() {
-        self.didShutdown.withLockedValue { $0 = true }
-    }
-    
-    func shutdown() async {
+    func shutdown() async throws {
         self.didShutdown.withLockedValue { $0 = true }
     }
 }

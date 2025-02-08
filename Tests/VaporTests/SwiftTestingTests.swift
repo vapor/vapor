@@ -34,7 +34,7 @@ struct RequestTestsSwiftTesting {
             #expect(try await app.client.post("http://localhost:\(port)/redirect_temporary").status == .temporaryRedirect)
             #expect(try await app.client.post("http://localhost:\(port)/redirect_permanentPost").status == .permanentRedirect)
 
-            await app.server.shutdown()
+            try await app.server.shutdown()
         }
     }
 }

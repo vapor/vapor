@@ -1,6 +1,6 @@
 import NIOHTTPCompression
 
-extension HTTPServer.Configuration {
+extension HTTPServerOld.Configuration {
     /// Supported HTTP decompression options.
     public struct RequestDecompressionConfiguration: Sendable {
         /// Disables decompression. This is the default option.

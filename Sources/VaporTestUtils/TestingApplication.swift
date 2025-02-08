@@ -57,7 +57,7 @@ extension Application {
                 // Collect up to 1MB
                 let responseBody = try await response.body.collect(upTo: 1024 * 1024)
                 try await client.shutdown()
-                await app.server.shutdown()
+                try await app.server.shutdown()
                 return TestingHTTPResponse(
                     status: response.status,
                     headers: response.headers,
@@ -65,7 +65,7 @@ extension Application {
                 )
             } catch {
                 try? await client.shutdown()
-                await app.server.shutdown()
+                try? await app.server.shutdown()
                 throw error
             }
         }

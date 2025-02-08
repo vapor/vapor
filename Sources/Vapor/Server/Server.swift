@@ -9,7 +9,7 @@ public protocol Server: Sendable {
     func start(address: BindAddress?) async throws
     
     /// Shut the server down.
-    func shutdown() async
+    func shutdown() async throws
 }
 
 public enum BindAddress: Equatable, Sendable {

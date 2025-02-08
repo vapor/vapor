@@ -215,6 +215,6 @@ final class MiddlewareTests: XCTestCase {
         
         XCTAssertEqual(span.attributes["http.response.status_code"]?.toSpanAttribute(), 200)
 
-        await app.server.shutdown()
+        try await app.server.shutdown()
     }
 }

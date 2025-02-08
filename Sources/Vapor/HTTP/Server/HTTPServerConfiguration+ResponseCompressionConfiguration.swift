@@ -1,4 +1,4 @@
-extension HTTPServer.Configuration {
+extension HTTPServerOld.Configuration {
     /// Supported HTTP response compression options.
     public struct ResponseCompressionConfiguration: Sendable {
         /// The default initial byte buffer capacity to use for the compressor if none is specified.

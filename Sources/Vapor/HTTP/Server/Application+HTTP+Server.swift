@@ -14,11 +14,11 @@ extension Application.HTTP {
     public struct Server: Sendable {
         let application: Application
 
-        public var shared: HTTPServer {
+        public var shared: HTTPServerOld {
             if let existing = self.application.storage[Key.self] {
                 return existing
             } else {
-                let new = HTTPServer.init(
+                let new = HTTPServerOld.init(
                     application: self.application,
                     responder: self.application.responder.current,
                     configuration: self.configuration,
@@ -30,7 +30,7 @@ extension Application.HTTP {
         }
 
         struct Key: StorageKey, Sendable {
-            typealias Value = HTTPServer
+            typealias Value = HTTPServerOld
         }
 
         /// The configuration for the HTTP server.
@@ -39,13 +39,13 @@ extension Application.HTTP {
         /// and the configuration will be discarded if an option will no longer be considered.
         /// 
         /// These include the following properties, which are only read once when the server starts:
-        /// - ``HTTPServer/Configuration-swift.struct/address``
-        /// - ``HTTPServer/Configuration-swift.struct/hostname``
-        /// - ``HTTPServer/Configuration-swift.struct/port``
-        /// - ``HTTPServer/Configuration-swift.struct/backlog``
-        /// - ``HTTPServer/Configuration-swift.struct/reuseAddress``
-        /// - ``HTTPServer/Configuration-swift.struct/tcpNoDelay``
-        public var configuration: HTTPServer.Configuration {
+        /// - ``HTTPServerOld/Configuration-swift.struct/address``
+        /// - ``HTTPServerOld/Configuration-swift.struct/hostname``
+        /// - ``HTTPServerOld/Configuration-swift.struct/port``
+        /// - ``HTTPServerOld/Configuration-swift.struct/backlog``
+        /// - ``HTTPServerOld/Configuration-swift.struct/reuseAddress``
+        /// - ``HTTPServerOld/Configuration-swift.struct/tcpNoDelay``
+        public var configuration: HTTPServerOld.Configuration {
             get {
                 self.application.storage[ConfigurationKey.self] ?? .init(
                     logger: self.application.logger
@@ -63,7 +63,7 @@ extension Application.HTTP {
         }
 
         struct ConfigurationKey: StorageKey, Sendable {
-            typealias Value = HTTPServer.Configuration
+            typealias Value = HTTPServerOld.Configuration
         }
     }
 }

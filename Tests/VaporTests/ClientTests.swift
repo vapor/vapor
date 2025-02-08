@@ -84,7 +84,7 @@ final class ClientTests: XCTestCase, @unchecked Sendable {
 
         XCTAssertEqual(res.status, .seeOther)
 
-        await app.server.shutdown()
+        try await app.server.shutdown()
     }
 
     func testClientConfigurationCantBeChangedAfterClientHasBeenUsed() async throws {
@@ -107,7 +107,7 @@ final class ClientTests: XCTestCase, @unchecked Sendable {
         let res = try await app.client.get("http://localhost:\(port)/redirect")
         XCTAssertEqual(res.status, .seeOther)
 
-        await app.server.shutdown()
+        try await app.server.shutdown()
     }
 
     func testClientResponseCodable() async throws {

@@ -24,7 +24,7 @@ import NIOTransportServices
 #endif
 
 /// HTTP server class
-public actor Server<ChildChannel: ServerChildChannel>: Service {
+public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
     public typealias AsyncChildChannel = ChildChannel.Value
     public typealias AsyncServerChannel = NIOAsyncChannel<AsyncChildChannel, Never>
     enum State: CustomStringConvertible {
@@ -367,7 +367,7 @@ extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
 }
 #endif
 
-extension Server: CustomStringConvertible {
+extension HTTPServer: CustomStringConvertible {
     public nonisolated var description: String {
         "Vapor"
     }

@@ -13,7 +13,7 @@ public enum HTTPVersionMajor: Equatable, Hashable, Sendable {
     case two
 }
 
-public final class HTTPServer: Server, Sendable {
+public final class HTTPServerOld: Server, Sendable {
     /// Engine server config struct.
     ///
     ///     let serverConfig = HTTPServerConfig.default(port: 8123)
@@ -282,7 +282,7 @@ public final class HTTPServer: Server, Sendable {
         /// Log starting message for debugging before attempting to start the server.
         configuration.logger.debug("Server starting on \(configuration.addressDescription)")
 
-        /// Start the actual `HTTPServer`.
+        /// Start the actual `HTTPServerOld`.
         let serverConnection = try await HTTPServerConnection.start(
             application: self.application,
             server: self,
@@ -336,7 +336,7 @@ public final class HTTPServer: Server, Sendable {
     deinit {
         let started = self.didStart.withLockedValue { $0 }
         let shutdown = self.didShutdown.withLockedValue { $0 }
-        assert(!started || shutdown, "HTTPServer did not shutdown before deinitializing")
+        assert(!started || shutdown, "HTTPServerOld did not shutdown before deinitializing")
     }
 }
 
@@ -346,9 +346,9 @@ private final class HTTPServerConnection: Sendable {
     
     static func start(
         application: Application,
-        server: HTTPServer,
+        server: HTTPServerOld,
         responder: Responder,
-        configuration: HTTPServer.Configuration,
+        configuration: HTTPServerOld.Configuration,
         on eventLoopGroup: EventLoopGroup
     ) -> EventLoopFuture<HTTPServerConnection> {
         let quiesce = ServerQuiescingHelper(group: eventLoopGroup)
@@ -480,7 +480,7 @@ extension ChannelPipeline {
     func addVaporHTTP2Handlers(
         application: Application,
         responder: Responder,
-        configuration: HTTPServer.Configuration
+        configuration: HTTPServerOld.Configuration
     ) -> EventLoopFuture<Void> {
         /// Create server pipeline array.
         var handlers: [ChannelHandler] = []
@@ -530,7 +530,7 @@ extension ChannelPipeline {
     func addVaporHTTP1Handlers(
         application: Application,
         responder: Responder,
-        configuration: HTTPServer.Configuration
+        configuration: HTTPServerOld.Configuration
     ) -> EventLoopFuture<Void> {
         /// Create server pipeline array.
         var handlers: [RemovableChannelHandler] = []
@@ -608,7 +608,7 @@ extension NIOSSLServerHandler {
 }
 
 // MARK: Response Compression Helpers
-extension HTTPServer.Configuration.ResponseCompressionConfiguration {
+extension HTTPServerOld.Configuration.ResponseCompressionConfiguration {
     func makeCompressor() -> HTTPResponseCompressor {
         HTTPResponseCompressor(initialByteBufferCapacity: storage.initialByteBufferCapacity) { [storage] responseHeaders, isCompressionSupported in
             defer {

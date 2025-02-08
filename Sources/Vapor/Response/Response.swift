@@ -7,7 +7,7 @@ import NIOConcurrencyHelpers
 ///
 ///     let res = Response(status: .ok)
 ///
-/// See `HTTPClient` and `HTTPServer`.
+/// See `HTTPClient` and `HTTPServerOld`.
 public final class Response: CustomStringConvertible, Sendable {
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000

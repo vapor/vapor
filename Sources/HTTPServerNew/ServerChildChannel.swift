@@ -55,7 +55,7 @@ extension ServerChildChannel {
         eventLoopGroup: EventLoopGroup,
         logger: Logger
     ) -> Service {
-        Server(
+        HTTPServer(
             childChannelSetup: self,
             configuration: configuration,
             onServerRunning: onServerRunning,
