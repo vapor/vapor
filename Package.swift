@@ -13,7 +13,6 @@ let package = Package(
         .library(name: "Vapor", targets: ["Vapor"]),
         .library(name: "XCTVapor", targets: ["XCTVapor"]),
         .library(name: "VaporTesting", targets: ["VaporTesting"]),
-        .library(name: "_HTTPServer", targets: ["HTTPServerNew"]),
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
@@ -126,6 +125,7 @@ let package = Package(
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+                .target(name: "HTTPServerNew"),
             ]
         ),
 
