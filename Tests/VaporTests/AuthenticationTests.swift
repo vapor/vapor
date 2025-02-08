@@ -17,7 +17,7 @@ struct AuthenticationTests {
             var name: String
         }
 
-        struct TestAuthenticator: AsyncBearerAuthenticator {
+        struct TestAuthenticator: BearerAuthenticator {
             func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
@@ -57,7 +57,7 @@ struct AuthenticationTests {
             var name: String
         }
 
-        struct TestAuthenticator: AsyncBasicAuthenticator {
+        struct TestAuthenticator: BasicAuthenticator {
             typealias User = Test
 
             func authenticate(basic: BasicAuthorization, for request: Request) async throws {
@@ -98,7 +98,7 @@ struct AuthenticationTests {
             var name: String
         }
 
-        struct TestAuthenticator: AsyncBasicAuthenticator {
+        struct TestAuthenticator: BasicAuthenticator {
             typealias User = Test
 
             func authenticate(basic: BasicAuthorization, for request: Request) async throws {
@@ -175,7 +175,7 @@ struct AuthenticationTests {
             var name: String
         }
 
-        struct TestAuthenticator: AsyncBasicAuthenticator {
+        struct TestAuthenticator: BasicAuthenticator {
             typealias User = Test
 
             func authenticate(basic: BasicAuthorization, for request: Request) async throws {
@@ -225,7 +225,7 @@ struct AuthenticationTests {
             var name: String
         }
 
-        struct TestBearerAuthenticator: AsyncBearerAuthenticator {
+        struct TestBearerAuthenticator: BearerAuthenticator {
             func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
@@ -283,7 +283,7 @@ struct AuthenticationTests {
             var name: String
         }
 
-        struct TestAuthenticator: AsyncBearerAuthenticator {
+        struct TestAuthenticator: BearerAuthenticator {
             typealias User = Test
 
             func authenticate(bearer: BearerAuthorization, for request: Request) async throws {}

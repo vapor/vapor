@@ -291,7 +291,6 @@ final class FileTests: XCTestCase, @unchecked Sendable {
         }
     }
 
-
     func testPercentDecodedFilePath() async throws {
         let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
@@ -453,20 +452,7 @@ final class FileTests: XCTestCase, @unchecked Sendable {
         }
     }
 
-    func testAsyncFileWrite() async throws {
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-
-        let data = "Hello"
-        let path = "/tmp/fileio_write.txt"
-
-        try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
-        defer { try? FileManager.default.removeItem(atPath: path) }
-
-        let result = try String(contentsOfFile: path, encoding: .utf8)
-        XCTAssertEqual(result, data)
-    }
-
-    func testAsyncFileRead() async throws {
+    func testFileRead() async throws {
         let request = Request(application: app, on: app.eventLoopGroup.next())
 
         let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/long-test-file.txt"

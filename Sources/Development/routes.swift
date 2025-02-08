@@ -257,7 +257,7 @@ public func routes(_ app: Application) throws {
         var name: String
     }
 
-    struct TestAuthenticator: AsyncBasicAuthenticator {
+    struct TestAuthenticator: BasicAuthenticator {
         typealias User = Test
 
         func authenticate(basic: BasicAuthorization, for request: Request) async throws {
