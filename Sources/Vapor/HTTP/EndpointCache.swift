@@ -12,7 +12,7 @@ public enum EndpointCacheError: Swift.Error {
 /// Handles the complexities of HTTP caching.
 public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     private var cached: (T?, Date?)
-    private var request: T?
+    private var request: Task<T, Error>?
     private var headers: HTTPHeaders?
     private let uri: URI
 
@@ -51,19 +51,19 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
         // Don't make a new request if one is already running.
         if let request {
             // The current request may be happening on a different event loop.
-            return request
+            return try await request.value
         }
 
         logger?.debug("Requesting data from \(self.uri)")
 
-        let newRequest = try await self.download(using: client, logger: logger)
+        let newRequest = Task {
+            try await self.download(using: client, logger: logger)
+        }
         self.request = newRequest
-
-//        let request = try await self.download(using: client, logger: logger)
+        let result = try await newRequest.value
         // Once the request finishes, clear the current request and return the data.
         self.request = nil
-
-        return newRequest
+        return result
     }
 
     private func download(using client: Client, logger: Logger?) async throws -> T {

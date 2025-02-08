@@ -96,4 +96,33 @@ struct EndpointCacheTests {
             }
         }
     }
+
+    @Test("Test cache only runs one request at once")
+    func testEndpointCacheSequential() async throws {
+        try await withApp { app in
+            let currentActor = CurrentActor()
+            struct Test: Content {
+                let number: Int
+            }
+
+            app.clients.use(.responder)
+
+            app.get("number") { req -> Response in
+                let res = Response()
+                let current = await currentActor.getCurrent()
+                try res.content.encode(Test(number: current))
+                res.headers.cacheControl = .init(maxAge: 10)
+                await currentActor.increment()
+                try await Task.sleep(for: .seconds(1))
+                return res
+            }
+
+            let cache = EndpointCache<Test>(uri: "/number")
+            async let _ = cache.get(using: app.client, logger: app.logger)
+            async let _ = cache.get(using: app.client, logger: app.logger)
+            try await Task.sleep(for: .milliseconds(100))
+            let current = await currentActor.current
+            #expect(current == 1)
+        }
+    }
 }
