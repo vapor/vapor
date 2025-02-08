@@ -37,16 +37,14 @@ struct EndpointCacheTests {
             do {
                 let test = try await cache.get(
                     using: app.client,
-                    logger: app.logger,
-                    on: app.eventLoopGroup.next()
+                    logger: app.logger
                 )
                 #expect(test.number == 0)
             }
             do {
                 let test = try await cache.get(
                     using: app.client,
-                    logger: app.logger,
-                    on: app.eventLoopGroup.next()
+                    logger: app.logger
                 )
                 #expect(test.number == 1)
             }
@@ -76,16 +74,14 @@ struct EndpointCacheTests {
             do {
                 let test = try await cache.get(
                     using: app.client,
-                    logger: app.logger,
-                    on: app.eventLoopGroup.next()
+                    logger: app.logger
                 )
                 #expect(test.number == 0)
             }
             do {
                 let test = try await cache.get(
                     using: app.client,
-                    logger: app.logger,
-                    on: app.eventLoopGroup.next()
+                    logger: app.logger
                 )
                 #expect(test.number == 0)
             }
@@ -94,8 +90,7 @@ struct EndpointCacheTests {
             do {
                 let test = try await cache.get(
                     using: app.client,
-                    logger: app.logger,
-                    on: app.eventLoopGroup.next()
+                    logger: app.logger
                 )
                 #expect(test.number == 1)
             }

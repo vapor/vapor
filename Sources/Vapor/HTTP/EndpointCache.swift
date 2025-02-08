@@ -31,7 +31,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     ///   - request: The `Request` which is initiating the download.
     ///   - logger: An optional logger
     public func get(on request: Request, logger: Logger? = nil) async throws -> T {
-        try await self.download(on: request.eventLoop, using: request.client, logger: logger ?? request.logger)
+        try await self.download(using: request.client, logger: logger ?? request.logger)
     }
 
     /// Downloads the resource.
@@ -39,7 +39,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     ///   - eventLoop: The `EventLoop` to use for the download.
     ///   - client: The `Client` which will perform the download.
     ///   - logger: An optional logger
-    public func get(using client: Client, logger: Logger? = nil, on eventLoop: EventLoop) async throws -> T {
+    public func get(using client: Client, logger: Logger? = nil) async throws -> T {
         if let cached = self.cached.0, let cacheUntil = self.cached.1, Date() < cacheUntil {
             // If no-cache was set on the header, you *always* have to validate with the server.
             // must-revalidate does not require checking with the server until after it expires.
@@ -56,17 +56,17 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
 
         logger?.debug("Requesting data from \(self.uri)")
 
-        let newRequest = try await self.download(on: eventLoop, using: client, logger: logger)
+        let newRequest = try await self.download(using: client, logger: logger)
         self.request = newRequest
 
-        let request = try await self.download(on: eventLoop, using: client, logger: logger)
+//        let request = try await self.download(using: client, logger: logger)
         // Once the request finishes, clear the current request and return the data.
         self.request = nil
 
-        return request
+        return newRequest
     }
 
-    private func download(on eventLoop: EventLoop, using client: Client, logger: Logger?) async throws -> T {
+    private func download(using client: Client, logger: Logger?) async throws -> T {
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
         var headers: HTTPHeaders = [:]
 
@@ -103,7 +103,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
                 guard let cached = self.cached.0 else {
                     // This shouldn't actually be possible, but just in case.
                     self.clearCache()
-                    return try await self.download(on: eventLoop, using: client, logger: logger)
+                    return try await self.download(using: client, logger: logger)
                 }
 
                 return cached
