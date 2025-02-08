@@ -37,9 +37,6 @@ struct PipelineTestsTesting {
 
             try await asyncChannel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\ntransfer-encoding: chunked\r\n\r\n1\r\na\r\n"))
             let chunk = try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string
-            XCTAssertContains(chunk, "HTTP/1.1 200 OK")
-            XCTAssertContains(chunk, "connection: keep-alive")
-            XCTAssertContains(chunk, "transfer-encoding: chunked")
             #expect(chunk?.contains("HTTP/1.1 200 OK") == true)
             #expect(chunk?.contains("connection: keep-alive") == true)
             #expect(chunk?.contains("transfer-encoding: chunked") == true)
@@ -64,6 +61,63 @@ struct PipelineTestsTesting {
             try await asyncChannel.writeInbound(ByteBuffer(string: "0\r\n\r\n"))
             #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "0\r\n\r\n")
             #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self) == nil)
+        }
+    }
+
+    @Test("Test EOF Framing")
+    func eofFraming() async throws {
+        try await withApp { app in
+            app.on(.POST, "echo", body: .stream) { request -> Response in
+                Response(body: .init(stream: { writer in
+                    request.body.drain { body in
+                        switch body {
+                        case .buffer(let buffer):
+                            return writer.write(.buffer(buffer))
+                        case .error(let error):
+                            return writer.write(.error(error))
+                        case .end:
+                            return writer.write(.end)
+                        }
+                    }
+                }))
+            }
+
+            let asyncChannel = NIOAsyncTestingChannel()
+
+            try await asyncChannel.testingEventLoop.flatSubmit {
+                asyncChannel.pipeline.addVaporHTTP1Handlers(application: app, responder: app.responder, configuration: app.http.server.configuration)
+            }.get()
+
+            try await asyncChannel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n"))
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string.contains("HTTP/1.1 200 OK") == true)
+        }
+    }
+
+    @Test("Test Bad Stream Length")
+    func badStreamLength() async throws {
+        try await withApp { app in
+            app.on(.POST, "echo", body: .stream) { request -> Response in
+                Response(body: .init(stream: { writer in
+                    writer.write(.buffer(.init(string: "a")), promise: nil)
+                    writer.write(.end, promise: nil)
+                }, count: 2))
+            }
+
+            let asyncChannel = NIOAsyncTestingChannel()
+            try await asyncChannel.connect(to: .init(unixDomainSocketPath: "/foo"))
+            try await asyncChannel.testingEventLoop.flatSubmit {
+                asyncChannel.pipeline.addVaporHTTP1Handlers(application: app, responder: app.responder, configuration: app.http.server.configuration)
+            }.get()
+
+            #expect(asyncChannel.isActive == true)
+            // throws a notEnoughBytes error which is good
+            await #expect(throws: Error.self) {
+                try await asyncChannel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n"))
+            }
+            #expect(asyncChannel.isActive == false)
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string.contains("HTTP/1.1 200 OK") == true)
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "a")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == nil)
         }
     }
 }
@@ -176,58 +230,6 @@ final class PipelineTests: XCTestCase {
         }
 
         try await client.shutdown()
-    }
-
-    func testEOFFraming() throws {
-        app.on(.POST, "echo", body: .stream) { request -> Response in
-            Response(body: .init(stream: { writer in
-                request.body.drain { body in
-                    switch body {
-                    case .buffer(let buffer):
-                        return writer.write(.buffer(buffer))
-                    case .error(let error):
-                        return writer.write(.error(error))
-                    case .end:
-                        return writer.write(.end)
-                    }
-                }
-            }))
-        }
-
-        let channel = EmbeddedChannel()
-        try channel.pipeline.addVaporHTTP1Handlers(
-            application: app,
-            responder: app.responder,
-            configuration: app.http.server.configuration
-        ).wait()
-
-        try channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n"))
-        try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 200 OK")
-    }
-
-    func testBadStreamLength() throws {
-        app.on(.POST, "echo", body: .stream) { request -> Response in
-            Response(body: .init(stream: { writer in
-                writer.write(.buffer(.init(string: "a")), promise: nil)
-                writer.write(.end, promise: nil)
-            }, count: 2))
-        }
-
-        let channel = EmbeddedChannel()
-        try channel.connect(to: .init(unixDomainSocketPath: "/foo")).wait()
-        try channel.pipeline.addVaporHTTP1Handlers(
-            application: app,
-            responder: app.responder,
-            configuration: app.http.server.configuration
-        ).wait()
-
-        XCTAssertEqual(channel.isActive, true)
-        // throws a notEnoughBytes error which is good
-        XCTAssertThrowsError(try channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n")))
-        XCTAssertEqual(channel.isActive, false)
-        try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 200 OK")
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "a")
-        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
     }
     
     func testInvalidHttp() throws {
