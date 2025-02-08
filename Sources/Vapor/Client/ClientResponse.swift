@@ -81,8 +81,8 @@ extension ClientResponse: CustomStringConvertible {
     }
 }
 
-extension ClientResponse: ResponseEncodable {
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+extension ClientResponse: AsyncResponseEncodable {
+    public func encodeResponse(for request: Request) async throws -> Response {
         let body: Response.Body
         if let buffer = self.body {
             body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
@@ -94,7 +94,7 @@ extension ClientResponse: ResponseEncodable {
             headers: self.headers,
             body: body
         )
-        return request.eventLoop.makeSucceededFuture(response)
+        return response
     }
 }
 

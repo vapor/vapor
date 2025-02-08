@@ -100,23 +100,6 @@ extension Content {
     }
 }
 
-extension ClientResponse: AsyncResponseEncodable {
-    public func encodeResponse(for request: Request) async throws -> Response {
-        let body: Response.Body
-        if let buffer = self.body {
-            body = .init(buffer: buffer)
-        } else {
-            body = .empty
-        }
-        let response = Response(
-            status: self.status,
-            headers: self.headers,
-            body: body
-        )
-        return response
-    }
-}
-
 extension HTTPStatus: AsyncResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
         return Response(status: self)

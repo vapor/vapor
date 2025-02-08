@@ -81,21 +81,12 @@ public func routes(_ app: Application) throws {
         let ip = req.remoteAddress?.description ?? "<no ip>"
         ws.send("Hello 👋 \(ip)")
     }
-    
-    app.on(.POST, "file", body: .stream) { req -> EventLoopFuture<String> in
-        let promise = req.eventLoop.makePromise(of: String.self)
-        req.body.drain { result in
-            switch result {
-            case .buffer(let buffer):
-                debugPrint(buffer)
-            case .error(let error):
-                promise.fail(error)
-            case .end:
-                promise.succeed("Done")
-            }
-            return req.eventLoop.makeSucceededFuture(())
+
+    app.on(.POST, "file", body: .stream) { req in
+        for try await part in req.body {
+            debugPrint(part)
         }
-        return promise.futureResult
+        return "Done"
     }
 
     app.get("shutdown") { req -> HTTPStatus in
@@ -204,7 +195,7 @@ public func routes(_ app: Application) throws {
             }
     }
 
-    let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware(number: 1))
+    let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in
         let response = try await req.client.get("https://www.google.com")
         guard let body = response.body else {
@@ -239,11 +230,6 @@ public func routes(_ app: Application) throws {
         "Hello World"
     }
     asyncRoutes.get("opaque", use: opaqueRouteTester)
-    
-    // Make sure jumping between multiple different types of middleware works
-    asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
-        return "OK"
-    }
     
     let basicAuthRoutes = asyncRoutes.grouped(Test.authenticator(), Test.guardMiddleware())
     basicAuthRoutes.get("auth") { req async throws -> String in
@@ -298,7 +284,7 @@ struct TestError: AbortError, DebuggableError {
     }
 }
 
-struct TestAsyncMiddleware: AsyncMiddleware {
+struct TestMiddleware: AsyncMiddleware {
     let number: Int
     
     func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
@@ -306,17 +292,5 @@ struct TestAsyncMiddleware: AsyncMiddleware {
         let response = try await next.respond(to: request)
         request.logger.debug("In async middleware way out - \(number)")
         return response
-    }
-}
-
-struct TestMiddleware: Middleware {
-    let number: Int
-    
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        request.logger.debug("In non-async middleware - \(number)")
-        return next.respond(to: request).map { response in
-            request.logger.debug("In non-async middleware way out - \(self.number)")
-            return response
-        }
     }
 }
