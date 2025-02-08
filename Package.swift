@@ -65,6 +65,9 @@ let package = Package(
 
         // Low-level atomic operations
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
+
+        // Service Lifecycle Management
+        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.6.3"),
     ],
     targets: [
         // C helpers
@@ -100,6 +103,7 @@ let package = Package(
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
+                .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             ]
         ),
 

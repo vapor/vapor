@@ -28,3 +28,9 @@ HTTP Client
   * HOMEPAGE:
     * https://github.com/swift-server/async-http-client
 
+This product contains an implementation of Server taken from Hummingbird
+
+  * LICENSE (Apache License 2.0):
+    * https://www.apache.org/licenses/LICENSE-2.0
+  * HOMEPAGE:
+    * https://github.com/hummingbird-project/hummingbird
