@@ -172,7 +172,7 @@ public func routes(_ app: Application) throws {
     
     app.directory.viewsDirectory = "/Users/tanner/Desktop"
     app.get("view") { req in
-        req.view.render("hello.txt", ["name": "world"])
+        try await req.view.render("hello.txt", ["name": "world"])
     }
 
     app.get("error") { req -> String in
