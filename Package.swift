@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "Vapor", targets: ["Vapor"]),
         .library(name: "XCTVapor", targets: ["XCTVapor"]),
         .library(name: "VaporTesting", targets: ["VaporTesting"]),
+        .library(name: "_HTTPServer", targets: ["HTTPServerNew"]),
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
@@ -68,11 +69,32 @@ let package = Package(
 
         // Service Lifecycle Management
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.6.3"),
+
+        // Network IO on Apple platforms
+        .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
     ],
     targets: [
         // C helpers
         .target(name: "CVaporBcrypt"),
-        
+
+        .target(
+            name: "HTTPServerNew",
+            dependencies: [
+                .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(
+                    name: "NIOTransportServices",
+                    package: "swift-nio-transport-services",
+                    condition: .when(platforms: [.macOS, .iOS, .tvOS, .visionOS])
+                ),
+                .product(name: "NIOExtras", package: "swift-nio-extras"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
+                .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
+            ]
+        ),
+
         // Vapor
         .target(
             name: "Vapor",
