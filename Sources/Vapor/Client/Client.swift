@@ -3,9 +3,7 @@ import Logging
 import NIOHTTP1
 
 public protocol Client: Sendable {
-    var eventLoop: EventLoop { get }
     var byteBufferAllocator: ByteBufferAllocator { get }
-    func delegating(to eventLoop: EventLoop) -> Client
     func logging(to logger: Logger) -> Client
     func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client
     func send(_ request: ClientRequest) async throws -> ClientResponse

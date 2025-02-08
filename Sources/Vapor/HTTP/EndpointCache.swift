@@ -36,7 +36,6 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
 
     /// Downloads the resource.
     /// - Parameters:
-    ///   - eventLoop: The `EventLoop` to use for the download.
     ///   - client: The `Client` which will perform the download.
     ///   - logger: An optional logger
     public func get(using client: Client, logger: Logger? = nil) async throws -> T {
@@ -50,7 +49,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
 
         // Don't make a new request if one is already running.
         if let request {
-            // The current request may be happening on a different event loop.
+            // The current request may be happening on a different task.
             return try await request.value
         }
 

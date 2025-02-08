@@ -6,7 +6,7 @@ extension Application.Caches {
     /// In-memory cache. Thread safe.
     /// Not shared between multiple instances of your application.
     public var memory: Cache {
-        MemoryCache(storage: self.memoryStorage, on: self.application.eventLoopGroup.next())
+        MemoryCache(storage: self.memoryStorage)
     }
 
     private var memoryStorage: MemoryCacheStorage {
@@ -90,11 +90,9 @@ private actor MemoryCacheStorage: Sendable {
 
 private struct MemoryCache: Cache {
     let storage: MemoryCacheStorage
-    let eventLoop: EventLoop
-    
-    init(storage: MemoryCacheStorage, on eventLoop: EventLoop) {
+
+    init(storage: MemoryCacheStorage) {
         self.storage = storage
-        self.eventLoop = eventLoop
     }
     
     func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable & Sendable {
@@ -110,6 +108,6 @@ private struct MemoryCache: Cache {
     }
     
     func `for`(_ request: Request) -> MemoryCache {
-        .init(storage: self.storage, on: request.eventLoop)
+        .init(storage: self.storage)
     }
 }
