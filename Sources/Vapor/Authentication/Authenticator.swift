@@ -59,21 +59,16 @@ extension BearerAuthenticator {
 // MARK: Credentials
 
 /// Helper for creating authentication middleware using request body contents.
-public protocol CredentialsAuthenticator: RequestAuthenticator {
+public protocol CredentialsAuthenticator: AsyncRequestAuthenticator {
     associatedtype Credentials: Content
-    func authenticate(credentials: Credentials, for request: Request) -> EventLoopFuture<Void>
+    func authenticate(credentials: Credentials, for request: Request) async throws
 }
 
 extension CredentialsAuthenticator {
-    public func authenticate(request: Request) -> EventLoopFuture<Void> {
-        return request.body.collect(max: nil).flatMap { _ -> EventLoopFuture<Void> in
-            let credentials: Credentials
-            do {
-                credentials = try request.content.decode(Credentials.self)
-            } catch {
-                return request.eventLoop.makeSucceededFuture(())
-            }
-            return self.authenticate(credentials: credentials, for: request)
+    public func authenticate(request: Request) async throws {
+        _ = try await request.body.collect(max: nil).get()
+        if let credentials = try? request.content.decode(Credentials.self) {
+            try await self.authenticate(credentials: credentials, for: request)
         }
     }
 }

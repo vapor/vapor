@@ -74,13 +74,13 @@ struct SessionTests {
 
 
             // Test accessing session with no cookie.
-            try await app.test(.GET, "get") { res in
+            try await app.testing().test(.GET, "get") { res in
                 #expect(res.status == .badRequest)
             }
 
             // Test setting session with invalid cookie.
             var newCookie: HTTPCookies.Value?
-            try await app.test(.GET, "set", beforeRequest: { req in
+            try await app.testing().test(.GET, "set", beforeRequest: { req in
                 req.headers.cookie = ["vapor-session": "foo"]
             }, afterResponse: { res in
                 // We should get a new cookie back.
@@ -92,7 +92,7 @@ struct SessionTests {
             })
 
             // Test accessing newly created session.
-            try await app.test(.GET, "get", beforeRequest: { req in
+            try await app.testing().test(.GET, "get", beforeRequest: { req in
                 // Pass cookie from previous request.
                 req.headers.cookie = ["vapor-session": newCookie!]
             }, afterResponse: { res in
