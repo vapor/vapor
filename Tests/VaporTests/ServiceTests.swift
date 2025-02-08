@@ -17,7 +17,7 @@ final class ServiceTests: XCTestCase {
 
     func testReadOnly() async throws {
         app.get("test") { req in
-            req.readOnly.foos()
+            try await req.readOnly.foos()
         }
 
         try await app.test(.GET, "test") { res in
@@ -34,7 +34,7 @@ final class ServiceTests: XCTestCase {
     func testLifecycleHandler() async throws {
         app.http.server.configuration.port = 0
         
-        app.lifecycle.use(AsyncHello())
+        app.lifecycle.use(Hello())
         app.environment.arguments = ["serve"]
         try await app.startup()
         app.running?.stop()
@@ -107,8 +107,8 @@ struct MyTestService: MyService {
 private struct ReadOnly {
     let client: Client
 
-    func foos() -> EventLoopFuture<[String]> {
-        self.client.eventLoop.makeSucceededFuture(["foo"])
+    func foos() async throws -> [String] {
+        ["foo"]
     }
 }
 
@@ -139,12 +139,6 @@ private extension Application {
 
 private struct Hello: LifecycleHandler {
     func willBoot(_ app: Application) throws {
-        app.logger.info("Hello!")
-    }
-}
-
-private struct AsyncHello: LifecycleHandler {
-    func willBootAsync(_ app: Application) async throws {
         app.logger.info("Hello!")
     }
 }
