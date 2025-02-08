@@ -18,7 +18,7 @@ import NIOCore
 ///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
-public protocol Content: Codable, RequestDecodable, ResponseEncodable, AsyncRequestDecodable, AsyncResponseEncodable, Sendable {
+public protocol Content: Codable, RequestDecodable, ResponseEncodable, AsyncResponseEncodable, Sendable {
     /// The default `MediaType` to use when _encoding_ content. This can always be overridden at the encode call.
     ///
     /// Default implementation is `MediaType.json` for all types.
@@ -65,13 +65,8 @@ extension Content {
         return .json
     }
     
-    public static func decodeRequest(_ request: Request) -> EventLoopFuture<Self> {
-        do {
-            let content = try request.content.decode(Self.self)
-            return request.eventLoop.makeSucceededFuture(content)
-        } catch {
-            return request.eventLoop.makeFailedFuture(error)
-        }
+    public static func decodeRequest(_ request: Request) async throws -> Self {
+        try request.content.decode(Self.self)
     }
     
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
@@ -123,13 +118,13 @@ extension BinaryFloatingPoint where Self: Content {
 extension Double: Content { }
 extension Float: Content { }
 
-extension Array: Content, ResponseEncodable, RequestDecodable, AsyncRequestDecodable, AsyncResponseEncodable where Element: Content {
+extension Array: Content, ResponseEncodable, RequestDecodable, AsyncResponseEncodable where Element: Content {
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
 }
 
-extension Dictionary: Content, ResponseEncodable, RequestDecodable, AsyncRequestDecodable, AsyncResponseEncodable where Key == String, Value: Content {
+extension Dictionary: Content, ResponseEncodable, RequestDecodable, AsyncResponseEncodable where Key == String, Value: Content {
     public static var defaultContentType: HTTPMediaType {
         return .json
     }

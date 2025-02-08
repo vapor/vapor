@@ -22,12 +22,12 @@ public protocol RequestDecodable {
     /// - parameters:
     ///     - request: The `Request` to be decoded.
     /// - returns: An asynchronous `Self`.
-    static func decodeRequest(_ request: Request) -> EventLoopFuture<Self>
+    static func decodeRequest(_ request: Request) async throws -> Self
 }
 
 extension Request: RequestDecodable {
-    public static func decodeRequest(_ request: Request) -> EventLoopFuture<Request> {
-        return request.eventLoop.makeSucceededFuture(request)
+    public static func decodeRequest(_ request: Request) async throws -> Request {
+        request
     }
 }
 
