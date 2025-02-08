@@ -658,19 +658,11 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     }
     
     func testCollectedResponseBodyEnd() async throws {
-        app.post("drain") { req -> EventLoopFuture<HTTPStatus> in
-            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
-            req.body.drain { result in
-                switch result {
-                case .buffer: break
-                case .error(let error):
-                    promise.fail(error)
-                case .end:
-                    promise.succeed(.ok)
-                }
-                return req.eventLoop.makeSucceededFuture(())
+        app.post("drain") { req in
+            for try await _ in req.body {
+                // Ignore
             }
-            return promise.futureResult
+            return HTTPStatus.ok
         }
         
         try await app.testable(method: .running(port: 0)).test(.POST, "drain", beforeRequest: { req in

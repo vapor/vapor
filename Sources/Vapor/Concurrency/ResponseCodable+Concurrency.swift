@@ -74,9 +74,3 @@ extension Content {
         return response
     }
 }
-
-extension HTTPStatus: AsyncResponseEncodable {
-    public func encodeResponse(for request: Request) async throws -> Response {
-        return Response(status: self)
-    }
-}
