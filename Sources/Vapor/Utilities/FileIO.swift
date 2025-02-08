@@ -2,7 +2,6 @@ import Foundation
 import NIOCore
 import _NIOFileSystem
 import NIOHTTP1
-import NIOPosix
 import Logging
 import Crypto
 import NIOConcurrencyHelpers
@@ -11,7 +10,6 @@ import _NIOFileSystemFoundationCompat
 extension Request {
     public var fileio: FileIO {
         return .init(
-            io: self.application.fileio,
             allocator: self.application.allocator,
             request: self
         )
@@ -20,7 +18,7 @@ extension Request {
 
 // MARK: FileIO
 
-/// `FileIO` is a convenience wrapper around SwiftNIO's `NonBlockingFileIO`.
+/// `FileIO` is a convenience wrapper around SwiftNIO's `FileSystem`.
 ///
 /// It can read files, both in their entirety and chunked.
 ///
@@ -41,9 +39,6 @@ extension Request {
 ///
 /// Streaming file responses respect `E-Tag` headers present in the request.
 public struct FileIO: Sendable {
-    /// Wrapped non-blocking file io from SwiftNIO
-    private let io: NonBlockingFileIO
-
     /// ByteBufferAllocator to use for generating buffers.
     private let allocator: ByteBufferAllocator
     
@@ -55,13 +50,11 @@ public struct FileIO: Sendable {
     /// Creates a new `FileIO`.
     ///
     /// See `Request.fileio()` to create one.
-    internal init(io: NonBlockingFileIO, allocator: ByteBufferAllocator, request: Request) {
-        self.io = io
+    internal init(allocator: ByteBufferAllocator, request: Request) {
         self.allocator = allocator
         self.request = request
     }
     
-    /// Async version of `read(path:fromOffset:byteCount:chunkSize:onRead)`
     private func read(
         path: String,
         fromOffset offset: Int64,
@@ -163,7 +156,7 @@ public struct FileIO: Sendable {
     /// - returns: `FileChunks` containing the file data chunks.
     public func readFile(
         at path: String,
-        chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
+        chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
         offset: Int64? = nil,
         byteCount: Int? = nil
     ) async throws -> FileChunks {
@@ -175,12 +168,12 @@ public struct FileIO: Sendable {
         
         if let offset {
             if let byteCount {
-                chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(Int64(chunkSize)))
+                chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(chunkSize))
             } else {
-                chunks = readHandle.readChunks(in: offset..., chunkLength: .bytes(Int64(chunkSize)))
+                chunks = readHandle.readChunks(in: offset..., chunkLength: .bytes(chunkSize))
             }
         } else {
-            chunks = readHandle.readChunks(chunkLength: .bytes(Int64(chunkSize)))
+            chunks = readHandle.readChunks(chunkLength: .bytes(chunkSize))
         }
 
         return FileChunks(fileChunks: chunks, fileHandle: readHandle)
@@ -224,7 +217,7 @@ public struct FileIO: Sendable {
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
     public func streamFile(
         at path: String,
-        chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
+        chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool = false,
         onCompleted: @escaping @Sendable (Result<Void, Error>) async throws -> () = { _ in }

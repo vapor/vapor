@@ -4,23 +4,19 @@ import Logging
 import _NIOFileSystem
 
 public struct PlaintextRenderer: ViewRenderer, Sendable {
-    private let fileio: NonBlockingFileIO
     private let viewsDirectory: String
     private let logger: Logger
 
     public init(
-        fileio: NonBlockingFileIO,
         viewsDirectory: String,
         logger: Logger
     ) {
-        self.fileio = fileio
         self.viewsDirectory = viewsDirectory.finished(with: "/")
         self.logger = logger
     }
     
     public func `for`(_ request: Request) -> ViewRenderer {
         PlaintextRenderer(
-            fileio: request.application.fileio,
             viewsDirectory: self.viewsDirectory,
             logger: request.logger
         )

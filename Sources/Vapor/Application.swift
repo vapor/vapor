@@ -126,7 +126,7 @@ public final class Application: Sendable {
     ) async throws {
         self.init(environment, eventLoopGroupProvider, async: true)
         await self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
-        await DotEnvFile.load(for: self.environment, fileio: self.fileio, logger: self.logger)
+        await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
     
     // async flag here is just to stop the compiler from complaining about duplicates

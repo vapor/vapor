@@ -12,8 +12,7 @@ import _NIOFileSystem
 
 /// Reads dotenv (`.env`) files and loads them into the current process.
 ///
-///     let fileio: NonBlockingFileIO
-///     let file = try await DotEnvFile.read(path: ".env", fileio: fileio)
+///     let file = try await DotEnvFile.read(path: ".env")
 ///     for line in file.lines {
 ///         print("\(line.key)=\(line.value)")
 ///     }
@@ -68,8 +67,7 @@ public struct DotEnvFile: Sendable {
     
     /// Reads a dotenv file from the supplied path.
     ///
-    ///     let fileio: NonBlockingFileIO
-    ///     let file = try await DotEnvFile.read(path: ".env", fileio: fileio)
+    ///     let file = try await DotEnvFile.read(path: ".env")
     ///     for line in file.lines {
     ///         print("\(line.key)=\(line.value)")
     ///     }
@@ -80,11 +78,7 @@ public struct DotEnvFile: Sendable {
     ///
     /// - parameters:
     ///     - path: Absolute or relative path of the dotenv file.
-    ///     - fileio: File loader.
-    public static func read(
-        path: String,
-        fileio: NonBlockingFileIO
-    ) async throws -> DotEnvFile {
+    public static func read(path: String) async throws -> DotEnvFile {
         try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
             let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
             var parser = Parser(source: buffer)
@@ -94,45 +88,39 @@ public struct DotEnvFile: Sendable {
     
     /// Reads a dotenv file from the supplied path and loads it into the process.
     ///
-    ///     let fileio: NonBlockingFileIO
-    ///     try await DotEnvFile.load(path: ".env", fileio: fileio)
+    ///     try await DotEnvFile.load(path: ".env")
     ///     print(Environment.process.FOO) // BAR
     ///
     /// Use `DotEnvFile.read` to read the file without loading it.
     ///
     /// - parameters:
     ///     - path: Absolute or relative path of the dotenv file.
-    ///     - fileio: File loader.
     ///     - overwrite: If `true`, values already existing in the process' env
     ///                  will be overwritten. Defaults to `false`.
     public static func load(
         path: String,
-        fileio: NonBlockingFileIO,
         overwrite: Bool = false
     ) async throws {
-        let file = try await self.read(path: path, fileio: fileio)
+        let file = try await self.read(path: path)
         file.load(overwrite: overwrite)
     }
     
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let path: String
-    ///     let fileio: NonBlockingFileIO
     ///     let logger: Logger
-    ///     try DotEnvFile.load(path: path, fileio: filio, logger: logger)
+    ///     try DotEnvFile.load(path: path, logger: logger)
     ///     print(Environment.process.FOO) // BAR
     ///
     /// - parameters:
     ///     - path: Absolute or relative path of the dotenv file.
-    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
     ///     - logger: Optionally provide an existing logger.
     public static func load(
         path: String,
-        fileio: NonBlockingFileIO,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) async {
         do {
-            try await load(path: path, fileio: fileio, overwrite: false)
+            try await load(path: path, overwrite: false)
         } catch {
             logger.debug("Could not load \(path) file: \(error)")
         }
@@ -141,23 +129,20 @@ public struct DotEnvFile: Sendable {
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let environment: Environment
-    ///     let fileio: NonBlockingFileIO
     ///     let logger: Logger
-    ///     try await DotEnvFile.load(for: .development, fileio: fileio, logger: logger)
+    ///     try await DotEnvFile.load(for: .development, logger: logger)
     ///     print(Environment.process.FOO) // BAR
     ///
     /// - parameters:
     ///     - environment: current environment, selects which .env file to use.
-    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
     ///     - logger: Optionally provide an existing logger.
     public static func load(
         for environment: Environment = .development,
-        fileio: NonBlockingFileIO,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) async {
         // Load specific .env first since values are not overridden.
-        await DotEnvFile.load(path: ".env.\(environment.name)", fileio: fileio, logger: logger)
-        await DotEnvFile.load(path: ".env", fileio: fileio, logger: logger)
+        await DotEnvFile.load(path: ".env.\(environment.name)", logger: logger)
+        await DotEnvFile.load(path: ".env", logger: logger)
     }
 }
 

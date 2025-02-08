@@ -30,8 +30,6 @@ extension Environment {
     ///
     /// - Parameters:
     ///   - key: The environment variable name
-    ///   - fileIO: `NonBlockingFileIO` handler provided by NIO
-    ///   - eventLoop: `EventLoop` for NIO to use for working with the file
     ///
     /// Example usage:
     ///

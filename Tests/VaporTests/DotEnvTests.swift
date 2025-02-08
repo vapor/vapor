@@ -9,10 +9,9 @@ final class DotEnvTests: XCTestCase {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let pool = NIOThreadPool(numberOfThreads: 1)
         pool.start()
-        let fileio = NonBlockingFileIO(threadPool: pool)
         let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/test.env"
-        let file = try await DotEnvFile.read(path: path, fileio: fileio)
+        let file = try await DotEnvFile.read(path: path)
         let test = file.lines.map { $0.description }.joined(separator: "\n")
         XCTAssertEqual(test, """
         NODE_ENV=development
