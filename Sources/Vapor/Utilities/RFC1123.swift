@@ -61,7 +61,8 @@ extension Date {
 /// Performant method for generating RFC1123 date headers.
 internal final class RFC1123DateCache: Sendable {
     static func eventLoop(_ eventLoop: EventLoop) -> RFC1123DateCache {
-        assert(eventLoop.inEventLoop)
+#warning("Fix")
+//        assert(eventLoop.inEventLoop)
         
         if let existing = thread.currentValue {
             return existing

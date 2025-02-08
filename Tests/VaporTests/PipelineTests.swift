@@ -6,6 +6,67 @@ import NIOEmbedded
 import NIOCore
 import NIOConcurrencyHelpers
 import class NIOPosix.ClientBootstrap
+import Testing
+import VaporTesting
+
+@Suite("Pipeline Tests")
+struct PipelineTestsTesting {
+    @Test("Test Echo Handlers")
+    func echoHandlers() async throws {
+        try await withApp { app in
+            app.on(.POST, "echo", body: .stream) { request -> Response in
+                Response(body: .init(stream: { writer in
+                    request.body.drain { body in
+                        switch body {
+                        case .buffer(let buffer):
+                            return writer.write(.buffer(buffer))
+                        case .error(let error):
+                            return writer.write(.error(error))
+                        case .end:
+                            return writer.write(.end)
+                        }
+                    }
+                }))
+            }
+
+            let asyncChannel = NIOAsyncTestingChannel()
+
+            try await asyncChannel.testingEventLoop.flatSubmit {
+                asyncChannel.pipeline.addVaporHTTP1Handlers(application: app, responder: app.responder, configuration: app.http.server.configuration)
+            }.get()
+
+            try await asyncChannel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\ntransfer-encoding: chunked\r\n\r\n1\r\na\r\n"))
+            let chunk = try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string
+            XCTAssertContains(chunk, "HTTP/1.1 200 OK")
+            XCTAssertContains(chunk, "connection: keep-alive")
+            XCTAssertContains(chunk, "transfer-encoding: chunked")
+            #expect(chunk?.contains("HTTP/1.1 200 OK") == true)
+            #expect(chunk?.contains("connection: keep-alive") == true)
+            #expect(chunk?.contains("transfer-encoding: chunked") == true)
+
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "1\r\n")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "a")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "\r\n")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self) == nil)
+
+            try await asyncChannel.writeInbound(ByteBuffer(string: "1\r\nb\r\n"))
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "1\r\n")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "b")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "\r\n")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self) == nil)
+
+            try await asyncChannel.writeInbound(ByteBuffer(string: "1\r\nc\r\n"))
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "1\r\n")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "c")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "\r\n")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self) == nil)
+
+            try await asyncChannel.writeInbound(ByteBuffer(string: "0\r\n\r\n"))
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self)?.string == "0\r\n\r\n")
+            #expect(try await asyncChannel.readOutbound(as: ByteBuffer.self) == nil)
+        }
+    }
+}
 
 final class PipelineTests: XCTestCase {
     var app: Application!
@@ -16,57 +77,6 @@ final class PipelineTests: XCTestCase {
     
     override func tearDown() async throws {
         try await app.shutdown()
-    }
-    
-    
-    func testEchoHandlers() throws {
-        app.on(.POST, "echo", body: .stream) { request -> Response in
-            Response(body: .init(stream: { writer in
-                request.body.drain { body in
-                    switch body {
-                    case .buffer(let buffer):
-                        return writer.write(.buffer(buffer))
-                    case .error(let error):
-                        return writer.write(.error(error))
-                    case .end:
-                        return writer.write(.end)
-                    }
-                }
-            }))
-        }
-
-        let channel = EmbeddedChannel()
-        try channel.pipeline.addVaporHTTP1Handlers(
-            application: app,
-            responder: app.responder,
-            configuration: app.http.server.configuration
-        ).wait()
-
-        try channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\ntransfer-encoding: chunked\r\n\r\n1\r\na\r\n"))
-        let chunk = try channel.readOutbound(as: ByteBuffer.self)?.string
-        XCTAssertContains(chunk, "HTTP/1.1 200 OK")
-        XCTAssertContains(chunk, "connection: keep-alive")
-        XCTAssertContains(chunk, "transfer-encoding: chunked")
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "1\r\n")
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "a")
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "\r\n")
-        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
-
-        try channel.writeInbound(ByteBuffer(string: "1\r\nb\r\n"))
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "1\r\n")
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "b")
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "\r\n")
-        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
-
-        try channel.writeInbound(ByteBuffer(string: "1\r\nc\r\n"))
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "1\r\n")
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "c")
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "\r\n")
-        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
-
-        try channel.writeInbound(ByteBuffer(string: "0\r\n\r\n"))
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "0\r\n\r\n")
-        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
     }
 
     func testAsyncEchoHandlers() async throws {
