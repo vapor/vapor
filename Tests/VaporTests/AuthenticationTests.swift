@@ -1,22 +1,14 @@
 import NIOCore
 import NIOPosix
-import XCTVapor
 import Vapor
-import XCTest
+import VaporTesting
+import Testing
+import Foundation
 
-final class AsyncAuthenticationTests: XCTestCase {
-
-    var app: Application!
-
-    override func setUp() async throws {
-        app = try await Application(.testing)
-    }
-
-    override func tearDown() async throws {
-        try await app.shutdown()
-    }
-
-    func testBearerAuthenticator() async throws {
+@Suite("Authentication Tests")
+struct AuthenticationTests {
+    @Test("Test Bearer Authenticator")
+    func bearerAuthenticator() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
@@ -34,26 +26,29 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        app.routes.grouped([
-            Test.authenticator(), Test.guardMiddleware()
-        ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
-        }
+        try await withApp { app in
+            app.routes.grouped([
+                Test.authenticator(), Test.guardMiddleware()
+            ]).get("test") { req -> String in
+                return try req.auth.require(Test.self).name
+            }
 
-        try await app.testable().test(.GET, "/test") { res async in
-            XCTAssertEqual(res.status, .unauthorized)
-        }
-        .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res async in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
-        }
-        .test(.GET, "/test", headers: ["Authorization": "bearer test"]) { res async in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
+            try await app.testing().test(.GET, "/test") { res async in
+                #expect(res.status == .unauthorized)
+            }
+            .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }
+            .test(.GET, "/test", headers: ["Authorization": "bearer test"]) { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }
         }
     }
 
-    func testBasicAuthenticator() async throws {
+    @Test("Test Basic Authenticator")
+    func basicAuthenticator() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
@@ -73,25 +68,28 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        app.routes.grouped([
-            Test.authenticator(), Test.guardMiddleware()
-        ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
-        }
+        try await withApp { app in
+            app.routes.grouped([
+                Test.authenticator(), Test.guardMiddleware()
+            ]).get("test") { req -> String in
+                return try req.auth.require(Test.self).name
+            }
 
-        let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try await app.testable().test(.GET, "/test") { res async in
-            XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
-        }.test(.GET, "/test", headers: ["Authorization": "basic \(basic)"]) { res async in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
+            let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
+            try await app.testing().test(.GET, "/test") { res async in
+                #expect(res.status == .unauthorized)
+            }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }.test(.GET, "/test", headers: ["Authorization": "basic \(basic)"]) { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }
         }
     }
 
-    func testBasicAuthenticatorWithColonInPassword() async throws {
+    @Test("Test Basic Authenticator with Colon in Password")
+    func basicAuthenticatorWithColonInPassword() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
@@ -111,22 +109,25 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        app.routes.grouped([
-            Test.authenticator(), Test.guardMiddleware()
-        ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
-        }
+        try await withApp { app in
+            app.routes.grouped([
+                Test.authenticator(), Test.guardMiddleware()
+            ]).get("test") { req -> String in
+                return try req.auth.require(Test.self).name
+            }
 
-        let basic = "test:secret:with:colon".data(using: .utf8)!.base64EncodedString()
-        try await app.testable().test(.GET, "/test") { res async in
-            XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
+            let basic = "test:secret:with:colon".data(using: .utf8)!.base64EncodedString()
+            try await app.testing().test(.GET, "/test") { res async in
+                #expect(res.status == .unauthorized)
+            }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }
         }
     }
 
-    func testBasicAuthenticatorWithEmptyPassword() async throws {
+    @Test("Test Basic Authenticator with Empty Password")
+    func basicAuthenticatorWithEmptyPassword() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> Authenticator {
                 TestAuthenticator()
@@ -147,22 +148,25 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        app.routes.grouped([
-            Test.authenticator(), Test.guardMiddleware()
-        ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
-        }
+        try await withApp { app in
+            app.routes.grouped([
+                Test.authenticator(), Test.guardMiddleware()
+            ]).get("test") { req -> String in
+                return try req.auth.require(Test.self).name
+            }
 
-        let basic = Data("test:".utf8).base64EncodedString()
-        try await app.testable().test(.GET, "/test") { res in
-            XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
+            let basic = Data("test:".utf8).base64EncodedString()
+            try await app.testing().test(.GET, "/test") { res in
+                #expect(res.status == .unauthorized)
+            }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }
         }
     }
 
-    func testBasicAuthenticatorWithRedirect() async throws {
+    @Test("Test Basic Authenticator with Redirect")
+    func basicAuthenticatorWithRedirect() async throws {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
@@ -186,23 +190,26 @@ final class AsyncAuthenticationTests: XCTestCase {
             return "/redirect?orig=\(req.url.path)"
         }
 
-        app.routes.grouped([
-            Test.authenticator(), redirectMiddleware
-        ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
-        }
+        try await withApp { app in
+            app.routes.grouped([
+                Test.authenticator(), redirectMiddleware
+            ]).get("test") { req -> String in
+                return try req.auth.require(Test.self).name
+            }
 
-        let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try await app.testable().test(.GET, "/test") { res async in
-            XCTAssertEqual(res.status, .seeOther)
-            XCTAssertEqual(res.headers["Location"].first, "/redirect?orig=/test")
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
+            let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
+            try await app.testing().test(.GET, "/test") { res async in
+                #expect(res.status == .seeOther)
+                #expect(res.headers["Location"].first == "/redirect?orig=/test")
+            }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }
         }
     }
 
-    func testSessionAuthentication() async throws {
+    @Test("Test Session Authentication")
+    func sessionAuthentication() async throws {
         struct Test: Authenticatable, SessionAuthenticatable {
             static func bearerAuthenticator() -> AsyncAuthenticator {
                 TestBearerAuthenticator()
@@ -236,36 +243,39 @@ final class AsyncAuthenticationTests: XCTestCase {
             }
         }
 
-        app.routes.grouped([
-            app.sessions.middleware,
-            Test.sessionAuthenticator(),
-            Test.bearerAuthenticator(),
-            Test.guardMiddleware(),
-        ]).get("test") { req -> String in
-            try req.auth.require(Test.self).name
-        }
-
-        var sessionCookie: HTTPCookies.Value?
-        try await app.testable().test(.GET, "/test") { res async in
-            XCTAssertEqual(res.status, .unauthorized)
-            XCTAssertNil(res.headers.first(name: .setCookie))
-        }.test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res async in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
-            if let cookie = res.headers.setCookie?["vapor-session"] {
-                sessionCookie = cookie
-            } else {
-                XCTFail("No set cookie header")
+        try await withApp { app in
+            app.routes.grouped([
+                app.sessions.middleware,
+                Test.sessionAuthenticator(),
+                Test.bearerAuthenticator(),
+                Test.guardMiddleware(),
+            ]).get("test") { req -> String in
+                try req.auth.require(Test.self).name
             }
-        }
-        .test(.GET, "/test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")]) { res async in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
-            XCTAssertNotNil(res.headers.first(name: .setCookie))
+
+            var sessionCookie: HTTPCookies.Value?
+            try await app.testing().test(.GET, "/test") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers.first(name: .setCookie) == nil)
+            }.test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+                if let cookie = res.headers.setCookie?["vapor-session"] {
+                    sessionCookie = cookie
+                } else {
+                    Issue.record("No set cookie header")
+                }
+            }
+            .test(.GET, "/test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")]) { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+                #expect(res.headers.first(name: .setCookie) != nil)
+            }
         }
     }
 
-    func testMiddlewareConfigExistential() async {
+    @Test("Test Middleware Config with Existential")
+    func middlewareConfigExistential() async {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
@@ -281,49 +291,5 @@ final class AsyncAuthenticationTests: XCTestCase {
 
         var config = Middlewares()
         config.use(Test.authenticator())
-    }
-
-    func testAsyncAuthenticator() async throws {
-        struct Test: Authenticatable {
-            static func authenticator(threadPool: NIOThreadPool) -> Authenticator {
-                TestAuthenticator(threadPool: threadPool)
-            }
-            var name: String
-        }
-
-        struct TestAuthenticator: BasicAuthenticator {
-            typealias User = Test
-            let threadPool: NIOThreadPool
-
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
-                let promise = request.eventLoop.makePromise(of: Void.self)
-                self.threadPool.submit { _ in
-                    sleep(1)
-                    request.eventLoop.execute {
-                        if basic.username == "test" && basic.password == "secret" {
-                            let test = Test(name: "Vapor")
-                            request.auth.login(test)
-                        }
-                        promise.succeed(())
-                    }
-                }
-                return promise.futureResult
-            }
-        }
-
-        app.routes.grouped([
-            Test.authenticator(threadPool: app.threadPool),
-            Test.guardMiddleware()
-        ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
-        }
-
-        let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try await app.testable().test(.GET, "/test") { res in
-            XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
-        }
     }
 }

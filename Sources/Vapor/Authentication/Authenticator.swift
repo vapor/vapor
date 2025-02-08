@@ -43,16 +43,16 @@ extension BasicAuthenticator {
 // MARK: Bearer
 
 /// Helper for creating authentication middleware using the Bearer authorization header.
-public protocol BearerAuthenticator: RequestAuthenticator {
-    func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void>
+public protocol BearerAuthenticator: AsyncRequestAuthenticator {
+    func authenticate(bearer: BearerAuthorization, for request: Request) async throws
 }
 
 extension BearerAuthenticator {
-    public func authenticate(request: Request) -> EventLoopFuture<Void> {
+    public func authenticate(request: Request) async throws {
         guard let bearerAuthorization = request.headers.bearerAuthorization else {
-            return request.eventLoop.makeSucceededFuture(())
+            return
         }
-        return self.authenticate(bearer: bearerAuthorization, for: request)
+        return try await self.authenticate(bearer: bearerAuthorization, for: request)
     }
 }
 
