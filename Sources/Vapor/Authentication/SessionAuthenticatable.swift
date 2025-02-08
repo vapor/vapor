@@ -1,7 +1,7 @@
 import NIOCore
 
 /// Helper for creating authentication middleware in conjunction with `SessionsMiddleware`.
-public protocol SessionAuthenticator: AsyncAuthenticator {
+public protocol SessionAuthenticator: Authenticator {
     associatedtype User: SessionAuthenticatable
 
     /// Authenticate a model with the supplied ID.

@@ -250,7 +250,7 @@ public func routes(_ app: Application) throws {
     }
     
     struct Test: Authenticatable {
-        static func authenticator() -> AsyncAuthenticator {
+        static func authenticator() -> Authenticator {
             TestAuthenticator()
         }
 

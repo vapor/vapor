@@ -12,7 +12,7 @@ public protocol Authenticator: AsyncMiddleware { }
 ///
 /// `Authenticator`'s use the incoming request to check for authentication information.
 /// If valid authentication credentials are present, the authenticated user is added to `req.auth`.
-public protocol RequestAuthenticator: AsyncAuthenticator {
+public protocol RequestAuthenticator: Authenticator {
     func authenticate(request: Request) async throws
 }
 
@@ -26,7 +26,7 @@ extension RequestAuthenticator {
 // MARK: Basic
 
 /// Helper for creating authentication middleware using the Basic authorization header.
-public protocol BasicAuthenticator: AsyncRequestAuthenticator {
+public protocol BasicAuthenticator: RequestAuthenticator {
     func authenticate(basic: BasicAuthorization, for request: Request) async throws
 }
 
@@ -42,7 +42,7 @@ extension BasicAuthenticator {
 // MARK: Bearer
 
 /// Helper for creating authentication middleware using the Bearer authorization header.
-public protocol BearerAuthenticator: AsyncRequestAuthenticator {
+public protocol BearerAuthenticator: RequestAuthenticator {
     func authenticate(bearer: BearerAuthorization, for request: Request) async throws
 }
 
@@ -58,7 +58,7 @@ extension BearerAuthenticator {
 // MARK: Credentials
 
 /// Helper for creating authentication middleware using request body contents.
-public protocol CredentialsAuthenticator: AsyncRequestAuthenticator {
+public protocol CredentialsAuthenticator: RequestAuthenticator {
     associatedtype Credentials: Content
     func authenticate(credentials: Credentials, for request: Request) async throws
 }

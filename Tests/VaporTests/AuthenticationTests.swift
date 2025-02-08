@@ -10,7 +10,7 @@ struct AuthenticationTests {
     @Test("Test Bearer Authenticator")
     func bearerAuthenticator() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> AsyncAuthenticator {
+            static func authenticator() -> Authenticator {
                 TestAuthenticator()
             }
 
@@ -50,7 +50,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator")
     func basicAuthenticator() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> AsyncAuthenticator {
+            static func authenticator() -> Authenticator {
                 TestAuthenticator()
             }
 
@@ -91,7 +91,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Colon in Password")
     func basicAuthenticatorWithColonInPassword() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> AsyncAuthenticator {
+            static func authenticator() -> Authenticator {
                 TestAuthenticator()
             }
 
@@ -129,7 +129,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Empty Password")
     func basicAuthenticatorWithEmptyPassword() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> AsyncAuthenticator {
+            static func authenticator() -> Authenticator {
                 TestAuthenticator()
             }
 
@@ -168,7 +168,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Redirect")
     func basicAuthenticatorWithRedirect() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> AsyncAuthenticator {
+            static func authenticator() -> Authenticator {
                 TestAuthenticator()
             }
 
@@ -211,11 +211,11 @@ struct AuthenticationTests {
     @Test("Test Session Authentication")
     func sessionAuthentication() async throws {
         struct Test: Authenticatable, SessionAuthenticatable {
-            static func bearerAuthenticator() -> AsyncAuthenticator {
+            static func bearerAuthenticator() -> Authenticator {
                 TestBearerAuthenticator()
             }
 
-            static func sessionAuthenticator() -> AsyncAuthenticator {
+            static func sessionAuthenticator() -> Authenticator {
                 TestSessionAuthenticator()
             }
 
@@ -234,7 +234,7 @@ struct AuthenticationTests {
             }
         }
 
-        struct TestSessionAuthenticator: AsyncSessionAuthenticator {
+        struct TestSessionAuthenticator: SessionAuthenticator {
             typealias User = Test
 
             func authenticate(sessionID: String, for request: Request) async throws {
@@ -277,7 +277,7 @@ struct AuthenticationTests {
     @Test("Test Middleware Config with Existential")
     func middlewareConfigExistential() async {
         struct Test: Authenticatable {
-            static func authenticator() -> AsyncAuthenticator {
+            static func authenticator() -> Authenticator {
                 TestAuthenticator()
             }
             var name: String
