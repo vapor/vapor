@@ -1290,9 +1290,6 @@ extension Application {
 final class CustomServer: Server, Sendable {
     let didStart: NIOLockedValueBox<Bool>
     let didShutdown: NIOLockedValueBox<Bool>
-    var onShutdown: EventLoopFuture<Void> {
-        fatalError()
-    }
     
     init() {
         self.didStart = .init(false)

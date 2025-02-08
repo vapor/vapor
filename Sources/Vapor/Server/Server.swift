@@ -1,8 +1,6 @@
 import NIOCore
 
-public protocol Server: Sendable {
-    var onShutdown: EventLoopFuture<Void> { get }
-    
+public protocol Server: Sendable {    
     /// Start the server with the specified address.
     /// - Parameters:
     ///   - address: The address to start the server with.

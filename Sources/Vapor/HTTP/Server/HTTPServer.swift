@@ -199,13 +199,6 @@ public final class HTTPServerOld: Server, Sendable {
             self.connectionsPerServerTick = connectionsPerServerTick
         }
     }
-    
-    public var onShutdown: EventLoopFuture<Void> {
-        guard let connection = self.connection.withLockedValue({ $0 }) else {
-            fatalError("Server has not started yet")
-        }
-        return connection.channel.closeFuture
-    }
 
     /// The configuration for the HTTP server.
     ///
