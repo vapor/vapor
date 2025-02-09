@@ -1,5 +1,13 @@
+import HTTPServerNew
+
 extension Application.Servers.Provider {
     public static var http: Self {
+        .init {
+            $0.servers.use { $0.http.server.shared }
+        }
+    }
+
+    public static var httpNew: Self {
         .init {
             $0.servers.use { $0.http.server.shared }
         }
@@ -13,6 +21,18 @@ extension Application.HTTP {
     
     public struct Server: Sendable {
         let application: Application
+
+        public var sharedNew: HTTPServer<HTTP1Channel> {
+            if let existing = self.application.storage[NewKey.self] {
+                return existing
+            } else {
+                let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: .init(), eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger) { req, channel in
+                    print("Request received")
+                } as! HTTPServer<HTTP1Channel>
+                self.application.storage[NewKey.self] = new
+                return new
+            }
+        }
 
         public var shared: HTTPServerOld {
             if let existing = self.application.storage[Key.self] {
@@ -31,6 +51,10 @@ extension Application.HTTP {
 
         struct Key: StorageKey, Sendable {
             typealias Value = HTTPServerOld
+        }
+
+        struct NewKey: StorageKey, Sendable {
+            typealias Value = HTTPServer<HTTP1Channel>
         }
 
         /// The configuration for the HTTP server.
