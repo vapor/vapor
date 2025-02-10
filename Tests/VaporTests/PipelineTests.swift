@@ -132,6 +132,42 @@ final class PipelineTests: XCTestCase {
         try await client.shutdown()
     }
 
+    func testAsyncFailingHandlers() async throws {
+        app.on(.POST, "fail", body: .stream) { request async throws -> Response in
+            return Response(body: .init(managedAsyncStream: { writer in
+                try await writer.writeBuffer(.init(string: "foo"))
+                throw Abort(.internalServerError)
+            }))
+        }
+
+        app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
+        try await app.startup()
+
+        guard
+            let localAddress = app.http.server.shared.localAddress,
+            let port = localAddress.port
+        else {
+            XCTFail("couldn't get port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        let client = HTTPClient()
+
+        do {
+            try await client.post(url: "http://localhost:\(port)/fail").get()
+            XCTFail("Client has failed to detect broken server response")
+        } catch {
+            if let error = error as? HTTPParserError {
+                XCTAssertEqual(error, HTTPParserError.invalidEOFState)
+            } else {
+                XCTFail("Caught error \"\(error)\"")
+            }
+        }
+
+        try await client.shutdown()
+    }
+
     func testEOFFraming() throws {
         app.on(.POST, "echo", body: .stream) { request -> Response in
             Response(body: .init(stream: { writer in
