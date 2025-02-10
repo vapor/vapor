@@ -4,6 +4,7 @@ import Vapor
 import NIOCore
 import NIOHTTP1
 
+@available(*, deprecated, message: "Test old future APIs")
 final class RouteTests: XCTestCase {
     func testParameter() throws {
         let app = Application(.testing)

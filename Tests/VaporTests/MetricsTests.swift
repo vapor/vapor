@@ -5,12 +5,19 @@ import Metrics
 import XCTest
 
 class MetricsTests: XCTestCase {
+    var app: Application!
+
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+
     func testMetricsIncreasesCounter() {
         let metrics = CapturingMetricsSystem()
         MetricsSystem.bootstrapInternal(metrics)
-
-        let app = Application(.testing)
-        defer { app.shutdown() }
 
         struct User: Content {
             let id: Int
@@ -54,9 +61,6 @@ class MetricsTests: XCTestCase {
         let metrics = CapturingMetricsSystem()
         MetricsSystem.bootstrapInternal(metrics)
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         struct User: Content {
             let id: Int
             let name: String
@@ -98,9 +102,6 @@ class MetricsTests: XCTestCase {
         let metrics = CapturingMetricsSystem()
         MetricsSystem.bootstrapInternal(metrics)
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         XCTAssertNoThrow(try app.testable().test(.GET, "/not/found") { res in
             XCTAssertEqual(res.status, .notFound)
             XCTAssertEqual(metrics.counters.count, 1)
@@ -127,9 +128,7 @@ class MetricsTests: XCTestCase {
         let metrics = CapturingMetricsSystem()
         MetricsSystem.bootstrapInternal(metrics)
 
-        let app = Application(.testing)
         app.http.server.configuration.reportMetrics = false
-        defer { app.shutdown() }
 
         struct User: Content {
             let id: Int

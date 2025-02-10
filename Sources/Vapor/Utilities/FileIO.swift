@@ -69,6 +69,7 @@ public struct FileIO: Sendable {
     /// - parameters:
     ///     - path: Path to file on the disk.
     /// - returns: `Future` containing the file data as a `ByteBuffer`.
+    @available(*, deprecated, message: "Migrate to async API")
     public func collectFile(at path: String) -> EventLoopFuture<ByteBuffer> {
         let dataWrapper: NIOLockedValueBox<ByteBuffer> = .init(self.allocator.buffer(capacity: 0))
         return self.readFile(at: path) { new in
@@ -89,6 +90,7 @@ public struct FileIO: Sendable {
     ///     - chunkSize: Maximum size for the file data chunks.
     ///     - onRead: Closure to be called sequentially for each file data chunk.
     /// - returns: `Future` that will complete when the file read is finished.
+    @available(*, deprecated, message: "Migrate to async API")
     @preconcurrency public func readFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
@@ -123,6 +125,7 @@ public struct FileIO: Sendable {
     ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
     ///     - onCompleted: Closure to be run on completion of stream.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
+    @available(*, deprecated, message: "Migrate to asyncStreamFile")
     @preconcurrency public func streamFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
@@ -256,6 +259,7 @@ public struct FileIO: Sendable {
 
     /// Private read method. `onRead` closure uses ByteBuffer and expects future return.
     /// There may be use in publicizing this in the future for reads that must be async.
+    @available(*, deprecated, message: "Migrate to the async API for this")
     private func read(
         path: String,
         fromOffset offset: Int64,
@@ -293,11 +297,9 @@ public struct FileIO: Sendable {
         fromOffset offset: Int64,
         byteCount: Int
     ) async throws -> ByteBuffer {
-        let fd = try NIOFileHandle(path: path)
-        defer {
-            try? fd.close()
+        return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
+            return try await handle.readChunk(fromAbsoluteOffset: offset, length: .bytes(Int64(byteCount)))
         }
-        return try await self.io.read(fileHandle: fd, fromOffset: offset, byteCount: byteCount, allocator: allocator)
     }
     
     /// Write the contents of buffer to a file at the supplied path.
@@ -309,6 +311,7 @@ public struct FileIO: Sendable {
     ///     - path: Path to file on the disk.
     ///     - buffer: The `ByteBuffer` to write.
     /// - returns: `Future` that will complete when the file write is finished.
+    @available(*, deprecated, message: "Migrate to the async API for this")
     public func writeFile(_ buffer: ByteBuffer, at path: String) -> EventLoopFuture<Void> {
         self.request.eventLoop.flatSubmit {
             do {
@@ -329,17 +332,18 @@ public struct FileIO: Sendable {
     /// - Parameters:
     ///   - path: The file's path.
     ///   - lastModified: When the file was last modified.
-    /// - Returns: An `EventLoopFuture<String>` which holds the ETag.
-    private func generateETagHash(path: String, lastModified: Date) -> EventLoopFuture<String> {
+    /// - Returns: A `String` which holds the ETag.
+    private func generateETagHash(path: String, lastModified: Date) async throws -> String {
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
-            return request.eventLoop.makeSucceededFuture(hash.digestHex)
+            return hash.digestHex
         } else {
-            return collectFile(at: path).map { buffer in
+            return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
+                let buffer = try await handle.readToEnd(maximumSizeAllowed: .bytes(.max))
                 let digest = SHA256.hash(data: buffer.readableBytesView)
-                
+
                 // update hash in dictionary
                 request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
-                
+
                 return digest.hex
             }
         }
@@ -407,9 +411,13 @@ public struct FileIO: Sendable {
     ///        print("chunk: \(data)")
     ///    }
     ///
+    /// > Warning: It's the caller's responsibility to close the file handle provided in ``FileChunks`` when finished.
+    ///
     /// - parameters:
     ///     - path: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
+    ///     - offset: The offset to start reading from.
+    ///     - byteCount: The number of bytes to read from the file. If `nil`, the file will be read to the end.
     /// - returns: `FileChunks` containing the file data chunks.
     public func readFile(
         at path: String,
@@ -441,18 +449,18 @@ public struct FileIO: Sendable {
     ///     let data = ByteBuffer(string: "ByteBuffer")
     ///     try await req.fileio.writeFile(data, at: "/path/to/file.txt")
     ///
+    /// > Warning: This method will overwrite the file if it already exists.
+    ///
     /// - parameters:
-    ///     - path: Path to file on the disk.
     ///     - buffer: The `ByteBuffer` to write.
-    /// - returns: `Void` when the file write is finished.
+    ///     - path: Path to file on the disk.
     public func writeFile(_ buffer: ByteBuffer, at path: String) async throws {
-        let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
-        defer {
-            try? fd.close()
+        // This returns the number of bytes written which we don't need
+        _ = try await FileSystem.shared.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: true)) { handle in
+            try await handle.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
-        try await self.io.write(fileHandle: fd, buffer: buffer)
     }
-    
+
     /// Generates a chunked `Response` for the specified file. This method respects values in
     /// the `"ETag"` header and is capable of responding `304 Not Modified` if the file in question
     /// has not been modified since last served. If `advancedETagComparison` is set to true,
@@ -504,7 +512,7 @@ public struct FileIO: Sendable {
         let eTag: String
 
         if advancedETagComparison {
-            eTag = try await generateETagHash(path: path, lastModified: fileInfo.lastDataModificationTime.date).get()
+            eTag = try await generateETagHash(path: path, lastModified: fileInfo.lastDataModificationTime.date)
         } else {
             // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
             eTag = "\"\(fileInfo.lastDataModificationTime.seconds)-\(fileInfo.size)\""

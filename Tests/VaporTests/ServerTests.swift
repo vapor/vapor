@@ -28,22 +28,23 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         try await app.asyncShutdown()
     }
     
-    func testPortOverride() throws {
+    func testPortOverride() async throws {
         let env = Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--port", "8123"]
         )
         
-        let app = Application(env)
-        defer { app.shutdown() }
+        let app = try await Application.make(env)
         
         app.get("foo") { req in
             return "bar"
         }
-        try app.start()
-        
-        let res = try app.client.get("http://127.0.0.1:8123/foo").wait()
+        try await app.startup()
+
+        let res = try await app.client.get("http://127.0.0.1:8123/foo")
         XCTAssertEqual(res.body?.string, "bar")
+
+        try await app.asyncShutdown()
     }
     
     // `httpUnixDomainSocket` is currently broken in 6.0
@@ -70,8 +71,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     }
     #endif
     
-    func testIncompatibleStartupOptions() throws {
-        func checkForError(_ app: Application) {
+    func testIncompatibleStartupOptions() async throws {
+        func checkForError(_ app: Application) async throws {
             XCTAssertThrowsError(try app.start()) { error in
                 XCTAssertNotNil(error as? ServeCommand.Error)
                 guard let serveError = error as? ServeCommand.Error else {
@@ -81,62 +82,62 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
                 
                 XCTAssertEqual(ServeCommand.Error.incompatibleFlags, serveError)
             }
-            app.shutdown()
+            try await app.asyncShutdown()
         }
         
-        var app = Application(Environment(
+        var app = try await Application.make(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", "/path/to/socket"]
         ))
-        checkForError(app)
-        
-        app = Application(Environment(
+        try await checkForError(app)
+
+        app = try await Application.make(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--hostname", "localhost", "--unix-socket", "/path/to/socket"]
         ))
-        checkForError(app)
-        
-        app = Application(Environment(
+        try await checkForError(app)
+
+        app = try await Application.make(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--unix-socket", "/path/to/socket"]
         ))
-        checkForError(app)
-        
-        app = Application(Environment(
+        try await checkForError(app)
+
+        app = try await Application.make(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4"]
         ))
-        checkForError(app)
-        
-        app = Application(Environment(
+        try await checkForError(app)
+
+        app = try await Application.make(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081"]
         ))
-        checkForError(app)
-        
-        app = Application(Environment(
+        try await checkForError(app)
+
+        app = try await Application.make(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081", "--unix-socket", "/path/to/socket"]
         ))
-        checkForError(app)
-        
-        app = Application(Environment(
+        try await checkForError(app)
+
+        app = try await Application.make(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--unix-socket", "/path/to/socket"]
         ))
-        checkForError(app)
-        
-        app = Application(Environment(
+        try await checkForError(app)
+
+        app = try await Application.make(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
         ))
-        checkForError(app)
-        
-        app = Application(Environment(
+        try await checkForError(app)
+
+        app = try await Application.make(Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
         ))
-        checkForError(app)
+        try await checkForError(app)
     }
     
     @available(*, deprecated)
@@ -878,11 +879,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.environment.arguments = ["serve"]
         try app.start()
         
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port")
-            return
-        }
-        
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/echo",
             method: .POST,
@@ -933,10 +930,9 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(client, ["foo", "bar", "baz"])
     }
     
-    func testSkipStreaming() throws {
+    func testSkipStreaming() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let app = Application(.testing, .shared(eventLoopGroup))
-        defer { app.shutdown() }
+        let app = try await Application.make(.testing, .shared(eventLoopGroup))
         
         app.on(.POST, "echo", body: .stream) { request in
             "hello, world"
@@ -944,13 +940,9 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         
         app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
-        try app.start()
+        try await app.startup()
         
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port")
-            return
-        }
-        
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/echo",
             method: .POST,
@@ -969,10 +961,12 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             })
         )
         
-        let a = try app.http.client.shared.execute(request: request).wait()
+        let a = try await app.http.client.shared.execute(request: request).get()
         XCTAssertEqual(a.status, .ok)
-        let b = try app.http.client.shared.execute(request: request).wait()
+        let b = try await app.http.client.shared.execute(request: request).get()
         XCTAssertEqual(b.status, .ok)
+
+        try await app.asyncShutdown()
     }
     
     func testStartWithValidSocketFile() throws {
@@ -1074,11 +1068,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.environment.arguments = ["serve"]
         try app.start()
         
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port")
-            return
-        }
-        
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/hello",
             method: .GET,

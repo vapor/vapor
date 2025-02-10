@@ -4,6 +4,7 @@ import XCTest
 import WebSocketKit
 import NIOPosix
 
+@available(*, deprecated, message: "Test old future APIs")
 final class WebSocketTests: XCTestCase {
     func testWebSocketClient() throws {
         let server = Application(.testing)
@@ -152,15 +153,5 @@ final class WebSocketTests: XCTestCase {
 
     override class func setUp() {
         XCTAssertTrue(isLoggingConfigured)
-    }
-}
-
-extension Vapor.WebSocket: Swift.Hashable {
-    public static func == (lhs: WebSocket, rhs: WebSocket) -> Bool {
-        lhs === rhs
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        ObjectIdentifier(self).hash(into: &hasher)
     }
 }

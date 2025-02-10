@@ -6,6 +6,7 @@ import NIOCore
 import func Android.sleep
 #endif
 
+@available(*, deprecated, message: "Test old future APIs")
 final class CacheTests: XCTestCase {
     func testInMemoryCache() throws {
         let app = Application(.testing)

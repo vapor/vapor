@@ -2,6 +2,7 @@
 import XCTVapor
 import XCTest
 
+@available(*, deprecated, message: "Testing old future APIs")
 final class EnvironmentSecretTests: XCTestCase {
     func testNonExistingSecretFile() throws {
         let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
