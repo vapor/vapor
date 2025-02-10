@@ -1,6 +1,6 @@
 import NIOHTTP1
 import NIOCore
-#if compiler(>=6.0)
+#if compiler(>=6.0) && canImport(Testing)
 import Testing
 #endif
 
@@ -27,7 +27,7 @@ extension Application: TestingApplicationTester {
     }
 }
 
-#if compiler(>=6.0)
+#if compiler(>=6.0) && canImport(Testing)
 extension TestingApplicationTester {
     @discardableResult
     public func test(
