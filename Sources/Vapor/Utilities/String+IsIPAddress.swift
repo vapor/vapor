@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(Android)
+import Android
+#endif
 
 extension String {
     func isIPAddress() -> Bool {

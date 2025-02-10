@@ -7,6 +7,8 @@ import Glibc
 #else
 @preconcurrency import Glibc
 #endif
+#elseif canImport(Android)
+@preconcurrency import Android
 #elseif canImport(Musl)
 @preconcurrency import Musl
 #elseif canImport(WinSDK)

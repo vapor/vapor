@@ -3,6 +3,9 @@ import XCTest
 import Vapor
 import NIOCore
 import NIOPosix
+#if canImport(Android)
+import func Android.sleep
+#endif
 
 @available(*, deprecated, message: "Test old future APIs")
 final class AuthenticationTests: XCTestCase {
