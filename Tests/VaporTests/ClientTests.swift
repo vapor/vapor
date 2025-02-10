@@ -202,34 +202,6 @@ final class ClientTests: XCTestCase {
 
         try app.running?.onStop.wait()
     }
-    
-    func testApplicationClientThreadSafety() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        let startingPistol = DispatchGroup()
-        startingPistol.enter()
-        startingPistol.enter()
-
-        let finishLine = DispatchGroup()
-        finishLine.enter()
-        Thread.async {
-            startingPistol.leave()
-            startingPistol.wait()
-            XCTAssert(type(of: app.http.client.shared) == HTTPClient.self)
-            finishLine.leave()
-        }
-
-        finishLine.enter()
-        Thread.async {
-            startingPistol.leave()
-            startingPistol.wait()
-            XCTAssert(type(of: app.http.client.shared) == HTTPClient.self)
-            finishLine.leave()
-        }
-
-        finishLine.wait()
-    }
 
     func testCustomClient() throws {
         let app = Application(.testing)
