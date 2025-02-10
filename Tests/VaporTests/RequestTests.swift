@@ -166,11 +166,7 @@ final class RequestTests: XCTestCase {
         try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
         
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port for app")
-            return
-        }
-        
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
         XCTAssertEqual(
             try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
             .seeOther
@@ -211,11 +207,7 @@ final class RequestTests: XCTestCase {
         try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
         
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port for app")
-            return
-        }
-        
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
         XCTAssertEqual(
             try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
             .seeOther

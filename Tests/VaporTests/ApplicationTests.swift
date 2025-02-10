@@ -22,10 +22,7 @@ final class ApplicationTests: XCTestCase {
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
         try app.start()
-        guard let running = app.running else {
-            XCTFail("app started without setting 'running'")
-            return
-        }
+        let running = try XCTUnwrap(app.running, "app started without setting 'running'")
         running.stop()
         try running.onStop.wait()
     }
@@ -34,10 +31,7 @@ final class ApplicationTests: XCTestCase {
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
         try await app.startup()
-        guard let running = app.running else {
-            XCTFail("app started without setting 'running'")
-            return
-        }
+        let running = try XCTUnwrap(app.running, "app started without setting 'running'")
         running.stop()
         try await running.onStop.get()
     }

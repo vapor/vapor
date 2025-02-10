@@ -178,11 +178,7 @@ final class MiddlewareTests: XCTestCase {
 
         try await app.server.start(address: .hostname("127.0.0.1", port: 0))
 
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port for app")
-            return
-        }
-
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
         let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
             req.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
             req.headers.add(name: TestTracer.extractKey, value: "extracted")
