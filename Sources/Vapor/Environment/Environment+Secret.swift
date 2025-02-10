@@ -93,8 +93,6 @@ extension Environment {
     ///
     /// - Parameters:
     ///   - key: The environment variable name
-    ///   - fileIO: `NonBlockingFileIO` handler provided by NIO
-    ///   - eventLoop: `EventLoop` for NIO to use for working with the file
     ///
     /// Example usage:
     ///
@@ -105,9 +103,6 @@ extension Environment {
     ///     let databasePassword = try await Environment.secret(key: "DATABASE_PASSWORD_FILE")
     ///
     /// ````
-    ///
-    /// - Important: Do _not_ use `.wait()` if loading a secret at any time after the app has booted, such as while
-    ///   handling a `Request`. Chain the result as you would any other future instead.
     public static func secret(key: String) async throws -> String? {
         guard let filePath = self.get(key) else {
             return nil

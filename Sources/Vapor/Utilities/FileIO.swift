@@ -332,7 +332,7 @@ public struct FileIO: Sendable {
     /// - Parameters:
     ///   - path: The file's path.
     ///   - lastModified: When the file was last modified.
-    /// - Returns: An `EventLoopFuture<String>` which holds the ETag.
+    /// - Returns: A `String` which holds the ETag.
     private func generateETagHash(path: String, lastModified: Date) async throws -> String {
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
             return hash.digestHex
@@ -411,7 +411,7 @@ public struct FileIO: Sendable {
     ///        print("chunk: \(data)")
     ///    }
     ///
-    ///    **Warning** it's the caller's responsibility to close the file handle provided in ``FileChunks`` when finished.
+    ///    > Warning: It's the caller's responsibility to close the file handle provided in ``FileChunks`` when finished.
     ///
     /// - parameters:
     ///     - path: Path to file on the disk.

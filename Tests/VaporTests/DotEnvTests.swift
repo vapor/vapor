@@ -37,10 +37,7 @@ final class DotEnvTests: XCTestCase {
     }
 
     func testReadFile() async throws {
-        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let pool = NIOThreadPool(numberOfThreads: 1)
-        pool.start()
-        let fileio = NonBlockingFileIO(threadPool: pool)
+        let fileio = NonBlockingFileIO(threadPool: NIOThreadPool.singleton)
         let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/test.env"
         let file = try await DotEnvFile.read(path: path, fileio: fileio)
@@ -62,8 +59,6 @@ final class DotEnvTests: XCTestCase {
         INCLUDE_SPACE=some spaced out string
         USERNAME=therealnerdybeast@example.tld
         """)
-        try await pool.shutdownGracefully()
-        try await elg.shutdownGracefully()
     }
 
     func testNoTrailingNewline() throws {
