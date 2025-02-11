@@ -3,6 +3,16 @@ import Vapor
 import Logging
 
 final class ErrorTests: XCTestCase {
+    var app: Application!
+
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+
     func testPrintable() throws {
         let expectedPrintable = """
         FooError.noFoo: You do not have a `foo`.
@@ -67,9 +77,6 @@ final class ErrorTests: XCTestCase {
     }
 
     func testAbortError() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.get("foo") { req -> String in
             throw Abort(.internalServerError, reason: "Foo")
         }
@@ -96,9 +103,6 @@ final class ErrorTests: XCTestCase {
     }
     
     func testErrorMiddlewareUsesContentConfiguration() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
         app.get("foo") { req -> String in
             throw Abort(.internalServerError, reason: "Foo")
         }

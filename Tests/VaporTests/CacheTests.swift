@@ -2,7 +2,11 @@ import XCTVapor
 import XCTest
 import Vapor
 import NIOCore
+#if canImport(Android)
+import func Android.sleep
+#endif
 
+@available(*, deprecated, message: "Test old future APIs")
 final class CacheTests: XCTestCase {
     func testInMemoryCache() throws {
         let app = Application(.testing)
