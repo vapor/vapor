@@ -6,6 +6,8 @@ import Glibc
 @preconcurrency import Musl
 #elseif canImport(WinSDK)
 @preconcurrency import WinSDK
+#elseif canImport(Android)
+@preconcurrency import Android
 #endif
 import Foundation
 import NIOPosix

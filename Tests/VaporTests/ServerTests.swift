@@ -759,12 +759,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
         try await app.startup()
-
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port")
-            return
-        }
         
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/echo",
             method: .POST,
@@ -827,11 +823,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.environment.arguments = ["serve"]
         try await app.startup()
         
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port")
-            return
-        }
-        
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/echo",
             method: .POST,
@@ -956,12 +948,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
         try await app.startup()
-
-        guard let port = app.http.server.shared.localAddress?.port else {
-            XCTFail("Failed to get port")
-            return
-        }
         
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/hello",
             method: .GET,

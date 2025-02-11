@@ -148,11 +148,13 @@ public struct FileIO: Sendable {
     ///        print("chunk: \(data)")
     ///    }
     ///
-    ///    **Warning** it's the caller's responsibility to close the file handle provided in ``FileChunks`` when finished.
+    /// > Warning: It's the caller's responsibility to close the file handle provided in ``FileChunks`` when finished.
     ///
     /// - parameters:
     ///     - path: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
+    ///     - offset: The offset to start reading from.
+    ///     - byteCount: The number of bytes to read from the file. If `nil`, the file will be read to the end.
     /// - returns: `FileChunks` containing the file data chunks.
     public func readFile(
         at path: String,
@@ -184,12 +186,11 @@ public struct FileIO: Sendable {
     ///     let data = ByteBuffer(string: "ByteBuffer")
     ///     try await req.fileio.writeFile(data, at: "/path/to/file.txt")
     ///
-    /// **WARNING**: this will overwrite the file if it already exists.
+    /// > Warning: This method will overwrite the file if it already exists.
     ///
     /// - parameters:
-    ///     - path: Path to file on the disk.
     ///     - buffer: The `ByteBuffer` to write.
-    /// - returns: `Void` when the file write is finished.
+    ///     - path: Path to file on the disk.
     public func writeFile(_ buffer: ByteBuffer, at path: String) async throws {
         // This returns the number of bytes written which we don't need
         _ = try await FileSystem.shared.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: true)) { handle in

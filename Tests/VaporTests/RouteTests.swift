@@ -5,6 +5,7 @@ import Vapor
 import NIOHTTP1
 import WebSocketKit
 
+@available(*, deprecated, message: "Test old future APIs")
 final class RouteTests: XCTestCase {
     var app: Application!
 

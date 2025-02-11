@@ -17,6 +17,7 @@ fileprivate extension String {
     }
 }
 
+@available(*, deprecated, message: "Test old future APIs")
 final class RequestTests: XCTestCase {
 
     var app: Application!
@@ -343,7 +344,7 @@ final class RequestTests: XCTestCase {
             XCTAssertContains(res.body.string, "IP")
         }
     }
-
+    
     func testCollectedBodyDrain() throws {
         let request = Request(
             application: app,

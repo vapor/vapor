@@ -5,6 +5,7 @@ import WebSocketKit
 import NIOCore
 import NIOPosix
 
+@available(*, deprecated, message: "Test old future APIs")
 final class WebSocketTests: XCTestCase {
     var app: Application!
 

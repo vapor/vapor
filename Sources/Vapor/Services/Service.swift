@@ -17,10 +17,24 @@ extension Application {
             }
         }
 
-        final class Storage: Sendable {
-            let makeService: NIOLockedValueBox<(@Sendable (Application) -> ServiceType)?>
+        final class Storage: @unchecked Sendable {
+            // At first glance, one could think that using a
+            // `NIOLockedValueBox<(@Sendable (Application) -> ServiceType)?>` for `makeService` would be sufficient
+            // here. However, for some reason, caling `self.storage.makeService.withLockedValue({ $0 })` repeatedly in
+            // `Service.service` causes each subsequent call to the function stored inside the locked value to perform
+            // one (or several) more "trampoline" function calls, slowing down the execution and eventually leading to a
+            // stack overflow. This is why we use a `NIOLock` here instead; it seems to avoid the `{ $0 }` issue above
+            // despite still accessing `_makeService` from within a closure (`{ self._makeService }`).
+            let lock = NIOLock()
+
+            private var _makeService: @Sendable (Application) -> ServiceType
+            var makeService: @Sendable (Application) -> ServiceType {
+                get { self.lock.withLock { self._makeService } }
+                set { self.lock.withLock { self._makeService = newValue } }
+            }
+
             init() {
-                self.makeService = .init(nil)
+                self._makeService = { _ in fatalError("No service configured for \(ServiceType.self)") }
             }
         }
 
@@ -29,10 +43,7 @@ extension Application {
         }
 
         public var service: ServiceType {
-            guard let makeService = self.storage.makeService.withLockedValue({ $0 }) else {
-                fatalError("No service configured for \(ServiceType.self)")
-            }
-            return makeService(self.application)
+            self.storage.makeService(self.application)
         }
 
         public func use(_ provider: Provider) {
@@ -40,7 +51,7 @@ extension Application {
         }
 
         public func use(_ makeService: @escaping @Sendable (Application) -> ServiceType) {
-            self.storage.makeService.withLockedValue { $0 = makeService }
+            self.storage.makeService = makeService
         }
 
         func initialize() -> Storage {
