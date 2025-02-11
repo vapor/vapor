@@ -1,28 +1,21 @@
-import XCTVapor
 import Vapor
-import XCTest
+import VaporTesting
+import Testing
 
-final class LoggingTests: XCTestCase {
-    var app: Application!
+@Suite("Logging Tests")
+struct LoggingTests {
+    @Test func testChangeRequestLogLevel() async throws {
+        try await withApp { app in
+            app.get("trace") { req -> String in
+                req.logger.logLevel = .trace
+                req.logger.trace("foo")
+                return "done"
+            }
 
-    override func setUp() async throws {
-        app = try await Application(.testing)
-    }
-
-    override func tearDown() async throws {
-        try await app.shutdown()
-    }
-
-    func testChangeRequestLogLevel() async throws {
-        app.get("trace") { req -> String in
-            req.logger.logLevel = .trace
-            req.logger.trace("foo")
-            return "done"
-        }
-
-        try await app.testable().test(.GET, "trace") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "done")
+            try await app.testing().test(.GET, "trace") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "done")
+            }
         }
     }
 }

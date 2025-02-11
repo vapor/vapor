@@ -1,216 +1,217 @@
 import NIOHTTP1
-import XCTVapor
-import XCTest
 import Vapor
 import NIOCore
 import Tracing
+import Testing
+import VaporTesting
 
-final class MiddlewareTests: XCTestCase {
-    var app: Application!
-    
-    override func setUp() async throws {
-        app = try await Application(.testing)
-    }
-    
-    override func tearDown() async throws {
-        try await app.shutdown()
-    }
-    
-    actor OrderStore {
-        var order: [String] = []
-        
-        func addOrder(_ orderValue: String) {
-            self.order.append(orderValue)
-        }
-        
-        func getOrder() -> [String] {
-            self.order
-        }
-    }
-    
-    final class OrderMiddleware: Middleware {
-        let pos: String
-        let store: OrderStore
-        init(_ pos: String, store: OrderStore) {
-            self.pos = pos
-            self.store = store
-        }
-        func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-            req.eventLoop.makeFutureWithTask {
-                await self.store.addOrder(self.pos)
-            }.flatMap {
-                next.respond(to: req)
-            }
-        }
-    }
-
+@Suite("Middleware Tests")
+struct MiddlewareTests2 {
+    @Test("Test Middleware Order")
     func testMiddlewareOrder() async throws {
-        let store = OrderStore()
-        app.grouped(
-            OrderMiddleware("a", store: store), OrderMiddleware("b", store: store), OrderMiddleware("c", store: store)
-        ).get("order") { req -> String in
-            return "done"
-        }
+        try await withApp { app in
+            let store = OrderStore()
+            app.grouped(
+                OrderMiddleware("a", store: store), OrderMiddleware("b", store: store), OrderMiddleware("c", store: store)
+            ).get("order") { req -> String in
+                return "done"
+            }
 
-        try await app.testable().test(.GET, "/order") { res in
-            let order = await store.getOrder()
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(order, ["a", "b", "c"])
-            XCTAssertEqual(res.body.string, "done")
+            try await app.testing().test(.GET, "/order") { res in
+                let order = await store.getOrder()
+                #expect(res.status == .ok)
+                #expect(order == ["a", "b", "c"])
+                #expect(res.body.string == "done")
+            }
         }
     }
 
+    @Test("Test Prepending Middleware")
     func testPrependingMiddleware() async throws {
-        let store = OrderStore()
-        app.middleware.use(OrderMiddleware("b", store: store))
-        app.middleware.use(OrderMiddleware("c", store: store))
-        app.middleware.use(OrderMiddleware("a", store: store), at: .beginning)
-        app.middleware.use(OrderMiddleware("d", store: store), at: .end)
+        try await withApp { app in
+            let store = OrderStore()
+            app.middleware.use(OrderMiddleware("b", store: store))
+            app.middleware.use(OrderMiddleware("c", store: store))
+            app.middleware.use(OrderMiddleware("a", store: store), at: .beginning)
+            app.middleware.use(OrderMiddleware("d", store: store), at: .end)
 
-        app.get("order") { req -> String in
-            return "done"
-        }
+            app.get("order") { req -> String in
+                return "done"
+            }
 
-        try await app.testable().test(.GET, "/order") { res in
-            let order = await store.getOrder()
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(order, ["a", "b", "c", "d"])
-            XCTAssertEqual(res.body.string, "done")
+            try await app.testable().test(.GET, "/order") { res in
+                let order = await store.getOrder()
+                #expect(res.status == .ok)
+                #expect(order == ["a", "b", "c", "d"])
+                #expect(res.body.string == "done")
+            }
         }
     }
 
+    @Test("Test CORS Middleware Varied By Request Origin")
     func testCORSMiddlewareVariedByRequestOrigin() async throws {
-        app.grouped(
-            CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.GET], allowedHeaders: [.origin]))
-        ).get("order") { req -> String in
-            return "done"
-        }
+        try await withApp { app in
+            app.grouped(
+                CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.GET], allowedHeaders: [.origin]))
+            ).get("order") { req -> String in
+                return "done"
+            }
 
-        try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "done")
-            XCTAssertEqual(res.headers[.vary], ["origin"])
-            XCTAssertEqual(res.headers[.accessControlAllowOrigin], ["foo"])
-            XCTAssertEqual(res.headers[.accessControlAllowHeaders], ["origin"])
+            try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "done")
+                #expect(res.headers[.vary] == ["origin"])
+                #expect(res.headers[.accessControlAllowOrigin] == ["foo"])
+                #expect(res.headers[.accessControlAllowHeaders] == ["origin"])
+            }
         }
     }
 
+    @Test("Test CORS Middleware No Variation By Request Origin Allowed")
     func testCORSMiddlewareNoVariationByRequestOriginAllowed() async throws {
-        app.grouped(
-            CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.GET], allowedHeaders: []))
-        ).get("order") { req -> String in
-            return "done"
-        }
+        try await withApp { app in
+            app.grouped(
+                CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.GET], allowedHeaders: []))
+            ).get("order") { req -> String in
+                return "done"
+            }
 
-        try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "done")
-            XCTAssertEqual(res.headers[.vary], [])
-            XCTAssertEqual(res.headers[.accessControlAllowOrigin], [])
-            XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
+            try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "done")
+                #expect(res.headers[.vary] == [])
+                #expect(res.headers[.accessControlAllowOrigin] == [])
+                #expect(res.headers[.accessControlAllowHeaders] == [""])
+            }
         }
     }
-    
+
+    @Test("Test File Middleware From Bundle")
     func testFileMiddlewareFromBundle() async throws {
-        var fileMiddleware: FileMiddleware!
-        
-        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/"), "FileMiddleware instantiation from Bundle should not fail")
-        
-        app.middleware.use(fileMiddleware)
-        
-        try await app.testable().test(.GET, "/foo.txt") { result async in
-            XCTAssertEqual(result.status, .ok)
-            XCTAssertEqual(result.body.string, "bar\n")
+        try await withApp { app in
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/")
+            app.middleware.use(fileMiddleware)
+
+            try await app.testing().test(.GET, "/foo.txt") { result async in
+                #expect(result.status == .ok)
+                #expect(result.body.string == "bar\n")
+            }
         }
     }
-    
+
+    @Test("Test File Middleware From Bundle Subfolder")
     func testFileMiddlewareFromBundleSubfolder() async throws {
-        var fileMiddleware: FileMiddleware!
-        
-        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities"), "FileMiddleware instantiation from Bundle should not fail")
-        
-        app.middleware.use(fileMiddleware)
-        
-        try await app.testable().test(.GET, "/index.html") { result async in
-            XCTAssertEqual(result.status, .ok)
-            XCTAssertEqual(result.body.string, "<h1>Subdirectory Default</h1>\n")
+        try await withApp { app in
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities")
+            app.middleware.use(fileMiddleware)
+
+            try await app.testing().test(.GET, "/index.html") { result async in
+                #expect(result.status == .ok)
+                #expect(result.body.string == "<h1>Subdirectory Default</h1>\n")
+            }
         }
     }
-    
+
+    @Test("Test File Middleware From Bundle Invalid Public Directory")
     func testFileMiddlewareFromBundleInvalidPublicDirectory() {
-        XCTAssertThrowsError(try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")) { error in
-            guard let error = error as? FileMiddleware.BundleSetupError else {
-                return XCTFail("Error should be of type FileMiddleware.SetupError")
-            }
-            XCTAssertEqual(error, .publicDirectoryIsNotAFolder)
+        #expect(throws: FileMiddleware.BundleSetupError.publicDirectoryIsNotAFolder) {
+            try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")
         }
     }
-    
+
+    @Test("Test Tracing Middleware")
     func testTracingMiddleware() async throws {
-        app.traceAutoPropagation = true
-        let tracer = TestTracer()
-        InstrumentationSystem.bootstrap(tracer)
-        
-        struct TestServiceContextMiddleware: Middleware {
-            func respond(to request: Request, chainingTo next: any Responder) -> EventLoopFuture<Response> {
-                XCTAssertNotNil(ServiceContext.current)
-                return next.respond(to: request)
+        try await withApp { app in
+            app.traceAutoPropagation = true
+            let tracer = TestTracer()
+            InstrumentationSystem.bootstrap(tracer)
+
+            struct TestServiceContextMiddleware: AsyncMiddleware {
+                func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+                    #expect(ServiceContext.current != nil)
+                    return try await next.respond(to: request)
+                }
             }
-        }
-        
-        app.grouped(
-            TracingMiddleware() { attributes, _ in
-                attributes["custom"] = "custom"
+
+            app.grouped(
+                TracingMiddleware() { attributes, _ in
+                    attributes["custom"] = "custom"
+                }
+            ).grouped(
+                TestServiceContextMiddleware()
+            ).get("testTracing") { req -> String in
+                // Validates that TracingMiddleware sets the serviceContext
+                #expect(req.serviceContext != nil)
+                // Validates that TracingMiddleware exposes header extraction to backend
+                #expect(req.serviceContext.extracted == "extracted")
+                // Validates that the span's service context is propagated into the
+                // Task.local storage of the responder closure, thereby ensuring that
+                // spans created in the closure are nested under the request span.
+                // Requires Application.traceAutoPropagation to be enabled
+                #expect(ServiceContext.current != nil)
+                return "done"
             }
-        ).grouped(
-            TestServiceContextMiddleware()
-        ).get("testTracing") { req -> String in
-            // Validates that TracingMiddleware sets the serviceContext
-            XCTAssertNotNil(req.serviceContext)
-            // Validates that TracingMiddleware exposes header extraction to backend
-            XCTAssertEqual(req.serviceContext.extracted, "extracted")
-            // Validates that the span's service context is propagated into the
-            // Task.local storage of the responder closure, thereby ensuring that
-            // spans created in the closure are nested under the request span.
-            // Requires Application.traceAutoPropagation to be enabled
-            XCTAssertNotNil(ServiceContext.current)
-            return "done"
+
+            try await app.server.start(address: .hostname("127.0.0.1", port: 0))
+
+            let port = try #require(app.http.server.shared.localAddress?.port, "Failed to get port")
+            let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
+                req.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
+                req.headers.add(name: TestTracer.extractKey, value: "extracted")
+            }
+
+            #expect(response.status == .ok)
+            #expect(response.body?.string == "done")
+
+            let span = try #require(tracer.spans.first)
+            #expect(span.operationName == "GET /testTracing")
+
+            #expect(span.attributes["http.request.method"]?.toSpanAttribute() == "GET")
+            #expect(span.attributes["url.path"]?.toSpanAttribute() == "/testTracing")
+            #expect(span.attributes["url.scheme"]?.toSpanAttribute() == nil)
+
+            #expect(span.attributes["http.route"]?.toSpanAttribute() == "/testTracing")
+            #expect(span.attributes["network.protocol.name"]?.toSpanAttribute() == "http")
+            #expect(span.attributes["server.address"]?.toSpanAttribute() == "127.0.0.1")
+            #expect(span.attributes["server.port"]?.toSpanAttribute() == port.toSpanAttribute())
+            #expect(span.attributes["url.query"]?.toSpanAttribute() == "foo=bar")
+
+            #expect(span.attributes["client.address"]?.toSpanAttribute() == "127.0.0.1")
+            #expect(span.attributes["network.peer.address"]?.toSpanAttribute() == "127.0.0.1")
+            #expect(span.attributes["network.peer.port"]?.toSpanAttribute() != nil)
+            #expect(span.attributes["network.protocol.version"]?.toSpanAttribute() == "1.1")
+            #expect(span.attributes["user_agent.original"]?.toSpanAttribute() == "test")
+
+            #expect(span.attributes["custom"]?.toSpanAttribute() == "custom")
+
+            #expect(span.attributes["http.response.status_code"]?.toSpanAttribute() == 200)
+
+            try await app.server.shutdown()
         }
+    }
+}
 
-        try await app.server.start(address: .hostname("127.0.0.1", port: 0))
+actor OrderStore {
+    var order: [String] = []
 
-        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
-        let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
-            req.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
-            req.headers.add(name: TestTracer.extractKey, value: "extracted")
-        }
+    func addOrder(_ orderValue: String) {
+        self.order.append(orderValue)
+    }
 
-        XCTAssertEqual(response.status, .ok)
-        XCTAssertEqual(response.body?.string, "done")
+    func getOrder() -> [String] {
+        self.order
+    }
+}
 
-        let span = try XCTUnwrap(tracer.spans.first)
-        XCTAssertEqual(span.operationName, "GET /testTracing")
-        
-        XCTAssertEqual(span.attributes["http.request.method"]?.toSpanAttribute(), "GET")
-        XCTAssertEqual(span.attributes["url.path"]?.toSpanAttribute(), "/testTracing")
-        XCTAssertEqual(span.attributes["url.scheme"]?.toSpanAttribute(), nil)
-        
-        XCTAssertEqual(span.attributes["http.route"]?.toSpanAttribute(), "/testTracing")
-        XCTAssertEqual(span.attributes["network.protocol.name"]?.toSpanAttribute(), "http")
-        XCTAssertEqual(span.attributes["server.address"]?.toSpanAttribute(), "127.0.0.1")
-        XCTAssertEqual(span.attributes["server.port"]?.toSpanAttribute(), port.toSpanAttribute())
-        XCTAssertEqual(span.attributes["url.query"]?.toSpanAttribute(), "foo=bar")
-        
-        XCTAssertEqual(span.attributes["client.address"]?.toSpanAttribute(), "127.0.0.1")
-        XCTAssertEqual(span.attributes["network.peer.address"]?.toSpanAttribute(), "127.0.0.1")
-        XCTAssertNotNil(span.attributes["network.peer.port"]?.toSpanAttribute())
-        XCTAssertEqual(span.attributes["network.protocol.version"]?.toSpanAttribute(), "1.1")
-        XCTAssertEqual(span.attributes["user_agent.original"]?.toSpanAttribute(), "test")
-        
-        XCTAssertEqual(span.attributes["custom"]?.toSpanAttribute(), "custom")
-        
-        XCTAssertEqual(span.attributes["http.response.status_code"]?.toSpanAttribute(), 200)
-
-        try await app.server.shutdown()
+final class OrderMiddleware: AsyncMiddleware {
+    let pos: String
+    let store: OrderStore
+    init(_ pos: String, store: OrderStore) {
+        self.pos = pos
+        self.store = store
+    }
+    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+        await store.addOrder(pos)
+        return try await next.respond(to: request)
     }
 }
