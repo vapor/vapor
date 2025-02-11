@@ -2,9 +2,6 @@ import VaporTesting
 import Testing
 import Vapor
 import NIOCore
-#if canImport(Android)
-import func Android.sleep
-#endif
 
 @Suite("Endpoint Cache Tests")
 struct EndpointCacheTests {
