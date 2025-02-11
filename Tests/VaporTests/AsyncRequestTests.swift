@@ -3,7 +3,7 @@ import Vapor
 import VaporTesting
 
 @Suite("Request Tests")
-struct RequestTestsSwiftTesting {
+struct AsyncRequestTests {
     @Test("Test Redirect")
     func testRedirect() async throws {
         try await withApp { app in
