@@ -64,10 +64,10 @@ final class ServiceTests: XCTestCase {
     
     func testServiceHelpers() throws {
         let testString = "This is a test - \(Int.random())"
-        let myFakeServicce = MyTestService(cannedResponse: testString, eventLoop: app.eventLoopGroup.next(), logger: app.logger)
+        let myFakeService = MyTestService(cannedResponse: testString, eventLoop: app.eventLoopGroup.next(), logger: app.logger)
         
         app.services.myService.use { _ in
-            myFakeServicce
+            myFakeService
         }
         
         app.get("myService") { req -> String in
@@ -79,6 +79,23 @@ final class ServiceTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, testString)
         })
+    }
+    
+    func testRepeatedAccessCausesNoStackOverflow() throws {
+        let myFakeService = MyTestService(cannedResponse: "", eventLoop: app.eventLoopGroup.next(), logger: app.logger)
+        app.services.myService.use { _ in myFakeService }
+        
+        let app = self.app!  // For use inside the sendable closure
+        try app.eventLoopGroup.next()
+            .future()
+            .map {
+                // ~6.7k iterations should already be sufficient, but even with this many iterations, the test still
+                // run quickly enough, and we would detect potential regressions even for larger stack sizes.
+                for _ in 1...100_000 {
+                    _ = app.services.myService.service
+                }
+            }
+            .wait()
     }
 }
 
