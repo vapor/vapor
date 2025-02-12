@@ -1,19 +1,18 @@
 @testable import Vapor
-import XCTVapor
-import XCTest
 import NIOPosix
 import NIOCore
+import Testing
+import VaporTesting
 
-final class DotEnvTests: XCTestCase {
+@Suite("DotEnv Tests")
+struct DotEnvTests {
+    @Test("Test Reading a File")
     func testReadFile() async throws {
-        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let pool = NIOThreadPool(numberOfThreads: 1)
-        pool.start()
         let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/test.env"
         let file = try await DotEnvFile.read(path: path)
         let test = file.lines.map { $0.description }.joined(separator: "\n")
-        XCTAssertEqual(test, """
+        #expect(test == """
         NODE_ENV=development
         BASIC=basic
         AFTER_LINE=after_line
@@ -30,28 +29,29 @@ final class DotEnvTests: XCTestCase {
         INCLUDE_SPACE=some spaced out string
         USERNAME=therealnerdybeast@example.tld
         """)
-        try await pool.shutdownGracefully()
-        try await elg.shutdownGracefully()
     }
 
+    @Test("Test Parsing works without a trailing newline")
     func testNoTrailingNewline() throws {
         let env = "FOO=bar\nBAR=baz"
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString(env)
         var parser = DotEnvFile.Parser(source: buffer)
         let lines = parser.parse()
-        XCTAssertEqual(lines, [
+        #expect(lines == [
             .init(key: "FOO", value: "bar"),
             .init(key: "BAR", value: "baz"),
         ])
     }
+
+    @Test("Test Parsing comments")
     func testCommentWithNoTrailingNewline() throws {
         let env = "FOO=bar\n#BAR=baz"
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString(env)
         var parser = DotEnvFile.Parser(source: buffer)
         let lines = parser.parse()
-        XCTAssertEqual(lines, [
+        #expect(lines == [
             .init(key: "FOO", value: "bar")
         ])
     }
