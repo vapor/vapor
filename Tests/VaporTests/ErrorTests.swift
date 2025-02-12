@@ -1,18 +1,13 @@
-import XCTest
 import Vapor
 import Logging
+import Testing
+import VaporTesting
+import Foundation
 
-final class ErrorTests: XCTestCase {
-    var app: Application!
+@Suite("Error Tests")
+struct ErrorTests {
 
-    override func setUp() async throws {
-        app = try await Application(.testing)
-    }
-
-    override func tearDown() async throws {
-        try await app.shutdown()
-    }
-
+    @Test("Test Debug Description of Errors")
     func testPrintable() throws {
         let expectedPrintable = """
         FooError.noFoo: You do not have a `foo`.
@@ -29,43 +24,46 @@ final class ErrorTests: XCTestCase {
         - http://documentation.com/foo/noFoo
 
         """
-        XCTAssertEqual(FooError.noFoo.debugDescription, expectedPrintable)
+        #expect(FooError.noFoo.debugDescription == expectedPrintable)
     }
 
+    @Test("Test Omitting Empty Fields")
     func testOmitEmptyFields() {
-        XCTAssertTrue(FooError.noFoo.stackOverflowQuestions.isEmpty)
-        XCTAssertFalse(
-            FooError.noFoo.debugDescription.contains("Stack Overflow")
-        )
+        #expect(FooError.noFoo.stackOverflowQuestions.isEmpty == true)
+        #expect(FooError.noFoo.debugDescription.contains("Stack Overflow") == false)
     }
 
+    @Test("Test Readable Names")
     func testReadableName() {
-        XCTAssertEqual(FooError.readableName, "Foo Error")
+        #expect(FooError.readableName == "Foo Error")
     }
 
+    @Test("Test Error Identifier")
     func testIdentifier() {
-        XCTAssertEqual(FooError.noFoo.identifier, "noFoo")
+        #expect(FooError.noFoo.identifier == "noFoo")
     }
 
+    @Test("Test Error Causes")
     func testCausesAndSuggestions() {
-        XCTAssertEqual(FooError.noFoo.possibleCauses, [
+        #expect(FooError.noFoo.possibleCauses == [
             "You did not set the flongwaffle.",
             "The session ended before a `Foo` could be made.",
             "The universe conspires against us all.",
             "Computers are hard."
         ])
 
-        XCTAssertEqual(FooError.noFoo.suggestedFixes, [
+        #expect(FooError.noFoo.suggestedFixes == [
             "You really want to use a `Bar` here.",
             "Take up the guitar and move to the beach."
         ])
 
-        XCTAssertEqual(FooError.noFoo.documentationLinks, [
+        #expect(FooError.noFoo.documentationLinks == [
             "http://documentation.com/Foo",
             "http://documentation.com/foo/noFoo"
         ])
     }
 
+    @Test("Test Minimum Conformance")
     func testMinimumConformance() {
         let minimum = MinimumError.alpha
         let description = minimum.debugDescription
@@ -73,70 +71,60 @@ final class ErrorTests: XCTestCase {
         MinimumError.alpha: Not enabled
         
         """
-        XCTAssertEqual(description, expectation)
+        #expect(description == expectation)
     }
 
+    @Test("Test Abort Error")
     func testAbortError() async throws {
-        app.get("foo") { req -> String in
-            throw Abort(.internalServerError, reason: "Foo")
-        }
-
-        app.post("foo") { req -> Foo in
-            try req.content.decode(Foo.self)
-        }
-
-        struct AbortResponse: Content {
-            var reason: String
-        }
-
-        try await app.test(.GET, "foo") { res in
-            XCTAssertEqual(res.status, .internalServerError)
-            let abort = try res.content.decode(AbortResponse.self)
-            XCTAssertEqual(abort.reason, "Foo")
-        }.test(.POST, "foo", beforeRequest: { req in
-            try req.content.encode(Foo(bar: 42))
-        }, afterResponse: { res in
-            XCTAssertEqual(res.status, .internalServerError)
-            let abort = try res.content.decode(AbortResponse.self)
-            XCTAssertEqual(abort.reason, "After decode")
-        })
-    }
-    
-    func testErrorMiddlewareUsesContentConfiguration() async throws {
-        app.get("foo") { req -> String in
-            throw Abort(.internalServerError, reason: "Foo")
-        }
-        
-        ContentConfiguration.global.use(encoder: URLEncodedFormEncoder(), for: .json)
-        
-        try await app.test(.GET, "foo") { res in
-            XCTAssertEqual(res.status, HTTPStatus.internalServerError)
-            let option1 = "error=true&reason=Foo"
-            let option2 = "reason=Foo&error=true"
-            guard res.body.string == option1 || res.body.string == option2 else {
-                XCTFail("Response does not match")
-                return
+        try await withApp { app in
+            app.get("foo") { req -> String in
+                throw Abort(.internalServerError, reason: "Foo")
             }
-        }
-        
-        // Clean up
-        ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)
-    }
-}
 
-func XCTAssertContains(
-    _ haystack: String?,
-    _ needle: String,
-    file: StaticString = #filePath,
-    line: UInt = #line
-) {
-    let file = (file)
-    guard let haystack = haystack else {
-        XCTFail("\(needle) not found in: nil", file: file, line: line)
-        return
+            app.post("foo") { req -> Foo in
+                try req.content.decode(Foo.self)
+            }
+
+            struct AbortResponse: Content {
+                var reason: String
+            }
+
+            try await app.testing().test(.GET, "foo") { res in
+                #expect(res.status == .internalServerError)
+                let abort = try res.content.decode(AbortResponse.self)
+                #expect(abort.reason == "Foo")
+            }.test(.POST, "foo", beforeRequest: { req in
+                try req.content.encode(Foo(bar: 42))
+            }, afterResponse: { res in
+                #expect(res.status == .internalServerError)
+                let abort = try res.content.decode(AbortResponse.self)
+                #expect(abort.reason == "After decode")
+            })
+        }
     }
-    if !haystack.contains(needle) {
-        XCTFail("\(needle) not found in: \(haystack)", file: file, line: line)
+
+    @Test("Test Error Middleware Uses Content Configuration")
+    func testErrorMiddlewareUsesContentConfiguration() async throws {
+        try await withApp { app in
+            app.get("foo") { req -> String in
+                throw Abort(.internalServerError, reason: "Foo")
+            }
+
+            ContentConfiguration.global.use(encoder: URLEncodedFormEncoder(), for: .json)
+
+            try await app.test(.GET, "foo") { res in
+                #expect(res.status == HTTPStatus.internalServerError)
+                let option1 = "error=true&reason=Foo"
+                let option2 = "reason=Foo&error=true"
+                guard res.body.string == option1 || res.body.string == option2 else {
+                    Issue.record("Response does not match")
+                    return
+                }
+            }
+
+            // Clean up
+            ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)
+        }
     }
 }
 
