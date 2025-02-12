@@ -1,57 +1,57 @@
-import XCTVapor
 import Algorithms
-import XCTest
 import Vapor
 import NIOCore
+import Testing
+import Foundation
 
-final class Base32Tests: XCTestCase {
+@Suite("Base N Tests")
+struct BaseNTests {
+
+    @Test("Base 32 Tests")
     func testBase32() throws {
         // Base32 test vectors from [RFC 4648 § 10](https://datatracker.ietf.org/doc/html/rfc4648#section-10)
-        XCTAssertEqual("".base32String(), "")
-        XCTAssertEqual("f".base32String(), "MY======")
-        XCTAssertEqual("fo".base32String(), "MZXQ====")
-        XCTAssertEqual("foo".base32String(), "MZXW6===")
-        XCTAssertEqual("foob".base32String(), "MZXW6YQ=")
-        XCTAssertEqual("fooba".base32String(), "MZXW6YTB")
-        XCTAssertEqual("foobar".base32String(), "MZXW6YTBOI======")
+        #expect("".base32String() == "")
+        #expect("f".base32String() == "MY======")
+        #expect("fo".base32String() == "MZXQ====")
+        #expect("foo".base32String() == "MZXW6===")
+        #expect("foob".base32String() == "MZXW6YQ=")
+        #expect("fooba".base32String() == "MZXW6YTB")
+        #expect("foobar".base32String() == "MZXW6YTBOI======")
 
-        XCTAssertEqual(Array(decodingBase32: "").map { String(decoding: $0, as: UTF8.self) }, "")
-        XCTAssertEqual(Array(decodingBase32: "MY======").map { String(decoding: $0, as: UTF8.self) }, "f")
-        XCTAssertEqual(Array(decodingBase32: "MZXQ====").map { String(decoding: $0, as: UTF8.self) }, "fo")
-        XCTAssertEqual(Array(decodingBase32: "MZXW6===").map { String(decoding: $0, as: UTF8.self) }, "foo")
-        XCTAssertEqual(Array(decodingBase32: "MZXW6YQ=").map { String(decoding: $0, as: UTF8.self) }, "foob")
-        XCTAssertEqual(Array(decodingBase32: "MZXW6YTB").map { String(decoding: $0, as: UTF8.self) }, "fooba")
-        XCTAssertEqual(Array(decodingBase32: "MZXW6YTBOI======").map { String(decoding: $0, as: UTF8.self) }, "foobar")
+        #expect(Array(decodingBase32: "").map { String(decoding: $0, as: UTF8.self) } == "")
+        #expect(Array(decodingBase32: "MY======").map { String(decoding: $0, as: UTF8.self) } == "f")
+        #expect(Array(decodingBase32: "MZXQ====").map { String(decoding: $0, as: UTF8.self) } == "fo")
+        #expect(Array(decodingBase32: "MZXW6===").map { String(decoding: $0, as: UTF8.self) } == "foo")
+        #expect(Array(decodingBase32: "MZXW6YQ=").map { String(decoding: $0, as: UTF8.self) } == "foob")
+        #expect(Array(decodingBase32: "MZXW6YTB").map { String(decoding: $0, as: UTF8.self) } == "fooba")
+        #expect(Array(decodingBase32: "MZXW6YTBOI======").map { String(decoding: $0, as: UTF8.self) } == "foobar")
 
         let data = Data([1, 2, 3, 4])
-        XCTAssertEqual(data.base32EncodedString(), "AEBAGBA")
-        XCTAssertEqual(Data(base32Encoded: "AEBAGBA"), data)
-        XCTAssertNil(Data(base32Encoded: data.base64EncodedString()))
+        #expect(data.base32EncodedString() == "AEBAGBA")
+        #expect(Data(base32Encoded: "AEBAGBA") == data)
+        #expect(Data(base32Encoded: data.base64EncodedString()) == nil)
     }
-}
 
-final class Base64Tests: XCTestCase {
+    @Test("Base 64 Tests")
     func testBase64() throws {
         // Base64 test vectors from [RFC 4648 § 10](https://datatracker.ietf.org/doc/html/rfc4648#section-10)
-        XCTAssertEqual("".base64String(), "")
-        XCTAssertEqual("f".base64String(), "Zg==")
-        XCTAssertEqual("fo".base64String(), "Zm8=")
-        XCTAssertEqual("foo".base64String(), "Zm9v")
-        XCTAssertEqual("foob".base64String(), "Zm9vYg==")
-        XCTAssertEqual("fooba".base64String(), "Zm9vYmE=")
-        XCTAssertEqual("foobar".base64String(), "Zm9vYmFy")
+        #expect("".base64String() == "")
+        #expect("f".base64String() == "Zg==")
+        #expect("fo".base64String() == "Zm8=")
+        #expect("foo".base64String() == "Zm9v")
+        #expect("foob".base64String() == "Zm9vYg==")
+        #expect("fooba".base64String() == "Zm9vYmE=")
+        #expect("foobar".base64String() == "Zm9vYmFy")
 
-        XCTAssertEqual(Array(decodingBase64: "").map { String(decoding: $0, as: UTF8.self) }, "")
-        XCTAssertEqual(Array(decodingBase64: "Zg==").map { String(decoding: $0, as: UTF8.self) }, "f")
-        XCTAssertEqual(Array(decodingBase64: "Zm8=").map { String(decoding: $0, as: UTF8.self) }, "fo")
-        XCTAssertEqual(Array(decodingBase64: "Zm9v").map { String(decoding: $0, as: UTF8.self) }, "foo")
-        XCTAssertEqual(Array(decodingBase64: "Zm9vYg==").map { String(decoding: $0, as: UTF8.self) }, "foob")
-        XCTAssertEqual(Array(decodingBase64: "Zm9vYmE=").map { String(decoding: $0, as: UTF8.self) }, "fooba")
-        XCTAssertEqual(Array(decodingBase64: "Zm9vYmFy").map { String(decoding: $0, as: UTF8.self) }, "foobar")
+        #expect(Array(decodingBase64: "").map { String(decoding: $0, as: UTF8.self) } == "")
+        #expect(Array(decodingBase64: "Zg==").map { String(decoding: $0, as: UTF8.self) } == "f")
+        #expect(Array(decodingBase64: "Zm8=").map { String(decoding: $0, as: UTF8.self) } == "fo")
+        #expect(Array(decodingBase64: "Zm9v").map { String(decoding: $0, as: UTF8.self) } == "foo")
+        #expect(Array(decodingBase64: "Zm9vYg==").map { String(decoding: $0, as: UTF8.self) } == "foob")
+        #expect(Array(decodingBase64: "Zm9vYmE=").map { String(decoding: $0, as: UTF8.self) } == "fooba")
+        #expect(Array(decodingBase64: "Zm9vYmFy").map { String(decoding: $0, as: UTF8.self) } == "foobar")
     }
-}
 
-final class BaseNTests: XCTestCase {
     /// This is six ASCII alphabetic characters, followed by one low and one high control character,
     /// followed by three codepoints in the high Latin-1 range (U+00A1 - U+00FF), then three in the
     /// range U+0100 - U+0FFF, four in the remainder of the BMP, three simple codepoints outside the
@@ -60,44 +60,45 @@ final class BaseNTests: XCTestCase {
     static let vector = "foobar\u{0009}\u{00a0}þàøƀāƿᏮᨡᡢꓞ𐌜𐍈𐔂😀👍🏼👩‍👩‍👧‍👧👨‍👨‍👦‍👦🏳️🏳️‍🌈🇺🇳"
     let checks = chain(chain(BaseNTests.vector.windows(ofCount: 1), BaseNTests.vector.windows(ofCount: 2)), [BaseNTests.vector[...]])
 
+    @Test("Base N Tests")
     func testBaseN() throws {
-        // Set this to true to regenerate the "expected" test comparison vectors at the bottom of this file.
-        let printVectors = false
-
-        func check(with instance: BaseNEncoding, name: String, expected: [String], file: StaticString = #fileID, line: UInt = #line) {
-            assert(self.checks.count == expected.count)
-
-            XCTAssertEqual(instance.encode([]), [], file: (file), line: line)
-
-            if printVectors { print("let expected\(name) = [", terminator: "") }
-            for (elem, expected) in zip(self.checks, expected) {
-                let encodedBytes = instance.encode(Array(elem.utf8)), encodedString = String(decoding: encodedBytes, as: Unicode.ASCII.self)
-                let decodedBytes = instance.decode(encodedBytes)
-
-                if printVectors {
-                    print(instance.bits > 6 ? "\(encodedBytes)" : "\"\(encodedString)\"", terminator: elem.count == Self.vector.count ? "" : ", ")
-                } else {
-                    XCTAssertEqual(expected, encodedString, "string encode", file: (file), line: line)
-
-                    XCTAssertEqual(Array(expected.utf8), encodedBytes, "byte encode", file: (file), line: line)
-                    XCTAssertEqual(Array(elem.utf8), decodedBytes, "byte decode", file: (file), line: line)
-
-                    let utf8ReadyBytes = decodedBytes.map { Array(chain($0.map(Int8.init(bitPattern:)), [0])) }
-                    let utf8ReadyBytesWithoutNullTermination = utf8ReadyBytes?.dropLast()
-                    XCTAssertEqual(utf8ReadyBytesWithoutNullTermination.flatMap { String(validating: $0, as: UTF8.self)?[...] }, elem, "\(name) - \(elem) - \(decodedBytes ?? [])")
-                }
-            }
-            if printVectors {
-                print("]\(instance.bits > 6 ? ".map { String(decoding: $0, as: Unicode.ASCII.self) }" : "")")
-            }
-        }
-
         check(with: Base32.default, name: "Base32", expected: expectedBase32)
         check(with: Base32.lowercasedCanonical, name: "Base32Lower", expected: expectedBase32Lower)
         check(with: Base32.relaxed, name: "Base32Relaxed", expected: expectedBase32Relaxed)
 
         check(with: Base64.canonical, name: "Base64", expected: expectedBase64)
         check(with: Base64.bcrypt, name: "Base64Bcrypt", expected: expectedBase64Bcrypt)
+    }
+
+    // Set this to true to regenerate the "expected" test comparison vectors at the bottom of this file.
+    let printVectors = false
+
+    func check(with instance: BaseNEncoding, name: String, expected: [String], sourceLocation: SourceLocation = #_sourceLocation) {
+        assert(self.checks.count == expected.count)
+
+        #expect(instance.encode([]) == [], sourceLocation: sourceLocation)
+
+        if printVectors { print("let expected\(name) = [", terminator: "") }
+        for (elem, expected) in zip(self.checks, expected) {
+            let encodedBytes = instance.encode(Array(elem.utf8)), encodedString = String(decoding: encodedBytes, as: Unicode.ASCII.self)
+            let decodedBytes = instance.decode(encodedBytes)
+
+            if printVectors {
+                print(instance.bits > 6 ? "\(encodedBytes)" : "\"\(encodedString)\"", terminator: elem.count == Self.vector.count ? "" : ", ")
+            } else {
+                #expect(expected == encodedString, "string encode", sourceLocation: sourceLocation)
+
+                #expect(Array(expected.utf8) == encodedBytes, "byte encode", sourceLocation: sourceLocation)
+                #expect(Array(elem.utf8) == decodedBytes, "byte decode", sourceLocation: sourceLocation)
+
+                let utf8ReadyBytes = decodedBytes.map { Array(chain($0.map(Int8.init(bitPattern:)), [0])) }
+                let utf8ReadyBytesWithoutNullTermination = utf8ReadyBytes?.dropLast()
+                #expect(utf8ReadyBytesWithoutNullTermination.flatMap { String(validating: $0, as: UTF8.self)?[...] } == elem, "\(name) - \(elem) - \(decodedBytes ?? [])", sourceLocation: sourceLocation)
+            }
+        }
+        if printVectors {
+            print("]\(instance.bits > 6 ? ".map { String(decoding: $0, as: Unicode.ASCII.self) }" : "")")
+        }
     }
 }
 

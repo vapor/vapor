@@ -1,6 +1,5 @@
 @testable import Vapor
 import Testing
-import VaporTesting
 import Foundation
 
 @Suite("Environment Secret Tests")
