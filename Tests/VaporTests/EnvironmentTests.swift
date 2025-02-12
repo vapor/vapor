@@ -1,34 +1,28 @@
 @testable import Vapor
-import XCTVapor
-import XCTest
+import Testing
+import Foundation
 
-final class AsyncEnvironmentSecretTests: XCTestCase {
-    var app: Application!
-
-    override func setUp() async throws {
-        app = try await Application.make(.testing)
-    }
-
-    override func tearDown() async throws {
-        try await app.asyncShutdown()
-    }
-
+@Suite("Environment Secret Tests")
+struct EnvironmentSecretTests {
+    @Test("Non-existing secret file")
     func testNonExistingSecretFile() async throws {
         let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/non-existing-secret"
 
         let secretContent = try await Environment.secret(path: path)
-        XCTAssertNil(secretContent)
+        #expect(secretContent == nil)
     }
 
+    @Test("Existing secret file")
     func testExistingSecretFile() async throws {
         let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/my-secret-env-content"
 
         let secretContent = try await Environment.secret(path: path)
-        XCTAssertEqual(secretContent, "password")
+        #expect(secretContent == "password")
     }
 
+    @Test("Existing secret file from environment key")
     func testExistingSecretFileFromEnvironmentKey() async throws {
         let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/my-secret-env-content"
@@ -40,12 +34,13 @@ final class AsyncEnvironmentSecretTests: XCTestCase {
         }
 
         let secretContent = try await Environment.secret(key: key)
-        XCTAssertEqual(secretContent, "password")
+        #expect(secretContent == "password")
     }
 
+    @Test("Loading secret from environment key which does not exist")
     func testLoadingSecretFromEnvKeyWhichDoesNotExist() async throws {
         let key = "MY_NON_EXISTING_ENVIRONMENT_SECRET"
         let secretContent = try await Environment.secret(key: key)
-        XCTAssertNil(secretContent)
+        #expect(secretContent == nil)
     }
 }

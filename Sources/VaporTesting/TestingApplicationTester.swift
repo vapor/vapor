@@ -1,8 +1,8 @@
 import NIOHTTP1
 import NIOCore
-#if compiler(>=6.0) && canImport(Testing)
 import Testing
-#endif
+import Vapor
+import VaporTestUtils
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
@@ -12,8 +12,8 @@ extension Application.Live: TestingApplicationTester {}
 extension Application.InMemory: TestingApplicationTester {}
 
 extension Application: TestingApplicationTester {
-    public func testing(method: Method = .inMemory) throws -> TestingApplicationTester {
-        try self.boot()
+    public func testing(method: Method = .inMemory) async throws -> TestingApplicationTester {
+        try await self.boot()
         switch method {
         case .inMemory:
             return try InMemory(app: self)
@@ -27,7 +27,6 @@ extension Application: TestingApplicationTester {
     }
 }
 
-#if compiler(>=6.0) && canImport(Testing)
 extension TestingApplicationTester {
     @discardableResult
     public func test(
@@ -130,4 +129,3 @@ extension TestingApplicationTester {
         }
     }
 }
-#endif

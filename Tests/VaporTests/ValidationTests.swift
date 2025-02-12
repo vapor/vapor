@@ -632,7 +632,7 @@ class ValidationTests: XCTestCase {
         }
 
         // Setup
-        let app = try await Application.make(.testing)
+        let app = try await Application(.testing)
 
         // Converts validation errors to a custom response.
         final class ValidationErrorMiddleware: Middleware {
@@ -705,7 +705,7 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual(content.errors.count, 1)
         })
 
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
     func testValidateNullWhenNotRequired() throws {

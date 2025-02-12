@@ -1,3 +1,4 @@
+import NIOPosix
 import NIOCore
 import NIOHTTP1
 import WebSocketKit

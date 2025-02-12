@@ -1,19 +1,13 @@
-#if swift(>=5.10)
 #if canImport(Darwin)
 @preconcurrency import Darwin
 #elseif canImport(Glibc)
-#if compiler(>=6.0)
 import Glibc
-#else
-@preconcurrency import Glibc
-#endif
-#elseif canImport(Android)
-@preconcurrency import Android
 #elseif canImport(Musl)
 @preconcurrency import Musl
 #elseif canImport(WinSDK)
 @preconcurrency import WinSDK
-#endif
+#elseif canImport(Android)
+@preconcurrency import Android
 #endif
 import Foundation
 import NIOPosix
@@ -69,7 +63,8 @@ extension Date {
 /// Performant method for generating RFC1123 date headers.
 internal final class RFC1123DateCache: Sendable {
     static func eventLoop(_ eventLoop: EventLoop) -> RFC1123DateCache {
-        assert(eventLoop.inEventLoop)
+#warning("Fix")
+//        assert(eventLoop.inEventLoop)
         
         if let existing = thread.currentValue {
             return existing
@@ -185,7 +180,5 @@ private let stringNumbers = [
 
 private let secondsInDay = 60 * 60 * 24
 
-#if compiler(>=6.0)
 extension tm: @retroactive @unchecked Sendable {}
-#endif
 

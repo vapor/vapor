@@ -1,3 +1,4 @@
+import NIOHTTP1
 import Tracing
 
 /// Creates a trace and metadata for every request

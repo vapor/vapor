@@ -1,5 +1,7 @@
-#if compiler(>=6.0) && canImport(Testing)
+import Foundation
 import Testing
+import VaporTestUtils
+import Vapor
 
 public func expectContent<D>(
     _ type: D.Type,
@@ -114,4 +116,3 @@ where T: Codable & Equatable
         Issue.record("could not decode \(T.self): \(error)", sourceLocation: sourceLocation)
     }
 }
-#endif

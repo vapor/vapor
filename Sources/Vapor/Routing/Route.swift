@@ -1,6 +1,7 @@
 import NIOHTTP1
 import RoutingKit
 import NIOConcurrencyHelpers
+import ConsoleKit
 
 public final class Route: CustomStringConvertible, Sendable {
     public var method: HTTPMethod {

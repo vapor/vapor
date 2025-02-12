@@ -17,6 +17,7 @@ import NIOConcurrencyHelpers
 /// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
 /// See the ``Content`` protocol for more information.
 public struct ContentConfiguration: Sendable {
+    #warning("Globals are bad, inject into app")
     public static var global: ContentConfiguration {
         get {
             _global.withLockedValue { $0 }

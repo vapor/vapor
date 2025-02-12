@@ -1,14 +1,13 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 import PackageDescription
-import Foundation
 
 let package = Package(
     name: "vapor",
     platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6)
+        .macOS(.v15),
+        .iOS(.v18),
+        .tvOS(.v18),
+        .watchOS(.v11),
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -66,11 +65,35 @@ let package = Package(
 
         // Low-level atomic operations
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
+
+        // Service Lifecycle Management
+        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.6.3"),
+
+        // Network IO on Apple platforms
+        .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
     ],
     targets: [
         // C helpers
         .target(name: "CVaporBcrypt"),
-        
+
+        .target(
+            name: "HTTPServerNew",
+            dependencies: [
+                .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(
+                    name: "NIOTransportServices",
+                    package: "swift-nio-transport-services",
+                    condition: .when(platforms: [.macOS, .iOS, .tvOS, .visionOS])
+                ),
+                .product(name: "NIOExtras", package: "swift-nio-extras"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
+                .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
+            ]
+        ),
+
         // Vapor
         .target(
             name: "Vapor",
@@ -101,8 +124,9 @@ let package = Package(
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
-            ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+                .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+                .target(name: "HTTPServerNew"),
+            ]
         ),
 
         // Development
@@ -111,8 +135,7 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
             ],
-            resources: [.copy("Resources")],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            resources: [.copy("Resources")]
         ),
 
         // Testing
@@ -120,24 +143,21 @@ let package = Package(
             name: "VaporTestUtils",
             dependencies: [
                 .target(name: "Vapor"),
-            ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            ]
         ),
         .target(
             name: "VaporTesting",
             dependencies: [
                 .target(name: "VaporTestUtils"),
                 .target(name: "Vapor"),
-            ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            ]
         ),
         .target(
             name: "XCTVapor",
             dependencies: [
                 .target(name: "VaporTestUtils"),
                 .target(name: "Vapor"),
-            ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            ]
         ),
         .testTarget(
             name: "VaporTests",
@@ -157,10 +177,14 @@ let package = Package(
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),
                 .copy("Utilities/long-test-file.txt"),
-            ],
-            swiftSettings: [
-                .enableUpcomingFeature("BareSlashRegexLiterals"),
-                .enableExperimentalFeature("StrictConcurrency=complete"),
+            ]
+        ),
+        .testTarget(
+            name: "VaporSequentialTests",
+            dependencies: [
+                .target(name: "VaporTesting"),
+                .target(name: "Vapor"),
+                .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
             ]
         ),
     ]

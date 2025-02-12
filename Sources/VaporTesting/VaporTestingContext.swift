@@ -1,4 +1,4 @@
-#if compiler(>=6.0) && canImport(Testing)
+import Foundation
 import Testing
 
 public enum VaporTestingContext {
@@ -30,8 +30,7 @@ public enum VaporTestingContext {
             Location: \(sourceLocation.debugDescription)
             🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺
             """)
-            fflush(stdout)
+//            fflush(stdout)
         }
     }
 }
-#endif

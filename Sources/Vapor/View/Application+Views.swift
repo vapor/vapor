@@ -45,10 +45,8 @@ extension Application {
 
         public var plaintext: PlaintextRenderer {
             return .init(
-                fileio: self.application.fileio,
                 viewsDirectory: self.application.directory.viewsDirectory,
-                logger: self.application.logger,
-                eventLoopGroup: self.application.eventLoopGroup
+                logger: self.application.logger
             )
         }
 

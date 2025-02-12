@@ -1,3 +1,4 @@
+import Logging
 import XCTVapor
 import XCTest
 import Vapor
@@ -7,19 +8,19 @@ final class ServiceTests: XCTestCase {
     var app: Application!
 
     override func setUp() async throws {
-        app = try await Application.make(.testing)
+        app = try await Application(.testing)
     }
 
     override func tearDown() async throws {
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
-    func testReadOnly() throws {
+    func testReadOnly() async throws {
         app.get("test") { req in
-            req.readOnly.foos()
+            try await req.readOnly.foos()
         }
 
-        try app.test(.GET, "test") { res in
+        try await app.test(.GET, "test") { res in
             XCTAssertEqual(res.status, .ok)
             try XCTAssertEqual(res.content.decode([String].self), ["foo"])
         }
@@ -29,21 +30,11 @@ final class ServiceTests: XCTestCase {
         app.writable = .init(apiKey: "foo")
         XCTAssertEqual(app.writable?.apiKey, "foo")
     }
-
-    func testLifecycle() throws {
-        app.http.server.configuration.port = 0
-
-        app.lifecycle.use(Hello())
-        app.environment.arguments = ["serve"]
-        try app.start()
-        app.running?.stop()
-    }
     
-    func testAsyncLifecycleHandler() async throws {
-        let app = try await Application.make(.testing)
+    func testLifecycleHandler() async throws {
         app.http.server.configuration.port = 0
         
-        app.lifecycle.use(AsyncHello())
+        app.lifecycle.use(Hello())
         app.environment.arguments = ["serve"]
         try await app.startup()
         app.running?.stop()
@@ -62,7 +53,7 @@ final class ServiceTests: XCTestCase {
         }
     }
     
-    func testServiceHelpers() throws {
+    func testServiceHelpers() async throws {
         let testString = "This is a test - \(Int.random())"
         let myFakeService = MyTestService(cannedResponse: testString, eventLoop: app.eventLoopGroup.next(), logger: app.logger)
         
@@ -75,7 +66,7 @@ final class ServiceTests: XCTestCase {
             return thing
         }
         
-        try app.test(.GET, "myService", afterResponse: { res in
+        try await app.test(.GET, "myService", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, testString)
         })
@@ -133,8 +124,8 @@ struct MyTestService: MyService {
 private struct ReadOnly {
     let client: Client
 
-    func foos() -> EventLoopFuture<[String]> {
-        self.client.eventLoop.makeSucceededFuture(["foo"])
+    func foos() async throws -> [String] {
+        ["foo"]
     }
 }
 
@@ -165,12 +156,6 @@ private extension Application {
 
 private struct Hello: LifecycleHandler {
     func willBoot(_ app: Application) throws {
-        app.logger.info("Hello!")
-    }
-}
-
-private struct AsyncHello: LifecycleHandler {
-    func willBootAsync(_ app: Application) async throws {
         app.logger.info("Hello!")
     }
 }

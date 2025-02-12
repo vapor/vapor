@@ -1,25 +1,4 @@
 extension Request {
-    /// Creates a redirect `Response`.
-    ///
-    ///     router.get("redirect") { req in
-    ///         return req.redirect(to: "https://vapor.codes")
-    ///     }
-    ///
-    /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
-    /// Defaulting to non-permanent to prevent unexpected caching.
-    /// - Parameters:
-    ///   - location: The path to redirect to
-    ///   - type: The type of redirect to perform
-    /// - Returns: A response that provides a redirect to the specified location
-    @available(*, deprecated, renamed: "redirect(to:redirectType:)")
-    public func redirect(to location: String, type: RedirectType) -> Response {
-        let response = Response()
-        response.responseBox.withLockedValue { box in
-            box.status = type.status
-            box.headers.replaceOrAdd(name: .location, value: location)
-        }
-        return response
-    }
     
     /// Creates a redirect `Response`.
     ///
@@ -40,30 +19,6 @@ extension Request {
             box.headers.replaceOrAdd(name: .location, value: location)
         }
         return response
-    }
-}
-
-/// Specifies the type of redirect that the client should receive.
-@available(*, deprecated, renamed: "Redirect")
-public enum RedirectType {
-    /// A cacheable redirect. Not all user-agents preserve request method and body, so
-    /// this should only be used for GET or HEAD requests
-    /// `301 permanent`
-    case permanent
-    /// Forces the redirect to come with a GET, regardless of req method.
-    /// `303 see other`
-    case normal
-    /// Maintains original request method, ie: PUT will call PUT on redirect.
-    /// `307 Temporary`
-    case temporary
-
-    /// Associated `HTTPStatus` for this redirect type.
-    public var status: HTTPStatus {
-        switch self {
-        case .permanent: return .movedPermanently
-        case .normal: return .seeOther
-        case .temporary: return .temporaryRedirect
-        }
     }
 }
 
