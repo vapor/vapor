@@ -39,7 +39,7 @@ struct MiddlewareTests2 {
                 return "done"
             }
 
-            try await app.testable().test(.GET, "/order") { res in
+            try await app.testing().test(.GET, "/order") { res in
                 let order = await store.getOrder()
                 #expect(res.status == .ok)
                 #expect(order == ["a", "b", "c", "d"])
@@ -57,7 +57,7 @@ struct MiddlewareTests2 {
                 return "done"
             }
 
-            try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+            try await app.testing().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "done")
                 #expect(res.headers[.vary] == ["origin"])
@@ -76,7 +76,7 @@ struct MiddlewareTests2 {
                 return "done"
             }
 
-            try await app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+            try await app.testing().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "done")
                 #expect(res.headers[.vary] == [])
