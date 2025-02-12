@@ -1,156 +1,160 @@
-import XCTVapor
 import Vapor
 import Metrics
 @testable import CoreMetrics
-import XCTest
+import VaporTesting
+import Testing
 
-class MetricsTests: XCTestCase {
-    var app: Application!
+// These have to be serialized because the metrics system is essentially a global
+@Suite("Metric Tests", .serialized)
+struct MetricsTests {
+    @Test("Test Metrics Increases Counter")
+    func testMetricsIncreasesCounter() async throws {
+        try await withApp { app in
+            let metrics = CapturingMetricsSystem()
+            MetricsSystem.bootstrapInternal(metrics)
 
-    override func setUp() async throws {
-        app = try await Application(.testing)
-    }
+            struct User: Content {
+                let id: Int
+                let name: String
+            }
 
-    override func tearDown() async throws {
-        try await app.shutdown()
-    }
+            app.routes.get("users", ":userID") { req -> User in
+                let userID = try req.parameters.require("userID", as: Int.self)
+                if userID == 1 {
+                    return User(id: 1, name: "Tim")
+                } else {
+                    throw Abort(.notFound)
+                }
+            }
 
-    func testMetricsIncreasesCounter() async{
-        let metrics = CapturingMetricsSystem()
-        MetricsSystem.bootstrapInternal(metrics)
+            try await app.testing().test(.GET, "/users/1") { res in
+                #expect(res.status == .ok)
+                let resData = try res.content.decode(User.self)
+                #expect(resData.id == 1)
+                #expect(metrics.counters.count == 1)
+                let counter = metrics.counters["http_requests_total"] as! TestCounter
+                let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
+                #expect(pathDimension.1 == "/users/:userID")
+                #expect(counter.dimensions.first(where: { $0.0 == "path" && $0.1 == "/users/1" }) == nil)
+                let methodDimension = try #require(counter.dimensions.first(where: { $0.0 == "method"}))
+                #expect(methodDimension.1 == "GET")
+                let status = try #require(counter.dimensions.first(where: { $0.0 == "status"}))
+                #expect(status.1 == "200")
 
-        struct User: Content {
-            let id: Int
-            let name: String
-        }
-
-        app.routes.get("users", ":userID") { req -> User in
-            let userID = try req.parameters.require("userID", as: Int.self)
-            if userID == 1 {
-                return User(id: 1, name: "Tim")
-            } else {
-                throw Abort(.notFound)
+                let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
+                let timerPathDimension = try #require(timer.dimensions.first(where: { $0.0 == "path"}))
+                #expect(timerPathDimension.1 == "/users/:userID")
+                let timerMethodDimension = try #require(timer.dimensions.first(where: { $0.0 == "method"}))
+                #expect(timerMethodDimension.1 == "GET")
+                let timerStatusDimension = try #require(timer.dimensions.first(where: { $0.0 == "status"}))
+                #expect(timerStatusDimension.1 == "200")
             }
         }
-
-        await XCTAssertAsyncNoThrow(try await app.testable().test(.GET, "/users/1") { res in
-            XCTAssertEqual(res.status, .ok)
-            let resData = try res.content.decode(User.self)
-            XCTAssertEqual(resData.id, 1)
-            XCTAssertEqual(metrics.counters.count, 1)
-            let counter = metrics.counters["http_requests_total"] as! TestCounter
-            let pathDimension = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "path"}))
-            XCTAssertEqual(pathDimension.1, "/users/:userID")
-            XCTAssertNil(counter.dimensions.first(where: { $0.0 == "path" && $0.1 == "/users/1" }))
-            let methodDimension = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "method"}))
-            XCTAssertEqual(methodDimension.1, "GET")
-            let status = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "status"}))
-            XCTAssertEqual(status.1, "200")
-
-            let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
-            let timerPathDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "path"}))
-            XCTAssertEqual(timerPathDimension.1, "/users/:userID")
-            let timerMethodDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "method"}))
-            XCTAssertEqual(timerMethodDimension.1, "GET")
-            let timerStatusDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "status"}))
-            XCTAssertEqual(timerStatusDimension.1, "200")
-        })
     }
 
-    func testID404DoesntSpamMetrics() async {
-        let metrics = CapturingMetricsSystem()
-        MetricsSystem.bootstrapInternal(metrics)
+    @Test("Test 404 on Dyanmic Route Doesn't Spam Metrics")
+    func testID404DoesntSpamMetrics() async throws {
+        try await withApp { app in
+            let metrics = CapturingMetricsSystem()
+            MetricsSystem.bootstrapInternal(metrics)
 
-        struct User: Content {
-            let id: Int
-            let name: String
-        }
+            struct User: Content {
+                let id: Int
+                let name: String
+            }
 
-        app.routes.get("users", ":userID") { req -> User in
-            let userID = try req.parameters.require("userID", as: Int.self)
-            if userID == 1 {
-                return User(id: 1, name: "Tim")
-            } else {
-                throw Abort(.notFound)
+            app.routes.get("users", ":userID") { req -> User in
+                let userID = try req.parameters.require("userID", as: Int.self)
+                if userID == 1 {
+                    return User(id: 1, name: "Tim")
+                } else {
+                    throw Abort(.notFound)
+                }
+            }
+
+            try await app.testing().test(.GET, "/users/2") { res in
+                #expect(res.status == .notFound)
+                let counter = metrics.counters["http_requests_total"] as! TestCounter
+                let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
+                #expect(pathDimension.1 == "/users/:userID")
+                let methodDimension = try #require(counter.dimensions.first(where: { $0.0 == "method"}))
+                #expect(methodDimension.1 == "GET")
+                let status = try #require(counter.dimensions.first(where: { $0.0 == "status"}))
+                #expect(status.1 == "404")
+                #expect(counter.dimensions.first(where: { $0.1 == "200" }) == nil)
+                #expect(counter.dimensions.first(where: { $0.0 == "path" && $0.1 == "/users/1" }) == nil)
+
+                let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
+                let timerPathDimension = try #require(timer.dimensions.first(where: { $0.0 == "path"}))
+                #expect(timerPathDimension.1 == "/users/:userID")
+                let timerMethodDimension = try #require(timer.dimensions.first(where: { $0.0 == "method"}))
+                #expect(timerMethodDimension.1 == "GET")
+                let timerStatusDimension = try #require(timer.dimensions.first(where: { $0.0 == "status"}))
+                #expect(timerStatusDimension.1 == "404")
+                #expect(timer.dimensions.first(where: { $0.1 == "200" }) == nil)
             }
         }
-
-        await XCTAssertAsyncNoThrow(try await app.testable().test(.GET, "/users/2") { res in
-            XCTAssertEqual(res.status, .notFound)
-            let counter = metrics.counters["http_requests_total"] as! TestCounter
-            let pathDimension = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "path"}))
-            XCTAssertEqual(pathDimension.1, "/users/:userID")
-            let methodDimension = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "method"}))
-            XCTAssertEqual(methodDimension.1, "GET")
-            let status = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "status"}))
-            XCTAssertEqual(status.1, "404")
-            XCTAssertNil(counter.dimensions.first(where: { $0.1 == "200" }))
-            XCTAssertNil(counter.dimensions.first(where: { $0.0 == "path" && $0.1 == "/users/1" }))
-
-            let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
-            let timerPathDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "path"}))
-            XCTAssertEqual(timerPathDimension.1, "/users/:userID")
-            let timerMethodDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "method"}))
-            XCTAssertEqual(timerMethodDimension.1, "GET")
-            let timerStatusDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "status"}))
-            XCTAssertEqual(timerStatusDimension.1, "404")
-            XCTAssertNil(timer.dimensions.first(where: { $0.1 == "200" }))
-        })
     }
 
-    func test404RewritesPathForMetricsToAvoidDOSAttack() async {
-        let metrics = CapturingMetricsSystem()
-        MetricsSystem.bootstrapInternal(metrics)
+    @Test("Test 404 Rewrites Path for Metrics to Avoid DOS Attack")
+    func test404RewritesPathForMetricsToAvoidDOSAttack() async throws {
+        try await withApp { app in
+            let metrics = CapturingMetricsSystem()
+            MetricsSystem.bootstrapInternal(metrics)
 
-        await XCTAssertAsyncNoThrow(try await app.testable().test(.GET, "/not/found") { res in
-            XCTAssertEqual(res.status, .notFound)
-            XCTAssertEqual(metrics.counters.count, 1)
-            let counter = metrics.counters["http_requests_total"] as! TestCounter
-            let pathDimension = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "path"}))
-            XCTAssertEqual(pathDimension.1, "vapor_route_undefined")
-            let methodDimension = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "method"}))
-            XCTAssertEqual(methodDimension.1, "undefined")
-            let status = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "status"}))
-            XCTAssertEqual(status.1, "404")
+            try await app.testing().test(.GET, "/not/found") { res in
+                #expect(res.status == .notFound)
+                #expect(metrics.counters.count == 1)
+                let counter = metrics.counters["http_requests_total"] as! TestCounter
+                let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
+                #expect(pathDimension.1 == "vapor_route_undefined")
+                let methodDimension = try #require(counter.dimensions.first(where: { $0.0 == "method"}))
+                #expect(methodDimension.1 == "undefined")
+                let status = try #require(counter.dimensions.first(where: { $0.0 == "status"}))
+                #expect(status.1 == "404")
 
-            let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
-            let timerPathDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "path"}))
-            XCTAssertEqual(timerPathDimension.1, "vapor_route_undefined")
-            let timerMethodDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "method"}))
-            XCTAssertEqual(timerMethodDimension.1, "undefined")
-            let timerStatusDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "status"}))
-            XCTAssertEqual(timerStatusDimension.1, "404")
-            XCTAssertNil(timer.dimensions.first(where: { $0.1 == "200" }))
-        })
-    }
-
-    func testMetricsDisabled() async {
-        let metrics = CapturingMetricsSystem()
-        MetricsSystem.bootstrapInternal(metrics)
-
-        app.http.server.configuration.reportMetrics = false
-
-        struct User: Content {
-            let id: Int
-            let name: String
-        }
-
-        app.routes.get("users", ":userID") { req -> User in
-            let userID = try req.parameters.require("userID", as: Int.self)
-            if userID == 1 {
-                return User(id: 1, name: "Tim")
-            } else {
-                throw Abort(.notFound)
+                let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
+                let timerPathDimension = try #require(timer.dimensions.first(where: { $0.0 == "path"}))
+                #expect(timerPathDimension.1 == "vapor_route_undefined")
+                let timerMethodDimension = try #require(timer.dimensions.first(where: { $0.0 == "method"}))
+                #expect(timerMethodDimension.1 == "undefined")
+                let timerStatusDimension = try #require(timer.dimensions.first(where: { $0.0 == "status"}))
+                #expect(timerStatusDimension.1 == "404")
+                #expect(timer.dimensions.first(where: { $0.1 == "200" }) == nil)
             }
         }
+    }
 
-        await XCTAssertAsyncNoThrow(try await app.testable().test(.GET, "/users/1") { res in
-            XCTAssertEqual(res.status, .ok)
-            let resData = try res.content.decode(User.self)
-            XCTAssertEqual(resData.id, 1)
-            XCTAssertEqual(metrics.counters.count, 0)
-            XCTAssertNil(metrics.timers["http_request_duration_seconds"])
-        })
+    @Test("Test Metrics Disabled")
+    func testMetricsDisabled() async throws {
+        try await withApp { app in
+            let metrics = CapturingMetricsSystem()
+            MetricsSystem.bootstrapInternal(metrics)
+
+            app.http.server.configuration.reportMetrics = false
+
+            struct User: Content {
+                let id: Int
+                let name: String
+            }
+
+            app.routes.get("users", ":userID") { req -> User in
+                let userID = try req.parameters.require("userID", as: Int.self)
+                if userID == 1 {
+                    return User(id: 1, name: "Tim")
+                } else {
+                    throw Abort(.notFound)
+                }
+            }
+
+            try await app.testing().test(.GET, "/users/1") { res in
+                #expect(res.status == .ok)
+                let resData = try res.content.decode(User.self)
+                #expect(resData.id == 1)
+                #expect(metrics.counters.count == 0)
+                #expect(metrics.timers["http_request_duration_seconds"] == nil)
+            }
+        }
     }
 }
 
