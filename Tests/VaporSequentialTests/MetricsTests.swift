@@ -31,8 +31,8 @@ struct MetricsTests {
                 #expect(res.status == .ok)
                 let resData = try res.content.decode(User.self)
                 #expect(resData.id == 1)
-                await #expect(metrics.counters.count == 1)
-                let counter = await metrics.counters["http_requests_total"] as! TestCounter
+                #expect(metrics.counters.count == 1)
+                let counter = metrics.counters["http_requests_total"] as! TestCounter
                 let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
                 #expect(pathDimension.1 == "/users/:userID")
                 #expect(counter.dimensions.first(where: { $0.0 == "path" && $0.1 == "/users/1" }) == nil)
@@ -41,7 +41,7 @@ struct MetricsTests {
                 let status = try #require(counter.dimensions.first(where: { $0.0 == "status"}))
                 #expect(status.1 == "200")
 
-                let timer = await metrics.timers["http_request_duration_seconds"] as! TestTimer
+                let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
                 let timerPathDimension = try #require(timer.dimensions.first(where: { $0.0 == "path"}))
                 #expect(timerPathDimension.1 == "/users/:userID")
                 let timerMethodDimension = try #require(timer.dimensions.first(where: { $0.0 == "method"}))
@@ -74,7 +74,7 @@ struct MetricsTests {
 
             try await app.testing().test(.GET, "/users/2") { res in
                 #expect(res.status == .notFound)
-                let counter = await metrics.counters["http_requests_total"] as! TestCounter
+                let counter = metrics.counters["http_requests_total"] as! TestCounter
                 let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
                 #expect(pathDimension.1 == "/users/:userID")
                 let methodDimension = try #require(counter.dimensions.first(where: { $0.0 == "method"}))
@@ -84,7 +84,7 @@ struct MetricsTests {
                 #expect(counter.dimensions.first(where: { $0.1 == "200" }) == nil)
                 #expect(counter.dimensions.first(where: { $0.0 == "path" && $0.1 == "/users/1" }) == nil)
 
-                let timer = await metrics.timers["http_request_duration_seconds"] as! TestTimer
+                let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
                 let timerPathDimension = try #require(timer.dimensions.first(where: { $0.0 == "path"}))
                 #expect(timerPathDimension.1 == "/users/:userID")
                 let timerMethodDimension = try #require(timer.dimensions.first(where: { $0.0 == "method"}))
@@ -104,8 +104,8 @@ struct MetricsTests {
 
             try await app.testing().test(.GET, "/not/found") { res in
                 #expect(res.status == .notFound)
-                await #expect(metrics.counters.count == 1)
-                let counter = await metrics.counters["http_requests_total"] as! TestCounter
+                #expect(metrics.counters.count == 1)
+                let counter = metrics.counters["http_requests_total"] as! TestCounter
                 let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
                 #expect(pathDimension.1 == "vapor_route_undefined")
                 let methodDimension = try #require(counter.dimensions.first(where: { $0.0 == "method"}))
@@ -113,7 +113,7 @@ struct MetricsTests {
                 let status = try #require(counter.dimensions.first(where: { $0.0 == "status"}))
                 #expect(status.1 == "404")
 
-                let timer = await metrics.timers["http_request_duration_seconds"] as! TestTimer
+                let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
                 let timerPathDimension = try #require(timer.dimensions.first(where: { $0.0 == "path"}))
                 #expect(timerPathDimension.1 == "vapor_route_undefined")
                 let timerMethodDimension = try #require(timer.dimensions.first(where: { $0.0 == "method"}))
@@ -151,8 +151,8 @@ struct MetricsTests {
                 #expect(res.status == .ok)
                 let resData = try res.content.decode(User.self)
                 #expect(resData.id == 1)
-                await #expect(metrics.counters.count == 0)
-                await #expect(metrics.timers["http_request_duration_seconds"] == nil)
+                #expect(metrics.counters.count == 0)
+                #expect(metrics.timers["http_request_duration_seconds"] == nil)
             }
         }
     }

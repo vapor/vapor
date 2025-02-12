@@ -321,156 +321,180 @@ struct FileTests {
         }
     }
 
-//    func testPercentDecodedRelativePath() async throws {
-//        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-//        app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
-//
-//        try await app.test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
-//            #expect(res.status, .forbidden)
-//        }.test(.GET, "Utilities/foo.txt") { res async in
-//            #expect(res.status, .ok)
-//            #expect(res.body.string, "bar\n")
-//        }
-//    }
-//
-//    func testDefaultFileRelative() async throws {
-//        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-//        app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
-//
-//        try await app.test(.GET, "Utilities/") { res async in
-//            #expect(res.status, .ok)
-//            #expect(res.body.string, "<h1>Root Default</h1>\n")
-//        }.test(.GET, "Utilities/SubUtilities/") { res async in
-//            #expect(res.status, .ok)
-//            #expect(res.body.string, "<h1>Subdirectory Default</h1>\n")
-//        }
-//    }
-//
-//    func testDefaultFileAbsolute() async throws {
-//        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-//        app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
-//
-//        try await app.test(.GET, "Utilities/") { res async in
-//            #expect(res.status, .ok)
-//            #expect(res.body.string, "<h1>Root Default</h1>\n")
-//        }.test(.GET, "Utilities/SubUtilities/") { res async in
-//            #expect(res.status, .ok)
-//            #expect(res.body.string, "<h1>Root Default</h1>\n")
-//        }
-//    }
+    @Test("Test Percent Decoded Relative Path")
+    func testPercentDecodedRelativePath() async throws {
+        try await withApp { app in
+            let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-//    func testNoDefaultFile() async throws {
-//        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-//        app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
-//
-//        try await app.test(.GET, "Utilities/") { res in
-//            XCTAssertEqual(res.status, .notFound)
-//        }
-//    }
-//
-//    func testRedirect() async throws {
-//        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-//        app.middleware.use(
-//            FileMiddleware(
-//                publicDirectory: "/" + path,
-//                defaultFile: "index.html",
-//                directoryAction: .redirect
-//            )
-//        )
-//
-//        try await app.test(.GET, "Utilities") { res in
-//            XCTAssertEqual(res.status, .movedPermanently)
-//        }.test(.GET, "Utilities/SubUtilities") { res in
-//            XCTAssertEqual(res.status, .movedPermanently)
-//        }
-//    }
-//
-//    func testRedirectWithQueryParams() async throws {
-//        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-//        app.middleware.use(
-//            FileMiddleware(
-//                publicDirectory: "/" + path,
-//                defaultFile: "index.html",
-//                directoryAction: .redirect
-//            )
-//        )
-//
-//        try await app.test(.GET, "Utilities?vaporTest=test") { res in
-//            XCTAssertEqual(res.status, .movedPermanently)
-//            XCTAssertEqual(res.headers.first(name: .location), "/Utilities/?vaporTest=test")
-//        }.test(.GET, "Utilities/SubUtilities?vaporTest=test") { res in
-//            XCTAssertEqual(res.status, .movedPermanently)
-//            XCTAssertEqual( res.headers.first(name: .location), "/Utilities/SubUtilities/?vaporTest=test")
-//        }.test(.GET, "Utilities/SubUtilities?vaporTest=test#vapor") { res in
-//            XCTAssertEqual(res.status, .movedPermanently)
-//            XCTAssertEqual( res.headers.first(name: .location), "/Utilities/SubUtilities/?vaporTest=test#vapor")
-//        }
-//    }
-//
-//    func testNoRedirect() async throws {
-//        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-//        app.middleware.use(
-//            FileMiddleware(
-//                publicDirectory: "/" + path,
-//                defaultFile: "index.html",
-//                directoryAction: .none
-//            )
-//        )
-//
-//        try await app.test(.GET, "Utilities") { res in
-//            XCTAssertEqual(res.status, .notFound)
-//        }.test(.GET, "Utilities/SubUtilities") { res in
-//            XCTAssertEqual(res.status, .notFound)
-//        }
-//    }
-//
-//    // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
-//    func testInvalidRangeHeaderDoesNotCrash() async throws {
-//        app.get("file-stream") { req -> Response in
-//            try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
-//        }
-//
-//        var headers = HTTPHeaders()
-//        headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
-//        try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
-//            XCTAssertEqual(res.status, .badRequest)
-//        }
-//
-//        headers.replaceOrAdd(name: .range, value: "bytes=-1-10")
-//        try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
-//            XCTAssertEqual(res.status, .badRequest)
-//        }
-//
-//        headers.replaceOrAdd(name: .range, value: "bytes=100-10")
-//        try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
-//            XCTAssertEqual(res.status, .badRequest)
-//        }
-//
-//        headers.replaceOrAdd(name: .range, value: "bytes=10--100")
-//        try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
-//            XCTAssertEqual(res.status, .badRequest)
-//        }
-//
-//        headers.replaceOrAdd(name: .range, value: "bytes=9223372036854775808-")
-//        try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
-//            XCTAssertEqual(res.status, .badRequest)
-//        }
-//
-//        headers.replaceOrAdd(name: .range, value: "bytes=922337203-")
-//        try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
-//            XCTAssertEqual(res.status, .badRequest)
-//        }
-//
-//        headers.replaceOrAdd(name: .range, value: "bytes=-922337203")
-//        try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
-//            XCTAssertEqual(res.status, .badRequest)
-//        }
-//
-//        headers.replaceOrAdd(name: .range, value: "bytes=-9223372036854775808")
-//        try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
-//            XCTAssertEqual(res.status, .badRequest)
-//        }
-//    }
+            try await app.testing().test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
+                #expect(res.status == .forbidden)
+            }.test(.GET, "Utilities/foo.txt") { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "bar\n")
+            }
+        }
+    }
+
+    @Test("Test Default File Relative Path")
+    func testDefaultFileRelative() async throws {
+        try await withApp { app in
+            let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
+
+            try await app.testing().test(.GET, "Utilities/") { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "<h1>Root Default</h1>\n")
+            }.test(.GET, "Utilities/SubUtilities/") { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "<h1>Subdirectory Default</h1>\n")
+            }
+        }
+    }
+
+    @Test("Test Default File Absolute Path")
+    func testDefaultFileAbsolute() async throws {
+        try await withApp { app in
+            let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
+
+            try await app.testing().test(.GET, "Utilities/") { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "<h1>Root Default</h1>\n")
+            }.test(.GET, "Utilities/SubUtilities/") { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "<h1>Root Default</h1>\n")
+            }
+        }
+    }
+
+    @Test("Test No Default File")
+    func testNoDefaultFile() async throws {
+        try await withApp { app in
+            let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+
+            try await app.testing().test(.GET, "Utilities/") { res in
+                #expect(res.status == .notFound)
+            }
+        }
+    }
+
+    @Test("Test Redirect")
+    func testRedirect() async throws {
+        try await withApp { app in
+            let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+            app.middleware.use(
+                FileMiddleware(
+                    publicDirectory: "/" + path,
+                    defaultFile: "index.html",
+                    directoryAction: .redirect
+                )
+            )
+
+            try await app.testing().test(.GET, "Utilities") { res in
+                #expect(res.status == .movedPermanently)
+            }.test(.GET, "Utilities/SubUtilities") { res in
+                #expect(res.status == .movedPermanently)
+            }
+        }
+    }
+
+    @Test("Test Redirect With Query Params")
+    func testRedirectWithQueryParams() async throws {
+        try await withApp { app in
+            let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+            app.middleware.use(
+                FileMiddleware(
+                    publicDirectory: "/" + path,
+                    defaultFile: "index.html",
+                    directoryAction: .redirect
+                )
+            )
+
+            try await app.testing().test(.GET, "Utilities?vaporTest=test") { res in
+                #expect(res.status == .movedPermanently)
+                #expect(res.headers.first(name: .location) == "/Utilities/?vaporTest=test")
+            }.test(.GET, "Utilities/SubUtilities?vaporTest=test") { res in
+                #expect(res.status == .movedPermanently)
+                #expect( res.headers.first(name: .location) == "/Utilities/SubUtilities/?vaporTest=test")
+            }.test(.GET, "Utilities/SubUtilities?vaporTest=test#vapor") { res in
+                #expect(res.status == .movedPermanently)
+                #expect( res.headers.first(name: .location) == "/Utilities/SubUtilities/?vaporTest=test#vapor")
+            }
+        }
+    }
+
+    @Test("Test No Redirect")
+    func testNoRedirect() async throws {
+        try await withApp { app in
+            let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+            app.middleware.use(
+                FileMiddleware(
+                    publicDirectory: "/" + path,
+                    defaultFile: "index.html",
+                    directoryAction: .none
+                )
+            )
+
+            try await app.testing().test(.GET, "Utilities") { res in
+                #expect(res.status == .notFound)
+            }.test(.GET, "Utilities/SubUtilities") { res in
+                #expect(res.status == .notFound)
+            }
+        }
+    }
+
+    // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
+    @Test("Test Invalid Range Header Does Not Crash")
+    func testInvalidRangeHeaderDoesNotCrash() async throws {
+        try await withApp { app in
+            app.get("file-stream") { req -> Response in
+                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+            }
+
+            var headers = HTTPHeaders()
+            headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
+            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+                #expect(res.status == .badRequest)
+            }
+
+            headers.replaceOrAdd(name: .range, value: "bytes=-1-10")
+            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+                #expect(res.status == .badRequest)
+            }
+
+            headers.replaceOrAdd(name: .range, value: "bytes=100-10")
+            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+                #expect(res.status == .badRequest)
+            }
+
+            headers.replaceOrAdd(name: .range, value: "bytes=10--100")
+            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+                #expect(res.status == .badRequest)
+            }
+
+            headers.replaceOrAdd(name: .range, value: "bytes=9223372036854775808-")
+            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+                #expect(res.status == .badRequest)
+            }
+
+            headers.replaceOrAdd(name: .range, value: "bytes=922337203-")
+            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+                #expect(res.status == .badRequest)
+            }
+
+            headers.replaceOrAdd(name: .range, value: "bytes=-922337203")
+            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+                #expect(res.status == .badRequest)
+            }
+
+            headers.replaceOrAdd(name: .range, value: "bytes=-9223372036854775808")
+            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+                #expect(res.status == .badRequest)
+            }
+        }
+    }
 
     #warning("Consider whether we should offer these anymoer instead of just deferring to NIOFileSystem")
 //    func testFileRead() async throws {
