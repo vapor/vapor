@@ -112,7 +112,7 @@ struct ErrorTests {
 
             ContentConfiguration.global.use(encoder: URLEncodedFormEncoder(), for: .json)
 
-            try await app.test(.GET, "foo") { res in
+            try await app.testing().test(.GET, "foo") { res in
                 #expect(res.status == HTTPStatus.internalServerError)
                 let option1 = "error=true&reason=Foo"
                 let option2 = "reason=Foo&error=true"
