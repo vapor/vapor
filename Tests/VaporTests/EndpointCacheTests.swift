@@ -101,7 +101,7 @@ struct EndpointCacheTests {
     func testEndpointCacheSequential() async throws {
         try await withApp { app in
             let currentActor = CurrentActor()
-            struct Test: Content {
+            struct Test: Content, Equatable {
                 let number: Int
             }
 
@@ -118,9 +118,10 @@ struct EndpointCacheTests {
             }
 
             let cache = EndpointCache<Test>(uri: "/number")
-            async let _ = cache.get(using: app.client, logger: app.logger)
-            async let _ = cache.get(using: app.client, logger: app.logger)
+            async let request1 = cache.get(using: app.client, logger: app.logger)
+            async let request2 = cache.get(using: app.client, logger: app.logger)
             try await Task.sleep(for: .milliseconds(100))
+            #expect(try await request1 == request2)
             let current = await currentActor.current
             #expect(current == 1)
         }

@@ -11,7 +11,7 @@ public enum EndpointCacheError: Swift.Error {
 
 /// Handles the complexities of HTTP caching.
 public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
-    private var cached: (T?, Date?)
+    private var cached: (cachedData: T?, cacheDate: Date?)
     private var request: Task<T, Error>?
     private var headers: HTTPHeaders?
     private let uri: URI
@@ -39,7 +39,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     ///   - client: The `Client` which will perform the download.
     ///   - logger: An optional logger
     public func get(using client: Client, logger: Logger? = nil) async throws -> T {
-        if let cached = self.cached.0, let cacheUntil = self.cached.1, Date() < cacheUntil {
+        if let cached = self.cached.cachedData, let cacheUntil = self.cached.cacheDate, Date() <= cacheUntil {
             // If no-cache was set on the header, you *always* have to validate with the server.
             // must-revalidate does not require checking with the server until after it expires.
             if self.headers == nil || self.headers?.cacheControl == nil || self.headers?.cacheControl?.noCache == false {
