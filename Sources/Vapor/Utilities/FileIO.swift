@@ -216,6 +216,7 @@ public struct FileIO: Sendable {
     ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
     ///     - onCompleted: Closure to be run on completion of stream.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
+    #warning("We shouldn't be mixing result and throws here")
     public func streamFile(
         at path: String,
         chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO

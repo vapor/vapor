@@ -179,5 +179,13 @@ let package = Package(
                 .copy("Utilities/long-test-file.txt"),
             ]
         ),
+        .testTarget(
+            name: "VaporSequentialTests",
+            dependencies: [
+                .target(name: "VaporTesting"),
+                .target(name: "Vapor"),
+                .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
+            ]
+        ),
     ]
 )
