@@ -13,6 +13,7 @@ extension Application.Live: XCTApplicationTester {}
 extension Application.InMemory: XCTApplicationTester {}
 
 extension Application: XCTApplicationTester {
+    @available(*, deprecated, message: "Migrate")
     public func testable(method: Method = .inMemory) async throws -> XCTApplicationTester {
         try await self.boot()
         switch method {
@@ -23,6 +24,7 @@ extension Application: XCTApplicationTester {
         }
     }
 
+    @available(*, deprecated, message: "Migrate")
     public func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
         try await self.testable().performTest(request: request)
     }
