@@ -1315,3 +1315,11 @@ func XCTAssertAsyncThrowsError<T>(_ expression: @autoclosure () async throws -> 
         errorHandler(error)
     }
 }
+
+func XCTAssertAsyncNoThrow<T>(_ expression: @autoclosure () async throws -> T, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) async {
+    do {
+        _ = try await expression()
+    } catch {
+        XCTFail("Unexpected error: \(error)", file: file, line: line)
+    }
+}
