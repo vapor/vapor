@@ -4,7 +4,8 @@ import Testing
 
 @Suite("Logging Tests")
 struct LoggingTests {
-    @Test func testChangeRequestLogLevel() async throws {
+    @Test("Test Changing Request Log Level")
+    func testChangeRequestLogLevel() async throws {
         try await withApp { app in
             app.get("trace") { req -> String in
                 req.logger.logLevel = .trace
