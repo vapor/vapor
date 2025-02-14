@@ -296,12 +296,12 @@ final class AsyncRouteTests: XCTestCase {
 
     func testCollection() throws {
         struct Foo: RouteCollection {
-            func boot(routes: RoutesBuilder) throws {
+            func boot(routes: RoutesBuilder) {
                 routes.get("foo") { _ in "bar" }
             }
         }
 
-        try app.register(collection: Foo())
+        app.register(collection: Foo())
 
         try app.test(.GET, "foo") { res in
             XCTAssertEqual(res.body.string, "bar")

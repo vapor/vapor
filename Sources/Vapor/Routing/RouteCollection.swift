@@ -4,7 +4,7 @@ public protocol RouteCollection {
     ///
     /// - parameters:
     ///     - routes: `RoutesBuilder` to register any new routes to.
-    func boot(routes: RoutesBuilder) throws
+    func boot(routes: RoutesBuilder)
 }
 
 extension RoutesBuilder {
@@ -12,7 +12,7 @@ extension RoutesBuilder {
     ///
     /// - parameters:
     ///     - collection: `RouteCollection` to register.
-    public func register(collection: RouteCollection) throws {
-        try collection.boot(routes: self)
+    public func register(collection: RouteCollection) {
+        collection.boot(routes: self)
     }
 }

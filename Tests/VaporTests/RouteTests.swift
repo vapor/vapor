@@ -333,7 +333,7 @@ final class RouteTests: XCTestCase {
 
     func testCollection() throws {
         struct Foo: RouteCollection {
-            func boot(routes: RoutesBuilder) throws {
+            func boot(routes: RoutesBuilder) {
                 routes.get("foo") { _ in "bar" }
             }
         }
