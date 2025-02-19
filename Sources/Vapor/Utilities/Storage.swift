@@ -128,7 +128,7 @@ public struct Storage: Sendable {
     }
     
     // Provides a way to set an async shutdown with an async call to avoid breaking the API
-    // This must not be called when a value alraedy exists in storage
+    // This must not be called when a value already exists in storage
     mutating func setFirstTime<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
