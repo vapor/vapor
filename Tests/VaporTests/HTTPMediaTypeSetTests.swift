@@ -1,51 +1,56 @@
 @testable import Vapor
-import XCTest
+import Testing
 import NIOHTTP1
 
-final class HTTPMediaTypeSetTests: XCTestCase {
+@Suite("HTTP Media Type Set Tests")
+struct HTTPMediaTypeSetTests {
+    @Test("Test empty set")
     func testEmptySet() {
         let mediaSet = HTTPMediaTypeSet.none
         
-        XCTAssertFalse(mediaSet.contains(.any))
-        XCTAssertFalse(mediaSet.contains(.html))
-        XCTAssertFalse(mediaSet.contains(.multipart))
-        
-        XCTAssertEqual(mediaSet.mediaTypeLookup, [:])
-        XCTAssertTrue(mediaSet.allowsNone)
-        XCTAssertFalse(mediaSet.allowsAny)
+        #expect(mediaSet.contains(.any) == false)
+        #expect(mediaSet.contains(.html) == false)
+        #expect(mediaSet.contains(.multipart) == false)
+
+        #expect(mediaSet.mediaTypeLookup == [:])
+        #expect(mediaSet.allowsNone)
+        #expect(mediaSet.allowsAny == false)
     }
-    
+
+    @Test("Test All Set")
     func testAllSet() {
         let mediaSet = HTTPMediaTypeSet.all
         
-        XCTAssertTrue(mediaSet.contains(.any))
-        XCTAssertTrue(mediaSet.contains(.html))
-        XCTAssertTrue(mediaSet.contains(.multipart))
-        
-        XCTAssertEqual(mediaSet.mediaTypeLookup, ["*": ["*" : [.any]]])
-        XCTAssertFalse(mediaSet.allowsNone)
-        XCTAssertTrue(mediaSet.allowsAny)
+        #expect(mediaSet.contains(.any))
+        #expect(mediaSet.contains(.html))
+        #expect(mediaSet.contains(.multipart))
+
+        #expect(mediaSet.mediaTypeLookup == ["*": ["*" : [.any]]])
+        #expect(mediaSet.allowsNone == false)
+        #expect(mediaSet.allowsAny)
     }
-    
+
+    @Test("Test Initialisation")
     func testInitialization() {
         var mediaSet: HTTPMediaTypeSet
         
         mediaSet = []
-        XCTAssertEqual(mediaSet.mediaTypeLookup, [:])
-        
+        #expect(mediaSet.mediaTypeLookup == [:])
+
         mediaSet = [.any]
-        XCTAssertEqual(mediaSet.mediaTypeLookup, ["*" : ["*" : [.any]]])
-        
+        #expect(mediaSet.mediaTypeLookup == ["*" : ["*" : [.any]]])
+
         mediaSet = [.html]
-        XCTAssertEqual(mediaSet.mediaTypeLookup, ["text" : ["html" : [.html]]])
-        
+        #expect(mediaSet.mediaTypeLookup == ["text" : ["html" : [.html]]])
+
         mediaSet = [.html, .css]
-        XCTAssertEqual(mediaSet.mediaTypeLookup, ["text" : ["css" : [.css], "html": [.html]]])
-        
+        #expect(mediaSet.mediaTypeLookup == ["text" : ["css" : [.css], "html": [.html]]])
+
         mediaSet = [.html, .png]
-        XCTAssertEqual(mediaSet.mediaTypeLookup, ["text" : ["html": [.html]], "image" : ["png" : [.png]]])
+        #expect(mediaSet.mediaTypeLookup == ["text" : ["html": [.html]], "image" : ["png" : [.png]]])
     }
-    
+
+    @Test("Test Contains")
     func testContains() {
         let mediaSet: HTTPMediaTypeSet = [
             HTTPMediaType(type: "a", subType: "1"),
@@ -57,56 +62,58 @@ final class HTTPMediaTypeSetTests: XCTestCase {
             HTTPMediaType(type: "b", subType: "-", parameters: ["B": "b"]),
         ]
         
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "a", subType: "1")))
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "a", subType: "2")))
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "a", subType: "-", parameters: ["A": "a"])))
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "b", subType: "3")))
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "b", subType: "4")))
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "b", subType: "-", parameters: ["A": "a"])))
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "b", subType: "-", parameters: ["B": "b"])))
-        
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "a", subType: "2", parameters: ["A": "a"])))
-        
-        XCTAssertFalse(mediaSet.contains(HTTPMediaType(type: "a", subType: "3")))
-        XCTAssertFalse(mediaSet.contains(HTTPMediaType(type: "b", subType: "1")))
-        XCTAssertFalse(mediaSet.contains(HTTPMediaType(type: "c", subType: "1")))
-        XCTAssertFalse(mediaSet.contains(HTTPMediaType(type: "c", subType: "5")))
-        
+        #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "1")))
+        #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "2")))
+        #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "-", parameters: ["A": "a"])))
+        #expect(mediaSet.contains(HTTPMediaType(type: "b", subType: "3")))
+        #expect(mediaSet.contains(HTTPMediaType(type: "b", subType: "4")))
+        #expect(mediaSet.contains(HTTPMediaType(type: "b", subType: "-", parameters: ["A": "a"])))
+        #expect(mediaSet.contains(HTTPMediaType(type: "b", subType: "-", parameters: ["B": "b"])))
+
+        #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "2", parameters: ["A": "a"])))
+
+        #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "3")) == false)
+        #expect(mediaSet.contains(HTTPMediaType(type: "b", subType: "1")) == false)
+        #expect(mediaSet.contains(HTTPMediaType(type: "c", subType: "1")) == false)
+        #expect(mediaSet.contains(HTTPMediaType(type: "c", subType: "5")) == false)
+
         /// These are currently allowed because `HTTPMediaType` current performs equality by ignoring the parameters, which we may not want in a set like this in the future. This does not currently impact anything, but leaving this note here in case a future version of Vapor would like to change the behavior to meet these expectations.
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "a", subType: "-")))
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "a", subType: "-", parameters: ["A": "b"])))
-        XCTAssertTrue(mediaSet.contains(HTTPMediaType(type: "a", subType: "-", parameters: ["B": "b"])))
+        #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "-")))
+        #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "-", parameters: ["A": "b"])))
+        #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "-", parameters: ["B": "b"])))
     }
-    
+
+    @Test("Test Compressible Sample")
     func testCompressibleSample() {
         let compressible = HTTPMediaTypeSet.compressible
-        XCTAssertTrue(compressible.contains(.html))
-        XCTAssertTrue(compressible.contains(.jsonAPI))
-        XCTAssertTrue(compressible.contains(.json))
-        XCTAssertTrue(compressible.contains(.svg))
-        XCTAssertTrue(compressible.contains(.formData))
-        
-        XCTAssertFalse(compressible.contains(.png))
-        XCTAssertFalse(compressible.contains(.mp3))
-        XCTAssertFalse(compressible.contains(.mpeg))
-        XCTAssertFalse(compressible.contains(.tar))
-        
-        XCTAssertFalse(compressible.contains(.any))
+        #expect(compressible.contains(.html))
+        #expect(compressible.contains(.jsonAPI))
+        #expect(compressible.contains(.json))
+        #expect(compressible.contains(.svg))
+        #expect(compressible.contains(.formData))
+
+        #expect(compressible.contains(.png) == false)
+        #expect(compressible.contains(.mp3) == false)
+        #expect(compressible.contains(.mpeg) == false)
+        #expect(compressible.contains(.tar) == false)
+
+        #expect(compressible.contains(.any) == false)
     }
-    
+
+    @Test("Test Incompressible Sample")
     func testIncompressibleSample() {
         let incompressible = HTTPMediaTypeSet.incompressible
-        XCTAssertFalse(incompressible.contains(.html))
-        XCTAssertFalse(incompressible.contains(.jsonAPI))
-        XCTAssertFalse(incompressible.contains(.json))
-        XCTAssertFalse(incompressible.contains(.svg))
-        XCTAssertFalse(incompressible.contains(.formData))
-        
-        XCTAssertTrue(incompressible.contains(.png))
-        XCTAssertTrue(incompressible.contains(.mp3))
-        XCTAssertTrue(incompressible.contains(.mpeg))
-        XCTAssertTrue(incompressible.contains(.tar))
-        
-        XCTAssertFalse(incompressible.contains(.any))
+        #expect(incompressible.contains(.html) == false)
+        #expect(incompressible.contains(.jsonAPI) == false)
+        #expect(incompressible.contains(.json) == false)
+        #expect(incompressible.contains(.svg) == false)
+        #expect(incompressible.contains(.formData) == false)
+
+        #expect(incompressible.contains(.png) == true)
+        #expect(incompressible.contains(.mp3) == true)
+        #expect(incompressible.contains(.mpeg) == true)
+        #expect(incompressible.contains(.tar) == true)
+
+        #expect(incompressible.contains(.any) == false)
     }
 }
