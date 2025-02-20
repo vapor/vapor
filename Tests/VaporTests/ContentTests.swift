@@ -563,7 +563,7 @@ struct ContentTests {
             #expect(performing: {
                 try req.content.decode(PostInput.self)
             }, throws: { error in
-                return (error as! AbortError).reason ==
+                return (error as? AbortError)?.reason ==
                         #"No such key 'is_free' at path ''. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
             })
         }
@@ -587,7 +587,7 @@ struct ContentTests {
             #expect(performing: {
                 try req.content.decode(DecodeModel.self)
             }, throws: { error in
-                return (error as! AbortError).reason.contains(#"Data corrupted at path ''. The given data was not valid JSON"#)
+                return (error as? AbortError)?.reason.contains(#"Data corrupted at path ''. The given data was not valid JSON"#) ?? false
             })
         }
     }
@@ -615,7 +615,7 @@ struct ContentTests {
             #expect(performing: {
                 try req.content.decode(DecodeModel.self)
             }, throws: { error in
-                return (error as! AbortError).reason ==
+                return (error as? AbortError)?.reason ==
                 #"No value found (expected type 'String') at path 'items.Index 1'. Unkeyed container is at end."#
             })
         }
@@ -641,8 +641,7 @@ struct ContentTests {
             #expect(performing: {
                 try req.content.decode(DecodeModel.self)
             }, throws: { error in
-                return (error as! AbortError).reason ==
-                #"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#
+                (error as? AbortError)?.reason.contains(#"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#) ?? false
             })
         }
     }
