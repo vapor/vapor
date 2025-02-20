@@ -1,7 +1,7 @@
 import NIOHTTP1
 
 /// Errors thrown while encoding/decoding `application/x-www-form-urlencoded` data.
-enum URLEncodedFormError: Error {
+enum URLEncodedFormError: Error, Equatable {
     case malformedKey(key: Substring)
     case reachedNestingLimit
 }
