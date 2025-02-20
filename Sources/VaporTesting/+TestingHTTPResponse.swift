@@ -49,39 +49,6 @@ public func expectContent<D>(
     try closure(content)
 }
 
-public func expectContains(
-    _ haystack: String?,
-    _ needle: String?,
-    fileID: String = #fileID,
-    filePath: String = #filePath,
-    line: Int = #line,
-    column: Int = #column
-) {
-    VaporTestingContext.warnIfNotInSwiftTestingContext(
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column
-    )
-
-    let sourceLocation = Testing.SourceLocation(
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column
-    )
-    switch (haystack, needle) {
-    case (.some(let haystack), .some(let needle)):
-        #expect(haystack.contains(needle), "\(haystack) does not contain \(needle)", sourceLocation: sourceLocation)
-    case (.some(let haystack), .none):
-        Issue.record("\(haystack) does not contain nil", sourceLocation: sourceLocation)
-    case (.none, .some(let needle)):
-        Issue.record("nil does not contain \(needle)", sourceLocation: sourceLocation)
-    case (.none, .none):
-        Issue.record("nil does not contain nil", sourceLocation: sourceLocation)
-    }
-}
-
 public func expectJSONEquals<T>(
     _ data: String?,
     _ test: T,

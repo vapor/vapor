@@ -1,32 +1,28 @@
 import NIOCore
-import NIOEmbedded
 import NIOHTTP1
 import Vapor
-import XCTest
-import XCTVapor
+import Testing
+import VaporTesting
+import Foundation
 
-final class ContentTests: XCTestCase {
-    var app: Application!
+@Suite("Content Tests")
+struct ContentTests {
 
-    override func setUp() async throws {
-        app = try await Application(.testing)
+    @Test("Test Content")
+    func testContent() async throws {
+        try await withApp { app in
+            let request = Request(
+                application: app,
+                collectedBody: .init(string: #"{"hello": "world"}"#),
+                on: app.eventLoopGroup.any()
+            )
+            request.headers.contentType = .json
+            try #expect(request.content.get(at: "hello") == "world")
+        }
     }
 
-    override func tearDown() async throws {
-        try await app.shutdown()
-    }
-
-    func testContent() throws {
-        let request = Request(
-            application: app,
-            collectedBody: .init(string: #"{"hello": "world"}"#),
-            on: EmbeddedEventLoop()
-        )
-        request.headers.contentType = .json
-        try XCTAssertEqual(request.content.get(at: "hello"), "world")
-    }
-
-    func testComplexContent() throws {
+    @Test("Test complex content")
+    func testComplexContent() async throws {
         // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
         let complexJSON = """
         {
@@ -56,35 +52,42 @@ final class ContentTests: XCTestCase {
                 ]
         }
         """
-        let request = Request(
-            application: app,
-            collectedBody: .init(string: complexJSON),
-            on: app.eventLoopGroup.any()
-        )
-        request.headers.contentType = .json
-        try XCTAssertEqual(request.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
+
+        try await withApp { app in
+            let request = Request(
+                application: app,
+                collectedBody: .init(string: complexJSON),
+                on: app.eventLoopGroup.any()
+            )
+            request.headers.contentType = .json
+            try #expect(request.content.get(at: "batters", "batter", 1, "type") == "Chocolate")
+        }
     }
 
+    @Test("Test decoding errors return 400", .bug("https://github.com/vapor/vapor/issues/1534"))
     func testGH1534() async throws {
         let data = """
         {"name":"hi","bar":"asdf"}
         """
 
-        app.routes.get("decode_error") { _ -> String in
-            struct Foo: Decodable {
-                var name: String
-                var bar: Int
+        try await withApp { app in
+            app.routes.get("decode_error") { _ -> String in
+                struct Foo: Decodable {
+                    var name: String
+                    var bar: Int
+                }
+                let foo = try JSONDecoder().decode(Foo.self, from: Data(data.utf8))
+                return foo.name
             }
-            let foo = try JSONDecoder().decode(Foo.self, from: Data(data.utf8))
-            return foo.name
-        }
 
-        try await app.testable().test(.GET, "/decode_error") { res in
-            XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, #"Value was not of type 'Int' at path 'bar'. Expected to decode Int but found a string"#)
+            try await app.testing().test(.GET, "/decode_error") { res in
+                #expect(res.status == .badRequest)
+                #expect(res.body.string.contains(#"Value was not of type 'Int' at path 'bar'. Expected to decode Int but found a string"#))
+            }
         }
     }
 
+    @Test("Test Content Container Encode")
     func testContentContainerEncode() async throws {
         struct FooContent: Content {
             var message: String = "hi"
@@ -93,20 +96,23 @@ final class ContentTests: XCTestCase {
             var message: String = "hi"
         }
 
-        app.routes.get("encode") { _ -> Response in
-            let res = Response()
-            try res.content.encode(FooContent())
-            try res.content.encode(FooContent(), as: .json)
-            try res.content.encode(FooEncodable(), as: .json)
-            return res
-        }
+        try await withApp { app in
+            app.routes.get("encode") { _ -> Response in
+                let res = Response()
+                try res.content.encode(FooContent())
+                try res.content.encode(FooContent(), as: .json)
+                try res.content.encode(FooEncodable(), as: .json)
+                return res
+            }
 
-        try await app.testable().test(.GET, "/encode") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertContains(res.body.string, "hi")
+            try await app.testing().test(.GET, "/encode") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string.contains("hi"))
+            }
         }
     }
 
+    @Test("Test Content Container Decode")
     func testContentContainerDecode() async throws {
         struct FooContent: Content, Equatable {
             var message: String = "hi"
@@ -115,40 +121,42 @@ final class ContentTests: XCTestCase {
             var message: String = "hi"
         }
 
-        app.routes.post("decode") { req async throws -> String in
-            XCTAssertEqual(try req.content.decode(FooContent.self), FooContent())
-            XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .json), FooDecodable())
-            return "decoded!"
-        }
-
-        try await app.testable().test(.POST, "/decode") { req in
-            try req.content.encode(FooContent())
-        } afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertContains(res.body.string, "decoded!")
-        }
-
-        app.routes.post("decode-bad-header") { req async throws -> String in
-            XCTAssertEqual(req.headers.contentType, .audio)
-            XCTAssertThrowsError(try req.content.decode(FooContent.self)) { error in
-                guard let abort = error as? Abort, abort.status == .unsupportedMediaType else {
-                    XCTFail("Unexpected error: \(error)")
-                    return
-                }
+        try await withApp { app in
+            app.routes.post("decode") { req async throws -> String in
+                #expect(try req.content.decode(FooContent.self) == FooContent())
+                #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
+                return "decoded!"
             }
-            XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .json), FooDecodable())
-            return "decoded!"
-        }
 
-        try await app.testable().test(.POST, "/decode-bad-header") { req in
-            try req.content.encode(FooContent())
-            req.headers.contentType = .audio
-        } afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertContains(res.body.string, "decoded!")
+            try await app.testing().test(.POST, "/decode") { req in
+                try req.content.encode(FooContent())
+            } afterResponse: { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string.contains("decoded!"))
+            }
+
+            app.routes.post("decode-bad-header") { req async throws -> String in
+                #expect(req.headers.contentType == .audio)
+                #expect(performing: {
+                    try req.content.decode(FooContent.self)
+                }, throws: { error in
+                    (error as? Abort)?.status == .unsupportedMediaType
+                })
+                #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
+                return "decoded!"
+            }
+
+            try await app.testing().test(.POST, "/decode-bad-header") { req in
+                try req.content.encode(FooContent())
+                req.headers.contentType = .audio
+            } afterResponse: { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string.contains("decoded!"))
+            }
         }
     }
 
+    @Test("Multipart Decode")
     func testMultipartDecode() async throws {
         let data = """
         --123\r
@@ -178,20 +186,23 @@ final class ContentTests: XCTestCase {
             var image: File
         }
 
-        app.routes.get("multipart") { req -> User in
-            let decoded = try req.content.decode(User.self)
-            XCTAssertEqual(decoded, expected)
-            return decoded
-        }
+        try await withApp { app in
+            app.routes.get("multipart") { req -> User in
+                let decoded = try req.content.decode(User.self)
+                #expect(decoded == expected)
+                return decoded
+            }
 
-        try await app.testable().test(.GET, "/multipart", headers: [
-            "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqualJSON(res.body.string, expected)
+            try await app.testing().test(.GET, "/multipart", headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)) { res in
+                #expect(res.status == .ok)
+                expectJSONEquals(res.body.string, expected)
+            }
         }
     }
 
+    @Test("Test Multipart Decoded Empty Multipart Form")
     func testMultipartDecodedEmptyMultipartForm() async throws {
         let data = """
         --123\r
@@ -205,19 +216,22 @@ final class ContentTests: XCTestCase {
             var name: String
         }
 
-        app.routes.get("multipart") { req -> User in
-            let decoded = try req.content.decode(User.self)
-            XCTAssertEqual(decoded, expected)
-            return decoded
-        }
+        try await withApp { app in
+            app.routes.get("multipart") { req -> User in
+                let decoded = try req.content.decode(User.self)
+                #expect(decoded == expected)
+                return decoded
+            }
 
-        try await app.testable().test(.GET, "/multipart", headers: [
-            "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
-            XCTAssertEqual(res.status, .unprocessableEntity)
+            try await app.testing().test(.GET, "/multipart", headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)) { res in
+                #expect(res.status == .unprocessableEntity)
+            }
         }
     }
 
+    @Test("Test Multipart Decoded Empty Body")
     func testMultipartDecodedEmptyBody() async throws {
         let data = ""
         let expected = User(
@@ -228,19 +242,22 @@ final class ContentTests: XCTestCase {
             var name: String
         }
 
-        app.routes.get("multipart") { req -> User in
-            let decoded = try req.content.decode(User.self)
-            XCTAssertEqual(decoded, expected)
-            return decoded
-        }
+        try await withApp { app in
+            app.routes.get("multipart") { req -> User in
+                let decoded = try req.content.decode(User.self)
+                #expect(decoded == expected)
+                return decoded
+            }
 
-        try await app.testable().test(.GET, "/multipart", headers: [
-            "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
-            XCTAssertEqual(res.status, .unprocessableEntity)
+            try await app.testing().test(.GET, "/multipart", headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)) { res in
+                #expect(res.status == .unprocessableEntity)
+            }
         }
     }
 
+    @Test("Test Multipart Decode Unicode")
     func testMultipartDecodeUnicode() async throws {
         let data = """
         --123\r
@@ -270,20 +287,23 @@ final class ContentTests: XCTestCase {
             var image: File
         }
 
-        app.routes.get("multipart") { req -> User in
-            let decoded = try req.content.decode(User.self)
-            XCTAssertEqual(decoded, expected)
-            return decoded
-        }
+        try await withApp { app in
+            app.routes.get("multipart") { req -> User in
+                let decoded = try req.content.decode(User.self)
+                #expect(decoded == expected)
+                return decoded
+            }
 
-        try await app.testable().test(.GET, "/multipart", headers: [
-            "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqualJSON(res.body.string, expected)
+            try await app.testing().test(.GET, "/multipart", headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)) { res in
+                #expect(res.status == .ok)
+                expectJSONEquals(res.body.string, expected)
+            }
         }
     }
 
+    @Test("Test Multipart Encoding")
     func testMultipartEncode() async throws {
         struct User: Content {
             static let defaultContentType: HTTPMediaType = .formData
@@ -292,23 +312,26 @@ final class ContentTests: XCTestCase {
             var image: File
         }
 
-        app.get("multipart") { _ -> User in
-            User(
-                name: "Vapor",
-                age: 4,
-                image: File(data: "<contents of image>", filename: "droplet.png")
-            )
-        }
-        try await app.testable().test(.GET, "/multipart") { res in
-            XCTAssertEqual(res.status, .ok)
-            let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
-            XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
-            XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=\"droplet.png\"")
-            XCTAssertContains(res.body.string, "name=\"image\"")
+        try await withApp { app in
+            app.get("multipart") { _ -> User in
+                User(
+                    name: "Vapor",
+                    age: 4,
+                    image: File(data: "<contents of image>", filename: "droplet.png")
+                )
+            }
+            try await app.testing().test(.GET, "/multipart") { res in
+                #expect(res.status == .ok)
+                let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
+                #expect(res.body.string.contains("Content-Disposition: form-data; name=\"name\""))
+                #expect(res.body.string.contains("--\(boundary)"))
+                #expect(res.body.string.contains("filename=\"droplet.png\""))
+                #expect(res.body.string.contains("name=\"image\""))
+            }
         }
     }
 
+    @Test("Test Multipart Encoding with Unicode")
     func testMultiPartEncodeUnicode() async throws {
         struct User: Content {
             static let defaultContentType: HTTPMediaType = .formData
@@ -317,23 +340,26 @@ final class ContentTests: XCTestCase {
             var image: File
         }
 
-        app.get("multipart") { _ -> User in
-            User(
-                name: "Vapor",
-                age: 4,
-                image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
-            )
-        }
-        try await app.testable().test(.GET, "/multipart") { res in
-            XCTAssertEqual(res.status, .ok)
-            let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
-            XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
-            XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\"")
-            XCTAssertContains(res.body.string, "name=\"image\"")
+        try await withApp { app in
+            app.get("multipart") { _ -> User in
+                User(
+                    name: "Vapor",
+                    age: 4,
+                    image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
+                )
+            }
+            try await app.testing().test(.GET, "/multipart") { res in
+                #expect(res.status == .ok)
+                let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
+                #expect(res.body.string.contains("Content-Disposition: form-data; name=\"name\""))
+                #expect(res.body.string.contains("--\(boundary)"))
+                #expect(res.body.string.contains("filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\""))
+                #expect(res.body.string.contains("name=\"image\""))
+            }
         }
     }
 
+    @Test("Test URLEncoded Form Decode")
     func testURLEncodedFormDecode() async throws {
         struct User: Content {
             var name: String
@@ -341,24 +367,27 @@ final class ContentTests: XCTestCase {
             var luckyNumbers: [Int]
         }
 
-        app.get("urlencodedform") { req -> HTTPStatus in
-            let foo = try req.content.decode(User.self)
-            XCTAssertEqual(foo.name, "Vapor")
-            XCTAssertEqual(foo.age, 3)
-            XCTAssertEqual(foo.luckyNumbers, [5, 7])
-            return .ok
-        }
+        try await withApp { app in
+            app.get("urlencodedform") { req -> HTTPStatus in
+                let foo = try req.content.decode(User.self)
+                #expect(foo.name == "Vapor")
+                #expect(foo.age == 3)
+                #expect(foo.luckyNumbers == [5, 7])
+                return .ok
+            }
 
-        var headers = HTTPHeaders()
-        headers.contentType = .urlEncodedForm
-        var body = ByteBufferAllocator().buffer(capacity: 0)
-        body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
+            var headers = HTTPHeaders()
+            headers.contentType = .urlEncodedForm
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
 
-        try await app.testable().test(.GET, "/urlencodedform", headers: headers, body: body) { res in
-            XCTAssertEqual(res.status.code, 200)
+            try await app.testing().test(.GET, "/urlencodedform", headers: headers, body: body) { res in
+                #expect(res.status.code == 200)
+            }
         }
     }
 
+    @Test("Test URLEncoded Form Encode")
     func testURLEncodedFormEncode() async throws {
         struct User: Content {
             static let defaultContentType: HTTPMediaType = .urlEncodedForm
@@ -367,120 +396,140 @@ final class ContentTests: XCTestCase {
             var luckyNumbers: [Int]
         }
 
-        app.get("urlencodedform") { _ -> User in
-            User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
-        }
-        try await app.testable().test(.GET, "/urlencodedform") { res in
-            XCTAssertEqual(res.status.code, 200)
-            XCTAssertEqual(res.headers.contentType, .urlEncodedForm)
-            XCTAssertContains(res.body.string, "luckyNumbers[]=5")
-            XCTAssertContains(res.body.string, "luckyNumbers[]=7")
-            XCTAssertContains(res.body.string, "age=3")
-            XCTAssertContains(res.body.string, "name=Vapor")
+        try await withApp { app in
+            app.get("urlencodedform") { _ -> User in
+                User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
+            }
+            try await app.testing().test(.GET, "/urlencodedform") { res in
+                #expect(res.status.code == 200)
+                #expect(res.headers.contentType == .urlEncodedForm)
+                #expect(res.body.string.contains("luckyNumbers[]=5"))
+                #expect(res.body.string.contains("luckyNumbers[]=7"))
+                #expect(res.body.string.contains("age=3"))
+                #expect(res.body.string.contains("name=Vapor"))
+            }
         }
     }
 
+    @Test("Test JSON Preserves HTTP Headers")
     func testJSONPreservesHTTPHeaders() async throws {
-        app.get("check") { (req: Request) -> String in
-            "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
-        }
+        try await withApp { app in
+            app.get("check") { (req: Request) -> String in
+                "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
+            }
 
-        try await app.test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
-            try req.content.encode(["foo": "bar"], as: .json)
-        }) { res in
-            XCTAssertEqual(res.body.string, "PRESENT.application/json; charset=utf-8")
+            try await app.testing().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
+                try req.content.encode(["foo": "bar"], as: .json)
+            }) { res in
+                #expect(res.body.string == "PRESENT.application/json; charset=utf-8")
+            }
         }
     }
 
+    @Test("Test JSON Allows ContentType Override")
     func testJSONAllowsContentTypeOverride() async throws {
-        app.get("check") { (req: Request) -> String in
-            "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
-        }
-        // Me and my sadistic sense of humor.
-        ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
+        try await withApp { app in
+            app.get("check") { (req: Request) -> String in
+                "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
+            }
+            // Me and my sadistic sense of humor.
+            ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
 
-        try await app.testable().test(.GET, "/check", headers: [
-            "X-Test-Value": "PRESENT"
-        ], beforeRequest: { req in
-            try req.content.encode(["foo": "bar"], as: .json)
-            req.headers.contentType = .xml
-        }) { res in
-            XCTAssertEqual(res.body.string, "PRESENT.application/xml; charset=utf-8")
+            try await app.testing().test(.GET, "/check", headers: [
+                "X-Test-Value": "PRESENT"
+            ], beforeRequest: { req in
+                try req.content.encode(["foo": "bar"], as: .json)
+                req.headers.contentType = .xml
+            }) { res in
+                #expect(res.body.string == "PRESENT.application/xml; charset=utf-8")
+            }
         }
     }
 
+    @Test("Test Before Encode Content")
     func testBeforeEncodeContent() throws {
         let content = SampleContent()
-        XCTAssertEqual(content.name, "old name")
+        #expect(content.name == "old name")
 
         let response = Response(status: .ok)
         try response.content.encode(content)
 
-        let body = try XCTUnwrap(response.body.string)
-        XCTAssertEqual(body, #"{"name":"new name"}"#)
+        let body = try #require(response.body.string)
+        #expect(body == #"{"name":"new name"}"#)
     }
 
-    func testAfterContentEncode() throws {
+    @Test("Test After Content Encode")
+    func testAfterContentEncode() async throws {
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString(#"{"name": "before decode"}"#)
 
-        let request = Request(
-            application: app,
-            collectedBody: body,
-            on: EmbeddedEventLoop()
-        )
+        try await withApp { app in
+            let request = Request(
+                application: app,
+                collectedBody: body,
+                on: app.eventLoopGroup.any()
+            )
 
-        request.headers.contentType = .json
+            request.headers.contentType = .json
 
-        let content = try request.content.decode(SampleContent.self)
-        XCTAssertEqual(content.name, "new name after decode")
+            let content = try request.content.decode(SampleContent.self)
+            #expect(content.name == "new name after decode")
+        }
     }
 
-    func testSupportsJsonApi() throws {
+    @Test("Test Supports JSON API")
+    func testSupportsJsonApi() async throws {
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString(#"{"data": ["entity0", "entity1"], "meta": {}}"#)
 
-        let request = Request(
-            application: app,
-            collectedBody: body,
-            on: EmbeddedEventLoop()
-        )
+        try await withApp { app in
+            let request = Request(
+                application: app,
+                collectedBody: body,
+                on: app.eventLoopGroup.any()
+            )
 
-        request.headers.contentType = .jsonAPI
+            request.headers.contentType = .jsonAPI
 
-        let content = try request.content.decode(JsonApiContent.self)
-        XCTAssertEqual(content.data, ["entity0", "entity1"])
+            let content = try request.content.decode(JsonApiContent.self)
+            #expect(content.data == ["entity0", "entity1"])
+        }
     }
 
-    func testQueryHooks() throws {
-        let request = Request(
-            application: app,
-            collectedBody: .init(string: ""),
-            on: app.eventLoopGroup.any()
-        )
-        request.url.query = "name=before+decode"
-        request.headers.contentType = .json
+    @Test("Test Query Hooks")
+    func testQueryHooks() async throws {
+        try await withApp { app in
+            let request = Request(
+                application: app,
+                collectedBody: .init(string: ""),
+                on: app.eventLoopGroup.any()
+            )
+            request.url.query = "name=before+decode"
+            request.headers.contentType = .json
 
-        let query = try request.query.decode(SampleContent.self)
-        XCTAssertEqual(query.name, "new name after decode")
-        try request.query.encode(query)
-        XCTAssertEqual(request.url.query, "name=new%20name")
+            let query = try request.query.decode(SampleContent.self)
+            #expect(query.name == "new name after decode")
+            try request.query.encode(query)
+            #expect(request.url.query == "name=new%20name")
+        }
     }
 
-    /// https://github.com/vapor/vapor/issues/3135
-    func testDecodePercentEncodedQuery() throws {
-        let request = Request(
-            application: app,
-            collectedBody: .init(string: ""),
-            on: app.eventLoopGroup.any()
-        )
-        request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
-        request.headers.contentType = .urlEncodedForm
+    @Test("Test Decode Percent Encoded Query", .bug("https://github.com/vapor/vapor/issues/3135"))
+    func testDecodePercentEncodedQuery() async throws {
+        try await withApp { app in
+            let request = Request(
+                application: app,
+                collectedBody: .init(string: ""),
+                on: app.eventLoopGroup.any()
+            )
+            request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
+            request.headers.contentType = .urlEncodedForm
 
-        XCTAssertEqual(try request.query.get(String.self, at: "name"), "value has 1% of its percents")
+            try #expect(request.query.get(String.self, at: "name") == "value has 1% of its percents")
+        }
     }
 
-    /// https://github.com/vapor/vapor/issues/3133
+    @Test("Test Encode Percent Encoded Query", .bug("https://github.com/vapor/vapor/issues/3133"))
     func testEncodePercentEncodedQuery() throws {
         struct Foo: Content {
             var status: String
@@ -491,161 +540,181 @@ final class ContentTests: XCTestCase {
             "⬆️ taylorswift just released swift-mongodb v0.10.1 – use BSON and MongoDB in pure Swift\n\nhttps://swiftpackageindex.com/tayloraswift/swift-mongodb#releases"
         ))
 
-        XCTAssertEqual(request.url.string, "https://example.com/api?status=%E2%AC%86%EF%B8%8F%20taylorswift%20just%20released%20swift-mongodb%20v0.10.1%20%E2%80%93%20use%20BSON%20and%20MongoDB%20in%20pure%20Swift%0A%0Ahttps%3A%2F%2Fswiftpackageindex.com%2Ftayloraswift%2Fswift-mongodb%23releases")
+        #expect(request.url.string == "https://example.com/api?status=%E2%AC%86%EF%B8%8F%20taylorswift%20just%20released%20swift-mongodb%20v0.10.1%20%E2%80%93%20use%20BSON%20and%20MongoDB%20in%20pure%20Swift%0A%0Ahttps%3A%2F%2Fswiftpackageindex.com%2Ftayloraswift%2Fswift-mongodb%23releases")
     }
 
-    func testSnakeCaseCodingKeyError() throws {
-        let req = Request(application: app, on: app.eventLoopGroup.any())
-        try req.content.encode([
-            "title": "The title"
-        ], as: .json)
-
-        struct PostInput: Content {
-            enum CodingKeys: String, CodingKey {
-                case id, title, isFree = "is_free"
-            }
-
-            let id: UUID?
-            let title: String
-            let isFree: Bool
-        }
-        XCTAssertThrowsError(try req.content.decode(PostInput.self)) { error in
-            XCTAssertEqual(
-                (error as? AbortError)?.reason,
-                #"No such key 'is_free' at path ''. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
-            )
-        }
-    }
-
-    func testDataCorruptionError() throws {
-        let req = Request(
-            application: app,
-            method: .GET,
-            url: URI(string: "https://vapor.codes"),
-            headersNoUpdate: ["Content-Type": "application/json"],
-            collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
-            on: app.eventLoopGroup.any()
-        )
-
-        struct DecodeModel: Content {
-            let badJson: String
-        }
-        XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
-            XCTAssertContains(
-                (error as? AbortError)?.reason,
-                #"Data corrupted at path ''. The given data was not valid JSON"#
-            )
-        }
-    }
-
-    func testValueNotFoundError() throws {
-        let req = Request(application: app, on: app.eventLoopGroup.any())
-        try req.content.encode([
-            "items": ["1"]
-        ], as: .json)
-
-        struct DecodeModel: Content {
-            struct Item: Content {
-                init(from decoder: Decoder) throws {
-                    var container = try decoder.unkeyedContainer()
-                    _ = try container.decode(String.self)
-                    _ = try container.decode(String.self)
-                    fatalError()
-                }
-            }
-
-            let items: Item
-        }
-        XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
-            XCTAssertEqual(
-                (error as? AbortError)?.reason,
-                #"No value found (expected type 'String') at path 'items.Index 1'. Unkeyed container is at end."#
-            )
-        }
-    }
-
-    func testTypeMismatchError() throws {
-        let req = Request(application: app, on: app.eventLoopGroup.any())
-        try req.content.encode([
-            "item": [
+    @Test("Test Snake Case Coding Key Error")
+    func testSnakeCaseCodingKeyError() async throws {
+        try await withApp { app in
+            let req = Request(application: app, on: app.eventLoopGroup.any())
+            try req.content.encode([
                 "title": "The title"
-            ]
-        ], as: .json)
+            ], as: .json)
 
-        struct DecodeModel: Content {
-            struct Item: Content {
-                let title: Int
+            struct PostInput: Content {
+                enum CodingKeys: String, CodingKey {
+                    case id, title, isFree = "is_free"
+                }
+
+                let id: UUID?
+                let title: String
+                let isFree: Bool
+            }
+            #expect(performing: {
+                try req.content.decode(PostInput.self)
+            }, throws: { error in
+                return (error as! AbortError).reason ==
+                        #"No such key 'is_free' at path ''. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
+            })
+        }
+    }
+
+    @Test("Test Data Corruption Error")
+    func testDataCorruptionError() async throws {
+        try await withApp { app in
+            let req = Request(
+                application: app,
+                method: .GET,
+                url: URI(string: "https://vapor.codes"),
+                headersNoUpdate: ["Content-Type": "application/json"],
+                collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
+                on: app.eventLoopGroup.any()
+            )
+
+            struct DecodeModel: Content {
+                let badJson: String
+            }
+            #expect(performing: {
+                try req.content.decode(DecodeModel.self)
+            }, throws: { error in
+                return (error as! AbortError).reason.contains(#"Data corrupted at path ''. The given data was not valid JSON"#)
+            })
+        }
+    }
+
+    @Test("Test ValueNotFoundError")
+    func testValueNotFoundError() async throws {
+        try await withApp { app in
+            let req = Request(application: app, on: app.eventLoopGroup.any())
+            try req.content.encode([
+                "items": ["1"]
+            ], as: .json)
+
+            struct DecodeModel: Content {
+                struct Item: Content {
+                    init(from decoder: Decoder) throws {
+                        var container = try decoder.unkeyedContainer()
+                        _ = try container.decode(String.self)
+                        _ = try container.decode(String.self)
+                        fatalError()
+                    }
+                }
+
+                let items: Item
+            }
+            #expect(performing: {
+                try req.content.decode(DecodeModel.self)
+            }, throws: { error in
+                return (error as! AbortError).reason ==
+                #"No value found (expected type 'String') at path 'items.Index 1'. Unkeyed container is at end."#
+            })
+        }
+    }
+
+    @Test("Test Type Mismatch Error")
+    func testTypeMismatchError() async throws {
+        try await withApp { app in
+            let req = Request(application: app, on: app.eventLoopGroup.any())
+            try req.content.encode([
+                "item": [
+                    "title": "The title"
+                ]
+            ], as: .json)
+
+            struct DecodeModel: Content {
+                struct Item: Content {
+                    let title: Int
+                }
+
+                let item: Item
+            }
+            #expect(performing: {
+                try req.content.decode(DecodeModel.self)
+            }, throws: { error in
+                return (error as! AbortError).reason ==
+                #"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#
+            })
+        }
+    }
+
+    @Test("Test Plaintext Decode")
+    func testPlaintextDecode() async throws {
+        try await withApp { app in
+            let data = "255"
+            app.routes.get("plaintext") { _ -> Response in
+                let res = Response()
+                try res.content.encode(data, as: .plainText)
+                return res
             }
 
-            let item: Item
-        }
-        XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
-            XCTAssertContains(
-                (error as? AbortError)?.reason,
-                #"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#
-            )
+            app.routes.get("empty-plaintext") { _ -> Response in
+                let res = Response()
+                try res.content.encode("", as: .plainText)
+                return res
+            }
+
+            try await app.testing().test(.GET, "/plaintext") { res in
+                #expect(res.status == .ok)
+                try #expect(res.content.decode(UInt8.self) == 255)
+                try #expect(res.content.decode(String.self) == "255")
+            }
+
+            try await app.testing().test(.GET, "/empty-plaintext") { res in
+                #expect(res.status == .ok)
+                try #expect(res.content.decode(String.self) == "")
+            }
         }
     }
 
-    func testPlaintextDecode() async throws {
-        let data = "255"
-        app.routes.get("plaintext") { _ -> Response in
-            let res = Response()
-            try res.content.encode(data, as: .plainText)
-            return res
-        }
-
-        app.routes.get("empty-plaintext") { _ -> Response in
-            let res = Response()
-            try res.content.encode("", as: .plainText)
-            return res
-        }
-
-        try await app.testable().test(.GET, "/plaintext") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(try res.content.decode(UInt8.self), 255)
-            XCTAssertEqual(try res.content.decode(String.self), "255")
-        }
-
-        try await app.testable().test(.GET, "/empty-plaintext") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(try res.content.decode(String.self), "")
-        }
-    }
-
+    @Test("Test Plaintext Decoder Doesn't Crash")
     func testPlaintextDecoderDoesntCrash() async throws {
         struct WrongType: Content {
             let example: String
         }
 
-        app.routes.post("plaintext") { req -> String in
-            _ = try req.content.decode(WrongType.self)
-            return "OK"
-        }
+        try await withApp { app in
+            app.routes.post("plaintext") { req -> String in
+                _ = try req.content.decode(WrongType.self)
+                return "OK"
+            }
 
-        let body = """
+            let body = """
         {
           "example": "example"
         }
         """
 
-        let byteBuffer = ByteBuffer(string: body)
-        var headers = HTTPHeaders()
-        headers.add(name: .contentType, value: "text/plain")
+            let byteBuffer = ByteBuffer(string: body)
+            var headers = HTTPHeaders()
+            headers.add(name: .contentType, value: "text/plain")
 
-        try await app.testable().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
-            // This should return a 400 Bad Request and not crash
-            XCTAssertEqual(res.status, .badRequest)
+            try await app.testing().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
+                // This should return a 400 Bad Request and not crash
+                #expect(res.status == .badRequest)
+            }
         }
     }
 
+    @Test("Test Content Is Bool")
     func testContentIsBool() async throws {
-        app.routes.get("success") { _ in
-            true
-        }
+        try await withApp { app in
+            app.routes.get("success") { _ in
+                true
+            }
 
-        try await app.testable().test(.GET, "/success") { res in
-            XCTAssertEqual(try res.content.decode(Bool.self), true)
+            try await app.testing().test(.GET, "/success") { res in
+                try #expect(res.content.decode(Bool.self) == true)
+            }
         }
     }
 }
