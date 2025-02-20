@@ -10,14 +10,14 @@ struct ContentTests {
 
     @Test("Test Content")
     func testContent() async throws {
-        try await withApp { app in
+        try await withApp { app throws in
             let request = Request(
                 application: app,
                 collectedBody: .init(string: #"{"hello": "world"}"#),
                 on: app.eventLoopGroup.any()
             )
             request.headers.contentType = .json
-            try #expect(request.content.get(at: "hello") == "world")
+            #expect(try request.content.get(at: "hello") == "world")
         }
     }
 
@@ -53,14 +53,14 @@ struct ContentTests {
         }
         """
 
-        try await withApp { app in
+        try await withApp { app throws in
             let request = Request(
                 application: app,
                 collectedBody: .init(string: complexJSON),
                 on: app.eventLoopGroup.any()
             )
             request.headers.contentType = .json
-            try #expect(request.content.get(at: "batters", "batter", 1, "type") == "Chocolate")
+            #expect(try request.content.get(at: "batters", "batter", 1, "type") == "Chocolate")
         }
     }
 
@@ -516,7 +516,7 @@ struct ContentTests {
 
     @Test("Test Decode Percent Encoded Query", .bug("https://github.com/vapor/vapor/issues/3135"))
     func testDecodePercentEncodedQuery() async throws {
-        try await withApp { app in
+        try await withApp { app throws in
             let request = Request(
                 application: app,
                 collectedBody: .init(string: ""),
@@ -525,7 +525,7 @@ struct ContentTests {
             request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
             request.headers.contentType = .urlEncodedForm
 
-            try #expect(request.query.get(String.self, at: "name") == "value has 1% of its percents")
+            #expect(try request.query.get(String.self, at: "name") == "value has 1% of its percents")
         }
     }
 
@@ -662,15 +662,15 @@ struct ContentTests {
                 return res
             }
 
-            try await app.testing().test(.GET, "/plaintext") { res in
+            try await app.testing().test(.GET, "/plaintext") { res throws in
                 #expect(res.status == .ok)
-                try #expect(res.content.decode(UInt8.self) == 255)
-                try #expect(res.content.decode(String.self) == "255")
+                #expect(try res.content.decode(UInt8.self) == 255)
+                #expect(try res.content.decode(String.self) == "255")
             }
 
-            try await app.testing().test(.GET, "/empty-plaintext") { res in
+            try await app.testing().test(.GET, "/empty-plaintext") { res throws in
                 #expect(res.status == .ok)
-                try #expect(res.content.decode(String.self) == "")
+                #expect(try res.content.decode(String.self) == "")
             }
         }
     }
@@ -711,8 +711,8 @@ struct ContentTests {
                 true
             }
 
-            try await app.testing().test(.GET, "/success") { res in
-                try #expect(res.content.decode(Bool.self) == true)
+            try await app.testing().test(.GET, "/success") { res throws in
+                #expect(try res.content.decode(Bool.self) == true)
             }
         }
     }
