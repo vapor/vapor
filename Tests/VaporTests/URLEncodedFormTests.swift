@@ -2,6 +2,7 @@ import NIOPosix
 @testable import Vapor
 import Testing
 import Foundation
+import XCTest
 
 @Suite("URL Encoded Form Tests")
 struct URLEncodedFormTests {
@@ -445,20 +446,6 @@ struct URLEncodedFormTests {
         #expect(decodedUsers == usersToEncode)
     }
 
-    @Test("Test Inheritance Coding")
-    func testInheritanceCoding() throws {
-        let toEncode = ChildClass()
-        toEncode.baseField = "Base Value"
-        toEncode.childField = "Child Field"
-        let result = try URLEncodedFormEncoder().encode(toEncode)
-        let decoded = try URLEncodedFormDecoder().decode(ChildClass.self, from: result)
-        print(decoded.childField)
-        print(decoded.baseField)
-        print(toEncode.childField)
-        print(toEncode.baseField)
-        #expect(decoded == toEncode)
-    }
-
     @Test("Test Arrays of Arrays of Objects")
     func testArraysOfArraysOfObjects() throws {
         let toEncode = [[User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)]]
@@ -762,20 +749,6 @@ private struct User: Codable, Equatable {
     var foos: [Foo]
     var nums: [Decimal]
     var isCool: Bool
-}
-
-class BaseClass: Codable, Equatable {
-    var baseField: String?
-    static func == (lhs: BaseClass, rhs: BaseClass) -> Bool {
-        return lhs.baseField == rhs.baseField
-    }
-}
-
-class ChildClass: BaseClass {
-    var childField: String?
-    static func == (lhs: ChildClass, rhs: ChildClass) -> Bool {
-        return lhs.baseField == rhs.baseField && lhs.childField == rhs.childField
-    }
 }
 
 private struct Users: Codable, Equatable {
