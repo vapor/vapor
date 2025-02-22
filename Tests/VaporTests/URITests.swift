@@ -334,7 +334,7 @@ func expectURIComponents(
         #expect(uri.fragment == fragment?.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed), "(fragment) \(messageString)", sourceLocation: sourceLocation)
 
         // The URI's generated string should match the expected input.
-        #expect(try uri.string == expected(), "(string) \(message().testDescription)", sourceLocation: sourceLocation)
+        #expect(try uri.string == expected(), "(string) \(messageString)", sourceLocation: sourceLocation)
     } catch {
         Issue.record(error, message(), sourceLocation: sourceLocation)
     }
