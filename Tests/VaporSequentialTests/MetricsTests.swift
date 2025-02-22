@@ -7,11 +7,10 @@ import Testing
 #if(compiler(>=6.1))
 @Suite("Metric Tests")
 struct MetricsTests {
-    @Test("Test Metrics Increases Counter", .withMetrics(CapturingMetricsSystem()))
+    @Test("Test Metrics Increases Counter", .withMetrics(CapturingMetricsSystem("1")))
     func testMetricsIncreasesCounter() async throws {
+        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
         try await withApp { app in
-            MetricsSystem.bootstrapInternal(metrics)
-
             struct User: Content {
                 let id: Int
                 let name: String
@@ -25,6 +24,8 @@ struct MetricsTests {
                     throw Abort(.notFound)
                 }
             }
+
+            print("Using CaputringMetricsSystems \(metrics.number)")
 
             try await app.testing().test(.GET, "/users/1") { res in
                 #expect(res.status == .ok)
@@ -51,15 +52,16 @@ struct MetricsTests {
         }
     }
 
-    @Test("Test 404 on Dyanmic Route Doesn't Spam Metrics", .withMetrics(CapturingMetricsSystem()))
+    @Test("Test 404 on Dyanmic Route Doesn't Spam Metrics", .withMetrics(CapturingMetricsSystem("2")))
     func testID404DoesntSpamMetrics() async throws {
+        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
         try await withApp { app in
-            MetricsSystem.bootstrapInternal(metrics)
-
             struct User: Content {
                 let id: Int
                 let name: String
             }
+
+            print("Using CaputringMetricsSystems \(metrics.number)")
 
             app.routes.get("users", ":userID") { req -> User in
                 let userID = try req.parameters.require("userID", as: Int.self)
@@ -94,10 +96,11 @@ struct MetricsTests {
         }
     }
 
-    @Test("Test 404 Rewrites Path for Metrics to Avoid DOS Attack", .withMetrics(CapturingMetricsSystem()))
+    @Test("Test 404 Rewrites Path for Metrics to Avoid DOS Attack", .withMetrics(CapturingMetricsSystem("3")))
     func test404RewritesPathForMetricsToAvoidDOSAttack() async throws {
+        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
         try await withApp { app in
-            MetricsSystem.bootstrapInternal(metrics)
+            print("Using CaputringMetricsSystems \(metrics.number)")
 
             try await app.testing().test(.GET, "/not/found") { res in
                 #expect(res.status == .notFound)
@@ -122,10 +125,12 @@ struct MetricsTests {
         }
     }
 
-    @Test("Test Metrics Disabled", .withMetrics(CapturingMetricsSystem()))
+    @Test("Test Metrics Disabled", .withMetrics(CapturingMetricsSystem("4")))
     func testMetricsDisabled() async throws {
+        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
+
         try await withApp { app in
-            MetricsSystem.bootstrapInternal(metrics)
+            print("Using CaputringMetricsSystems \(metrics.number)")
 
             app.http.server.configuration.reportMetrics = false
 
@@ -154,26 +159,26 @@ struct MetricsTests {
     }
 }
 
-@TaskLocal var metrics = CapturingMetricsSystem()
+@TaskLocal var metrics: CapturingMetricsSystem = CapturingMetricsSystem("default")
 
 struct MetricsTaskLocalTrait: TestTrait, SuiteTrait, TestScoping {
-  fileprivate var implementation: @Sendable (_ body: @Sendable () async throws -> Void) async throws -> Void
+    fileprivate var implementation: @Sendable (_ body: @Sendable () async throws -> Void) async throws -> Void
 
-  func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable () async throws -> Void) async throws {
-    try await implementation {
-      try await function()
+    func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable () async throws -> Void) async throws {
+        try await implementation {
+            try await function()
+        }
     }
-  }
 
 }
 
 extension Trait where Self == MetricsTaskLocalTrait {
-  static func withMetrics(_ value: CapturingMetricsSystem) -> Self {
-    Self { body in
-      try await $metrics.withValue(value) {
-        try await body()
-      }
+    static func withMetrics(_ value: CapturingMetricsSystem) -> Self {
+        Self { body in
+            try await $metrics.withValue(value) {
+                try await body()
+            }
+        }
     }
-  }
 }
 #endif
