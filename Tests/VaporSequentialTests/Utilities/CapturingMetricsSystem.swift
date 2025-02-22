@@ -19,35 +19,28 @@ import Foundation
 import NIOConcurrencyHelpers
 
 internal final class TaskLocalMetricsSysemWrapper: MetricsFactory {
-
-    private let systemToUse: TaskLocal<CapturingMetricsSystem>
-
-    init() {
-        self.systemToUse = $metrics
-    }
-
     func makeCounter(label: String, dimensions: [(String, String)]) -> any CoreMetrics.CounterHandler {
-        self.systemToUse.get().makeCounter(label: label, dimensions: dimensions)
+        metrics.makeCounter(label: label, dimensions: dimensions)
     }
     
     func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any CoreMetrics.RecorderHandler {
-        self.systemToUse.get().makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+        metrics.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
     }
     
     func makeTimer(label: String, dimensions: [(String, String)]) -> any CoreMetrics.TimerHandler {
-        self.systemToUse.get().makeTimer(label: label, dimensions: dimensions)
+        metrics.makeTimer(label: label, dimensions: dimensions)
     }
     
     func destroyCounter(_ handler: any CoreMetrics.CounterHandler) {
-        self.systemToUse.get().destroyCounter(handler)
+        metrics.destroyCounter(handler)
     }
     
     func destroyRecorder(_ handler: any CoreMetrics.RecorderHandler) {
-        self.systemToUse.get().destroyRecorder(handler)
+        metrics.destroyRecorder(handler)
     }
     
     func destroyTimer(_ handler: any CoreMetrics.TimerHandler) {
-        self.systemToUse.get().destroyTimer(handler)
+        metrics.destroyTimer(handler)
     }
 }
 

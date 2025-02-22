@@ -7,9 +7,12 @@ import Testing
 #if(compiler(>=6.1))
 @Suite("Metric Tests")
 struct MetricsTests {
+    init() {
+        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
+    }
+
     @Test("Test Metrics Increases Counter", .withMetrics(CapturingMetricsSystem("1")))
     func testMetricsIncreasesCounter() async throws {
-        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
         try await withApp { app in
             struct User: Content {
                 let id: Int
@@ -54,7 +57,6 @@ struct MetricsTests {
 
     @Test("Test 404 on Dyanmic Route Doesn't Spam Metrics", .withMetrics(CapturingMetricsSystem("2")))
     func testID404DoesntSpamMetrics() async throws {
-        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
         try await withApp { app in
             struct User: Content {
                 let id: Int
@@ -98,7 +100,6 @@ struct MetricsTests {
 
     @Test("Test 404 Rewrites Path for Metrics to Avoid DOS Attack", .withMetrics(CapturingMetricsSystem("3")))
     func test404RewritesPathForMetricsToAvoidDOSAttack() async throws {
-        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
         try await withApp { app in
             print("Using CaputringMetricsSystems \(metrics.number)")
 
@@ -127,8 +128,6 @@ struct MetricsTests {
 
     @Test("Test Metrics Disabled", .withMetrics(CapturingMetricsSystem("4")))
     func testMetricsDisabled() async throws {
-        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
-
         try await withApp { app in
             print("Using CaputringMetricsSystems \(metrics.number)")
 
