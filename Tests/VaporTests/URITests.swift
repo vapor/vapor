@@ -312,6 +312,7 @@ func expectURIComponents(
     _ message: @autoclosure () -> Testing.Comment? = nil, sourceLocation: SourceLocation = #_sourceLocation
 ) {
     do {
+        let messageString = message().testDescription
         let scheme = try scheme(), rawuserinfo = try userinfo(), host = try host(), port = try port(),
             path = try path(), query = try query(), fragment = try fragment()
         let uri = URI(scheme: scheme, userinfo: rawuserinfo, host: host, port: port, path: path, query: query, fragment: fragment)
@@ -324,16 +325,16 @@ func expectURIComponents(
         }
 
         // All components should be identical to their input counterparts with percent encoding.
-        #expect(uri.scheme ==   scheme,   "(scheme) \(message())", sourceLocation: sourceLocation)
-        #expect(uri.userinfo == userinfo, "(userinfo) \(message())", sourceLocation: sourceLocation)
-        #expect(uri.host ==     host?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),     "(host) \(message())", sourceLocation: sourceLocation)
-        #expect(uri.port ==     port,     "(port) \(message())", sourceLocation: sourceLocation)
-        #expect(uri.path ==     path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),     "(path) \(message())", sourceLocation: sourceLocation)
-        #expect(uri.query ==    query?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),    "(query) \(message())", sourceLocation: sourceLocation)
-        #expect(uri.fragment == fragment?.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed), "(fragment) \(message())", sourceLocation: sourceLocation)
+        #expect(uri.scheme ==   scheme,   "(scheme) \(messageString)", sourceLocation: sourceLocation)
+        #expect(uri.userinfo == userinfo, "(userinfo) \(messageString)", sourceLocation: sourceLocation)
+        #expect(uri.host ==     host?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),     "(host) \(messageString)", sourceLocation: sourceLocation)
+        #expect(uri.port ==     port,     "(port) \(messageString)", sourceLocation: sourceLocation)
+        #expect(uri.path ==     path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),     "(path) \(messageString)", sourceLocation: sourceLocation)
+        #expect(uri.query ==    query?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),    "(query) \(messageString)", sourceLocation: sourceLocation)
+        #expect(uri.fragment == fragment?.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed), "(fragment) \(messageString)", sourceLocation: sourceLocation)
 
         // The URI's generated string should match the expected input.
-        #expect(try uri.string == expected(), "(string) \(message())", sourceLocation: sourceLocation)
+        #expect(try uri.string == expected(), "(string) \(message().testDescription)", sourceLocation: sourceLocation)
     } catch {
         Issue.record(error, message(), sourceLocation: sourceLocation)
     }
@@ -354,19 +355,20 @@ func expectURIString(
     do {
         let string = try string()
         let uri = URI(string: string)
+        let messageString = message().testDescription
 
         // Each component should match its expected value.
-        #expect(try uri.scheme ==   scheme(),   "(scheme) \(message())", sourceLocation: sourceLocation)
-        #expect(try uri.userinfo == userinfo(), "(userinfo) \(message())", sourceLocation: sourceLocation)
-        #expect(try uri.host ==     host(),     "(host) \(message())", sourceLocation: sourceLocation)
-        #expect(try uri.port ==     port(),     "(port) \(message())", sourceLocation: sourceLocation)
-        #expect(try uri.path ==     path(),     "(path) \(message())", sourceLocation: sourceLocation)
-        #expect(try uri.query ==    query(),    "(query) \(message())", sourceLocation: sourceLocation)
-        #expect(try uri.fragment == fragment(), "(fragment) \(message())", sourceLocation: sourceLocation)
+        #expect(try uri.scheme ==   scheme(),   "(scheme) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.userinfo == userinfo(), "(userinfo) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.host ==     host(),     "(host) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.port ==     port(),     "(port) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.path ==     path(),     "(path) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.query ==    query(),    "(query) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.fragment == fragment(), "(fragment) \(messageString)", sourceLocation: sourceLocation)
 
         // The URI's generated string should come out identical to the input string, unless explicitly stated otherwise.
         if try exact() {
-            #expect(uri.string ==   string,     "(string) \(message())", sourceLocation: sourceLocation)
+            #expect(uri.string ==   string,     "(string) \(messageString)", sourceLocation: sourceLocation)
         }
     } catch {
         Issue.record(error, message(), sourceLocation: sourceLocation)
