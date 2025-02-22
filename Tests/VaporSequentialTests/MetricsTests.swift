@@ -4,13 +4,12 @@ import Metrics
 import VaporTesting
 import Testing
 
-// These have to be serialized because the metrics system is essentially a global
-@Suite("Metric Tests", .serialized)
+#if(compiler(>=6.1))
+@Suite("Metric Tests")
 struct MetricsTests {
-    @Test("Test Metrics Increases Counter")
+    @Test("Test Metrics Increases Counter", .withMetrics(CapturingMetricsSystem()))
     func testMetricsIncreasesCounter() async throws {
         try await withApp { app in
-            let metrics = CapturingMetricsSystem()
             MetricsSystem.bootstrapInternal(metrics)
 
             struct User: Content {
@@ -32,7 +31,7 @@ struct MetricsTests {
                 let resData = try res.content.decode(User.self)
                 #expect(resData.id == 1)
                 #expect(metrics.counters.count == 1)
-                let counter = metrics.counters["http_requests_total"] as! TestCounter
+                let counter = try #require(metrics.counters["http_requests_total"] as? TestCounter)
                 let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
                 #expect(pathDimension.1 == "/users/:userID")
                 #expect(counter.dimensions.first(where: { $0.0 == "path" && $0.1 == "/users/1" }) == nil)
@@ -41,7 +40,7 @@ struct MetricsTests {
                 let status = try #require(counter.dimensions.first(where: { $0.0 == "status"}))
                 #expect(status.1 == "200")
 
-                let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
+                let timer = try #require(metrics.timers["http_request_duration_seconds"] as? TestTimer)
                 let timerPathDimension = try #require(timer.dimensions.first(where: { $0.0 == "path"}))
                 #expect(timerPathDimension.1 == "/users/:userID")
                 let timerMethodDimension = try #require(timer.dimensions.first(where: { $0.0 == "method"}))
@@ -52,10 +51,9 @@ struct MetricsTests {
         }
     }
 
-    @Test("Test 404 on Dyanmic Route Doesn't Spam Metrics")
+    @Test("Test 404 on Dyanmic Route Doesn't Spam Metrics", .withMetrics(CapturingMetricsSystem()))
     func testID404DoesntSpamMetrics() async throws {
         try await withApp { app in
-            let metrics = CapturingMetricsSystem()
             MetricsSystem.bootstrapInternal(metrics)
 
             struct User: Content {
@@ -74,7 +72,7 @@ struct MetricsTests {
 
             try await app.testing().test(.GET, "/users/2") { res in
                 #expect(res.status == .notFound)
-                let counter = metrics.counters["http_requests_total"] as! TestCounter
+                let counter = try #require(metrics.counters["http_requests_total"] as? TestCounter)
                 let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
                 #expect(pathDimension.1 == "/users/:userID")
                 let methodDimension = try #require(counter.dimensions.first(where: { $0.0 == "method"}))
@@ -84,7 +82,7 @@ struct MetricsTests {
                 #expect(counter.dimensions.first(where: { $0.1 == "200" }) == nil)
                 #expect(counter.dimensions.first(where: { $0.0 == "path" && $0.1 == "/users/1" }) == nil)
 
-                let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
+                let timer = try #require(metrics.timers["http_request_duration_seconds"] as? TestTimer)
                 let timerPathDimension = try #require(timer.dimensions.first(where: { $0.0 == "path"}))
                 #expect(timerPathDimension.1 == "/users/:userID")
                 let timerMethodDimension = try #require(timer.dimensions.first(where: { $0.0 == "method"}))
@@ -96,16 +94,15 @@ struct MetricsTests {
         }
     }
 
-    @Test("Test 404 Rewrites Path for Metrics to Avoid DOS Attack")
+    @Test("Test 404 Rewrites Path for Metrics to Avoid DOS Attack", .withMetrics(CapturingMetricsSystem()))
     func test404RewritesPathForMetricsToAvoidDOSAttack() async throws {
         try await withApp { app in
-            let metrics = CapturingMetricsSystem()
             MetricsSystem.bootstrapInternal(metrics)
 
             try await app.testing().test(.GET, "/not/found") { res in
                 #expect(res.status == .notFound)
                 #expect(metrics.counters.count == 1)
-                let counter = metrics.counters["http_requests_total"] as! TestCounter
+                let counter = try #require(metrics.counters["http_requests_total"] as? TestCounter)
                 let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
                 #expect(pathDimension.1 == "vapor_route_undefined")
                 let methodDimension = try #require(counter.dimensions.first(where: { $0.0 == "method"}))
@@ -113,7 +110,7 @@ struct MetricsTests {
                 let status = try #require(counter.dimensions.first(where: { $0.0 == "status"}))
                 #expect(status.1 == "404")
 
-                let timer = metrics.timers["http_request_duration_seconds"] as! TestTimer
+                let timer = try #require(metrics.timers["http_request_duration_seconds"] as? TestTimer)
                 let timerPathDimension = try #require(timer.dimensions.first(where: { $0.0 == "path"}))
                 #expect(timerPathDimension.1 == "vapor_route_undefined")
                 let timerMethodDimension = try #require(timer.dimensions.first(where: { $0.0 == "method"}))
@@ -125,10 +122,9 @@ struct MetricsTests {
         }
     }
 
-    @Test("Test Metrics Disabled")
+    @Test("Test Metrics Disabled", .withMetrics(CapturingMetricsSystem()))
     func testMetricsDisabled() async throws {
         try await withApp { app in
-            let metrics = CapturingMetricsSystem()
             MetricsSystem.bootstrapInternal(metrics)
 
             app.http.server.configuration.reportMetrics = false
@@ -158,3 +154,26 @@ struct MetricsTests {
     }
 }
 
+@TaskLocal var metrics = CapturingMetricsSystem()
+
+struct MetricsTaskLocalTrait: TestTrait, SuiteTrait, TestScoping {
+  fileprivate var implementation: @Sendable (_ body: @Sendable () async throws -> Void) async throws -> Void
+
+  func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable () async throws -> Void) async throws {
+    try await implementation {
+      try await function()
+    }
+  }
+
+}
+
+extension Trait where Self == MetricsTaskLocalTrait {
+  static func withMetrics(_ value: CapturingMetricsSystem) -> Self {
+    Self { body in
+      try await $metrics.withValue(value) {
+        try await body()
+      }
+    }
+  }
+}
+#endif
