@@ -95,19 +95,6 @@ extension Application {
                 self.directory = .init(.detect())
             }
         }
-
-        struct LifecycleHandler: Vapor.LifecycleHandler {
-            func shutdown(_ application: Application) {
-                do {
-                    try application.threadPool.syncShutdownGracefully()
-                } catch is NIOThreadPoolError.UnsupportedOperation {
-                    // ignore, singleton thread pool throws this error on shutdown attempts
-                    // see https://github.com/apple/swift-nio/blob/c51907a839e63ebf0ba2076bba73dd96436bd1b9/Sources/NIOPosix/NIOThreadPool.swift#L142-L147
-                } catch {
-                    application.logger.debug("Failed to shutdown thread pool", metadata: ["error": "\(error)"])
-                }
-            }
-        }
         
         struct AsyncLifecycleHandler: Vapor.LifecycleHandler {
             func shutdownAsync(_ application: Application) async {
@@ -135,13 +122,9 @@ extension Application {
             return storage
         }
 
-        func initialize(asyncEnvironment: Bool) {
+        func initialize() {
             self.application.storage[Key.self] = .init()
-            if asyncEnvironment {
-                self.application.lifecycle.use(AsyncLifecycleHandler())
-            } else {
-                self.application.lifecycle.use(LifecycleHandler())
-            }
+            self.application.lifecycle.use(AsyncLifecycleHandler())
         }
     }
 }

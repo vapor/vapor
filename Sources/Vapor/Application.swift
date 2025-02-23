@@ -139,13 +139,13 @@ public final class Application: Sendable {
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         services: ServiceConfiguration = .init()
     ) async throws {
-        self.init(environment, eventLoopGroupProvider, async: true, services: services)
+        self.init(environment, eventLoopGroupProvider, services: services, internal: true)
         await self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
     
-    // async flag here is just to stop the compiler from complaining about duplicates
-    package init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, async: Bool, services: ServiceConfiguration = .init()) {
+    // internal flag here is just to stop the compiler from complaining about duplicates
+    package init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, services: ServiceConfiguration, internal: Bool) {
         self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
@@ -163,7 +163,7 @@ public final class Application: Sendable {
         self.contentConfiguration = services.contentConfiguration
 
         // Service Setup
-        self.core.initialize(asyncEnvironment: async)
+        self.core.initialize()
         self.caches.initialize()
         self.views.initialize()
         self.passwords.use(.bcrypt)

@@ -243,16 +243,15 @@ final class CustomClient: Client, Sendable {
     }
 
     func delegating(to eventLoop: any EventLoop) -> Client {
-        #warning("Can this return self?")
-        return self._requests.withLockedValue { CustomClient(eventLoop: eventLoop, _requests: $0) }
+        self
     }
 
     func logging(to logger: Logger) -> Client {
-        return self
+        self
     }
 
     func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
-        return self
+        self
     }
 }
 

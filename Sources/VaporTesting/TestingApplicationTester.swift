@@ -64,7 +64,6 @@ extension TestingApplicationTester {
             body: body ?? ByteBufferAllocator().buffer(capacity: 0),
             contentConfigurtion: .default()
         )
-#warning("Fix")
         try await beforeRequest(&request)
         do {
             let response = try await self.performTest(request: request)
@@ -91,7 +90,6 @@ extension TestingApplicationTester {
             body: body ?? ByteBufferAllocator().buffer(capacity: 0),
             contentConfigurtion: .default()
         )
-#warning("Fix")
         try await beforeRequest(&request)
         do {
             return try await self.performTest(request: request)
