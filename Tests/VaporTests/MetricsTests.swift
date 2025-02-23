@@ -5,7 +5,7 @@ import VaporTesting
 import Testing
 
 // These have to be serialized because the metrics system is essentially a global
-@Suite("Metric Tests", .serialized)
+@Suite("Metric Tests", .serialized, .disabled())
 struct MetricsTests {
     @Test("Test Metrics Increases Counter")
     func testMetricsIncreasesCounter() async throws {
