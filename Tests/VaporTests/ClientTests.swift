@@ -8,8 +8,8 @@ import VaporTesting
 import Foundation
 import AsyncHTTPClient
 
-@Suite("Async Client Tests")
-struct AsyncClientTests {
+@Suite("Client Tests")
+struct ClientTests {
     @Test("Test changing the client configuration")
     func clientConfigurationChange() async throws {
         try await withApp { app in
