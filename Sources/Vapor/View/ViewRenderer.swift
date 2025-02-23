@@ -1,6 +1,6 @@
 import NIOCore
 
-public protocol ViewRenderer {
+public protocol ViewRenderer: Sendable {
     func `for`(_ request: Request) -> ViewRenderer
     func render<E>(_ name: String, _ context: E) async throws -> View
         where E: Encodable

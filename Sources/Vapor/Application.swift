@@ -123,12 +123,16 @@ public final class Application: Sendable {
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
     public let byteBufferAllocator: ByteBufferAllocator = .init()
+    public let viewRenderer: ViewRenderer
+    public let directoryConfiguration: DirectoryConfiguration
 
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration
+        let viewRenderer: ViewRenderer?
 
-        public init(contentConfiguration: ContentConfiguration = .default()) {
+        public init(contentConfiguration: ContentConfiguration = .default(), viewRenderer: ViewRenderer? = nil) {
             self.contentConfiguration = contentConfiguration
+            self.viewRenderer = viewRenderer
         }
     }
 
@@ -161,11 +165,17 @@ public final class Application: Sendable {
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
+        self.directoryConfiguration = .detect()
+
+        if let viewRenderer = services.viewRenderer {
+            self.viewRenderer = viewRenderer
+        } else {
+            self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory, logger: logger)
+        }
 
         // Service Setup
         self.core.initialize()
         self.caches.initialize()
-        self.views.initialize()
         self.passwords.use(.bcrypt)
         self.sessions.initialize()
         self.sessions.use(.memory)
