@@ -2,7 +2,6 @@ import NIOPosix
 @testable import Vapor
 import Testing
 import Foundation
-import XCTest
 
 @Suite("URL Encoded Form Tests")
 struct URLEncodedFormTests {

@@ -1,125 +1,133 @@
-import XCTVapor
-import XCTest
 import Vapor
 import NIOCore
 import NIOHTTP1
+import Testing
+import VaporTesting
+import Foundation
 
-final class QueryTests: XCTestCase {
-    var app: Application!
+@Suite("Query Tests")
+struct QueryTests {
 
-    override func setUp() async throws {
-        app = try await Application(.testing)
+    @Test("Test Query")
+    func testQuery() async throws {
+        try await withApp { app throws in
+            let request = Request(application: app, on: app.eventLoopGroup.next())
+            request.headers.contentType = .json
+            request.url.path = "/foo"
+            request.url.query = "hello=world"
+            #expect(try request.query.get(String.self, at: "hello") == "world")
+        }
     }
 
-    override func tearDown() async throws {
-        try await app.shutdown()
+    @Test("Test Query as Array")
+    func testQueryAsArray() async throws {
+        try await withApp { app throws in
+            let request = Request(application: app, on: app.eventLoopGroup.next())
+            request.headers.contentType = .json
+            request.url.path = "/foo"
+            request.url.query = "hello=world&hello[]=you"
+            #expect(try request.query.get([String].self, at: "hello") == ["world", "you"])
+            #expect(try request.query.get([String].self, at: "goodbye") == [])
+        }
     }
 
-    func testQuery() throws {
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-        request.headers.contentType = .json
-        request.url.path = "/foo"
-        request.url.query = "hello=world"
-        try XCTAssertEqual(request.query.get(String.self, at: "hello"), "world")
-    }
+    @Test("Test Wrapped Single Value Query Decoding", .bug("https://github.com/vapor/vapor/pull/2163"))
+    func testWrappedSingleValueQueryDecoding() async throws {
+        try await withApp { app throws in
+            let request = Request(application: app, on: app.eventLoopGroup.next())
+            request.headers.contentType = .json
+            request.url.path = "/foo"
+            request.url.query = ""
+            
+            // Think of property wrappers, or MongoKitten's ObjectId
+            struct StringWrapper: Decodable {
+                let string: String
+                
+                init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    string = try container.decode(String.self)
+                }
+            }
 
-    func testQueryAsArray() throws {
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-        request.headers.contentType = .json
-        request.url.path = "/foo"
-        request.url.query = "hello=world&hello[]=you"
-        try XCTAssertEqual(request.query.get([String].self, at: "hello"), ["world", "you"])
-        try XCTAssertEqual(request.query.get([String].self, at: "goodbye"), [])
-    }
-
-    // https://github.com/vapor/vapor/pull/2163
-    func testWrappedSingleValueQueryDecoding() throws {
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-        request.headers.contentType = .json
-        request.url.path = "/foo"
-        request.url.query = ""
-
-        // Think of property wrappers, or MongoKitten's ObjectId
-        struct StringWrapper: Decodable {
-            let string: String
-
-            init(from decoder: Decoder) throws {
-                let container = try decoder.singleValueContainer()
-                string = try container.decode(String.self)
+            #expect(throws: DecodingError.self) {
+                try request.query.get(StringWrapper.self, at: "hello")
             }
         }
-
-        XCTAssertThrowsError(try request.query.get(StringWrapper.self, at: "hello"))
     }
 
-    func testNotCrashingArrayWithPercentEncoding() throws {
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-        request.headers.contentType = .json
-        request.url.path = "/"
-        request.url.query = "emailsToSearch%5B%5D=xyz"
-        let parsed = try request.query.get([String].self, at: "emailsToSearch")
-        XCTAssertEqual(parsed, ["xyz"])
+    @Test("Test Does Not Crash with an Array with Percent Encoding")
+    func testNotCrashingArrayWithPercentEncoding() async throws {
+        try await withApp { app throws in
+            let request = Request(application: app, on: app.eventLoopGroup.next())
+            request.headers.contentType = .json
+            request.url.path = "/"
+            request.url.query = "emailsToSearch%5B%5D=xyz"
+            let parsed = try request.query.get([String].self, at: "emailsToSearch")
+            #expect(parsed == ["xyz"])
+        }
     }
 
-    func testQueryGet() throws {
-        var req: Request
+    @Test("Test Query Get")
+    func testQueryGet() async throws {
+        try await withApp { app throws in
+            let request1 = Request(
+                application: app,
+                method: .GET,
+                url: .init(string: "/path?foo=a"),
+                on: app.eventLoopGroup.next()
+            )
 
-        //
-        req = Request(
-            application: app,
-            method: .GET,
-            url: .init(string: "/path?foo=a"),
-            on: app.eventLoopGroup.next()
-        )
-
-        XCTAssertEqual(try req.query.get(String.self, at: "foo"), "a")
-        XCTAssertThrowsError(try req.query.get(Int.self, at: "foo")) { error in
-            if case .typeMismatch(_, let context) = error as? DecodingError {
-                XCTAssertEqual(context.debugDescription, "Data found at 'foo' was not Int")
+            #expect(try request1.query.get(String.self, at: "foo") == "a")
+            let error1 = #expect(throws: Error.self) {
+                try request1.query.get(Int.self, at: "foo")
+            }
+            if case .typeMismatch(_, let context) = error1 as? DecodingError {
+                #expect(context.debugDescription == "Data found at 'foo' was not Int")
             } else {
-                XCTFail("Caught error \"\(error)\", but not the expected: \"DecodingError.typeMismatch\"")
+                Issue.record("Caught error \"\(error1.debugDescription)\", but not the expected: \"DecodingError.typeMismatch\"")
             }
-        }
-        XCTAssertThrowsError(try req.query.get(String.self, at: "bar")) { error in
-            if case .valueNotFound(_, let context) = error as? DecodingError {
-                XCTAssertEqual(context.debugDescription, "No String was found at 'bar'")
-            } else {
-                XCTFail("Caught error \"\(error)\", but not the expected: \"DecodingError.valueNotFound\"")
-            }
-        }
 
-        XCTAssertEqual(req.query[String.self, at: "foo"], "a")
-        XCTAssertEqual(req.query[String.self, at: "bar"], nil)
-
-        //
-        req = Request(
-            application: app,
-            method: .GET,
-            url: .init(string: "/path"),
-            on: app.eventLoopGroup.next()
-        )
-        XCTAssertThrowsError(try req.query.get(Int.self, at: "foo")) { error in
-            if let error = error as? DecodingError {
-                XCTAssertEqual(error.status, .badRequest)
-            } else {
-                XCTFail("Caught error \"\(error)\"")
+            let error2 = #expect(throws: Error.self) {
+                try request1.query.get(String.self, at: "bar")
             }
+            if case .valueNotFound(_, let context) = error2 as? DecodingError {
+                #expect(context.debugDescription == "No String was found at 'bar'")
+            } else {
+                Issue.record("Caught error \"\(error2.debugDescription)\", but not the expected: \"DecodingError.valueNotFound\"")
+            }
+
+            #expect(request1.query[String.self, at: "foo"] == "a")
+            #expect(request1.query[String.self, at: "bar"] == nil)
+
+            let request2 = Request(
+                application: app,
+                method: .GET,
+                url: .init(string: "/path"),
+                on: app.eventLoopGroup.next()
+            )
+            let error3 = #expect(throws: DecodingError.self) {
+                try request1.query.get(Int.self, at: "bar")
+            }
+            #expect(error3?.status == .badRequest)
+            #expect(request2.query[String.self, at: "foo"] == nil)
         }
-        XCTAssertEqual(req.query[String.self, at: "foo"], nil)
     }
 
-    // https://github.com/vapor/vapor/issues/1537
+    @Test("Test Query String Running", .bug("https://github.com/vapor/vapor/issues/1537"))
     func testQueryStringRunning() async throws {
-        app.routes.get("todos") { req in
-            return "hi"
-        }
+        try await withApp { app throws in
+            app.routes.get("todos") { req in
+                return "hi"
+            }
 
-        try await app.testable().test(.GET, "/todos?a=b") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "hi")
+            try await app.testing().test(.GET, "/todos?a=b") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "hi")
+            }
         }
     }
 
+    @Test("Test URL Encoded Form Decode Query")
     func testURLEncodedFormDecodeQuery() async throws {
         struct User: Content {
             var name: String
@@ -133,22 +141,25 @@ final class QueryTests: XCTestCase {
             var age: Int
         }
 
-        app.get("urlencodedform") { req -> HTTPStatus in
-            let foo = try req.query.decode(User.self)
-            XCTAssertEqual(foo.name, "Vapor")
-            XCTAssertEqual(foo.age, 3)
-            XCTAssertEqual(foo.luckyNumbers, [5, 7])
-            XCTAssertEqual(foo.pet.name, "Fido")
-            XCTAssertEqual(foo.pet.age, 3)
-            return .ok
-        }
+        try await withApp { app throws in
+            app.get("urlencodedform") { req -> HTTPStatus in
+                let foo = try req.query.decode(User.self)
+                #expect(foo.name == "Vapor")
+                #expect(foo.age == 3)
+                #expect(foo.luckyNumbers == [5, 7])
+                #expect(foo.pet.name == "Fido")
+                #expect(foo.pet.age == 3)
+                return .ok
+            }
 
-        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3"
-        try await app.testable().test(.GET, "/urlencodedform?\(data)") { res in
-            XCTAssertEqual(res.status.code, 200)
+            let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3"
+            try await app.testing().test(.GET, "/urlencodedform?\(data)") { res in
+                #expect(res.status.code == 200)
+            }
         }
     }
 
+    @Test("Test URL Percent Encoded Form Decode Query")
     func testURLPercentEncodedFormDecodeQuery() async throws {
         struct User: Content {
             var name: String
@@ -162,75 +173,84 @@ final class QueryTests: XCTestCase {
             var age: Int
         }
 
-        app.get("urlencodedform") { req -> HTTPStatus in
-            let foo = try req.query.decode(User.self)
-            XCTAssertEqual(foo.name, "Vapor")
-            XCTAssertEqual(foo.age, 3)
-            XCTAssertEqual(foo.luckyNumbers, [5, 7])
-            XCTAssertEqual(foo.pet.name, "Fido")
-            XCTAssertEqual(foo.pet.age, 3)
-            return .ok
-        }
+        try await withApp { app throws in
+            app.get("urlencodedform") { req -> HTTPStatus in
+                let foo = try req.query.decode(User.self)
+                #expect(foo.name == "Vapor")
+                #expect(foo.age == 3)
+                #expect(foo.luckyNumbers == [5, 7])
+                #expect(foo.pet.name == "Fido")
+                #expect(foo.pet.age == 3)
+                return .ok
+            }
 
-        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        try await app.testable().test(.GET, "/urlencodedform?\(data)") { res in
-            XCTAssertEqual(res.status.code, 200)
+            let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+            try await app.testing().test(.GET, "/urlencodedform?\(data)") { res in
+                #expect(res.status.code == 200)
+            }
         }
     }
 
+    @Test("Test Custom Encode")
     func testCustomEncode() async throws {
-        app.get("custom-encode") { req -> Response in
-            let res = Response(status: .ok)
-            let jsonEncoder = JSONEncoder()
-            jsonEncoder.outputFormatting = .prettyPrinted
-            try res.content.encode(["hello": "world"], using: jsonEncoder)
-            return res
-        }
+        try await withApp { app throws in
+            app.get("custom-encode") { req -> Response in
+                let res = Response(status: .ok)
+                let jsonEncoder = JSONEncoder()
+                jsonEncoder.outputFormatting = .prettyPrinted
+                try res.content.encode(["hello": "world"], using: jsonEncoder)
+                return res
+            }
 
-        try await app.testable().test(.GET, "/custom-encode") { res in
-            XCTAssertEqual(res.body.string, """
+            try await app.testing().test(.GET, "/custom-encode") { res in
+                #expect(res.body.string == """
             {
               "hello" : "world"
             }
             """)
+            }
         }
     }
 
-    // https://github.com/vapor/vapor/issues/1609
+    @Test("Test Content Decoding Does Not Hang", .bug("https://github.com/vapor/vapor/issues/1609"))
     func testGH1609() async throws {
         struct DecodeFail: Content {
             var here: String
             var missing: String
         }
 
-        app.post("decode-fail") { req -> String in
-            _ = try req.content.decode(DecodeFail.self)
-            return "ok"
-        }
+        try await withApp { app throws in
+            app.post("decode-fail") { req -> String in
+                _ = try req.content.decode(DecodeFail.self)
+                return "ok"
+            }
 
-        var body = ByteBufferAllocator().buffer(capacity: 0)
-        body.writeString(#"{"here":"hi"}"#)
-        var headers = HTTPHeaders()
-        headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
-        headers.contentType = .json
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            body.writeString(#"{"here":"hi"}"#)
+            var headers = HTTPHeaders()
+            headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
+            headers.contentType = .json
 
-        try await app.testable().test(.POST, "/decode-fail", headers: headers, body: body) { res in
-            XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, "missing")
+            try await app.testing().test(.POST, "/decode-fail", headers: headers, body: body) { res in
+                #expect(res.status == .badRequest)
+                #expect(res.body.string.contains("missing"))
+            }
         }
     }
 
-    // https://github.com/vapor/vapor/issues/1687
-    func testRequestQueryStringPercentEncoding() throws {
+    @Test("Test Request Query String Percent Encoding", .bug("https://github.com/vapor/vapor/issues/1687"))
+    func testRequestQueryStringPercentEncoding() async throws {
         struct TestQueryStringContainer: Content {
             var name: String
         }
-        let req = Request(application: app, on: app.eventLoopGroup.next())
-        try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
-        XCTAssertEqual(req.url.query, "name=Vapor%20Test")
+        try await withApp { app in
+            let req = Request(application: app, on: app.eventLoopGroup.next())
+            try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
+            #expect(req.url.query == "name=Vapor%20Test")
+        }
     }
 
-    // https://github.com/vapor/vapor/issues/2383
+    @Test("Test Query Key Decoding", .bug("https://github.com/vapor/vapor/issues/2383"))
     func testQueryKeyDecoding() throws {
         struct Test: Codable, Equatable {
             struct Page: Codable, Equatable {
@@ -246,88 +266,93 @@ final class QueryTests: XCTestCase {
 
         let query = "page[offset]=0&page[limit]=50&filter[ids]=auth0,abc123"
         let a = try URLEncodedFormDecoder().decode(Test.self, from: query)
-        XCTAssertEqual(a.page.offset, 0)
-        XCTAssertEqual(a.page.limit, 50)
-        XCTAssertEqual(a.filter.ids, ["auth0", "abc123"])
+        #expect(a.page.offset == 0)
+        #expect(a.page.limit == 50)
+        #expect(a.filter.ids == ["auth0", "abc123"])
         let b = try URLEncodedFormDecoder().decode(Test.self, from: query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-        XCTAssertEqual(a, b)
+        #expect(a == b)
     }
 
-    func testOptionalGet() throws {
-        let req = Request(
-            application: app,
-            method: .GET,
-            url: URI(string: "/"),
-            on: app.eventLoopGroup.next()
-        )
-        do {
+    @Test("Test Optional Get")
+    func testOptionalGet() async throws {
+        try await withApp { app in
+            let req = Request(
+                application: app,
+                method: .GET,
+                url: URI(string: "/"),
+                on: app.eventLoopGroup.next()
+            )
             req.url = .init(path: "/foo?bar=baz")
-            let page = try req.query.get(Int?.self, at: "page")
-            XCTAssertEqual(page, nil)
-        }
-        do {
+            let page1 = try req.query.get(Int?.self, at: "page")
+            #expect(page1 == nil)
             req.url = .init(path: "/foo?bar=baz&page=1")
-            let page = try req.query.get(Int?.self, at: "page")
-            XCTAssertEqual(page, 1)
-        }
-        do {
+            let page2 = try req.query.get(Int?.self, at: "page")
+            #expect(page2 == 1)
             req.url = .init(path: "/foo?bar=baz&page=a")
-            XCTAssertThrowsError(try req.query.get(Int?.self, at: "page"))
+            #expect(throws: DecodingError.self) {
+                try req.query.get(Int?.self, at: "page")
+            }
         }
     }
 
-    func testValuelessParamGet() throws {
-        let req = Request(
-            application: app,
-            method: .GET,
-            url: URI(string: "/"),
-            on: app.eventLoopGroup.next()
-        )
-        struct BarStruct : Content {
-            let bar: Bool
+    @Test("Test Valueluss Param Get")
+    func testValuelessParamGet() async throws {
+        try await withApp { app throws in
+            let req = Request(
+                application: app,
+                method: .GET,
+                url: URI(string: "/"),
+                on: app.eventLoopGroup.next()
+            )
+            struct BarStruct : Content {
+                let bar: Bool
+            }
+            struct OptionalBarStruct : Content {
+                let bar: Bool?
+                let baz: String?
+            }
+
+            req.url = .init(path: "/foo?bar")
+            #expect(try req.query.get(Bool.self, at: "bar") == true)
+            #expect(try req.query.decode(BarStruct.self).bar == true)
+            #expect(try req.query.decode(OptionalBarStruct.self).bar == true)
+
+            req.url = .init(path: "/foo?bar&baz=bop")
+            #expect(try req.query.get(Bool.self, at: "bar"))
+            #expect(try req.query.decode(BarStruct.self).bar)
+            #expect(try req.query.decode(OptionalBarStruct.self).bar == true)
+
+            req.url = .init(path: "/foo")
+            #expect(try req.query.get(Bool.self, at: "bar") == false)
+            #expect(try req.query.decode(BarStruct.self).bar == false)
+            #expect(try req.query.decode(OptionalBarStruct.self).bar == nil)
+
+            req.url = .init(path: "/foo?baz=bop")
+            #expect(try req.query.get(Bool.self, at: "bar") == false)
+            #expect(try req.query.decode(BarStruct.self).bar == false)
+            #expect(try req.query.decode(OptionalBarStruct.self).bar == nil)
         }
-        struct OptionalBarStruct : Content {
-            let bar: Bool?
-            let baz: String?
-        }
-
-        req.url = .init(path: "/foo?bar")
-        XCTAssertTrue(try req.query.get(Bool.self, at: "bar"))
-        XCTAssertTrue(try req.query.decode(BarStruct.self).bar)
-        XCTAssertEqual(try req.query.decode(OptionalBarStruct.self).bar, true)
-
-        req.url = .init(path: "/foo?bar&baz=bop")
-        XCTAssertTrue(try req.query.get(Bool.self, at: "bar"))
-        XCTAssertTrue(try req.query.decode(BarStruct.self).bar)
-        XCTAssertEqual(try req.query.decode(OptionalBarStruct.self).bar, true)
-
-        req.url = .init(path: "/foo")
-        XCTAssertFalse(try req.query.get(Bool.self, at: "bar"))
-        XCTAssertFalse(try req.query.decode(BarStruct.self).bar)
-        XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
-
-        req.url = .init(path: "/foo?baz=bop")
-        XCTAssertFalse(try req.query.get(Bool.self, at: "bar"))
-        XCTAssertFalse(try req.query.decode(BarStruct.self).bar)
-        XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
     }
-    
-    func testNotCrashingWhenUnkeyedContainerIsAtEnd() {
+
+    @Test("Test Does Not Crash When Unkeyed Container Is At End")
+    func testNotCrashingWhenUnkeyedContainerIsAtEnd() async throws {
         struct Query: Decodable {
             let closedRange: ClosedRange<Double>
         }
         
-        
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-        request.headers.contentType = .json
-        request.url.path = "/"
-        request.url.query = "closedRange=1"
-        
-        XCTAssertThrowsError(try request.query.decode(Query.self)) { error in
+        try await withApp { app in
+            let request = Request(application: app, on: app.eventLoopGroup.next())
+            request.headers.contentType = .json
+            request.url.path = "/"
+            request.url.query = "closedRange=1"
+
+            let error = #expect(throws: Error.self) {
+                try request.query.decode(Query.self)
+            }
             if case .valueNotFound(_, let context) = error as? DecodingError {
-                XCTAssertEqual(context.debugDescription, "Unkeyed container is at end.")
+                #expect(context.debugDescription == "Unkeyed container is at end.")
             } else {
-                XCTFail("Caught error \"\(error)\", but not the expected: \"DecodingError.valueNotFound\"")
+                Issue.record("Caught error \"\(error.debugDescription)\", but not the expected: \"DecodingError.valueNotFound\"")
             }
         }
     }

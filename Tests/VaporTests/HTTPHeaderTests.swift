@@ -1,7 +1,7 @@
 @testable import Vapor
-import XCTest
 import NIOHTTP1
 import Testing
+import Foundation
 
 @Suite("HTTP Header Tests")
 struct HTTPHeaderTests {
