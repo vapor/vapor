@@ -21,6 +21,7 @@ public struct TestingHTTPRequest: Sendable {
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer
         var headers: HTTPHeaders
+        let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
@@ -43,7 +44,7 @@ public struct TestingHTTPRequest: Sendable {
 
     public var content: ContentContainer {
         get {
-            _ContentContainer(body: self.body, headers: self.headers)
+            _ContentContainer(body: self.body, headers: self.headers, contentConfiguration: self.contentConfiguration)
         }
         set {
             let content = (newValue as! _ContentContainer)

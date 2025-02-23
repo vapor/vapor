@@ -8,6 +8,9 @@ public protocol ContentContainer {
     /// For outgoing content, the type is typically specified as part of encoding.
     var contentType: HTTPMediaType? { get }
 
+    /// The configuration for encoding and decoding content.
+    var contentConfiguration: ContentConfiguration { get }
+
     /// Use the provided ``ContentDecoder`` to read a value of type `D` from the container.
     func decode<D: Decodable>(_: D.Type, using decoder: ContentDecoder) throws -> D
 

@@ -7,11 +7,13 @@ public struct TestingHTTPResponse: Sendable {
     public var status: HTTPStatus
     public var headers: HTTPHeaders
     public var body: ByteBuffer
+    private let contentConfiguration: ContentConfiguration
 
-    package init(status: HTTPStatus, headers: HTTPHeaders, body: ByteBuffer) {
+    package init(status: HTTPStatus, headers: HTTPHeaders, body: ByteBuffer, contentConfiguration: ContentConfiguration) {
         self.status = status
         self.headers = headers
         self.body = body
+        self.contentConfiguration = contentConfiguration
     }
 }
 
@@ -19,6 +21,7 @@ extension TestingHTTPResponse {
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer
         var headers: HTTPHeaders
+        let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
@@ -40,6 +43,6 @@ extension TestingHTTPResponse {
     }
 
     public var content: ContentContainer {
-        _ContentContainer(body: self.body, headers: self.headers)
+        _ContentContainer(body: self.body, headers: self.headers, contentConfiguration: self.contentConfiguration)
     }
 }

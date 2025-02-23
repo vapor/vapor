@@ -5,6 +5,7 @@ import Vapor
 public func expectContent<D>(
     _ type: D.Type,
     _ res: TestingHTTPResponse,
+    contentConfiguration: ContentConfiguration = .default(),
     sourceLocation: SourceLocation = #_sourceLocation,
     _ closure: (D) throws -> ()
 ) rethrows where D: Decodable {
@@ -16,7 +17,7 @@ public func expectContent<D>(
     let content: D
 
     do {
-        let decoder = try ContentConfiguration.global.requireDecoder(for: contentType)
+        let decoder = try contentConfiguration.requireDecoder(for: contentType)
         content = try decoder.decode(D.self, from: res.body, headers: res.headers)
     } catch {
         Issue.record("could not decode body: \(error)", sourceLocation: sourceLocation)

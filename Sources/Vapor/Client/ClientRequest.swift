@@ -78,6 +78,7 @@ extension ClientRequest {
         var body: ByteBuffer?
         var headers: HTTPHeaders
         let byteBufferAllocator: ByteBufferAllocator
+        let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
@@ -116,7 +117,7 @@ extension ClientRequest {
 
     public var content: ContentContainer {
         get {
-            return _ContentContainer(body: self.body, headers: self.headers, byteBufferAllocator: self.byteBufferAllocator)
+            return _ContentContainer(body: self.body, headers: self.headers, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
         }
         set {
             let container = (newValue as! _ContentContainer)

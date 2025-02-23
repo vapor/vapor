@@ -70,7 +70,7 @@ extension Content {
     }
     
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let response = Response()
+        let response = Response(contentConfiguration: request.application.contentConfiguration)
         do {
             try response.content.encode(self)
         } catch {

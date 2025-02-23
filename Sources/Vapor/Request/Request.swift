@@ -132,6 +132,10 @@ public final class Request: CustomStringConvertible, Sendable {
             return self.request.headers.contentType
         }
 
+        var contentConfiguration: ContentConfiguration {
+            self.request.application.contentConfiguration
+        }
+
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.request.headers)

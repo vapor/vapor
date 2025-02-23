@@ -61,7 +61,8 @@ extension Application {
                 return TestingHTTPResponse(
                     status: response.status,
                     headers: response.headers,
-                    body: responseBody
+                    body: responseBody,
+                    contentConfiguration: self.app.contentConfiguration
                 )
             } catch {
                 try? await client.shutdown()
@@ -100,7 +101,8 @@ extension Application {
             return try await TestingHTTPResponse(
                 status: res.status,
                 headers: res.headers,
-                body: res.body.collect(on: request.eventLoop).get() ?? ByteBufferAllocator().buffer(capacity: 0)
+                body: res.body.collect(on: request.eventLoop).get() ?? ByteBufferAllocator().buffer(capacity: 0),
+                contentConfiguration: self.app.contentConfiguration
             )
         }
     }

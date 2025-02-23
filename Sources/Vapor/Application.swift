@@ -127,7 +127,7 @@ public final class Application: Sendable {
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration
 
-        public init(contentConfiguration: ContentConfiguration = .global) {
+        public init(contentConfiguration: ContentConfiguration = .default()) {
             self.contentConfiguration = contentConfiguration
         }
     }

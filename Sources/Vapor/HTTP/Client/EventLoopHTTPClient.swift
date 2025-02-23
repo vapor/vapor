@@ -44,7 +44,8 @@ private struct EventLoopHTTPClient: Client {
             status: response.status,
             headers: response.headers,
             body: response.body,
-            byteBufferAllocator: self.byteBufferAllocator
+            byteBufferAllocator: self.byteBufferAllocator,
+            contentConfiguration: self.contentConfiguration
         )
     }
     

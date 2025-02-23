@@ -65,7 +65,8 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
 
     /// Create a new `URLEncodedFormEncoder`.
     ///
-    ///      ContentConfiguration.global.use(urlEncoder: URLEncodedFormEncoder())
+    ///      var contentConfiguration = ContentConfiguration.default()
+    ///      contentConfiguration.use(urlEncoder: URLEncodedFormEncoder())
     ///
     /// - Parameters:
     ///  - configuration: Defines how encoding is done; see ``URLEncodedFormEncoder/Configuration`` for more information

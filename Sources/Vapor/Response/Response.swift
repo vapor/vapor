@@ -112,6 +112,10 @@ public final class Response: CustomStringConvertible, Sendable {
     private struct _ContentContainer: ContentContainer {
         let response: Response
 
+        var contentConfiguration: ContentConfiguration {
+            self.response.contentConfiguration
+        }
+
         var contentType: HTTPMediaType? {
             return self.response.headers.contentType
         }
@@ -181,7 +185,8 @@ public final class Response: CustomStringConvertible, Sendable {
     
     let responseBox: NIOLockedValueBox<ResponseBox>
     private let _storage: NIOLockedValueBox<Storage>
-    
+    private let contentConfiguration: ContentConfiguration
+
     // MARK: Init
     
     /// Creates a new `Response`.
@@ -200,27 +205,30 @@ public final class Response: CustomStringConvertible, Sendable {
         status: HTTPResponseStatus = .ok,
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPHeaders = .init(),
-        body: Body = .empty
+        body: Body = .empty,
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         self.init(
             status: status,
             version: version,
             headersNoUpdate: headers,
-            body: body
+            body: body,
+            contentConfiguration: contentConfiguration
         )
         self.headers.updateContentLength(body.count)
     }
-    
-    
+
     /// Internal init that creates a new `Response` without sanitizing headers.
     public init(
         status: HTTPResponseStatus,
         version: HTTPVersion,
         headersNoUpdate headers: HTTPHeaders,
-        body: Body
+        body: Body,
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         self._storage = .init(.init())
         self.responseBox = .init(.init(version: version, status: status, headers: headers, body: body, forHeadRequest: false))
+        self.contentConfiguration = contentConfiguration
     }
 }
 
