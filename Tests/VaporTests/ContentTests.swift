@@ -428,22 +428,23 @@ struct ContentTests {
 
     @Test("Test JSON Allows ContentType Override")
     func testJSONAllowsContentTypeOverride() async throws {
-        try await withApp { app in
-            app.get("check") { (req: Request) -> String in
-                "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
-            }
-            // Me and my sadistic sense of humor.
-            ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
-
-            try await app.testing().test(.GET, "/check", headers: [
-                "X-Test-Value": "PRESENT"
-            ], beforeRequest: { req in
-                try req.content.encode(["foo": "bar"], as: .json)
-                req.headers.contentType = .xml
-            }) { res in
-                #expect(res.body.string == "PRESENT.application/xml; charset=utf-8")
-            }
+        // Me and my sadistic sense of humor.
+        var contentConfiguration = ContentConfiguration.default()
+        try contentConfiguration.use(decoder: contentConfiguration.requireDecoder(for: .json), for: .xml)
+        let app = try await Application(.testing, services: .init(contentConfiguration: contentConfiguration))
+        app.get("check") { (req: Request) -> String in
+            "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
+
+        try await app.testing().test(.GET, "/check", headers: [
+            "X-Test-Value": "PRESENT"
+        ], beforeRequest: { req in
+            try req.content.encode(["foo": "bar"], as: .json)
+            req.headers.contentType = .xml
+        }) { res in
+            #expect(res.body.string == "PRESENT.application/xml; charset=utf-8")
+        }
+        try await app.shutdown()
     }
 
     @Test("Test Before Encode Content")

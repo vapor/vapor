@@ -74,7 +74,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     /// Typically configured via ``ContentConfiguration``:
     ///
     /// ```swift
-    /// let contentConfiguration = ContentConfiguration.default()
+    /// var contentConfiguration = ContentConfiguration.default()
     /// contentConfiguration.use(urlDecoder: URLEncodedFormDecoder(
     ///     bracketsAsArray: true,
     ///     flagsAsBool: true,
