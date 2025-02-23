@@ -52,7 +52,7 @@ public final class ErrorMiddleware: Middleware {
             // attempt to serialize the error to json
             let body: Response.Body
             do {
-                let encoder = try ContentConfiguration.global.requireEncoder(for: .json)
+                let encoder = try req.application.contentConfiguration.requireEncoder(for: .json)
                 var byteBuffer = req.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(ErrorResponse(error: true, reason: reason), to: &byteBuffer, headers: &headers)
                 

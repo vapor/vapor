@@ -71,10 +71,11 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
 
     /// Create a new ``URLEncodedFormDecoder``.
     ///
-    /// Typically configured via the global ``ContentConfiguration`` class:
+    /// Typically configured via ``ContentConfiguration``:
     ///
     /// ```swift
-    /// ContentConfiguration.global.use(urlDecoder: URLEncodedFormDecoder(
+    /// let contentConfiguration = ContentConfiguration.default()
+    /// contentConfiguration.use(urlDecoder: URLEncodedFormDecoder(
     ///     bracketsAsArray: true,
     ///     flagsAsBool: true,
     ///     arraySeparator: nil

@@ -105,26 +105,26 @@ struct ErrorTests {
 
     @Test("Test Error Middleware Uses Content Configuration")
     func testErrorMiddlewareUsesContentConfiguration() async throws {
-        try await withApp { app in
-            app.get("foo") { req -> String in
-                throw Abort(.internalServerError, reason: "Foo")
-            }
-
-            ContentConfiguration.global.use(encoder: URLEncodedFormEncoder(), for: .json)
-
-            try await app.testing().test(.GET, "foo") { res in
-                #expect(res.status == HTTPStatus.internalServerError)
-                let option1 = "error=true&reason=Foo"
-                let option2 = "reason=Foo&error=true"
-                guard res.body.string == option1 || res.body.string == option2 else {
-                    Issue.record("Response does not match")
-                    return
-                }
-            }
-
-            // Clean up
-            ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)
+        var contentConfiguration = ContentConfiguration.default()
+        contentConfiguration.use(encoder: URLEncodedFormEncoder(), for: .json)
+        let app = try await Application(.testing, services: .init(contentConfiguration: contentConfiguration))
+        app.get("foo") { req -> String in
+            throw Abort(.internalServerError, reason: "Foo")
         }
+
+        ContentConfiguration.global.use(encoder: URLEncodedFormEncoder(), for: .json)
+
+        try await app.testing().test(.GET, "foo") { res in
+            #expect(res.status == HTTPStatus.internalServerError)
+            let option1 = "error=true&reason=Foo"
+            let option2 = "reason=Foo&error=true"
+            guard res.body.string == option1 || res.body.string == option2 else {
+                Issue.record("Response does not match")
+                return
+            }
+        }
+
+        try await app.shutdown()
     }
 }
 
