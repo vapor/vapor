@@ -534,52 +534,76 @@ struct ServerTests {
             try await app.server.shutdown()
         }
     }
-    
-//    func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() async throws {
-//        app.http.server.configuration.hostname = "127.0.0.1"
-//        app.http.server.configuration.port = 0
-//        
-//        let numRequests = ManagedAtomic<Int>(0)
-//        let writersStarted = DispatchSemaphore(value: 0)
-//        
-//        app.get() { req  -> EventLoopFuture<Response> in
-//            numRequests.wrappingIncrement(ordering: .relaxed)
-//            
-//            return req.eventLoop.scheduleTask(in: .milliseconds(10)) {
-//                numRequests.wrappingIncrement(ordering: .relaxed)
-//                
-//                return Response(status: .ok, body: .init(stream: { writer in
-//                    writersStarted.signal()
-//                    _ = writer.write(.end)
-//                }))
-//            }.futureResult
-//        }
-//        
-//        app.environment.arguments = ["serve"]
-//        await XCTAssertAsyncNoThrow(try await app.startup())
-//
-//        XCTAssertNotNil(app.http.server.shared.localAddress)
-//        guard let localAddress = app.http.server.shared.localAddress else {
-//            Issue.record("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-//            return
-//        }
-//        
-//        let numberOfClients = 100
-//        
-//        for _ in 0 ..< numberOfClients {
-//            let client = try await ClientBootstrap(group: app.eventLoopGroup)
-//                .connect(to: localAddress)
-//                .get()
-//            try await client.writeAndFlush(ByteBuffer(string: "GET / HTTP/1.1\r\nhost: foo\r\n\r\n"))
-//            try await client.close()
-//        }
-//        
-//        for clientNumber in 0 ..< numberOfClients {
-//            #expect(.success, writersStarted.wait(timeout: .now() + 1), "client #\(clientNumber) failed")
-//        }
-//        #expect(numberOfClients * 2, numRequests.load(ordering: .relaxed))
-//    }
-//
+
+    @Test("Test Request Body Stream Gets Finalised Even If Client Abandons Connection")
+    func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() async throws {
+        actor WritersCount {
+            enum WriterError: Error {
+                case timeout
+            }
+            var count: Int = 0
+            
+            func signal() {
+                count += 1
+            }
+            
+            func wait(timeout: UInt64) async throws {
+                var currentTimeout = timeout
+                while count <= 0 {
+                    try await Task.sleep(nanoseconds: 100)
+                    currentTimeout -= 100
+                    if currentTimeout <= 0 {
+                        throw WriterError.timeout
+                    }
+                }
+                count -= 1
+            }
+        }
+        try await withApp { app in
+            app.http.server.configuration.hostname = "127.0.0.1"
+            app.http.server.configuration.port = 0
+
+            let numRequests = ManagedAtomic<Int>(0)
+            let writersStarted = WritersCount()
+
+            app.get() { req  -> EventLoopFuture<Response> in
+                numRequests.wrappingIncrement(ordering: .relaxed)
+
+                return req.eventLoop.scheduleTask(in: .milliseconds(10)) {
+                    numRequests.wrappingIncrement(ordering: .relaxed)
+
+                    return Response(status: .ok, body: .init(asyncStream: { writer in
+                        await writersStarted.signal()
+                        _ = try await writer.write(.end)
+                    }))
+                }.futureResult
+            }
+
+            app.environment.arguments = ["serve"]
+            await #expect(throws: Never.self) {
+                try await app.startup()
+            }
+
+            let localAddress = try #require(app.http.server.shared.localAddress)
+            let numberOfClients = 100
+
+            for _ in 0 ..< numberOfClients {
+                let client = try await ClientBootstrap(group: app.eventLoopGroup)
+                    .connect(to: localAddress)
+                    .get()
+                try await client.writeAndFlush(ByteBuffer(string: "GET / HTTP/1.1\r\nhost: foo\r\n\r\n"))
+                try await client.close()
+            }
+
+            for clientNumber in 0 ..< numberOfClients {
+                await #expect(throws: Never.self, "Client \(clientNumber) did not complete") {
+                    try await writersStarted.wait(timeout: 1_000_000)
+                }
+            }
+            #expect(numberOfClients * 2 == numRequests.load(ordering: .relaxed))
+        }
+    }
+
     @Test("Test Live Server")
     func testLiveServer() async throws {
         try await withApp { app in
@@ -670,7 +694,7 @@ struct ServerTests {
     func testTooLargePort() async throws {
         try await withApp { app in
             app.http.server.configuration.port = .max
-            await #expect(throws: Abort.self) {
+            await #expect(throws: SocketAddressError.unknown(host: "127.0.0.1", port: Int.max)) {
                 try await app.startup()
             }
         }
@@ -859,7 +883,7 @@ struct ServerTests {
         try await withApp { app in
             app.http.server.configuration.address = .unixDomainSocket(path: "/tmp")
 
-            await #expect(throws: Abort.self) {
+            await #expect(throws: IOError.self) {
                 try await app.startup()
             }
         }
@@ -870,7 +894,7 @@ struct ServerTests {
         try await withApp { app in
             app.http.server.configuration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
 
-            await #expect(throws: Abort.self) {
+            await #expect(throws: IOError.self) {
                 try await app.startup()
             }
         }
@@ -1297,4 +1321,30 @@ private extension ByteBuffer {
         buffer.writeBytes(decoded)
         self = buffer
     }
+}
+
+#warning("Remove when future NIO implementation fixes this")
+extension SocketAddressError: @retroactive Equatable {
+    public static func == (lhs: SocketAddressError, rhs: SocketAddressError) -> Bool {
+        switch lhs {
+        case .unsupported:
+            return rhs == .unsupported
+        case .unixDomainSocketPathTooLong:
+            return rhs == .unixDomainSocketPathTooLong
+        case .failedToParseIPString(let string):
+            if case .failedToParseIPString(let other) = rhs {
+                return string == other
+            } else {
+                return false
+            }
+        case .unknown(host: let host, port: let port):
+            if case .unknown(host: let otherHost, port: let otherPort) = rhs {
+                return host == otherHost && port == otherPort
+            } else {
+                return false
+            }
+        }
+    }
+    
+
 }
