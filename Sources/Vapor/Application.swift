@@ -122,7 +122,7 @@ public final class Application: Sendable {
 
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
-    package let byteBufferAllocator: ByteBufferAllocator = .init()
+    public let byteBufferAllocator: ByteBufferAllocator = .init()
 
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration

@@ -10,7 +10,7 @@ import _NIOFileSystemFoundationCompat
 extension Request {
     public var fileio: FileIO {
         return .init(
-            allocator: self.application.allocator,
+            allocator: self.application.byteBufferAllocator,
             request: self
         )
     }

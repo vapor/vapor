@@ -53,10 +53,6 @@ extension Application {
         }
     }
 
-    public var allocator: ByteBufferAllocator {
-        self.core.storage.allocator
-    }
-
     public var running: Running? {
         get { self.core.storage.running.current.withLockedValue { $0 } }
         set { self.core.storage.running.current.withLockedValue { $0 = newValue } }
@@ -77,7 +73,6 @@ extension Application {
             let commands: NIOLockedValueBox<Commands>
             let asyncCommands: NIOLockedValueBox<AsyncCommands>
             let threadPool: NIOLockedValueBox<NIOThreadPool>
-            let allocator: ByteBufferAllocator
             let running: Application.Running.Storage
             let directory: NIOLockedValueBox<DirectoryConfiguration>
 
@@ -90,7 +85,6 @@ extension Application {
                 let threadPool = NIOSingletons.posixBlockingThreadPool
                 threadPool.start()
                 self.threadPool = .init(threadPool)
-                self.allocator = .init()
                 self.running = .init()
                 self.directory = .init(.detect())
             }
