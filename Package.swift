@@ -139,15 +139,8 @@ let package = Package(
 
         // Testing
         .target(
-            name: "VaporTestUtils",
-            dependencies: [
-                .target(name: "Vapor"),
-            ]
-        ),
-        .target(
             name: "VaporTesting",
             dependencies: [
-                .target(name: "VaporTestUtils"),
                 .target(name: "Vapor"),
             ]
         ),
