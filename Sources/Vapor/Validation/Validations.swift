@@ -52,17 +52,17 @@ public struct Validations: Sendable {
         guard let body = request.body.data else {
             throw Abort(.unprocessableEntity, reason: "Empty Body")
         }
-        let contentDecoder = try ContentConfiguration.global.requireDecoder(for: contentType)
+        let contentDecoder = try request.application.contentConfiguration.requireDecoder(for: contentType)
         return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
     
-    public func validate(query: URI) throws -> ValidationsResult {
-        let urlDecoder = try ContentConfiguration.global.requireURLDecoder()
+    public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
+        let urlDecoder = try contentConfiguration.requireURLDecoder()
         return try urlDecoder.decode(ValidationsExecutor.self, from: query, userInfo: [.pendingValidations: self]).results
     }
     
-    public func validate(json: String) throws -> ValidationsResult {
-        return try ContentConfiguration.global.requireDecoder(for: .json)
+    public func validate(json: String, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
+        return try contentConfiguration.requireDecoder(for: .json)
             .decode(ValidationsExecutor.self, from: .init(string: json), headers: [:], userInfo: [.pendingValidations: self]).results
     }
     
