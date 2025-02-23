@@ -11,7 +11,6 @@ let package = Package(
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
-        .library(name: "XCTVapor", targets: ["XCTVapor"]),
         .library(name: "VaporTesting", targets: ["VaporTesting"]),
     ],
     dependencies: [
@@ -152,18 +151,10 @@ let package = Package(
                 .target(name: "Vapor"),
             ]
         ),
-        .target(
-            name: "XCTVapor",
-            dependencies: [
-                .target(name: "VaporTestUtils"),
-                .target(name: "Vapor"),
-            ]
-        ),
         .testTarget(
             name: "VaporTests",
             dependencies: [
                 .product(name: "NIOTestUtils", package: "swift-nio"),
-                .target(name: "XCTVapor"),
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
             ],
