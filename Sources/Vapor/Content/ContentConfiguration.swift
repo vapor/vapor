@@ -17,20 +17,7 @@ import NIOConcurrencyHelpers
 ///
 /// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
 /// See the ``Content`` protocol for more information.
-public struct ContentConfiguration: Sendable {
-    #warning("Globals are bad, inject into app")
-    public static var global: ContentConfiguration {
-        get {
-            _global.withLockedValue { $0 }
-        }
-        set {
-            _global.withLockedValue {
-                $0 = newValue
-            }
-        }
-    }
-    private static let _global: NIOLockedValueBox<ContentConfiguration> = .init(.default())
-    
+public struct ContentConfiguration: Sendable {    
     /// Creates a ``ContentConfiguration`` containing all of Vapor's default coders.
     public static func `default`() -> ContentConfiguration {
         var config = ContentConfiguration()
