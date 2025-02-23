@@ -150,7 +150,7 @@ struct ConditionalCompressionTests {
             #expect(response.body?.string == compressiblePayload, sourceLocation: sourceLocation)
         }
 
-        func withCompressionApp<T>(_ block: (Application) async throws -> T) async throws -> T {
+        func withCompressionApp(_ block: (Application) async throws -> Void) async throws {
             try await withApp { app in
                 app.http.server.configuration.hostname = "127.0.0.1"
                 app.http.server.configuration.port = 0
@@ -161,9 +161,8 @@ struct ConditionalCompressionTests {
                 app.http.client.configuration.maximumUsesPerConnection = 1
                 app.http.client.configuration.decompression = .enabled(limit: .none)
 
-                let result = try await block(app)
+                try await block(app)
                 try await app.server.shutdown()
-                return result
             }
         }
 
