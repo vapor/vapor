@@ -4,23 +4,10 @@ import NIOHTTP1
 
 public protocol Client: Sendable {
     var byteBufferAllocator: ByteBufferAllocator { get }
+    var contentConfiguration: ContentConfiguration { get }
     func logging(to logger: Logger) -> Client
     func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client
     func send(_ request: ClientRequest) async throws -> ClientResponse
-}
-
-extension Client {
-    public func logging(to logger: Logger) -> Client {
-        return self
-    }
-
-    public func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
-        return self
-    }
-
-    public var byteBufferAllocator: ByteBufferAllocator {
-        return ByteBufferAllocator()
-    }
 }
 
 extension Client {
@@ -62,7 +49,7 @@ extension Client {
         to url: URI,
         beforeSend: (inout ClientRequest) throws -> () = { _ in }
     ) async throws -> ClientResponse {
-        var request = ClientRequest(method: method, url: url, headers: headers, body: nil, byteBufferAllocator: self.byteBufferAllocator)
+        var request = ClientRequest(method: method, url: url, headers: headers, body: nil, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
         try beforeSend(&request)
         return try await self.send(request)
     }

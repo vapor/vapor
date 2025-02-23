@@ -1,9 +1,19 @@
 import Vapor
 import NIOCore
+import Logging
 
 struct ResponderClient: Client {
     let responder: Responder
     let application: Application
+    let byteBufferAllocator: NIOCore.ByteBufferAllocator
+    let contentConfiguration: Vapor.ContentConfiguration
+
+    init(responder: Responder, application: Application) {
+        self.responder = responder
+        self.application = application
+        self.byteBufferAllocator = application.byteBufferAllocator
+        self.contentConfiguration = application.contentConfiguration
+    }
 
     var eventLoop: EventLoop {
         self.application.eventLoopGroup.next()
@@ -26,6 +36,14 @@ struct ResponderClient: Client {
             on: application.eventLoopGroup.next()
         )).get()
         return ClientResponse(status: res.status, headers: res.headers, body: res.body.buffer)
+    }
+
+    func logging(to logger: Logger) -> Client {
+        self
+    }
+
+    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
+        self
     }
 }
 

@@ -61,8 +61,10 @@ extension TestingApplicationTester {
             method: method,
             url: .init(path: path),
             headers: headers,
-            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0),
+            contentConfigurtion: .default()
         )
+#warning("Fix")
         try await beforeRequest(&request)
         do {
             let response = try await self.performTest(request: request)
@@ -86,8 +88,10 @@ extension TestingApplicationTester {
             method: method,
             url: .init(path: path),
             headers: headers,
-            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0),
+            contentConfigurtion: .default()
         )
+#warning("Fix")
         try await beforeRequest(&request)
         do {
             return try await self.performTest(request: request)

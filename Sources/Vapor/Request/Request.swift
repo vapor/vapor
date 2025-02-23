@@ -101,6 +101,7 @@ public final class Request: CustomStringConvertible, Sendable {
 
     private struct _URLQueryContainer: URLQueryContainer, Sendable {
         let request: Request
+        let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
             where D: Decodable
@@ -117,7 +118,7 @@ public final class Request: CustomStringConvertible, Sendable {
     
     public var query: URLQueryContainer {
         get {
-            return _URLQueryContainer(request: self)
+            return _URLQueryContainer(request: self, contentConfiguration: self.application.contentConfiguration)
         }
         set {
             // ignore since Request is a reference type

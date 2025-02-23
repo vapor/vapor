@@ -8,12 +8,14 @@ public struct TestingHTTPRequest: Sendable {
     public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer
+    public var contentConfiguration: ContentConfiguration
 
-    public init(method: HTTPMethod, url: URI, headers: HTTPHeaders, body: ByteBuffer) {
+    public init(method: HTTPMethod, url: URI, headers: HTTPHeaders, body: ByteBuffer, contentConfigurtion: ContentConfiguration) {
         self.method = method
         self.url = url
         self.headers = headers
         self.body = body
+        self.contentConfiguration = contentConfigurtion
     }
 
     private struct _ContentContainer: ContentContainer {
@@ -52,6 +54,7 @@ public struct TestingHTTPRequest: Sendable {
 
     private struct _URLQueryContainer: URLQueryContainer {
         var url: URI
+        let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
             where D: Decodable
@@ -68,7 +71,7 @@ public struct TestingHTTPRequest: Sendable {
 
     public var query: URLQueryContainer {
         get {
-            _URLQueryContainer(url: url)
+            _URLQueryContainer(url: url, contentConfiguration: self.contentConfiguration)
         }
         set {
             let query = (newValue as! _URLQueryContainer)

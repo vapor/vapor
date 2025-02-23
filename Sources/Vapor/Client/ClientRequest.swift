@@ -9,6 +9,7 @@ public struct ClientRequest: Sendable {
     public var body: ByteBuffer?
     public var timeout: TimeAmount?
     private let byteBufferAllocator: ByteBufferAllocator
+    private let contentConfiguration: ContentConfiguration
 
     public init(
         method: HTTPMethod = .GET,
@@ -16,7 +17,8 @@ public struct ClientRequest: Sendable {
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
         timeout: TimeAmount?,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         self.method = method
         self.url = url
@@ -24,6 +26,7 @@ public struct ClientRequest: Sendable {
         self.body = body
         self.timeout = timeout
         self.byteBufferAllocator = byteBufferAllocator
+        self.contentConfiguration = contentConfiguration
     }
 
     public init(
@@ -31,20 +34,23 @@ public struct ClientRequest: Sendable {
         url: URI = "/",
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         self.init(method: method,
                   url: url,
                   headers: headers,
                   body: body,
                   timeout: nil,
-                  byteBufferAllocator: byteBufferAllocator)
+                  byteBufferAllocator: byteBufferAllocator,
+                  contentConfiguration: contentConfiguration)
     }
 }
 
 extension ClientRequest {
     private struct _URLQueryContainer: URLQueryContainer {
         var url: URI
+        let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
             where D: Decodable
@@ -61,7 +67,7 @@ extension ClientRequest {
 
     public var query: URLQueryContainer {
         get {
-            return _URLQueryContainer(url: self.url)
+            return _URLQueryContainer(url: self.url, contentConfiguration: self.contentConfiguration)
         }
         set {
             self.url = (newValue as! _URLQueryContainer).url

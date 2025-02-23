@@ -119,18 +119,33 @@ public final class Application: Sendable {
     private let _traceAutoPropagation: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
-    
+
+    // MARK: - Services
+    package let contentConfiguration: ContentConfiguration
+    package let byteBufferAllocator: ByteBufferAllocator = .init()
+
+    public struct ServiceConfiguration {
+        let contentConfiguration: ContentConfiguration
+
+        public init(contentConfiguration: ContentConfiguration = .global) {
+            self.contentConfiguration = contentConfiguration
+        }
+    }
+
+    // MARK: - Initialization
+
     public convenience init(
         _ environment: Environment = .development,
-        _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
+        _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
+        services: ServiceConfiguration = .init()
     ) async throws {
-        self.init(environment, eventLoopGroupProvider, async: true)
+        self.init(environment, eventLoopGroupProvider, async: true, services: services)
         await self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
     
     // async flag here is just to stop the compiler from complaining about duplicates
-    package init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, async: Bool) {
+    package init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, async: Bool, services: ServiceConfiguration = .init()) {
         self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
@@ -145,6 +160,9 @@ public final class Application: Sendable {
         self._storage = .init(.init(logger: logger))
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
+        self.contentConfiguration = services.contentConfiguration
+
+        // Service Setup
         self.core.initialize(asyncEnvironment: async)
         self.caches.initialize()
         self.views.initialize()

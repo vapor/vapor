@@ -224,6 +224,8 @@ struct ClientTests {
 final class CustomClient: Client, Sendable {
     let eventLoop: any EventLoop
     let _requests: NIOLockedValueBox<[ClientRequest]>
+    let contentConfiguration: ContentConfiguration = .default()
+    let byteBufferAllocator: ByteBufferAllocator = .init()
     var requests: [ClientRequest] {
         get {
             self._requests.withLockedValue { $0 }
@@ -241,7 +243,16 @@ final class CustomClient: Client, Sendable {
     }
 
     func delegating(to eventLoop: any EventLoop) -> Client {
-        self._requests.withLockedValue { CustomClient(eventLoop: eventLoop, _requests: $0) }
+        #warning("Can this return self?")
+        return self._requests.withLockedValue { CustomClient(eventLoop: eventLoop, _requests: $0) }
+    }
+
+    func logging(to logger: Logger) -> Client {
+        return self
+    }
+
+    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
+        return self
     }
 }
 

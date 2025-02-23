@@ -4,12 +4,13 @@ import Logging
 import Foundation
 
 extension HTTPClient {
-    func delegating(to eventLoop: EventLoop, logger: Logger, byteBufferAllocator: ByteBufferAllocator) -> Client {
+    func delegating(to eventLoop: EventLoop, logger: Logger, byteBufferAllocator: ByteBufferAllocator, contentConfiguration: ContentConfiguration) -> Client {
         EventLoopHTTPClient(
             http: self,
             eventLoop: eventLoop,
             logger: logger,
-            byteBufferAllocator: byteBufferAllocator
+            byteBufferAllocator: byteBufferAllocator,
+            contentConfiguration: contentConfiguration
         )
     }
 }
@@ -19,6 +20,7 @@ private struct EventLoopHTTPClient: Client {
     let eventLoop: EventLoop
     var logger: Logger?
     var byteBufferAllocator: ByteBufferAllocator
+    let contentConfiguration: ContentConfiguration
 
     func send(_ clientRequest: ClientRequest) async throws -> ClientResponse {
         let urlString = clientRequest.url.string
@@ -47,10 +49,10 @@ private struct EventLoopHTTPClient: Client {
     }
     
     func logging(to logger: Logger) -> Client {
-        return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: logger, byteBufferAllocator: self.byteBufferAllocator)
+        return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: self.logger, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
     }
 
     func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
-        return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: self.logger, byteBufferAllocator: byteBufferAllocator)
+        return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: self.logger, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
     }
 }
