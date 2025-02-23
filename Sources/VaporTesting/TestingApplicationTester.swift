@@ -2,7 +2,6 @@ import NIOHTTP1
 import NIOCore
 import Testing
 import Vapor
-import VaporTestUtils
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse

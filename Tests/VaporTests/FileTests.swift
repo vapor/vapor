@@ -4,7 +4,6 @@ import NIOHTTP1
 import _NIOFileSystem
 import Crypto
 import Vapor
-import VaporTestUtils
 import Testing
 import VaporTesting
 import Foundation

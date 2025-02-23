@@ -15,7 +15,7 @@ extension Application {
         case running(hostname: String, port: Int)
     }
 
-    package struct Live {
+    package struct Live: Sendable {
         let app: Application
         let port: Int
         let hostname: String
@@ -71,7 +71,7 @@ extension Application {
         }
     }
 
-    package struct InMemory {
+    package struct InMemory: Sendable {
         let app: Application
         package init(app: Application) throws {
             self.app = app

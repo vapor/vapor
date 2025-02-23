@@ -1,6 +1,5 @@
 import Foundation
 import Testing
-import VaporTestUtils
 import Vapor
 
 public func expectContent<D>(
