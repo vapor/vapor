@@ -6,11 +6,11 @@ extension ObjectIdentifier: @retroactive CustomStringConvertible {
 }
 
 extension Application {
-    public var id: ServiceID {
+    public var id: ServiceIdentity {
         .init(_application: self)
     }
     
-    public struct ServiceID: Sendable {
+    public struct ServiceIdentity: Sendable {
         public let _application: Application
         
         private struct Key: StorageKey {
@@ -18,13 +18,13 @@ extension Application {
         }
         
         public final actor Storage: Sendable {
-            var id: ServiceIdentifier?
+            var id: ServiceIdentifiable?
             
             init() {
                 self.id = nil
             }
             
-            func setID(_ newID: ServiceIdentifier?) {
+            func setID(_ newID: ServiceIdentifiable?) {
                 self.id = newID
             }
         }
@@ -43,17 +43,17 @@ extension Application {
             }
         }
         
-        var description: ServiceIdentity? {
-            get async { await ServiceIdentity(self.storage.id) }
+        var description: ServiceIdentifier? {
+            get async { await ServiceIdentifier(self.storage.id) }
         }
         
-        public func register(_ newID: ServiceIdentifier?) async {
+        public func register(_ newID: ServiceIdentifiable?) async {
             await storage.setID(newID)
         }
     }
 }
 
-public final actor ServiceIdentifier: Sendable {
+public final actor ServiceIdentifiable: Sendable {
     private var id = Set<ObjectIdentifier>()
     private let label: String
     private var version: Double
@@ -68,7 +68,7 @@ public final actor ServiceIdentifier: Sendable {
     }
 }
 
-extension ServiceIdentifier: CustomStringConvertible {
+extension ServiceIdentifiable: CustomStringConvertible {
     public nonisolated var description: String {
         return "[invalid]:\(label)@[invalid]"
     }
@@ -81,20 +81,20 @@ extension ServiceIdentifier: CustomStringConvertible {
     }
 }
 
-struct ServiceIdentity: Codable {
+struct ServiceIdentifier: Codable {
     let id: String
     let label: String
     let version: Double
     
-    init?(_ from: ServiceIdentifier?) async {
+    init?(_ from: ServiceIdentifiable?) async {
         guard let from = from else { return nil }
         
-        let serviceidentifierString = await from.string
-        self.init(stringLiteral: serviceidentifierString)
+        let serviceidentityString = await from.string
+        self.init(stringLiteral: serviceidentityString)
     }
 }
 
-extension ServiceIdentity: ExpressibleByStringLiteral {
+extension ServiceIdentifier: ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
     
     public init(stringLiteral value: String) {
@@ -107,7 +107,7 @@ extension ServiceIdentity: ExpressibleByStringLiteral {
     }
 }
 
-extension ServiceIdentity: CustomStringConvertible {
+extension ServiceIdentifier: CustomStringConvertible {
     public var description: String {
         return "\(self.id):\(self.label)@\(self.version)"
     }
