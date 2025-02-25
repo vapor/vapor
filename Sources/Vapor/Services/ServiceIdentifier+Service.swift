@@ -36,12 +36,11 @@ extension Application {
       }
     }
     
-    // Async accessor methods
-    public func getID() async -> ServiceIdentifier? {
-      return await storage.id
+    var description: ServiceIdentity? {
+      get async { await ServiceIdentity(self.storage.id) }
     }
     
-    public func setID(_ newID: ServiceIdentifier?) async {
+    public func register(_ newID: ServiceIdentifier?) async {
       await storage.setID(newID)
     }
   }
@@ -82,5 +81,37 @@ extension ObjectIdentifier: @retroactive CustomStringConvertible {
   /// Create a unique description. ex. 7ffbd0704a60
   public var description: String {
     return String(format: "%x", unsafeBitCast(self, to: UInt.self))
+  }
+}
+
+
+struct ServiceIdentity: Codable {
+  let id: String
+  let label: String
+  let version: Double
+  
+  init?(_ from: ServiceIdentifier?) async {
+    guard let from = from else { return nil }
+    let serviceidentifierString = await from.string
+    self.init(stringLiteral: serviceidentifierString)
+  }
+}
+
+extension ServiceIdentity: ExpressibleByStringLiteral {
+  public typealias StringLiteralType = String
+  
+  public init(stringLiteral value: String) {
+    let componentID = value.split(separator: ":")
+    let componentLabel = componentID[1].split(separator: "@")
+    
+    self.id = String(componentID[0])
+    self.label = String(componentLabel[0])
+    self.version = Double(componentLabel[1]) ?? 0.0
+  }
+}
+
+extension ServiceIdentity: CustomStringConvertible {
+  public var description: String {
+    return "\(self.id):\(self.label)@\(self.version)"
   }
 }
