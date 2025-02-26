@@ -26,7 +26,7 @@ extension Application.HTTP {
             if let existing = self.application.storage[NewKey.self] {
                 return existing
             } else {
-                let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: .init(), eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger) { req, channel in
+                let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: .init(), eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger) { req, responseWriter, channel  in
                     print("Request received")
                 } as! HTTPServer<HTTP1Channel>
                 self.application.storage[NewKey.self] = new
