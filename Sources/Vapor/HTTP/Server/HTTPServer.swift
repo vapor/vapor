@@ -295,7 +295,7 @@ public final class HTTPServer: Server, Sendable {
         }
 
         /// Overwrite configuration with actual address, if applicable.
-        /// They may differ from the provided configuation if port 0 was provided, for example.
+        /// They may differ from the provided configuration if port 0 was provided, for example.
         if let localAddress = self.localAddress {
             if let hostname = localAddress.hostname, let port = localAddress.port {
                 configuration.address = .hostname(hostname, port: port)
@@ -344,7 +344,7 @@ public final class HTTPServer: Server, Sendable {
         }
         
         /// Overwrite configuration with actual address, if applicable.
-        /// They may differ from the provided configuation if port 0 was provided, for example.
+        /// They may differ from the provided configuration if port 0 was provided, for example.
         if let localAddress = self.localAddress {
             if let hostname = localAddress.hostname, let port = localAddress.port {
                 configuration.address = .hostname(hostname, port: port)
