@@ -70,6 +70,9 @@ let package = Package(
 
         // Network IO on Apple platforms
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
+
+        // Swift Types for HTTP Requests
+        .package(url: "https://github.com/apple/swift-http-types", from: "1.0.0"),
     ],
     targets: [
         // C helpers
@@ -90,6 +93,7 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
             ]
         ),
 
@@ -125,6 +129,7 @@ let package = Package(
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
                 .target(name: "HTTPServerNew"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
             ]
         ),
 

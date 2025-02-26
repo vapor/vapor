@@ -18,11 +18,10 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTPTypes
 import ServiceLifecycle
-import HTTPServerNew
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: ServerChildChannel {
-    typealias Responder = @Sendable (Request, Channel) async throws -> Void
+    typealias Responder = @Sendable (Request, consuming ResponseWriter, Channel) async throws -> Void
     /// HTTP Request responder
     var responder: Responder { get }
 }
@@ -48,18 +47,17 @@ extension HTTPChannelHandler {
                     }
 
                     while true {
-                        let request = try await Request(application: Application(), on: asyncChannel.channel.eventLoop)
-//                        let request = Request(
-//                            head: head,
-//                            bodyIterator: iterator
-//                        )
-//                        let responseWriter = ResponseWriter(outbound: outbound)
-//                        do {
-//                            try await self.responder(request, responseWriter, asyncChannel.channel)
-//                        } catch {
-//                            throw error
-//                        }
-                        if request.headers.first(name: .connection) == "close" {
+                        let request = Request(
+                            head: head,
+                            bodyIterator: iterator
+                        )
+                        let responseWriter = ResponseWriter(outbound: outbound)
+                        do {
+                            try await self.responder(request, responseWriter, asyncChannel.channel)
+                        } catch {
+                            throw error
+                        }
+                        if request.headers[.connection] == "close" {
                             return
                         }
 

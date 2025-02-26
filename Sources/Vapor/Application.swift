@@ -167,13 +167,13 @@ public final class Application: Sendable {
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
 
+        // Service Setup
         if let viewRenderer = services.viewRenderer {
             self.viewRenderer = viewRenderer
         } else {
             self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory, logger: logger)
         }
 
-        // Service Setup
         self.core.initialize()
         self.caches.initialize()
         self.passwords.use(.bcrypt)

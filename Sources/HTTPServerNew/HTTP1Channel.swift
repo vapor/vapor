@@ -17,7 +17,6 @@ import Logging
 import NIOCore
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
-import HTTPServerNew
 
 /// Child channel for processing HTTP1
 public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
