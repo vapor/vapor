@@ -14,7 +14,7 @@ extension HTTPFields {
             if let header = newValue {
                 self.serializeDirectives([header.directives()], name: .contentDisposition)
             } else {
-                self.remove(name: .contentDisposition)
+                self[.contentDisposition] = nil
             }
         }
     }

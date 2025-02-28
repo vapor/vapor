@@ -1,9 +1,10 @@
 import MultipartKit
 import HTTPTypes
+import NIOCore
 
 extension File: MultipartPartConvertible {
-    public var multipart: MultipartPart? {
-        var part = MultipartPart(headers: [:], body: .init(self.data.readableBytesView))
+    public var multipart: MultipartPart<ByteBufferView>? {
+        var part = MultipartPart(headerFields: [:], body: .init(self.data.readableBytesView))
         part.contentType = self.extension
             .flatMap { HTTPMediaType.fileExtension($0) }
             .flatMap { $0.serialize() }
@@ -11,7 +12,7 @@ extension File: MultipartPartConvertible {
         return part
     }
     
-    public init?(multipart: MultipartPart) {
+    public init?(multipart: MultipartPart<ByteBufferView>) {
         guard let filename = multipart.filename else {
             return nil
         }
@@ -22,13 +23,13 @@ extension File: MultipartPartConvertible {
 extension MultipartPart {
     public var contentType: String? {
         get {
-            self.headers.first(name: .contentType)
+            self.headerFields[.contentType]
         }
         set {
             if let value = newValue {
-                self.headers.replaceOrAdd(name: .contentType, value: value)
+                self.headerFields[.contentType] = value
             } else {
-                self.headers.remove(name: .contentType)
+                self.headerFields[.contentType] = nil
             }
         }
     }
@@ -49,10 +50,10 @@ extension MultipartPart {
     
     public var contentDisposition: HTTPFields.ContentDisposition? {
         get {
-            self.headers.contentDisposition
+            self.headerFields.contentDisposition
         }
         set {
-            self.headers.contentDisposition = newValue
+            self.headerFields.contentDisposition = newValue
         }
     }
 }

@@ -3,6 +3,7 @@ import NIOHTTP1
 import NIOWebSocket
 import WebSocketKit
 import HTTPTypes
+import NIOHTTPTypes
 
 final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Request
@@ -34,7 +35,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         let req = self.unwrapInboundIn(data)
         
         // check if request is upgrade
-        let connectionHeaders = Set(req.headers[canonicalForm: "connection"].map { $0.lowercased() })
+        let connectionHeaders = req.headers[values: .connection].map { $0.lowercased() }
         if connectionHeaders.contains("upgrade") {
             let buffer = UpgradeBufferHandler()
             do {
@@ -144,22 +145,24 @@ public protocol Upgrader: Sendable {
 /// Handles upgrading an HTTP connection to a WebSocket
 public struct WebSocketUpgrader: Upgrader, Sendable {
     var maxFrameSize: WebSocketMaxFrameSize
-    var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPHeaders?>)
+    var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPFields?>)
     var onUpgrade: @Sendable (WebSocket) -> ()
     
     @preconcurrency public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPFields?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
-        self.shouldUpgrade = shouldUpgrade {
-            shouldUpgrade().map { headers in
-                HTTPHeaders(headers)
-            }
-        }
+        self.shouldUpgrade = shouldUpgrade
         self.onUpgrade = onUpgrade
     }
     
     public func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader {
         let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: self.maxFrameSize.value, automaticErrorHandling: false, shouldUpgrade: { _, _ in
-            return self.shouldUpgrade()
+            return self.shouldUpgrade().map { headers in
+                if let headers {
+                    return .init(headers)
+                } else {
+                    return nil
+                }
+            }
         }, upgradePipelineHandler: { channel, req in
             return WebSocket.server(on: channel, onUpgrade: self.onUpgrade)
         })
