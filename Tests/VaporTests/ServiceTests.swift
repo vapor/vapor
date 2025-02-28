@@ -1,101 +1,87 @@
-import XCTVapor
-import XCTest
+import Logging
 import Vapor
 import NIOCore
+import Testing
+import VaporTesting
 
-final class ServiceTests: XCTestCase {
-    var app: Application!
-
-    override func setUp() async throws {
-        app = try await Application.make(.testing)
-    }
-
-    override func tearDown() async throws {
-        try await app.asyncShutdown()
-    }
-
-    func testReadOnly() throws {
-        app.get("test") { req in
-            req.readOnly.foos()
-        }
-
-        try app.test(.GET, "test") { res in
-            XCTAssertEqual(res.status, .ok)
-            try XCTAssertEqual(res.content.decode([String].self), ["foo"])
-        }
-    }
-
-    func testWritable() throws {
-        app.writable = .init(apiKey: "foo")
-        XCTAssertEqual(app.writable?.apiKey, "foo")
-    }
-
-    func testLifecycle() throws {
-        app.http.server.configuration.port = 0
-
-        app.lifecycle.use(Hello())
-        app.environment.arguments = ["serve"]
-        try app.start()
-        app.running?.stop()
-    }
-    
-    func testAsyncLifecycleHandler() async throws {
-        let app = try await Application.make(.testing)
-        app.http.server.configuration.port = 0
-        
-        app.lifecycle.use(AsyncHello())
-        app.environment.arguments = ["serve"]
-        try await app.startup()
-        app.running?.stop()
-    }
-
-    func testLocks() throws {
-        app.sync.withLock {
-            // Do something.
-        }
-
-        struct TestKey: LockKey { }
-
-        let test = app.locks.lock(for: TestKey.self)
-        test.withLock {
-            // Do something.
-        }
-    }
-    
-    func testServiceHelpers() throws {
-        let testString = "This is a test - \(Int.random())"
-        let myFakeService = MyTestService(cannedResponse: testString, eventLoop: app.eventLoopGroup.next(), logger: app.logger)
-        
-        app.services.myService.use { _ in
-            myFakeService
-        }
-        
-        app.get("myService") { req -> String in
-            let thing = req.services.myService.doSomething()
-            return thing
-        }
-        
-        try app.test(.GET, "myService", afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, testString)
-        })
-    }
-    
-    func testRepeatedAccessCausesNoStackOverflow() throws {
-        let myFakeService = MyTestService(cannedResponse: "", eventLoop: app.eventLoopGroup.next(), logger: app.logger)
-        app.services.myService.use { _ in myFakeService }
-        
-        let app = self.app!  // For use inside the sendable closure
-        try app.eventLoopGroup.next()
-            .future()
-            .map {
-                // ~6.7k iterations should already be sufficient, but even with this many iterations, the test still
-                // run quickly enough, and we would detect potential regressions even for larger stack sizes.
-                for _ in 1...100_000 {
-                    _ = app.services.myService.service
-                }
+@Suite("Service Tests")
+struct ServiceTests {
+    @Test("Test Read Only")
+    func testReadOnly() async throws {
+        try await withApp { app in
+            app.get("test") { req in
+                try await req.readOnly.foos()
             }
-            .wait()
+
+            try await app.testing().test(.GET, "test") { res throws in
+                #expect(res.status == .ok)
+                #expect(try res.content.decode([String].self) == ["foo"])
+            }
+        }
+    }
+
+    @Test("Test Writable")
+    func testWritable() async throws {
+        try await withApp { app in
+            app.writable = .init(apiKey: "foo")
+            #expect(app.writable?.apiKey == "foo")
+        }
+    }
+
+    @Test("Test Locks")
+    func testLocks() async throws {
+        try await withApp { app in
+            app.sync.withLock {
+                // Do something.
+            }
+
+            struct TestKey: LockKey { }
+
+            let test = app.locks.lock(for: TestKey.self)
+            test.withLock {
+                // Do something.
+            }
+        }
+    }
+
+    @Test("Test Service Helpers")
+    func testServiceHelpers() async throws {
+        try await withApp { app in
+            let testString = "This is a test - \(Int.random())"
+            let myFakeService = MyTestService(cannedResponse: testString, eventLoop: app.eventLoopGroup.next(), logger: app.logger)
+
+            app.services.myService.use { _ in
+                myFakeService
+            }
+
+            app.get("myService") { req -> String in
+                let thing = req.services.myService.doSomething()
+                return thing
+            }
+
+            try await app.testing().test(.GET, "myService", afterResponse: { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == testString)
+            })
+        }
+    }
+
+    @Test("Test Repeated Access Causes No Stackoverflow")
+    func testRepeatedAccessCausesNoStackOverflow() async throws {
+        try await withApp { app in
+            let myFakeService = MyTestService(cannedResponse: "", eventLoop: app.eventLoopGroup.next(), logger: app.logger)
+            app.services.myService.use { _ in myFakeService }
+            try await app.eventLoopGroup.next()
+                .future()
+                .map {
+                    // ~6.7k iterations should already be sufficient, but even with this many iterations, the test still
+                    // run quickly enough, and we would detect potential regressions even for larger stack sizes.
+                    for _ in 1...100_000 {
+                        _ = app.services.myService.service
+                    }
+                }
+                .get()
+        }
     }
 }
 
@@ -133,8 +119,8 @@ struct MyTestService: MyService {
 private struct ReadOnly {
     let client: Client
 
-    func foos() -> EventLoopFuture<[String]> {
-        self.client.eventLoop.makeSucceededFuture(["foo"])
+    func foos() async throws -> [String] {
+        ["foo"]
     }
 }
 
@@ -159,18 +145,5 @@ private extension Application {
         set {
             self.storage[WritableKey.self] = newValue
         }
-    }
-}
-
-
-private struct Hello: LifecycleHandler {
-    func willBoot(_ app: Application) throws {
-        app.logger.info("Hello!")
-    }
-}
-
-private struct AsyncHello: LifecycleHandler {
-    func willBootAsync(_ app: Application) async throws {
-        app.logger.info("Hello!")
     }
 }

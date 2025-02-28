@@ -8,6 +8,8 @@ public protocol URLQueryContainer {
     func decode<D: Decodable>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
 
     mutating func encode<E: Encodable>(_ encodable: E, using encoder: URLQueryEncoder) throws
+
+    var contentConfiguration: ContentConfiguration { get }
 }
 
 extension URLQueryContainer {
@@ -90,10 +92,10 @@ extension URLQueryContainer {
     }
 
     /// Look up a ``URLQueryDecoder``.
-    private func configuredDecoder() throws -> URLQueryDecoder { try ContentConfiguration.global.requireURLDecoder() }
+    private func configuredDecoder() throws -> URLQueryDecoder { try self.contentConfiguration.requireURLDecoder() }
 
     /// Look up a ``URLQueryEncoder``.
-    private func configuredEncoder() throws -> URLQueryEncoder { try ContentConfiguration.global.requireURLEncoder() }
+    private func configuredEncoder() throws -> URLQueryEncoder { try self.contentConfiguration.requireURLEncoder() }
 }
 
 /// Injects coder userInfo into a ``URLQueryDecoder`` so we don't have to add passthroughs to ``URLQueryContainer``.

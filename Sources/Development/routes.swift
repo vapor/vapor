@@ -15,7 +15,6 @@ public func routes(_ app: Application) throws {
         return "123" as StaticString
     }
 
-
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
     app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
         let done = req.eventLoop.makePromise(of: String.self)
@@ -81,21 +80,12 @@ public func routes(_ app: Application) throws {
         let ip = req.remoteAddress?.description ?? "<no ip>"
         ws.send("Hello 👋 \(ip)")
     }
-    
-    app.on(.POST, "file", body: .stream) { req -> EventLoopFuture<String> in
-        let promise = req.eventLoop.makePromise(of: String.self)
-        req.body.drain { result in
-            switch result {
-            case .buffer(let buffer):
-                debugPrint(buffer)
-            case .error(let error):
-                promise.fail(error)
-            case .end:
-                promise.succeed("Done")
-            }
-            return req.eventLoop.makeSucceededFuture(())
+
+    app.on(.POST, "file", body: .stream) { req in
+        for try await part in req.body {
+            debugPrint(part)
         }
-        return promise.futureResult
+        return "Done"
     }
 
     app.get("shutdown") { req -> HTTPStatus in
@@ -147,19 +137,20 @@ public func routes(_ app: Application) throws {
     }
 
     app.get("client") { req in
-        return req.client.get("http://httpbin.org/status/201").map { $0.description }
+        let response = try await req.client.get("http://httpbin.org/status/201")
+        return response.description
     }
 
-    app.get("client-json") { req -> EventLoopFuture<String> in
+    app.get("client-json") { req in
         struct HTTPBinResponse: Decodable {
             struct Slideshow: Decodable {
                 var title: String
             }
             var slideshow: Slideshow
         }
-        return req.client.get("http://httpbin.org/json")
-            .flatMapThrowing { try $0.content.decode(HTTPBinResponse.self) }
-            .map { $0.slideshow.title }
+        let response = try await req.client.get("http://httpbin.org/json")
+        let data = try response.content.decode(HTTPBinResponse.self)
+        return data.slideshow.title
     }
     
     let users = app.grouped("users")
@@ -172,7 +163,7 @@ public func routes(_ app: Application) throws {
     
     app.directory.viewsDirectory = "/Users/tanner/Desktop"
     app.get("view") { req in
-        req.view.render("hello.txt", ["name": "world"])
+        try await req.view.render("hello.txt", ["name": "world"])
     }
 
     app.get("error") { req -> String in
@@ -191,55 +182,6 @@ public func routes(_ app: Application) throws {
         return .ok
     }
 
-    @available(*, deprecated, message: "Testing deprecated functions")
-    func deprecatedUploadHandler(_ req: Request) -> EventLoopFuture<HTTPStatus> {
-        enum BodyStreamWritingToDiskError: Error {
-            case streamFailure(Error)
-            case fileHandleClosedFailure(Error)
-            case multipleFailures([BodyStreamWritingToDiskError])
-        }
-
-        return req.application.fileio.openFile(
-            path: Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? "",
-            mode: .write,
-            flags: .allowFileCreation(),
-            eventLoop: req.eventLoop
-        ).flatMap { fileHandle in
-            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
-            let fileHandleBox = NIOLoopBound(fileHandle, eventLoop: req.eventLoop)
-            req.body.drain { part in
-                let fileHandle = fileHandleBox.value
-                switch part {
-                case .buffer(let buffer):
-                    return req.application.fileio.write(
-                        fileHandle: fileHandle,
-                        buffer: buffer,
-                        eventLoop: req.eventLoop
-                    )
-                case .error(let drainError):
-                    do {
-                        try fileHandle.close()
-                        promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
-                    } catch {
-                        promise.fail(BodyStreamWritingToDiskError.multipleFailures([
-                            .fileHandleClosedFailure(error),
-                            .streamFailure(drainError)
-                        ]))
-                    }
-                    return req.eventLoop.makeSucceededFuture(())
-                case .end:
-                    do {
-                        try fileHandle.close()
-                        promise.succeed(.ok)
-                    } catch {
-                        promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))
-                    }
-                    return req.eventLoop.makeSucceededFuture(())
-                }
-            }
-            return promise.futureResult
-        }
-    }
     app.on(.POST, "upload", body: .stream) { req -> HTTPStatus in
         return try await FileSystem.shared.withFileHandle(
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
@@ -252,7 +194,7 @@ public func routes(_ app: Application) throws {
             }
     }
 
-    let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware(number: 1))
+    let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in
         let response = try await req.client.get("https://www.google.com")
         guard let body = response.body else {
@@ -288,25 +230,20 @@ public func routes(_ app: Application) throws {
     }
     asyncRoutes.get("opaque", use: opaqueRouteTester)
     
-    // Make sure jumping between multiple different types of middleware works
-    asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
-        return "OK"
-    }
-    
     let basicAuthRoutes = asyncRoutes.grouped(Test.authenticator(), Test.guardMiddleware())
     basicAuthRoutes.get("auth") { req async throws -> String in
         return try req.auth.require(Test.self).name
     }
     
     struct Test: Authenticatable {
-        static func authenticator() -> AsyncAuthenticator {
+        static func authenticator() -> Authenticator {
             TestAuthenticator()
         }
 
         var name: String
     }
 
-    struct TestAuthenticator: AsyncBasicAuthenticator {
+    struct TestAuthenticator: BasicAuthenticator {
         typealias User = Test
 
         func authenticate(basic: BasicAuthorization, for request: Request) async throws {
@@ -346,7 +283,7 @@ struct TestError: AbortError, DebuggableError {
     }
 }
 
-struct TestAsyncMiddleware: AsyncMiddleware {
+struct TestMiddleware: AsyncMiddleware {
     let number: Int
     
     func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
@@ -354,17 +291,5 @@ struct TestAsyncMiddleware: AsyncMiddleware {
         let response = try await next.respond(to: request)
         request.logger.debug("In async middleware way out - \(number)")
         return response
-    }
-}
-
-struct TestMiddleware: Middleware {
-    let number: Int
-    
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        request.logger.debug("In non-async middleware - \(number)")
-        return next.respond(to: request).map { response in
-            request.logger.debug("In non-async middleware way out - \(self.number)")
-            return response
-        }
     }
 }

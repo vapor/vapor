@@ -8,7 +8,7 @@ public struct Validations: Sendable {
     }
     
     public mutating func add<T>(
-        _ key: ValidationKey,
+        _ key: BasicCodingKey,
         as type: T.Type = T.self,
         is validator: Validator<T> = .valid,
         required: Bool = true,
@@ -18,7 +18,7 @@ public struct Validations: Sendable {
     }
     
     public mutating func add(
-        _ key: ValidationKey,
+        _ key: BasicCodingKey,
         result: ValidatorResult,
         customFailureDescription: String? = nil
     ) {
@@ -26,7 +26,7 @@ public struct Validations: Sendable {
     }
 
     public mutating func add(
-        _ key: ValidationKey,
+        _ key: BasicCodingKey,
         required: Bool = true,
         customFailureDescription: String? = nil,
         _ nested: (inout Validations) -> ()
@@ -37,7 +37,7 @@ public struct Validations: Sendable {
     }
     
     @preconcurrency public mutating func add(
-        each key: ValidationKey,
+        each key: BasicCodingKey,
         required: Bool = true,
         customFailureDescription: String? = nil,
         _ handler: @Sendable @escaping (Int, inout Validations) -> ()
@@ -52,22 +52,22 @@ public struct Validations: Sendable {
         guard let body = request.body.data else {
             throw Abort(.unprocessableEntity, reason: "Empty Body")
         }
-        let contentDecoder = try ContentConfiguration.global.requireDecoder(for: contentType)
+        let contentDecoder = try request.application.contentConfiguration.requireDecoder(for: contentType)
         return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
     
-    public func validate(query: URI) throws -> ValidationsResult {
-        let urlDecoder = try ContentConfiguration.global.requireURLDecoder()
+    public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
+        let urlDecoder = try contentConfiguration.requireURLDecoder()
         return try urlDecoder.decode(ValidationsExecutor.self, from: query, userInfo: [.pendingValidations: self]).results
     }
     
-    public func validate(json: String) throws -> ValidationsResult {
-        return try ContentConfiguration.global.requireDecoder(for: .json)
+    public func validate(json: String, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
+        return try contentConfiguration.requireDecoder(for: .json)
             .decode(ValidationsExecutor.self, from: .init(string: json), headers: [:], userInfo: [.pendingValidations: self]).results
     }
     
     public func validate(_ decoder: Decoder) throws -> ValidationsResult {
-        let container = try decoder.container(keyedBy: ValidationKey.self)
+        let container = try decoder.container(keyedBy: BasicCodingKey.self)
         
         return try .init(results: self.storage.map {
             try .init(

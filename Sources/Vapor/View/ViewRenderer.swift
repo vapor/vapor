@@ -1,13 +1,13 @@
 import NIOCore
 
-public protocol ViewRenderer {
+public protocol ViewRenderer: Sendable {
     func `for`(_ request: Request) -> ViewRenderer
-    func render<E>(_ name: String, _ context: E) -> EventLoopFuture<View>
+    func render<E>(_ name: String, _ context: E) async throws -> View
         where E: Encodable
 }
 
 extension ViewRenderer {
-    public func render(_ name: String) -> EventLoopFuture<View> {
-        return self.render(name, [String: String]())
+    public func render(_ name: String) async throws -> View {
+        return try await self.render(name, [String: String]())
     }
 }

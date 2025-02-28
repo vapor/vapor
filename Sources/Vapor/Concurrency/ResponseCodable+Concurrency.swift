@@ -15,26 +15,6 @@ public protocol AsyncResponseEncodable {
     func encodeResponse(for request: Request) async throws -> Response
 }
 
-/// Can convert `Request` to a `Self`.
-///
-/// Types that conform to this protocol can decode requests to their type.
-///
-/// This is the async version of `RequestDecodable`
-public protocol AsyncRequestDecodable {
-    /// Decodes an instance of `Request` to a `Self`.
-    ///
-    /// - parameters:
-    ///     - request: The `Request` to be decoded.
-    /// - returns: An asynchronous `Self`.
-    static func decodeRequest(_ request: Request) async throws -> Self
-}
-
-extension Request: AsyncRequestDecodable {
-    public static func decodeRequest(_ request: Request) async throws -> Request {
-        return request
-    }
-}
-
 // MARK: Convenience
 extension AsyncResponseEncodable {
     /// Asynchronously encodes `Self` into a `Response`, setting the supplied status and headers.
@@ -74,7 +54,7 @@ extension Response: AsyncResponseEncodable {
 extension StaticString: AsyncResponseEncodable {
     // See `AsyncResponseEncodable`.
     public func encodeResponse(for request: Request) async throws -> Response {
-        let res = Response(headers: staticStringHeaders, body: .init(staticString: self))
+        let res = Response(headers: staticStringHeaders, body: .init(staticString: self), contentConfiguration: request.application.contentConfiguration)
         return res
     }
 }
@@ -82,43 +62,15 @@ extension StaticString: AsyncResponseEncodable {
 extension String: AsyncResponseEncodable {
     // See `AsyncResponseEncodable`.
     public func encodeResponse(for request: Request) async throws -> Response {
-        let res = Response(headers: staticStringHeaders, body: .init(string: self))
+        let res = Response(headers: staticStringHeaders, body: .init(string: self), contentConfiguration: request.application.contentConfiguration)
         return res
     }
 }
 
 extension Content {
     public func encodeResponse(for request: Request) async throws -> Response {
-        let response = Response()
+        let response = Response(contentConfiguration: request.application.contentConfiguration)
         try response.content.encode(self)
         return response
-    }
-
-    public static func decodeRequest(_ request: Request) async throws -> Self {
-        let content = try request.content.decode(Self.self)
-        return content
-    }
-}
-
-extension ClientResponse: AsyncResponseEncodable {
-    public func encodeResponse(for request: Request) async throws -> Response {
-        let body: Response.Body
-        if let buffer = self.body {
-            body = .init(buffer: buffer)
-        } else {
-            body = .empty
-        }
-        let response = Response(
-            status: self.status,
-            headers: self.headers,
-            body: body
-        )
-        return response
-    }
-}
-
-extension HTTPStatus: AsyncResponseEncodable {
-    public func encodeResponse(for request: Request) async throws -> Response {
-        return Response(status: self)
     }
 }

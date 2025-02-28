@@ -8,6 +8,9 @@ public protocol ContentContainer {
     /// For outgoing content, the type is typically specified as part of encoding.
     var contentType: HTTPMediaType? { get }
 
+    /// The configuration for encoding and decoding content.
+    var contentConfiguration: ContentConfiguration { get }
+
     /// Use the provided ``ContentDecoder`` to read a value of type `D` from the container.
     func decode<D: Decodable>(_: D.Type, using decoder: ContentDecoder) throws -> D
 
@@ -117,7 +120,7 @@ extension ContentContainer {
 
     /// Look up a ``ContentEncoder`` for the supplied ``HTTPMediaType``.
     private func configuredEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
-        try ContentConfiguration.global.requireEncoder(for: mediaType)
+        try self.contentConfiguration.requireEncoder(for: mediaType)
     }
     
     /// Look up a ``ContentDecoder`` for the container's ``contentType``.
@@ -125,7 +128,7 @@ extension ContentContainer {
         guard let contentType = mediaType ?? self.contentType else {
             throw Abort(.unsupportedMediaType, reason: "Can't decode data without a content type")
         }
-        return try ContentConfiguration.global.requireDecoder(for: contentType)
+        return try self.contentConfiguration.requireDecoder(for: contentType)
     }
 }
 

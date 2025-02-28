@@ -1,8 +1,7 @@
 import NIOHTTP1
 import NIOCore
-#if compiler(>=6.0) && canImport(Testing)
 import Testing
-#endif
+import Vapor
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
@@ -12,8 +11,8 @@ extension Application.Live: TestingApplicationTester {}
 extension Application.InMemory: TestingApplicationTester {}
 
 extension Application: TestingApplicationTester {
-    public func testing(method: Method = .inMemory) throws -> TestingApplicationTester {
-        try self.boot()
+    public func testing(method: Method = .inMemory) async throws -> TestingApplicationTester {
+        try await self.boot()
         switch method {
         case .inMemory:
             return try InMemory(app: self)
@@ -27,7 +26,6 @@ extension Application: TestingApplicationTester {
     }
 }
 
-#if compiler(>=6.0) && canImport(Testing)
 extension TestingApplicationTester {
     @discardableResult
     public func test(
@@ -35,10 +33,7 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        fileID: String = #fileID,
-        filePath: String = #filePath,
-        line: Int = #line,
-        column: Int = #column,
+        sourceLocation: SourceLocation = #_sourceLocation,
         afterResponse: (TestingHTTPResponse) async throws -> ()
     ) async throws -> TestingApplicationTester {
         try await self.test(
@@ -46,10 +41,7 @@ extension TestingApplicationTester {
             path,
             headers: headers,
             body: body,
-            fileID: fileID,
-            filePath: filePath,
-            line: line,
-            column: column,
+            sourceLocation: sourceLocation,
             beforeRequest: { _ in },
             afterResponse: afterResponse
         )
@@ -61,10 +53,7 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        fileID: String = #fileID,
-        filePath: String = #filePath,
-        line: Int = #line,
-        column: Int = #column,
+        sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in },
         afterResponse: (TestingHTTPResponse) async throws -> () = { _ in }
     ) async throws -> TestingApplicationTester {
@@ -72,19 +61,14 @@ extension TestingApplicationTester {
             method: method,
             url: .init(path: path),
             headers: headers,
-            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0),
+            contentConfigurtion: .default()
         )
         try await beforeRequest(&request)
         do {
             let response = try await self.performTest(request: request)
             try await afterResponse(response)
         } catch {
-            let sourceLocation = Testing.SourceLocation(
-                fileID: fileID,
-                filePath: filePath,
-                line: line,
-                column: column
-            )
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
         }
@@ -96,38 +80,22 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        fileID: String = #fileID,
-        filePath: String = #filePath,
-        line: Int = #line,
-        column: Int = #column,
+        sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in }
     ) async throws -> TestingHTTPResponse {
-        VaporTestingContext.warnIfNotInSwiftTestingContext(
-            fileID: fileID,
-            filePath: filePath,
-            line: line,
-            column: column
-        )
-        
         var request = TestingHTTPRequest(
             method: method,
             url: .init(path: path),
             headers: headers,
-            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0),
+            contentConfigurtion: .default()
         )
         try await beforeRequest(&request)
         do {
             return try await self.performTest(request: request)
         } catch {
-            let sourceLocation = Testing.SourceLocation(
-                fileID: fileID,
-                filePath: filePath,
-                line: line,
-                column: column
-            )
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
         }
     }
 }
-#endif

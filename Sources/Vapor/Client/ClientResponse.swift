@@ -7,12 +7,14 @@ public struct ClientResponse: Sendable {
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
     private let byteBufferAllocator: ByteBufferAllocator
+    private let contentConfiguration: ContentConfiguration
 
-    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), contentConfiguration: ContentConfiguration = .default()) {
         self.status = status
         self.headers = headers
         self.body = body
         self.byteBufferAllocator = byteBufferAllocator
+        self.contentConfiguration = contentConfiguration
     }
 }
 
@@ -21,6 +23,7 @@ extension ClientResponse {
         var body: ByteBuffer?
         var headers: HTTPHeaders
         let allocator: ByteBufferAllocator
+        let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
@@ -59,7 +62,7 @@ extension ClientResponse {
 
     public var content: ContentContainer {
         get {
-            return _ContentContainer(body: self.body, headers: self.headers, allocator: self.byteBufferAllocator)
+            return _ContentContainer(body: self.body, headers: self.headers, allocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
         }
         set {
             let container = (newValue as! _ContentContainer)
@@ -81,8 +84,8 @@ extension ClientResponse: CustomStringConvertible {
     }
 }
 
-extension ClientResponse: ResponseEncodable {
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+extension ClientResponse: AsyncResponseEncodable {
+    public func encodeResponse(for request: Request) async throws -> Response {
         let body: Response.Body
         if let buffer = self.body {
             body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
@@ -92,9 +95,10 @@ extension ClientResponse: ResponseEncodable {
         let response = Response(
             status: self.status,
             headers: self.headers,
-            body: body
+            body: body,
+            contentConfiguration: request.application.contentConfiguration
         )
-        return request.eventLoop.makeSucceededFuture(response)
+        return response
     }
 }
 
@@ -115,6 +119,7 @@ extension ClientResponse: Codable {
         }
         self.byteBufferAllocator = ByteBufferAllocator()
         self.body = self.byteBufferAllocator.buffer(bytes: bodyData)
+        self.contentConfiguration = .default()
     }
 
     public func encode(to encoder: Encoder) throws {

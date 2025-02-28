@@ -1,5 +1,40 @@
 import Vapor
 
+/// Perform a test while handling lifecycle of the application. Returns the result of the block
+/// Feel free to create a custom function like this, tailored to your project.
+///
+/// Usage:
+/// ```swift
+/// @Test
+/// func helloWorld() async throws {
+///     let status = try await withAppResult { app in
+///         app.get("hello") { req -> String in
+///             return "Hello, world!"
+///         }
+///
+///         let result: HTTPStatus? = nil
+///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
+///             #expect(res.status == .ok)
+///             result = res.status
+///             #expect(res.body.string == "Hello, world!")
+///         })
+///         return result
+///     }
+/// }
+/// ```
+public func withAppResult<T>(_ block: (Application) async throws -> T) async throws -> T {
+    let app = try await Application(.testing)
+    let result: T
+    do {
+        result = try await block(app)
+    } catch {
+        try? await app.shutdown()
+        throw error
+    }
+    try await app.shutdown()
+    return result
+}
+
 /// Perform a test while handling lifecycle of the application.
 /// Feel free to create a custom function like this, tailored to your project.
 ///
@@ -7,7 +42,11 @@ import Vapor
 /// ```swift
 /// @Test
 /// func helloWorld() async throws {
-///     try await withApp(/* whatever set up needed*/) { app in
+///     try await withApp { app in
+///         app.get("hello") { req -> String in
+///             return "Hello, world!"
+///         }
+///
 ///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
 ///             #expect(res.status == .ok)
 ///             #expect(res.body.string == "Hello, world!")
@@ -15,15 +54,13 @@ import Vapor
 ///     }
 /// }
 /// ```
-public func withApp<T>(_ block: (Application) async throws -> T) async throws -> T {
-    let app = try await Application.make(.testing)
-    let result: T
+public func withApp(_ block: (Application) async throws -> Void) async throws {
+    let app = try await Application(.testing)
     do {
-        result = try await block(app)
+        try await block(app)
     } catch {
-        try? await app.asyncShutdown()
+        try? await app.shutdown()
         throw error
     }
-    try await app.asyncShutdown()
-    return result
+    try await app.shutdown()
 }

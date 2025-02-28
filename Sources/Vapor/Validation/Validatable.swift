@@ -18,15 +18,15 @@ extension Validatable {
     }
     
     public static func validate(query request: Request) throws {
-        try self.validations().validate(query: request.url).assert()
+        try self.validations().validate(query: request.url, contentConfiguration: request.application.contentConfiguration).assert()
     }
     
-    public static func validate(json: String) throws {
-        try self.validations().validate(json: json).assert()
+    public static func validate(json: String, contentConfiguration: ContentConfiguration = .default()) throws {
+        try self.validations().validate(json: json, contentConfiguration: contentConfiguration).assert()
     }
     
-    public static func validate(query: URI) throws {
-        try self.validations().validate(query: query).assert()
+    public static func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws {
+        try self.validations().validate(query: query, contentConfiguration: contentConfiguration).assert()
     }
     
     public static func validate(_ decoder: Decoder) throws {

@@ -4,7 +4,8 @@ import NIOConcurrencyHelpers
 
 /// Configures which ``Encoder``s and ``Decoder``s to use when interacting with data in HTTP messages.
 ///
-///     ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)
+///     var contentConfig = ContentConfiguration()
+///     contentConfig.use(encoder: JSONEncoder(), for: .json)
 ///
 /// Each coder is registered to a specific ``HTTPMediaType``. When _decoding_ content from HTTP messages,
 /// the ``HTTPMediaType`` will be specified by the message itself. When _encoding_ content from HTTP messages,
@@ -16,19 +17,7 @@ import NIOConcurrencyHelpers
 ///
 /// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
 /// See the ``Content`` protocol for more information.
-public struct ContentConfiguration: Sendable {
-    public static var global: ContentConfiguration {
-        get {
-            _global.withLockedValue { $0 }
-        }
-        set {
-            _global.withLockedValue {
-                $0 = newValue
-            }
-        }
-    }
-    private static let _global: NIOLockedValueBox<ContentConfiguration> = .init(.default())
-    
+public struct ContentConfiguration: Sendable {    
     /// Creates a ``ContentConfiguration`` containing all of Vapor's default coders.
     public static func `default`() -> ContentConfiguration {
         var config = ContentConfiguration()
@@ -111,7 +100,7 @@ public struct ContentConfiguration: Sendable {
     
     /// Returns an ``ContentEncoder`` for the specified ``HTTPMediaType`` or throws an error.
     ///
-    ///     let coder = try ContentConfiguration.global.requireEncoder(for: .json)
+    ///     let coder = try contentConfiguration.requireEncoder(for: .json)
     ///
     public func requireEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
         guard let encoder = self.encoders[mediaType] else {
@@ -123,8 +112,8 @@ public struct ContentConfiguration: Sendable {
     
     /// Returns a ``ContentDecoder`` for the specified ``HTTPMediaType`` or throws an error.
     ///
-    ///     let coder = try ContentConfiguration.global.requireDecoder(for: .json)
-    ///     
+    ///     let coder = try contentConfiguration.requireDecoder(for: .json)
+    ///
     public func requireDecoder(for mediaType: HTTPMediaType) throws -> ContentDecoder {
         guard let decoder = self.decoders[mediaType] else {
             throw Abort(.unsupportedMediaType, reason: "Support for reading media type '\(mediaType)' has not been configured.")
