@@ -43,7 +43,7 @@ extension Application.HTTP {
                         on: application.eventLoopGroup.any()
                     )
 
-                    let vaporResponse = try await application.responder.current.respond(to: vaporRequest).get()
+                    let vaporResponse = try await application.responder.current.respond(to: vaporRequest)
                     let httpResponse = HTTPResponse(status: vaporResponse.status, headerFields: vaporResponse.headers)
 
                     var bodyWriter: any ResponseBodyWriter = try await responseWriter.writeHead(httpResponse)

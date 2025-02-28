@@ -14,15 +14,17 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         self.logger = logger
         self.isShuttingDown = false
     }
-    
+
+    #warning("Delete")
+
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
         let request = self.unwrapInboundIn(data)
         // hop(to:) is required here to ensure we're on the correct event loop
-        self.responder.respond(to: request).hop(to: context.eventLoop).whenComplete { response in
-            let (context, handler) = box.value
-            handler.serialize(response, for: request, context: context)
-        }
+//        self.responder.respond(to: request).hop(to: context.eventLoop).whenComplete { response in
+//            let (context, handler) = box.value
+//            handler.serialize(response, for: request, context: context)
+//        }
     }
     
     func serialize(_ response: Result<Response, Error>, for request: Request, context: ChannelHandlerContext) {

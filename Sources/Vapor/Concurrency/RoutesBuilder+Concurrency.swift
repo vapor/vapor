@@ -138,7 +138,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        let responder = AsyncBasicResponder { request in
+        let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
                 _ = try await request.eventLoop.flatSubmit {
                     request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)

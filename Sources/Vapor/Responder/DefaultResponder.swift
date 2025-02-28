@@ -47,23 +47,17 @@ internal struct DefaultResponder: Responder {
     }
 
     /// See `Responder`
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
+    public func respond(to request: Request) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
-        let response: EventLoopFuture<Response>
-        if let cachedRoute = self.getRoute(for: request) {
-            request.route = cachedRoute.route
-            response = cachedRoute.responder.respond(to: request)
-        } else {
-            response = self.notFoundResponder.respond(to: request)
-        }
-        return response.always { result in
-            let status: HTTPStatus
-            switch result {
-            case .success(let response):
-                status = response.status
-            case .failure:
-                status = .internalServerError
+        let response: Response
+        do {
+            if let cachedRoute = self.getRoute(for: request) {
+                request.route = cachedRoute.route
+                response = try await cachedRoute.responder.respond(to: request)
+            } else {
+                response = try await self.notFoundResponder.respond(to: request)
             }
+            let status = response.status
             if self.reportMetrics {
                 self.updateMetrics(
                     for: request,
@@ -71,6 +65,16 @@ internal struct DefaultResponder: Responder {
                     statusCode: status.code
                 )
             }
+            return response
+        } catch {
+            if self.reportMetrics {
+                self.updateMetrics(
+                    for: request,
+                    startTime: startTime,
+                    statusCode: 500
+                )
+            }
+            throw error
         }
     }
     
@@ -136,8 +140,8 @@ internal struct DefaultResponder: Responder {
 }
 
 private struct NotFoundResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeFailedFuture(RouteNotFound())
+    func respond(to request: Request) async throws -> Response {
+        throw RouteNotFound()
     }
 }
 

@@ -47,7 +47,7 @@ private struct HTTPMiddlewareResponder: Responder {
     ///     - request: The incoming `Request`.
     /// - returns: An asynchronous `Response`.
     func respond(to request: Request) async throws -> Response {
-        return request.propagateTracingIfEnabled {
+        return try await request.propagateTracingIfEnabled {
             try await self.middleware.respond(to: request, chainingTo: self.responder)
         }
     }
