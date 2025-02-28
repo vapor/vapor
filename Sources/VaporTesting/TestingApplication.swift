@@ -50,7 +50,7 @@ extension Application {
                     url += "?\(query)"
                 }
                 var clientRequest = HTTPClientRequest(url: url)
-                clientRequest.method = request.method
+                clientRequest.method = .init(request.method)
                 clientRequest.headers = request.headers
                 clientRequest.body = .bytes(request.body)
                 let response = try await client.execute(clientRequest, timeout: .seconds(30))

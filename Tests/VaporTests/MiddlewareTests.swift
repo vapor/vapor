@@ -17,7 +17,7 @@ struct MiddlewareTests2 {
                 return "done"
             }
 
-            try await app.testing().test(.GET, "/order") { res in
+            try await app.testing().test(.get, "/order") { res in
                 let order = await store.getOrder()
                 #expect(res.status == .ok)
                 #expect(order == ["a", "b", "c"])
@@ -39,7 +39,7 @@ struct MiddlewareTests2 {
                 return "done"
             }
 
-            try await app.testing().test(.GET, "/order") { res in
+            try await app.testing().test(.get, "/order") { res in
                 let order = await store.getOrder()
                 #expect(res.status == .ok)
                 #expect(order == ["a", "b", "c", "d"])
@@ -52,12 +52,12 @@ struct MiddlewareTests2 {
     func testCORSMiddlewareVariedByRequestOrigin() async throws {
         try await withApp { app in
             app.grouped(
-                CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.GET], allowedHeaders: [.origin]))
+                CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.get], allowedHeaders: [.origin]))
             ).get("order") { req -> String in
                 return "done"
             }
 
-            try await app.testing().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+            try await app.testing().test(.get, "/order", headers: ["Origin": "foo"]) { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "done")
                 #expect(res.headers[.vary] == ["origin"])
@@ -71,12 +71,12 @@ struct MiddlewareTests2 {
     func testCORSMiddlewareNoVariationByRequestOriginAllowed() async throws {
         try await withApp { app in
             app.grouped(
-                CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.GET], allowedHeaders: []))
+                CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.get], allowedHeaders: []))
             ).get("order") { req -> String in
                 return "done"
             }
 
-            try await app.testing().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+            try await app.testing().test(.get, "/order", headers: ["Origin": "foo"]) { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "done")
                 #expect(res.headers[.vary] == [])
@@ -92,7 +92,7 @@ struct MiddlewareTests2 {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/")
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.GET, "/foo.txt") { result async in
+            try await app.testing().test(.get, "/foo.txt") { result async in
                 #expect(result.status == .ok)
                 #expect(result.body.string == "bar\n")
             }
@@ -105,7 +105,7 @@ struct MiddlewareTests2 {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities")
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.GET, "/index.html") { result async in
+            try await app.testing().test(.get, "/index.html") { result async in
                 #expect(result.status == .ok)
                 #expect(result.body.string == "<h1>Subdirectory Default</h1>\n")
             }

@@ -1,9 +1,10 @@
 import NIOCore
 import NIOHTTP1
 import Foundation
+import HTTPTypes
 
 public struct ClientRequest: Sendable {
-    public var method: HTTPMethod
+    public var method: HTTPRequest.Method
     public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
@@ -12,7 +13,7 @@ public struct ClientRequest: Sendable {
     private let contentConfiguration: ContentConfiguration
 
     public init(
-        method: HTTPMethod = .GET,
+        method: HTTPRequest.Method = .get,
         url: URI = "/",
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
@@ -30,7 +31,7 @@ public struct ClientRequest: Sendable {
     }
 
     public init(
-        method: HTTPMethod = .GET,
+        method: HTTPRequest.Method = .get,
         url: URI = "/",
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,

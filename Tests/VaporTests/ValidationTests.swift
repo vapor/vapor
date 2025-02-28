@@ -746,7 +746,7 @@ struct ValidationTests {
         }
 
         // Test that the custom validation error middleware is working.
-        try await app.testing().test(.POST, "users", beforeRequest: { req async throws in
+        try await app.testing().test(.post, "users", beforeRequest: { req async throws in
             try req.content.encode([
                 "name": "Vapor",
                 "age": "asdf"

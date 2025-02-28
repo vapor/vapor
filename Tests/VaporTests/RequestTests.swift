@@ -10,7 +10,7 @@ import Foundation
 
 @Suite("Request Tests")
 struct RequestTests {
-    @Test("Test Redirect")
+    @Test("Test Redirect", .timeLimit(.minutes(1)))
     func testRedirect() async throws {
         try await withApp { app in
             app.http.client.configuration.redirectConfiguration = .disallow
@@ -52,7 +52,7 @@ struct RequestTests {
 
             let testValue = String.randomDigits()
 
-            app.on(.POST, "stream", body: .stream) { req in
+            app.on(.post, "stream", body: .stream) { req in
                 var receivedBuffer = ByteBuffer()
                 for try await part in req.body {
                     #expect(part != nil)
@@ -89,7 +89,7 @@ struct RequestTests {
 
             let bytesTheServerRead = ManagedAtomic<Int>(0)
 
-            app.on(.POST, "hello", body: .stream) { req async throws -> Response in
+            app.on(.post, "hello", body: .stream) { req async throws -> Response in
                 var bodyIterator = req.body.makeAsyncIterator()
                 let firstChunk = try await bodyIterator.next()
                 bytesTheServerRead.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .relaxed)
@@ -132,7 +132,7 @@ struct RequestTests {
 
             let requestHandlerTask: NIOLockedValueBox<Task<Response, Error>?> = .init(nil)
 
-            app.on(.POST, "hello", body: .stream) { req async throws -> Response in
+            app.on(.post, "hello", body: .stream) { req async throws -> Response in
                 requestHandlerTask.withLockedValue {
                     $0 = Task {
                         #expect(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged == true)
@@ -216,7 +216,7 @@ struct RequestTests {
             app.http.server.configuration.hostname = "127.0.0.1"
             app.http.server.configuration.port = 0
             
-            app.on(.POST, "upload", body: .stream, use: { request async throws -> String  in
+            app.on(.post, "upload", body: .stream, use: { request async throws -> String  in
                 let buffer = try await request.body.collect(upTo: Int.max)
                 return "Received \(buffer.readableBytes) bytes"
             })
@@ -250,7 +250,7 @@ struct RequestTests {
             }
 
             let ipV4Hostname = "127.0.0.1"
-            try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "vapor/is/fun") { res in
+            try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.get, "vapor/is/fun") { res in
                 #expect(res.body.string == ipV4Hostname)
             }
         }
@@ -289,7 +289,7 @@ struct RequestTests {
                 return peerAddress.description
             }
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "remote") { res in
+            try await app.testing(method: .running(port: 0)).test(.get, "remote") { res in
                 #expect(res.body.string == "[IPv4]192.0.2.60:80")
             }
         }
@@ -306,7 +306,7 @@ struct RequestTests {
                 return peerAddress.description
             }
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "remote") { res in
+            try await app.testing(method: .running(port: 0)).test(.get, "remote") { res in
                 #expect(res.body.string == "[IPv4]5.6.7.8:80")
             }
         }
@@ -323,7 +323,7 @@ struct RequestTests {
             }
 
             let ipV4Hostname = "127.0.0.1"
-            try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
+            try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.get, "remote") { res in
                 #expect(res.body.string.contains("[IPv4]\(ipV4Hostname)"))
             }
         }
@@ -342,7 +342,7 @@ struct RequestTests {
             }
 
             let ipV4Hostname = "127.0.0.1"
-            try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
+            try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.get, "remote") { res in
                 #expect(res.body.string == "[IPv4]192.0.2.60:80")
             }
         }
@@ -359,7 +359,7 @@ struct RequestTests {
                 }
             }
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "remote", beforeRequest: { req in
+            try await app.testing(method: .running(port: 0)).test(.get, "remote", beforeRequest: { req in
                 req.headers.add(name: .xRequestId, value: "test")
             }, afterResponse: { res in
                 #expect(res.body.string == "test")
@@ -374,7 +374,7 @@ struct RequestTests {
                 $0.remoteAddress?.description ?? "n/a"
             }
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "remote") { res in
+            try await app.testing(method: .running(port: 0)).test(.get, "remote") { res in
                 #expect(res.body.string.contains("IP"))
             }
         }

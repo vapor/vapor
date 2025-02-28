@@ -218,7 +218,7 @@ struct ServerTests {
                 var contentLength: Int
             }
 
-            app.on(.POST, "compressed", body: .collect(maxSize: "1mb")) { request async throws in
+            app.on(.post, "compressed", body: .collect(maxSize: "1mb")) { request async throws in
                 let contentLength = request.headers.first(name: .contentLength).flatMap { Int($0) }
                 let contents = try await request.body.collect().get()
                 return TestResponse(
@@ -611,7 +611,7 @@ struct ServerTests {
                 return "123"
             }
 
-            try await app.testing().test(.GET, "/ping") { res in
+            try await app.testing().test(.get, "/ping") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "123")
             }
@@ -640,7 +640,7 @@ struct ServerTests {
         try await withApp { app in
             let payload = [UInt8].random(count: 1 << 20)
 
-            app.on(.POST, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPStatus in
+            app.on(.post, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPStatus in
                 guard let data = req.body.data else {
                     throw Abort(.internalServerError)
                 }
@@ -651,7 +651,7 @@ struct ServerTests {
 
             var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
             buffer.writeBytes(payload)
-            try await app.testing(method: .running(port: 0)).test(.POST, "payload", body: buffer) { res in
+            try await app.testing(method: .running(port: 0)).test(.post, "payload", body: buffer) { res in
                 #expect(res.status == .ok)
             }
         }
@@ -667,7 +667,7 @@ struct ServerTests {
                 return HTTPStatus.ok
             }
 
-            try await app.testing(method: .running(port: 0)).test(.POST, "drain", beforeRequest: { req in
+            try await app.testing(method: .running(port: 0)).test(.post, "drain", beforeRequest: { req in
                 try req.content.encode(["hello": "world"])
             }, afterResponse: { res in
                 #expect(res.status == .ok)
@@ -684,7 +684,7 @@ struct ServerTests {
                 return try req.content.decode(User.self)
             }
 
-            try await app.testing().test(.GET, "/user") { res in
+            try await app.testing().test(.get, "/user") { res in
                 #expect(res.status == .unsupportedMediaType)
             }
         }
@@ -703,7 +703,7 @@ struct ServerTests {
     @Test("Test Early Exit Streaming Request")
     func testEarlyExitStreamingRequest() async throws {
         try await withApp { app in
-            app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<Int> in
+            app.on(.post, "upload", body: .stream) { req -> EventLoopFuture<Int> in
                 guard req.headers.first(name: "test") != nil else {
                     return req.eventLoop.makeFailedFuture(Abort(.badRequest))
                 }
@@ -727,11 +727,11 @@ struct ServerTests {
             var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)
             buffer.writeString(String(repeating: "a", count: 10_000_000))
 
-            try await app.testing(method: .running(port: 0)).test(.POST, "upload", beforeRequest: { req in
+            try await app.testing(method: .running(port: 0)).test(.post, "upload", beforeRequest: { req in
                 req.body = buffer
             }, afterResponse: { res in
                 #expect(res.status == .badRequest)
-            }).test(.POST, "upload", beforeRequest: { req in
+            }).test(.post, "upload", beforeRequest: { req in
                 req.body = buffer
                 req.headers.replaceOrAdd(name: "test", value: "a")
             }, afterResponse: { res in
@@ -753,7 +753,7 @@ struct ServerTests {
         let context = Context()
 
         try await withApp { app in
-            app.on(.POST, "echo", body: .stream) { request -> Response in
+            app.on(.post, "echo", body: .stream) { request -> Response in
                 Response(body: .init(stream: { writer in
                     request.body.drain { body in
                         switch body {
@@ -830,7 +830,7 @@ struct ServerTests {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let app = try await Application(.testing, .shared(eventLoopGroup))
         
-        app.on(.POST, "echo", body: .stream) { request in
+        app.on(.post, "echo", body: .stream) { request in
             "hello, world"
         }
         
@@ -1007,7 +1007,7 @@ struct ServerTests {
             let serverIsFinalisedPromise = app.eventLoopGroup.any().makePromise(of: Void.self)
             let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
 
-            app.on(.POST, "hello", body: .stream) { req -> Response in
+            app.on(.post, "hello", body: .stream) { req -> Response in
                 return Response(body: .init(stream: { writer in
                     req.body.drain { stream in
                         switch stream {
@@ -1060,7 +1060,7 @@ struct ServerTests {
             let serverSawRequest = ManagedAtomic<Bool>(false)
             let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
 
-            app.on(.POST, "hello", body: .stream) { req -> Response in
+            app.on(.post, "hello", body: .stream) { req -> Response in
                 #expect(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged == true)
 
                 return Response(body: .init(stream: { writer in

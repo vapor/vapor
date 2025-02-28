@@ -1,5 +1,6 @@
 import NIOHTTP1
 import NIOCore
+import HTTPTypes
 
 /// Middleware that adds support for CORS settings in request responses.
 /// For configuration of this middleware please use the `CORSMiddleware.Configuration` object.
@@ -61,7 +62,7 @@ public final class CORSMiddleware: AsyncMiddleware {
         public static func `default`() -> Configuration {
             return .init(
                 allowedOrigin: .originBased,
-                allowedMethods: [.GET, .POST, .PUT, .OPTIONS, .DELETE, .PATCH],
+                allowedMethods: [.get, .post, .put, .options, .delete, .patch],
                 allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith]
             )
         }
@@ -96,7 +97,7 @@ public final class CORSMiddleware: AsyncMiddleware {
         ///   - exposedHeaders: Headers exposed in the response of pre-flight request.
         public init(
             allowedOrigin: AllowOriginSetting,
-            allowedMethods: [HTTPMethod],
+            allowedMethods: [HTTPRequest.Method],
             allowedHeaders: [HTTPHeaders.Name],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,
@@ -168,7 +169,7 @@ public final class CORSMiddleware: AsyncMiddleware {
 private extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
-        return self.method == .OPTIONS && self.headers[.accessControlRequestMethod].first != nil
+        return self.method == .options && self.headers[.accessControlRequestMethod].first != nil
     }
 }
 

@@ -72,7 +72,7 @@ struct QueryTests {
         try await withApp { app throws in
             let request1 = Request(
                 application: app,
-                method: .GET,
+                method: .get,
                 url: .init(string: "/path?foo=a"),
                 on: app.eventLoopGroup.next()
             )
@@ -101,7 +101,7 @@ struct QueryTests {
 
             let request2 = Request(
                 application: app,
-                method: .GET,
+                method: .get,
                 url: .init(string: "/path"),
                 on: app.eventLoopGroup.next()
             )
@@ -120,7 +120,7 @@ struct QueryTests {
                 return "hi"
             }
 
-            try await app.testing().test(.GET, "/todos?a=b") { res in
+            try await app.testing().test(.get, "/todos?a=b") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "hi")
             }
@@ -153,7 +153,7 @@ struct QueryTests {
             }
 
             let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3"
-            try await app.testing().test(.GET, "/urlencodedform?\(data)") { res in
+            try await app.testing().test(.get, "/urlencodedform?\(data)") { res in
                 #expect(res.status.code == 200)
             }
         }
@@ -185,7 +185,7 @@ struct QueryTests {
             }
 
             let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-            try await app.testing().test(.GET, "/urlencodedform?\(data)") { res in
+            try await app.testing().test(.get, "/urlencodedform?\(data)") { res in
                 #expect(res.status.code == 200)
             }
         }
@@ -202,7 +202,7 @@ struct QueryTests {
                 return res
             }
 
-            try await app.testing().test(.GET, "/custom-encode") { res in
+            try await app.testing().test(.get, "/custom-encode") { res in
                 #expect(res.body.string == """
             {
               "hello" : "world"
@@ -231,7 +231,7 @@ struct QueryTests {
             headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
             headers.contentType = .json
 
-            try await app.testing().test(.POST, "/decode-fail", headers: headers, body: body) { res in
+            try await app.testing().test(.post, "/decode-fail", headers: headers, body: body) { res in
                 #expect(res.status == .badRequest)
                 #expect(res.body.string.contains("missing"))
             }
@@ -278,7 +278,7 @@ struct QueryTests {
         try await withApp { app in
             let req = Request(
                 application: app,
-                method: .GET,
+                method: .get,
                 url: URI(string: "/"),
                 on: app.eventLoopGroup.next()
             )
@@ -300,7 +300,7 @@ struct QueryTests {
         try await withApp { app throws in
             let req = Request(
                 application: app,
-                method: .GET,
+                method: .get,
                 url: URI(string: "/"),
                 on: app.eventLoopGroup.next()
             )

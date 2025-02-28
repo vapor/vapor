@@ -102,7 +102,7 @@ struct ApplicationTests {
                 throw Foo()
             }
 
-            try await app.testing().test(.GET, "/error") { res in
+            try await app.testing().test(.get, "/error") { res in
                 #expect(res.status == .internalServerError)
             }
         }

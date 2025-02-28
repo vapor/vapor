@@ -33,7 +33,7 @@ extension Application.HTTP {
 
                     let vaporRequest = Vapor.Request(
                         application: self.application,
-                        method: .init(req.method),
+                        method: req.method,
                         url: .init(path: req.uri.path),
                         version: .init(major: 1, minor: 1),
                         headersNoUpdate: .init(req.headers),

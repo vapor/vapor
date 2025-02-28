@@ -1,6 +1,7 @@
 import NIOCore
 import NIOHTTP1
 import RoutingKit
+import HTTPTypes
 
 extension RoutesBuilder {
     @discardableResult
@@ -11,7 +12,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.GET, path, use: closure)
+        return self.on(.get, path, use: closure)
     }
     
     @discardableResult
@@ -22,7 +23,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.GET, path, use: closure)
+        return self.on(.get, path, use: closure)
     }
     
     @discardableResult
@@ -33,7 +34,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.POST, path, use: closure)
+        return self.on(.post, path, use: closure)
     }
     
     @discardableResult
@@ -44,7 +45,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.POST, path, use: closure)
+        return self.on(.post, path, use: closure)
     }
     
     @discardableResult
@@ -55,7 +56,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.PATCH, path, use: closure)
+        return self.on(.patch, path, use: closure)
     }
     
     @discardableResult
@@ -66,7 +67,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.PATCH, path, use: closure)
+        return self.on(.patch, path, use: closure)
     }
     
     @discardableResult
@@ -77,7 +78,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.PUT, path, use: closure)
+        return self.on(.put, path, use: closure)
     }
     
     @discardableResult
@@ -88,7 +89,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.PUT, path, use: closure)
+        return self.on(.put, path, use: closure)
     }
     
     @discardableResult
@@ -99,7 +100,7 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.DELETE, path, use: closure)
+        return self.on(.delete, path, use: closure)
     }
     
     @discardableResult
@@ -110,13 +111,13 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
-        return self.on(.DELETE, path, use: closure)
+        return self.on(.delete, path, use: closure)
     }
     
     @discardableResult
     @preconcurrency
     public func on<Response>(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: PathComponent...,
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -131,7 +132,7 @@ extension RoutesBuilder {
     @discardableResult
     @preconcurrency
     public func on<Response>(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @Sendable @escaping (Request) async throws -> Response

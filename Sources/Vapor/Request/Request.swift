@@ -5,6 +5,7 @@ import Logging
 import RoutingKit
 import NIOConcurrencyHelpers
 import ServiceContextModule
+import HTTPTypes
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {
@@ -12,9 +13,9 @@ public final class Request: CustomStringConvertible, Sendable {
 
     /// The HTTP method for this request.
     ///
-    ///     httpReq.method = .GET
+    ///     httpReq.method = .get
     ///
-    public var method: HTTPMethod {
+    public var method: HTTPRequest.Method {
         get {
             self.requestBox.withLockedValue { $0.method }
         }
@@ -274,7 +275,7 @@ public final class Request: CustomStringConvertible, Sendable {
     }
     
     struct RequestBox: Sendable {
-        var method: HTTPMethod
+        var method: HTTPRequest.Method
         var url: URI
         var version: HTTPVersion
         var headers: HTTPHeaders
@@ -292,7 +293,7 @@ public final class Request: CustomStringConvertible, Sendable {
     
     public convenience init(
         application: Application,
-        method: HTTPMethod = .GET,
+        method: HTTPRequest.Method = .get,
         url: URI = "/",
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPHeaders = .init(),
@@ -321,7 +322,7 @@ public final class Request: CustomStringConvertible, Sendable {
     
     public init(
         application: Application,
-        method: HTTPMethod,
+        method: HTTPRequest.Method,
         url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
         headersNoUpdate headers: HTTPHeaders = .init(),

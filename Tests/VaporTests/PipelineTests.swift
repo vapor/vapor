@@ -13,7 +13,7 @@ struct PipelineTests {
     @Test("Test Echo Handlers")
     func echoHandlers() async throws {
         try await withApp { app in
-            app.on(.POST, "echo", body: .stream) { request -> Response in
+            app.on(.post, "echo", body: .stream) { request -> Response in
                 Response(body: .init(stream: { writer in
                     request.body.drain { body in
                         switch body {
@@ -66,7 +66,7 @@ struct PipelineTests {
     @Test("Test Async Echo Handlers")
     func asyncEchoHandlers() async throws {
         try await withApp { app in
-            app.on(.POST, "echo", body: .stream) { request async throws -> Response in
+            app.on(.post, "echo", body: .stream) { request async throws -> Response in
                 var buffers = [ByteBuffer]()
 
                 for try await buffer in request.body {
@@ -132,7 +132,7 @@ struct PipelineTests {
     @Test("Test Failing Async Handlers")
     func asyncFailingHandlers() async throws {
         try await withApp { app in
-            app.on(.POST, "fail", body: .stream) { request async throws -> Response in
+            app.on(.post, "fail", body: .stream) { request async throws -> Response in
                 return Response(body: .init(managedAsyncStream: { writer in
                     try await writer.writeBuffer(.init(string: "foo"))
                     throw Abort(.internalServerError)
@@ -171,7 +171,7 @@ struct PipelineTests {
     @Test("Test EOF Framing")
     func eofFraming() async throws {
         try await withApp { app in
-            app.on(.POST, "echo", body: .stream) { request -> Response in
+            app.on(.post, "echo", body: .stream) { request -> Response in
                 Response(body: .init(stream: { writer in
                     request.body.drain { body in
                         switch body {
@@ -200,7 +200,7 @@ struct PipelineTests {
     @Test("Test Bad Stream Length")
     func badStreamLength() async throws {
         try await withApp { app in
-            app.on(.POST, "echo", body: .stream) { request -> Response in
+            app.on(.post, "echo", body: .stream) { request -> Response in
                 Response(body: .init(stream: { writer in
                     writer.write(.buffer(.init(string: "a")), promise: nil)
                     writer.write(.end, promise: nil)
@@ -273,7 +273,7 @@ struct PipelineTests {
                 return ResponseThing(eventLoop: eventLoop)
             }
 
-            try await app.testing().test(.GET, "dont-crash") { res async in
+            try await app.testing().test(.get, "dont-crash") { res async in
                 #expect(res.status == .ok)
             }
 
@@ -305,7 +305,7 @@ struct PipelineTests {
                 return "OK"
             }
 
-            try await app.testing().test(.GET, "dont-crash") { res async in
+            try await app.testing().test(.get, "dont-crash") { res async in
                 #expect(res.status == .ok)
             }
 
@@ -328,7 +328,7 @@ struct PipelineTests {
     func streamingOffEventLoop() async throws {
         try await withApp { app in
             let eventLoop = app.eventLoopGroup.next()
-            app.on(.POST, "stream", body: .stream) { request -> Response in
+            app.on(.post, "stream", body: .stream) { request -> Response in
                 Response(body: .init(stream: { writer in
                     request.body.drain { body in
                         switch body {

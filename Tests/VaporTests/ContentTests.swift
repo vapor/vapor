@@ -80,7 +80,7 @@ struct ContentTests {
                 return foo.name
             }
 
-            try await app.testing().test(.GET, "/decode_error") { res in
+            try await app.testing().test(.get, "/decode_error") { res in
                 #expect(res.status == .badRequest)
                 #expect(res.body.string.contains(#"Value was not of type 'Int' at path 'bar'. Expected to decode Int but found a string"#))
             }
@@ -105,7 +105,7 @@ struct ContentTests {
                 return res
             }
 
-            try await app.testing().test(.GET, "/encode") { res in
+            try await app.testing().test(.get, "/encode") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string.contains("hi"))
             }
@@ -128,7 +128,7 @@ struct ContentTests {
                 return "decoded!"
             }
 
-            try await app.testing().test(.POST, "/decode") { req in
+            try await app.testing().test(.post, "/decode") { req in
                 try req.content.encode(FooContent())
             } afterResponse: { res in
                 #expect(res.status == .ok)
@@ -146,7 +146,7 @@ struct ContentTests {
                 return "decoded!"
             }
 
-            try await app.testing().test(.POST, "/decode-bad-header") { req in
+            try await app.testing().test(.post, "/decode-bad-header") { req in
                 try req.content.encode(FooContent())
                 req.headers.contentType = .audio
             } afterResponse: { res in
@@ -193,7 +193,7 @@ struct ContentTests {
                 return decoded
             }
 
-            try await app.testing().test(.GET, "/multipart", headers: [
+            try await app.testing().test(.get, "/multipart", headers: [
                 "Content-Type": "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
                 #expect(res.status == .ok)
@@ -223,7 +223,7 @@ struct ContentTests {
                 return decoded
             }
 
-            try await app.testing().test(.GET, "/multipart", headers: [
+            try await app.testing().test(.get, "/multipart", headers: [
                 "Content-Type": "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
                 #expect(res.status == .unprocessableEntity)
@@ -249,7 +249,7 @@ struct ContentTests {
                 return decoded
             }
 
-            try await app.testing().test(.GET, "/multipart", headers: [
+            try await app.testing().test(.get, "/multipart", headers: [
                 "Content-Type": "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
                 #expect(res.status == .unprocessableEntity)
@@ -294,7 +294,7 @@ struct ContentTests {
                 return decoded
             }
 
-            try await app.testing().test(.GET, "/multipart", headers: [
+            try await app.testing().test(.get, "/multipart", headers: [
                 "Content-Type": "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
                 #expect(res.status == .ok)
@@ -320,7 +320,7 @@ struct ContentTests {
                     image: File(data: "<contents of image>", filename: "droplet.png")
                 )
             }
-            try await app.testing().test(.GET, "/multipart") { res in
+            try await app.testing().test(.get, "/multipart") { res in
                 #expect(res.status == .ok)
                 let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
                 #expect(res.body.string.contains("Content-Disposition: form-data; name=\"name\""))
@@ -348,7 +348,7 @@ struct ContentTests {
                     image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
                 )
             }
-            try await app.testing().test(.GET, "/multipart") { res in
+            try await app.testing().test(.get, "/multipart") { res in
                 #expect(res.status == .ok)
                 let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
                 #expect(res.body.string.contains("Content-Disposition: form-data; name=\"name\""))
@@ -381,7 +381,7 @@ struct ContentTests {
             var body = ByteBufferAllocator().buffer(capacity: 0)
             body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
 
-            try await app.testing().test(.GET, "/urlencodedform", headers: headers, body: body) { res in
+            try await app.testing().test(.get, "/urlencodedform", headers: headers, body: body) { res in
                 #expect(res.status.code == 200)
             }
         }
@@ -400,7 +400,7 @@ struct ContentTests {
             app.get("urlencodedform") { _ -> User in
                 User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
             }
-            try await app.testing().test(.GET, "/urlencodedform") { res in
+            try await app.testing().test(.get, "/urlencodedform") { res in
                 #expect(res.status.code == 200)
                 #expect(res.headers.contentType == .urlEncodedForm)
                 #expect(res.body.string.contains("luckyNumbers[]=5"))
@@ -418,7 +418,7 @@ struct ContentTests {
                 "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
             }
 
-            try await app.testing().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
+            try await app.testing().test(.get, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
                 try req.content.encode(["foo": "bar"], as: .json)
             }) { res in
                 #expect(res.body.string == "PRESENT.application/json; charset=utf-8")
@@ -436,7 +436,7 @@ struct ContentTests {
             "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
 
-        try await app.testing().test(.GET, "/check", headers: [
+        try await app.testing().test(.get, "/check", headers: [
             "X-Test-Value": "PRESENT"
         ], beforeRequest: { req in
             try req.content.encode(["foo": "bar"], as: .json)
@@ -575,7 +575,7 @@ struct ContentTests {
         try await withApp { app in
             let req = Request(
                 application: app,
-                method: .GET,
+                method: .get,
                 url: URI(string: "https://vapor.codes"),
                 headersNoUpdate: ["Content-Type": "application/json"],
                 collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
@@ -663,13 +663,13 @@ struct ContentTests {
                 return res
             }
 
-            try await app.testing().test(.GET, "/plaintext") { res throws in
+            try await app.testing().test(.get, "/plaintext") { res throws in
                 #expect(res.status == .ok)
                 #expect(try res.content.decode(UInt8.self) == 255)
                 #expect(try res.content.decode(String.self) == "255")
             }
 
-            try await app.testing().test(.GET, "/empty-plaintext") { res throws in
+            try await app.testing().test(.get, "/empty-plaintext") { res throws in
                 #expect(res.status == .ok)
                 #expect(try res.content.decode(String.self) == "")
             }
@@ -698,7 +698,7 @@ struct ContentTests {
             var headers = HTTPHeaders()
             headers.add(name: .contentType, value: "text/plain")
 
-            try await app.testing().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
+            try await app.testing().test(.post, "/plaintext", headers: headers, body: byteBuffer) { res in
                 // This should return a 400 Bad Request and not crash
                 #expect(res.status == .badRequest)
             }
@@ -712,7 +712,7 @@ struct ContentTests {
                 true
             }
 
-            try await app.testing().test(.GET, "/success") { res throws in
+            try await app.testing().test(.get, "/success") { res throws in
                 #expect(try res.content.decode(Bool.self) == true)
             }
         }

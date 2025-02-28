@@ -22,7 +22,7 @@ struct VaporTestingTests {
                 return "decoded!"
             }
 
-            try await app.testing().test(.POST, "/decode") { req in
+            try await app.testing().test(.post, "/decode") { req in
                 try req.content.encode(FooContent())
             } afterResponse: { res in
                 #expect(res.status == .ok)
@@ -47,7 +47,7 @@ struct VaporTestingTests {
                 return "decoded!"
             }
 
-            try await app.testing().test(.POST, "/decode-bad-header") { req in
+            try await app.testing().test(.post, "/decode-bad-header") { req in
                 try req.content.encode(FooContent())
                 req.headers.contentType = .audio
             } afterResponse: { res in

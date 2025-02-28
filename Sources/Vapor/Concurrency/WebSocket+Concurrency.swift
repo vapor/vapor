@@ -72,7 +72,7 @@ extension RoutesBuilder {
         shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
         onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Route {
-        return self.on(.GET, path) { request -> Response in
+        return self.on(.get, path) { request -> Response in
             return request.webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
         }
     }

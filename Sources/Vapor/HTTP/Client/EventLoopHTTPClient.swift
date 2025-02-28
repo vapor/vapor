@@ -30,7 +30,7 @@ private struct EventLoopHTTPClient: Client {
         }
         let request = try HTTPClient.Request(
             url: url,
-            method: clientRequest.method,
+            method: .init(clientRequest.method),
             headers: clientRequest.headers,
             body: clientRequest.body.map { .byteBuffer($0) }
         )

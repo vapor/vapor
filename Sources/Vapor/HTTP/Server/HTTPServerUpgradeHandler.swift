@@ -75,7 +75,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
 
                 let head = HTTPRequestHead(
                     version: req.version,
-                    method: req.method,
+                    method: .init(req.method),
                     uri: req.url.string,
                     headers: req.headers
                 )

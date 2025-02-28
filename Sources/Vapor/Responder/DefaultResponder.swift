@@ -4,6 +4,7 @@ import Metrics
 import NIOCore
 import NIOHTTP1
 import Logging
+import HTTPTypes
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
@@ -81,16 +82,16 @@ internal struct DefaultResponder: Responder {
             .map(String.init)
         
         // If it's a HEAD request and a HEAD route exists, return that route...
-        if request.method == .HEAD, let route = self.router.route(
-            path: [HTTPMethod.HEAD.rawValue] + pathComponents,
+        if request.method == .head, let route = self.router.route(
+            path: [HTTPRequest.Method.head.rawValue] + pathComponents,
             parameters: &request.parameters
         ) {
             return route
         }
 
         // ...otherwise forward HEAD requests to GET route
-        let method = (request.method == .HEAD) ? .GET : request.method
-        
+        let method = (request.method == .head) ? .get : request.method
+
         return self.router.route(
             path: [method.rawValue] + pathComponents,
             parameters: &request.parameters

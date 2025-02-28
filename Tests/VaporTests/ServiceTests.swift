@@ -13,7 +13,7 @@ struct ServiceTests {
                 try await req.readOnly.foos()
             }
 
-            try await app.testing().test(.GET, "test") { res throws in
+            try await app.testing().test(.get, "test") { res throws in
                 #expect(res.status == .ok)
                 #expect(try res.content.decode([String].self) == ["foo"])
             }
@@ -59,7 +59,7 @@ struct ServiceTests {
                 return thing
             }
 
-            try await app.testing().test(.GET, "myService", afterResponse: { res in
+            try await app.testing().test(.get, "myService", afterResponse: { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == testString)
             })

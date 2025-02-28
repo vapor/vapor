@@ -147,6 +147,7 @@ let package = Package(
             name: "VaporTesting",
             dependencies: [
                 .target(name: "Vapor"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
             ]
         ),
         .testTarget(
@@ -155,6 +156,7 @@ let package = Package(
                 .product(name: "NIOTestUtils", package: "swift-nio"),
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),

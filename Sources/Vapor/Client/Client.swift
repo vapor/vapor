@@ -1,6 +1,7 @@
 import NIOCore
 import Logging
 import NIOHTTP1
+import HTTPTypes
 
 public protocol Client: Sendable {
     var byteBufferAllocator: ByteBufferAllocator { get }
@@ -12,23 +13,23 @@ public protocol Client: Sendable {
 
 extension Client {
     public func get(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
-        try await self.send(.GET, headers: headers, to: url, beforeSend: beforeSend)
+        try await self.send(.get, headers: headers, to: url, beforeSend: beforeSend)
     }
 
     public func post(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
-        try await self.send(.POST, headers: headers, to: url, beforeSend: beforeSend)
+        try await self.send(.post, headers: headers, to: url, beforeSend: beforeSend)
     }
 
     public func patch(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
-        try await self.send(.PATCH, headers: headers, to: url, beforeSend: beforeSend)
+        try await self.send(.patch, headers: headers, to: url, beforeSend: beforeSend)
     }
 
     public func put(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
-        try await self.send(.PUT, headers: headers, to: url, beforeSend: beforeSend)
+        try await self.send(.put, headers: headers, to: url, beforeSend: beforeSend)
     }
 
     public func delete(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
-        try await self.send(.DELETE, headers: headers, to: url, beforeSend: beforeSend)
+        try await self.send(.delete, headers: headers, to: url, beforeSend: beforeSend)
     }
     
     public func post<T>(_ url: URI, headers: HTTPHeaders = [:], content: T) async throws -> ClientResponse where T: Content {
@@ -44,7 +45,7 @@ extension Client {
     }
 
     public func send(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         headers: HTTPHeaders = [:],
         to url: URI,
         beforeSend: (inout ClientRequest) throws -> () = { _ in }

@@ -27,7 +27,7 @@ struct MetricsTests {
                 }
             }
 
-            try await app.testing().test(.GET, "/users/1") { res in
+            try await app.testing().test(.get, "/users/1") { res in
                 #expect(res.status == .ok)
                 let resData = try res.content.decode(User.self)
                 #expect(resData.id == 1)
@@ -72,7 +72,7 @@ struct MetricsTests {
                 }
             }
 
-            try await app.testing().test(.GET, "/users/2") { res in
+            try await app.testing().test(.get, "/users/2") { res in
                 #expect(res.status == .notFound)
                 let counter = metrics.counters["http_requests_total"] as! TestCounter
                 let pathDimension = try #require(counter.dimensions.first(where: { $0.0 == "path"}))
@@ -102,7 +102,7 @@ struct MetricsTests {
             let metrics = CapturingMetricsSystem()
             MetricsSystem.bootstrapInternal(metrics)
 
-            try await app.testing().test(.GET, "/not/found") { res in
+            try await app.testing().test(.get, "/not/found") { res in
                 #expect(res.status == .notFound)
                 #expect(metrics.counters.count == 1)
                 let counter = metrics.counters["http_requests_total"] as! TestCounter
@@ -147,7 +147,7 @@ struct MetricsTests {
                 }
             }
 
-            try await app.testing().test(.GET, "/users/1") { res in
+            try await app.testing().test(.get, "/users/1") { res in
                 #expect(res.status == .ok)
                 let resData = try res.content.decode(User.self)
                 #expect(resData.id == 1)

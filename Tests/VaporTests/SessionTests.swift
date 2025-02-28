@@ -23,7 +23,7 @@ struct SessionTests {
                 return "del"
             }
 
-            try await app.testing().test(.GET, "/set") { res in
+            try await app.testing().test(.get, "/set") { res in
                 #expect(res.body.string == "set")
                 cookie = res.headers.setCookie?["vapor-session"]
                 #expect(cookie != nil)
@@ -40,7 +40,7 @@ struct SessionTests {
             var cookies = HTTPCookies()
             cookies["vapor-session"] = cookie
             headers.cookie = cookies
-            try await app.testing().test(.GET, "/del", headers: headers) { res in
+            try await app.testing().test(.get, "/del", headers: headers) { res in
                 #expect(res.body.string == "del")
                 let ops = await cache.ops
                 #expect(ops == [
@@ -74,13 +74,13 @@ struct SessionTests {
 
 
             // Test accessing session with no cookie.
-            try await app.testing().test(.GET, "get") { res in
+            try await app.testing().test(.get, "get") { res in
                 #expect(res.status == .badRequest)
             }
 
             // Test setting session with invalid cookie.
             var newCookie: HTTPCookies.Value?
-            try await app.testing().test(.GET, "set", beforeRequest: { req in
+            try await app.testing().test(.get, "set", beforeRequest: { req in
                 req.headers.cookie = ["vapor-session": "foo"]
             }, afterResponse: { res in
                 // We should get a new cookie back.
@@ -92,7 +92,7 @@ struct SessionTests {
             })
 
             // Test accessing newly created session.
-            try await app.testing().test(.GET, "get", beforeRequest: { req in
+            try await app.testing().test(.get, "get", beforeRequest: { req in
                 // Pass cookie from previous request.
                 req.headers.cookie = ["vapor-session": newCookie!]
             }, afterResponse: { res in

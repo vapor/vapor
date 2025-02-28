@@ -16,12 +16,12 @@ struct RouteTests {
             app.routes.get("hello", ":a", ":b") { req in
                 return [req.parameters.get("a") ?? "", req.parameters.get("b") ?? ""]
             }
-            try await app.testing().test(.GET, "/hello/vapor") { res in
+            try await app.testing().test(.get, "/hello/vapor") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string.contains("vapor"))
-            }.test(.POST, "/hello/vapor") { res in
+            }.test(.post, "/hello/vapor") { res in
                 #expect(res.status == .notFound)
-            }.test(.GET, "/hello/vapor/development") { res in
+            }.test(.get, "/hello/vapor/development") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == #"["vapor","development"]"#)
             }
@@ -44,15 +44,15 @@ struct RouteTests {
                 return try req.parameters.require("value")
             }
 
-            try await app.testing().test(.GET, "/string/test") { res in
+            try await app.testing().test(.get, "/string/test") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string.contains("test"))
-            }.test(.GET, "/int/123") { res in
+            }.test(.get, "/int/123") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "123")
-            }.test(.GET, "/int/not-int") { res in
+            }.test(.get, "/int/not-int") { res in
                 #expect(res.status == .unprocessableEntity)
-            }.test(.GET, "/missing") { res in
+            }.test(.get, "/missing") { res in
                 #expect(res.status == .internalServerError)
             }
         }
@@ -65,7 +65,7 @@ struct RouteTests {
                 return ["foo": "bar"]
             }
 
-            try await app.testing().test(.GET, "/json") { res in
+            try await app.testing().test(.get, "/json") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == #"{"foo":"bar"}"#)
             }
@@ -82,10 +82,10 @@ struct RouteTests {
                 return "foo"
             }
 
-            try await app.testing().test(.GET, "/") { res in
+            try await app.testing().test(.get, "/") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "root")
-            }.test(.GET, "/foo") { res in
+            }.test(.get, "/foo") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foo")
             }
@@ -101,10 +101,10 @@ struct RouteTests {
                 return "foo"
             }
 
-            try await app.testing().test(.GET, "/foo") { res in
+            try await app.testing().test(.get, "/foo") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foo")
-            }.test(.GET, "/FOO") { res in
+            }.test(.get, "/FOO") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foo")
             }
@@ -122,12 +122,12 @@ struct RouteTests {
                 }
             }
 
-            try await app.testing().test(.GET, "/foo", beforeRequest: { req in
+            try await app.testing().test(.get, "/foo", beforeRequest: { req in
                 try req.query.encode(["number": "true"])
             }) { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "42")
-            }.test(.GET, "/foo", beforeRequest: { req in
+            }.test(.get, "/foo", beforeRequest: { req in
                 try req.query.encode(["number": "false"])
             }) { res in
                 #expect(res.status == .ok)
@@ -161,10 +161,10 @@ struct RouteTests {
                 }
             }
 
-            try await app.testing().test(.GET, "/foo?number=true") { res async in
+            try await app.testing().test(.get, "/foo?number=true") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "42")
-            }.test(.GET, "/foo?number=false") { res async in
+            }.test(.get, "/foo?number=false") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "string")
             }
@@ -188,7 +188,7 @@ struct RouteTests {
                 return try req.content.decode(User.self)
             }
 
-            try await app.testing().test(.POST, "/users", beforeRequest: { req in
+            try await app.testing().test(.post, "/users", beforeRequest: { req in
                 try req.content.encode([
                     "name": "vapor",
                     "email": "foo"
@@ -196,10 +196,10 @@ struct RouteTests {
             }) { res in
                 #expect(res.status == .badRequest)
                 #expect(res.body.string.contains("email is not a valid email address"))
-            }.test(.POST, "/users") { res in
+            }.test(.post, "/users") { res in
                 #expect(res.status == .unprocessableEntity)
                 #expect(res.body.string.replacingOccurrences(of: "\\", with: "").contains("Missing \"Content-Type\" header"))
-            }.test(.POST, "/users", headers: ["Content-Type":"application/json"]) { res in
+            }.test(.post, "/users", headers: ["Content-Type":"application/json"]) { res in
                 #expect(res.status == .unprocessableEntity)
                 #expect(res.body.string.contains("Empty Body"))
             }
@@ -219,7 +219,7 @@ struct RouteTests {
                     .encodeResponse(status: .created, for: req)
             }
 
-            try await app.testing().test(.POST, "/users", beforeRequest: { req async throws in
+            try await app.testing().test(.post, "/users", beforeRequest: { req async throws in
                 try req.content.encode(["name": "vapor"], as: .json)
             }) { res in
                 #expect(res.status == .created)
@@ -235,11 +235,11 @@ struct RouteTests {
     func testHeadRequestForwardedToGet() async throws {
         try await withApp { app in
             app.get("hello") { req -> String in
-                #expect(req.method == .HEAD)
+                #expect(req.method == .head)
                 return "hi"
             }
 
-            try await app.testing(method: .running(port: 0)).test(.HEAD, "/hello") { res in
+            try await app.testing(method: .running(port: 0)).test(.head, "/hello") { res in
                 #expect(res.status == .ok)
                 #expect(res.headers.first(name: .contentLength) == "2")
                 #expect(res.body.readableBytes == 0)
@@ -254,11 +254,11 @@ struct RouteTests {
                 return Response(status: .badRequest)
             }
 
-            app.on(.HEAD, "hello") { req -> Response in
+            app.on(.head, "hello") { req -> Response in
                 return Response(status: .found)
             }
 
-            try await app.testing(method: .running(port: 0)).test(.HEAD, "/hello") { res in
+            try await app.testing(method: .running(port: 0)).test(.head, "/hello") { res in
                 #expect(res.status == .found)
                 #expect(res.headers.first(name: .contentLength) == "0")
                 #expect(res.body.readableBytes == 0)
@@ -278,7 +278,7 @@ struct RouteTests {
             var cookies = HTTPCookies()
             cookies["vapor-session"] = "asdf"
             headers.cookie = cookies
-            try await app.testing().test(.GET, "/get", headers: headers) { res in
+            try await app.testing().test(.get, "/get", headers: headers) { res in
                 #expect(res.status == .ok)
                 #expect(res.headers[.setCookie].first != nil)
                 #expect(res.body.string == "n/a")
@@ -293,7 +293,7 @@ struct RouteTests {
                 throw Abort(.noContent)
             }
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "/no-content") { res in
+            try await app.testing(method: .running(port: 0)).test(.get, "/no-content") { res in
                 #expect(res.status.code == 204)
                 #expect(res.body.readableBytes == 0)
             }
@@ -310,13 +310,13 @@ struct RouteTests {
                 "b"
             }
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "/api/addresses/") { res in
+            try await app.testing(method: .running(port: 0)).test(.get, "/api/addresses/") { res in
                 #expect(res.body.string == "a")
-            }.test(.GET, "/api/addresses/search/test") { res in
+            }.test(.get, "/api/addresses/search/test") { res in
                 #expect(res.body.string == "b")
-            }.test(.GET, "/api/addresses/search/") { res in
+            }.test(.get, "/api/addresses/search/") { res in
                 #expect(res.status == .notFound)
-            }.test(.GET, "/api/addresses/search") { res in
+            }.test(.get, "/api/addresses/search") { res in
                 #expect(res.status == .notFound)
             }
         }
@@ -344,7 +344,7 @@ struct RouteTests {
         try await withApp { app in
             try app.register(collection: Foo())
 
-            try await app.test(.GET, "foo") { res in
+            try await app.test(.get, "foo") { res in
                 #expect(res.body.string == "bar")
             }
         }
@@ -357,28 +357,28 @@ struct RouteTests {
             app.routes.defaultMaxBodySize = 1
             #expect(app.routes.defaultMaxBodySize == 1)
 
-            app.on(.POST, "default") { request in
+            app.on(.post, "default") { request in
                 HTTPStatus.ok
             }
-            app.on(.POST, "1kb", body: .collect(maxSize: "1kb")) { request in
+            app.on(.post, "1kb", body: .collect(maxSize: "1kb")) { request in
                 HTTPStatus.ok
             }
-            app.on(.POST, "1mb", body: .collect(maxSize: "1mb")) { request in
+            app.on(.post, "1mb", body: .collect(maxSize: "1mb")) { request in
                 HTTPStatus.ok
             }
-            app.on(.POST, "1gb", body: .collect(maxSize: "1gb")) { request in
+            app.on(.post, "1gb", body: .collect(maxSize: "1gb")) { request in
                 HTTPStatus.ok
             }
 
             var buffer = ByteBufferAllocator().buffer(capacity: 0)
             buffer.writeBytes(Array(repeating: 0, count: 500_000))
-            try await app.testing(method: .running(port: 0)).test(.POST, "/default", body: buffer) { res in
+            try await app.testing(method: .running(port: 0)).test(.post, "/default", body: buffer) { res in
                 #expect(res.status == .payloadTooLarge)
-            }.test(.POST, "/1kb", body: buffer) { res in
+            }.test(.post, "/1kb", body: buffer) { res in
                 #expect(res.status == .payloadTooLarge)
-            }.test(.POST, "/1mb", body: buffer) { res in
+            }.test(.post, "/1mb", body: buffer) { res in
                 #expect(res.status == .ok)
-            }.test(.POST, "/1gb", body: buffer) { res in
+            }.test(.post, "/1gb", body: buffer) { res in
                 #expect(res.status == .ok)
             }
         }
@@ -394,7 +394,7 @@ struct RouteTests {
                 [testMarkerHeaderKey: testMarkerHeaderValue]
             }, onUpgrade: { _, _ in })
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "customshouldupgrade", beforeRequest: { req async in
+            try await app.testing(method: .running(port: 0)).test(.get, "customshouldupgrade", beforeRequest: { req async in
                 req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
                 req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
                 req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
@@ -413,7 +413,7 @@ struct RouteTests {
                 return response.description
             }
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "/client") { res in
+            try await app.testing(method: .running(port: 0)).test(.get, "/client") { res in
                 #expect(res.status.code == 500)
             }
         }
@@ -426,28 +426,28 @@ struct RouteTests {
                 "\(try req.parameters.require("foo"))\(try req.parameters.require("bar"))"
             }
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "/foop/barp/buz") { res in
+            try await app.testing(method: .running(port: 0)).test(.get, "/foop/barp/buz") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foopbarp")
-            }.test(.GET, "//foop/barp/buz") { res in
+            }.test(.get, "//foop/barp/buz") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foopbarp")
-            }.test(.GET, "//foop//barp/buz") { res in
+            }.test(.get, "//foop//barp/buz") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foopbarp")
-            }.test(.GET, "//foop//barp//buz") { res in
+            }.test(.get, "//foop//barp//buz") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foopbarp")
-            }.test(.GET, "/foop//barp/buz") { res in
+            }.test(.get, "/foop//barp/buz") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foopbarp")
-            }.test(.GET, "/foop//barp//buz") { res in
+            }.test(.get, "/foop//barp//buz") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foopbarp")
-            }.test(.GET, "/foop/barp//buz") { res in
+            }.test(.get, "/foop/barp//buz") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foopbarp")
-            }.test(.GET, "//foop/barp//buz") { res in
+            }.test(.get, "//foop/barp//buz") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "foopbarp")
             }

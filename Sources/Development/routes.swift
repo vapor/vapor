@@ -11,12 +11,12 @@ struct Creds: Content {
 }
 
 public func routes(_ app: Application) throws {
-    app.on(.GET, "ping") { req -> StaticString in
+    app.on(.get, "ping") { req -> StaticString in
         return "123" as StaticString
     }
 
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
-    app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
+    app.on(.post, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
         let done = req.eventLoop.makePromise(of: String.self)
 
         let totalBox = NIOLoopBoundBox(0, eventLoop: req.eventLoop)
@@ -61,7 +61,7 @@ public func routes(_ app: Application) throws {
         return "\(creds)"
     }
     
-    app.on(.POST, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
+    app.on(.post, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
         return req.body.data?.readableBytes.description  ?? "none"
     }
 
@@ -81,7 +81,7 @@ public func routes(_ app: Application) throws {
         ws.send("Hello 👋 \(ip)")
     }
 
-    app.on(.POST, "file", body: .stream) { req in
+    app.on(.post, "file", body: .stream) { req in
         for try await part in req.body {
             debugPrint(part)
         }
@@ -177,12 +177,12 @@ public func routes(_ app: Application) throws {
         return secret
     }
 
-    app.on(.POST, "max-256", body: .collect(maxSize: 256)) { req -> HTTPStatus in
+    app.on(.post, "max-256", body: .collect(maxSize: 256)) { req -> HTTPStatus in
         print("in route")
         return .ok
     }
 
-    app.on(.POST, "upload", body: .stream) { req -> HTTPStatus in
+    app.on(.post, "upload", body: .stream) { req -> HTTPStatus in
         return try await FileSystem.shared.withFileHandle(
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
             options: .newFile(replaceExisting: true)) { handle in

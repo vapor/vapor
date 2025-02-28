@@ -13,7 +13,7 @@ import Vapor
 ///         }
 ///
 ///         let result: HTTPStatus? = nil
-///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
+///         try await app.testing().test(.get, "hello", afterResponse: { res async in
 ///             #expect(res.status == .ok)
 ///             result = res.status
 ///             #expect(res.body.string == "Hello, world!")
@@ -47,7 +47,7 @@ public func withAppResult<T>(_ block: (Application) async throws -> T) async thr
 ///             return "Hello, world!"
 ///         }
 ///
-///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
+///         try await app.testing().test(.get, "hello", afterResponse: { res async in
 ///             #expect(res.status == .ok)
 ///             #expect(res.body.string == "Hello, world!")
 ///         })

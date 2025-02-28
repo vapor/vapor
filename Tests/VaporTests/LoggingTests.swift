@@ -13,7 +13,7 @@ struct LoggingTests {
                 return "done"
             }
 
-            try await app.testing().test(.GET, "trace") { res in
+            try await app.testing().test(.get, "trace") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "done")
             }

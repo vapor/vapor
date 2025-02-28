@@ -103,7 +103,7 @@ struct PasswordTests {
                 return verify ? "true" : "false"
             }
 
-            try await app.testing().test(.GET, "test", afterResponse: { res in
+            try await app.testing().test(.get, "test", afterResponse: { res in
                 #expect(res.body.string == "true", sourceLocation: sourceLocation)
             })
         }

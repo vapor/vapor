@@ -2,9 +2,10 @@ import NIOHTTP1
 import RoutingKit
 import NIOConcurrencyHelpers
 import ConsoleKit
+import HTTPTypes
 
 public final class Route: CustomStringConvertible, Sendable {
-    public var method: HTTPMethod {
+    public var method: HTTPRequest.Method {
         get {
             self.sendableBox.withLockedValue { $0.method }
         }
@@ -50,7 +51,7 @@ public final class Route: CustomStringConvertible, Sendable {
     }
     
     struct SendableBox: Sendable {
-        var method: HTTPMethod
+        var method: HTTPRequest.Method
         var path: [PathComponent]
         var responder: Responder
         var requestType: Any.Type
@@ -76,7 +77,7 @@ public final class Route: CustomStringConvertible, Sendable {
     let sendableBox: NIOLockedValueBox<SendableBox>
     
     public init(
-        method: HTTPMethod,
+        method: HTTPRequest.Method,
         path: [PathComponent],
         responder: Responder,
         requestType: Any.Type,

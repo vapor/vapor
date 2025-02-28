@@ -50,9 +50,9 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 ///
                 /// The latter parse has the correct semantics for an HTTP request's URL (which, in the absence of an
                 /// accompanying scheme, should never have a host); the former follows strict RFC 3986 rules.
-                let request = Request(
+                let request = try! Request(
                     application: self.application,
-                    method: head.method,
+                    method: .init(head.method),
                     url: .init(path: head.uri),
                     version: head.version,
                     headersNoUpdate: head.headers,

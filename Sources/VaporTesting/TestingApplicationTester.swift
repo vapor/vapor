@@ -2,6 +2,7 @@ import NIOHTTP1
 import NIOCore
 import Testing
 import Vapor
+import HTTPTypes
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
@@ -29,7 +30,7 @@ extension Application: TestingApplicationTester {
 extension TestingApplicationTester {
     @discardableResult
     public func test(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
@@ -49,7 +50,7 @@ extension TestingApplicationTester {
 
     @discardableResult
     public func test(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
@@ -76,7 +77,7 @@ extension TestingApplicationTester {
     }
 
     public func sendRequest(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,

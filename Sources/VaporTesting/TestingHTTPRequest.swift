@@ -2,15 +2,16 @@ import NIOCore
 import NIOHTTP1
 import NIOConcurrencyHelpers
 import Vapor
+import HTTPTypes
 
 public struct TestingHTTPRequest: Sendable {
-    public var method: HTTPMethod
+    public var method: HTTPRequest.Method
     public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer
     public var contentConfiguration: ContentConfiguration
 
-    public init(method: HTTPMethod, url: URI, headers: HTTPHeaders, body: ByteBuffer, contentConfigurtion: ContentConfiguration) {
+    public init(method: HTTPRequest.Method, url: URI, headers: HTTPHeaders, body: ByteBuffer, contentConfigurtion: ContentConfiguration) {
         self.method = method
         self.url = url
         self.headers = headers

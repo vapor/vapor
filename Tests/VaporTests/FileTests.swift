@@ -24,7 +24,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.GET, "/file-stream") { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream") { res async in
                 let test = "the quick brown fox"
                 #expect(res.headers.first(name: .eTag) != nil)
                 #expect(res.body.string.contains(test))
@@ -41,7 +41,7 @@ struct FileTests {
 
             var headers = HTTPHeaders()
             headers.replaceOrAdd(name: .connection, value: "close")
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 let test = "the quick brown fox"
                 #expect(res.headers.first(name: .eTag) != nil)
                 #expect(res.body.string.contains(test))
@@ -67,7 +67,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running(port: 0)).test(.GET, "/file-stream") { res async in
+            try await app.testing(method: .running(port: 0)).test(.get, "/file-stream") { res async in
                 #expect(res.status == .internalServerError)
             }
         }
@@ -86,7 +86,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.GET, "/file-stream") { res async throws in
+            try await app.testing(method: .running).test(.get, "/file-stream") { res async throws in
                 let fileData = try Data(contentsOf: URL(fileURLWithPath: #filePath))
                 let digest = SHA256.hash(data: fileData)
                 let eTag = res.headers.first(name: "etag")
@@ -108,7 +108,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.GET, "/file-stream") { res in
+            try await app.testing(method: .running).test(.get, "/file-stream") { res in
                 guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(#filePath)) else {
                     Issue.record("Missing File Info")
                     return
@@ -134,7 +134,7 @@ struct FileTests {
 
             var headerRequest = HTTPHeaders()
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
 
                 let contentRange = res.headers.first(name: "content-range")
                 let contentLength = res.headers.first(name: "content-length")
@@ -165,7 +165,7 @@ struct FileTests {
 
             var headerRequest = HTTPHeaders()
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
 
                 let contentRange = res.headers.first(name: "content-range")
                 let contentLength = res.headers.first(name: "content-length")
@@ -194,7 +194,7 @@ struct FileTests {
 
             var headerRequest = HTTPHeaders()
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
 
                 let contentRange = res.headers.first(name: "content-range")
                 let contentLength = res.headers.first(name: "content-length")
@@ -223,7 +223,7 @@ struct FileTests {
 
             var headers = HTTPHeaders()
             headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .partialContent)
 
                 #expect(res.headers.first(name: .contentLength) == "1")
@@ -248,12 +248,12 @@ struct FileTests {
 
             var headerRequest = HTTPHeaders()
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: -20, end: 25)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 10, end: 100000000)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
         }
@@ -272,12 +272,12 @@ struct FileTests {
 
             var headerRequest = HTTPHeaders()
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: -20)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 100000000)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
         }
@@ -296,12 +296,12 @@ struct FileTests {
 
             var headerRequest = HTTPHeaders()
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: -20)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 100000000)])
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
         }
@@ -313,7 +313,7 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-            try await app.testing().test(.GET, "/Utilities/foo%20bar.html") { res async in
+            try await app.testing().test(.get, "/Utilities/foo%20bar.html") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "<h1>Hello</h1>\n")
             }
@@ -326,9 +326,9 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-            try await app.testing().test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
+            try await app.testing().test(.get, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
                 #expect(res.status == .forbidden)
-            }.test(.GET, "Utilities/foo.txt") { res async in
+            }.test(.get, "Utilities/foo.txt") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "bar\n")
             }
@@ -341,10 +341,10 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
 
-            try await app.testing().test(.GET, "Utilities/") { res async in
+            try await app.testing().test(.get, "Utilities/") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "<h1>Root Default</h1>\n")
-            }.test(.GET, "Utilities/SubUtilities/") { res async in
+            }.test(.get, "Utilities/SubUtilities/") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "<h1>Subdirectory Default</h1>\n")
             }
@@ -357,10 +357,10 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
 
-            try await app.testing().test(.GET, "Utilities/") { res async in
+            try await app.testing().test(.get, "Utilities/") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "<h1>Root Default</h1>\n")
-            }.test(.GET, "Utilities/SubUtilities/") { res async in
+            }.test(.get, "Utilities/SubUtilities/") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "<h1>Root Default</h1>\n")
             }
@@ -373,7 +373,7 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-            try await app.testing().test(.GET, "Utilities/") { res in
+            try await app.testing().test(.get, "Utilities/") { res in
                 #expect(res.status == .notFound)
             }
         }
@@ -391,9 +391,9 @@ struct FileTests {
                 )
             )
 
-            try await app.testing().test(.GET, "Utilities") { res in
+            try await app.testing().test(.get, "Utilities") { res in
                 #expect(res.status == .movedPermanently)
-            }.test(.GET, "Utilities/SubUtilities") { res in
+            }.test(.get, "Utilities/SubUtilities") { res in
                 #expect(res.status == .movedPermanently)
             }
         }
@@ -411,13 +411,13 @@ struct FileTests {
                 )
             )
 
-            try await app.testing().test(.GET, "Utilities?vaporTest=test") { res in
+            try await app.testing().test(.get, "Utilities?vaporTest=test") { res in
                 #expect(res.status == .movedPermanently)
                 #expect(res.headers.first(name: .location) == "/Utilities/?vaporTest=test")
-            }.test(.GET, "Utilities/SubUtilities?vaporTest=test") { res in
+            }.test(.get, "Utilities/SubUtilities?vaporTest=test") { res in
                 #expect(res.status == .movedPermanently)
                 #expect( res.headers.first(name: .location) == "/Utilities/SubUtilities/?vaporTest=test")
-            }.test(.GET, "Utilities/SubUtilities?vaporTest=test#vapor") { res in
+            }.test(.get, "Utilities/SubUtilities?vaporTest=test#vapor") { res in
                 #expect(res.status == .movedPermanently)
                 #expect( res.headers.first(name: .location) == "/Utilities/SubUtilities/?vaporTest=test#vapor")
             }
@@ -436,9 +436,9 @@ struct FileTests {
                 )
             )
 
-            try await app.testing().test(.GET, "Utilities") { res in
+            try await app.testing().test(.get, "Utilities") { res in
                 #expect(res.status == .notFound)
-            }.test(.GET, "Utilities/SubUtilities") { res in
+            }.test(.get, "Utilities/SubUtilities") { res in
                 #expect(res.status == .notFound)
             }
         }
@@ -454,42 +454,42 @@ struct FileTests {
 
             var headers = HTTPHeaders()
             headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers.replaceOrAdd(name: .range, value: "bytes=-1-10")
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers.replaceOrAdd(name: .range, value: "bytes=100-10")
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers.replaceOrAdd(name: .range, value: "bytes=10--100")
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers.replaceOrAdd(name: .range, value: "bytes=9223372036854775808-")
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers.replaceOrAdd(name: .range, value: "bytes=922337203-")
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers.replaceOrAdd(name: .range, value: "bytes=-922337203")
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers.replaceOrAdd(name: .range, value: "bytes=-9223372036854775808")
-            try await app.testing(method: .running).test(.GET, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
         }

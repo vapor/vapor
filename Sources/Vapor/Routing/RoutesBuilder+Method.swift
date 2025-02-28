@@ -1,5 +1,5 @@
 import RoutingKit
-import NIOHTTP1
+import HTTPTypes
 
 /// Determines how an incoming HTTP request's body is collected.
 public enum HTTPBodyStreamStrategy: Sendable {
@@ -35,7 +35,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.GET, path, use: closure)
+        return self.on(.get, path, use: closure)
     }
 
     @preconcurrency
@@ -46,7 +46,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.GET, path, use: closure)
+        return self.on(.get, path, use: closure)
     }
     
     @preconcurrency
@@ -57,7 +57,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.POST, path, use: closure)
+        return self.on(.post, path, use: closure)
     }
     
     @preconcurrency
@@ -68,7 +68,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.POST, path, use: closure)
+        return self.on(.post, path, use: closure)
     }
     
     @preconcurrency
@@ -79,7 +79,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.PATCH, path, use: closure)
+        return self.on(.patch, path, use: closure)
     }
     
     @preconcurrency
@@ -90,7 +90,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.PATCH, path, use: closure)
+        return self.on(.patch, path, use: closure)
     }
     
     @preconcurrency
@@ -101,7 +101,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.PUT, path, use: closure)
+        return self.on(.put, path, use: closure)
     }
     
     @preconcurrency
@@ -112,7 +112,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.PUT, path, use: closure)
+        return self.on(.put, path, use: closure)
     }
     
     @preconcurrency
@@ -123,7 +123,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.DELETE, path, use: closure)
+        return self.on(.delete, path, use: closure)
     }
     
     @preconcurrency
@@ -134,13 +134,13 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(.DELETE, path, use: closure)
+        return self.on(.delete, path, use: closure)
     }
     
     @preconcurrency
     @discardableResult
     public func on<Response>(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: PathComponent...,
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @Sendable @escaping (Request) throws -> Response
@@ -155,7 +155,7 @@ extension RoutesBuilder {
     @preconcurrency
     @discardableResult
     public func on<Response>(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @Sendable @escaping (Request) throws -> Response
