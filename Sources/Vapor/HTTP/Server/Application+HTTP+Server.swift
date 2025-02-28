@@ -29,7 +29,7 @@ extension Application.HTTP {
                 return existing
             } else {
                 let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: .init(), eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger) { req, responseWriter, channel  in
-                    print("Request received")
+                    application.logger.info("Request received with new Vapor 5 server")
 
                     let vaporRequest = Vapor.Request(
                         application: self.application,
@@ -48,6 +48,8 @@ extension Application.HTTP {
 
                     var bodyWriter: any ResponseBodyWriter = try await responseWriter.writeHead(httpResponse)
                     try await vaporResponse.body.write(&bodyWriter)
+                    application.logger.info("Response sent with new Vapor 5 server")
+
                 } as! HTTPServer<HTTP1Channel>
                 self.application.storage[NewKey.self] = new
                 return new
