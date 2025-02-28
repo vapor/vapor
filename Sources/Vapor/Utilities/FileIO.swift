@@ -235,7 +235,7 @@ public struct FileIO: Sendable {
             } else {
                 contentRange = nil
             }
-        } else if request.headers.contains(name: .range) {
+        } else if request.headers[.range] != nil {
             // Range header was supplied but could not be parsed i.e. it was invalid
             request.logger.debug("Range header was provided in request but was invalid")
             throw Abort(.badRequest)
@@ -258,14 +258,14 @@ public struct FileIO: Sendable {
         // Respond with lastModified header
         headers.lastModified = HTTPFields.LastModified(value: fileInfo.lastDataModificationTime.date)
 
-        headers.replaceOrAdd(name: .eTag, value: eTag)
+        headers[.eTag] = eTag
 
         // Check if file has been cached already and return NotModified response if the etags match
-        if eTag == request.headers.first(name: .ifNoneMatch) {
+        if eTag == request.headers[.ifNoneMatch] {
             // Per RFC 9110 here: https://www.rfc-editor.org/rfc/rfc9110.html#status.304
             // and here: https://www.rfc-editor.org/rfc/rfc9110.html#name-content-encoding
             // A 304 response MUST include the ETag header and a Content-Length header matching what the original resource's content length would have been were this a 200 response.
-            headers.replaceOrAdd(name: .contentLength, value: fileInfo.size.description)
+            headers[.contentLength] = fileInfo.size.description
             return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
         }
 
@@ -275,7 +275,7 @@ public struct FileIO: Sendable {
         let byteCount: Int
         if let contentRange = contentRange {
             response.status = .partialContent
-            response.headers.add(name: .accept, value: contentRange.unit.serialize())
+            response.headers[.accept] = contentRange.unit.serialize()
             if let firstRange = contentRange.ranges.first {
                 do {
                     let range = try firstRange.asResponseContentRange(limit: Int(fileInfo.size))

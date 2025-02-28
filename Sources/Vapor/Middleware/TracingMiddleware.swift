@@ -65,7 +65,7 @@ public final class TracingMiddleware: AsyncMiddleware {
                 attributes["network.peer.address"] = request.remoteAddress?.ipAddress
                 attributes["network.peer.port"] = request.remoteAddress?.port
                 attributes["network.protocol.version"] = "\(request.version.major).\(request.version.minor)"
-                attributes["user_agent.original"] = request.headers[.userAgent].first
+                attributes["user_agent.original"] = request.headers[.userAgent]
                 
                 // Custom defined
                 setCustomAttributes(&attributes, request)

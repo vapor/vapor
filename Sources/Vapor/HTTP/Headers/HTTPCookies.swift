@@ -12,9 +12,9 @@ extension HTTPFields {
         }
         set {
             if let cookieHeader = newValue?.cookieHeader {
-                self.replaceOrAdd(name: .cookie, value: cookieHeader)
+                self[.cookie] = cookieHeader
             } else {
-                self.remove(name: .cookie)
+                self[.cookie] = nil
             }
         }
     }
@@ -36,10 +36,10 @@ extension HTTPFields {
             return cookies
         }
         set {
-            self.remove(name: .setCookie)
+            self[.setCookie] = nil
             if let cookies = newValue {
                 for cookieHeader in cookies.setCookieHeaders {
-                    self.add(name: .setCookie, value: cookieHeader)
+                    self.append(.init(name: .setCookie, value: cookieHeader))
                 }
             }
         }

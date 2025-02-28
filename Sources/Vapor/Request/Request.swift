@@ -91,7 +91,7 @@ public final class Request: CustomStringConvertible, Sendable {
             return try? SocketAddress.init(ipAddress: clientAddress, port: 80)
         }
 
-        if let xForwardedFor = headers.first(name: .xForwardedFor) {
+        if let xForwardedFor = headers[.xForwardedFor] {
             return try? SocketAddress.init(ipAddress: xForwardedFor, port: 80)
         }
 
@@ -332,7 +332,7 @@ public final class Request: CustomStringConvertible, Sendable {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
-        let requestId = headers.first(name: .xRequestId) ?? UUID().uuidString
+        let requestId = headers[.xRequestId] ?? UUID().uuidString
         let bodyStorage: BodyStorage
         if let body = collectedBody {
             bodyStorage = .collected(body)

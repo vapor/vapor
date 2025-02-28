@@ -15,7 +15,7 @@ extension HTTPFields {
     /// Access or set the `Authorization: Bearer: ...` header.
     public var bearerAuthorization: BearerAuthorization? {
         get {
-            guard let string = self.first(name: .authorization) else {
+            guard let string = self[.authorization] else {
                 return nil
             }
 
@@ -30,9 +30,9 @@ extension HTTPFields {
         }
         set {
             if let bearer = newValue {
-                replaceOrAdd(name: .authorization, value: "Bearer \(bearer.token)")
+                self[.authorization] = "Bearer \(bearer.token)"
             } else {
-                remove(name: .authorization)
+                self[.authorization] = nil
             }
         }
     }

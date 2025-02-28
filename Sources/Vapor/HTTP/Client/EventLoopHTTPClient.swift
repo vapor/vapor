@@ -31,7 +31,7 @@ private struct EventLoopHTTPClient: Client {
         let request = try HTTPClient.Request(
             url: url,
             method: .init(clientRequest.method),
-            headers: clientRequest.headers,
+            headers: .init(clientRequest.headers),
             body: clientRequest.body.map { .byteBuffer($0) }
         )
         let response = try await self.http.execute(
@@ -41,8 +41,8 @@ private struct EventLoopHTTPClient: Client {
             logger: logger
         ).get()
         return ClientResponse(
-            status: response.status,
-            headers: response.headers,
+            status: .init(code: Int(response.status.code)),
+            headers: .init(response.headers, splitCookie: false),
             body: response.body,
             byteBufferAllocator: self.byteBufferAllocator,
             contentConfiguration: self.contentConfiguration

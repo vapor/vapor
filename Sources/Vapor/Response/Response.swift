@@ -239,14 +239,14 @@ extension HTTPFields {
         let count = contentLength.description
         switch contentLength {
         case -1:
-            self.remove(name: .contentLength)
-            if "chunked" != self.first(name: .transferEncoding) {
-                self.add(name: .transferEncoding, value: "chunked")
+            self[.contentLength] = nil
+            if "chunked" != self[.transferEncoding] {
+                self[.transferEncoding] = "chunked"
             }
         default:
-            self.remove(name: .transferEncoding)
-            if count != self.first(name: .contentLength) {
-                self.replaceOrAdd(name: .contentLength, value: count)
+            self[.transferEncoding] = nil
+            if count != self[.contentLength] {
+                self[.contentLength] = count
             }
         }
     }

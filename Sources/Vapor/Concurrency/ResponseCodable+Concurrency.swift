@@ -34,7 +34,7 @@ extension AsyncResponseEncodable {
         let response = try await self.encodeResponse(for: request)
         response.responseBox.withLockedValue { box in
             for field in headers {
-                box.headers.replaceOrAdd(name: field.name, value: field.value)
+                box.headers.append(field)
             }
             box.status = status
         }

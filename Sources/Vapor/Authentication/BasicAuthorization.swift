@@ -20,7 +20,7 @@ extension HTTPFields {
     /// Access or set the `Authorization: Basic: ...` header.
     public var basicAuthorization: BasicAuthorization? {
         get {
-            guard let string = self.first(name: .authorization) else {
+            guard let string = self[.authorization] else {
                 return nil
             }
 
@@ -46,9 +46,9 @@ extension HTTPFields {
             if let basic = newValue {
                 let credentials = "\(basic.username):\(basic.password)"
                 let encoded = Data(credentials.utf8).base64EncodedString()
-                replaceOrAdd(name: .authorization, value: "Basic \(encoded)")
+                self[.authorization] = "Basic \(encoded)"
             } else {
-                remove(name: .authorization)
+                self[.authorization] = nil
             }
         }
     }

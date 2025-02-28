@@ -37,10 +37,10 @@ public final class CORSMiddleware: AsyncMiddleware {
         public func header(forRequest req: Request) -> String {
             switch self {
             case .none: return ""
-            case .originBased: return req.headers[.origin].first ?? ""
+            case .originBased: return req.headers[values: .origin].first ?? ""
             case .all: return "*"
             case .any(let origins):
-                guard let origin = req.headers[.origin].first else {
+                guard let origin = req.headers[values: .origin].first else {
                     return ""
                 }
                 return origins.contains(origin) ? origin : ""
@@ -97,10 +97,10 @@ public final class CORSMiddleware: AsyncMiddleware {
         public init(
             allowedOrigin: AllowOriginSetting,
             allowedMethods: [HTTPRequest.Method],
-            allowedHeaders: [HTTPFields.Name],
+            allowedHeaders: [HTTPField.Name],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,
-            exposedHeaders: [HTTPFields.Name]? = nil
+            exposedHeaders: [HTTPField.Name]? = nil
         ) {
             self.allowedOrigin = allowedOrigin
             self.allowedMethods = allowedMethods.map({ "\($0)" }).joined(separator: ", ")
@@ -125,7 +125,7 @@ public final class CORSMiddleware: AsyncMiddleware {
 
     public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         // Check if it's valid CORS request
-        guard request.headers[.origin].first != nil else {
+        guard request.headers[.origin] != nil else {
             return try await next.respond(to: request)
         }
 
@@ -137,26 +137,26 @@ public final class CORSMiddleware: AsyncMiddleware {
         let originBasedAccessControlAllowHeader = self.configuration.allowedOrigin.header(forRequest: request)
         response.responseBox.withLockedValue { box in
             if !originBasedAccessControlAllowHeader.isEmpty {
-                box.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: originBasedAccessControlAllowHeader)
+                box.headers[.accessControlAllowOrigin] = originBasedAccessControlAllowHeader
             }
 
-            box.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
-            box.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
+            box.headers[.accessControlAllowMethods] = self.configuration.allowedMethods
+            box.headers[.accessControlAllowHeaders] = self.configuration.allowedHeaders
 
             if let exposedHeaders = self.configuration.exposedHeaders {
-                box.headers.replaceOrAdd(name: .accessControlExpose, value: exposedHeaders)
+                box.headers[.accessControlExposeHeaders] = exposedHeaders
             }
 
             if let cacheExpiration = self.configuration.cacheExpiration {
-                box.headers.replaceOrAdd(name: .accessControlMaxAge, value: String(cacheExpiration))
+                box.headers[.accessControlMaxAge] = String(cacheExpiration)
             }
 
             if self.configuration.allowCredentials {
-                box.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
+                box.headers[.accessControlAllowCredentials] = "true"
             }
 
             if case .originBased = self.configuration.allowedOrigin, !originBasedAccessControlAllowHeader.isEmpty {
-                box.headers.add(name: .vary, value: "origin")
+                box.headers[.vary] = "origin"
             }
         }
         return response
@@ -168,7 +168,7 @@ public final class CORSMiddleware: AsyncMiddleware {
 private extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
-        return self.method == .options && self.headers[.accessControlRequestMethod].first != nil
+        return self.method == .options && self.headers[.accessControlRequestMethod] != nil
     }
 }
 

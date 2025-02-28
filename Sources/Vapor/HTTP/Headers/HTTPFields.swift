@@ -10,9 +10,9 @@ extension HTTPFields {
         }
         set {
             if let new = newValue?.serialize() {
-                self.replaceOrAdd(name: .contentType, value: new)
+                self[.contentType] = new
             } else {
-                self.remove(name: .contentType)
+                self[.contentType] = nil
             }
         }
     }

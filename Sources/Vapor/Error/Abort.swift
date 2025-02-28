@@ -18,7 +18,7 @@ public struct Abort: AbortError, DebuggableError, Equatable {
     /// - Returns: An abort error that provides a redirect to the specified location
     public static func redirect(to location: String, redirectType: Redirect = .normal) -> Abort {
         var headers: HTTPFields = [:]
-        headers.replaceOrAdd(name: .location, value: location)
+        headers[.location] = location
         return .init(redirectType.status, headers: headers)
     }
 

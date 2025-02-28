@@ -46,7 +46,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             if self.isShuttingDown {
                 self.logger.debug("In-flight request has completed")
             }
-            response.headers.add(name: .connection, value: keepAlive ? "keep-alive" : "close")
+            response.headers[.connection] = keepAlive ? "keep-alive" : "close"
             let done = context.write(self.wrapOutboundOut(response))
             let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
             done.whenComplete { result in

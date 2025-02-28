@@ -69,14 +69,14 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
         var headers: HTTPFields = [:]
 
-        if let eTag = self.headers?.first(name: .eTag) {
-            headers.add(name: .ifNoneMatch, value: eTag)
+        if let eTag = self.headers?[.eTag] {
+            headers[.ifNoneMatch] = eTag
         }
 
         if let lastModified = self.headers?.lastModified {
             // TODO: If using HTTP/1.0 then this should be .ifUnmodifiedSince instead. Don't know
             // how to determine that right now.
-            headers.add(name: .ifModifiedSince, value: lastModified.serialize())
+            headers[.ifModifiedSince] = lastModified.serialize()
         }
 
         // Cache-Control max-age is calculated against the request date.

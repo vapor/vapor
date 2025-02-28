@@ -51,12 +51,12 @@ extension HTTPFields {
     /// ### Note ###
     /// `Expires` is legacy and you should switch to using `CacheControl` if possible.
     public var expires: Expires? {
-        get { self.first(name: .expires).flatMap(Expires.parse) }
+        get { self[.expires].flatMap(Expires.parse) }
         set {
             if let new = newValue?.serialize() {
-                self.replaceOrAdd(name: .expires, value: new)
+                self[.expires] = new
             } else {
-                self.remove(name: .expires)
+                self[.expires] = nil
             }
         }
     }

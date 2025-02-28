@@ -24,7 +24,7 @@ extension HTTPFields {
         }
     }
 
-    func parseDirectives(name: Name) -> [[Directive]] {
+    func parseDirectives(name: HTTPField.Name) -> [[Directive]] {
         let headers = self[name]
         var values: [[Directive]] = []
         let separatorCharacters = getSeparatorCharacters(for: name)
@@ -37,7 +37,7 @@ extension HTTPFields {
         return values
     }
 
-    private func getSeparatorCharacters(for headerName: Name) -> [Character] {
+    private func getSeparatorCharacters(for headerName:  HTTPField.Name) -> [Character] {
         switch headerName {
         // Headers with dates can't have comma as a separator
         case .setCookie, .ifModifiedSince, .date, .lastModified, .expires:
@@ -46,9 +46,9 @@ extension HTTPFields {
         }
     }
 
-    mutating func serializeDirectives(_ directives: [[Directive]], name: Name) {
+    mutating func serializeDirectives(_ directives: [[Directive]], name:  HTTPField.Name) {
         let serializer = DirectiveSerializer(directives: directives)
-        self.replaceOrAdd(name: name, value: serializer.serialize())
+        self[name] = serializer.serialize()
     }
 
     struct DirectiveParser {

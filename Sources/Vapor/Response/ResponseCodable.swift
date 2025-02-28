@@ -50,8 +50,8 @@ extension ResponseEncodable {
     public func encodeResponse(status: HTTPStatus, headers: HTTPFields = [:], for request: Request) -> EventLoopFuture<Response> {
         return self.encodeResponse(for: request).map { response in
             response.responseBox.withLockedValue { box in
-                for (name, value) in headers {
-                    box.headers.replaceOrAdd(name: name, value: value)
+                for header in headers {
+                    box.headers.append(header)
                 }
                 box.status = status
             }
@@ -96,4 +96,4 @@ extension EventLoopFuture: ResponseEncodable where Value: ResponseEncodable {
     }
 }
 
-internal let staticStringHeaders: HTTPFields = ["content-type": "text/plain; charset=utf-8"]
+internal let staticStringHeaders: HTTPFields = [.contentType: "text/plain; charset=utf-8"]

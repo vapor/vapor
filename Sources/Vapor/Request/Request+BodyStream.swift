@@ -95,7 +95,7 @@ extension Request {
                     switch chunk {
                     case .buffer(var buffer):
                         if let max = max, data.value.readableBytes + buffer.readableBytes >= max {
-                            promise.fail(Abort(.payloadTooLarge))
+                            promise.fail(Abort(.contentTooLarge))
                         } else {
                             data.value.writeBuffer(&buffer)
                         }

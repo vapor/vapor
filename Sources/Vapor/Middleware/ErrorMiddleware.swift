@@ -44,7 +44,7 @@ public final class ErrorMiddleware: Middleware {
             req.logger.report(error: error,
                               metadata: ["method" : "\(req.method.rawValue)",
                                          "url" : "\(req.url.string)",
-                                         "userAgent" : .array(req.headers["User-Agent"].map { "\($0)" })],
+                                         "userAgent" : .array(req.headers[values: .userAgent].map { "\($0)" })],
                               file: source.file,
                               function: source.function,
                               line: source.line)

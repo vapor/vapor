@@ -18,7 +18,7 @@ extension Request {
         let response = Response()
         response.responseBox.withLockedValue { box in
             box.status = redirectType.status
-            box.headers.replaceOrAdd(name: .location, value: location)
+            box.headers[.location] = location
         }
         return response
     }

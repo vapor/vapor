@@ -44,7 +44,7 @@ extension Application.HTTP {
                     )
 
                     let vaporResponse = try await application.responder.current.respond(to: vaporRequest).get()
-                    let httpResponse = HTTPResponse(status: .init(code: Int(vaporResponse.status.code), reasonPhrase: vaporResponse.status.reasonPhrase), headerFields: HTTPFields(vaporResponse.headers, splitCookie: false))
+                    let httpResponse = HTTPResponse(status: vaporResponse.status, headerFields: vaporResponse.headers)
 
                     var bodyWriter: any ResponseBodyWriter = try await responseWriter.writeHead(httpResponse)
                     try await vaporResponse.body.write(&bodyWriter)
