@@ -11,7 +11,7 @@ public protocol Middleware: Sendable {
     ///     - request: The incoming `Request`.
     ///     - next: Next `Responder` in the chain, potentially another middleware or the main router.
     /// - returns: An asynchronous `Response`.
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response>
+    func respond(to request: Request, chainingTo next: Responder) async throws -> Response
 }
 
 extension Array where Element == Middleware {
@@ -46,9 +46,9 @@ private struct HTTPMiddlewareResponder: Responder {
     /// - parameters:
     ///     - request: The incoming `Request`.
     /// - returns: An asynchronous `Response`.
-    func respond(to request: Request) -> EventLoopFuture<Response> {
+    func respond(to request: Request) async throws -> Response {
         return request.propagateTracingIfEnabled {
-            self.middleware.respond(to: request, chainingTo: self.responder)
+            try await self.middleware.respond(to: request, chainingTo: self.responder)
         }
     }
 }

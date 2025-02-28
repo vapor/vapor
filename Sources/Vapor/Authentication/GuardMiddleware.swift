@@ -27,7 +27,7 @@ extension Authenticatable {
 
 
 
-private final class GuardAuthenticationMiddleware<A>: AsyncMiddleware
+private final class GuardAuthenticationMiddleware<A>: Middleware
     where A: Authenticatable
 {
     /// Error to throw when guard fails.
@@ -42,7 +42,7 @@ private final class GuardAuthenticationMiddleware<A>: AsyncMiddleware
         self.error = error
     }
 
-    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         guard request.auth.has(A.self) else {
             throw self.error
         }

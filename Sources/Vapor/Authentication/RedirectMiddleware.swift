@@ -19,7 +19,7 @@ extension Authenticatable {
 }
 
 
-private final class RedirectMiddleware<A>: AsyncMiddleware
+private final class RedirectMiddleware<A>: Middleware
     where A: Authenticatable
 {
     let makePath: @Sendable (Request) -> String
@@ -28,7 +28,7 @@ private final class RedirectMiddleware<A>: AsyncMiddleware
         self.makePath = makePath
     }
 
-    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         if request.auth.has(A.self) {
             return try await next.respond(to: request)
         }

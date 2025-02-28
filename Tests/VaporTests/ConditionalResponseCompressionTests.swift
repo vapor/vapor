@@ -733,8 +733,8 @@ struct ConditionalCompressionTests {
     @Suite("Conditional Response Compression Route Tests")
     struct ConditionalResponseCompressionRouteTests {
         func expectResponseCompression(
-            middleware: any AsyncMiddleware,
-            responder: any AsyncResponder,
+            middleware: any Middleware,
+            responder: any Responder,
             compressionValue: String?,
             on app: Application,
             sourceLocation: SourceLocation = #_sourceLocation
@@ -863,7 +863,7 @@ private let compressiblePayload = #"{"compressed": ["key": "value", "key": "valu
 
 private let unknownType = HTTPMediaType(type: "vapor-test", subType: "unknown")
 
-private struct TestResponder: AsyncResponder {
+private struct TestResponder: Responder {
     let transform: @Sendable (_ request: Request) -> Response
 
     func respond(to request: Request) async throws -> Response {

@@ -12,7 +12,7 @@ import NIOCore
 ///     app.middleware.use(app.sessions.middleware)
 ///
 /// See `SessionsConfig` and `Sessions` for more information.
-public final class SessionsMiddleware: AsyncMiddleware {
+public final class SessionsMiddleware: Middleware {
     /// The cookie to work with
     let configuration: SessionsConfiguration
 
@@ -32,7 +32,7 @@ public final class SessionsMiddleware: AsyncMiddleware {
         self.configuration = configuration
     }
 
-    public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         // Signal middleware has been added.
         request._sessionCache.middlewareFlag.withLockedValue { $0 = true }
 

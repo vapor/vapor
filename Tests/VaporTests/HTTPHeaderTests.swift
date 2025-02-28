@@ -159,9 +159,7 @@ struct HTTPHeaderTests {
     func testComplexCookieParsing() throws {
         var headers = HTTPFields()
         do {
-            headers[.setCookie] = "SIWA_STATE=CJKxa71djx6CaZ0MwRjtvtJ5Zub+kfaoIEZGoY3wXKA=; Path=/; SameSite=None; HttpOnly; Secure"
-            headers[.setCookie] = "vapor-session=TL7r+TS3RNhpEC6HoCfukq+7edNHKF2elF6WiKV4JCg=; Expires=Wed, 02 Jun 2021 14:57:57 GMT; Path=/; SameSite=None; HttpOnly; Secure"
-
+            headers[values: .setCookie] = ["SIWA_STATE=CJKxa71djx6CaZ0MwRjtvtJ5Zub+kfaoIEZGoY3wXKA=; Path=/; SameSite=None; HttpOnly; Secure", "vapor-session=TL7r+TS3RNhpEC6HoCfukq+7edNHKF2elF6WiKV4JCg=; Expires=Wed, 02 Jun 2021 14:57:57 GMT; Path=/; SameSite=None; HttpOnly; Secure"]
             #expect(headers.setCookie?.all.count == 2)
 
             let siwaState = try #require(headers.setCookie?["SIWA_STATE"])
@@ -202,7 +200,7 @@ struct HTTPHeaderTests {
         var headers = HTTPFields()
         headers[.xForwardedFor] = "192.0.2.43, 2001:db8:cafe::17 "
 
-        #expect(headers.forwarded.map { $0.for } == [
+        #expect(headers.forwarded.compactMap { $0.for } == [
             "192.0.2.43",
             "2001:db8:cafe::17",
         ])
@@ -261,6 +259,7 @@ struct HTTPHeaderTests {
         var headers = HTTPFields()
         headers[.cookie] = "oauth2_authentication_csrf=MTU4NzA1MTc0N3xEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJRGs1WkRKbU1HRTVNMlF3TmpRM1lUbGhOelptTnprMU5EYzRZMlk1WkRObXx6lRdSC3-hPvE1pxp4ylFlBruOyJtRo8OnzBrAriBr0w==; vapor-session=ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=; oauth2_consent_csrf=MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg=="
 
+        print(headers.cookie)
         #expect(headers.cookie?["oauth2_authentication_csrf"]?.string ==
             "MTU4NzA1MTc0N3xEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJRGs1WkRKbU1HRTVNMlF3TmpRM1lUbGhOelptTnprMU5EYzRZMlk1WkRObXx6lRdSC3-hPvE1pxp4ylFlBruOyJtRo8OnzBrAriBr0w==")
         #expect(headers.cookie?["vapor-session"]?.string == "ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=")

@@ -6,7 +6,7 @@ import HTTPTypes
 ///
 /// - note: Make sure this middleware is inserted before all your error/abort middlewares,
 ///         so that even the failed request responses contain proper CORS information.
-public final class CORSMiddleware: AsyncMiddleware {
+public final class CORSMiddleware: Middleware {
     /// Option for the allow origin header in responses for CORS requests.
     ///
     /// - none: Disallows any origin.
@@ -123,7 +123,7 @@ public final class CORSMiddleware: AsyncMiddleware {
         self.configuration = configuration
     }
 
-    public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         // Check if it's valid CORS request
         guard request.headers[.origin] != nil else {
             return try await next.respond(to: request)

@@ -367,13 +367,13 @@ public final class Request: CustomStringConvertible, Sendable {
     }
     
     /// Automatically restores tracing serviceContext around the provided closure
-    func propagateTracingIfEnabled<T>(_ closure: () throws -> T) rethrows -> T {
+    func propagateTracingIfEnabled<T>(_ closure: () async throws -> T) async rethrows -> T {
         if self.traceAutoPropagation {
-            return try ServiceContext.withValue(self.serviceContext) {
-                try closure()
+            return try await ServiceContext.withValue(self.serviceContext) {
+                try await closure()
             }
         } else {
-            return try closure()
+            return try await closure()
         }
     }
 }

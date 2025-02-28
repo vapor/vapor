@@ -126,8 +126,8 @@ struct MiddlewareTests2 {
             let tracer = TestTracer()
             InstrumentationSystem.bootstrap(tracer)
 
-            struct TestServiceContextMiddleware: AsyncMiddleware {
-                func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+            struct TestServiceContextMiddleware: Middleware {
+                func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
                     #expect(ServiceContext.current != nil)
                     return try await next.respond(to: request)
                 }
@@ -203,14 +203,14 @@ actor OrderStore {
     }
 }
 
-final class OrderMiddleware: AsyncMiddleware {
+final class OrderMiddleware: Middleware {
     let pos: String
     let store: OrderStore
     init(_ pos: String, store: OrderStore) {
         self.pos = pos
         self.store = store
     }
-    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
         await store.addOrder(pos)
         return try await next.respond(to: request)
     }

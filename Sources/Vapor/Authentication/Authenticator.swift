@@ -6,7 +6,7 @@ public protocol Authenticatable { }
 /// Helper for creating authentication middleware.
 ///
 /// See `RequestAuthenticator` and `SessionAuthenticator` for more information.
-public protocol Authenticator: AsyncMiddleware { }
+public protocol Authenticator: Middleware { }
 
 /// Help for creating authentication middleware based on `Request`.
 ///
@@ -17,7 +17,7 @@ public protocol RequestAuthenticator: Authenticator {
 }
 
 extension RequestAuthenticator {
-    public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
         try await self.authenticate(request: request)
         return try await next.respond(to: request)
     }
