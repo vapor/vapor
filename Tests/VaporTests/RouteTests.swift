@@ -138,7 +138,7 @@ struct RouteTests {
 
     @Test("Test Enum Response")
     func testEnumResponse() async throws {
-        enum IntOrString: AsyncResponseEncodable {
+        enum IntOrString: ResponseEncodable {
             case int(Int)
             case string(String)
 

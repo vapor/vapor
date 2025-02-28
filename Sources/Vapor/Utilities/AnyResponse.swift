@@ -32,15 +32,15 @@ import NIOCore
 ///         }
 ///     }
 ///
-public struct AnyResponse: AsyncResponseEncodable {
+public struct AnyResponse: ResponseEncodable {
     /// The wrapped `ResponseEncodable` type.
-    private let encodable: AsyncResponseEncodable
+    private let encodable: ResponseEncodable
 
     /// Creates a new `AnyResponse`.
     ///
     /// - parameters:
     ///     - encodable: Something `ResponseEncodable`.
-    public init(_ encodable: AsyncResponseEncodable) {
+    public init(_ encodable: ResponseEncodable) {
         self.encodable = encodable
     }
 

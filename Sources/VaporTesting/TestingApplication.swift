@@ -94,7 +94,7 @@ extension Application {
                 logger: app.logger,
                 on: self.app.eventLoopGroup.next()
             )
-            let res = try await self.app.responder.respond(to: request).get()
+            let res = try await self.app.responder.respond(to: request)
             return try await TestingHTTPResponse(
                 status: res.status,
                 headers: res.headers,

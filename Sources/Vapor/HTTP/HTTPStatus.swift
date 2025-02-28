@@ -4,7 +4,7 @@ import NIOCore
 /// Less verbose typealias for `HTTPResponse.Status`.
 public typealias HTTPStatus = HTTPResponse.Status
 
-extension HTTPStatus: AsyncResponseEncodable {
+extension HTTPStatus: ResponseEncodable {
     /// See `ResponseEncodable`.
     public func encodeResponse(for request: Request) async throws -> Response {
         Response(status: self)

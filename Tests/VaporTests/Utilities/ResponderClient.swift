@@ -34,7 +34,7 @@ struct ResponderClient: Client {
             remoteAddress: nil,
             logger: application.logger,
             on: application.eventLoopGroup.next()
-        )).get()
+        ))
         return ClientResponse(status: res.status, headers: res.headers, body: res.body.buffer)
     }
 

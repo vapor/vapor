@@ -693,13 +693,15 @@ struct ValidationTests {
                 var errors: [String]
             }
 
-            func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-                next.respond(to: request).flatMapErrorThrowing { error in
-                    // Check to see if this is a validation error. 
+            func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+                do {
+                    return try await next.respond(to: request)
+                } catch {
+                    // Check to see if this is a validation error.
                     if let validationError = error as? ValidationsError {
                         // Convert each failed ValidatorResults to a String
                         // for the sake of this example.
-                        let errorMessages = validationError.failures.map { failure -> String in 
+                        let errorMessages = validationError.failures.map { failure -> String in
                             let reason: String
                             // The failure result will be one of the ValidatorResults subtypes.
                             //

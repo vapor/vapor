@@ -256,73 +256,75 @@ struct PipelineTests {
         }
     }
 
-    @Test("Returning Response on Different EventLoop Dosent Crash LoopBoundBox")
-    func returningResponseOnDifferentEventLoopDosentCrashLoopBoundBox() async throws {
-        struct ResponseThing: ResponseEncodable {
-            let eventLoop: EventLoop
+#warning("do we need this?")
+//    @Test("Returning Response on Different EventLoop Dosent Crash LoopBoundBox")
+//    func returningResponseOnDifferentEventLoopDosentCrashLoopBoundBox() async throws {
+//        struct ResponseThing: ResponseEncodable {
+//            let eventLoop: EventLoop
+//
+//            func encodeResponse(for request: Vapor.Request) -> NIOCore.EventLoopFuture<Vapor.Response> {
+//                let response = Response(status: .ok)
+//                return eventLoop.future(response)
+//            }
+//        }
+//
+//        try await withApp { app in
+//            let eventLoop = app.eventLoopGroup.next()
+//            app.get("dont-crash") { req in
+//                return ResponseThing(eventLoop: eventLoop)
+//            }
+//
+//            try await app.testing().test(.get, "dont-crash") { res async in
+//                #expect(res.status == .ok)
+//            }
+//
+//            app.environment.arguments = ["serve"]
+//            app.http.server.configuration.port = 0
+//            try await app.startup()
+//
+//            guard let localAddress = app.http.server.shared.localAddress,
+//                  let port = localAddress.port else {
+//                Issue.record("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+//                return
+//            }
+//
+//            let res = try await app.client.get("http://localhost:\(port)/dont-crash")
+//            #expect(res.status == .ok)
+//        }
+//    }
 
-            func encodeResponse(for request: Vapor.Request) -> NIOCore.EventLoopFuture<Vapor.Response> {
-                let response = Response(status: .ok)
-                return eventLoop.future(response)
-            }
-        }
-
-        try await withApp { app in
-            let eventLoop = app.eventLoopGroup.next()
-            app.get("dont-crash") { req in
-                return ResponseThing(eventLoop: eventLoop)
-            }
-
-            try await app.testing().test(.get, "dont-crash") { res async in
-                #expect(res.status == .ok)
-            }
-
-            app.environment.arguments = ["serve"]
-            app.http.server.configuration.port = 0
-            try await app.startup()
-
-            guard let localAddress = app.http.server.shared.localAddress,
-                  let port = localAddress.port else {
-                Issue.record("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-                return
-            }
-
-            let res = try await app.client.get("http://localhost:\(port)/dont-crash")
-            #expect(res.status == .ok)
-        }
-    }
-
-    @Test("Returning Response from Middleware on Different EventLoop Dosent Crash LoopBoundBox")
-    func returningResponseFromMiddlewareOnDifferentEventLoopDosentCrashLoopBoundBox() async throws {
-        struct WrongEventLoopMiddleware: Middleware {
-            func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-                next.respond(to: request).hop(to: request.application.eventLoopGroup.next())
-            }
-        }
-
-        try await withApp { app in
-            app.grouped(WrongEventLoopMiddleware()).get("dont-crash") { req in
-                return "OK"
-            }
-
-            try await app.testing().test(.get, "dont-crash") { res async in
-                #expect(res.status == .ok)
-            }
-
-            app.environment.arguments = ["serve"]
-            app.http.server.configuration.port = 0
-            try await app.startup()
-
-            guard let localAddress = app.http.server.shared.localAddress,
-                  let port = localAddress.port else {
-                Issue.record("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-                return
-            }
-
-            let res = try await app.client.get("http://localhost:\(port)/dont-crash")
-            #expect(res.status == .ok)
-        }
-    }
+    #warning("do we need this?")
+//    @Test("Returning Response from Middleware on Different EventLoop Dosent Crash LoopBoundBox")
+//    func returningResponseFromMiddlewareOnDifferentEventLoopDosentCrashLoopBoundBox() async throws {
+//        struct WrongEventLoopMiddleware: Middleware {
+//            func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+//                next.respond(to: request).hop(to: request.application.eventLoopGroup.next())
+//            }
+//        }
+//
+//        try await withApp { app in
+//            app.grouped(WrongEventLoopMiddleware()).get("dont-crash") { req in
+//                return "OK"
+//            }
+//
+//            try await app.testing().test(.get, "dont-crash") { res async in
+//                #expect(res.status == .ok)
+//            }
+//
+//            app.environment.arguments = ["serve"]
+//            app.http.server.configuration.port = 0
+//            try await app.startup()
+//
+//            guard let localAddress = app.http.server.shared.localAddress,
+//                  let port = localAddress.port else {
+//                Issue.record("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+//                return
+//            }
+//
+//            let res = try await app.client.get("http://localhost:\(port)/dont-crash")
+//            #expect(res.status == .ok)
+//        }
+//    }
 
     @Test("Test Streaming Off EventLoop")
     func streamingOffEventLoop() async throws {

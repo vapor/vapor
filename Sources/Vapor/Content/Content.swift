@@ -18,7 +18,7 @@ import NIOCore
 ///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
-public protocol Content: Codable, RequestDecodable, ResponseEncodable, AsyncResponseEncodable, Sendable {
+public protocol Content: Codable, RequestDecodable, ResponseEncodable, Sendable {
     /// The default `MediaType` to use when _encoding_ content. This can always be overridden at the encode call.
     ///
     /// Default implementation is `MediaType.json` for all types.
@@ -118,13 +118,13 @@ extension BinaryFloatingPoint where Self: Content {
 extension Double: Content { }
 extension Float: Content { }
 
-extension Array: Content, ResponseEncodable, RequestDecodable, AsyncResponseEncodable where Element: Content {
+extension Array: Content, ResponseEncodable, RequestDecodable where Element: Content {
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
 }
 
-extension Dictionary: Content, ResponseEncodable, RequestDecodable, AsyncResponseEncodable where Key == String, Value: Content {
+extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content {
     public static var defaultContentType: HTTPMediaType {
         return .json
     }

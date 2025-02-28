@@ -1,4 +1,3 @@
-import NIOCore
 import HTTPTypes
 
 /// Can convert `self` to a `Response`.
@@ -10,7 +9,7 @@ public protocol ResponseEncodable {
     /// - parameters:
     ///     - for: The `Request` associated with this `Response`.
     /// - returns: A `Response`.
-    func encodeResponse(for request: Request) -> EventLoopFuture<Response>
+    func encodeResponse(for request: Request) async throws -> Response
 }
 
 /// Can convert `Request` to a `Self`.
@@ -47,16 +46,15 @@ extension ResponseEncodable {
     ///     - status: `HTTPStatus` to set on the `Response`.
     ///     - headers: `HTTPFields` to merge into the `Response`'s headers.
     /// - returns: Newly encoded `Response`.
-    public func encodeResponse(status: HTTPStatus, headers: HTTPFields = [:], for request: Request) -> EventLoopFuture<Response> {
-        return self.encodeResponse(for: request).map { response in
-            response.responseBox.withLockedValue { box in
-                for header in headers {
-                    box.headers.append(header)
-                }
-                box.status = status
+    public func encodeResponse(status: HTTPStatus, headers: HTTPFields = [:], for request: Request) async throws -> Response {
+        let response = try await encodeResponse(for: request)
+        response.responseBox.withLockedValue { box in
+            for header in headers {
+                box.headers.append(header)
             }
-            return response
+            box.status = status
         }
+        return response
     }
 }
 
@@ -64,24 +62,32 @@ extension ResponseEncodable {
 
 extension Response: ResponseEncodable {
     // See `ResponseEncodable`.
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        return request.eventLoop.makeSucceededFuture(self)
+    public func encodeResponse(for request: Request) async throws -> Response {
+        return self
     }
 }
 
 extension StaticString: ResponseEncodable {
-    // See `ResponseEncodable`.
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let res = Response(headers: staticStringHeaders, body: .init(staticString: self, byteBufferAllocator: request.byteBufferAllocator))
-        return request.eventLoop.makeSucceededFuture(res)
+    // See `AsyncResponseEncodable`.
+    public func encodeResponse(for request: Request) async throws -> Response {
+        let res = Response(headers: staticStringHeaders, body: .init(staticString: self), contentConfiguration: request.application.contentConfiguration)
+        return res
     }
 }
 
 extension String: ResponseEncodable {
-    // See `ResponseEncodable`.
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let res = Response(headers: staticStringHeaders, body: .init(string: self, byteBufferAllocator: request.byteBufferAllocator))
-        return request.eventLoop.makeSucceededFuture(res)
+    // See `AsyncResponseEncodable`.
+    public func encodeResponse(for request: Request) async throws -> Response {
+        let res = Response(headers: staticStringHeaders, body: .init(string: self), contentConfiguration: request.application.contentConfiguration)
+        return res
+    }
+}
+
+extension Content {
+    public func encodeResponse(for request: Request) async throws -> Response {
+        let response = Response(contentConfiguration: request.application.contentConfiguration)
+        try response.content.encode(self)
+        return response
     }
 }
 

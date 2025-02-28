@@ -84,7 +84,7 @@ extension ClientResponse: CustomStringConvertible {
     }
 }
 
-extension ClientResponse: AsyncResponseEncodable {
+extension ClientResponse: ResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
         let body: Response.Body
         if let buffer = self.body {

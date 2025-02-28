@@ -15,38 +15,39 @@ public func routes(_ app: Application) throws {
         return "123" as StaticString
     }
 
+    #warning("Fix")
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
-    app.on(.post, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
-        let done = req.eventLoop.makePromise(of: String.self)
-
-        let totalBox = NIOLoopBoundBox(0, eventLoop: req.eventLoop)
-        req.body.drain { result in
-            let promise = req.eventLoop.makePromise(of: Void.self)
-
-            switch result {
-            case .buffer(let buffer):
-                req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
-                    totalBox.value += buffer.readableBytes
-                    promise.succeed(())
-                }
-            case .error(let error):
-                done.fail(error)
-            case .end:
-                promise.succeed(())
-                done.succeed(totalBox.value.description)
-            }
-
-            // manually return pre-completed future
-            // this should balloon in memory
-            // return req.eventLoop.makeSucceededFuture(())
-            
-            // return real future that indicates bytes were handled
-            // this should use very little memory
-            return promise.futureResult
-        }
-
-        return done.futureResult
-    }
+//    app.on(.post, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
+//        let done = req.eventLoop.makePromise(of: String.self)
+//
+//        let totalBox = NIOLoopBoundBox(0, eventLoop: req.eventLoop)
+//        req.body.drain { result in
+//            let promise = req.eventLoop.makePromise(of: Void.self)
+//
+//            switch result {
+//            case .buffer(let buffer):
+//                req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
+//                    totalBox.value += buffer.readableBytes
+//                    promise.succeed(())
+//                }
+//            case .error(let error):
+//                done.fail(error)
+//            case .end:
+//                promise.succeed(())
+//                done.succeed(totalBox.value.description)
+//            }
+//
+//            // manually return pre-completed future
+//            // this should balloon in memory
+//            // return req.eventLoop.makeSucceededFuture(())
+//            
+//            // return real future that indicates bytes were handled
+//            // this should use very little memory
+//            return promise.futureResult
+//        }
+//
+//        return done.futureResult
+//    }
 
     app.get("test", "head") { req -> String in
         return "OK!"
@@ -225,7 +226,7 @@ public func routes(_ app: Application) throws {
     }
     
     @Sendable
-    func opaqueRouteTester(_ req: Request) async throws -> some AsyncResponseEncodable {
+    func opaqueRouteTester(_ req: Request) async throws -> some ResponseEncodable {
         "Hello World"
     }
     asyncRoutes.get("opaque", use: opaqueRouteTester)

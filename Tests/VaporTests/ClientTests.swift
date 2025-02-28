@@ -200,7 +200,7 @@ struct ClientTests {
         }
 
         remoteApp.get("stalling") {
-            $0.eventLoop.scheduleTask(in: .seconds(1)) { SomeJSON() }.futureResult
+            try await $0.eventLoop.scheduleTask(in: .seconds(1)) { SomeJSON() }.futureResult.get()
         }
 
         remoteApp.environment.arguments = ["serve"]
