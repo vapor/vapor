@@ -1,5 +1,4 @@
 import NIOCore
-import NIOHTTP1
 import RoutingKit
 import HTTPTypes
 

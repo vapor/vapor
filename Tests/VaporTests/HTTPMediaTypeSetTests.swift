@@ -1,6 +1,6 @@
 @testable import Vapor
 import Testing
-import NIOHTTP1
+import HTTPTypes
 
 @Suite("HTTP Media Type Set Tests")
 struct HTTPMediaTypeSetTests {

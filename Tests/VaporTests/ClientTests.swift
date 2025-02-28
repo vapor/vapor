@@ -180,12 +180,12 @@ struct ClientTests {
 
         remoteApp.get("status", ":status") { req -> HTTPStatus in
             let status = try req.parameters.require("status", as: Int.self)
-            return HTTPStatus(statusCode: status)
+            return HTTPStatus(code: status)
         }
 
         remoteApp.post("anything") { req -> AnythingResponse in
             let headers = req.headers.reduce(into: [String: String]()) {
-                $0[$1.0] = $1.1
+                $0[$1.name.canonicalName] = $1.value
             }
 
             guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {

@@ -1,14 +1,16 @@
+import NIOHTTP1
 import Foundation
 import Vapor
 import AsyncHTTPClient
 import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers
-import NIOHTTP1
+import HTTPTypes
 import NIOSSL
 import Atomics
 import Testing
 import VaporTesting
+import NIOHTTPTypesHTTP1
 
 @Suite("Server Tests")
 struct ServerTests {
@@ -140,8 +142,8 @@ struct ServerTests {
 
             // Small payload should just barely get through.
             let res = try await app.client.post("http://localhost:\(port)/gzip") { req in
-                req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-                req.headers.replaceOrAdd(name: .contentType, value: "application/json")
+                req.headers[.contentEncoding] = "gzip"
+                req.headers[.contentType] = "application/json"
                 req.body = jsonPayload
             }
 
@@ -179,7 +181,7 @@ struct ServerTests {
             let port = try #require(app.http.server.shared.localAddress?.port)
             // Small payload should just barely get through.
             let res = try await app.client.post("http://localhost:\(port)/gzip") { req in
-                req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
+                req.headers[.contentEncoding] = "gzip"
                 req.body = smallBody
             }
             #expect(res.body?.string == smallOrigString)
@@ -188,7 +190,7 @@ struct ServerTests {
             // protocol decoding errors are only ever logged and can't be directly caught.
             await #expect(throws: HTTPClientError.remoteConnectionClosed) {
                 _ = try await app.client.post("http://localhost:\(port)/gzip") { req in
-                    req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
+                    req.headers[.contentEncoding] = "gzip"
                     req.body = bigBody
                 }
             }
@@ -219,7 +221,7 @@ struct ServerTests {
             }
 
             app.on(.post, "compressed", body: .collect(maxSize: "1mb")) { request async throws in
-                let contentLength = request.headers.first(name: .contentLength).flatMap { Int($0) }
+                let contentLength = request.headers[.contentLength].flatMap { Int($0) }
                 let contents = try await request.body.collect().get()
                 return TestResponse(
                     content: contents,
@@ -244,7 +246,7 @@ struct ServerTests {
 
             // TODO: The server should probably reject this?
             let unsupportedCompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
-                request.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
+                request.headers[.contentEncoding] = "gzip"
                 request.body = compressedPayload
             }
 
@@ -271,7 +273,7 @@ struct ServerTests {
             }
 
             let supportedCompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
-                request.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
+                request.headers[.contentEncoding] = "gzip"
                 request.body = compressedPayload
             }
 
@@ -334,7 +336,7 @@ struct ServerTests {
             }
 
             app.post("compressed") { request async throws in
-                let contentLength = request.headers.first(name: .contentLength)
+                let contentLength = request.headers[.contentLength]
                 let contents = try await request.body.collect().get()
                 return TestResponse(
                     content: contents,
@@ -359,7 +361,7 @@ struct ServerTests {
 
             // TODO: The server should probably reject this?
             let unsupportedCompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
-                request.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
+                request.headers[.contentEncoding] = "gzip"
                 request.body = compressedPayload
             }
 
@@ -386,7 +388,7 @@ struct ServerTests {
             }
 
             let supportedCompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
-                request.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
+                request.headers[.contentEncoding] = "gzip"
                 request.body = compressedPayload
             }
 
@@ -423,33 +425,33 @@ struct ServerTests {
             let port = try #require(app.http.server.shared.localAddress?.port)
 
             let unsupportedNoncompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-                request.headers.remove(name: .acceptEncoding)
+                request.headers[.acceptEncoding] = nil
             }
-            #expect(unsupportedNoncompressedResponse.headers.first(name: .contentEncoding) != "gzip")
-            #expect(unsupportedNoncompressedResponse.headers.first(name: .contentLength) == "\(compressiblePayload.count)")
+            #expect(unsupportedNoncompressedResponse.headers[.contentEncoding] != "gzip")
+            #expect(unsupportedNoncompressedResponse.headers[.contentLength] == "\(compressiblePayload.count)")
             #expect(unsupportedNoncompressedResponse.body?.string == compressiblePayload)
 
             let unsupportedCompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-                request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
+                request.headers[.acceptEncoding] = "gzip"
             }
-            #expect(unsupportedCompressedResponse.headers.first(name: .contentEncoding) != "gzip")
-            #expect(unsupportedCompressedResponse.headers.first(name: .contentLength) == "\(compressiblePayload.count)")
+            #expect(unsupportedCompressedResponse.headers[.contentEncoding] != "gzip")
+            #expect(unsupportedCompressedResponse.headers[.contentLength] == "\(compressiblePayload.count)")
             #expect(unsupportedCompressedResponse.body?.string == compressiblePayload)
 
             app.http.server.configuration.responseCompression = .enabled
 
             let supportedUncompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-                request.headers.remove(name: .acceptEncoding)
+                request.headers[.acceptEncoding] = nil
             }
-            #expect(supportedUncompressedResponse.headers.first(name: .contentEncoding) != "gzip")
-            #expect(supportedUncompressedResponse.headers.first(name: .contentLength) != "\(compressiblePayload.count)")
+            #expect(supportedUncompressedResponse.headers[.contentEncoding] != "gzip")
+            #expect(supportedUncompressedResponse.headers[.contentLength] != "\(compressiblePayload.count)")
             #expect(supportedUncompressedResponse.body?.string == compressiblePayload)
 
             let supportedCompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-                request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
+                request.headers[.acceptEncoding] = "gzip"
             }
-            #expect(supportedCompressedResponse.headers.first(name: .contentEncoding) == "gzip")
-            #expect(supportedCompressedResponse.headers.first(name: .contentLength) != "\(compressiblePayload.count)")
+            #expect(supportedCompressedResponse.headers[.contentEncoding] == "gzip")
+            #expect(supportedCompressedResponse.headers[.contentLength] != "\(compressiblePayload.count)")
             #expect(supportedCompressedResponse.body?.string == compressiblePayload)
 
             try await app.server.shutdown()
@@ -502,33 +504,33 @@ struct ServerTests {
             let port = try #require(app.http.server.shared.localAddress?.port)
 
             let unsupportedNoncompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-                request.headers.remove(name: .acceptEncoding)
+                request.headers[.acceptEncoding] = nil
             }
-            #expect(unsupportedNoncompressedResponse.headers.first(name: .contentEncoding) != "gzip")
-            #expect(unsupportedNoncompressedResponse.headers.first(name: .contentLength) == "\(compressiblePayload.count)")
+            #expect(unsupportedNoncompressedResponse.headers[.contentEncoding] != "gzip")
+            #expect(unsupportedNoncompressedResponse.headers[.contentLength] == "\(compressiblePayload.count)")
             #expect(unsupportedNoncompressedResponse.body?.string == compressiblePayload)
 
             let unsupportedCompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-                request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
+                request.headers[.acceptEncoding]  = "gzip"
             }
-            #expect(unsupportedCompressedResponse.headers.first(name: .contentEncoding) != "gzip")
-            #expect(unsupportedCompressedResponse.headers.first(name: .contentLength) == "\(compressiblePayload.count)")
+            #expect(unsupportedCompressedResponse.headers[.contentEncoding] != "gzip")
+            #expect(unsupportedCompressedResponse.headers[.contentLength] == "\(compressiblePayload.count)")
             #expect(unsupportedCompressedResponse.body?.string == compressiblePayload)
 
             app.http.server.configuration.responseCompression = .enabled
 
             let supportedUncompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-                request.headers.remove(name: .acceptEncoding)
+                request.headers[.acceptEncoding] = nil
             }
-            #expect(supportedUncompressedResponse.headers.first(name: .contentEncoding) != "gzip")
-            #expect(supportedUncompressedResponse.headers.first(name: .contentLength) != "\(compressiblePayload.count)")
+            #expect(supportedUncompressedResponse.headers[.contentEncoding] != "gzip")
+            #expect(supportedUncompressedResponse.headers[.contentLength] != "\(compressiblePayload.count)")
             #expect(supportedUncompressedResponse.body?.string == compressiblePayload)
 
             let supportedCompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-                request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
+                request.headers[.acceptEncoding] = "gzip"
             }
-            #expect(supportedCompressedResponse.headers.first(name: .contentEncoding) == "gzip")
-            #expect(supportedCompressedResponse.headers.first(name: .contentLength) != "\(compressiblePayload.count)")
+            #expect(supportedCompressedResponse.headers[.contentEncoding] == "gzip")
+            #expect(supportedCompressedResponse.headers[.contentLength] != "\(compressiblePayload.count)")
             #expect(supportedCompressedResponse.body?.string == compressiblePayload)
 
             try await app.server.shutdown()
@@ -704,7 +706,7 @@ struct ServerTests {
     func testEarlyExitStreamingRequest() async throws {
         try await withApp { app in
             app.on(.post, "upload", body: .stream) { req -> EventLoopFuture<Int> in
-                guard req.headers.first(name: "test") != nil else {
+                guard req.headers[.init("test")!] != nil else {
                     return req.eventLoop.makeFailedFuture(Abort(.badRequest))
                 }
 
@@ -733,7 +735,7 @@ struct ServerTests {
                 #expect(res.status == .badRequest)
             }).test(.post, "upload", beforeRequest: { req in
                 req.body = buffer
-                req.headers.replaceOrAdd(name: "test", value: "a")
+                req.headers[.init("test")!] = "a"
             }, afterResponse: { res in
                 #expect(res.status == .ok)
             })
@@ -994,7 +996,8 @@ struct ServerTests {
                 headers: ["connection": "keep-alive"]
             )
             let a = try await app.http.client.shared.execute(request: request).get()
-            #expect(a.headers.connection == .keepAlive)
+            let newHeaders = HTTPFields(a.headers, splitCookie: false)
+            #expect(newHeaders.connection == .keepAlive)
         }
     }
 
@@ -1041,7 +1044,7 @@ struct ServerTests {
             }
 
             allDonePromise.succeed(()) // This unblocks the server
-            await #expect(throws: HTTPParserError.invalidEOFState) {
+            await #expect(throws: NIOHTTP1.HTTPParserError.invalidEOFState) {
                 try await serverIsFinalisedPromise.futureResult.get()
             }
         }
@@ -1222,7 +1225,7 @@ struct ServerTests {
                     method: .GET
                 )
             ).get()
-            #expect(a.headers[.server] == ["Old"])
+            #expect(a.headers["server"] == ["Old"])
             #expect(a.body == ByteBuffer(string: "world"))
 
             /// Configure server name without stopping the server
@@ -1245,7 +1248,7 @@ struct ServerTests {
                     method: .GET
                 )
             ).get()
-            #expect(b.headers[.server] == ["New"])
+            #expect(b.headers["server"] == ["New"])
             #expect(b.body == ByteBuffer(string: "world"))
 
             /// Non-TLS request should now fail

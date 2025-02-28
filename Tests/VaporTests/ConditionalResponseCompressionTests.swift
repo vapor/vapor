@@ -4,14 +4,13 @@ import AsyncHTTPClient
 import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers
-import NIOHTTP1
 import NIOSSL
 import Atomics
 import Testing
 import VaporTesting
 import HTTPTypes
 
-let markerHeader = HTTPFields.Name.xVaporResponseCompression.description
+let markerHeader = HTTPField.Name(HTTPField.Name.xVaporResponseCompression.description)!
 
 @Suite("Conditional Compression Tests")
 struct ConditionalCompressionTests {
@@ -54,8 +53,8 @@ struct ConditionalCompressionTests {
             #expect(headers == [markerHeader : "disable"])
             headers.responseCompression = .unset
             #expect(headers == [:])
-            headers.add(name: markerHeader, value: "enable")
-            headers.add(name: markerHeader, value: "disable")
+            headers[markerHeader] = "enable"
+            headers[markerHeader] = "disable"
             #expect(headers == [markerHeader : "enable", markerHeader : "disable"])
             headers.responseCompression = .disable
             #expect(headers == [markerHeader : "disable"])
@@ -127,10 +126,10 @@ struct ConditionalCompressionTests {
             app.http.server.configuration.responseCompression = configuration
 
             let response = try await app.client.get("http://localhost:\(port)/resource") { request in
-                request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
+                request.headers[.acceptEncoding] = "gzip"
             }
-            #expect(response.headers.first(name: .contentEncoding) == "gzip", sourceLocation: sourceLocation)
-            #expect(response.headers.first(name: .contentLength) != "\(compressiblePayload.count)", sourceLocation: sourceLocation)
+            #expect(response.headers[.contentEncoding] == "gzip", sourceLocation: sourceLocation)
+            #expect(response.headers[.contentLength] != "\(compressiblePayload.count)", sourceLocation: sourceLocation)
             #expect(response.body?.string == compressiblePayload, sourceLocation: sourceLocation)
         }
 
@@ -144,10 +143,10 @@ struct ConditionalCompressionTests {
             app.http.server.configuration.responseCompression = configuration
 
             let response = try await app.client.get("http://localhost:\(port)/resource") { request in
-                request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
+                request.headers[.acceptEncoding] = "gzip"
             }
-            #expect(response.headers.first(name: .contentEncoding) != "gzip", sourceLocation: sourceLocation)
-            #expect(response.headers.first(name: .contentLength) == "\(compressiblePayload.count)", sourceLocation: sourceLocation)
+            #expect(response.headers[.contentEncoding] != "gzip", sourceLocation: sourceLocation)
+            #expect(response.headers[.contentLength] == "\(compressiblePayload.count)", sourceLocation: sourceLocation)
             #expect(response.body?.string == compressiblePayload, sourceLocation: sourceLocation)
         }
 
@@ -741,9 +740,9 @@ struct ConditionalCompressionTests {
             sourceLocation: SourceLocation = #_sourceLocation
         ) async throws {
             let response = try await middleware.respond(to: Request(application: app, on: app.eventLoopGroup.next()), chainingTo: responder)
-            let header = response.headers[canonicalForm: .xVaporResponseCompression]
+            let header = response.headers[values: .xVaporResponseCompression]
 
-            #expect(header == compressionValue.map { $0.components(separatedBy: ", ") }?.map { $0[...] } ?? [], sourceLocation: sourceLocation)
+            #expect(header == compressionValue.map { $0.components(separatedBy: ", ") }?.map { String($0[...]) } ?? [], sourceLocation: sourceLocation)
         }
 
         let enabledMiddleware = ResponseCompressionMiddleware(override: .enable)

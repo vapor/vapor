@@ -194,7 +194,7 @@ struct ContentTests {
             }
 
             try await app.testing().test(.get, "/multipart", headers: [
-                "Content-Type": "multipart/form-data; boundary=123"
+                .contentType: "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
                 #expect(res.status == .ok)
                 expectJSONEquals(res.body.string, expected)
@@ -224,7 +224,7 @@ struct ContentTests {
             }
 
             try await app.testing().test(.get, "/multipart", headers: [
-                "Content-Type": "multipart/form-data; boundary=123"
+                .contentType: "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
                 #expect(res.status == .unprocessableContent)
             }
@@ -250,7 +250,7 @@ struct ContentTests {
             }
 
             try await app.testing().test(.get, "/multipart", headers: [
-                "Content-Type": "multipart/form-data; boundary=123"
+                .contentType: "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
                 #expect(res.status == .unprocessableContent)
             }
@@ -295,7 +295,7 @@ struct ContentTests {
             }
 
             try await app.testing().test(.get, "/multipart", headers: [
-                "Content-Type": "multipart/form-data; boundary=123"
+                .contentType: "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
                 #expect(res.status == .ok)
                 expectJSONEquals(res.body.string, expected)
@@ -415,10 +415,10 @@ struct ContentTests {
     func testJSONPreservesHTTPHeaders() async throws {
         try await withApp { app in
             app.get("check") { (req: Request) -> String in
-                "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
+                "\(req.headers[.init("X-Test-Value")!] ?? "MISSING").\(req.headers[.contentType] ?? "?")"
             }
 
-            try await app.testing().test(.get, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
+            try await app.testing().test(.get, "/check", headers: [.init("X-Test-Value")!: "PRESENT"], beforeRequest: { req in
                 try req.content.encode(["foo": "bar"], as: .json)
             }) { res in
                 #expect(res.body.string == "PRESENT.application/json; charset=utf-8")
@@ -433,11 +433,11 @@ struct ContentTests {
         try contentConfiguration.use(decoder: contentConfiguration.requireDecoder(for: .json), for: .xml)
         let app = try await Application(.testing, services: .init(contentConfiguration: contentConfiguration))
         app.get("check") { (req: Request) -> String in
-            "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
+            "\(req.headers[.init("X-Test-Value")!] ?? "MISSING").\(req.headers[.contentType] ?? "?")"
         }
 
         try await app.testing().test(.get, "/check", headers: [
-            "X-Test-Value": "PRESENT"
+            .init("X-Test-Value")!: "PRESENT"
         ], beforeRequest: { req in
             try req.content.encode(["foo": "bar"], as: .json)
             req.headers.contentType = .xml
@@ -577,7 +577,7 @@ struct ContentTests {
                 application: app,
                 method: .get,
                 url: URI(string: "https://vapor.codes"),
-                headersNoUpdate: ["Content-Type": "application/json"],
+                headersNoUpdate: [.contentType: "application/json"],
                 collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
                 on: app.eventLoopGroup.any()
             )
@@ -696,7 +696,7 @@ struct ContentTests {
 
             let byteBuffer = ByteBuffer(string: body)
             var headers = HTTPFields()
-            headers.add(name: .contentType, value: "text/plain")
+            headers[.contentType] = "text/plain"
 
             try await app.testing().test(.post, "/plaintext", headers: headers, body: byteBuffer) { res in
                 // This should return a 400 Bad Request and not crash

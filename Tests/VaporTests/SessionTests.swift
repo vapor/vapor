@@ -106,7 +106,7 @@ struct SessionTests {
     @Test("Test cookie handles quotes correctly")
     func cookieQuotes() throws {
         var headers = HTTPFields()
-        headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)
+        headers[.cookie] = #"foo= "+cookie/value" "#
         #expect(headers.cookie?["foo"]?.string == "+cookie/value")
     }
 }

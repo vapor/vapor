@@ -199,7 +199,7 @@ struct RouteTests {
             }.test(.post, "/users") { res in
                 #expect(res.status == .unprocessableContent)
                 #expect(res.body.string.replacingOccurrences(of: "\\", with: "").contains("Missing \"Content-Type\" header"))
-            }.test(.post, "/users", headers: ["Content-Type":"application/json"]) { res in
+            }.test(.post, "/users", headers: [.contentType: "application/json"]) { res in
                 #expect(res.status == .unprocessableContent)
                 #expect(res.body.string.contains("Empty Body"))
             }
@@ -241,7 +241,7 @@ struct RouteTests {
 
             try await app.testing(method: .running(port: 0)).test(.head, "/hello") { res in
                 #expect(res.status == .ok)
-                #expect(res.headers.first(name: .contentLength) == "2")
+                #expect(res.headers[.contentLength] == "2")
                 #expect(res.body.readableBytes == 0)
             }
         }
@@ -260,7 +260,7 @@ struct RouteTests {
 
             try await app.testing(method: .running(port: 0)).test(.head, "/hello") { res in
                 #expect(res.status == .found)
-                #expect(res.headers.first(name: .contentLength) == "0")
+                #expect(res.headers[.contentLength] == "0")
                 #expect(res.body.readableBytes == 0)
             }
         }
@@ -280,7 +280,7 @@ struct RouteTests {
             headers.cookie = cookies
             try await app.testing().test(.get, "/get", headers: headers) { res in
                 #expect(res.status == .ok)
-                #expect(res.headers[.setCookie].first != nil)
+                #expect(res.headers[.setCookie] != nil)
                 #expect(res.body.string == "n/a")
             }
         }
@@ -373,9 +373,9 @@ struct RouteTests {
             var buffer = ByteBufferAllocator().buffer(capacity: 0)
             buffer.writeBytes(Array(repeating: 0, count: 500_000))
             try await app.testing(method: .running(port: 0)).test(.post, "/default", body: buffer) { res in
-                #expect(res.status == .payloadTooLarge)
+                #expect(res.status == .contentTooLarge)
             }.test(.post, "/1kb", body: buffer) { res in
-                #expect(res.status == .payloadTooLarge)
+                #expect(res.status == .contentTooLarge)
             }.test(.post, "/1mb", body: buffer) { res in
                 #expect(res.status == .ok)
             }.test(.post, "/1gb", body: buffer) { res in
@@ -387,7 +387,7 @@ struct RouteTests {
     @Test("Test Websocket Upgrade")
     func testWebsocketUpgrade() async throws {
         try await withApp { app in
-            let testMarkerHeaderKey = "TestMarker"
+            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
             let testMarkerHeaderValue = "addedInShouldUpgrade"
 
             app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
@@ -395,12 +395,12 @@ struct RouteTests {
             }, onUpgrade: { _, _ in })
 
             try await app.testing(method: .running(port: 0)).test(.get, "customshouldupgrade", beforeRequest: { req async in
-                req.headers.replaceOrAdd(name: HTTPFields.Name.secWebSocketVersion, value: "13")
-                req.headers.replaceOrAdd(name: HTTPFields.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
-                req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
-                req.headers.replaceOrAdd(name: .upgrade, value: "websocket")
+                req.headers[.secWebSocketVersion] = "13"
+                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
+                req.headers[.connection] = "Upgrade"
+                req.headers[.upgrade] = "websocket"
             }) { res in
-                #expect(res.headers.first(name: testMarkerHeaderKey) == testMarkerHeaderValue)
+                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
             }
         }
     }

@@ -282,7 +282,7 @@ struct RequestTests {
     func testRequestPeerAddressForwarded() async throws {
         try await withApp { app in
             app.get("remote") { req -> String in
-                req.headers.add(name: .forwarded, value: "for=192.0.2.60; proto=http; by=203.0.113.43")
+                req.headers[.forwarded] = "for=192.0.2.60; proto=http; by=203.0.113.43"
                 guard let peerAddress = req.peerAddress else {
                     return "n/a"
                 }
@@ -299,7 +299,7 @@ struct RequestTests {
     func testRequestPeerAddressXForwardedFor() async throws {
         try await withApp { app in
             app.get("remote") { req -> String in
-                req.headers.add(name: .xForwardedFor, value: "5.6.7.8")
+                req.headers[.xForwardedFor] = "5.6.7.8"
                 guard let peerAddress = req.peerAddress else {
                     return "n/a"
                 }
@@ -333,8 +333,8 @@ struct RequestTests {
     func testRequestPeerAddressMultipleHeadersOrder() async throws {
         try await withApp { app in
             app.get("remote") { req -> String in
-                req.headers.add(name: .xForwardedFor, value: "5.6.7.8")
-                req.headers.add(name: .forwarded, value: "for=192.0.2.60; proto=http; by=203.0.113.43")
+                req.headers[.xForwardedFor] = "5.6.7.8"
+                req.headers[.forwarded] = "for=192.0.2.60; proto=http; by=203.0.113.43"
                 guard let peerAddress = req.peerAddress else {
                     return "n/a"
                 }
@@ -360,7 +360,7 @@ struct RequestTests {
             }
 
             try await app.testing(method: .running(port: 0)).test(.get, "remote", beforeRequest: { req in
-                req.headers.add(name: .xRequestId, value: "test")
+                req.headers[.xRequestId] = "test"
             }, afterResponse: { res in
                 #expect(res.body.string == "test")
             })

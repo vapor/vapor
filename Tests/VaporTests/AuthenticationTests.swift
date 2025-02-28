@@ -36,11 +36,11 @@ struct AuthenticationTests {
             try await app.testing().test(.get, "/test") { res async in
                 #expect(res.status == .unauthorized)
             }
-            .test(.get, "/test", headers: ["Authorization": "Bearer test"]) { res async in
+            .test(.get, "/test", headers: [.authorization: "Bearer test"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
             }
-            .test(.get, "/test", headers: ["Authorization": "bearer test"]) { res async in
+            .test(.get, "/test", headers: [.authorization: "bearer test"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
             }
@@ -78,10 +78,10 @@ struct AuthenticationTests {
             let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
             try await app.testing().test(.get, "/test") { res async in
                 #expect(res.status == .unauthorized)
-            }.test(.get, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
+            }.test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
-            }.test(.get, "/test", headers: ["Authorization": "basic \(basic)"]) { res async in
+            }.test(.get, "/test", headers: [.authorization: "basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
             }
@@ -119,7 +119,7 @@ struct AuthenticationTests {
             let basic = "test:secret:with:colon".data(using: .utf8)!.base64EncodedString()
             try await app.testing().test(.get, "/test") { res async in
                 #expect(res.status == .unauthorized)
-            }.test(.get, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
+            }.test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
             }
@@ -158,7 +158,7 @@ struct AuthenticationTests {
             let basic = Data("test:".utf8).base64EncodedString()
             try await app.testing().test(.get, "/test") { res in
                 #expect(res.status == .unauthorized)
-            }.test(.get, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+            }.test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
             }
@@ -200,8 +200,8 @@ struct AuthenticationTests {
             let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
             try await app.testing().test(.get, "/test") { res async in
                 #expect(res.status == .seeOther)
-                #expect(res.headers["Location"].first == "/redirect?orig=/test")
-            }.test(.get, "/test", headers: ["Authorization": "Basic \(basic)"]) { res async in
+                #expect(res.headers[.location] == "/redirect?orig=/test")
+            }.test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
             }
@@ -256,8 +256,8 @@ struct AuthenticationTests {
             var sessionCookie: HTTPCookies.Value?
             try await app.testing().test(.get, "/test") { res async in
                 #expect(res.status == .unauthorized)
-                #expect(res.headers.first(name: .setCookie) == nil)
-            }.test(.get, "/test", headers: ["Authorization": "Bearer test"]) { res async in
+                #expect(res.headers[.setCookie] == nil)
+            }.test(.get, "/test", headers: [.authorization: "Bearer test"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
                 if let cookie = res.headers.setCookie?["vapor-session"] {
@@ -266,10 +266,10 @@ struct AuthenticationTests {
                     Issue.record("No set cookie header")
                 }
             }
-            .test(.get, "/test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")]) { res async in
+            .test(.get, "/test", headers: [.cookie: sessionCookie!.serialize(name: "vapor-session")]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
-                #expect(res.headers.first(name: .setCookie) != nil)
+                #expect(res.headers[.setCookie] != nil)
             }
         }
     }

@@ -1,6 +1,5 @@
 import NIOCore
 import Logging
-import NIOHTTP1
 import HTTPTypes
 
 public protocol Client: Sendable {

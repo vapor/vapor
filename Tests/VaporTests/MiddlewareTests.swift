@@ -1,4 +1,4 @@
-import NIOHTTP1
+import HTTPTypes
 import Vapor
 import NIOCore
 import Tracing
@@ -57,12 +57,12 @@ struct MiddlewareTests2 {
                 return "done"
             }
 
-            try await app.testing().test(.get, "/order", headers: ["Origin": "foo"]) { res in
+            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "done")
-                #expect(res.headers[.vary] == ["origin"])
-                #expect(res.headers[.accessControlAllowOrigin] == ["foo"])
-                #expect(res.headers[.accessControlAllowHeaders] == ["origin"])
+                #expect(res.headers[values: .vary] == ["origin"])
+                #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
+                #expect(res.headers[values: .accessControlAllowHeaders] == ["origin"])
             }
         }
     }
@@ -76,12 +76,12 @@ struct MiddlewareTests2 {
                 return "done"
             }
 
-            try await app.testing().test(.get, "/order", headers: ["Origin": "foo"]) { res in
+            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "done")
-                #expect(res.headers[.vary] == [])
-                #expect(res.headers[.accessControlAllowOrigin] == [])
-                #expect(res.headers[.accessControlAllowHeaders] == [""])
+                #expect(res.headers[values: .vary] == [])
+                #expect(res.headers[values: .accessControlAllowOrigin] == [])
+                #expect(res.headers[values: .accessControlAllowHeaders] == [""])
             }
         }
     }
@@ -156,8 +156,8 @@ struct MiddlewareTests2 {
 
             let port = try #require(app.http.server.shared.localAddress?.port, "Failed to get port")
             let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
-                req.headers.add(name: HTTPFields.Name.userAgent.description, value: "test")
-                req.headers.add(name: TestTracer.extractKey, value: "extracted")
+                req.headers[.userAgent] = "test"
+                req.headers[TestTracer.extractKey] = "extracted"
             }
 
             #expect(response.status == .ok)

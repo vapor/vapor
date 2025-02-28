@@ -1,6 +1,6 @@
 import Vapor
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 import _NIOFileSystem
 import Crypto
 import Vapor
@@ -26,7 +26,7 @@ struct FileTests {
 
             try await app.testing(method: .running).test(.get, "/file-stream") { res async in
                 let test = "the quick brown fox"
-                #expect(res.headers.first(name: .eTag) != nil)
+                #expect(res.headers[.eTag] != nil)
                 #expect(res.body.string.contains(test))
             }
         }
@@ -40,10 +40,10 @@ struct FileTests {
             }
 
             var headers = HTTPFields()
-            headers.replaceOrAdd(name: .connection, value: "close")
+            headers[.connection] = "close"
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 let test = "the quick brown fox"
-                #expect(res.headers.first(name: .eTag) != nil)
+                #expect(res.headers[.eTag] != nil)
                 #expect(res.body.string.contains(test))
             }
         }
@@ -89,7 +89,7 @@ struct FileTests {
             try await app.testing(method: .running).test(.get, "/file-stream") { res async throws in
                 let fileData = try Data(contentsOf: URL(fileURLWithPath: #filePath))
                 let digest = SHA256.hash(data: fileData)
-                let eTag = res.headers.first(name: "etag")
+                let eTag = res.headers[.eTag]
                 #expect(eTag == digest.hex)
             }
         }
@@ -114,7 +114,7 @@ struct FileTests {
                     return
                 }
                 let fileETag = "\"\(Int(fileInfo.lastDataModificationTime.date.timeIntervalSince1970))-\(fileInfo.size)\""
-                #expect(res.headers.first(name: .eTag) == fileETag)
+                #expect(res.headers[.eTag] == fileETag)
             }
         }
     }
@@ -135,9 +135,8 @@ struct FileTests {
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
-
-                let contentRange = res.headers.first(name: "content-range")
-                let contentLength = res.headers.first(name: "content-length")
+                let contentRange = res.headers[.contentRange]
+                let contentLength = res.headers[.contentLength]
 
                 let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
                 let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
@@ -167,8 +166,8 @@ struct FileTests {
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
 
-                let contentRange = res.headers.first(name: "content-range")
-                let contentLength = res.headers.first(name: "content-length")
+                let contentRange = res.headers[.contentRange]
+                let contentLength = res.headers[.contentLength]
 
                 let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
                 let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
@@ -196,8 +195,8 @@ struct FileTests {
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
 
-                let contentRange = res.headers.first(name: "content-range")
-                let contentLength = res.headers.first(name: "content-length")
+                let contentRange = res.headers[.contentRange]
+                let contentLength = res.headers[.contentLength]
 
                 let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
                 let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
@@ -226,8 +225,8 @@ struct FileTests {
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .partialContent)
 
-                #expect(res.headers.first(name: .contentLength) == "1")
-                let range = res.headers.first(name: .contentRange)!.split(separator: "/").first!.split(separator: " ").last!
+                #expect(res.headers[.contentLength] == "1")
+                let range = res.headers[.contentRange]!.split(separator: "/").first!.split(separator: " ").last!
                 #expect(range == "0-0")
 
                 #expect(res.body.readableBytes == 1)
@@ -413,13 +412,13 @@ struct FileTests {
 
             try await app.testing().test(.get, "Utilities?vaporTest=test") { res in
                 #expect(res.status == .movedPermanently)
-                #expect(res.headers.first(name: .location) == "/Utilities/?vaporTest=test")
+                #expect(res.headers[.location] == "/Utilities/?vaporTest=test")
             }.test(.get, "Utilities/SubUtilities?vaporTest=test") { res in
                 #expect(res.status == .movedPermanently)
-                #expect( res.headers.first(name: .location) == "/Utilities/SubUtilities/?vaporTest=test")
+                #expect(res.headers[.location] == "/Utilities/SubUtilities/?vaporTest=test")
             }.test(.get, "Utilities/SubUtilities?vaporTest=test#vapor") { res in
                 #expect(res.status == .movedPermanently)
-                #expect( res.headers.first(name: .location) == "/Utilities/SubUtilities/?vaporTest=test#vapor")
+                #expect(res.headers[.location] == "/Utilities/SubUtilities/?vaporTest=test#vapor")
             }
         }
     }
@@ -453,42 +452,42 @@ struct FileTests {
             }
 
             var headers = HTTPFields()
-            headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
+            headers[.range] = "bytes=0-9223372036854775807"
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
-            headers.replaceOrAdd(name: .range, value: "bytes=-1-10")
+            headers[.range] = "bytes=1-10"
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
-            headers.replaceOrAdd(name: .range, value: "bytes=100-10")
+            headers[.range] = "bytes=100-10"
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
-            headers.replaceOrAdd(name: .range, value: "bytes=10--100")
+            headers[.range] = "bytes=10--100"
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
-            headers.replaceOrAdd(name: .range, value: "bytes=9223372036854775808-")
+            headers[.range] = "bytes=9223372036854775808-"
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
-            headers.replaceOrAdd(name: .range, value: "bytes=922337203-")
+            headers[.range] = "bytes=922337203-"
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
-            headers.replaceOrAdd(name: .range, value: "bytes=-922337203")
+            headers[.range] = "bytes=-922337203"
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
-            headers.replaceOrAdd(name: .range, value: "bytes=-9223372036854775808")
+            headers[.range] = "bytes=-9223372036854775808-"
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }

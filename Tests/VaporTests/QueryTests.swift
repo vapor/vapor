@@ -1,6 +1,6 @@
 import Vapor
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 import Testing
 import VaporTesting
 import Foundation
@@ -228,7 +228,7 @@ struct QueryTests {
             var body = ByteBufferAllocator().buffer(capacity: 0)
             body.writeString(#"{"here":"hi"}"#)
             var headers = HTTPFields()
-            headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
+            headers[.contentLength] = body.readableBytes.description
             headers.contentType = .json
 
             try await app.testing().test(.post, "/decode-fail", headers: headers, body: body) { res in

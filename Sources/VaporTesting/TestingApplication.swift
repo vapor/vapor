@@ -51,7 +51,7 @@ extension Application {
                 }
                 var clientRequest = HTTPClientRequest(url: url)
                 clientRequest.method = .init(request.method)
-                clientRequest.headers = request.headers
+                clientRequest.headers = .init(request.headers)
                 clientRequest.body = .bytes(request.body)
                 let response = try await client.execute(clientRequest, timeout: .seconds(30))
                 // Collect up to 1MB
@@ -59,8 +59,8 @@ extension Application {
                 try await client.shutdown()
                 try await app.server.shutdown()
                 return TestingHTTPResponse(
-                    status: response.status,
-                    headers: response.headers,
+                    status: .init(code: Int(response.status.code)),
+                    headers: .init(response.headers, splitCookie: false),
                     body: responseBody,
                     contentConfiguration: self.app.contentConfiguration
                 )
@@ -83,10 +83,7 @@ extension Application {
             request: TestingHTTPRequest
         ) async throws -> TestingHTTPResponse {
             var headers = request.headers
-            headers.replaceOrAdd(
-                name: .contentLength,
-                value: request.body.readableBytes.description
-            )
+            headers[.contentLength] = request.body.readableBytes.description
             let request = Request(
                 application: app,
                 method: request.method,
