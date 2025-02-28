@@ -1,4 +1,6 @@
 import HTTPServerNew
+import NIOHTTPTypes
+import HTTPTypes
 
 extension Application.Servers.Provider {
     public static var http: Self {
@@ -9,7 +11,7 @@ extension Application.Servers.Provider {
 
     public static var httpNew: Self {
         .init {
-            $0.servers.use { $0.http.server.shared }
+            $0.servers.use { $0.http.server.sharedNew }
         }
     }
 }
@@ -28,6 +30,24 @@ extension Application.HTTP {
             } else {
                 let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: .init(), eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger) { req, responseWriter, channel  in
                     print("Request received")
+
+                    let vaporRequest = Vapor.Request(
+                        application: self.application,
+                        method: .init(req.method),
+                        url: .init(path: req.uri.path),
+                        version: .init(major: 1, minor: 1),
+                        headersNoUpdate: .init(req.headers),
+                        remoteAddress: nil,
+                        logger: self.application.logger,
+                        byteBufferAllocator: application.byteBufferAllocator,
+                        on: application.eventLoopGroup.any()
+                    )
+
+                    let vaporResponse = try await application.responder.current.respond(to: vaporRequest).get()
+                    let httpResponse = HTTPResponse(status: .init(code: Int(vaporResponse.status.code), reasonPhrase: vaporResponse.status.reasonPhrase), headerFields: HTTPFields(vaporResponse.headers, splitCookie: false))
+
+                    var bodyWriter: any ResponseBodyWriter = try await responseWriter.writeHead(httpResponse)
+                    try await vaporResponse.body.write(&bodyWriter)
                 } as! HTTPServer<HTTP1Channel>
                 self.application.storage[NewKey.self] = new
                 return new

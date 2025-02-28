@@ -2,6 +2,7 @@
 import Foundation
 import NIOCore
 import NIOConcurrencyHelpers
+import HTTPServerNew
 
 extension Response {
     struct BodyStream: Sendable {
@@ -277,5 +278,14 @@ private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWrit
         
         self.eventLoop.execute { self.write(result, promise: promise) }
         try await promise.futureResult.get()
+    }
+}
+
+extension Response.Body {
+    func write(_ writer: inout any ResponseBodyWriter) async throws {
+        if let buffer {
+            try await writer.write(buffer)
+        }
+        try await writer.finish(nil)
     }
 }

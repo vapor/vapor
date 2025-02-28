@@ -182,7 +182,7 @@ public final class Application: Sendable {
         self.responder.initialize()
         self.responder.use(.default)
         self.servers.initialize()
-        self.servers.use(.http)
+        self.servers.use(.httpNew)
         self.clients.initialize()
         self.clients.use(.http)
         self.asyncCommands.use(RoutesCommand(), as: "routes")
