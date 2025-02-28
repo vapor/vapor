@@ -47,10 +47,10 @@ public struct Validations: Sendable {
     
     public func validate(request: Request) throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
-            throw Abort(.unprocessableEntity, reason: "Missing \"Content-Type\" header")
+            throw Abort(.unprocessableContent, reason: "Missing \"Content-Type\" header")
         }
         guard let body = request.body.data else {
-            throw Abort(.unprocessableEntity, reason: "Empty Body")
+            throw Abort(.unprocessableContent, reason: "Empty Body")
         }
         let contentDecoder = try request.application.contentConfiguration.requireDecoder(for: contentType)
         return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results

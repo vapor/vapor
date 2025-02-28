@@ -2,7 +2,7 @@ import NIOCore
 import Testing
 import VaporTesting
 import Vapor
-import NIOHTTP1
+import HTTPTypes
 import WebSocketKit
 
 @Suite("Route Tests")
@@ -51,7 +51,7 @@ struct RouteTests {
                 #expect(res.status == .ok)
                 #expect(res.body.string == "123")
             }.test(.get, "/int/not-int") { res in
-                #expect(res.status == .unprocessableEntity)
+                #expect(res.status == .unprocessableContent)
             }.test(.get, "/missing") { res in
                 #expect(res.status == .internalServerError)
             }
@@ -197,10 +197,10 @@ struct RouteTests {
                 #expect(res.status == .badRequest)
                 #expect(res.body.string.contains("email is not a valid email address"))
             }.test(.post, "/users") { res in
-                #expect(res.status == .unprocessableEntity)
+                #expect(res.status == .unprocessableContent)
                 #expect(res.body.string.replacingOccurrences(of: "\\", with: "").contains("Missing \"Content-Type\" header"))
             }.test(.post, "/users", headers: ["Content-Type":"application/json"]) { res in
-                #expect(res.status == .unprocessableEntity)
+                #expect(res.status == .unprocessableContent)
                 #expect(res.body.string.contains("Empty Body"))
             }
         }

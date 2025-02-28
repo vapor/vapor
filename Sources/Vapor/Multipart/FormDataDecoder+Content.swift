@@ -20,7 +20,7 @@ extension FormDataDecoder: ContentDecoder {
         let buffer = body.readBytes(length: body.readableBytes) ?? []
 
         guard Array("--\(boundary)\r\n--\(boundary)--\r".utf8) != buffer else {
-            throw Abort(.unprocessableEntity, identifier: "emptyMultipartFormData")
+            throw Abort(.unprocessableContent, identifier: "emptyMultipartFormData")
         }
 
         if !userInfo.isEmpty {

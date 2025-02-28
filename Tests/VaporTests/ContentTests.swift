@@ -1,5 +1,5 @@
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 import Vapor
 import Testing
 import VaporTesting
@@ -226,7 +226,7 @@ struct ContentTests {
             try await app.testing().test(.get, "/multipart", headers: [
                 "Content-Type": "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
-                #expect(res.status == .unprocessableEntity)
+                #expect(res.status == .unprocessableContent)
             }
         }
     }
@@ -252,7 +252,7 @@ struct ContentTests {
             try await app.testing().test(.get, "/multipart", headers: [
                 "Content-Type": "multipart/form-data; boundary=123"
             ], body: .init(string: data)) { res in
-                #expect(res.status == .unprocessableEntity)
+                #expect(res.status == .unprocessableContent)
             }
         }
     }

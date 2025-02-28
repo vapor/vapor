@@ -2,7 +2,6 @@ import Foundation
 import Metrics
 @preconcurrency import RoutingKit
 import NIOCore
-import NIOHTTP1
 import Logging
 import HTTPTypes
 
@@ -102,7 +101,7 @@ internal struct DefaultResponder: Responder {
     private func updateMetrics(
         for request: Request,
         startTime: UInt64,
-        statusCode: UInt
+        statusCode: Int
     ) {
         let pathForMetrics: String
         let methodForMetrics: String
@@ -145,7 +144,7 @@ private struct NotFoundResponder: Responder {
 struct RouteNotFound: Error {}
 
 extension RouteNotFound: AbortError {    
-    var status: HTTPResponseStatus {
+    var status: HTTPResponse.Status {
         .notFound
     }
 }

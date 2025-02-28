@@ -1,7 +1,7 @@
 import class Foundation.Bundle
 import Vapor
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 import NIOConcurrencyHelpers
 import _NIOFileSystem
 
@@ -256,7 +256,7 @@ public func routes(_ app: Application) throws {
 }
 
 struct TestError: AbortError, DebuggableError {
-    var status: HTTPResponseStatus {
+    var status: HTTPResponse.Status {
         .internalServerError
     }
 

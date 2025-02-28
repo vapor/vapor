@@ -1,5 +1,5 @@
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 
 /// Can convert `self` to a `Response`.
 ///
@@ -33,8 +33,8 @@ extension AsyncResponseEncodable {
     public func encodeResponse(status: HTTPStatus, headers: HTTPFields = [:], for request: Request) async throws -> Response {
         let response = try await self.encodeResponse(for: request)
         response.responseBox.withLockedValue { box in
-            for (name, value) in headers {
-                box.headers.replaceOrAdd(name: name, value: value)
+            for field in headers {
+                box.headers.replaceOrAdd(name: field.name, value: field.value)
             }
             box.status = status
         }

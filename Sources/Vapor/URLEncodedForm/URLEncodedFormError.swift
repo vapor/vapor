@@ -1,4 +1,4 @@
-import NIOHTTP1
+import HTTPTypes
 
 /// Errors thrown while encoding/decoding `application/x-www-form-urlencoded` data.
 enum URLEncodedFormError: Error, Equatable {
@@ -7,7 +7,7 @@ enum URLEncodedFormError: Error, Equatable {
 }
 
 extension URLEncodedFormError: AbortError {
-    var status: HTTPResponseStatus {
+    var status: HTTPResponse.Status {
         .badRequest
     }
 
