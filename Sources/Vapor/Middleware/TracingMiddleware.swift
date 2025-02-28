@@ -92,7 +92,10 @@ public final class TracingMiddleware: AsyncMiddleware {
 // https://swiftpackageindex.com/apple/swift-distributed-tracing/main/documentation/tracing/instrumentyourlibrary#Handling-inbound-requests
 private struct HTTPHeadersExtractor: Extractor {
     func extract(key name: String, from headers: HTTPFields) -> String? {
-        let headerValue = headers[name]
+        guard let headerName = HTTPField.Name(name) else {
+            return nil
+        }
+        let headerValue = headers[values: headerName]
         if headerValue.isEmpty {
             return nil
         } else {

@@ -2,9 +2,10 @@ import MultipartKit
 import HTTPTypes
 import NIOCore
 
-extension File: MultipartPartConvertible {
+#warning("Replace")
+extension File { //}: MultipartPartConvertible {
     public var multipart: MultipartPart<ByteBufferView>? {
-        var part = MultipartPart(headerFields: [:], body: .init(self.data.readableBytesView))
+        var part = MultipartPart(headerFields: [:], body: self.data.readableBytesView)
         part.contentType = self.extension
             .flatMap { HTTPMediaType.fileExtension($0) }
             .flatMap { $0.serialize() }
@@ -16,7 +17,7 @@ extension File: MultipartPartConvertible {
         guard let filename = multipart.filename else {
             return nil
         }
-        self.init(data: multipart.body, filename: filename)
+        self.init(data: ByteBuffer(multipart.body), filename: filename)
     }
 }
 

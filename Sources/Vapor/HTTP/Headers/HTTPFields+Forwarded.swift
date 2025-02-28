@@ -19,26 +19,27 @@ extension HTTPFields {
             }
 
             // Add values from deprecated headers.
-            let bys = self[canonicalForm: .via]
-            let fors = self[canonicalForm: .xForwardedFor]
-            let hosts = self[canonicalForm: .xForwardedHost]
-            let protos = self[canonicalForm: .xForwardedProto]
+            let bys = self[values: .via]
+            let fors = self[values: .xForwardedFor]
+            let hosts = self[values: .xForwardedHost]
+            let protos = self[values: .xForwardedProto]
             for i in 0..<[bys.count, fors.count, hosts.count, protos.count].max()! {
-                forwarded.append(.init(
-                    by: bys[safe: i].flatMap(String.init),
-                    for: fors[safe: i].flatMap(String.init),
-                    host: hosts[safe: i].flatMap(String.init),
-                    proto: protos[safe: i].flatMap(String.init)
-                ))
+                let new: Forwarded = Forwarded(
+                    by: bys[safe: i],
+                    for: fors[safe: i],
+                    host: hosts[safe: i],
+                    proto: protos[safe: i],
+                )
+                forwarded.append(new)
             }
 
             return forwarded
         }
         set {
             self.serializeDirectives(newValue.map { $0.directives() }, name: .forwarded)
-            self.remove(name: .xForwardedFor)
-            self.remove(name: .xForwardedHost)
-            self.remove(name: .xForwardedProto)
+            self[.xForwardedFor] = nil
+            self[.xForwardedHost] = nil
+            self[.xForwardedProto] = nil
         }
     }
 

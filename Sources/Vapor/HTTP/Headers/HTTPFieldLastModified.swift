@@ -32,12 +32,12 @@ extension HTTPFields {
     }
 
     public var lastModified: LastModified? {
-        get { self.first(name: .lastModified).flatMap(LastModified.parse) }
+        get { self[.lastModified].flatMap(LastModified.parse) }
         set {
             if let new = newValue?.serialize() {
-                self.replaceOrAdd(name: .lastModified, value: new)
+                self[.lastModified] = new
             } else {
-                self.remove(name: .lastModified)
+                self[.lastModified] = nil
             }
         }
     }

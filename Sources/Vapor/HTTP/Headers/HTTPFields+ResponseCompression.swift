@@ -41,12 +41,12 @@ extension HTTPFields {
 
     /// A marker header internal to vapor that explicitely allows or disallows response compression.
     public var responseCompression: ResponseCompression {
-        get { ResponseCompression(string: self[canonicalForm: .xVaporResponseCompression].last.map { String ($0) }) }
+        get { ResponseCompression(string: self[values: .xVaporResponseCompression].last.map { String ($0) }) }
         set {
             if let newValue = newValue.rawValue {
-                self.replaceOrAdd(name: .xVaporResponseCompression, value: newValue)
+                self[.xVaporResponseCompression] = newValue
             } else {
-                self.remove(name: .xVaporResponseCompression)
+                self[.xVaporResponseCompression] = nil
             }
         }
     }

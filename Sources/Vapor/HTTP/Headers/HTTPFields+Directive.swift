@@ -25,7 +25,7 @@ extension HTTPFields {
     }
 
     func parseDirectives(name: HTTPField.Name) -> [[Directive]] {
-        let headers = self[name]
+        let headers = self[values: name]
         var values: [[Directive]] = []
         let separatorCharacters = getSeparatorCharacters(for: name)
         for header in headers {

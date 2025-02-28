@@ -18,13 +18,13 @@ extension HTTPFields {
 
     public var connection: Connection? {
         get {
-            self.first(name: .connection).flatMap(Connection.init(value:))
+            self[.connection].flatMap(Connection.init(value:))
         }
         set {
             if let value = newValue {
-                self.replaceOrAdd(name: .connection, value: value.value)
+                self[.connection] = value.value
             } else {
-                self.remove(name: .connection)
+                self[.connection] = nil
             }
         }
     }

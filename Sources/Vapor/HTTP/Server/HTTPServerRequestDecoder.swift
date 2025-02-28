@@ -55,7 +55,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                     method: .init(head.method),
                     url: .init(path: head.uri),
                     version: head.version,
-                    headersNoUpdate: head.headers,
+                    headersNoUpdate: .init(head.headers, splitCookie: false),
                     remoteAddress: context.channel.remoteAddress,
                     logger: self.application.logger,
                     byteBufferAllocator: context.channel.allocator,
@@ -79,7 +79,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 // because when a request is g-zipped, content-length refers to the gzipped length.
                 // Therefore, we can receive data after our expected end-of-request
                 // When decompressing data, more bytes come out than came in, so content-length does not represent the maximum length
-                if request.headers.first(name: .contentLength) == buffer.readableBytes.description {
+                if request.headers[.contentLength] == buffer.readableBytes.description {
                     self.requestState = .awaitingEnd(request, buffer)
                 } else {
                     let stream = Request.BodyStream(on: context.eventLoop, byteBufferAllocator: context.channel.allocator)

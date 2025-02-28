@@ -101,13 +101,13 @@ extension HTTPFields {
             return HTTPFields.ContentRange(directives: self.parseDirectives(name: .contentRange).flatMap { $0 })
         }
         set {
-            if self.contains(name: .contentRange) {
-                self.remove(name: .contentRange)
+            if self.contains(.contentRange) {
+                self[.contentRange] = nil
             }
             guard let newValue = newValue else {
                 return
             }
-            self.add(name: .contentRange, value: newValue.serialize())
+            self[.contentRange] = newValue.serialize()
         }
     }
     
@@ -119,13 +119,13 @@ extension HTTPFields {
             return HTTPFields.Range(directives: self.parseDirectives(name: .range).flatMap { $0 })
         }
         set {
-            if self.contains(name: .range) {
-                self.remove(name: .range)
+            if self.contains(.range) {
+                self[.range] = nil
             }
             guard let newValue = newValue else {
                 return
             }
-            self.add(name: .range, value: newValue.serialize())
+            self[.range] = newValue.serialize()
         }
     }
 }

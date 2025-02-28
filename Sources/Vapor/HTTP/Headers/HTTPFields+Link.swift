@@ -13,7 +13,7 @@ extension HTTPFields {
                 // N.B.: The sort here is not necessary for protocol reasons; it just hugely simplifies unit tests.
                 self.serializeDirectives(header.map(\.directives), name: .link)
             } else {
-                self.remove(name: .link)
+                self[.link] = nil
             }
         }
     }

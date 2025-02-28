@@ -15,9 +15,11 @@ extension FormDataEncoder: ContentEncoder {
             var actualEncoder = self  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
 
             actualEncoder.userInfo.merge(userInfo) { $1 }
-            return try actualEncoder.encode(encodable, boundary: boundary, into: &body)
+            let view = try actualEncoder.encode(encodable, boundary: boundary, to: ByteBufferView.self)
+            body.writeBytes(view)
         } else {
-            return try self.encode(encodable, boundary: boundary, into: &body)
+            let view = try self.encode(encodable, boundary: boundary, to: ByteBufferView.self)
+            body.writeBytes(view)
         }
     }
 }

@@ -7,6 +7,7 @@ import NIOSSL
 import Logging
 import NIOPosix
 import NIOConcurrencyHelpers
+import HTTPTypes
 
 public enum HTTPVersionMajor: Equatable, Hashable, Sendable {
     case one
@@ -604,16 +605,19 @@ extension NIOSSLServerHandler {
 extension HTTPServerOld.Configuration.ResponseCompressionConfiguration {
     func makeCompressor() -> HTTPResponseCompressor {
         HTTPResponseCompressor(initialByteBufferCapacity: storage.initialByteBufferCapacity) { [storage] responseHeaders, isCompressionSupported in
+            guard var newHead = try? HTTPResponse(responseHeaders) else {
+                return .doNotCompress
+            }
             defer {
                 /// Always remove this marker header.
-                responseHeaders.headers.remove(name: .xVaporResponseCompression)
+                newHead.headerFields[.xVaporResponseCompression] = nil
             }
             
             /// If compression isn't supported, skip any further processing.
             guard isCompressionSupported else { return .doNotCompress }
             
             /// If we allow overrides, check for the response compression marker header value first before making any further checks:
-            if storage.allowRequestOverrides, let responseCompressionHeader = responseHeaders.headers.responseCompression.value {
+            if storage.allowRequestOverrides, let responseCompressionHeader = newHead.headerFields.responseCompression.value {
                 switch responseCompressionHeader {
                 case .enable: return .compressIfPossible
                 case .disable: return .doNotCompress
@@ -624,7 +628,7 @@ extension HTTPServerOld.Configuration.ResponseCompressionConfiguration {
             switch storage {
             case .enabled(_, let disallowedTypes, _):
                 /// If there were no explicit overrides, fallback to checking the content type against the disallowed set. If any type succeeds the check, disable compression:
-                let shouldDisable = responseHeaders.headers.parseDirectives(name: .contentType).contains { contentTypeDirectives in
+                let shouldDisable = newHead.headerFields.parseDirectives(name: .contentType).contains { contentTypeDirectives in
                     guard let mediaType = HTTPMediaType(directives: contentTypeDirectives)
                     else { return false }
                     
@@ -635,7 +639,7 @@ extension HTTPServerOld.Configuration.ResponseCompressionConfiguration {
                 return shouldDisable ? .doNotCompress : .compressIfPossible
             case .disabled(_, let allowedTypes, _):
                 /// If there were no explicit overrides, fallback to checking the content type against the allowed set. If all types succeed the check, enable compression:
-                let shouldEnable = responseHeaders.headers.parseDirectives(name: .contentType).allSatisfy { contentTypeDirectives in
+                let shouldEnable = newHead.headerFields.parseDirectives(name: .contentType).allSatisfy { contentTypeDirectives in
                     guard let mediaType = HTTPMediaType(directives: contentTypeDirectives)
                     else { return false }
                     
