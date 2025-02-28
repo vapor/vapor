@@ -1,6 +1,6 @@
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     struct Directive: Equatable, CustomStringConvertible {
         var value: Substring
         var parameter: Substring?

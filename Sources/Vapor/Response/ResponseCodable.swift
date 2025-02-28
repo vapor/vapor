@@ -1,5 +1,5 @@
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 
 /// Can convert `self` to a `Response`.
 ///
@@ -45,9 +45,9 @@ extension ResponseEncodable {
     ///
     /// - parameters:
     ///     - status: `HTTPStatus` to set on the `Response`.
-    ///     - headers: `HTTPHeaders` to merge into the `Response`'s headers.
+    ///     - headers: `HTTPFields` to merge into the `Response`'s headers.
     /// - returns: Newly encoded `Response`.
-    public func encodeResponse(status: HTTPStatus, headers: HTTPHeaders = [:], for request: Request) -> EventLoopFuture<Response> {
+    public func encodeResponse(status: HTTPStatus, headers: HTTPFields = [:], for request: Request) -> EventLoopFuture<Response> {
         return self.encodeResponse(for: request).map { response in
             response.responseBox.withLockedValue { box in
                 for (name, value) in headers {
@@ -96,4 +96,4 @@ extension EventLoopFuture: ResponseEncodable where Value: ResponseEncodable {
     }
 }
 
-internal let staticStringHeaders: HTTPHeaders = ["content-type": "text/plain; charset=utf-8"]
+internal let staticStringHeaders: HTTPFields = ["content-type": "text/plain; charset=utf-8"]

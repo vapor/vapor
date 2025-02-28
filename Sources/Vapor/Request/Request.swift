@@ -47,7 +47,7 @@ public final class Request: CustomStringConvertible, Sendable {
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPHeaders {
+    public var headers: HTTPFields {
         get {
             self.requestBox.withLockedValue { $0.headers }
         }
@@ -146,7 +146,7 @@ public final class Request: CustomStringConvertible, Sendable {
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
             guard let body = self.request.body.data else {
                 self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
-                throw Abort(.unprocessableEntity)
+                throw Abort(.unprocessableContent)
             }
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
         }
@@ -162,7 +162,7 @@ public final class Request: CustomStringConvertible, Sendable {
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
             guard let body = self.request.body.data else {
                 self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
-                throw Abort(.unprocessableEntity)
+                throw Abort(.unprocessableContent)
             }
             var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
             try decoded.afterDecode()
@@ -278,7 +278,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var method: HTTPRequest.Method
         var url: URI
         var version: HTTPVersion
-        var headers: HTTPHeaders
+        var headers: HTTPFields
         var isKeepAlive: Bool
         var route: Route?
         var parameters: Parameters
@@ -296,7 +296,7 @@ public final class Request: CustomStringConvertible, Sendable {
         method: HTTPRequest.Method = .get,
         url: URI = "/",
         version: HTTPVersion = .init(major: 1, minor: 1),
-        headers: HTTPHeaders = .init(),
+        headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
@@ -325,7 +325,7 @@ public final class Request: CustomStringConvertible, Sendable {
         method: HTTPRequest.Method,
         url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
-        headersNoUpdate headers: HTTPHeaders = .init(),
+        headersNoUpdate headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),

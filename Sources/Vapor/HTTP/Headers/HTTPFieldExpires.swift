@@ -1,7 +1,7 @@
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     public struct Expires {
         /// The date represented by the header.
         public let expires: Date

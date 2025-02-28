@@ -1,4 +1,4 @@
-import NIOHTTP1
+import HTTPTypes
 import Tracing
 
 /// Creates a trace and metadata for every request
@@ -91,7 +91,7 @@ public final class TracingMiddleware: AsyncMiddleware {
 // correlation using the `traceparent` and `tracestate` headers. For more information, see
 // https://swiftpackageindex.com/apple/swift-distributed-tracing/main/documentation/tracing/instrumentyourlibrary#Handling-inbound-requests
 private struct HTTPHeadersExtractor: Extractor {
-    func extract(key name: String, from headers: HTTPHeaders) -> String? {
+    func extract(key name: String, from headers: HTTPFields) -> String? {
         let headerValue = headers[name]
         if headerValue.isEmpty {
             return nil

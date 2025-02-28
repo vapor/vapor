@@ -1,4 +1,4 @@
-import NIOHTTP1
+import HTTPTypes
 
 /// Errors conforming to this protocol will always be displayed by
 /// Vapor to the end-user (even in production mode where most errors are silenced).
@@ -15,15 +15,15 @@ public protocol AbortError: Error {
     var reason: String { get }
 
     /// The HTTP status code this error will return.
-    var status: HTTPResponseStatus { get }
+    var status: HTTPResponse.Status { get }
 
-    /// Optional `HTTPHeaders` to add to the error response.
-    var headers: HTTPHeaders { get }
+    /// Optional `HTTPFields` to add to the error response.
+    var headers: HTTPFields { get }
 }
 
 extension AbortError {
     /// See `AbortError`.
-    public var headers: HTTPHeaders {
+    public var headers: HTTPFields {
         [:]
     }
 
@@ -45,7 +45,7 @@ extension AbortError where Self: DebuggableError {
 /// Decoding errors are very common and should result in a 400 Bad Request response most of the time
 extension DecodingError: AbortError {
     /// See `AbortError.status`
-    public var status: HTTPResponseStatus {
+    public var status: HTTPResponse.Status {
         return .badRequest
     }
 

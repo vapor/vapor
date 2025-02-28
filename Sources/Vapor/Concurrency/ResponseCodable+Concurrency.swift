@@ -28,9 +28,9 @@ extension AsyncResponseEncodable {
     ///
     /// - parameters:
     ///     - status: `HTTPStatus` to set on the `Response`.
-    ///     - headers: `HTTPHeaders` to merge into the `Response`'s headers.
+    ///     - headers: `HTTPFields` to merge into the `Response`'s headers.
     /// - returns: Newly encoded `Response`.
-    public func encodeResponse(status: HTTPStatus, headers: HTTPHeaders = [:], for request: Request) async throws -> Response {
+    public func encodeResponse(status: HTTPStatus, headers: HTTPFields = [:], for request: Request) async throws -> Response {
         let response = try await self.encodeResponse(for: request)
         response.responseBox.withLockedValue { box in
             for (name, value) in headers {

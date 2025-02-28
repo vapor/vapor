@@ -1,6 +1,6 @@
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// Convenience for accessing the Forwarded header. This header is added by
     /// proxies to pass information about the original request.
     ///

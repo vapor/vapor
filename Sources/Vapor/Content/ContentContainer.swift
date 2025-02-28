@@ -1,4 +1,4 @@
-import NIOHTTP1
+import HTTPTypes
 import NIOCore
 
 public protocol ContentContainer {
@@ -136,10 +136,10 @@ extension ContentContainer {
 fileprivate struct ForwardingContentDecoder: ContentDecoder {
     let base: ContentDecoder, info: [CodingUserInfoKey: Sendable]
     
-    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D {
+    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: self.info)
     }
-    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
+    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: userInfo.merging(self.info) { $1 })
     }
 }

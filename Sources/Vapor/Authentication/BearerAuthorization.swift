@@ -1,4 +1,4 @@
-import NIOHTTP1
+import HTTPTypes
 
 /// A bearer token.
 public struct BearerAuthorization: Sendable {
@@ -11,7 +11,7 @@ public struct BearerAuthorization: Sendable {
     }
 }
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// Access or set the `Authorization: Bearer: ...` header.
     public var bearerAuthorization: BearerAuthorization? {
         get {

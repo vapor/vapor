@@ -2,6 +2,7 @@ import NIOCore
 import NIOHTTP1
 import NIOWebSocket
 import WebSocketKit
+import HTTPTypes
 
 final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Request
@@ -77,7 +78,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     version: req.version,
                     method: .init(req.method),
                     uri: req.url.string,
-                    headers: req.headers
+                    headers: .init(req.headers)
                 )
 
                 protocolUpgrader.buildUpgradeResponse(
@@ -86,7 +87,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     initialResponseHeaders: [:]
                 ).map { headers in
                     let sendableBox = box.value
-                    res.headers = headers
+                    res.headers = .init(headers, splitCookie: false)
                     sendableBox.context.write(sendableBox.handler.wrapOutboundOut(res), promise: promise)
                 }.flatMap {
                     let sendableBox = box.value
@@ -143,10 +144,10 @@ public protocol Upgrader: Sendable {
 /// Handles upgrading an HTTP connection to a WebSocket
 public struct WebSocketUpgrader: Upgrader, Sendable {
     var maxFrameSize: WebSocketMaxFrameSize
-    var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPHeaders?>)
+    var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPFields?>)
     var onUpgrade: @Sendable (WebSocket) -> ()
     
-    @preconcurrency public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
+    @preconcurrency public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPFields?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
         self.shouldUpgrade = shouldUpgrade
         self.onUpgrade = onUpgrade

@@ -1,5 +1,4 @@
 import NIOCore
-import NIOHTTP1
 import NIOConcurrencyHelpers
 import Vapor
 import HTTPTypes
@@ -7,11 +6,11 @@ import HTTPTypes
 public struct TestingHTTPRequest: Sendable {
     public var method: HTTPRequest.Method
     public var url: URI
-    public var headers: HTTPHeaders
+    public var headers: HTTPFields
     public var body: ByteBuffer
     public var contentConfiguration: ContentConfiguration
 
-    public init(method: HTTPRequest.Method, url: URI, headers: HTTPHeaders, body: ByteBuffer, contentConfigurtion: ContentConfiguration) {
+    public init(method: HTTPRequest.Method, url: URI, headers: HTTPFields, body: ByteBuffer, contentConfigurtion: ContentConfiguration) {
         self.method = method
         self.url = url
         self.headers = headers
@@ -21,7 +20,7 @@ public struct TestingHTTPRequest: Sendable {
 
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer
-        var headers: HTTPHeaders
+        var headers: HTTPFields
         let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {

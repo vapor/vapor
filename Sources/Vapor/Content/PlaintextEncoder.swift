@@ -1,6 +1,6 @@
 import Foundation
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 
 /// Encodes data as plaintext, utf8.
 public struct PlaintextEncoder: ContentEncoder {
@@ -16,13 +16,13 @@ public struct PlaintextEncoder: ContentEncoder {
     }
     
     /// `ContentEncoder` conformance.
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields) throws
         where E: Encodable
     {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
     
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws
         where E: Encodable
     {
         let encoder = _PlaintextEncoder(userInfo: userInfo)

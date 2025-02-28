@@ -1,15 +1,14 @@
 import NIOCore
-import NIOHTTP1
-import NIOConcurrencyHelpers
 import Vapor
+import HTTPTypes
 
 public struct TestingHTTPResponse: Sendable {
     public var status: HTTPStatus
-    public var headers: HTTPHeaders
+    public var headers: HTTPFields
     public var body: ByteBuffer
     private let contentConfiguration: ContentConfiguration
 
-    package init(status: HTTPStatus, headers: HTTPHeaders, body: ByteBuffer, contentConfiguration: ContentConfiguration) {
+    package init(status: HTTPStatus, headers: HTTPFields, body: ByteBuffer, contentConfiguration: ContentConfiguration) {
         self.status = status
         self.headers = headers
         self.body = body
@@ -20,7 +19,7 @@ public struct TestingHTTPResponse: Sendable {
 extension TestingHTTPResponse {
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer
-        var headers: HTTPHeaders
+        var headers: HTTPFields
         let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {

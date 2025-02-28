@@ -1,13 +1,13 @@
 import MultipartKit
-import NIOHTTP1
+import HTTPTypes
 import NIOCore
 
 extension FormDataEncoder: ContentEncoder {
-    public func encode<E: Encodable>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws {
+    public func encode<E: Encodable>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
 
-    public func encode<E: Encodable>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws {
+    public func encode<E: Encodable>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws {
         let boundary = "----vaporBoundary\(randomBoundaryData())"
 
         headers.contentType = HTTPMediaType.formData(boundary: boundary)

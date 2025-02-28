@@ -1,12 +1,12 @@
-import NIOHTTP1
+import HTTPTypes
 
 /// Overrides the response compression settings for a route.
 ///
 /// This is useful when a set of static routes does not need compression, or a set of dynamic routes does.
 ///
-/// When the ``HTTPServerOld/Configuration-swift.struct/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPHeaders/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPHeaders/ResponseCompression/disable`` can be set to explicitly disable compression.
+/// When the ``HTTPServerOld/Configuration-swift.struct/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPFields/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPFields/ResponseCompression/disable`` can be set to explicitly disable compression.
 ///
-/// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPHeaders/ResponseCompression/useDefault``.
+/// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPFields/ResponseCompression/useDefault``.
 ///
 /// - Note: Response compression is only actually used if the client indicates it supports it via an `Accept` header.
 public struct ResponseCompressionMiddleware: AsyncMiddleware {
@@ -14,11 +14,11 @@ public struct ResponseCompressionMiddleware: AsyncMiddleware {
     ///
     /// Overrides are only used when the server's ``HTTPServerOld/Configuration-swift.struct/ResponseCompressionConfiguration/allowRequestOverrides`` property is enabled, otherwise they are ignored.
     ///
-    /// To clear an override set previously in the chain (ie. closer to the root route than to the original response), set ``HTTPHeaders/ResponseCompression/useDefault``.
+    /// To clear an override set previously in the chain (ie. closer to the root route than to the original response), set ``HTTPFields/ResponseCompression/useDefault``.
     ///
-    /// - Note: Middleware that come after this one, or responses with a ``HTTPHeaders/ResponseCompression`` header, will take priority over the override set here, unless ``shouldForce`` is set to true.
-    public var responseCompressionOverride: HTTPHeaders.ResponseCompression
-    
+    /// - Note: Middleware that come after this one, or responses with a ``HTTPFields/ResponseCompression`` header, will take priority over the override set here, unless ``shouldForce`` is set to true.
+    public var responseCompressionOverride: HTTPFields.ResponseCompression
+
     /// A flag to force the override atop whatever the response or output of middleware that process the response before this one.
     public var shouldForce: Bool
     
@@ -29,7 +29,7 @@ public struct ResponseCompressionMiddleware: AsyncMiddleware {
     ///   - shouldForce: Wether to force the compression preference over what the response prefers.
     ///
     /// - SeeAlso: Please see ``responseCompressionOverride`` for more details.
-    public init(override: HTTPHeaders.ResponseCompression, force shouldForce: Bool = false) {
+    public init(override: HTTPFields.ResponseCompression, force shouldForce: Bool = false) {
         self.responseCompressionOverride = override
         self.shouldForce = shouldForce
     }
@@ -49,18 +49,18 @@ extension RoutesBuilder {
     /// 
     /// This is useful when a set of static routes does not need compression, or a set of dynamic routes does.
     /// 
-    /// When the ``HTTPServerOld/Configuration-swift.struct/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPHeaders/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPHeaders/ResponseCompression/disable`` can be set to explicitly disable compression.
+    /// When the ``HTTPServerOld/Configuration-swift.struct/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPFields/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPFields/ResponseCompression/disable`` can be set to explicitly disable compression.
     ///
-    /// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPHeaders/ResponseCompression/useDefault``.
+    /// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPFields/ResponseCompression/useDefault``.
     ///
     /// - Note: Response compression is only actually used if the client indicates it supports it via an `Accept` header.
-    /// - Note: Setting the override to ``HTTPHeaders/ResponseCompression/unset`` has no effect here unless `force` is set to true.
+    /// - Note: Setting the override to ``HTTPFields/ResponseCompression/unset`` has no effect here unless `force` is set to true.
     ///
     /// - Parameters:
     ///   - override: The compression preference to apply if none is already set.
     ///   - shouldForce: Wether to force the compression preference over what the response prefers.
     /// - Returns: A route with the specified response compression preferences.
-    public func responseCompression(_ override: HTTPHeaders.ResponseCompression, force shouldForce: Bool = false) -> RoutesBuilder {
+    public func responseCompression(_ override: HTTPFields.ResponseCompression, force shouldForce: Bool = false) -> RoutesBuilder {
         self.grouped(ResponseCompressionMiddleware(override: override, force: shouldForce))
     }
 }

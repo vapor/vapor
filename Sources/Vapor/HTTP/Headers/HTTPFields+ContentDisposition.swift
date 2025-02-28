@@ -1,6 +1,6 @@
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// Convenience for accessing the Content-Disposition header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition

@@ -39,7 +39,7 @@ struct FileTests {
                 return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
             }
 
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.replaceOrAdd(name: .connection, value: "close")
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 let test = "the quick brown fox"
@@ -132,7 +132,7 @@ struct FileTests {
                 }
             }
 
-            var headerRequest = HTTPHeaders()
+            var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
 
@@ -163,7 +163,7 @@ struct FileTests {
                 }
             }
 
-            var headerRequest = HTTPHeaders()
+            var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
 
@@ -192,7 +192,7 @@ struct FileTests {
                 }
             }
 
-            var headerRequest = HTTPHeaders()
+            var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
 
@@ -221,7 +221,7 @@ struct FileTests {
                 }
             }
 
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .partialContent)
@@ -246,7 +246,7 @@ struct FileTests {
                 }
             }
 
-            var headerRequest = HTTPHeaders()
+            var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: -20, end: 25)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
@@ -270,7 +270,7 @@ struct FileTests {
                 }
             }
 
-            var headerRequest = HTTPHeaders()
+            var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: -20)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
@@ -294,7 +294,7 @@ struct FileTests {
                 }
             }
 
-            var headerRequest = HTTPHeaders()
+            var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: -20)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
@@ -452,7 +452,7 @@ struct FileTests {
                 try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
             }
 
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)

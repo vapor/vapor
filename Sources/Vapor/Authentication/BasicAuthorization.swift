@@ -1,5 +1,5 @@
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 
 /// A basic username and password.
 public struct BasicAuthorization: Sendable {
@@ -16,7 +16,7 @@ public struct BasicAuthorization: Sendable {
     }
 }
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// Access or set the `Authorization: Basic: ...` header.
     public var basicAuthorization: BasicAuthorization? {
         get {

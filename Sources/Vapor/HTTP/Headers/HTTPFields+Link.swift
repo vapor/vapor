@@ -1,6 +1,6 @@
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// Convenience for accessing the Link header as an array of provided links.
     ///
     /// See https://datatracker.ietf.org/doc/html/rfc8288

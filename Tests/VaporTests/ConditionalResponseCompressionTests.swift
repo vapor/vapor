@@ -9,8 +9,9 @@ import NIOSSL
 import Atomics
 import Testing
 import VaporTesting
+import HTTPTypes
 
-let markerHeader = HTTPHeaders.Name.xVaporResponseCompression.description
+let markerHeader = HTTPFields.Name.xVaporResponseCompression.description
 
 @Suite("Conditional Compression Tests")
 struct ConditionalCompressionTests {
@@ -18,35 +19,35 @@ struct ConditionalCompressionTests {
     struct ConditionalResponseCompressionParsingTests {
         @Test("Test enabling encoding")
         func testEncodingEnable() {
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.responseCompression = .enable
             #expect(headers == [markerHeader : "enable"])
         }
 
         @Test("Test disabling encoding")
         func testEncodingDisable() {
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.responseCompression = .disable
             #expect(headers == [markerHeader : "disable"])
         }
 
         @Test("Test Encoding Uses Default")
         func testEncodingUseDefault() {
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.responseCompression = .useDefault
             #expect(headers == [markerHeader : "useDefault"])
         }
 
         @Test("Test Encoding Unset")
         func testEncodingUnset() {
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.responseCompression = .unset
             #expect(headers == [:])
         }
 
         @Test("Test Updating Sets Correct Headers")
         func testUpdating() {
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.responseCompression = .enable
             #expect(headers == [markerHeader : "enable"])
             headers.responseCompression = .disable
@@ -62,55 +63,55 @@ struct ConditionalCompressionTests {
 
         @Test("Test Decoding Unset")
         func testDecodingUnset() {
-            let headers: HTTPHeaders = [:]
+            let headers: HTTPFields = [:]
             #expect(headers.responseCompression == .unset)
         }
 
         @Test("Decoding Enabled")
         func testDecodingEnabled() {
-            let headers: HTTPHeaders = [markerHeader : "enable"]
+            let headers: HTTPFields = [markerHeader : "enable"]
             #expect(headers.responseCompression == .enable)
         }
 
         @Test("Decoding Disabled")
         func testDecodingDisabled() {
-            let headers: HTTPHeaders = [markerHeader : "disable"]
+            let headers: HTTPFields = [markerHeader : "disable"]
             #expect(headers.responseCompression == .disable)
         }
 
         @Test("Test Decoding Use Default")
         func testDecodingUseDefault() {
-            let headers: HTTPHeaders = [markerHeader : "useDefault"]
+            let headers: HTTPFields = [markerHeader : "useDefault"]
             #expect(headers.responseCompression == .useDefault)
         }
 
         @Test("Test Decoding Literal Unset")
         func testDecodingLiteralUnset() {
-            let headers: HTTPHeaders = [markerHeader : "unset"]
+            let headers: HTTPFields = [markerHeader : "unset"]
             #expect(headers.responseCompression == .unset)
         }
 
         @Test("Test Decoding Other")
         func testDecodingOther() {
-            let headers: HTTPHeaders = [markerHeader : "other"]
+            let headers: HTTPFields = [markerHeader : "other"]
             #expect(headers.responseCompression == .unset)
         }
 
         @Test("Test Decoding Multiple Valid")
         func testDecodingMultipleValid() {
-            let headers: HTTPHeaders = [markerHeader : "enable", markerHeader : "disable"]
+            let headers: HTTPFields = [markerHeader : "enable", markerHeader : "disable"]
             #expect(headers.responseCompression == .disable)
         }
 
         @Test("Test Decoding Multiple First Invalid")
         func testDecodingMultipleFirstInvalid() {
-            let headers: HTTPHeaders = [markerHeader : "other", markerHeader : "enable"]
+            let headers: HTTPFields = [markerHeader : "other", markerHeader : "enable"]
             #expect(headers.responseCompression == .enable)
         }
 
         @Test("Test Decoding Multiple Last Invalid")
         func testDecodingMultipleLastInvalid() {
-            let headers: HTTPHeaders = [markerHeader : "enable", markerHeader : "other"]
+            let headers: HTTPFields = [markerHeader : "enable", markerHeader : "other"]
             #expect(headers.responseCompression == .unset)
         }
     }
@@ -199,7 +200,7 @@ struct ConditionalCompressionTests {
         func testUnknownType() async throws {
             try await withCompressionApp { app in
                 app.get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType /// Not explicitely marked as compressible or not.
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
@@ -232,7 +233,7 @@ struct ConditionalCompressionTests {
         func testImage() async throws {
             try await withCompressionApp { app in
                 app.get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = .png /// PNGs are explicitely called out as incompressible.
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
@@ -265,7 +266,7 @@ struct ConditionalCompressionTests {
         func testVideo() async throws {
             try await withCompressionApp { app in
                 app.get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = .mpeg /// Videos are explicitely called out as incompressible, but as a class.
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
@@ -298,7 +299,7 @@ struct ConditionalCompressionTests {
         func testText() async throws {
             try await withCompressionApp { app in
                 app.get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = .plainText /// Text types are explicitely called out as compressible, but as a class.
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
@@ -331,7 +332,7 @@ struct ConditionalCompressionTests {
         func testEnabledByResponse() async throws {
             try await withCompressionApp { app in
                 app.get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     headers.responseCompression = .enable
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
@@ -365,7 +366,7 @@ struct ConditionalCompressionTests {
         func testDisabledByResponse() async throws {
             try await withCompressionApp { app in
                 app.get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     headers.responseCompression = .disable
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
@@ -399,7 +400,7 @@ struct ConditionalCompressionTests {
         func testForceEnabledByResponse() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.disable).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     headers.responseCompression = .enable
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
@@ -433,7 +434,7 @@ struct ConditionalCompressionTests {
         func testForceDisabledByResponse() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.enable).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     headers.responseCompression = .disable
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
@@ -467,7 +468,7 @@ struct ConditionalCompressionTests {
         func testEnabledByRoute() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.enable).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
@@ -500,7 +501,7 @@ struct ConditionalCompressionTests {
         func testDisabledByRoute() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.disable).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
@@ -533,7 +534,7 @@ struct ConditionalCompressionTests {
         func testDisabledByRouteButReset() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.disable).responseCompression(.useDefault).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
@@ -566,7 +567,7 @@ struct ConditionalCompressionTests {
         func testEnabledByRouteButReset() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.enable).responseCompression(.useDefault).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
@@ -599,7 +600,7 @@ struct ConditionalCompressionTests {
         func testDisabledByRouteResetByResponse() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.disable).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.responseCompression = .useDefault
                     headers.contentType = unknownType
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
@@ -633,7 +634,7 @@ struct ConditionalCompressionTests {
         func testEnabledByRouteResetByResponse() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.enable).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.responseCompression = .useDefault
                     headers.contentType = unknownType
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
@@ -667,7 +668,7 @@ struct ConditionalCompressionTests {
         func testNoopsDisabledByRouteButReset() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.unset).responseCompression(.disable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
@@ -700,7 +701,7 @@ struct ConditionalCompressionTests {
         func testNoopsEnabledByRouteButReset() async throws {
             try await withCompressionApp { app in
                 app.responseCompression(.unset).responseCompression(.enable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { request in
-                    var headers = HTTPHeaders()
+                    var headers = HTTPFields()
                     headers.contentType = unknownType
                     return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }

@@ -2,7 +2,7 @@ import Foundation
 import NIOConcurrencyHelpers
 import NIOCore
 import Logging
-import NIOHTTP1
+import HTTPTypes
 
 public enum EndpointCacheError: Swift.Error {
     case unexpctedResponseStatus(HTTPStatus, uri: URI)
@@ -13,7 +13,7 @@ public enum EndpointCacheError: Swift.Error {
 public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     private var cached: (cachedData: T?, cacheDate: Date?)
     private var request: Task<T, Error>?
-    private var headers: HTTPHeaders?
+    private var headers: HTTPFields?
     private let uri: URI
 
     /// The designated initializer.
@@ -67,7 +67,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
 
     private func download(using client: Client, logger: Logger?) async throws -> T {
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
-        var headers: HTTPHeaders = [:]
+        var headers: HTTPFields = [:]
 
         if let eTag = self.headers?.first(name: .eTag) {
             headers.add(name: .ifNoneMatch, value: eTag)

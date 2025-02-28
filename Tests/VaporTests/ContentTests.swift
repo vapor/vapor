@@ -376,7 +376,7 @@ struct ContentTests {
                 return .ok
             }
 
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.contentType = .urlEncodedForm
             var body = ByteBufferAllocator().buffer(capacity: 0)
             body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
@@ -695,7 +695,7 @@ struct ContentTests {
         """
 
             let byteBuffer = ByteBuffer(string: body)
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.add(name: .contentType, value: "text/plain")
 
             try await app.testing().test(.post, "/plaintext", headers: headers, body: byteBuffer) { res in

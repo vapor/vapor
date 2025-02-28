@@ -274,7 +274,7 @@ struct RouteTests {
                     return req.session.data["name"] ?? "n/a"
                 }
 
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             var cookies = HTTPCookies()
             cookies["vapor-session"] = "asdf"
             headers.cookie = cookies
@@ -395,8 +395,8 @@ struct RouteTests {
             }, onUpgrade: { _, _ in })
 
             try await app.testing(method: .running(port: 0)).test(.get, "customshouldupgrade", beforeRequest: { req async in
-                req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
-                req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
+                req.headers.replaceOrAdd(name: HTTPFields.Name.secWebSocketVersion, value: "13")
+                req.headers.replaceOrAdd(name: HTTPFields.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
                 req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
                 req.headers.replaceOrAdd(name: .upgrade, value: "websocket")
             }) { res in

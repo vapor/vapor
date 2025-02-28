@@ -1,5 +1,7 @@
+import HTTPTypes
+
 extension Request {
-    
+
     /// Creates a redirect `Response`.
     ///
     ///     router.get("redirect") { req in
@@ -53,7 +55,7 @@ public struct Redirect {
     }
 
     /// Associated `HTTPStatus` for this redirect type.
-    public var status: HTTPStatus {
+    public var status: HTTPResponse.Status {
         switch self.kind {
         case .permanent: return .movedPermanently
         case .normal: return .seeOther

@@ -1,4 +1,3 @@
-import NIOHTTP1
 import NIOCore
 import HTTPTypes
 
@@ -98,10 +97,10 @@ public final class CORSMiddleware: AsyncMiddleware {
         public init(
             allowedOrigin: AllowOriginSetting,
             allowedMethods: [HTTPRequest.Method],
-            allowedHeaders: [HTTPHeaders.Name],
+            allowedHeaders: [HTTPFields.Name],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,
-            exposedHeaders: [HTTPHeaders.Name]? = nil
+            exposedHeaders: [HTTPFields.Name]? = nil
         ) {
             self.allowedOrigin = allowedOrigin
             self.allowedMethods = allowedMethods.map({ "\($0)" }).joined(separator: ", ")

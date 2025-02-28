@@ -1,15 +1,15 @@
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 import Foundation
 
 public struct ClientResponse: Sendable {
     public var status: HTTPStatus
-    public var headers: HTTPHeaders
+    public var headers: HTTPFields
     public var body: ByteBuffer?
     private let byteBufferAllocator: ByteBufferAllocator
     private let contentConfiguration: ContentConfiguration
 
-    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), contentConfiguration: ContentConfiguration = .default()) {
+    public init(status: HTTPStatus = .ok, headers: HTTPFields = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), contentConfiguration: ContentConfiguration = .default()) {
         self.status = status
         self.headers = headers
         self.body = body
@@ -21,7 +21,7 @@ public struct ClientResponse: Sendable {
 extension ClientResponse {
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer?
-        var headers: HTTPHeaders
+        var headers: HTTPFields
         let allocator: ByteBufferAllocator
         let contentConfiguration: ContentConfiguration
 
@@ -112,7 +112,7 @@ extension ClientResponse: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.status = try container.decode(HTTPStatus.self, forKey: .status)
-        self.headers = try container.decode(HTTPHeaders.self, forKey: .headers)
+        self.headers = try container.decode(HTTPFields.self, forKey: .headers)
         let bodyString = try container.decode(String?.self, forKey: .body)
         guard let s = bodyString, let bodyData = [UInt8].init(decodingBase64: s) else {
             throw Abort(.internalServerError, reason: "Could not decode client response body from base64 string")

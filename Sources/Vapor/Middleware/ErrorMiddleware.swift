@@ -1,6 +1,6 @@
 import Foundation
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 
 /// Captures all errors and transforms them into an internal server error HTTP response.
 public final class ErrorMiddleware: Middleware {
@@ -20,8 +20,8 @@ public final class ErrorMiddleware: Middleware {
     ///     - environment: The environment to respect when presenting errors.
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
-            let status: HTTPResponseStatus, reason: String, source: ErrorSource
-            var headers: HTTPHeaders
+            let status: HTTPResponse.Status, reason: String, source: ErrorSource
+            var headers: HTTPFields
 
             // Inspect the error type and extract what data we can.
             switch error {

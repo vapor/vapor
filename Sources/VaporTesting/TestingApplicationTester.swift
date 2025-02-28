@@ -1,4 +1,3 @@
-import NIOHTTP1
 import NIOCore
 import Testing
 import Vapor
@@ -32,7 +31,7 @@ extension TestingApplicationTester {
     public func test(
         _ method: HTTPRequest.Method,
         _ path: String,
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
         sourceLocation: SourceLocation = #_sourceLocation,
         afterResponse: (TestingHTTPResponse) async throws -> ()
@@ -52,7 +51,7 @@ extension TestingApplicationTester {
     public func test(
         _ method: HTTPRequest.Method,
         _ path: String,
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
         sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in },
@@ -79,7 +78,7 @@ extension TestingApplicationTester {
     public func sendRequest(
         _ method: HTTPRequest.Method,
         _ path: String,
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
         sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in }

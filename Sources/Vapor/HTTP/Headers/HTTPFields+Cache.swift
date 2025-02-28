@@ -1,7 +1,7 @@
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// Determines when the cached data should be expired.
     ///
     /// This first checks to see if the `Cache-Control` header is present.  If it is, and `no-store`

@@ -1,4 +1,4 @@
-import NIOHTTP1
+import HTTPTypes
 
 /// Default implementation of `AbortError`. You can use this as a convenient method for throwing
 /// `AbortError`s without having to conform your own error-type to `AbortError`.
@@ -17,7 +17,7 @@ public struct Abort: AbortError, DebuggableError, Equatable {
     ///   - redirectType: The type of redirect to perform
     /// - Returns: An abort error that provides a redirect to the specified location
     public static func redirect(to location: String, redirectType: Redirect = .normal) -> Abort {
-        var headers: HTTPHeaders = [:]
+        var headers: HTTPFields = [:]
         headers.replaceOrAdd(name: .location, value: location)
         return .init(redirectType.status, headers: headers)
     }
@@ -26,10 +26,10 @@ public struct Abort: AbortError, DebuggableError, Equatable {
     public var identifier: String
 
     /// See `AbortError`
-    public var status: HTTPResponseStatus
+    public var status: HTTPResponse.Status
 
     /// See `AbortError`.
-    public var headers: HTTPHeaders
+    public var headers: HTTPFields
 
     /// See `AbortError`
     public var reason: String
@@ -39,8 +39,8 @@ public struct Abort: AbortError, DebuggableError, Equatable {
 
     /// Create a new `Abort`, capturing current source location info.
     public init(
-        _ status: HTTPResponseStatus,
-        headers: HTTPHeaders = [:],
+        _ status: HTTPResponse.Status,
+        headers: HTTPFields = [:],
         reason: String? = nil,
         identifier: String? = nil,
         suggestedFixes: [String] = [],

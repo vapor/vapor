@@ -2,6 +2,7 @@ import NIOCore
 import NIOHTTP1
 import NIOFoundationCompat
 import NIOConcurrencyHelpers
+import HTTPTypes
 
 /// An HTTP response from a server back to the client.
 ///
@@ -23,7 +24,7 @@ public final class Response: CustomStringConvertible, Sendable {
     }
     
     /// The HTTP response status.
-    public var status: HTTPResponseStatus {
+    public var status: HTTPResponse.Status {
         get {
             self.responseBox.withLockedValue { $0.status }
         }
@@ -35,7 +36,7 @@ public final class Response: CustomStringConvertible, Sendable {
     /// The header fields for this HTTP response.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPHeaders {
+    public var headers: HTTPFields {
         get {
             self.responseBox.withLockedValue { $0.headers }
         }
@@ -170,8 +171,8 @@ public final class Response: CustomStringConvertible, Sendable {
     
     struct ResponseBox: Sendable {
         var version: HTTPVersion
-        var status: HTTPResponseStatus
-        var headers: HTTPHeaders
+        var status: HTTPResponse.Status
+        var headers: HTTPFields
         var body: Body {
             didSet {
                 self.headers.updateContentLength(body.count)
@@ -194,17 +195,17 @@ public final class Response: CustomStringConvertible, Sendable {
     ///     let res = Response(status: .ok)
     ///
     /// - parameters:
-    ///     - status: `HTTPResponseStatus` to use. This defaults to `HTTPResponseStatus.ok`
+    ///     - status: `HTTPResponse.Status` to use. This defaults to `HTTPResponse.Status.ok`
     ///     - version: `HTTPVersion` of this response, should usually be (and defaults to) 1.1.
-    ///     - headers: `HTTPHeaders` to include with this response.
+    ///     - headers: `HTTPFields` to include with this response.
     ///                Defaults to empty headers.
     ///                The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically.
     ///     - body: `Body` for this response, defaults to an empty body.
     ///             See `Response.Body` for more information.
     public convenience init(
-        status: HTTPResponseStatus = .ok,
+        status: HTTPResponse.Status = .ok,
         version: HTTPVersion = .init(major: 1, minor: 1),
-        headers: HTTPHeaders = .init(),
+        headers: HTTPFields = .init(),
         body: Body = .empty,
         contentConfiguration: ContentConfiguration = .default()
     ) {
@@ -220,9 +221,9 @@ public final class Response: CustomStringConvertible, Sendable {
 
     /// Internal init that creates a new `Response` without sanitizing headers.
     public init(
-        status: HTTPResponseStatus,
+        status: HTTPResponse.Status,
         version: HTTPVersion,
-        headersNoUpdate headers: HTTPHeaders,
+        headersNoUpdate headers: HTTPFields,
         body: Body,
         contentConfiguration: ContentConfiguration = .default()
     ) {
@@ -233,7 +234,7 @@ public final class Response: CustomStringConvertible, Sendable {
 }
 
 
-extension HTTPHeaders {
+extension HTTPFields {
     mutating func updateContentLength(_ contentLength: Int) {
         let count = contentLength.description
         switch contentLength {

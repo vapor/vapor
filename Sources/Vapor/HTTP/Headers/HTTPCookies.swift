@@ -1,7 +1,7 @@
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// Get and set `HTTPCookies` for an HTTP request
     /// This accesses the `"Cookie"` header.
     public var cookie: HTTPCookies? {
@@ -50,7 +50,7 @@ struct HTTPSetCookie {
     var name: String
     var value: HTTPCookies.Value
     
-    init?(directives: [HTTPHeaders.Directive]) {
+    init?(directives: [HTTPFields.Directive]) {
         guard let name = directives.first, let value = name.parameter else {
             return nil
         }
@@ -241,7 +241,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         self.cookies = [:]
     }
     
-    init(directives: [HTTPHeaders.Directive]) {
+    init(directives: [HTTPFields.Directive]) {
         self.cookies = directives.reduce(into: [:], { (cookies, directive) in
             if let value = directive.parameter {
                 cookies[.init(directive.value)] = .init(string: .init(value))

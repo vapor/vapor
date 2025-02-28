@@ -1,5 +1,5 @@
 import MultipartKit
-import NIOHTTP1
+import HTTPTypes
 
 extension File: MultipartPartConvertible {
     public var multipart: MultipartPart? {
@@ -47,7 +47,7 @@ extension MultipartPart {
         }
     }
     
-    public var contentDisposition: HTTPHeaders.ContentDisposition? {
+    public var contentDisposition: HTTPFields.ContentDisposition? {
         get {
             self.headers.contentDisposition
         }

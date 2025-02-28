@@ -1,5 +1,5 @@
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 import NIOCore
 
 /// Encodes `Encodable` instances to `application/x-www-form-urlencoded` data.
@@ -75,14 +75,14 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
     }
     
     /// ``ContentEncoder`` conformance.
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields) throws
         where E: Encodable
     {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
 
     /// ``ContentEncoder`` conformance.
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws
         where E: Encodable
     {
         headers.contentType = .urlEncodedForm

@@ -29,7 +29,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
             }
             
             // begin serializing
-            let responseHead = HTTPResponseHead(version: box.version, status: box.status, headers: box.headers)
+            let responseHead = HTTPResponseHead(version: box.version, status: box.status, headers: .init(box.headers, ))
             context.write(wrapOutboundOut(.head(responseHead)), promise: nil)
             
             if box.status == .noContent || box.forHeadRequest {

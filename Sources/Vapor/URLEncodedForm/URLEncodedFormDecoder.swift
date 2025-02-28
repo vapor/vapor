@@ -1,6 +1,6 @@
 import NIOCore
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 
 /// Decodes instances of `Decodable` types from `application/x-www-form-urlencoded` data.
 ///
@@ -89,12 +89,12 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     }
     
     // See `ContentDecoder.decode(_:from:headers:)`.
-    public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D {
+    public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
     // See `ContentDecoder.decode(_:from:headers:userInfo:)`.
-    public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
+    public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
         guard headers.contentType == .urlEncodedForm else {
             throw Abort(.unsupportedMediaType)
         }

@@ -227,7 +227,7 @@ struct QueryTests {
 
             var body = ByteBufferAllocator().buffer(capacity: 0)
             body.writeString(#"{"here":"hi"}"#)
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
             headers.contentType = .json
 

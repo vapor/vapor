@@ -2,7 +2,7 @@ import VaporTesting
 import Testing
 import Vapor
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 
 @Suite("Session Tests")
 struct SessionTests {
@@ -36,7 +36,7 @@ struct SessionTests {
 
             #expect(cookie?.string == "a")
 
-            var headers = HTTPHeaders()
+            var headers = HTTPFields()
             var cookies = HTTPCookies()
             cookies["vapor-session"] = cookie
             headers.cookie = cookies
@@ -105,7 +105,7 @@ struct SessionTests {
 
     @Test("Test cookie handles quotes correctly")
     func cookieQuotes() throws {
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)
         #expect(headers.cookie?["foo"]?.string == "+cookie/value")
     }

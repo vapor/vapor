@@ -1,7 +1,7 @@
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// A marker header internal to vapor that explicitely allows or disallows response compression.
     public struct ResponseCompression: Sendable, Hashable {
         enum Value: String {

@@ -1,15 +1,15 @@
 import Foundation
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 
 extension JSONEncoder: ContentEncoder {
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields) throws
         where E: Encodable
     {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
     
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws
         where E: Encodable
     {
         headers.contentType = .json
@@ -30,13 +30,13 @@ extension JSONEncoder: ContentEncoder {
 }
 
 extension JSONDecoder: ContentDecoder {
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
         where D: Decodable
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
         where D: Decodable
     {
         let data = body.getData(at: body.readerIndex, length: body.readableBytes) ?? Data()

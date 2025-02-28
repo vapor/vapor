@@ -1,19 +1,19 @@
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 
 /// Decodes data as plaintext, utf8.
 public struct PlaintextDecoder: ContentDecoder {
     public init() {}
 
     /// `ContentDecoder` conformance.
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
         where D : Decodable
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
     /// `ContentDecoder` conformance.
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
         where D : Decodable
     {
         let string = body.getString(at: body.readerIndex, length: body.readableBytes)

@@ -1,6 +1,6 @@
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     public struct Connection: ExpressibleByStringLiteral, Equatable, Sendable {
         public static let close: Self = "close"
         public static let keepAlive: Self = "keep-alive"

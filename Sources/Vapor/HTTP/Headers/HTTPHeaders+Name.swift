@@ -1,7 +1,7 @@
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
-    /// Type used for the name of a HTTP header in the `HTTPHeaders` storage.
+extension HTTPFields {
+    /// Type used for the name of a HTTP header in the `HTTPFields` storage.
     public struct Name: Codable, Hashable, Equatable, CustomStringConvertible, ExpressibleByStringLiteral, Sendable {
         /// See `Hashable`
         public func hash(into hasher: inout Hasher) {
@@ -480,7 +480,7 @@ extension HTTPHeaders {
         self[name.lowercased]
     }
     
-    /// Returns `true` if the `HTTPHeaders` contains a value for the supplied name.
+    /// Returns `true` if the `HTTPFields` contains a value for the supplied name.
     /// - Parameter name: The header field name to check.
     public func contains(name: Name) -> Bool {
         self.contains(name: name.lowercased)
@@ -497,18 +497,7 @@ extension HTTPHeaders {
     }
 }
 
-extension NIOHTTP1.HTTPHeaders: Swift.CustomDebugStringConvertible {
-    /// See `CustomDebugStringConvertible.debugDescription`
-    public var debugDescription: String {
-        var desc: [String] = []
-        for (key, val) in self {
-            desc.append("\(key): \(val)")
-        }
-        return desc.joined(separator: "\n")
-    }
-}
-
 // MARK: Internal Vapor Marker Headers
-extension HTTPHeaders.Name {
+extension HTTPFields.Name {
     public static let xVaporResponseCompression = Self("X-Vapor-Response-Compression")
 }

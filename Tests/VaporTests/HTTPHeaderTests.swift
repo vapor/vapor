@@ -7,31 +7,31 @@ import Foundation
 struct HTTPHeaderTests {
     @Test("Test Value Parsing")
     func testValue() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: "foobar")
+        var parser = HTTPFields.DirectiveParser(string: "foobar")
         #expect(parser.nextDirectives() == [.init(value: "foobar")])
     }
 
     @Test("Test Value Parsing with Whitespace")
     func testValue_whitespace() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: " foobar  ")
+        var parser = HTTPFields.DirectiveParser(string: " foobar  ")
         #expect(parser.nextDirectives() == [.init(value: "foobar")])
     }
 
     @Test("Test Value Parsing with Semicolon in Quotes")
     func testValue_semicolon_quote() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: #""foo;bar""#)
+        var parser = HTTPFields.DirectiveParser(string: #""foo;bar""#)
         #expect(parser.nextDirectives() == [.init(value: "foo;bar")])
     }
 
     @Test("Test Value Parsing with Semicolon and Escaped Quotes")
     func testValue_semicolon_quote_escape() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: #""foo;\"bar""#)
+        var parser = HTTPFields.DirectiveParser(string: #""foo;\"bar""#)
         #expect(parser.nextDirectives() == [.init(value: #"foo;"bar"#)])
     }
 
     @Test("Test Directive Parsing with Parameters")
     func testValue_directives() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: #"a; b=c, d"#)
+        var parser = HTTPFields.DirectiveParser(string: #"a; b=c, d"#)
         #expect(parser.nextDirectives() == [
             .init(value: "a"),
             .init(value: "b", parameter: "c"),
@@ -43,7 +43,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Directive Parsing with Quoted Parameters")
     func testValue_directives_quote() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: #""a;b"; c="d;e", f"#)
+        var parser = HTTPFields.DirectiveParser(string: #""a;b"; c="d;e", f"#)
         #expect(parser.nextDirectives() == [
             .init(value: "a;b"),
             .init(value: "c", parameter: "d;e"),
@@ -55,7 +55,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Directive Parsing for Content-Type")
     func testValue_directives_contentType() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: "application/json; charset=utf8")
+        var parser = HTTPFields.DirectiveParser(string: "application/json; charset=utf8")
         #expect(parser.nextDirectives() == [
             .init(value: "application/json"),
             .init(value: "charset", parameter: "utf8"),
@@ -64,7 +64,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Multiple Directives Parsing")
     func testValue_directives_multiple() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: "foo; bar=1; baz=2")
+        var parser = HTTPFields.DirectiveParser(string: "foo; bar=1; baz=2")
         #expect(parser.nextDirectives() == [
             .init(value: "foo"),
             .init(value: "bar", parameter: "1"),
@@ -74,7 +74,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Multiple Directives Parsing with Quotes")
     func testValue_directives_multiple_quote() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: #"foo; bar=1; baz="2""#)
+        var parser = HTTPFields.DirectiveParser(string: #"foo; bar=1; baz="2""#)
         #expect(parser.nextDirectives() == [
             .init(value: "foo"),
             .init(value: "bar", parameter: "1"),
@@ -84,7 +84,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Multiple Directives Parsing with Quoted Semicolon")
     func testValue_directives_multiple_quotedSemicolon() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: #"foo; bar=1; baz="2;3""#)
+        var parser = HTTPFields.DirectiveParser(string: #"foo; bar=1; baz="2;3""#)
         #expect(parser.nextDirectives() == [
             .init(value: "foo"),
             .init(value: "bar", parameter: "1"),
@@ -94,7 +94,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Multiple Directives Parsing with Quoted Semicolon and Equals")
     func testValue_directives_multiple_quotedSemicolonEqual() throws {
-        var parser = HTTPHeaders.DirectiveParser(string: #"foo; bar=1; baz="2;=3""#)
+        var parser = HTTPFields.DirectiveParser(string: #"foo; bar=1; baz="2;=3""#)
         #expect(parser.nextDirectives() == [
             .init(value: "foo"),
             .init(value: "bar", parameter: "1"),
@@ -104,7 +104,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Directive Serialization")
     func testValue_serialize() throws {
-        let serializer = HTTPHeaders.DirectiveSerializer(directives: [
+        let serializer = HTTPFields.DirectiveSerializer(directives: [
             [.init(value: "foo"), .init(value: "bar", parameter: "baz")],
             [.init(value: "qux", parameter: "quuz")]
         ])
@@ -113,7 +113,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Forwarded Header Parsing")
     func testForwarded() throws {
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         headers.replaceOrAdd(name: .forwarded, value: "for=192.0.2.60;proto=http;by=203.0.113.43")
 
         #expect(headers.forwarded.first?.for == "192.0.2.60")
@@ -123,7 +123,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Accept Header Parsing")
     func testAcceptType() throws {
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
 
         // Simple accept type
         do {
@@ -157,7 +157,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Complex Cookie Parsing")
     func testComplexCookieParsing() throws {
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         do {
             headers.add(name: .setCookie, value: "SIWA_STATE=CJKxa71djx6CaZ0MwRjtvtJ5Zub+kfaoIEZGoY3wXKA=; Path=/; SameSite=None; HttpOnly; Secure")
             headers.add(name: .setCookie, value: "vapor-session=TL7r+TS3RNhpEC6HoCfukq+7edNHKF2elF6WiKV4JCg=; Expires=Wed, 02 Jun 2021 14:57:57 GMT; Path=/; SameSite=None; HttpOnly; Secure")
@@ -180,7 +180,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Forwarded Header with Quoted Value")
     func testForwarded_quote() throws {
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         headers.replaceOrAdd(name: .forwarded, value: #"For="[2001:db8:cafe::17]:4711""#)
 
         #expect(headers.forwarded.first?.for == "[2001:db8:cafe::17]:4711")
@@ -188,7 +188,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Multiple Forwarded Headers")
     func testForwarded_multiple() throws {
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         headers.replaceOrAdd(name: .forwarded, value: #"for=192.0.2.43, for="[2001:db8:cafe::17]""#)
 
         #expect(headers.forwarded.map { $0.for } == [
@@ -199,7 +199,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Multiple Forwarded Headers (Deprecated)")
     func testForwarded_multiple_deprecated() throws {
-        let headers = HTTPHeaders([
+        let headers = HTTPFields([
             ("X-Forwarded-For", "192.0.2.43, 2001:db8:cafe::17 ")
         ])
 
@@ -211,7 +211,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Forwarded Header Serialization")
     func testForwarded_serialization() throws {
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         headers.forwarded.append(.init(
             by: "203.0.113.43",
             for: "192.0.2.60",
@@ -225,7 +225,7 @@ struct HTTPHeaderTests {
 
     @Test("Test X-Request-Id Header")
     func testXRequestId() throws {
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         let xRequestId = UUID().uuidString
         headers.replaceOrAdd(name: .xRequestId, value: xRequestId)
 
@@ -234,7 +234,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Content-Disposition Header Parsing")
     func testContentDisposition() throws {
-        let headers = HTTPHeaders([
+        let headers = HTTPFields([
             ("Content-Disposition", #"form-data; name="fieldName"; filename="filename.jpg""#)
         ])
 
@@ -245,7 +245,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Cookie Parsing")
     func testCookie_parsing() throws {
-        let headers = HTTPHeaders([
+        let headers = HTTPFields([
             (
                 "cookie",
                 """
@@ -263,7 +263,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Complex Cookie Parsing")
     func testCookie_complexParsing() throws {
-        let headers = HTTPHeaders([
+        let headers = HTTPFields([
             ("cookie", "oauth2_authentication_csrf=MTU4NzA1MTc0N3xEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJRGs1WkRKbU1HRTVNMlF3TmpRM1lUbGhOelptTnprMU5EYzRZMlk1WkRObXx6lRdSC3-hPvE1pxp4ylFlBruOyJtRo8OnzBrAriBr0w==; vapor-session=ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=; oauth2_consent_csrf=MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg==")
         ])
 
@@ -276,7 +276,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Invalid Cookie Handling")
     func testCookie_invalidCookie() throws {
-        let headers = HTTPHeaders([
+        let headers = HTTPFields([
             ("cookie", "cookie_one=1;cookie\ntwo=2;cookie_three=3;cookie_④=4;cookie_fivé=5")
         ])
 
@@ -304,7 +304,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Content-Disposition with Quoted Filename", .bug("https://github.com/vapor/vapor/issues/2439"))
     func testContentDispositionQuotedFilename() throws {
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
 
         headers.contentDisposition = .init(.formData, filename: "foo")
         #expect(headers.first(name: .contentDisposition) == "form-data; filename=\"foo\"")
@@ -318,14 +318,14 @@ struct HTTPHeaderTests {
 
     @Test("Test Range Directive Serialization")
     func testRangeDirectiveSerialization() throws {
-        let range = HTTPHeaders.Range(unit: .bytes, ranges: [
+        let range = HTTPFields.Range(unit: .bytes, ranges: [
             .within(start: 200, end: 1000),
             .within(start: 2000, end: 6576),
             .start(value: 19000),
             .tail(value: 500)
         ])
 
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         headers.range = range
 
         #expect(headers.range == range)
@@ -333,20 +333,20 @@ struct HTTPHeaderTests {
 
     @Test("Test Content-Range Directive Serialization")
     func testContentRangeDirectiveSerialization() throws {
-        let anyRange = HTTPHeaders.ContentRange(
+        let anyRange = HTTPFields.ContentRange(
             unit: .bytes,
             range: .any(size: 1000)
         )
-        let rangeOfUnknownLimit = HTTPHeaders.ContentRange(
+        let rangeOfUnknownLimit = HTTPFields.ContentRange(
             unit: .bytes,
             range: .within(start: 0, end: 1000)
         )
-        let rangeWithLimit = HTTPHeaders.ContentRange(
+        let rangeWithLimit = HTTPFields.ContentRange(
             unit: .bytes,
             range: .withinWithLimit(start: 0, end: 1000, limit: 1001)
         )
 
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
 
         headers.contentRange = anyRange
         #expect(headers.contentRange == anyRange)
@@ -360,7 +360,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Range Serialization")
     func testRangeSerialization() throws {
-        let range = HTTPHeaders.Range(unit: .bytes, ranges: [
+        let range = HTTPFields.Range(unit: .bytes, ranges: [
             .within(start: 200, end: 1000),
             .within(start: 2000, end: 6576),
             .start(value: 19000),
@@ -372,7 +372,7 @@ struct HTTPHeaderTests {
 
     @Test("Test Range Deserialization")
     func testRangeDeserialization() throws {
-        let range = HTTPHeaders.Range(unit: .bytes, ranges: [
+        let range = HTTPFields.Range(unit: .bytes, ranges: [
             .within(start: 200, end: 1000),
             .within(start: 2000, end: 6576),
             .start(value: 19000),
@@ -380,18 +380,18 @@ struct HTTPHeaderTests {
         ])
 
         let directives = [
-            HTTPHeaders.Directive(value: "bytes", parameter: "200-1000"),
-            HTTPHeaders.Directive(value: "2000-6576"),
-            HTTPHeaders.Directive(value: "19000-"),
-            HTTPHeaders.Directive(value: "-500"),
+            HTTPFields.Directive(value: "bytes", parameter: "200-1000"),
+            HTTPFields.Directive(value: "2000-6576"),
+            HTTPFields.Directive(value: "19000-"),
+            HTTPFields.Directive(value: "-500"),
         ]
 
-        #expect(HTTPHeaders.Range(directives: directives) == range)
+        #expect(HTTPFields.Range(directives: directives) == range)
     }
 
     @Test("Test Link Header Parsing")
     func testLinkHeaderParsing() throws {
-        let headers = HTTPHeaders([
+        let headers = HTTPFields([
             ("link", #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel=related, </?a=-2>; rel=related"#)
         ])
 
@@ -421,14 +421,14 @@ struct HTTPHeaderTests {
 
     @Test("Test Link Header Serialization")
     func testLinkHeaderSerialization() throws {
-        let links: [HTTPHeaders.Link] = [
+        let links: [HTTPFields.Link] = [
             .init(uri: "https://localhost/?a=1", relation: .next, attributes: [:]),
             .init(uri: "https://localhost/?a=2", relation: .last, attributes: ["custom1": "whatever"]),
             .init(uri: "/?a=-1", relation: .related, attributes: [:]),
             .init(uri: "/?a=-2", relation: .related, attributes: [:]),
         ]
 
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         headers.links = links
 
         #expect(headers.first(name: .link) == #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel="related", </?a=-2>; rel="related""#)
@@ -437,8 +437,8 @@ struct HTTPHeaderTests {
     /// Test parse and serialize of `Last-Modified` header
     @Test("Test Last-Modified Header Parsing and Serialization")
     func testLastModifiedHeader() throws {
-        var headers = HTTPHeaders()
-        headers.lastModified = HTTPHeaders.LastModified(value: Date(timeIntervalSince1970: 18 * 3600))
+        var headers = HTTPFields()
+        headers.lastModified = HTTPFields.LastModified(value: Date(timeIntervalSince1970: 18 * 3600))
 
         // Ensure the last-modified date was parsed correctly
         let date = try #require(headers.lastModified)
@@ -450,8 +450,8 @@ struct HTTPHeaderTests {
     /// Test parse and serialize of `Expires` header
     @Test("Test Expires Header Parsing and Serialization")
     func testExpiresHeader() throws {
-        var headers = HTTPHeaders()
-        headers.expires = HTTPHeaders.Expires(expires: Date(timeIntervalSince1970: 18 * 3600))
+        var headers = HTTPFields()
+        headers.expires = HTTPFields.Expires(expires: Date(timeIntervalSince1970: 18 * 3600))
 
         // Ensure the expires header was parsed correctly
         let date = try #require(headers.expires)
@@ -463,8 +463,8 @@ struct HTTPHeaderTests {
     /// Test parse and serialize of `Cache-Control` header
     @Test("Test Cache-Control Header Parsing and Serialization")
     func testCacheControlHeader() throws {
-        var headers = HTTPHeaders()
-        headers.cacheControl = HTTPHeaders.CacheControl(immutable: true)
+        var headers = HTTPFields()
+        headers.cacheControl = HTTPFields.CacheControl(immutable: true)
 
         // Ensure the cache-control header was parsed correctly
         let cacheControl = try #require(headers.cacheControl)
@@ -482,7 +482,7 @@ struct HTTPHeaderTests {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
         headers.add(name: .date, value: "\(Date(timeIntervalSinceReferenceDate: 100.0))")
         headers.add(name: .date, value: "\(Date(timeIntervalSinceReferenceDate: -100.0))")
         headers.add(name: .connection, value: "be-strange")
@@ -491,7 +491,7 @@ struct HTTPHeaderTests {
 
         #expect(String(decoding: encodedHeaders, as: UTF8.self) == #"[{"name":"date","value":"2001-01-01 00:01:40 +0000"},{"name":"date","value":"2000-12-31 23:58:20 +0000"},{"name":"connection","value":"be-strange"}]"#)
 
-        let decodedHeaders = try decoder.decode(HTTPHeaders.self, from: encodedHeaders)
+        let decodedHeaders = try decoder.decode(HTTPFields.self, from: encodedHeaders)
 
         #expect(decodedHeaders.count == headers.count)
 
@@ -501,15 +501,15 @@ struct HTTPHeaderTests {
         }
     }
 
-    /// Make sure the old HTTPHeaders encoding can still be decoded
-    @Test("Test Old HTTPHeaders Encoding")
-    func testOldHTTPHeadersEncoding() throws {
+    /// Make sure the old HTTPFields encoding can still be decoded
+    @Test("Test Old HTTPFields Encoding")
+    func testOldHTTPFieldsEncoding() throws {
         let decoder = JSONDecoder()
         let json = #"{"connection":"fun","attention":"none"}"#
-        var headers = HTTPHeaders()
+        var headers = HTTPFields()
 
         #expect(throws: Never.self) {
-            headers = try decoder.decode(HTTPHeaders.self, from: Data(json.utf8))
+            headers = try decoder.decode(HTTPFields.self, from: Data(json.utf8))
         }
 
         #expect(headers.count == 2)

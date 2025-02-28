@@ -1,7 +1,7 @@
 import Foundation
 import NIOCore
 import _NIOFileSystem
-import NIOHTTP1
+import HTTPTypes
 import Logging
 import Crypto
 import NIOConcurrencyHelpers
@@ -228,7 +228,7 @@ public struct FileIO: Sendable {
             throw Abort(.internalServerError)
         }
 
-        let contentRange: HTTPHeaders.Range?
+        let contentRange: HTTPFields.Range?
         if let rangeFromHeaders = request.headers.range {
             if rangeFromHeaders.unit == .bytes && rangeFromHeaders.ranges.count == 1 {
                 contentRange = rangeFromHeaders
@@ -253,10 +253,10 @@ public struct FileIO: Sendable {
         }
         
         // Create empty headers array.
-        var headers: HTTPHeaders = [:]
+        var headers: HTTPFields = [:]
 
         // Respond with lastModified header
-        headers.lastModified = HTTPHeaders.LastModified(value: fileInfo.lastDataModificationTime.date)
+        headers.lastModified = HTTPFields.LastModified(value: fileInfo.lastDataModificationTime.date)
 
         headers.replaceOrAdd(name: .eTag, value: eTag)
 
@@ -279,7 +279,7 @@ public struct FileIO: Sendable {
             if let firstRange = contentRange.ranges.first {
                 do {
                     let range = try firstRange.asResponseContentRange(limit: Int(fileInfo.size))
-                    response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
+                    response.headers.contentRange = HTTPFields.ContentRange(unit: contentRange.unit, range: range)
                     (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: Int(fileInfo.size), logger: request.logger)
                 } catch {
                     throw Abort(.badRequest)
@@ -325,7 +325,7 @@ public struct FileIO: Sendable {
     }
 }
 
-extension HTTPHeaders.Range.Value {
+extension HTTPFields.Range.Value {
     
     fileprivate func asByteBufferBounds(withMaxSize size: Int, logger: Logger) throws -> (offset: Int64, byteCount: Int) {
         switch self {
