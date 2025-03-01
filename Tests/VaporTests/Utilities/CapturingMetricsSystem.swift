@@ -18,6 +18,32 @@ import Metrics
 import Foundation
 import NIOConcurrencyHelpers
 
+internal final class TaskLocalMetricsSysemWrapper: MetricsFactory {
+    func makeCounter(label: String, dimensions: [(String, String)]) -> any CoreMetrics.CounterHandler {
+        metrics.makeCounter(label: label, dimensions: dimensions)
+    }
+    
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any CoreMetrics.RecorderHandler {
+        metrics.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+    }
+    
+    func makeTimer(label: String, dimensions: [(String, String)]) -> any CoreMetrics.TimerHandler {
+        metrics.makeTimer(label: label, dimensions: dimensions)
+    }
+    
+    func destroyCounter(_ handler: any CoreMetrics.CounterHandler) {
+        metrics.destroyCounter(handler)
+    }
+    
+    func destroyRecorder(_ handler: any CoreMetrics.RecorderHandler) {
+        metrics.destroyRecorder(handler)
+    }
+    
+    func destroyTimer(_ handler: any CoreMetrics.TimerHandler) {
+        metrics.destroyTimer(handler)
+    }
+}
+
 /// Metrics factory which allows inspecting recorded metrics programmatically.
 /// Only intended for tests of the Metrics API itself.
 internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable {
@@ -25,12 +51,19 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
     var counters = [String: CounterHandler]()
     var recorders = [String: RecorderHandler]()
     var timers = [String: TimerHandler]()
+    let number: String
+
+    init(_ number: String) {
+        self.number = number
+    }
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+        print("CaputuringMetricsSystem \(number)")
         return self.lock.withLock { self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init) }
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+        print("CaputuringMetricsSystem \(number)")
         let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
@@ -38,6 +71,7 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+        print("CaputuringMetricsSystem \(number)")
         return self.lock.withLock { self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init) }
     }
 
@@ -48,6 +82,7 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
     }
 
     func destroyCounter(_ handler: CounterHandler) {
+        print("CaputuringMetricsSystem \(number)")
         if let testCounter = handler as? TestCounter {
             self.lock.withLockVoid {
                 self.counters.removeValue(forKey: testCounter.label)
@@ -56,6 +91,7 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
     }
 
     func destroyRecorder(_ handler: RecorderHandler) {
+        print("CaputuringMetricsSystem \(number)")
         if let testRecorder = handler as? TestRecorder {
             self.lock.withLockVoid {
                 self.recorders.removeValue(forKey: testRecorder.label)
@@ -64,6 +100,7 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
     }
 
     func destroyTimer(_ handler: TimerHandler) {
+        print("CaputuringMetricsSystem \(number)")
         if let testTimer = handler as? TestTimer {
             self.lock.withLockVoid {
                 self.timers.removeValue(forKey: testTimer.label)
