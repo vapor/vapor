@@ -568,17 +568,18 @@ struct ServerTests {
             let numRequests = ManagedAtomic<Int>(0)
             let writersStarted = WritersCount()
 
-            app.get() { req  -> EventLoopFuture<Response> in
+            app.get() { req  -> Response in
                 numRequests.wrappingIncrement(ordering: .relaxed)
 
-                return req.eventLoop.scheduleTask(in: .milliseconds(10)) {
+                #warning("Migrate")
+                return try await req.eventLoop.scheduleTask(in: .milliseconds(10)) {
                     numRequests.wrappingIncrement(ordering: .relaxed)
 
                     return Response(status: .ok, body: .init(asyncStream: { writer in
                         await writersStarted.signal()
                         _ = try await writer.write(.end)
                     }))
-                }.futureResult
+                }.futureResult.get()
             }
 
             app.environment.arguments = ["serve"]
@@ -705,11 +706,12 @@ struct ServerTests {
     @Test("Test Early Exit Streaming Request")
     func testEarlyExitStreamingRequest() async throws {
         try await withApp { app in
-            app.on(.post, "upload", body: .stream) { req -> EventLoopFuture<Int> in
+            app.on(.post, "upload", body: .stream) { req -> Int in
                 guard req.headers[.init("test")!] != nil else {
-                    return req.eventLoop.makeFailedFuture(Abort(.badRequest))
+                    throw Abort(.badRequest)
                 }
 
+#warning("Migrate")
                 let countBox = NIOLockedValueBox<Int>(0)
                 let promise = req.eventLoop.makePromise(of: Int.self)
                 req.body.drain { part in
@@ -723,7 +725,7 @@ struct ServerTests {
                     }
                     return req.eventLoop.makeSucceededFuture(())
                 }
-                return promise.futureResult
+                return try await promise.futureResult.get()
             }
 
             var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)

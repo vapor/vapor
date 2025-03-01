@@ -201,7 +201,7 @@ struct ConditionalCompressionTests {
                 app.get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = unknownType /// Not explicitely marked as compressible or not.
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -234,7 +234,7 @@ struct ConditionalCompressionTests {
                 app.get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = .png /// PNGs are explicitely called out as incompressible.
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -267,7 +267,7 @@ struct ConditionalCompressionTests {
                 app.get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = .mpeg /// Videos are explicitely called out as incompressible, but as a class.
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -300,7 +300,7 @@ struct ConditionalCompressionTests {
                 app.get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = .plainText /// Text types are explicitely called out as compressible, but as a class.
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -334,7 +334,7 @@ struct ConditionalCompressionTests {
                     var headers = HTTPFields()
                     headers.contentType = unknownType
                     headers.responseCompression = .enable
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -368,7 +368,7 @@ struct ConditionalCompressionTests {
                     var headers = HTTPFields()
                     headers.contentType = unknownType
                     headers.responseCompression = .disable
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -402,7 +402,7 @@ struct ConditionalCompressionTests {
                     var headers = HTTPFields()
                     headers.contentType = unknownType
                     headers.responseCompression = .enable
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -436,7 +436,7 @@ struct ConditionalCompressionTests {
                     var headers = HTTPFields()
                     headers.contentType = unknownType
                     headers.responseCompression = .disable
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -469,7 +469,7 @@ struct ConditionalCompressionTests {
                 app.responseCompression(.enable).get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = unknownType
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -502,7 +502,7 @@ struct ConditionalCompressionTests {
                 app.responseCompression(.disable).get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = unknownType
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -535,7 +535,7 @@ struct ConditionalCompressionTests {
                 app.responseCompression(.disable).responseCompression(.useDefault).get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = unknownType
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -568,7 +568,7 @@ struct ConditionalCompressionTests {
                 app.responseCompression(.enable).responseCompression(.useDefault).get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = unknownType
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -602,7 +602,7 @@ struct ConditionalCompressionTests {
                     var headers = HTTPFields()
                     headers.responseCompression = .useDefault
                     headers.contentType = unknownType
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -636,7 +636,7 @@ struct ConditionalCompressionTests {
                     var headers = HTTPFields()
                     headers.responseCompression = .useDefault
                     headers.contentType = unknownType
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -669,7 +669,7 @@ struct ConditionalCompressionTests {
                 app.responseCompression(.unset).responseCompression(.disable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = unknownType
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
@@ -702,7 +702,7 @@ struct ConditionalCompressionTests {
                 app.responseCompression(.unset).responseCompression(.enable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { request in
                     var headers = HTTPFields()
                     headers.contentType = unknownType
-                    return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
                 try await app.server.start()
