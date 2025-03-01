@@ -1,4 +1,4 @@
-import NIOCore
+import HTTPServerNew
 
 public protocol Server: Sendable {    
     /// Start the server with the specified address.
