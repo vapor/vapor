@@ -119,6 +119,7 @@ public final class Application: Sendable {
     private let _traceAutoPropagation: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
+    public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
 
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
@@ -166,6 +167,7 @@ public final class Application: Sendable {
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
+        self.sharedNewAddress = .init(nil)
 
         // Service Setup
         if let viewRenderer = services.viewRenderer {

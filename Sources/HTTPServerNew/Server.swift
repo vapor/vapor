@@ -58,7 +58,7 @@ public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
     }
 
     public var state: State {
-        didSet { self.logger.trace("Server State: \(self.state)") }
+        didSet { self.logger.info("Server State: \(self.state)") }
     }
 
     /// Logger used by Server

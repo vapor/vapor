@@ -27,47 +27,58 @@ extension Application {
         }
 
         package func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
-            try await app.server.start(address: .hostname(self.hostname, port: self.port))
-            let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                print("Starting everything up")
+                group.addTask {
+                    print("Starting server")
+                    try await app.server.start(address: .hostname(self.hostname, port: self.port))
+                    print("Server returned")
+                }
 
-            do {
-                var path = request.url.path
-                path = path.hasPrefix("/") ? path : "/\(path)"
+                try await Task.sleep(for: .milliseconds(100))
+                let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
 
-                let actualPort: Int
+                do {
+                    var path = request.url.path
+                    path = path.hasPrefix("/") ? path : "/\(path)"
 
-                if self.port == 0 {
-                    guard let portAllocated = app.http.server.shared.localAddress?.port else {
-                        throw Abort(.internalServerError, reason: "Failed to get port from local address")
+                    let actualPort: Int
+
+                    print("Getting port")
+                    if self.port == 0 {
+                        guard let portAllocated = app.sharedNewAddress.withLockedValue({ $0 })?.port else {
+                            throw Abort(.internalServerError, reason: "Failed to get port from local address")
+                        }
+                        actualPort = portAllocated
+                    } else {
+                        actualPort = self.port
                     }
-                    actualPort = portAllocated
-                } else {
-                    actualPort = self.port
-                }
 
-                var url = "http://\(self.hostname):\(actualPort)\(path)"
-                if let query = request.url.query {
-                    url += "?\(query)"
+                    var url = "http://\(self.hostname):\(actualPort)\(path)"
+                    if let query = request.url.query {
+                        url += "?\(query)"
+                    }
+                    var clientRequest = HTTPClientRequest(url: url)
+                    clientRequest.method = .init(request.method)
+                    clientRequest.headers = .init(request.headers)
+                    clientRequest.body = .bytes(request.body)
+                    let response = try await client.execute(clientRequest, timeout: .seconds(30))
+                    // Collect up to 1MB
+                    let responseBody = try await response.body.collect(upTo: 1024 * 1024)
+                    try await client.shutdown()
+                    try await app.server.shutdown()
+                    return TestingHTTPResponse(
+                        status: .init(code: Int(response.status.code)),
+                        headers: .init(response.headers, splitCookie: false),
+                        body: responseBody,
+                        contentConfiguration: self.app.contentConfiguration
+                    )
+                } catch {
+                    #warning("We should probably use a service group here and trigger a graceful shutdown")
+                    try? await client.shutdown()
+                    try? await app.server.shutdown()
+                    throw error
                 }
-                var clientRequest = HTTPClientRequest(url: url)
-                clientRequest.method = .init(request.method)
-                clientRequest.headers = .init(request.headers)
-                clientRequest.body = .bytes(request.body)
-                let response = try await client.execute(clientRequest, timeout: .seconds(30))
-                // Collect up to 1MB
-                let responseBody = try await response.body.collect(upTo: 1024 * 1024)
-                try await client.shutdown()
-                try await app.server.shutdown()
-                return TestingHTTPResponse(
-                    status: .init(code: Int(response.status.code)),
-                    headers: .init(response.headers, splitCookie: false),
-                    body: responseBody,
-                    contentConfiguration: self.app.contentConfiguration
-                )
-            } catch {
-                try? await client.shutdown()
-                try? await app.server.shutdown()
-                throw error
             }
         }
     }

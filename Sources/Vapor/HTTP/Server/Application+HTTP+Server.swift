@@ -1,6 +1,8 @@
 import HTTPServerNew
 import NIOHTTPTypes
 import HTTPTypes
+import NIOCore
+import NIOConcurrencyHelpers
 
 extension Application.Servers.Provider {
     public static var http: Self {
@@ -28,7 +30,7 @@ extension Application.HTTP {
             if let existing = self.application.storage[NewKey.self] {
                 return existing
             } else {
-                let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: .init(), eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger) { req, responseWriter, channel  in
+                let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: .init(), eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger, responder: { req, responseWriter, channel  in
                     application.logger.info("Request received with new Vapor 5 server")
 
                     let vaporRequest = Vapor.Request(
@@ -50,7 +52,14 @@ extension Application.HTTP {
                     try await vaporResponse.body.write(&bodyWriter)
                     application.logger.info("Response sent with new Vapor 5 server")
 
-                } as! HTTPServer<HTTP1Channel>
+                }, onServerRunning: { channel in
+                    print("Server running on \(channel.localAddress!)")
+                    self.application.sharedNewAddress.withLockedValue {
+                        $0 = channel.localAddress
+                        print("Local address updated")
+                    }
+                    print("Shared address is \(self.application.sharedNewAddress.withLockedValue { $0 })")
+                }) as! HTTPServer<HTTP1Channel>
                 self.application.storage[NewKey.self] = new
                 return new
             }
