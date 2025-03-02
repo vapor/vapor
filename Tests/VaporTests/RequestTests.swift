@@ -28,19 +28,23 @@ struct RequestTests {
                 $0.redirect(to: "foo", redirectType: .permanentPost)
             }
 
-            try await app.server.start(address: .hostname("localhost", port: 0))
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await app.server.start(address: .hostname("localhost", port: 0))
+                }
 
-            guard let port = app.http.server.shared.localAddress?.port else {
-                Issue.record("Failed to get port for app")
-                return
+                #warning("This is a workaround for the server not being ready yet.")
+                try await Task.sleep(for: .milliseconds(100))
+
+                let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+
+                #expect(try await app.client.get("http://localhost:\(port)/redirect_normal").status == .seeOther)
+                #expect(try await app.client.get("http://localhost:\(port)/redirect_permanent").status == .movedPermanently)
+                #expect(try await app.client.post("http://localhost:\(port)/redirect_temporary").status == .temporaryRedirect)
+                #expect(try await app.client.post("http://localhost:\(port)/redirect_permanentPost").status == .permanentRedirect)
+
+                try await app.server.shutdown()
             }
-
-            #expect(try await app.client.get("http://localhost:\(port)/redirect_normal").status == .seeOther)
-            #expect(try await app.client.get("http://localhost:\(port)/redirect_permanent").status == .movedPermanently)
-            #expect(try await app.client.post("http://localhost:\(port)/redirect_temporary").status == .temporaryRedirect)
-            #expect(try await app.client.post("http://localhost:\(port)/redirect_permanentPost").status == .permanentRedirect)
-
-            try await app.server.shutdown()
         }
     }
 

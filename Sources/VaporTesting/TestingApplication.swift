@@ -28,13 +28,11 @@ extension Application {
 
         package func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
             try await withThrowingTaskGroup(of: Void.self) { group in
-                print("Starting everything up")
                 group.addTask {
-                    print("Starting server")
                     try await app.server.start(address: .hostname(self.hostname, port: self.port))
-                    print("Server returned")
                 }
 
+#warning("This is a workaround for the server not being ready yet.")
                 try await Task.sleep(for: .milliseconds(100))
                 let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
 
@@ -44,7 +42,6 @@ extension Application {
 
                     let actualPort: Int
 
-                    print("Getting port")
                     if self.port == 0 {
                         guard let portAllocated = app.sharedNewAddress.withLockedValue({ $0 })?.port else {
                             throw Abort(.internalServerError, reason: "Failed to get port from local address")

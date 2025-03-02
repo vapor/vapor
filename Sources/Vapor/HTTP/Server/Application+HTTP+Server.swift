@@ -53,12 +53,7 @@ extension Application.HTTP {
                     application.logger.info("Response sent with new Vapor 5 server")
 
                 }, onServerRunning: { channel in
-                    print("Server running on \(channel.localAddress!)")
-                    self.application.sharedNewAddress.withLockedValue {
-                        $0 = channel.localAddress
-                        print("Local address updated")
-                    }
-                    print("Shared address is \(self.application.sharedNewAddress.withLockedValue { $0 })")
+                    self.application.sharedNewAddress.withLockedValue { $0 = channel.localAddress }
                 }) as! HTTPServer<HTTP1Channel>
                 self.application.storage[NewKey.self] = new
                 return new
