@@ -215,7 +215,7 @@ struct PipelineTests {
 
             #expect(asyncChannel.isActive == true)
             // throws a notEnoughBytes error which is good
-            await #expect(throws: Error.self) {
+            await #expect(throws: (any Error).self) {
                 try await asyncChannel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n"))
             }
             #expect(asyncChannel.isActive == false)

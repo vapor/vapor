@@ -3,23 +3,23 @@ import NIOCore
 import Logging
 
 struct ResponderClient: Client {
-    let responder: Responder
+    let responder: any Responder
     let application: Application
     let byteBufferAllocator: NIOCore.ByteBufferAllocator
     let contentConfiguration: Vapor.ContentConfiguration
 
-    init(responder: Responder, application: Application) {
+    init(responder: any Responder, application: Application) {
         self.responder = responder
         self.application = application
         self.byteBufferAllocator = application.byteBufferAllocator
         self.contentConfiguration = application.contentConfiguration
     }
 
-    var eventLoop: EventLoop {
+    var eventLoop: any EventLoop {
         self.application.eventLoopGroup.next()
     }
 
-    func delegating(to eventLoop: EventLoop) -> Client {
+    func delegating(to eventLoop: any EventLoop) -> any Client {
         self
     }
 
@@ -38,11 +38,11 @@ struct ResponderClient: Client {
         return ClientResponse(status: res.status, headers: res.headers, body: res.body.buffer)
     }
 
-    func logging(to logger: Logger) -> Client {
+    func logging(to logger: Logger) -> any Client {
         self
     }
 
-    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
+    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> any Client {
         self
     }
 }

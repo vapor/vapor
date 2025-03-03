@@ -564,7 +564,7 @@ struct ContentTests {
             #expect(performing: {
                 try req.content.decode(PostInput.self)
             }, throws: { error in
-                return (error as? AbortError)?.reason ==
+                return (error as? any AbortError)?.reason ==
                         #"No such key 'is_free' at path ''. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
             })
         }
@@ -588,7 +588,7 @@ struct ContentTests {
             #expect(performing: {
                 try req.content.decode(DecodeModel.self)
             }, throws: { error in
-                return (error as? AbortError)?.reason.contains(#"Data corrupted at path ''. The given data was not valid JSON"#) ?? false
+                return (error as? any AbortError)?.reason.contains(#"Data corrupted at path ''. The given data was not valid JSON"#) ?? false
             })
         }
     }
@@ -603,7 +603,7 @@ struct ContentTests {
 
             struct DecodeModel: Content {
                 struct Item: Content {
-                    init(from decoder: Decoder) throws {
+                    init(from decoder: any Decoder) throws {
                         var container = try decoder.unkeyedContainer()
                         _ = try container.decode(String.self)
                         _ = try container.decode(String.self)
@@ -616,7 +616,7 @@ struct ContentTests {
             #expect(performing: {
                 try req.content.decode(DecodeModel.self)
             }, throws: { error in
-                return (error as? AbortError)?.reason ==
+                return (error as? any AbortError)?.reason ==
                 #"No value found (expected type 'String') at path 'items.Index 1'. Unkeyed container is at end."#
             })
         }
@@ -642,7 +642,7 @@ struct ContentTests {
             #expect(performing: {
                 try req.content.decode(DecodeModel.self)
             }, throws: { error in
-                (error as? AbortError)?.reason.contains(#"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#) ?? false
+                (error as? any AbortError)?.reason.contains(#"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#) ?? false
             })
         }
     }

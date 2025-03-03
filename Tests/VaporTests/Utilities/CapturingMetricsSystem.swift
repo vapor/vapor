@@ -48,29 +48,29 @@ internal final class TaskLocalMetricsSysemWrapper: MetricsFactory {
 /// Only intended for tests of the Metrics API itself.
 internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable {
     private let lock = NIOLock()
-    var counters = [String: CounterHandler]()
-    var recorders = [String: RecorderHandler]()
-    var timers = [String: TimerHandler]()
+    var counters = [String: any CounterHandler]()
+    var recorders = [String: any RecorderHandler]()
+    var timers = [String: any TimerHandler]()
     let number: String
 
     init(_ number: String) {
         self.number = number
     }
 
-    public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+    public func makeCounter(label: String, dimensions: [(String, String)]) -> any CounterHandler {
         print("CaputuringMetricsSystem \(number)")
         return self.lock.withLock { self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init) }
     }
 
-    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any RecorderHandler {
         print("CaputuringMetricsSystem \(number)")
-        let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
+        let maker = { (label: String, dimensions: [(String, String)]) -> any RecorderHandler in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
         return self.lock.withLock { self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker) }
     }
 
-    public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+    public func makeTimer(label: String, dimensions: [(String, String)]) -> any TimerHandler {
         print("CaputuringMetricsSystem \(number)")
         return self.lock.withLock { self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init) }
     }
@@ -81,7 +81,7 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
         return item
     }
 
-    func destroyCounter(_ handler: CounterHandler) {
+    func destroyCounter(_ handler: any CounterHandler) {
         print("CaputuringMetricsSystem \(number)")
         if let testCounter = handler as? TestCounter {
             self.lock.withLockVoid {
@@ -90,7 +90,7 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
         }
     }
 
-    func destroyRecorder(_ handler: RecorderHandler) {
+    func destroyRecorder(_ handler: any RecorderHandler) {
         print("CaputuringMetricsSystem \(number)")
         if let testRecorder = handler as? TestRecorder {
             self.lock.withLockVoid {
@@ -99,7 +99,7 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
         }
     }
 
-    func destroyTimer(_ handler: TimerHandler) {
+    func destroyTimer(_ handler: any TimerHandler) {
         print("CaputuringMetricsSystem \(number)")
         if let testTimer = handler as? TestTimer {
             self.lock.withLockVoid {

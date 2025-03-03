@@ -53,8 +53,8 @@ extension Application.Caches.Provider {
 // Always returns "bar" for key "foo".
 // That's all...
 struct FooCache: Cache {
-    let eventLoop: EventLoop
-    init(on eventLoop: EventLoop) {
+    let eventLoop: any EventLoop
+    init(on eventLoop: any EventLoop) {
         self.eventLoop = eventLoop
     }
 

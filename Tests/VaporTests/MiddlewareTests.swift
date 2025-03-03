@@ -210,7 +210,7 @@ final class OrderMiddleware: Middleware {
         self.pos = pos
         self.store = store
     }
-    func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         await store.addOrder(pos)
         return try await next.respond(to: request)
     }

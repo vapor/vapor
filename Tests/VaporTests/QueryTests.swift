@@ -43,7 +43,7 @@ struct QueryTests {
             struct StringWrapper: Decodable {
                 let string: String
                 
-                init(from decoder: Decoder) throws {
+                init(from decoder: any Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     string = try container.decode(String.self)
                 }
@@ -78,7 +78,7 @@ struct QueryTests {
             )
 
             #expect(try request1.query.get(String.self, at: "foo") == "a")
-            let error1 = #expect(throws: Error.self) {
+            let error1 = #expect(throws: (any Error).self) {
                 try request1.query.get(Int.self, at: "foo")
             }
             if case .typeMismatch(_, let context) = error1 as? DecodingError {
@@ -87,7 +87,7 @@ struct QueryTests {
                 Issue.record("Caught error \"\(error1.debugDescription)\", but not the expected: \"DecodingError.typeMismatch\"")
             }
 
-            let error2 = #expect(throws: Error.self) {
+            let error2 = #expect(throws: (any Error).self) {
                 try request1.query.get(String.self, at: "bar")
             }
             if case .valueNotFound(_, let context) = error2 as? DecodingError {
@@ -346,7 +346,7 @@ struct QueryTests {
             request.url.path = "/"
             request.url.query = "closedRange=1"
 
-            let error = #expect(throws: Error.self) {
+            let error = #expect(throws: (any Error).self) {
                 try request.query.decode(Query.self)
             }
             if case .valueNotFound(_, let context) = error as? DecodingError {

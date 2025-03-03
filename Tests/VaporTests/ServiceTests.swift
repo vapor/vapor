@@ -86,28 +86,28 @@ struct ServiceTests {
 }
 
 protocol MyService {
-    func `for`(_ request: Request) -> MyService
+    func `for`(_ request: Request) -> any MyService
     func doSomething() -> String
 }
 
 extension Application.Services {
-    var myService: Application.Service<MyService> {
+    var myService: Application.Service<any MyService> {
         .init(application: self.application)
     }
 }
 
 extension Request.Services {
-    var myService: MyService {
+    var myService: any MyService {
         self.request.application.services.myService.service.for(request)
     }
 }
 
 struct MyTestService: MyService {
     let cannedResponse: String
-    let eventLoop: EventLoop
+    let eventLoop: any EventLoop
     let logger: Logger
     
-    func `for`(_ request: Vapor.Request) -> MyService {
+    func `for`(_ request: Vapor.Request) -> any MyService {
         return MyTestService(cannedResponse: self.cannedResponse, eventLoop: request.eventLoop, logger: request.logger)
     }
     
@@ -117,7 +117,7 @@ struct MyTestService: MyService {
 }
 
 private struct ReadOnly {
-    let client: Client
+    let client: any Client
 
     func foos() async throws -> [String] {
         ["foo"]

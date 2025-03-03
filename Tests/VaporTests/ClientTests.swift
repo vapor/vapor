@@ -242,15 +242,15 @@ final class CustomClient: Client, Sendable {
         return ClientResponse()
     }
 
-    func delegating(to eventLoop: any EventLoop) -> Client {
+    func delegating(to eventLoop: any EventLoop) -> any Client {
         self
     }
 
-    func logging(to logger: Logger) -> Client {
+    func logging(to logger: Logger) -> any Client {
         self
     }
 
-    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
+    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> any Client {
         self
     }
 }

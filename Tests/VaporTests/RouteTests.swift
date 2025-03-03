@@ -336,7 +336,7 @@ struct RouteTests {
     @Test("Test Collection")
     func testCollection() async throws {
         struct Foo: RouteCollection {
-            func boot(routes: RoutesBuilder) throws {
+            func boot(routes: any RoutesBuilder) throws {
                 routes.get("foo") { _ in "bar" }
             }
         }

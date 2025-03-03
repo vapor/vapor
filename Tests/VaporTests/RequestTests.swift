@@ -134,7 +134,7 @@ struct RequestTests {
             let serverSawEnd = ManagedAtomic<Bool>(false)
             let serverSawRequest = ManagedAtomic<Bool>(false)
 
-            let requestHandlerTask: NIOLockedValueBox<Task<Response, Error>?> = .init(nil)
+            let requestHandlerTask: NIOLockedValueBox<Task<Response, any Error>?> = .init(nil)
 
             app.on(.post, "hello", body: .stream) { req async throws -> Response in
                 requestHandlerTask.withLockedValue {
