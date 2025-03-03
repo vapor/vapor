@@ -12,10 +12,10 @@ public protocol ContentContainer {
     var contentConfiguration: ContentConfiguration { get }
 
     /// Use the provided ``ContentDecoder`` to read a value of type `D` from the container.
-    func decode<D: Decodable>(_: D.Type, using decoder: ContentDecoder) throws -> D
+    func decode<D: Decodable>(_: D.Type, using decoder: any ContentDecoder) throws -> D
 
     /// Use the provided ``ContentEncoder`` to write a value of type `E` to the container.
-    mutating func encode<E: Encodable>(_ encodable: E, using encoder: ContentEncoder) throws
+    mutating func encode<E: Encodable>(_ encodable: E, using encoder: any ContentEncoder) throws
 }
 
 extension ContentContainer {
@@ -76,42 +76,42 @@ extension ContentContainer {
     // MARK: - Key path helpers
     
     /// Legacy alias for ``subscript(_:at:)-90mrm``.
-    public subscript<D: Decodable>(_ path: CodingKeyRepresentable...) -> D? {
+    public subscript<D: Decodable>(_ path: any CodingKeyRepresentable...) -> D? {
         self[D.self, at: path]
     }
 
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String? = req.content[at: "user", "name"]
-    public subscript<D: Decodable>(_: D.Type = D.self, at path: CodingKeyRepresentable...) -> D? {
+    public subscript<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) -> D? {
         self[D.self, at: path]
     }
 
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String? = req.content[at: ["user", "name"]]
-    public subscript<D: Decodable>(_: D.Type = D.self, at path: [CodingKeyRepresentable]) -> D? {
+    public subscript<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) -> D? {
         try? self.get(D.self, at: path)
     }
     
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String = try req.content.get(at: "user", "name")
-    public func get<D: Decodable>(_: D.Type = D.self, at path: CodingKeyRepresentable...) throws -> D {
+    public func get<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) throws -> D {
         try self.get(at: path)
     }
     
     /// Fetch a single ``Decodable`` value at the supplied keypath in this container.
     ///
     ///     let name = try req.content.get(String.self, at: ["user", "name"])
-    public func get<D: Decodable>(_: D.Type = D.self, at path: [CodingKeyRepresentable]) throws -> D {
+    public func get<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) throws -> D {
         try self.get(D.self, path: path.map(\.codingKey))
     }
     
     // MARK: - Private
     
     /// Execute a "get at coding key path" operation.
-    private func get<D: Decodable>(_: D.Type = D.self, path: [CodingKey]) throws -> D {
+    private func get<D: Decodable>(_: D.Type = D.self, path: [any CodingKey]) throws -> D {
         try self.decode(ContainerGetPathExecutor<D>.self, using: ForwardingContentDecoder(
             base: self.configuredDecoder(),
             info: ContainerGetPathExecutor<D>.userInfo(for: path)
@@ -119,12 +119,12 @@ extension ContentContainer {
     }
 
     /// Look up a ``ContentEncoder`` for the supplied ``HTTPMediaType``.
-    private func configuredEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
+    private func configuredEncoder(for mediaType: HTTPMediaType) throws -> any ContentEncoder {
         try self.contentConfiguration.requireEncoder(for: mediaType)
     }
     
     /// Look up a ``ContentDecoder`` for the container's ``contentType``.
-    private func configuredDecoder(for mediaType: HTTPMediaType? = nil) throws -> ContentDecoder {
+    private func configuredDecoder(for mediaType: HTTPMediaType? = nil) throws -> any ContentDecoder {
         guard let contentType = mediaType ?? self.contentType else {
             throw Abort(.unsupportedMediaType, reason: "Can't decode data without a content type")
         }
@@ -134,12 +134,12 @@ extension ContentContainer {
 
 /// Injects coder userInfo into a ``ContentDecoder`` so we don't have to add passthroughs to ``ContentContainer``.
 fileprivate struct ForwardingContentDecoder: ContentDecoder {
-    let base: ContentDecoder, info: [CodingUserInfoKey: Sendable]
-    
+    let base: any ContentDecoder, info: [CodingUserInfoKey: any Sendable]
+
     func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: self.info)
     }
-    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
+    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: userInfo.merging(self.info) { $1 })
     }
 }

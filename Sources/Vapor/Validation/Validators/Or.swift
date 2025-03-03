@@ -10,10 +10,10 @@ extension ValidatorResults {
     /// If either result is successful the combined result is as well.
     public struct Or {
         /// `ValidatorResult` of left hand side.
-        public let left: ValidatorResult
+        public let left: any ValidatorResult
 
         /// `ValidatorResult` of right hand side.
-        public let right: ValidatorResult
+        public let right: any ValidatorResult
     }
 }
 

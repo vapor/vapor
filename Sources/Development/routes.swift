@@ -237,7 +237,7 @@ public func routes(_ app: Application) throws {
     }
     
     struct Test: Authenticatable {
-        static func authenticator() -> Authenticator {
+        static func authenticator() -> any Authenticator {
             TestAuthenticator()
         }
 
@@ -287,7 +287,7 @@ struct TestError: AbortError, DebuggableError {
 struct TestMiddleware: Middleware {
     let number: Int
     
-    func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         request.logger.debug("In async middleware - \(number)")
         let response = try await next.respond(to: request)
         request.logger.debug("In async middleware way out - \(number)")

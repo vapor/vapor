@@ -1,5 +1,5 @@
 extension Request {
-    public var view: ViewRenderer {
+    public var view: any ViewRenderer {
         self.application.viewRenderer
     }
 }

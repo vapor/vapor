@@ -17,7 +17,7 @@ public protocol RequestAuthenticator: Authenticator {
 }
 
 extension RequestAuthenticator {
-    public func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         try await self.authenticate(request: request)
         return try await next.respond(to: request)
     }

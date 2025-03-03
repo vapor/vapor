@@ -4,7 +4,7 @@ import Logging
 import Foundation
 
 extension HTTPClient {
-    func delegating(to eventLoop: EventLoop, logger: Logger, byteBufferAllocator: ByteBufferAllocator, contentConfiguration: ContentConfiguration) -> Client {
+    func delegating(to eventLoop: any EventLoop, logger: Logger, byteBufferAllocator: ByteBufferAllocator, contentConfiguration: ContentConfiguration) -> any Client {
         EventLoopHTTPClient(
             http: self,
             eventLoop: eventLoop,
@@ -17,7 +17,7 @@ extension HTTPClient {
 
 private struct EventLoopHTTPClient: Client {
     let http: HTTPClient
-    let eventLoop: EventLoop
+    let eventLoop: any EventLoop
     var logger: Logger?
     var byteBufferAllocator: ByteBufferAllocator
     let contentConfiguration: ContentConfiguration
@@ -49,11 +49,11 @@ private struct EventLoopHTTPClient: Client {
         )
     }
     
-    func logging(to logger: Logger) -> Client {
+    func logging(to logger: Logger) -> any Client {
         return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: self.logger, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
     }
 
-    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
+    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> any Client {
         return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: self.logger, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
     }
 }

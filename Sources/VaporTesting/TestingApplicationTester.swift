@@ -11,7 +11,7 @@ extension Application.Live: TestingApplicationTester {}
 extension Application.InMemory: TestingApplicationTester {}
 
 extension Application: TestingApplicationTester {
-    public func testing(method: Method = .inMemory) async throws -> TestingApplicationTester {
+    public func testing(method: Method = .inMemory) async throws -> any TestingApplicationTester {
         try await self.boot()
         switch method {
         case .inMemory:
@@ -35,7 +35,7 @@ extension TestingApplicationTester {
         body: ByteBuffer? = nil,
         sourceLocation: SourceLocation = #_sourceLocation,
         afterResponse: (TestingHTTPResponse) async throws -> ()
-    ) async throws -> TestingApplicationTester {
+    ) async throws -> any TestingApplicationTester {
         try await self.test(
             method,
             path,
@@ -56,7 +56,7 @@ extension TestingApplicationTester {
         sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in },
         afterResponse: (TestingHTTPResponse) async throws -> () = { _ in }
-    ) async throws -> TestingApplicationTester {
+    ) async throws -> any TestingApplicationTester {
         var request = TestingHTTPRequest(
             method: method,
             url: .init(path: path),

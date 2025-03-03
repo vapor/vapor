@@ -5,7 +5,7 @@ import Foundation
 extension PasswordHasher {
     public func async(
         on threadPool: NIOThreadPool,
-        hopTo eventLoop: EventLoop
+        hopTo eventLoop: any EventLoop
     ) -> AsyncPasswordHasher {
         .init(
             hasher: self,
@@ -16,11 +16,11 @@ extension PasswordHasher {
 }
 
 public struct AsyncPasswordHasher: Sendable {
-    let hasher: PasswordHasher
+    let hasher: any PasswordHasher
     let threadPool: NIOThreadPool
-    let eventLoop: EventLoop
-    
-    public init(hasher: PasswordHasher, threadPool: NIOThreadPool, eventLoop: EventLoop) {
+    let eventLoop: any EventLoop
+
+    public init(hasher: any PasswordHasher, threadPool: NIOThreadPool, eventLoop: any EventLoop) {
         self.hasher = hasher
         self.threadPool = threadPool
         self.eventLoop = eventLoop

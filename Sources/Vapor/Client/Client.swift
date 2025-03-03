@@ -5,8 +5,8 @@ import HTTPTypes
 public protocol Client: Sendable {
     var byteBufferAllocator: ByteBufferAllocator { get }
     var contentConfiguration: ContentConfiguration { get }
-    func logging(to logger: Logger) -> Client
-    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client
+    func logging(to logger: Logger) -> any Client
+    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> any Client
     func send(_ request: ClientRequest) async throws -> ClientResponse
 }
 

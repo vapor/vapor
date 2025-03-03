@@ -15,7 +15,7 @@ extension Request {
             )
         }
         
-        public var sync: PasswordHasher {
+        public var sync: any PasswordHasher {
             self.request.application.password.sync
         }
         

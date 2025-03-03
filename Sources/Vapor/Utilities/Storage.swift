@@ -5,7 +5,7 @@ import Logging
 /// is keyed by a type conforming to ``StorageKey`` protocol.
 public struct Storage: Sendable {
     /// The internal storage area.
-    var storage: [ObjectIdentifier: AnyStorageValue]
+    var storage: [ObjectIdentifier: any AnyStorageValue]
 
     /// A container for a stored value and an associated optional `deinit`-like closure.
     struct Value<T: Sendable>: AnyStorageValue {

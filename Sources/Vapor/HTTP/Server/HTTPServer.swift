@@ -235,9 +235,9 @@ public final class HTTPServerOld: Server, Sendable {
         }
     }
 
-    private let responder: Responder
+    private let responder: any Responder
     private let _configuration: NIOLockedValueBox<Configuration>
-    private let eventLoopGroup: EventLoopGroup
+    private let eventLoopGroup: any EventLoopGroup
     private let connection: NIOLockedValueBox<HTTPServerConnection?>
     private let didShutdown: NIOLockedValueBox<Bool>
     private let didStart: NIOLockedValueBox<Bool>
@@ -245,9 +245,9 @@ public final class HTTPServerOld: Server, Sendable {
     
     public init(
         application: Application,
-        responder: Responder,
+        responder: any Responder,
         configuration: Configuration,
-        on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton
+        on eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton
     ) {
         self.application = application
         self.responder = responder
@@ -335,15 +335,15 @@ public final class HTTPServerOld: Server, Sendable {
 }
 
 private final class HTTPServerConnection: Sendable {
-    let channel: Channel
+    let channel: any Channel
     let quiesce: ServerQuiescingHelper
     
     static func start(
         application: Application,
         server: HTTPServerOld,
-        responder: Responder,
+        responder: any Responder,
         configuration: HTTPServerOld.Configuration,
-        on eventLoopGroup: EventLoopGroup
+        on eventLoopGroup: any EventLoopGroup
     ) -> EventLoopFuture<HTTPServerConnection> {
         let quiesce = ServerQuiescingHelper(group: eventLoopGroup)
         let bootstrap = ServerBootstrap(group: eventLoopGroup)
@@ -421,7 +421,7 @@ private final class HTTPServerConnection: Sendable {
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
         
-        let channel: EventLoopFuture<Channel>
+        let channel: EventLoopFuture<any Channel>
         switch configuration.address {
         case .hostname:
             channel = bootstrap.bind(host: configuration.hostname, port: configuration.port)
@@ -437,7 +437,7 @@ private final class HTTPServerConnection: Sendable {
         }
     }
     
-    init(channel: Channel, quiesce: ServerQuiescingHelper) {
+    init(channel: any Channel, quiesce: ServerQuiescingHelper) {
         self.channel = channel
         self.quiesce = quiesce
     }
@@ -473,12 +473,12 @@ extension HTTPResponseHead {
 extension ChannelPipeline {
     func addVaporHTTP2Handlers(
         application: Application,
-        responder: Responder,
+        responder: any Responder,
         configuration: HTTPServerOld.Configuration
     ) -> EventLoopFuture<Void> {
         /// Create server pipeline array.
-        var handlers: [ChannelHandler] = []
-        
+        var handlers: [any ChannelHandler] = []
+
         let http2 = HTTP2FramePayloadToHTTP1ServerCodec()
         handlers.append(http2)
         
@@ -523,11 +523,11 @@ extension ChannelPipeline {
     
     func addVaporHTTP1Handlers(
         application: Application,
-        responder: Responder,
+        responder: any Responder,
         configuration: HTTPServerOld.Configuration
     ) -> EventLoopFuture<Void> {
         /// Create server pipeline array.
-        var handlers: [RemovableChannelHandler] = []
+        var handlers: [any RemovableChannelHandler] = []
         
         /// Configure HTTP/1:
         /// Add http parsing and serializing.

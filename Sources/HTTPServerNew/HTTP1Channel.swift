@@ -74,7 +74,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     ///   - channel: Child channel
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
-    public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
                 withPipeliningAssistance: false,  // HTTP is pipelined by NIOAsyncChannel

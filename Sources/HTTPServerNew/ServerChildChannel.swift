@@ -19,7 +19,7 @@ import ServiceLifecycle
 /// Protocol for typed server child channel
 public protocol ServerChildChannelValue: Sendable {
     /// Child channel that spawned child channel
-    var channel: Channel { get }
+    var channel: any Channel { get }
 }
 
 /// Generic server child channel setup protocol
@@ -31,7 +31,7 @@ public protocol ServerChildChannel: Sendable {
     ///   - channel: Child channel
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
-    func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value>
+    func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value>
 
     /// handle messages being passed down the channel pipeline
     /// - Parameters:
@@ -51,10 +51,10 @@ extension ServerChildChannel {
     /// - Returns: Server Service
     public func server(
         configuration: ServerConfiguration,
-        onServerRunning: (@Sendable (Channel) async -> Void)? = nil,
-        eventLoopGroup: EventLoopGroup,
+        onServerRunning: (@Sendable (any Channel) async -> Void)? = nil,
+        eventLoopGroup: any EventLoopGroup,
         logger: Logger
-    ) -> Service {
+    ) -> any Service {
         HTTPServer(
             childChannelSetup: self,
             configuration: configuration,

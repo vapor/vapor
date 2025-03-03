@@ -49,7 +49,7 @@ import HTTPTypes
 ///     ; Must be in quoted-string,
 ///     ; to use within parameter values
 ///
-public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Sendable {
+public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Sendable, Codable {
     /// See `Equatable`.
     public static func ==(lhs: HTTPMediaType, rhs: HTTPMediaType) -> Bool {
         guard lhs.type != "*" && rhs.type != "*" else {

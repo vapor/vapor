@@ -17,7 +17,7 @@ public final class SessionsMiddleware: Middleware {
     let configuration: SessionsConfiguration
 
     /// Session store.
-    public let session: SessionDriver
+    public let session: any SessionDriver
 
     /// Creates a new `SessionsMiddleware`.
     ///
@@ -25,7 +25,7 @@ public final class SessionsMiddleware: Middleware {
     ///     - sessions: `Sessions` implementation to use for fetching and storing sessions.
     ///     - configuration: `SessionsConfiguration` to use for naming and creating cookie values.
     public init(
-        session: SessionDriver,
+        session: any SessionDriver,
         configuration: SessionsConfiguration = .default()
     ) {
         self.session = session

@@ -7,7 +7,7 @@ extension FormDataEncoder: ContentEncoder {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
 
-    public func encode<E: Encodable>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws {
+    public func encode<E: Encodable>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         let boundary = "----vaporBoundary\(randomBoundaryData())"
 
         headers.contentType = HTTPMediaType.formData(boundary: boundary)

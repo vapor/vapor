@@ -1,10 +1,10 @@
 public struct ValidatorResults {
     public struct Nested {
-        public let results: [ValidatorResult]
+        public let results: [any ValidatorResult]
     }
 
     public struct NestedEach {
-        public let results: [[ValidatorResult]]
+        public let results: [[any ValidatorResult]]
     }
     
     public struct Skipped { }
@@ -14,7 +14,7 @@ public struct ValidatorResults {
     public struct NotFound { }
 
     public struct Codable {
-        public let error: Error
+        public let error: any Error
     }
 
     public struct Invalid {

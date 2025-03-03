@@ -8,16 +8,16 @@ import HTTPTypes
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
     private let router: TrieRouter<CachedRoute>
-    private let notFoundResponder: Responder
+    private let notFoundResponder: any Responder
     private let reportMetrics: Bool
 
     private struct CachedRoute {
         let route: Route
-        let responder: Responder
+        let responder: any Responder
     }
 
     /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [Middleware] = [], reportMetrics: Bool = true) {
+    public init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
         let options = routes.caseInsensitive ?
             Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
         let router = TrieRouter(CachedRoute.self, options: options)

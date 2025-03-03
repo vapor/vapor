@@ -5,7 +5,7 @@ extension Authenticatable {
     ///
     /// - parameters:
     ///    - path: The path to redirect to if the request is not authenticated
-    public static func redirectMiddleware(path: String) -> Middleware {
+    public static func redirectMiddleware(path: String) -> any Middleware {
         self.redirectMiddleware(makePath: { _ in path })
     }
     
@@ -13,7 +13,7 @@ extension Authenticatable {
     ///
     /// - parameters:
     ///    - makePath: The closure that returns the redirect path based on the given `Request` object
-    @preconcurrency public static func redirectMiddleware(makePath: @Sendable @escaping (Request) -> String) -> Middleware {
+    @preconcurrency public static func redirectMiddleware(makePath: @Sendable @escaping (Request) -> String) -> any Middleware {
         RedirectMiddleware<Self>(Self.self, makePath: makePath)
     }
 }

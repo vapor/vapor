@@ -134,7 +134,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         }
     }
 
-    func errorCaught(context: ChannelHandlerContext, error: Error) {
+    func errorCaught(context: ChannelHandlerContext, error: any Error) {
         switch self.requestState {
         case .streamingBody(let stream):
             self.handleBodyStreamStateResult(
@@ -261,7 +261,7 @@ struct HTTPBodyStreamState: CustomStringConvertible {
         enum Action {
             case nothing
             case write(ByteBuffer)
-            case close(Error?)
+            case close((any Error)?)
         }
         let action: Action
         let callRead: Bool
@@ -288,7 +288,7 @@ struct HTTPBodyStreamState: CustomStringConvertible {
     private enum State {
         case idle
         case writing(BufferState)
-        case error(Error)
+        case error(any Error)
     }
 
     private var state: State
@@ -345,7 +345,7 @@ struct HTTPBodyStreamState: CustomStringConvertible {
         }
     }
 
-    mutating func didError(_ error: Error) -> Result {
+    mutating func didError(_ error: any Error) -> Result {
         switch self.state {
         case .idle:
             self.state = .error(error)

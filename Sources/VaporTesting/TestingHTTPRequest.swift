@@ -27,22 +27,22 @@ public struct TestingHTTPRequest: Sendable {
             return self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             try encoder.encode(encodable, to: &self.body, headers: &self.headers)
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
             fatalError("Decoding from test request is not supported.")
         }
 
-        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
             try encoder.encode(content, to: &self.body, headers: &self.headers)
         }
     }
 
-    public var content: ContentContainer {
+    public var content: any ContentContainer {
         get {
             _ContentContainer(body: self.body, headers: self.headers, contentConfiguration: self.contentConfiguration)
         }
@@ -57,20 +57,20 @@ public struct TestingHTTPRequest: Sendable {
         var url: URI
         let contentConfiguration: ContentConfiguration
 
-        func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
+        func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
             where D: Decodable
         {
             fatalError("Decoding from test request is not supported.")
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: URLQueryEncoder) throws
+        mutating func encode<E>(_ encodable: E, using encoder: any URLQueryEncoder) throws
             where E: Encodable
         {
             try encoder.encode(encodable, to: &self.url)
         }
     }
 
-    public var query: URLQueryContainer {
+    public var query: any URLQueryContainer {
         get {
             _URLQueryContainer(url: url, contentConfiguration: self.contentConfiguration)
         }

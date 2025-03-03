@@ -19,8 +19,8 @@ extension Authenticatable {
     /// - parameters:
     ///     - throwing: `Error` to throw if the type is not authed.
     public static func guardMiddleware(
-        throwing error: Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
-    ) -> Middleware {
+        throwing error: any Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
+    ) -> any Middleware {
         return GuardAuthenticationMiddleware<Self>(throwing: error)
     }
 }
@@ -31,14 +31,14 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
     where A: Authenticatable
 {
     /// Error to throw when guard fails.
-    private let error: Error
+    private let error: any Error
 
     /// Creates a new `GuardAuthenticationMiddleware`.
     ///
     /// - parameters:
     ///     - type: `Authenticatable` type to ensure is authed.
     ///     - error: `Error` to throw if the type is not authed.
-    internal init(_ type: A.Type = A.self, throwing error: Error) {
+    internal init(_ type: A.Type = A.self, throwing error: any Error) {
         self.error = error
     }
 

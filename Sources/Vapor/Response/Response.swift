@@ -64,7 +64,7 @@ public final class Response: CustomStringConvertible, Sendable {
 
     /// Optional Upgrade behavior to apply to this response.
     /// currently, websocket upgrades are the only defined case.
-    public var upgrader: Upgrader? {
+    public var upgrader: (any Upgrader)? {
         get {
             self.responseBox.withLockedValue { $0.upgrader }
         }
@@ -121,7 +121,7 @@ public final class Response: CustomStringConvertible, Sendable {
             return self.response.headers.contentType
         }
 
-        func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             try self.response.responseBox.withLockedValue { box in
                 var body = box.body.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(encodable, to: &body, headers: &box.headers)
@@ -129,7 +129,7 @@ public final class Response: CustomStringConvertible, Sendable {
             }
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
             try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
                     throw Abort(.unprocessableContent)
@@ -138,7 +138,7 @@ public final class Response: CustomStringConvertible, Sendable {
             }
         }
 
-        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
             try self.response.responseBox.withLockedValue { box in
@@ -148,7 +148,7 @@ public final class Response: CustomStringConvertible, Sendable {
             }
         }
 
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             var decoded = try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
                     throw Abort(.unprocessableContent)
@@ -160,7 +160,7 @@ public final class Response: CustomStringConvertible, Sendable {
         }
     }
 
-    public var content: ContentContainer {
+    public var content: any ContentContainer {
         get {
             return _ContentContainer(response: self)
         }
@@ -178,7 +178,7 @@ public final class Response: CustomStringConvertible, Sendable {
                 self.headers.updateContentLength(body.count)
             }
         }
-        var upgrader: Upgrader?
+        var upgrader: (any Upgrader)?
         // If `true`, don't serialize the body.
         var forHeadRequest: Bool
 

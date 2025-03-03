@@ -5,11 +5,11 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = Request
     typealias OutboundOut = Response
     
-    let responder: Responder
+    let responder: any Responder
     let logger: Logger
     var isShuttingDown: Bool
     
-    init(responder: Responder, logger: Logger) {
+    init(responder: any Responder, logger: Logger) {
         self.responder = responder
         self.logger = logger
         self.isShuttingDown = false
@@ -27,7 +27,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
 //        }
     }
     
-    func serialize(_ response: Result<Response, Error>, for request: Request, context: ChannelHandlerContext) {
+    func serialize(_ response: Result<Response, any Error>, for request: Request, context: ChannelHandlerContext) {
         switch response {
         case .failure(let error):
             self.errorCaught(context: context, error: error)
@@ -84,8 +84,8 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
 }
 
 fileprivate struct ErrorBodyStreamWriter: BodyStreamWriter, AsyncBodyStreamWriter {
-    let eventLoop: EventLoop
-    let error: Error
+    let eventLoop: any EventLoop
+    let error: any Error
     
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         promise?.fail(error)

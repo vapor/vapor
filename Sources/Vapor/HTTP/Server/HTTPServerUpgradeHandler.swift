@@ -20,11 +20,11 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     
     private var upgradeState: UpgradeState
     let httpRequestDecoder: ByteToMessageHandler<HTTPRequestDecoder>
-    let httpHandlers: [RemovableChannelHandler]
-    
+    let httpHandlers: [any RemovableChannelHandler]
+
     init(
         httpRequestDecoder: ByteToMessageHandler<HTTPRequestDecoder>,
-        httpHandlers: [RemovableChannelHandler]
+        httpHandlers: [any RemovableChannelHandler]
     ) {
         self.upgradeState = .ready
         self.httpRequestDecoder = httpRequestDecoder
@@ -56,7 +56,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
             let context: ChannelHandlerContext
             let buffer: UpgradeBufferHandler
             var handler: HTTPServerUpgradeHandler
-            let protocolUpgrader: HTTPServerProtocolUpgrader
+            let protocolUpgrader: any HTTPServerProtocolUpgrader
         }
         
         // check upgrade
@@ -92,7 +92,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     sendableBox.context.write(sendableBox.handler.wrapOutboundOut(res), promise: promise)
                 }.flatMap {
                     let sendableBox = box.value
-                    let handlers: [RemovableChannelHandler] = [sendableBox.handler] + sendableBox.handler.httpHandlers
+                    let handlers: [any RemovableChannelHandler] = [sendableBox.handler] + sendableBox.handler.httpHandlers
                     return .andAllComplete(handlers.map { handler in
                         sendableBox.context.pipeline.syncOperations.removeHandler(handler)
                     }, on: box.value.context.eventLoop)
@@ -139,7 +139,7 @@ private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChanne
 /// Conformance for any struct that performs an HTTP Upgrade
 @preconcurrency
 public protocol Upgrader: Sendable {
-    func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader
+    func applyUpgrade(req: Request, res: Response) -> any HTTPServerProtocolUpgrader
 }
 
 /// Handles upgrading an HTTP connection to a WebSocket
@@ -154,7 +154,7 @@ public struct WebSocketUpgrader: Upgrader, Sendable {
         self.onUpgrade = onUpgrade
     }
     
-    public func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader {
+    public func applyUpgrade(req: Request, res: Response) -> any HTTPServerProtocolUpgrader {
         let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: self.maxFrameSize.value, automaticErrorHandling: false, shouldUpgrade: { _, _ in
             return self.shouldUpgrade().map { headers in
                 if let headers {

@@ -39,11 +39,11 @@ extension SessionData {
 
 // MARK: Codable
 extension SessionData: Codable {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         self.storage = try .init(from: decoder)
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         try self.storage.encode(to: encoder)
     }
 }

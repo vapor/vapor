@@ -29,20 +29,20 @@ extension ClientResponse {
             return self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = self.allocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
             self.body = body
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: body, headers: self.headers)
         }
 
-        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var body = self.allocator.buffer(capacity: 0)
             var content = content
             try content.beforeEncode()
@@ -50,7 +50,7 @@ extension ClientResponse {
             self.body = body
         }
 
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
@@ -60,7 +60,7 @@ extension ClientResponse {
         }
     }
 
-    public var content: ContentContainer {
+    public var content: any ContentContainer {
         get {
             return _ContentContainer(body: self.body, headers: self.headers, allocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
         }
@@ -109,7 +109,7 @@ extension ClientResponse: Codable {
         case body = "body"
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.status = try container.decode(HTTPStatus.self, forKey: .status)
         self.headers = try container.decode(HTTPFields.self, forKey: .headers)
@@ -122,7 +122,7 @@ extension ClientResponse: Codable {
         self.contentConfiguration = .default()
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.status, forKey: .status)
         try container.encode(self.headers, forKey: .headers)

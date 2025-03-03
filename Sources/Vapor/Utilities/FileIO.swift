@@ -106,7 +106,7 @@ public struct FileIO: Sendable {
     /// This can be removed once `NIOFileSystem` reaches a stable API.
     public struct FileChunks: AsyncSequence {
         public typealias Element = ByteBuffer
-        private let fileHandle: _NIOFileSystem.FileHandleProtocol
+        private let fileHandle: any _NIOFileSystem.FileHandleProtocol
         private let fileChunks: _NIOFileSystem.FileChunks
 
         init(fileChunks: _NIOFileSystem.FileChunks, fileHandle: some _NIOFileSystem.FileHandleProtocol) {
@@ -116,7 +116,7 @@ public struct FileIO: Sendable {
 
         public struct FileChunksIterator: AsyncIteratorProtocol {
             private var iterator: _NIOFileSystem.FileChunks.AsyncIterator
-            private let fileHandle: _NIOFileSystem.FileHandleProtocol
+            private let fileHandle: any _NIOFileSystem.FileHandleProtocol
 
             fileprivate init(wrapping iterator: _NIOFileSystem.FileChunks.AsyncIterator, fileHandle: some _NIOFileSystem.FileHandleProtocol) {
                 self.iterator = iterator
@@ -221,7 +221,7 @@ public struct FileIO: Sendable {
         chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool = false,
-        onCompleted: @escaping @Sendable (Result<Void, Error>) async throws -> () = { _ in }
+        onCompleted: @escaping @Sendable (Result<Void, any Error>) async throws -> () = { _ in }
     ) async throws -> Response {
         // Get file attributes for this file.
         guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(path)) else {

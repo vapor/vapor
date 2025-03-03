@@ -52,20 +52,20 @@ extension ClientRequest {
         var url: URI
         let contentConfiguration: ContentConfiguration
 
-        func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
+        func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
             where D: Decodable
         {
             return try decoder.decode(D.self, from: self.url)
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: URLQueryEncoder) throws
+        mutating func encode<E>(_ encodable: E, using encoder: any URLQueryEncoder) throws
             where E: Encodable
         {
             try encoder.encode(encodable, to: &self.url)
         }
     }
 
-    public var query: URLQueryContainer {
+    public var query: any URLQueryContainer {
         get {
             return _URLQueryContainer(url: self.url, contentConfiguration: self.contentConfiguration)
         }
@@ -84,20 +84,20 @@ extension ClientRequest {
             return self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = self.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
             self.body = body
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: body, headers: self.headers)
         }
 
-        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
             var body = self.byteBufferAllocator.buffer(capacity: 0)
@@ -105,7 +105,7 @@ extension ClientRequest {
             self.body = body
         }
 
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
@@ -115,7 +115,7 @@ extension ClientRequest {
         }
     }
 
-    public var content: ContentContainer {
+    public var content: any ContentContainer {
         get {
             return _ContentContainer(body: self.body, headers: self.headers, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
         }

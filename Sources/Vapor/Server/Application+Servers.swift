@@ -5,7 +5,7 @@ extension Application {
         .init(application: self)
     }
 
-    public var server: Server {
+    public var server: any Server {
         guard let makeServer = self.servers.storage.makeServer.withLockedValue({ $0.factory }) else {
             fatalError("No server configured. Configure with app.servers.use(...)")
         }
@@ -27,7 +27,7 @@ extension Application {
 
         final class Storage: Sendable {
             struct ServerFactory {
-                let factory: (@Sendable (Application) -> Server)?
+                let factory: (@Sendable (Application) -> any Server)?
             }
             let makeServer: NIOLockedValueBox<ServerFactory>
             init() {
@@ -47,7 +47,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        @preconcurrency public func use(_ makeServer: @Sendable @escaping (Application) -> (Server)) {
+        @preconcurrency public func use(_ makeServer: @Sendable @escaping (Application) -> (any Server)) {
             self.storage.makeServer.withLockedValue { $0 = .init(factory: makeServer) }
         }
         

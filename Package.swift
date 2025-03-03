@@ -94,7 +94,8 @@ let package = Package(
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
 
         // Vapor
@@ -130,7 +131,8 @@ let package = Package(
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
                 .target(name: "HTTPServerNew"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
 
         // Development
@@ -139,7 +141,8 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
             ],
-            resources: [.copy("Resources")]
+            resources: [.copy("Resources")],
+            swiftSettings: swiftSettings
         ),
 
         // Testing
@@ -148,7 +151,8 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "VaporTests",
@@ -168,7 +172,14 @@ let package = Package(
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),
                 .copy("Utilities/long-test-file.txt"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
     ]
 )
+
+var swiftSettings: [SwiftSetting] {
+    [
+        .enableUpcomingFeature("ExistentialAny")
+    ]
+}

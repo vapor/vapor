@@ -31,7 +31,7 @@ public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
         case initial(
             childChannelSetup: ChildChannel,
             configuration: ServerConfiguration,
-            onServerRunning: (@Sendable (Channel) async -> Void)?
+            onServerRunning: (@Sendable (any Channel) async -> Void)?
         )
         case starting
         case running(
@@ -63,7 +63,7 @@ public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
 
     /// Logger used by Server
     public nonisolated let logger: Logger
-    let eventLoopGroup: EventLoopGroup
+    let eventLoopGroup: any EventLoopGroup
 
     /// HTTP server errors
     public enum Error: Swift.Error {
@@ -81,8 +81,8 @@ public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
     public init(
         childChannelSetup: ChildChannel,
         configuration: ServerConfiguration,
-        onServerRunning: (@Sendable (Channel) async -> Void)? = nil,
-        eventLoopGroup: EventLoopGroup,
+        onServerRunning: (@Sendable (any Channel) async -> Void)? = nil,
+        eventLoopGroup: any EventLoopGroup,
         logger: Logger
     ) {
         self.state = .initial(
@@ -198,7 +198,7 @@ public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
         childChannelSetup: ChildChannel,
         configuration: ServerConfiguration
     ) async throws -> (AsyncServerChannel, ServerQuiescingHelper) {
-        var bootstrap: ServerBootstrapProtocol
+        var bootstrap: any ServerBootstrapProtocol
         #if canImport(Network)
         if let tsBootstrap = self.createTSBootstrap(configuration: configuration) {
             bootstrap = tsBootstrap
@@ -332,20 +332,20 @@ protocol ServerBootstrapProtocol {
     ///
     /// - parameters:
     ///     - initializer: A closure that initializes the provided `Channel`.
-    func serverChannelInitializer(_ initializer: @escaping @Sendable (Channel) -> EventLoopFuture<Void>) -> Self
+    func serverChannelInitializer(_ initializer: @escaping @Sendable (any Channel) -> EventLoopFuture<Void>) -> Self
 
     func bind<Output: Sendable>(
         host: String,
         port: Int,
         serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark?,
-        childChannelInitializer: @escaping @Sendable (Channel) -> EventLoopFuture<Output>
+        childChannelInitializer: @escaping @Sendable (any Channel) -> EventLoopFuture<Output>
     ) async throws -> NIOAsyncChannel<Output, Never>
 
     func bind<Output: Sendable>(
         unixDomainSocketPath: String,
         cleanupExistingSocketFile: Bool,
         serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark?,
-        childChannelInitializer: @escaping @Sendable (Channel) -> EventLoopFuture<Output>
+        childChannelInitializer: @escaping @Sendable (any Channel) -> EventLoopFuture<Output>
     ) async throws -> NIOAsyncChannel<Output, Never>
 }
 
@@ -360,7 +360,7 @@ extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
         unixDomainSocketPath: String,
         cleanupExistingSocketFile: Bool,
         serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark?,
-        childChannelInitializer: @escaping @Sendable (Channel) -> EventLoopFuture<Output>
+        childChannelInitializer: @escaping @Sendable (any Channel) -> EventLoopFuture<Output>
     ) async throws -> NIOAsyncChannel<Output, Never> {
         preconditionFailure("Binding to a unixDomainSocketPath is currently not available with NIOTSListenerBootstrap.")
     }

@@ -19,7 +19,7 @@ public struct Validations: Sendable {
     
     public mutating func add(
         _ key: BasicCodingKey,
-        result: ValidatorResult,
+        result: any ValidatorResult,
         customFailureDescription: String? = nil
     ) {
         self.storage.append(.init(key: key, result: result, customFailureDescription: customFailureDescription))
@@ -66,7 +66,7 @@ public struct Validations: Sendable {
             .decode(ValidationsExecutor.self, from: .init(string: json), headers: [:], userInfo: [.pendingValidations: self]).results
     }
     
-    public func validate(_ decoder: Decoder) throws -> ValidationsResult {
+    public func validate(_ decoder: any Decoder) throws -> ValidationsResult {
         let container = try decoder.container(keyedBy: BasicCodingKey.self)
         
         return try .init(results: self.storage.map {
@@ -100,14 +100,14 @@ fileprivate extension CodingUserInfoKey {
 fileprivate struct ValidationsExecutor: Decodable {
     let results: ValidationsResult
     
-    init(from decoder: Decoder) throws {
+    init(from decoder: any Decoder) throws {
         guard let pendingValidations = decoder.userInfo[.pendingValidations] as? Validations else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Validation executor couldn't find any validations to run (broken Decoder?)"))
         }
         try self.init(from: decoder, explicitValidations: pendingValidations)
     }
     
-    init(from decoder: Decoder, explicitValidations: Validations) throws {
+    init(from decoder: any Decoder, explicitValidations: Validations) throws {
         self.results = try explicitValidations.validate(decoder)
     }
 }

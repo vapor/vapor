@@ -60,7 +60,7 @@ extension RoutesBuilder {
     ///   - override: The compression preference to apply if none is already set.
     ///   - shouldForce: Wether to force the compression preference over what the response prefers.
     /// - Returns: A route with the specified response compression preferences.
-    public func responseCompression(_ override: HTTPFields.ResponseCompression, force shouldForce: Bool = false) -> RoutesBuilder {
+    public func responseCompression(_ override: HTTPFields.ResponseCompression, force shouldForce: Bool = false) -> any RoutesBuilder {
         self.grouped(ResponseCompressionMiddleware(override: override, force: shouldForce))
     }
 }

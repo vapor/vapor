@@ -110,7 +110,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
     let count: Int?
     let currentCount: NIOLoopBoundBox<Int>
     let isComplete: NIOLockedValueBox<Bool>
-    let eventLoop: EventLoop
+    let eventLoop: any EventLoop
 
     enum Error: Swift.Error {
         case tooManyBytes

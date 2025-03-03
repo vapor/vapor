@@ -8,14 +8,14 @@ public struct Validation: Sendable {
     let key: BasicCodingKey
     let valuelessKeyBehavior: ValuelessKeyBehavior
     let customFailureDescription: String?
-    let run: @Sendable (Decoder) -> ValidatorResult
-    
+    let run: @Sendable (any Decoder) -> any ValidatorResult
+
     init<T>(key: BasicCodingKey, required: Bool, validator: Validator<T>, customFailureDescription: String?) {
         self.init(
             key: key,
             valuelessKeyBehavior: required ? .missing : .skipAlways,
             customFailureDescription: customFailureDescription
-        ) { decoder -> ValidatorResult in
+        ) { decoder -> any ValidatorResult in
             do {
                 let container = try decoder.singleValueContainer()
                 return try validator.validate(container.decode(T.self))
@@ -53,8 +53,8 @@ public struct Validation: Sendable {
         ) { decoder in
             do {
                 var container = try decoder.unkeyedContainer()
-                var results: [[ValidatorResult]] = []
-                
+                var results: [[any ValidatorResult]] = []
+
                 while !container.isAtEnd {
                     var validations = Validations()
                     factory(container.currentIndex, &validations)
@@ -67,7 +67,7 @@ public struct Validation: Sendable {
         }
     }
     
-    init(key: BasicCodingKey, result: ValidatorResult, customFailureDescription: String?) {
+    init(key: BasicCodingKey, result: any ValidatorResult, customFailureDescription: String?) {
         self.init(key: key, valuelessKeyBehavior: .ignore, customFailureDescription: customFailureDescription) { _ in result }
     }
     
@@ -75,7 +75,7 @@ public struct Validation: Sendable {
         key: BasicCodingKey,
         valuelessKeyBehavior: ValuelessKeyBehavior,
         customFailureDescription: String?,
-        run: @escaping @Sendable (Decoder) -> ValidatorResult
+        run: @escaping @Sendable (any Decoder) -> any ValidatorResult
     ) {
         self.key = key
         self.valuelessKeyBehavior = valuelessKeyBehavior
@@ -86,10 +86,10 @@ public struct Validation: Sendable {
 
 public struct ValidationResult: Sendable {
     public let key: BasicCodingKey
-    public let result: ValidatorResult
+    public let result: any ValidatorResult
     public let customFailureDescription: String?
     
-    init(key: BasicCodingKey, result: ValidatorResult, customFailureDescription: String? = nil) {
+    init(key: BasicCodingKey, result: any ValidatorResult, customFailureDescription: String? = nil) {
         self.key = key
         self.result = result
         self.customFailureDescription = customFailureDescription

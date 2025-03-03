@@ -5,7 +5,7 @@ import NIOConcurrencyHelpers
 extension Application.Caches {
     /// In-memory cache. Thread safe.
     /// Not shared between multiple instances of your application.
-    public var memory: Cache {
+    public var memory: any Cache {
         MemoryCache(storage: self.memoryStorage)
     }
 

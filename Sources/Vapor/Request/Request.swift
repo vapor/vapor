@@ -104,20 +104,20 @@ public final class Request: CustomStringConvertible, Sendable {
         let request: Request
         let contentConfiguration: ContentConfiguration
 
-        func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
+        func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
             where D: Decodable
         {
             return try decoder.decode(D.self, from: self.request.url)
         }
 
-        func encode<E>(_ encodable: E, using encoder: URLQueryEncoder) throws
+        func encode<E>(_ encodable: E, using encoder: any URLQueryEncoder) throws
             where E: Encodable
         {
             try encoder.encode(encodable, to: &self.request.url)
         }
     }
     
-    public var query: URLQueryContainer {
+    public var query: any URLQueryContainer {
         get {
             return _URLQueryContainer(request: self, contentConfiguration: self.application.contentConfiguration)
         }
@@ -137,13 +137,13 @@ public final class Request: CustomStringConvertible, Sendable {
             self.request.application.contentConfiguration
         }
 
-        func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.request.headers)
             self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
             guard let body = self.request.body.data else {
                 self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
@@ -151,7 +151,7 @@ public final class Request: CustomStringConvertible, Sendable {
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
         }
 
-        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
@@ -159,7 +159,7 @@ public final class Request: CustomStringConvertible, Sendable {
             self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
         }
 
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             guard let body = self.request.body.data else {
                 self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
@@ -172,7 +172,7 @@ public final class Request: CustomStringConvertible, Sendable {
 
     /// This container is used to read your `Decodable` type using a `ContentDecoder` implementation.
     /// If no `ContentDecoder` is provided, a `Request`'s `Content-Type` header is used to select a registered decoder.
-    public var content: ContentContainer {
+    public var content: any ContentContainer {
         get {
             return _ContentContainer(request: self)
         }
@@ -239,7 +239,7 @@ public final class Request: CustomStringConvertible, Sendable {
     ///
     /// - Warning: A futures-based route handler **MUST** return an `EventLoopFuture` bound to this event loop.
     ///  If this is difficult or awkward to guarantee, use `EventLoopFuture.hop(to:)` to jump to this event loop.
-    public let eventLoop: EventLoop
+    public let eventLoop: any EventLoop
     
     /// Whether Vapor should automatically propagate trace spans for this request. See `Application.traceAutoPropagation`
     let traceAutoPropagation: Bool
@@ -301,7 +301,7 @@ public final class Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        on eventLoop: EventLoop
+        on eventLoop: any EventLoop
     ) {
         self.init(
             application: application,
@@ -330,7 +330,7 @@ public final class Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        on eventLoop: EventLoop
+        on eventLoop: any EventLoop
     ) {
         let requestId = headers[.xRequestId] ?? UUID().uuidString
         let bodyStorage: BodyStorage

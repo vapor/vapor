@@ -21,7 +21,7 @@ public protocol ContentEncoder: Sendable {
     ///
     /// For legacy API compatibility reasons, the default protocol conformance for this method forwards it to the legacy
     /// encode method.
-    func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws
+    func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws
         where E: Encodable
 }
 
@@ -42,12 +42,12 @@ public protocol ContentDecoder: Sendable {
     ///
     /// For legacy API compatibility reasons, the default protocol conformance for this method forwards it to the legacy
     /// decode method.
-    func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
+    func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
         where D: Decodable
 }
 
 extension ContentEncoder {
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws
         where E: Encodable
     {
         try self.encode(encodable, to: &body, headers: &headers)
@@ -55,7 +55,7 @@ extension ContentEncoder {
 }
 
 extension ContentDecoder {
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
         where D: Decodable
     {
         try self.decode(decodable, from: body, headers: headers)

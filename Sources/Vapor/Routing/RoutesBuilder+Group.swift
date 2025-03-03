@@ -14,7 +14,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - path: Group path components separated by commas.
     /// - returns: Newly created `Router` wrapped in the path.
-    public func grouped(_ path: PathComponent...) -> RoutesBuilder {
+    public func grouped(_ path: PathComponent...) -> any RoutesBuilder {
         return self.grouped(path)
     }
 
@@ -29,7 +29,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - path: Array of group path components.
     /// - returns: Newly created `Router` wrapped in the path.
-    public func grouped(_ path: [PathComponent]) -> RoutesBuilder {
+    public func grouped(_ path: [PathComponent]) -> any RoutesBuilder {
         return HTTPRoutesGroup(root: self, path: path)
     }
 
@@ -45,7 +45,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - path: Group path components separated by commas.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ path: PathComponent..., configure: (RoutesBuilder) throws -> ()) rethrows {
+    public func group(_ path: PathComponent..., configure: (any RoutesBuilder) throws -> ()) rethrows {
         return try group(path, configure: configure)
     }
 
@@ -61,7 +61,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - path: Array of group path components.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ path: [PathComponent], configure: (RoutesBuilder) throws -> ()) rethrows {
+    public func group(_ path: [PathComponent], configure: (any RoutesBuilder) throws -> ()) rethrows {
         try configure(HTTPRoutesGroup(root: self, path: path))
     }
 }
@@ -69,13 +69,13 @@ extension RoutesBuilder {
 /// Groups routes
 private final class HTTPRoutesGroup: RoutesBuilder {
     /// Router to cascade to.
-    let root: RoutesBuilder
-    
+    let root: any RoutesBuilder
+
     /// Additional components.
     let path: [PathComponent]
 
     /// Creates a new `PathGroup`.
-    init(root: RoutesBuilder, path: [PathComponent]) {
+    init(root: any RoutesBuilder, path: [PathComponent]) {
         self.root = root
         self.path = path
     }

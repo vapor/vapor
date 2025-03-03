@@ -42,8 +42,8 @@ public final class ServeCommand: AsyncCommand, Sendable {
     struct SendableBox: Sendable {
         var didShutdown: Bool
         var running: Application.Running?
-        var signalSources: [DispatchSourceSignal]
-        var server: Server?
+        var signalSources: [any DispatchSourceSignal]
+        var server: (any Server)?
     }
 
     private let box: NIOLockedValueBox<SendableBox>

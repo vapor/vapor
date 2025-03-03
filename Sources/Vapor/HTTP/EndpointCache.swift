@@ -6,13 +6,13 @@ import HTTPTypes
 
 public enum EndpointCacheError: Swift.Error {
     case unexpctedResponseStatus(HTTPStatus, uri: URI)
-    case contentDecodeFailure(Error)
+    case contentDecodeFailure(any Error)
 }
 
 /// Handles the complexities of HTTP caching.
 public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     private var cached: (cachedData: T?, cacheDate: Date?)
-    private var request: Task<T, Error>?
+    private var request: Task<T, any Error>?
     private var headers: HTTPFields?
     private let uri: URI
 
@@ -38,7 +38,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     /// - Parameters:
     ///   - client: The `Client` which will perform the download.
     ///   - logger: An optional logger
-    public func get(using client: Client, logger: Logger? = nil) async throws -> T {
+    public func get(using client: any Client, logger: Logger? = nil) async throws -> T {
         if let cached = self.cached.cachedData, let cacheUntil = self.cached.cacheDate, Date() <= cacheUntil {
             // If no-cache was set on the header, you *always* have to validate with the server.
             // must-revalidate does not require checking with the server until after it expires.
@@ -65,7 +65,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
         return result
     }
 
-    private func download(using client: Client, logger: Logger?) async throws -> T {
+    private func download(using client: any Client, logger: Logger?) async throws -> T {
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
         var headers: HTTPFields = [:]
 

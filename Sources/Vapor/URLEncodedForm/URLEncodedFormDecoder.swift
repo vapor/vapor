@@ -29,14 +29,14 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
             case iso8601
 
             /// Invokes a custom callback to decode values when a date is requested.
-            case custom(@Sendable (Decoder) throws -> Date)
+            case custom(@Sendable (any Decoder) throws -> Date)
         }
 
         let boolFlags: Bool
         let arraySeparators: [Character]
         let dateDecodingStrategy: DateDecodingStrategy
-        let userInfo: [CodingUserInfoKey: Sendable]
-        
+        let userInfo: [CodingUserInfoKey: any Sendable]
+
         /// Creates a new ``URLEncodedFormDecoder/Configuration``.
         ///
         /// - Parameters:
@@ -54,7 +54,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],
             dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970,
-            userInfo: [CodingUserInfoKey: Sendable] = [:]
+            userInfo: [CodingUserInfoKey: any Sendable] = [:]
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
@@ -94,7 +94,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     }
     
     // See `ContentDecoder.decode(_:from:headers:userInfo:)`.
-    public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
+    public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
         guard headers.contentType == .urlEncodedForm else {
             throw Abort(.unsupportedMediaType)
         }
@@ -110,7 +110,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     }
     
     // See `URLQueryDecoder.decode(_:from:userInfo:)`.
-    public func decode<D: Decodable>(_: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
+    public func decode<D: Decodable>(_: D.Type, from url: URI, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
         try self.decode(D.self, from: url.query ?? "", userInfo: userInfo)
     }
 
@@ -158,7 +158,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     ///   - userInfo: Overrides and/or augments the default coder user info.
     /// - Returns: An instance of `D`.
     /// - Throws: Any error that may occur while attempting to decode the specified type.
-    public func decode<D: Decodable>(_: D.Type, from string: String, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
+    public func decode<D: Decodable>(_: D.Type, from string: String, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
         let configuration: URLEncodedFormDecoder.Configuration
         
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
@@ -187,13 +187,13 @@ private struct _Decoder: Decoder {
     var configuration: URLEncodedFormDecoder.Configuration
     
     // See `Decoder.codingPath`
-    var codingPath: [CodingKey]
+    var codingPath: [any CodingKey]
 
     // See `Decoder.userInfo`
     var userInfo: [CodingUserInfoKey: Any] { self.configuration.userInfo }
     
     /// Creates a new `_Decoder`.
-    init(data: URLEncodedFormData, codingPath: [CodingKey], configuration: URLEncodedFormDecoder.Configuration) {
+    init(data: URLEncodedFormData, codingPath: [any CodingKey], configuration: URLEncodedFormDecoder.Configuration) {
         self.data = data
         self.codingPath = codingPath
         self.configuration = configuration
@@ -209,7 +209,7 @@ private struct _Decoder: Decoder {
     
     struct KeyedContainer<Key: CodingKey>: KeyedDecodingContainerProtocol {
         let data: URLEncodedFormData
-        var codingPath: [CodingKey]
+        var codingPath: [any CodingKey]
         var configuration: URLEncodedFormDecoder.Configuration
 
         var allKeys: [Key] {
@@ -218,7 +218,7 @@ private struct _Decoder: Decoder {
         
         init(
             data: URLEncodedFormData,
-            codingPath: [CodingKey],
+            codingPath: [any CodingKey],
             configuration: URLEncodedFormDecoder.Configuration
         ) {
             self.data = data
@@ -246,7 +246,7 @@ private struct _Decoder: Decoder {
             // If decoding a date, we need to apply the configured date decoding strategy.
             if T.self is Date.Type {
                 return try self.decodeDate(forKey: key, child: child) as! T
-            } else if let convertible = T.self as? URLQueryFragmentConvertible.Type {
+            } else if let convertible = T.self as? any URLQueryFragmentConvertible.Type {
                 switch child.values.last {
                 case let value?:
                     guard let result = convertible.init(urlQueryFragmentValue: value) else {
@@ -274,7 +274,7 @@ private struct _Decoder: Decoder {
             ))
         }
         
-        func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
+        func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
             try UnkeyedContainer(
                 data: self.data.children[key.stringValue] ?? [],
                 codingPath: self.codingPath + [key],
@@ -282,7 +282,7 @@ private struct _Decoder: Decoder {
             )
         }
         
-        func superDecoder() throws -> Decoder {
+        func superDecoder() throws -> any Decoder {
             _Decoder(
                 data: self.data.children["super"] ?? [],
                 codingPath: self.codingPath + [BasicCodingKey.key("super")],
@@ -290,7 +290,7 @@ private struct _Decoder: Decoder {
             )
         }
         
-        func superDecoder(forKey key: Key) throws -> Decoder {
+        func superDecoder(forKey key: Key) throws -> any Decoder {
             _Decoder(
                 data: self.data.children[key.stringValue] ?? [],
                 codingPath: self.codingPath + [key],
@@ -299,14 +299,14 @@ private struct _Decoder: Decoder {
         }
     }
     
-    func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         try UnkeyedContainer(data: self.data, codingPath: self.codingPath, configuration: self.configuration)
     }
     
     struct UnkeyedContainer: UnkeyedDecodingContainer {
         let data: URLEncodedFormData
         let values: [URLQueryFragment]
-        var codingPath: [CodingKey]
+        var codingPath: [any CodingKey]
         var configuration: URLEncodedFormDecoder.Configuration
         var allChildKeysAreNumbers: Bool
 
@@ -331,7 +331,7 @@ private struct _Decoder: Decoder {
         
         init(
             data: URLEncodedFormData,
-            codingPath: [CodingKey],
+            codingPath: [any CodingKey],
             configuration: URLEncodedFormDecoder.Configuration
         ) throws {
             self.data = data
@@ -403,7 +403,7 @@ private struct _Decoder: Decoder {
                         codingPath: self.codingPath,
                         forKey: BasicCodingKey.index(self.currentIndex)
                     ) as! T
-                } else if let convertible = T.self as? URLQueryFragmentConvertible.Type {
+                } else if let convertible = T.self as? any URLQueryFragmentConvertible.Type {
                     guard let result = convertible.init(urlQueryFragmentValue: value) else {
                         throw DecodingError.typeMismatch(T.self, at: self.codingPath + [BasicCodingKey.index(self.currentIndex)])
                     }
@@ -421,14 +421,14 @@ private struct _Decoder: Decoder {
         }
         
         mutating func nestedContainer<NestedKey: CodingKey>(keyedBy: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> {
-            throw DecodingError.typeMismatch([String: Decodable].self, at: self.codingPath + [BasicCodingKey.index(self.currentIndex)])
+            throw DecodingError.typeMismatch([String: any Decodable].self, at: self.codingPath + [BasicCodingKey.index(self.currentIndex)])
         }
         
-        mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
-            throw DecodingError.typeMismatch([Decodable].self, at: self.codingPath + [BasicCodingKey.index(self.currentIndex)])
+        mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
+            throw DecodingError.typeMismatch([any Decodable].self, at: self.codingPath + [BasicCodingKey.index(self.currentIndex)])
         }
         
-        mutating func superDecoder() throws -> Decoder {
+        mutating func superDecoder() throws -> any Decoder {
             defer { self.currentIndex += 1 }
             
             let data = self.allChildKeysAreNumbers ? self.data.children[self.currentIndex.description]! : .init(values: [self.values[self.currentIndex]])
@@ -441,18 +441,18 @@ private struct _Decoder: Decoder {
         }
     }
     
-    func singleValueContainer() throws -> SingleValueDecodingContainer {
+    func singleValueContainer() throws -> any SingleValueDecodingContainer {
         SingleValueContainer(data: self.data, codingPath: self.codingPath, configuration: self.configuration)
     }
     
     struct SingleValueContainer: SingleValueDecodingContainer {
         let data: URLEncodedFormData
-        var codingPath: [CodingKey]
+        var codingPath: [any CodingKey]
         var configuration: URLEncodedFormDecoder.Configuration
         
         init(
             data: URLEncodedFormData,
-            codingPath: [CodingKey],
+            codingPath: [any CodingKey],
             configuration: URLEncodedFormDecoder.Configuration
         ) {
             self.data = data
@@ -467,7 +467,7 @@ private struct _Decoder: Decoder {
         func decode<T: Decodable>(_: T.Type) throws -> T {
             if T.self is Date.Type {
                 return try self.configuration.decodeDate(from: self.data, codingPath: self.codingPath, forKey: nil) as! T
-            } else if let convertible = T.self as? URLQueryFragmentConvertible.Type {
+            } else if let convertible = T.self as? any URLQueryFragmentConvertible.Type {
                 guard let value = self.data.values.last else {
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath)
                 }
@@ -490,7 +490,7 @@ private struct _Decoder: Decoder {
 }
 
 private extension URLEncodedFormDecoder.Configuration {
-    func decodeDate(from data: URLEncodedFormData, codingPath: [CodingKey], forKey key: CodingKey?) throws -> Date {
+    func decodeDate(from data: URLEncodedFormData, codingPath: [any CodingKey], forKey key: (any CodingKey)?) throws -> Date {
         let newCodingPath = codingPath + (key.map { [$0] } ?? [])
         
         switch self.dateDecodingStrategy {
@@ -518,13 +518,13 @@ private extension URLEncodedFormDecoder.Configuration {
         }
     }
     
-    func decodeDate(from data: URLQueryFragment, codingPath: [CodingKey], forKey key: CodingKey?) throws -> Date {
+    func decodeDate(from data: URLQueryFragment, codingPath: [any CodingKey], forKey key: (any CodingKey)?) throws -> Date {
         try self.decodeDate(from: .init(values: [data]), codingPath: codingPath, forKey: key)
     }
 }
 
 private extension DecodingError {
-    static func typeMismatch(_ type: Any.Type, at path: [CodingKey]) -> DecodingError {
+    static func typeMismatch(_ type: Any.Type, at path: [any CodingKey]) -> DecodingError {
         let pathString = path.map(\.stringValue).joined(separator: ".")
         let context = DecodingError.Context(
             codingPath: path,
@@ -534,7 +534,7 @@ private extension DecodingError {
         return .typeMismatch(type, context)
     }
     
-    static func valueNotFound(_ type: Any.Type, at path: [CodingKey]) -> DecodingError {
+    static func valueNotFound(_ type: Any.Type, at path: [any CodingKey]) -> DecodingError {
         let pathString = path.map(\.stringValue).joined(separator: ".")
         let context = DecodingError.Context(
             codingPath: path,

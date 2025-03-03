@@ -84,7 +84,7 @@ extension WebSocket {
         to url: String,
         headers: HTTPFields = [:],
         configuration: WebSocketClient.Configuration = .init(),
-        on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
+        on eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
         onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws {
         guard let url = URL(string: url) else {
@@ -104,7 +104,7 @@ extension WebSocket {
         to url: URL,
         headers: HTTPFields = [:],
         configuration: WebSocketClient.Configuration = .init(),
-        on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
+        on eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
         onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws  {
         let scheme = url.scheme ?? "ws"
@@ -128,7 +128,7 @@ extension WebSocket {
         path: String = "/",
         headers: HTTPFields = [:],
         configuration: WebSocketClient.Configuration = .init(),
-        on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
+        on eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
         onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws  {
         return try await WebSocketClient(

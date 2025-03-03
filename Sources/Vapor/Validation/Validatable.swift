@@ -29,7 +29,7 @@ extension Validatable {
         try self.validations().validate(query: query, contentConfiguration: contentConfiguration).assert()
     }
     
-    public static func validate(_ decoder: Decoder) throws {
+    public static func validate(_ decoder: any Decoder) throws {
         try self.validations().validate(decoder).assert()
     }
     

@@ -127,7 +127,7 @@ extension Request.Body: AsyncSequence {
         
         let producer = NIOThrowingAsyncSequenceProducer.makeSequence(
             elementType: ByteBuffer.self,
-            failureType: Error.self,
+            failureType: (any Error).self,
             backPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies
                 .HighLowWatermark(lowWatermark: 5, highWatermark: 20),
             finishOnDeinit: true,

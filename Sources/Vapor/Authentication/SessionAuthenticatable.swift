@@ -9,7 +9,7 @@ public protocol SessionAuthenticator: Authenticator {
 }
 
 extension SessionAuthenticator {
-    public func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         // if the user has already been authenticated
         // by a previous middleware, continue
         if request.auth.has(User.self) {

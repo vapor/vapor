@@ -30,7 +30,7 @@ public struct ServerConfiguration: Sendable {
     /// If we are not accepting connections the requests will be added to the backlog until the
     /// server is accepting connections again. If the backlog fills up then the server will start
     /// refusing requests.
-    public let availableConnectionsDelegate: AvailableConnectionsDelegate?
+    public let availableConnectionsDelegate: (any AvailableConnectionsDelegate)?
     #if canImport(Network)
     /// TLS options for NIO Transport services
     public let tlsOptions: TSTLSOptions
@@ -50,7 +50,7 @@ public struct ServerConfiguration: Sendable {
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true,
-        availableConnectionsDelegate: AvailableConnectionsDelegate? = nil
+        availableConnectionsDelegate: (any AvailableConnectionsDelegate)? = nil
     ) {
         self.address = address
         self.serverName = serverName
@@ -78,7 +78,7 @@ public struct ServerConfiguration: Sendable {
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true,
-        availableConnectionsDelegate: AvailableConnectionsDelegate? = nil,
+        availableConnectionsDelegate: (any AvailableConnectionsDelegate)? = nil,
         tlsOptions: TSTLSOptions
     ) {
         self.address = address

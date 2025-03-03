@@ -25,13 +25,13 @@ public final class ErrorMiddleware: Middleware {
 
             // Inspect the error type and extract what data we can.
             switch error {
-            case let debugAbort as (DebuggableError & AbortError):
+            case let debugAbort as (any DebuggableError & AbortError):
                 (reason, status, headers, source) = (debugAbort.reason, debugAbort.status, debugAbort.headers, debugAbort.source ?? .capture())
                 
-            case let abort as AbortError:
+            case let abort as any AbortError:
                 (reason, status, headers, source) = (abort.reason, abort.status, abort.headers, .capture())
             
-            case let debugErr as DebuggableError:
+            case let debugErr as any DebuggableError:
                 (reason, status, headers, source) = (debugErr.reason, .internalServerError, [:], debugErr.source ?? .capture())
             
             default:
@@ -71,17 +71,17 @@ public final class ErrorMiddleware: Middleware {
     }
 
     /// Error-handling closure.
-    private let closure: @Sendable (Request, Error) -> (Response)
+    private let closure: @Sendable (Request, any Error) -> (Response)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    @preconcurrency public init(_ closure: @Sendable @escaping (Request, Error) -> (Response)) {
+    @preconcurrency public init(_ closure: @Sendable @escaping (Request, any Error) -> (Response)) {
         self.closure = closure
     }
     
-    public func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         do {
             return try await next.respond(to: request)
         } catch {

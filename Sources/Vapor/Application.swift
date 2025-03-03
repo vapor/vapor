@@ -50,12 +50,12 @@ public final class Application: Sendable {
     }
     
     public struct Lifecycle: Sendable {
-        var handlers: [LifecycleHandler]
+        var handlers: [any LifecycleHandler]
         init() {
             self.handlers = []
         }
         
-        public mutating func use(_ handler: LifecycleHandler) {
+        public mutating func use(_ handler: any LifecycleHandler) {
             self.handlers.append(handler)
         }
     }
@@ -103,14 +103,14 @@ public final class Application: Sendable {
     }
     
     public enum EventLoopGroupProvider: Sendable {
-        case shared(EventLoopGroup)
+        case shared(any EventLoopGroup)
         public static var singleton: EventLoopGroupProvider {
             .shared(MultiThreadedEventLoopGroup.singleton)
         }
     }
     
     public let eventLoopGroupProvider: EventLoopGroupProvider
-    public let eventLoopGroup: EventLoopGroup
+    public let eventLoopGroup: any EventLoopGroup
     internal let isBooted: NIOLockedValueBox<Bool>
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
@@ -124,14 +124,14 @@ public final class Application: Sendable {
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
     public let byteBufferAllocator: ByteBufferAllocator = .init()
-    public let viewRenderer: ViewRenderer
+    public let viewRenderer: any ViewRenderer
     public let directoryConfiguration: DirectoryConfiguration
 
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration
-        let viewRenderer: ViewRenderer?
+        let viewRenderer: (any ViewRenderer)?
 
-        public init(contentConfiguration: ContentConfiguration = .default(), viewRenderer: ViewRenderer? = nil) {
+        public init(contentConfiguration: ContentConfiguration = .default(), viewRenderer: (any ViewRenderer)? = nil) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
         }

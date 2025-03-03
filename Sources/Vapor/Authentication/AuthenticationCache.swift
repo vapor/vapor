@@ -59,7 +59,7 @@ extension Request.Authentication {
     }
 
     private final class Cache: Sendable {
-        private let storage: NIOLockedValueBox<[ObjectIdentifier: Sendable]>
+        private let storage: NIOLockedValueBox<[ObjectIdentifier: any Sendable]>
 
         init() {
             self.storage = .init([:])

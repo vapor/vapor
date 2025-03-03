@@ -22,7 +22,7 @@ extension Application {
 
         final class Storage: Sendable {
             struct SessionDriverFactory {
-                let factory: (@Sendable (Application) -> SessionDriver)?
+                let factory: (@Sendable (Application) -> any SessionDriver)?
             }
             let memory: MemorySessions.Storage
             let makeDriver: NIOLockedValueBox<SessionDriverFactory>
@@ -56,7 +56,7 @@ extension Application {
             )
         }
 
-        public var driver: SessionDriver {
+        public var driver: any SessionDriver {
             guard let makeDriver = self.storage.makeDriver.withLockedValue({ $0.factory }) else {
                 fatalError("No driver configured. Configure with app.sessions.use(...)")
             }
@@ -71,7 +71,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        @preconcurrency public func use(_ makeDriver: @Sendable @escaping (Application) -> (SessionDriver)) {
+        @preconcurrency public func use(_ makeDriver: @Sendable @escaping (Application) -> (any SessionDriver)) {
             self.storage.makeDriver.withLockedValue { $0 = .init(factory: makeDriver) }
         }
 

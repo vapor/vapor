@@ -15,7 +15,7 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
         self.logger = logger
     }
     
-    public func `for`(_ request: Request) -> ViewRenderer {
+    public func `for`(_ request: Request) -> any ViewRenderer {
         PlaintextRenderer(
             viewsDirectory: self.viewsDirectory,
             logger: request.logger

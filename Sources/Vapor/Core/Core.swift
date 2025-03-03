@@ -4,7 +4,7 @@ import NIOPosix
 import NIOConcurrencyHelpers
 
 extension Application {
-    public var console: Console {
+    public var console: any Console {
         get { self.core.storage.console.withLockedValue { $0 } }
         set { self.core.storage.console.withLockedValue { $0 = newValue } }
     }
@@ -69,7 +69,7 @@ extension Application {
 
     public struct Core: Sendable {
         final class Storage: Sendable {
-            let console: NIOLockedValueBox<Console>
+            let console: NIOLockedValueBox<any Console>
             let commands: NIOLockedValueBox<Commands>
             let asyncCommands: NIOLockedValueBox<AsyncCommands>
             let threadPool: NIOLockedValueBox<NIOThreadPool>
