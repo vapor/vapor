@@ -36,10 +36,10 @@ extension Application.HTTP {
                     let vaporRequest = Vapor.Request(
                         application: self.application,
                         method: req.method,
-                        url: .init(path: req.uri.path),
+                        url: .init(scheme: .init(req.uri.scheme?.rawValue), host: req.uri.host, port: req.uri.port, path: req.uri.path, query: req.uri.query),
                         version: .init(major: 1, minor: 1),
                         headersNoUpdate: .init(req.headers),
-                        remoteAddress: nil,
+                        remoteAddress: channel.remoteAddress,
                         logger: self.application.logger,
                         byteBufferAllocator: application.byteBufferAllocator,
                         on: application.eventLoopGroup.any()
