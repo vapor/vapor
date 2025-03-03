@@ -226,22 +226,31 @@ struct RequestTests {
             })
             
             app.environment.arguments = ["serve"]
-            try await app.startup()
-            
-            let localAddress = try #require(app.http.server.shared.localAddress)
-            let ip = try #require(localAddress.ipAddress)
-            let port = try #require(localAddress.port)
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await app.startup()
+                }
 
-            let fiftyMB = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
-            var request = HTTPClientRequest(url: "http://\(ip):\(port)/upload")
-            request.method = .POST
-            request.body = .bytes(fiftyMB)
-            
-            for _ in 0..<10 {
-                let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
-                #expect(response.status == .ok)
-                let body = try await response.body.collect(upTo: 1024 * 1024)
-                #expect(body.string == "Received \(fiftyMB.readableBytes) bytes")
+#warning("This is a workaround for the server not being ready yet.")
+                try await Task.sleep(for: .milliseconds(100))
+
+                let localAddress = try #require(app.sharedNewAddress.withLockedValue({ $0 }))
+                let ip = try #require(localAddress.ipAddress)
+                let port = try #require(localAddress.port)
+
+                let fiftyMB = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
+                var request = HTTPClientRequest(url: "http://\(ip):\(port)/upload")
+                request.method = .POST
+                request.body = .bytes(fiftyMB)
+
+                for _ in 0..<10 {
+                    let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
+                    #expect(response.status == .ok)
+                    let body = try await response.body.collect(upTo: 1024 * 1024)
+                    #expect(body.string == "Received \(fiftyMB.readableBytes) bytes")
+                }
+
+                try await app.server.shutdown()
             }
         }
     }
