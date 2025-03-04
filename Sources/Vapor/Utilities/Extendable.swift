@@ -35,12 +35,12 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
     }
 
     /// See `Codable`.
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         // skip
     }
 
     /// See `Codable`.
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         // skip
         storage = [:]
     }

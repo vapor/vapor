@@ -6,6 +6,7 @@ public func configure(_ app: Application) throws {
     app.logger.logLevel = Environment.process.LOG_LEVEL ?? .debug
     
     app.http.server.configuration.hostname = "127.0.0.1"
+    app.http.server.configuration.port = 0
     if app.environment == .tls {
         app.http.server.configuration.port = 8443
         try app.http.server.configuration.tlsConfiguration = .makeServerConfiguration(

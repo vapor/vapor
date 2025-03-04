@@ -1,4 +1,6 @@
-extension HTTPServer.Configuration {
+import NIOHTTPCompression
+
+extension HTTPServerOld.Configuration {
     /// Supported HTTP decompression options.
     public struct RequestDecompressionConfiguration: Sendable {
         /// Disables decompression. This is the default option.
@@ -25,7 +27,4 @@ extension HTTPServer.Configuration {
 
         var storage: Storage
     }
-    
-    @available(*, deprecated, renamed: "RequestDecompressionConfiguration", message: "Renamed to RequestDecompressionConfiguration for clarity.")
-    public typealias DecompressionConfiguration = RequestDecompressionConfiguration
 }

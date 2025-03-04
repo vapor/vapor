@@ -1,11 +1,11 @@
 import NIOCore
 import WebSocketKit
-import NIOHTTP1
+import HTTPTypes
 
 extension Request {
      @preconcurrency public func webSocket(
          maxFrameSize: WebSocketMaxFrameSize = .`default`,
-         shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
+         shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPFields?>) = {
              $0.eventLoop.makeSucceededFuture([:])
          },
          onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()

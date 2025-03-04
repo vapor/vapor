@@ -5,7 +5,7 @@ extension Application {
         .init(application: self)
     }
     
-    public var client: Client {
+    public var client: any Client {
         guard let makeClient = self.clients.storage.makeClient.withLockedValue({ $0.factory }) else {
             fatalError("No client configured. Configure with app.clients.use(...)")
         }
@@ -23,7 +23,7 @@ extension Application {
         
         final class Storage: Sendable {
             struct ClientFactory {
-                let factory: (@Sendable (Application) -> Client)?
+                let factory: (@Sendable (Application) -> any Client)?
             }
             let makeClient: NIOLockedValueBox<ClientFactory>
             init() {
@@ -43,7 +43,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        @preconcurrency public func use(_ makeClient: @Sendable @escaping (Application) -> (Client)) {
+        @preconcurrency public func use(_ makeClient: @Sendable @escaping (Application) -> (any Client)) {
             self.storage.makeClient.withLockedValue { $0 = .init(factory: makeClient) }
         }
 

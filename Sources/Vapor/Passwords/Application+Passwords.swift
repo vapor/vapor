@@ -25,14 +25,14 @@ extension Application {
         }
 
         @preconcurrency public func use(
-            _ makeVerifier: @Sendable @escaping (Application) -> (PasswordHasher)
+            _ makeVerifier: @Sendable @escaping (Application) -> (any PasswordHasher)
         ) {
             self.storage.makeVerifier.withLockedValue { $0 = .init(factory: makeVerifier) }
         }
 
         final class Storage: Sendable {
             struct PasswordsFactory {
-                let factory: (@Sendable (Application) -> PasswordHasher)?
+                let factory: (@Sendable (Application) -> any PasswordHasher)?
             }
             let makeVerifier: NIOLockedValueBox<PasswordsFactory>
             init() {

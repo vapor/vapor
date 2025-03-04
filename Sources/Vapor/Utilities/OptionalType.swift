@@ -1,37 +1,5 @@
 import NIOCore
 
-extension EventLoopFuture where Value: OptionalType {
-    /// Unwraps an `Optional` value contained inside a Future's expectation.
-    /// If the optional resolves to `nil` (`.none`), the supplied error will be thrown instead.
-    ///
-    ///     print(futureString) // Future<String?>
-    ///     futureString.unwrap(or: MyError()) // Future<String>
-    ///
-    /// - parameters:
-    ///     - error: `Error` to throw if the value is `nil`. This is captured with `@autoclosure`
-    ///              to avoid initialize the `Error` unless needed.
-    public func unwrap(or error: @Sendable @autoclosure @escaping () -> Error) -> EventLoopFuture<Value.WrappedType> {
-        return self.flatMapThrowing { optional -> Value.WrappedType in
-            guard let wrapped = optional.wrapped else {
-                throw error()
-            }
-            return wrapped
-        }
-    }
-}
-
-/// Applies `nil` coalescing to a future's optional and a concrete type.
-///
-///     print(maybeFutureInt) // Future<Int>?
-///     let futureInt = maybeFutureInt ?? 0
-///     print(futureInt) // Future<Int>
-///
-public func ??<T: Sendable>(lhs: EventLoopFuture<T?>, rhs: T) -> EventLoopFuture<T> {
-    return lhs.map { value in
-        return value ?? rhs
-    }
-}
-
 /// Capable of being represented by an optional wrapped type.
 ///
 /// This protocol mostly exists to allow constrained extensions on generic

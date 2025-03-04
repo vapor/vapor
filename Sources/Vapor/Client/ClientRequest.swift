@@ -1,22 +1,24 @@
 import NIOCore
-import NIOHTTP1
 import Foundation
+import HTTPTypes
 
 public struct ClientRequest: Sendable {
-    public var method: HTTPMethod
+    public var method: HTTPRequest.Method
     public var url: URI
-    public var headers: HTTPHeaders
+    public var headers: HTTPFields
     public var body: ByteBuffer?
     public var timeout: TimeAmount?
     private let byteBufferAllocator: ByteBufferAllocator
+    private let contentConfiguration: ContentConfiguration
 
     public init(
-        method: HTTPMethod = .GET,
+        method: HTTPRequest.Method = .get,
         url: URI = "/",
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
         timeout: TimeAmount?,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         self.method = method
         self.url = url
@@ -24,44 +26,48 @@ public struct ClientRequest: Sendable {
         self.body = body
         self.timeout = timeout
         self.byteBufferAllocator = byteBufferAllocator
+        self.contentConfiguration = contentConfiguration
     }
 
     public init(
-        method: HTTPMethod = .GET,
+        method: HTTPRequest.Method = .get,
         url: URI = "/",
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         self.init(method: method,
                   url: url,
                   headers: headers,
                   body: body,
                   timeout: nil,
-                  byteBufferAllocator: byteBufferAllocator)
+                  byteBufferAllocator: byteBufferAllocator,
+                  contentConfiguration: contentConfiguration)
     }
 }
 
 extension ClientRequest {
     private struct _URLQueryContainer: URLQueryContainer {
         var url: URI
+        let contentConfiguration: ContentConfiguration
 
-        func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
+        func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
             where D: Decodable
         {
             return try decoder.decode(D.self, from: self.url)
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: URLQueryEncoder) throws
+        mutating func encode<E>(_ encodable: E, using encoder: any URLQueryEncoder) throws
             where E: Encodable
         {
             try encoder.encode(encodable, to: &self.url)
         }
     }
 
-    public var query: URLQueryContainer {
+    public var query: any URLQueryContainer {
         get {
-            return _URLQueryContainer(url: self.url)
+            return _URLQueryContainer(url: self.url, contentConfiguration: self.contentConfiguration)
         }
         set {
             self.url = (newValue as! _URLQueryContainer).url
@@ -70,27 +76,28 @@ extension ClientRequest {
 
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer?
-        var headers: HTTPHeaders
+        var headers: HTTPFields
         let byteBufferAllocator: ByteBufferAllocator
+        let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = self.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
             self.body = body
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: body, headers: self.headers)
         }
 
-        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
             var body = self.byteBufferAllocator.buffer(capacity: 0)
@@ -98,7 +105,7 @@ extension ClientRequest {
             self.body = body
         }
 
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
@@ -108,9 +115,9 @@ extension ClientRequest {
         }
     }
 
-    public var content: ContentContainer {
+    public var content: any ContentContainer {
         get {
-            return _ContentContainer(body: self.body, headers: self.headers, byteBufferAllocator: self.byteBufferAllocator)
+            return _ContentContainer(body: self.body, headers: self.headers, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
         }
         set {
             let container = (newValue as! _ContentContainer)
