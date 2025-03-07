@@ -82,7 +82,7 @@ struct ErrorTests {
             }
 
             app.post("foo") { req -> Foo in
-                try req.content.decode(Foo.self)
+                try await req.content.decode(Foo.self)
             }
 
             struct AbortResponse: Content {
@@ -91,13 +91,13 @@ struct ErrorTests {
 
             try await app.testing().test(.get, "foo") { res in
                 #expect(res.status == .internalServerError)
-                let abort = try res.content.decode(AbortResponse.self)
+                let abort = try await res.content.decode(AbortResponse.self)
                 #expect(abort.reason == "Foo")
             }.test(.post, "foo", beforeRequest: { req in
                 try req.content.encode(Foo(bar: 42))
             }, afterResponse: { res in
                 #expect(res.status == .internalServerError)
-                let abort = try res.content.decode(AbortResponse.self)
+                let abort = try await res.content.decode(AbortResponse.self)
                 #expect(abort.reason == "After decode")
             })
         }

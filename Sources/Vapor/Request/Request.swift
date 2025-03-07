@@ -6,6 +6,7 @@ import RoutingKit
 import NIOConcurrencyHelpers
 import ServiceContextModule
 import HTTPTypes
+import HTTPServerNew
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {
@@ -143,7 +144,11 @@ public final class Request: CustomStringConvertible, Sendable {
             self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
+            if let newBody = self.request.newBody.withLockedValue({ $0 }) {
+                let buffer = try await newBody.collect(upTo: request.application.routes.defaultMaxBodySize.value)
+                return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
+            }
             guard let body = self.request.body.data else {
                 self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
@@ -290,7 +295,8 @@ public final class Request: CustomStringConvertible, Sendable {
     private let _logger: NIOLockedValueBox<Logger>
     private let _serviceContext: NIOLockedValueBox<ServiceContext>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
-    
+    internal let newBody: NIOLockedValueBox<HTTPServerNew.RequestBody?>
+
     public convenience init(
         application: Application,
         method: HTTPRequest.Method = .get,
@@ -364,6 +370,7 @@ public final class Request: CustomStringConvertible, Sendable {
         self.eventLoop = eventLoop
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
+        self.newBody = .init(nil)
     }
     
     /// Automatically restores tracing serviceContext around the provided closure

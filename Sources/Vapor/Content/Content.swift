@@ -66,7 +66,7 @@ extension Content {
     }
     
     public static func decodeRequest(_ request: Request) async throws -> Self {
-        try request.content.decode(Self.self)
+        try await request.content.decode(Self.self)
     }
     
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {

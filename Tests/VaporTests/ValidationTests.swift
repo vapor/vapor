@@ -755,7 +755,7 @@ struct ValidationTests {
             ])
         }, afterResponse: { res in 
             #expect(res.status == .badRequest)
-            let content = try res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
+            let content = try await res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
             #expect(content.errors.count == 1)
         })
 

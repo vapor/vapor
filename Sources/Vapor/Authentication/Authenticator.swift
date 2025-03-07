@@ -66,7 +66,7 @@ public protocol CredentialsAuthenticator: RequestAuthenticator {
 extension CredentialsAuthenticator {
     public func authenticate(request: Request) async throws {
         _ = try await request.body.collect(max: nil).get()
-        if let credentials = try? request.content.decode(Credentials.self) {
+        if let credentials = try? await request.content.decode(Credentials.self) {
             try await self.authenticate(credentials: credentials, for: request)
         }
     }

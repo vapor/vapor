@@ -17,7 +17,7 @@ struct ContentTests {
                 on: app.eventLoopGroup.any()
             )
             request.headers.contentType = .json
-            #expect(try request.content.get(at: "hello") == "world")
+            #expect(try await request.content.get(at: "hello") == "world")
         }
     }
 
@@ -60,7 +60,7 @@ struct ContentTests {
                 on: app.eventLoopGroup.any()
             )
             request.headers.contentType = .json
-            #expect(try request.content.get(at: "batters", "batter", 1, "type") == "Chocolate")
+            #expect(try await request.content.get(at: "batters", "batter", 1, "type") == "Chocolate")
         }
     }
 
@@ -123,8 +123,8 @@ struct ContentTests {
 
         try await withApp { app in
             app.routes.post("decode") { req async throws -> String in
-                #expect(try req.content.decode(FooContent.self) == FooContent())
-                #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
+                #expect(try await req.content.decode(FooContent.self) == FooContent())
+                #expect(try await req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
 
@@ -137,12 +137,12 @@ struct ContentTests {
 
             app.routes.post("decode-bad-header") { req async throws -> String in
                 #expect(req.headers.contentType == .audio)
-                #expect(performing: {
-                    try req.content.decode(FooContent.self)
+                await #expect(performing: {
+                    try await req.content.decode(FooContent.self)
                 }, throws: { error in
                     (error as? Abort)?.status == .unsupportedMediaType
                 })
-                #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
+                #expect(try await req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
 
@@ -188,7 +188,7 @@ struct ContentTests {
 
         try await withApp { app in
             app.routes.get("multipart") { req -> User in
-                let decoded = try req.content.decode(User.self)
+                let decoded = try await req.content.decode(User.self)
                 #expect(decoded == expected)
                 return decoded
             }
@@ -218,7 +218,7 @@ struct ContentTests {
 
         try await withApp { app in
             app.routes.get("multipart") { req -> User in
-                let decoded = try req.content.decode(User.self)
+                let decoded = try await req.content.decode(User.self)
                 #expect(decoded == expected)
                 return decoded
             }
@@ -244,7 +244,7 @@ struct ContentTests {
 
         try await withApp { app in
             app.routes.get("multipart") { req -> User in
-                let decoded = try req.content.decode(User.self)
+                let decoded = try await req.content.decode(User.self)
                 #expect(decoded == expected)
                 return decoded
             }
@@ -289,7 +289,7 @@ struct ContentTests {
 
         try await withApp { app in
             app.routes.get("multipart") { req -> User in
-                let decoded = try req.content.decode(User.self)
+                let decoded = try await req.content.decode(User.self)
                 #expect(decoded == expected)
                 return decoded
             }
@@ -369,7 +369,7 @@ struct ContentTests {
 
         try await withApp { app in
             app.get("urlencodedform") { req -> HTTPStatus in
-                let foo = try req.content.decode(User.self)
+                let foo = try await req.content.decode(User.self)
                 #expect(foo.name == "Vapor")
                 #expect(foo.age == 3)
                 #expect(foo.luckyNumbers == [5, 7])
@@ -473,7 +473,7 @@ struct ContentTests {
 
             request.headers.contentType = .json
 
-            let content = try request.content.decode(SampleContent.self)
+            let content = try await request.content.decode(SampleContent.self)
             #expect(content.name == "new name after decode")
         }
     }
@@ -492,7 +492,7 @@ struct ContentTests {
 
             request.headers.contentType = .jsonAPI
 
-            let content = try request.content.decode(JsonApiContent.self)
+            let content = try await request.content.decode(JsonApiContent.self)
             #expect(content.data == ["entity0", "entity1"])
         }
     }
@@ -561,8 +561,8 @@ struct ContentTests {
                 let title: String
                 let isFree: Bool
             }
-            #expect(performing: {
-                try req.content.decode(PostInput.self)
+            await #expect(performing: {
+                try await req.content.decode(PostInput.self)
             }, throws: { error in
                 return (error as? any AbortError)?.reason ==
                         #"No such key 'is_free' at path ''. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
@@ -585,8 +585,8 @@ struct ContentTests {
             struct DecodeModel: Content {
                 let badJson: String
             }
-            #expect(performing: {
-                try req.content.decode(DecodeModel.self)
+            await #expect(performing: {
+                try await req.content.decode(DecodeModel.self)
             }, throws: { error in
                 return (error as? any AbortError)?.reason.contains(#"Data corrupted at path ''. The given data was not valid JSON"#) ?? false
             })
@@ -613,8 +613,8 @@ struct ContentTests {
 
                 let items: Item
             }
-            #expect(performing: {
-                try req.content.decode(DecodeModel.self)
+            await #expect(performing: {
+                try await req.content.decode(DecodeModel.self)
             }, throws: { error in
                 return (error as? any AbortError)?.reason ==
                 #"No value found (expected type 'String') at path 'items.Index 1'. Unkeyed container is at end."#
@@ -639,8 +639,8 @@ struct ContentTests {
 
                 let item: Item
             }
-            #expect(performing: {
-                try req.content.decode(DecodeModel.self)
+            await #expect(performing: {
+                try await req.content.decode(DecodeModel.self)
             }, throws: { error in
                 (error as? any AbortError)?.reason.contains(#"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#) ?? false
             })
@@ -665,13 +665,13 @@ struct ContentTests {
 
             try await app.testing().test(.get, "/plaintext") { res throws in
                 #expect(res.status == .ok)
-                #expect(try res.content.decode(UInt8.self) == 255)
-                #expect(try res.content.decode(String.self) == "255")
+                #expect(try await res.content.decode(UInt8.self) == 255)
+                #expect(try await res.content.decode(String.self) == "255")
             }
 
             try await app.testing().test(.get, "/empty-plaintext") { res throws in
                 #expect(res.status == .ok)
-                #expect(try res.content.decode(String.self) == "")
+                #expect(try await res.content.decode(String.self) == "")
             }
         }
     }
@@ -684,7 +684,7 @@ struct ContentTests {
 
         try await withApp { app in
             app.routes.post("plaintext") { req -> String in
-                _ = try req.content.decode(WrongType.self)
+                _ = try await req.content.decode(WrongType.self)
                 return "OK"
             }
 
@@ -713,7 +713,7 @@ struct ContentTests {
             }
 
             try await app.testing().test(.get, "/success") { res throws in
-                #expect(try res.content.decode(Bool.self) == true)
+                #expect(try await res.content.decode(Bool.self) == true)
             }
         }
     }
@@ -726,7 +726,7 @@ struct ContentTests {
 
         try await withApp { app in
             app.routes.post("json") { req in
-                let body = try req.content.decode(Message.self)
+                let body = try await req.content.decode(Message.self)
                 return body.name
             }
 

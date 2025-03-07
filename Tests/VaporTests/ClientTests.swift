@@ -74,7 +74,7 @@ struct ClientTests {
                     try req.content.encode(["hello": "world"])
                 }
 
-                let data = try res.content.decode(AnythingResponse.self)
+                let data = try await res.content.decode(AnythingResponse.self)
                 #expect(data.json == ["hello": "world"])
                 #expect(data.headers["content-type"] == "application/json; charset=utf-8")
             }
@@ -87,7 +87,7 @@ struct ClientTests {
             try await withApp { app in
                 let res = try await app.client.post("http://localhost:\(remoteAppPort)/anything", content: ["hello": "world"])
 
-                let data = try res.content.decode(AnythingResponse.self)
+                let data = try await res.content.decode(AnythingResponse.self)
                 #expect(data.json == ["hello": "world"])
                 #expect(data.headers["content-type"] == "application/json; charset=utf-8")
             }

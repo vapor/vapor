@@ -181,7 +181,7 @@ struct ApplicationTests {
 
             let port = try #require(app.http.server.shared.localAddress?.port)
             let response = try await app.client.get("http://localhost:\(port)/hello")
-            let returnedConfig = try response.content.decode(AddressConfig.self)
+            let returnedConfig = try await response.content.decode(AddressConfig.self)
             #expect(returnedConfig.hostname == "0.0.0.0")
             #expect(returnedConfig.port == port)
         }
@@ -211,7 +211,7 @@ struct ApplicationTests {
 
             let port = try #require(app.http.server.shared.localAddress?.port)
             let response = try await app.client.get("http://localhost:\(port)/hello")
-            let returnedConfig = try response.content.decode(AddressConfig.self)
+            let returnedConfig = try await response.content.decode(AddressConfig.self)
             #expect(returnedConfig.hostname == "0.0.0.0")
             #expect(returnedConfig.port == 3000)
         }

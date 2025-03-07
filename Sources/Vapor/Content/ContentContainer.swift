@@ -12,7 +12,7 @@ public protocol ContentContainer {
     var contentConfiguration: ContentConfiguration { get }
 
     /// Use the provided ``ContentDecoder`` to read a value of type `D` from the container.
-    func decode<D: Decodable>(_: D.Type, using decoder: any ContentDecoder) throws -> D
+    func decode<D: Decodable>(_: D.Type, using decoder: any ContentDecoder) async throws -> D
 
     /// Use the provided ``ContentEncoder`` to write a value of type `E` to the container.
     mutating func encode<E: Encodable>(_ encodable: E, using encoder: any ContentEncoder) throws
@@ -23,24 +23,24 @@ extension ContentContainer {
 
     /// Use the default decoder for the container's ``contentType`` to read a value of type `D`
     /// from the container.
-    public func decode<D: Decodable>(_: D.Type) throws -> D {
-        return try self.decode(D.self, using: self.configuredDecoder())
+    public func decode<D: Decodable>(_: D.Type) async throws -> D {
+        return try await self.decode(D.self, using: self.configuredDecoder())
     }
 
     /// Use the default decoder for the container's ``contentType`` to read a value of type `C`
     /// from the container.
     ///
     /// - Note: The ``Content/defaultContentType-9sljl`` of `C` is ignored.
-    public func decode<C: Content>(_: C.Type) throws -> C {
-        var content = try self.decode(C.self, using: self.configuredDecoder())
+    public func decode<C: Content>(_: C.Type) async throws -> C {
+        var content = try await self.decode(C.self, using: self.configuredDecoder())
         try content.afterDecode()
         return content
     }
 
     /// Use the default configured decoder for the ``contentType`` parameter to read a value
     /// of type `D` from the container.
-    public func decode<D: Decodable>(_: D.Type, as contentType: HTTPMediaType) throws -> D {
-        try self.decode(D.self, using: self.configuredDecoder(for: contentType))
+    public func decode<D: Decodable>(_: D.Type, as contentType: HTTPMediaType) async throws -> D {
+        try await self.decode(D.self, using: self.configuredDecoder(for: contentType))
     }
 
     // MARK: - Encoding helpers
@@ -74,45 +74,41 @@ extension ContentContainer {
     }
 
     // MARK: - Key path helpers
-    
-    /// Legacy alias for ``subscript(_:at:)-90mrm``.
-    public subscript<D: Decodable>(_ path: any CodingKeyRepresentable...) -> D? {
-        self[D.self, at: path]
-    }
 
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String? = req.content[at: "user", "name"]
-    public subscript<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) -> D? {
-        self[D.self, at: path]
-    }
+    #warning("Sort")
+//    public subscript<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) async -> D? {
+//        await self[D.self, at: path]
+//    }
 
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String? = req.content[at: ["user", "name"]]
-    public subscript<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) -> D? {
-        try? self.get(D.self, at: path)
-    }
+//    public subscript<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) async -> D? {
+//        try? await self.get(D.self, at: path)
+//    }
     
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String = try req.content.get(at: "user", "name")
-    public func get<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) throws -> D {
-        try self.get(at: path)
+    public func get<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) async throws -> D {
+        try await self.get(at: path)
     }
     
     /// Fetch a single ``Decodable`` value at the supplied keypath in this container.
     ///
     ///     let name = try req.content.get(String.self, at: ["user", "name"])
-    public func get<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) throws -> D {
-        try self.get(D.self, path: path.map(\.codingKey))
+    public func get<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) async throws -> D {
+        try await self.get(D.self, path: path.map(\.codingKey))
     }
     
     // MARK: - Private
     
     /// Execute a "get at coding key path" operation.
-    private func get<D: Decodable>(_: D.Type = D.self, path: [any CodingKey]) throws -> D {
-        try self.decode(ContainerGetPathExecutor<D>.self, using: ForwardingContentDecoder(
+    private func get<D: Decodable>(_: D.Type = D.self, path: [any CodingKey]) async throws -> D {
+        try await self.decode(ContainerGetPathExecutor<D>.self, using: ForwardingContentDecoder(
             base: self.configuredDecoder(),
             info: ContainerGetPathExecutor<D>.userInfo(for: path)
         )).result

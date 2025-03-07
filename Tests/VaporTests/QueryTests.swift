@@ -221,7 +221,7 @@ struct QueryTests {
 
         try await withApp { app throws in
             app.post("decode-fail") { req -> String in
-                _ = try req.content.decode(DecodeFail.self)
+                _ = try await req.content.decode(DecodeFail.self)
                 return "ok"
             }
 

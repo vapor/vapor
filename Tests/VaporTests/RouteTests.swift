@@ -185,7 +185,7 @@ struct RouteTests {
         try await withApp { app in
             app.post("users") { req -> User in
                 try User.validate(content: req)
-                return try req.content.decode(User.self)
+                return try await req.content.decode(User.self)
             }
 
             try await app.testing().test(.post, "/users", beforeRequest: { req in

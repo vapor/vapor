@@ -17,8 +17,8 @@ struct VaporTestingTests {
 
         try await withApp { app in
             app.routes.post("decode") { req async throws -> String in
-                #expect(try req.content.decode(FooContent.self) == FooContent())
-                #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
+                #expect(try await req.content.decode(FooContent.self) == FooContent())
+                #expect(try await req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
 
@@ -31,9 +31,9 @@ struct VaporTestingTests {
 
             app.routes.post("decode-bad-header") { req async throws -> String in
                 #expect(req.headers.contentType == .audio)
-                #expect(
+                await #expect(
                     performing: {
-                        try req.content.decode(FooContent.self)
+                        try await req.content.decode(FooContent.self)
                     }, throws: { error in
                         guard let abort = error as? Abort,
                               abort.status == .unsupportedMediaType else {
@@ -43,7 +43,7 @@ struct VaporTestingTests {
                         return true
                     }
                 )
-                #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
+                #expect(try await req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
 

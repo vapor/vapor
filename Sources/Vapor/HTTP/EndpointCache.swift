@@ -113,7 +113,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
                 let data: T
 
                 do {
-                    data = try response.content.decode(T.self)
+                    data = try await response.content.decode(T.self)
                 } catch {
                     throw EndpointCacheError.contentDecodeFailure(error)
                 }

@@ -30,7 +30,7 @@ struct MetricsTests {
 
             try await app.testing().test(.get, "/users/1") { res in
                 #expect(res.status == .ok)
-                let resData = try res.content.decode(User.self)
+                let resData = try await res.content.decode(User.self)
                 #expect(resData.id == 1)
                 #expect(metrics.counters.count == 1)
                 let counter = try #require(metrics.counters["http_requests_total"] as? TestCounter)
@@ -147,7 +147,7 @@ struct MetricsTests {
 
             try await app.testing().test(.get, "/users/1") { res in
                 #expect(res.status == .ok)
-                let resData = try res.content.decode(User.self)
+                let resData = try await res.content.decode(User.self)
                 #expect(resData.id == 1)
                 #expect(metrics.counters.count == 0)
                 #expect(metrics.timers["http_request_duration_seconds"] == nil)

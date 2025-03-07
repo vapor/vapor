@@ -684,7 +684,7 @@ struct ServerTests {
 
         try await withApp { app in
             app.get("user") { req -> User in
-                return try req.content.decode(User.self)
+                return try await req.content.decode(User.self)
             }
 
             try await app.testing().test(.get, "/user") { res in

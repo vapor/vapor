@@ -15,7 +15,7 @@ struct ServiceTests {
 
             try await app.testing().test(.get, "test") { res throws in
                 #expect(res.status == .ok)
-                #expect(try res.content.decode([String].self) == ["foo"])
+                #expect(try await res.content.decode([String].self) == ["foo"])
             }
         }
     }

@@ -58,7 +58,7 @@ public func routes(_ app: Application) throws {
     }
     
     app.post("login") { req -> String in
-        let creds = try req.content.decode(Creds.self)
+        let creds = try await req.content.decode(Creds.self)
         return "\(creds)"
     }
     
@@ -150,7 +150,7 @@ public func routes(_ app: Application) throws {
             var slideshow: Slideshow
         }
         let response = try await req.client.get("http://httpbin.org/json")
-        let data = try response.content.decode(HTTPBinResponse.self)
+        let data = try await response.content.decode(HTTPBinResponse.self)
         return data.slideshow.title
     }
     
