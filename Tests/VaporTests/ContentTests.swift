@@ -717,6 +717,27 @@ struct ContentTests {
             }
         }
     }
+
+    @Test("Test that JSON decoding in body works")
+    func jsonDecodeContent() async throws {
+        struct Message: Content {
+            let name: String
+        }
+
+        try await withApp { app in
+            app.routes.post("json") { req in
+                let body = try req.content.decode(Message.self)
+                return body.name
+            }
+
+            try await app.testing(method: .running).test(.post, "/json", beforeRequest: { req in
+                try req.content.encode(Message(name: "Vapor"))
+            }) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }
+        }
+    }
 }
 
 private struct SampleContent: Content {
