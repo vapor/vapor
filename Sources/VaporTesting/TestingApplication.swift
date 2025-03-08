@@ -32,9 +32,11 @@ extension Application {
                     try await app.server.start(address: .hostname(self.hostname, port: self.port))
                 }
 
+                let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
+                
+
 #warning("This is a workaround for the server not being ready yet.")
                 try await Task.sleep(for: .milliseconds(100))
-                let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
 
                 do {
                     var path = request.url.path

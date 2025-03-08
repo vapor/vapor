@@ -718,7 +718,7 @@ struct ContentTests {
         }
     }
 
-    @Test("Test that JSON decoding in body works")
+    @Test("Test body hooked up in request with JSON decoding")
     func jsonDecodeContent() async throws {
         struct Message: Content {
             let name: String
