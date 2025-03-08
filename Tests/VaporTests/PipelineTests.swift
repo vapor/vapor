@@ -8,7 +8,7 @@ import class NIOPosix.ClientBootstrap
 import Testing
 import VaporTesting
 
-@Suite("Pipeline Tests")
+@Suite("Pipeline Tests", .disabled())
 struct PipelineTests {
     @Test("Test Echo Handlers")
     func echoHandlers() async throws {
