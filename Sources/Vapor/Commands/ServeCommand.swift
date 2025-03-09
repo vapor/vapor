@@ -58,20 +58,22 @@ public final class ServeCommand: AsyncCommand, Sendable {
     public func run(using context: CommandContext, signature: Signature) async throws {
         switch (signature.hostname, signature.port, signature.bind, signature.socketPath) {
         case (.none, .none, .none, .none): // use defaults
-            try await context.application.server.start(address: nil)
-            
+            try await context.application.server.start()
+
         case (.none, .none, .none, .some(let socketPath)): // unix socket
-            try await context.application.server.start(address: .unixDomainSocket(path: socketPath))
-            
+            context.application.serverConfiguration.address = .unixDomainSocket(path: socketPath)
+            try await context.application.server.start()
+
         case (.none, .none, .some(let address), .none): // bind ("hostname:port")
             let hostname = address.split(separator: ":").first.flatMap(String.init)
             let port = address.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-            
-            try await context.application.server.start(address: .hostname(hostname, port: port))
-            
+            context.application.serverConfiguration.address = .hostname(hostname, port: port)
+            try await context.application.server.start()
+
         case (let hostname, let port, .none, .none): // hostname / port
-            try await context.application.server.start(address: .hostname(hostname, port: port))
-            
+            context.application.serverConfiguration.address = .hostname(hostname, port: port)
+            try await context.application.server.start()
+
         default: throw Error.incompatibleFlags
         }
         

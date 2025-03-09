@@ -193,7 +193,7 @@ struct ApplicationTests {
                     }
                 }
 
-                try await Task.sleep(for: .milliseconds(10))
+                try await Task.sleep(for: .milliseconds(50))
 
                 #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
                 #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")

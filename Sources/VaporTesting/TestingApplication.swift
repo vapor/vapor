@@ -27,9 +27,10 @@ extension Application {
         }
 
         package func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
-            try await withThrowingTaskGroup(of: Void.self) { group in
+            app.serverConfiguration.address = .hostname(self.hostname, port: self.port)
+            return try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
-                    try await app.server.start(address: .hostname(self.hostname, port: self.port))
+                    try await app.server.start()
                 }
 
                 let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)

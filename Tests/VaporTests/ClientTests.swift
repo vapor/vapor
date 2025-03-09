@@ -14,12 +14,13 @@ struct ClientTests {
     func clientConfigurationChange() async throws {
         try await withApp { app in
             app.http.client.configuration.redirectConfiguration = .disallow
+            app.serverConfiguration.address = .hostname("localhost", port: 0)
 
             app.get("redirect") {
                 $0.redirect(to: "foo")
             }
 
-            try await app.server.start(address: .hostname("localhost", port: 0))
+            try await app.server.start()
 
             let port = try #require(app.http.server.shared.localAddress?.port, "Failed to get port")
             let res = try await app.client.get("http://localhost:\(port)/redirect")
@@ -34,12 +35,13 @@ struct ClientTests {
     func clientConfigurationCantBeChangedAfterClientHasBeenUsed() async throws {
         try await withApp { app in
             app.http.client.configuration.redirectConfiguration = .disallow
+            app.serverConfiguration.address = .hostname("localhost", port: 0)
 
             app.get("redirect") {
                 $0.redirect(to: "foo")
             }
 
-            try await app.server.start(address: .hostname("localhost", port: 0))
+            try await app.server.start()
 
             let port = try #require(app.http.server.shared.localAddress?.port, "Failed to get port")
             _ = try await app.client.get("http://localhost:\(port)/redirect")

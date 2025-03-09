@@ -228,7 +228,7 @@ struct ServerTests {
                 )
             }
 
-            try await app.server.start(address: nil)
+            try await app.server.start()
             let port = try #require(app.http.server.shared.localAddress?.port)
 
             let unsupportedNoncompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
@@ -342,7 +342,7 @@ struct ServerTests {
                 )
             }
 
-            try await app.server.start(address: nil)
+            try await app.server.start()
             let port = try #require(app.http.server.shared.localAddress?.port)
 
             let unsupportedNoncompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
@@ -418,7 +418,7 @@ struct ServerTests {
 
             app.get("compressed") { _ in compressiblePayload }
 
-            try await app.server.start(address: nil)
+            try await app.server.start()
             let port = try #require(app.http.server.shared.localAddress?.port)
 
             let unsupportedNoncompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
@@ -496,7 +496,7 @@ struct ServerTests {
 
             app.get("compressed") { _ in compressiblePayload }
 
-            try await app.server.start(address: nil)
+            try await app.server.start()
             let port = try #require(app.http.server.shared.localAddress?.port)
 
             let unsupportedNoncompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
@@ -1301,7 +1301,7 @@ final class CustomServer: Server, Sendable {
         self.didShutdown = .init(false)
     }
     
-    func start(address: BindAddress?) async throws {
+    func start() async throws {
         self.didStart.withLockedValue { $0 = true }
     }
     

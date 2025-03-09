@@ -258,20 +258,20 @@ public final class HTTPServerOld: Server, Sendable {
         self.connection = .init(nil)
     }
     
-    public func start(address: BindAddress?) async throws {
+    public func start() async throws {
         var configuration = self.configuration
         
-        switch address {
-        case .none:
-            /// Use the configuration as is.
-            break
-        case .hostname(let hostname, let port):
-            /// Override the hostname, port, neither, or both.
-            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
-        case .unixDomainSocket:
-            /// Override the socket path.
-            configuration.address = address!
-        }
+//        switch address {
+//        case .none:
+//            /// Use the configuration as is.
+//            break
+//        case .hostname(let hostname, let port):
+//            /// Override the hostname, port, neither, or both.
+//            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
+//        case .unixDomainSocket:
+//            /// Override the socket path.
+//            configuration.address = address!
+//        }
         
         /// Log starting message for debugging before attempting to start the server.
         configuration.logger.debug("Server starting on \(configuration.addressDescription)")

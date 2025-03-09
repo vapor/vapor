@@ -27,7 +27,7 @@ import NIOTransportServices
 public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
     public typealias AsyncChildChannel = ChildChannel.Value
     public typealias AsyncServerChannel = NIOAsyncChannel<AsyncChildChannel, Never>
-    public enum State: CustomStringConvertible {
+    enum State: CustomStringConvertible {
         case initial(
             childChannelSetup: ChildChannel,
             configuration: ServerConfiguration,
@@ -41,7 +41,7 @@ public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
         case shuttingDown(shutdownPromise: EventLoopPromise<Void>)
         case shutdown
 
-        public var description: String {
+        var description: String {
             switch self {
             case .initial:
                 return "initial"
@@ -57,7 +57,7 @@ public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
         }
     }
 
-    public var state: State {
+    var state: State {
         didSet { self.logger.info("Server State: \(self.state)") }
     }
 

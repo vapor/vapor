@@ -14,6 +14,7 @@ struct RequestTests {
     func testRedirect() async throws {
         try await withApp { app in
             app.http.client.configuration.redirectConfiguration = .disallow
+            app.serverConfiguration.address = .hostname("localhost", port: 0)
 
             app.get("redirect_normal") {
                 $0.redirect(to: "foo", redirectType: .normal)
@@ -30,7 +31,7 @@ struct RequestTests {
 
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
-                    try await app.server.start(address: .hostname("localhost", port: 0))
+                    try await app.server.start()
                 }
 
                 #warning("This is a workaround for the server not being ready yet.")
