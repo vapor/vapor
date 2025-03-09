@@ -27,7 +27,8 @@ extension Application {
         }
 
         package func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
-            try await withThrowingTaskGroup(of: Void.self) { group in
+            app.logger.info("Will perform test in Live app")
+            return try await withThrowingTaskGroup(of: Void.self) { group in
                 app.serverConfiguration.address = .hostname(self.hostname, port: self.port)
                 let portPromise = Promise<Int>()
                 app.serverConfiguration.onServerRunning = { channel in
@@ -38,8 +39,14 @@ extension Application {
                     portPromise.complete(port)
                 }
 
+
                 group.addTask {
-                    try await app.server.start()
+                    app.logger.info("Will attempt to start server")
+                    do {
+                        try await app.server.start()
+                    } catch {
+                        print("tsentrsintersntirsteni")
+                    }
                 }
 
                 let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
@@ -50,6 +57,7 @@ extension Application {
 
                     let actualPort: Int
 
+                    app.logger.info("Will wait for port")
                     if self.port == 0 {
                         actualPort = try await portPromise.wait()
                     } else {

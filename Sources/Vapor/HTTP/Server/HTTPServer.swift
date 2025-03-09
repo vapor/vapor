@@ -103,9 +103,6 @@ public final class HTTPServerOld: Server, Sendable {
         /// If set, this name will be serialized as the `Server` header in outgoing responses.
         public var serverName: String?
 
-        /// When `true`, report http metrics through `swift-metrics`
-        public var reportMetrics: Bool
-
         /// Any uncaught server or responder errors will go here.
         public var logger: Logger
 
@@ -137,7 +134,6 @@ public final class HTTPServerOld: Server, Sendable {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
-            reportMetrics: Bool = true,
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
@@ -154,7 +150,6 @@ public final class HTTPServerOld: Server, Sendable {
                 supportVersions: supportVersions,
                 tlsConfiguration: tlsConfiguration,
                 serverName: serverName,
-                reportMetrics: reportMetrics,
                 logger: logger,
                 shutdownTimeout: shutdownTimeout,
                 customCertificateVerifyCallback: customCertificateVerifyCallback,
@@ -173,7 +168,6 @@ public final class HTTPServerOld: Server, Sendable {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
-            reportMetrics: Bool = true,
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
@@ -193,7 +187,6 @@ public final class HTTPServerOld: Server, Sendable {
             }
             self.tlsConfiguration = tlsConfiguration
             self.serverName = serverName
-            self.reportMetrics = reportMetrics
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
             self.customCertificateVerifyCallback = customCertificateVerifyCallback

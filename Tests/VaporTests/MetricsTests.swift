@@ -129,7 +129,7 @@ struct MetricsTests {
         try await withApp { app in
             print("Using CaputringMetricsSystems \(metrics.number)")
 
-            app.http.server.configuration.reportMetrics = false
+            app.serverConfiguration.reportMetrics = false
 
             struct User: Content {
                 let id: Int

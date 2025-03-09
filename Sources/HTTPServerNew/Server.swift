@@ -95,6 +95,7 @@ public actor HTTPServer<ChildChannel: ServerChildChannel>: Service {
     }
 
     public func run() async throws {
+        self.logger.info("Running", metadata: ["state": "\(self.state)"])
         switch self.state {
         case .initial(let childChannelSetup, let configuration, let onServerRunning):
             self.state = .starting

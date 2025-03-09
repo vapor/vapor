@@ -49,7 +49,7 @@ extension Application {
             DefaultResponder(
                 routes: self.application.routes,
                 middleware: self.application.middleware.resolve(),
-                reportMetrics: true//self.application.http.server.configuration.reportMetrics
+                reportMetrics: self.application.serverConfiguration.reportMetrics
             )
         }
 
