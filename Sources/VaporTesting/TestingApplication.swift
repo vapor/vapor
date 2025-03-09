@@ -62,11 +62,16 @@ extension Application {
                     clientRequest.method = .init(request.method)
                     clientRequest.headers = .init(request.headers)
                     clientRequest.body = .bytes(request.body)
+                    app.logger.info("Sending request in test")
                     let response = try await client.execute(clientRequest, timeout: .seconds(30))
+                    app.logger.info("Received response in test")
                     // Collect up to 1MB
                     let responseBody = try await response.body.collect(upTo: 1024 * 1024)
+                    app.logger.info("Collected response body in test, shutting client down")
                     try await client.shutdown()
+                    app.logger.info("Client shutdown, shutting server down")
                     try await app.server.shutdown()
+                    app.logger.info("Server shutdown, returning response")
                     return TestingHTTPResponse(
                         status: .init(code: Int(response.status.code)),
                         headers: .init(response.headers, splitCookie: false),
@@ -75,6 +80,7 @@ extension Application {
                     )
                 } catch {
                     #warning("We should probably use a service group here and trigger a graceful shutdown")
+                    app.logger.info("Caught error in test", metadata: ["error": "\(String(describing: error))"])
                     try? await client.shutdown()
                     try? await app.server.shutdown()
                     throw error
