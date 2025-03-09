@@ -12,7 +12,7 @@ struct ApplicationTests {
     func testApplicationStop() async throws {
         try await withApp { app in
             app.environment.arguments = ["serve"]
-            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.startup()
             guard let running = app.running else {
                 Issue.record("app started without setting 'running'")
@@ -115,7 +115,7 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
@@ -136,7 +136,7 @@ struct ApplicationTests {
     @Test("Test automatic port picking works")
     func testAutomaticPortPickingWorks() async throws {
         try await withApp { app in
-            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             app.get("hello") { req in
                 "Hello, world!"
@@ -173,7 +173,7 @@ struct ApplicationTests {
     @Test("Test configuration address details reflected after being set")
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
         try await withApp { app in
-            app.serverConfiguration.bindAddress = .hostname("0.0.0.0", port: 0)
+            app.serverConfiguration.address = .hostname("0.0.0.0", port: 0)
 
             struct AddressConfig: Content {
                 let hostname: String?
@@ -197,7 +197,7 @@ struct ApplicationTests {
 
                 #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
                 #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
-                if case let .hostname(_, port) = app.serverConfiguration.bindAddress {
+                if case let .hostname(_, port) = app.serverConfiguration.address {
                     #expect(0 == port)
                 } else {
                     Issue.record("Bind address not right")
@@ -225,7 +225,7 @@ struct ApplicationTests {
             }
 
             app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: req.application.http.server.configuration.hostname, port: req.application.http.server.configuration.port)
+                let config = AddressConfig(hostname: req.application.serverConfiguration.hostname, port: req.application.serverConfiguration.port)
                 return config
             }
 
@@ -235,8 +235,8 @@ struct ApplicationTests {
             }
 
             #expect(app.http.server.shared.localAddress != nil)
-            #expect(app.http.server.configuration.hostname == "0.0.0.0")
-            #expect(app.http.server.configuration.port == 3000)
+            #expect(app.serverConfiguration.hostname == "0.0.0.0")
+            #expect(app.serverConfiguration.port == 3000)
 
             let port = try #require(app.http.server.shared.localAddress?.port)
             let response = try await app.client.get("http://localhost:\(port)/hello")

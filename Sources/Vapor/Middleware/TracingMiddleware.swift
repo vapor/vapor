@@ -51,7 +51,7 @@ public final class TracingMiddleware: Middleware {
                 }
                 
                 attributes["network.protocol.name"] = "http"
-                switch request.application.http.server.configuration.address {
+                switch request.application.serverConfiguration.address {
                     case let .hostname(address, port):
                         attributes["server.address"] = address
                         attributes["server.port"] = port

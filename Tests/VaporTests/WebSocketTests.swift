@@ -10,7 +10,7 @@ struct WebSocketTests {
     @Test("Test WebSocket Client")
     func testWebSocketClient() async throws {
         try await withApp { app in
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             app.webSocket("echo") { req, ws in
                 ws.onText { ws.send($1) }
@@ -39,7 +39,7 @@ struct WebSocketTests {
     @Test("Test WebSocket 404")
     func testWebSocket404() async throws {
         try await withApp { app in
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             app.webSocket("bar") { req, ws in
                 ws.close(promise: nil)
@@ -74,7 +74,7 @@ struct WebSocketTests {
                 ws.send("foo")
                 ws.close(promise: nil)
             }
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             try await app.startup()
 
@@ -98,7 +98,7 @@ struct WebSocketTests {
     @Test("Test Manual Upgrade to WebSocket")
     func testManualUpgradeToWebSocket() async throws {
         try await withApp { app in
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             app.get("foo") { req in
                 return req.webSocket { req, ws in

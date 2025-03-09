@@ -51,7 +51,7 @@ struct RequestTests {
     @Test("Test Streaming Request")
     func testStreamingRequest() async throws {
         try await withApp { app in
-            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             let testValue = String.randomDigits()
 
@@ -95,7 +95,7 @@ struct RequestTests {
     @Test("Test Streaming Request Body Cleanup")
     func testStreamingRequestBodyCleansUp() async throws {
         try await withApp { app in
-            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             let bytesTheServerRead = ManagedAtomic<Int>(0)
 
@@ -131,7 +131,7 @@ struct RequestTests {
     @Test("Test Request Body Backpressure Works with Async Streaming", .disabled())
     func testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
         try await withApp { app in
-            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
             let bytesTheServerSaw = ManagedAtomic<Int>(0)
@@ -222,7 +222,7 @@ struct RequestTests {
     @Test("Test Large Body Collection Doesn't Crash")
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
-            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             app.on(.post, "upload", body: .stream, use: { request async throws -> String  in
                 let buffer = try await request.body.collect(upTo: Int.max)

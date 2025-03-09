@@ -152,8 +152,7 @@ struct ConditionalCompressionTests {
 
         func withCompressionApp(_ block: (Application) async throws -> Void) async throws {
             try await withApp { app in
-                app.http.server.configuration.hostname = "127.0.0.1"
-                app.http.server.configuration.port = 0
+                app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
                 app.http.server.configuration.supportVersions = [.one]
 

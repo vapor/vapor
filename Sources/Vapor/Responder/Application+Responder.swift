@@ -44,11 +44,12 @@ extension Application {
             return factory(self.application)
         }
 
+#warning("Fix report metrics")
         public var `default`: any Vapor.Responder {
             DefaultResponder(
                 routes: self.application.routes,
                 middleware: self.application.middleware.resolve(),
-                reportMetrics: self.application.http.server.configuration.reportMetrics
+                reportMetrics: true//self.application.http.server.configuration.reportMetrics
             )
         }
 

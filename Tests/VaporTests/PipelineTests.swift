@@ -81,7 +81,7 @@ struct PipelineTests {
             }
 
             app.environment.arguments = ["serve"]
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.startup()
 
             guard
@@ -140,7 +140,7 @@ struct PipelineTests {
             }
 
             app.environment.arguments = ["serve"]
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.startup()
 
             guard
@@ -346,7 +346,7 @@ struct PipelineTests {
             }
 
             app.environment.arguments = ["serve"]
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.startup()
 
             guard let localAddress = app.http.server.shared.localAddress,
@@ -421,7 +421,7 @@ struct PipelineTests {
             }
 
             app.environment.arguments = ["serve"]
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.startup()
 
             let channel = try await ClientBootstrap(group: app.eventLoopGroup)

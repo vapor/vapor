@@ -114,7 +114,7 @@ struct ClientTests {
     func testBoilerplateClient() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
-                app.http.server.configuration.port = 0
+                app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
                 app.get("foo") { req async throws -> String in
                     do {
@@ -172,7 +172,7 @@ struct ClientTests {
     // MARK: - Helpers
     func withRemoteApp<T>(_ block: (Application, Int) async throws -> T) async throws -> T {
         let remoteApp = try await Application(.testing)
-        remoteApp.http.server.configuration.port = 0
+        remvoteApp.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
         remoteApp.get("json") { _ in
             SomeJSON()

@@ -130,7 +130,7 @@ struct ServerTests {
         let jsonPayload = ByteBuffer(base64String: payload_2766)! // Payload from #2766
 
         try await withApp { app in
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             // Max out at the smaller payload (.size is of compressed data)
             app.http.server.configuration.requestDecompression = .enabled(limit: .size(200_000))
@@ -164,7 +164,7 @@ struct ServerTests {
     @Test("Test Configure HTTP Decompression Limit")
     func testConfigureHTTPDecompressionLimit() async throws {
         try await withApp { app in
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             let smallOrigString = "Hello, world!"
             let smallBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11Eozy/KSVEEAObG5usNAAAA")! // "Hello, world!"
@@ -206,8 +206,7 @@ struct ServerTests {
         let compressedPayload = ByteBuffer(base64String: "H4sIANRAImYAA6tWSs7PLShKLS5OTVGyUohWyk6tBNJKZYk5palKOgqj/FH+KH+UP8of5RPmx9YCAMfjVAhQBgAA")!
 
         try await withApp { app in
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             app.http.server.configuration.supportVersions = [.one]
             app.http.server.configuration.requestDecompression = .disabled
@@ -305,8 +304,7 @@ struct ServerTests {
             /// To regenerate, copy the above and run `% pbpaste | gzip | base64`. To verify, run `% pbpaste | base64 -d | gzip -d` instead.
             let compressedPayload = ByteBuffer(base64String: "H4sIANRAImYAA6tWSs7PLShKLS5OTVGyUohWyk6tBNJKZYk5palKOgqj/FH+KH+UP8of5RPmx9YCAMfjVAhQBgAA")!
 
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
             serverConfig.certificateVerification = .noHostnameVerification
@@ -409,8 +407,7 @@ struct ServerTests {
         try await withApp { app in
             let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
 
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             app.http.server.configuration.supportVersions = [.one]
             app.http.server.configuration.responseCompression = .disabled
@@ -472,8 +469,7 @@ struct ServerTests {
 
             let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
 
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
             serverConfig.certificateVerification = .noHostnameVerification
@@ -562,8 +558,7 @@ struct ServerTests {
             }
         }
         try await withApp { app in
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             let numRequests = ManagedAtomic<Int>(0)
             let writersStarted = WritersCount()
@@ -696,7 +691,7 @@ struct ServerTests {
     @Test("Test Too Large Port", .bug("https://github.com/vapor/vapor/issues/2245"))
     func testTooLargePort() async throws {
         try await withApp { app in
-            app.http.server.configuration.port = .max
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: .max)
             await #expect(throws: SocketAddressError.unknown(host: "127.0.0.1", port: Int.max)) {
                 try await app.startup()
             }
@@ -773,7 +768,7 @@ struct ServerTests {
                 }))
             }
 
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.environment.arguments = ["serve"]
             try await app.startup()
 
@@ -838,7 +833,7 @@ struct ServerTests {
             "hello, world"
         }
         
-        app.http.server.configuration.port = 0
+        app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
         app.environment.arguments = ["serve"]
         try await app.startup()
         
@@ -987,7 +982,7 @@ struct ServerTests {
                 "world"
             }
 
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.environment.arguments = ["serve"]
             try await app.startup()
 
@@ -1006,8 +1001,7 @@ struct ServerTests {
     @Test("Test Request Body Stream Gets Finalised Even If Client Disappears")
     func testRequestBodyStreamGetsFinalisedEvenIfClientDisappears() async throws {
         try await withApp { app in
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             let serverIsFinalisedPromise = app.eventLoopGroup.any().makePromise(of: Void.self)
             let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
@@ -1055,8 +1049,7 @@ struct ServerTests {
     @Test("Test Request Body Backpressure")
     func testRequestBodyBackpressureWorks() async throws {
         try await withApp { app in
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
             let bytesTheServerSaw = ManagedAtomic<Int>(0)
@@ -1146,8 +1139,7 @@ struct ServerTests {
             let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
             let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
 
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
             serverConfig.certificateVerification = .noHostnameVerification
@@ -1198,8 +1190,7 @@ struct ServerTests {
             let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
             let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
 
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.http.server.configuration.serverName = "Old"
 
             /// We need to disable verification on the client, because the cert we're using has expired
@@ -1268,11 +1259,11 @@ struct ServerTests {
     func testConfigurationHasActualPortAfterStart() async throws {
         try await withApp { app in
             app.environment.arguments = ["serve"]
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.startup()
 
-            #expect(app.http.server.configuration.port != 0)
-            #expect(app.http.server.configuration.port == app.http.server.shared.localAddress?.port)
+            #expect(app.serverConfiguration.port != 0)
+            #expect(app.serverConfiguration.port == app.sharedNewAddress.withLockedValue({ $0 })?.port)
         }
     }
 }

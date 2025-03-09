@@ -35,9 +35,9 @@ extension Application.HTTP {
                 return existing
             } else {
                 let bindAddress: HTTPServerNew.BindAddress
-                if case let .hostname(ip, port) = self.application.serverConfiguration.bindAddress, let port, let ip {
+                if case let .hostname(ip, port) = self.application.serverConfiguration.address, let port, let ip {
                     bindAddress = .hostname(ip, port: port)
-                } else if case let .unixDomainSocket(path) = self.application.serverConfiguration.bindAddress {
+                } else if case let .unixDomainSocket(path) = self.application.serverConfiguration.address {
                     bindAddress = .unixDomainSocket(path: path)
                 } else {
                     bindAddress = .hostname()
