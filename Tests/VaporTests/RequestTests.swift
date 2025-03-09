@@ -51,15 +51,13 @@ struct RequestTests {
     @Test("Test Streaming Request")
     func testStreamingRequest() async throws {
         try await withApp { app in
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
 
             let testValue = String.randomDigits()
 
             app.on(.post, "stream", body: .stream) { req in
                 var receivedBuffer = ByteBuffer()
                 for try await part in req.body {
-                    #expect(part != nil)
                     var part = part
                     receivedBuffer.writeBuffer(&part)
                 }
@@ -68,28 +66,36 @@ struct RequestTests {
             }
 
             app.environment.arguments = ["serve"]
-            try await app.startup()
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await app.startup()
+                }
 
-            let localAddress = try #require(app.http.server.shared.localAddress)
-            let ip = try #require(localAddress.ipAddress)
-            let port = try #require(localAddress.port)
+                #warning("Remove all these task.sleeps")
+                try await Task.sleep(for: .milliseconds(10))
 
-            var request = HTTPClientRequest(url: "http://\(ip):\(port)/stream")
-            request.method = .POST
-            request.body = .stream(testValue.utf8.async, length: .unknown)
+                let localAddress = try #require(app.sharedNewAddress.withLockedValue({ $0 }))
+                let ip = try #require(localAddress.ipAddress)
+                let port = try #require(localAddress.port)
 
-            let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
-            #expect(response.status == .ok)
-            let body = try await response.body.collect(upTo: 1024 * 1024)
-            #expect(body.string == testValue)
+                var request = HTTPClientRequest(url: "http://\(ip):\(port)/stream")
+                request.method = .POST
+                request.body = .stream(testValue.utf8.async, length: .unknown)
+
+                let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
+
+                try await app.server.shutdown()
+            }
         }
     }
 
     @Test("Test Streaming Request Body Cleanup")
     func testStreamingRequestBodyCleansUp() async throws {
         try await withApp { app in
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
 
             let bytesTheServerRead = ManagedAtomic<Int>(0)
 
@@ -122,11 +128,10 @@ struct RequestTests {
 #warning("Try when new server working")
     // TODO: Re-enable once it reliably works and doesn't cause issues with trying to shut the application down
     // This may require some work in Vapor
-//    @Test("Test Request Body Backpressure Works with Async Streaming")
+    @Test("Test Request Body Backpressure Works with Async Streaming", .disabled())
     func testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
         try await withApp { app in
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
 
             let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
             let bytesTheServerSaw = ManagedAtomic<Int>(0)
@@ -217,9 +222,8 @@ struct RequestTests {
     @Test("Test Large Body Collection Doesn't Crash")
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
-            
+            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
+
             app.on(.post, "upload", body: .stream, use: { request async throws -> String  in
                 let buffer = try await request.body.collect(upTo: Int.max)
                 return "Received \(buffer.readableBytes) bytes"
