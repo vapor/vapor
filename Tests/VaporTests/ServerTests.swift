@@ -902,7 +902,7 @@ struct ServerTests {
     @Test("Test Start With Default Hostname Configuration")
     func testStartWithDefaultHostnameConfiguration() async throws {
         try await withApp { app in
-            app.http.server.configuration.address = .hostname(nil, port: nil)
+            app.http.server.configuration.address = .hostname()
             app.environment.arguments = ["serve"]
 
             await #expect(throws: Never.self) {
@@ -926,18 +926,18 @@ struct ServerTests {
         #expect(configuration.hostname == "1.2.3.4")
         #expect(configuration.port == 123)
 
-        configuration = HTTPServerOld.Configuration(address: .hostname("1.2.3.4", port: nil))
-        #expect(configuration.address == .hostname("1.2.3.4", port: nil))
+        configuration = HTTPServerOld.Configuration(address: .hostname("1.2.3.4"))
+        #expect(configuration.address == .hostname("1.2.3.4"))
         #expect(configuration.hostname == "1.2.3.4")
         #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
 
-        configuration = HTTPServerOld.Configuration(address: .hostname(nil, port: 123))
-        #expect(configuration.address == .hostname(nil, port: 123))
+        configuration = HTTPServerOld.Configuration(address: .hostname(port: 123))
+        #expect(configuration.address == .hostname(port: 123))
         #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
         #expect(configuration.port == 123)
 
-        configuration = HTTPServerOld.Configuration(address: .hostname(nil, port: nil))
-        #expect(configuration.address == .hostname(nil, port: nil))
+        configuration = HTTPServerOld.Configuration(address: .hostname())
+        #expect(configuration.address == .hostname())
         #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
         #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
 
@@ -952,7 +952,7 @@ struct ServerTests {
         configuration.hostname = "1.2.3.4"
         #expect(configuration.hostname == "1.2.3.4")
         #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
-        #expect(configuration.address == .hostname("1.2.3.4", port: nil))
+        #expect(configuration.address == .hostname("1.2.3.4"))
 
         configuration.address = .unixDomainSocket(path: "/path")
         #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
@@ -962,17 +962,17 @@ struct ServerTests {
         configuration.port = 123
         #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
         #expect(configuration.port == 123)
-        #expect(configuration.address == .hostname(nil, port: 123))
+        #expect(configuration.address == .hostname(port: 123))
 
         configuration.hostname = "1.2.3.4"
         #expect(configuration.hostname == "1.2.3.4")
         #expect(configuration.port == 123)
         #expect(configuration.address == .hostname("1.2.3.4", port: 123))
 
-        configuration.address = .hostname(nil, port: nil)
+        configuration.address = .hostname()
         #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
         #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
-        #expect(configuration.address == .hostname(nil, port: nil))
+        #expect(configuration.address == .hostname())
     }
 
     @Test("Test Quiesce Keep Alive Connections")

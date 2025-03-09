@@ -67,11 +67,11 @@ public final class ServeCommand: AsyncCommand, Sendable {
         case (.none, .none, .some(let address), .none): // bind ("hostname:port")
             let hostname = address.split(separator: ":").first.flatMap(String.init)
             let port = address.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-            context.application.serverConfiguration.address = .hostname(hostname, port: port)
+            context.application.serverConfiguration.address = .hostname(hostname!, port: port!)
             try await context.application.server.start()
 
         case (let hostname, let port, .none, .none): // hostname / port
-            context.application.serverConfiguration.address = .hostname(hostname, port: port)
+            context.application.serverConfiguration.address = .hostname(hostname!, port: port!)
             try await context.application.server.start()
 
         default: throw Error.incompatibleFlags

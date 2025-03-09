@@ -242,8 +242,8 @@ struct ApplicationTests {
     func testConfigurationAddressDetailsReflectedWhenProvidedThroughServeCommand() async throws {
         try await withApp { app in
             struct AddressConfig: Content {
-                let hostname: String
-                let port: Int
+                let hostname: String?
+                let port: Int?
             }
 
             app.get("hello") { req -> AddressConfig in

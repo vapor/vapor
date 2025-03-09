@@ -32,7 +32,7 @@ public final class HTTPServerOld: Server, Sendable {
             get {
                 switch address {
                 case .hostname(let hostname, _):
-                    return hostname ?? Self.defaultHostname
+                    return hostname
                 default:
                     return Self.defaultHostname
                 }
@@ -42,7 +42,7 @@ public final class HTTPServerOld: Server, Sendable {
                 case .hostname(_, let port):
                     address = .hostname(newValue, port: port)
                 default:
-                    address = .hostname(newValue, port: nil)
+                    address = .hostname(newValue, port: Self.defaultPort)
                 }
             }
         }
@@ -52,7 +52,7 @@ public final class HTTPServerOld: Server, Sendable {
             get {
                 switch address {
                 case .hostname(_, let port):
-                    return port ?? Self.defaultPort
+                    return port
                 default:
                     return Self.defaultPort
                 }
@@ -62,7 +62,7 @@ public final class HTTPServerOld: Server, Sendable {
                 case .hostname(let hostname, _):
                     address = .hostname(hostname, port: newValue)
                 default:
-                    address = .hostname(nil, port: newValue)
+                    address = .hostname(Self.defaultHostname, port: newValue)
                 }
             }
         }
@@ -72,7 +72,7 @@ public final class HTTPServerOld: Server, Sendable {
             let scheme = tlsConfiguration == nil ? "http" : "https"
             switch address {
             case .hostname(let hostname, let port):
-                return "\(scheme)://\(hostname ?? Self.defaultHostname):\(port ?? Self.defaultPort)"
+                return "\(scheme)://\(hostname):\(port)"
             case .unixDomainSocket(let socketPath):
                 return "\(scheme)+unix: \(socketPath)"
             }

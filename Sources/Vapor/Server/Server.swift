@@ -10,6 +10,6 @@ public protocol Server: Sendable {
 }
 
 public enum BindAddress: Equatable, Sendable {
-    case hostname(_ hostname: String?, port: Int?)
+    case hostname(_ hostname: String = "127.0.0.1", port: Int = 8080)
     case unixDomainSocket(path: String)
 }
