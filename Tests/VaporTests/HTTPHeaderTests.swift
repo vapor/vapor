@@ -501,22 +501,20 @@ struct HTTPHeaderTests {
         decoder.dateDecodingStrategy = .iso8601
 
         var headers = HTTPFields()
-        headers[.date] = "\(Date(timeIntervalSinceReferenceDate: 100.0))"
-        headers[.date] = "\(Date(timeIntervalSinceReferenceDate: -100.0))"
+        headers[values: .date] = ["\(Date(timeIntervalSinceReferenceDate: 100.0))", "\(Date(timeIntervalSinceReferenceDate: -100.0))"]
         headers[.connection] = "be-strange"
 
         let encodedHeaders = try encoder.encode(headers)
 
-        #expect(String(decoding: encodedHeaders, as: UTF8.self) == #"[{"name":"date","value":"2001-01-01 00:01:40 +0000"},{"name":"date","value":"2000-12-31 23:58:20 +0000"},{"name":"connection","value":"be-strange"}]"#)
+        #expect(String(decoding: encodedHeaders, as: UTF8.self) == #"[{"name":"Date","value":"2001-01-01 00:01:40 +0000"},{"name":"Date","value":"2000-12-31 23:58:20 +0000"},{"name":"Connection","value":"be-strange"}]"#)
 
         let decodedHeaders = try decoder.decode(HTTPFields.self, from: encodedHeaders)
 
         #expect(decodedHeaders.count == headers.count)
 
-        #warning("Fix")
-//        for ((k1, v1), (k2, v2)) in zip(headers, decodedHeaders) {
-//            #expect(k1 == k2)
-//            #expect(v1 == v2)
-//        }
+        for (field1, field2) in zip(headers, decodedHeaders) {
+            #expect(field1.name == field2.name)
+            #expect(field1.value == field2.value)
+        }
     }
 }
