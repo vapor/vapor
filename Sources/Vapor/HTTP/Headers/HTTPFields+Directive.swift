@@ -37,6 +37,19 @@ extension HTTPFields {
         return values
     }
 
+    func parseFlattenDirectives(name: HTTPField.Name) -> [Directive] {
+        let headers = self[values: name]
+        var values: [Directive] = []
+        let separatorCharacters = getSeparatorCharacters(for: name)
+        for header in headers {
+            var parser = DirectiveParser(string: header)
+            while let directives = parser.nextDirectives(separatorCharacters: separatorCharacters) {
+                values.append(contentsOf: directives)
+            }
+        }
+        return values
+    }
+
     private func getSeparatorCharacters(for headerName:  HTTPField.Name) -> [Character] {
         switch headerName {
         // Headers with dates can't have comma as a separator

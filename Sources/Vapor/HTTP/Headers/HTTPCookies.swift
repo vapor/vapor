@@ -6,9 +6,7 @@ extension HTTPFields {
     /// This accesses the `"Cookie"` header.
     public var cookie: HTTPCookies? {
         get {
-            self.parseDirectives(name: .cookie).first.map {
-                HTTPCookies(directives: $0)
-            }
+            HTTPCookies(directives: self.parseFlattenDirectives(name: .cookie))
         }
         set {
             if let cookieHeader = newValue?.cookieHeader {

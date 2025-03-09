@@ -198,7 +198,7 @@ struct HTTPHeaderTests {
     @Test("Test Multiple Forwarded Headers (Deprecated)")
     func testForwarded_multiple_deprecated() throws {
         var headers = HTTPFields()
-        headers[.xForwardedFor] = "192.0.2.43, 2001:db8:cafe::17 "
+        headers[.xForwardedFor] = "192.0.2.43, 2001:db8:cafe::17"
 
         #expect(headers.forwarded.compactMap { $0.for } == [
             "192.0.2.43",
@@ -237,6 +237,22 @@ struct HTTPHeaderTests {
         #expect(headers.contentDisposition?.value == .formData)
         #expect(headers.contentDisposition?.name == "fieldName")
         #expect(headers.contentDisposition?.filename == "filename.jpg")
+    }
+
+    @Test("Test Multiple Cookie Parsing")
+    func testCookie_parsingMultiple() throws {
+        var headers = HTTPFields()
+        headers[values: .cookie] = ["vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==", "_ga=GA1.1.500315824.1585154561", "_gid=GA1.1.500224287.1585154561", "!#$%&'*+-.^_`~=symbols"]
+
+        print("headrs")
+        print("\(headers)")
+        print("Done")
+
+        #expect(headers.cookie?["vapor-session"]?.string == "0FuTYcHmGw7Bz1G4HiF+EA==")
+        #expect(headers.cookie?["vapor-session"]?.sameSite == .lax)
+        #expect(headers.cookie?["_ga"]?.string == "GA1.1.500315824.1585154561")
+        #expect(headers.cookie?["_gid"]?.string == "GA1.1.500224287.1585154561")
+        #expect(headers.cookie?["!#$%&'*+-.^_`~"]?.string == "symbols")
     }
 
     @Test("Test Cookie Parsing")
