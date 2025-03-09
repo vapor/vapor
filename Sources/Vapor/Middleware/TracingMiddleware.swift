@@ -51,12 +51,17 @@ public final class TracingMiddleware: Middleware {
                 }
                 
                 attributes["network.protocol.name"] = "http"
-                switch request.application.serverConfiguration.address {
-                    case let .hostname(address, port):
-                        attributes["server.address"] = address
-                        attributes["server.port"] = port
-                    case let .unixDomainSocket(path):
-                        attributes["server.address"] = path
+                let address = request.application.sharedNewAddress.withLockedValue({ $0 })
+                switch address {
+                case .v4:
+                    fallthrough
+                case .v6:
+                    attributes["server.address"] = address?.ipAddress
+                    attributes["server.port"] = address?.port
+                case .unixDomainSocket:
+                    attributes["server.address"] = address?.description
+                case .none:
+                    break
                 }
                 attributes["url.query"] = request.url.query
                 
