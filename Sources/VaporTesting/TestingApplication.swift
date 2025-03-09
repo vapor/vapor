@@ -27,17 +27,22 @@ extension Application {
         }
 
         package func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
-            app.serverConfiguration.address = .hostname(self.hostname, port: self.port)
-            return try await withThrowingTaskGroup(of: Void.self) { group in
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                app.serverConfiguration.address = .hostname(self.hostname, port: self.port)
+                let portPromise = Promise<Int>()
+                app.serverConfiguration.onServerRunning = { channel in
+                    guard let port = channel.localAddress?.port else {
+                        portPromise.fail(TestErrors.portNotSet)
+                        return
+                    }
+                    portPromise.complete(port)
+                }
+
                 group.addTask {
                     try await app.server.start()
                 }
 
                 let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
-                
-
-#warning("This is a workaround for the server not being ready yet.")
-                try await Task.sleep(for: .milliseconds(100))
 
                 do {
                     var path = request.url.path
@@ -46,10 +51,7 @@ extension Application {
                     let actualPort: Int
 
                     if self.port == 0 {
-                        guard let portAllocated = app.sharedNewAddress.withLockedValue({ $0 })?.port else {
-                            throw Abort(.internalServerError, reason: "Failed to get port from local address")
-                        }
-                        actualPort = portAllocated
+                        actualPort = try await portPromise.wait()
                     } else {
                         actualPort = self.port
                     }
@@ -120,4 +122,68 @@ extension Application {
             )
         }
     }
+}
+
+import NIOConcurrencyHelpers
+
+/// Promise type.
+package final class Promise<Value: Sendable>: Sendable {
+    enum State {
+        case blocked([CheckedContinuation<Value, any Error>])
+        case unblocked(Value)
+        case failed(any Error)
+    }
+
+    let state: NIOLockedValueBox<State>
+
+    package init() {
+        self.state = .init(.blocked([]))
+    }
+
+    /// wait from promise to be completed
+    package func wait() async throws -> Value {
+        try await withCheckedThrowingContinuation { cont in
+            self.state.withLockedValue { state in
+                switch state {
+                case .blocked(var continuations):
+                    continuations.append(cont)
+                    state = .blocked(continuations)
+                case .unblocked(let value):
+                    cont.resume(returning: value)
+                case .failed(let error):
+                    cont.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    /// complete promise with value
+    package func complete(_ value: Value) {
+        self.state.withLockedValue { state in
+            switch state {
+            case .blocked(let continuations):
+                for cont in continuations {
+                    cont.resume(returning: value)
+                }
+                state = .unblocked(value)
+            default: break
+            }
+        }
+    }
+
+    package func fail(_ error: any Error) {
+        self.state.withLockedValue { state in
+            switch state {
+            case .blocked(let continuations):
+                for cont in continuations {
+                    cont.resume(throwing: error)
+                }
+            default: break
+            }
+        }
+    }
+}
+
+package enum TestErrors: Error {
+    case portNotSet
 }

@@ -15,6 +15,14 @@ struct RequestTests {
         try await withApp { app in
             app.http.client.configuration.redirectConfiguration = .disallow
             app.serverConfiguration.address = .hostname("localhost", port: 0)
+            let portPromise = Promise<Int>()
+            app.serverConfiguration.onServerRunning = { channel in
+                guard let port = channel.localAddress?.port else {
+                    portPromise.fail(TestErrors.portNotSet)
+                    return
+                }
+                portPromise.complete(port)
+            }
 
             app.get("redirect_normal") {
                 $0.redirect(to: "foo", redirectType: .normal)
@@ -34,10 +42,7 @@ struct RequestTests {
                     try await app.server.start()
                 }
 
-                #warning("This is a workaround for the server not being ready yet.")
-                try await Task.sleep(for: .milliseconds(100))
-
-                let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+                let port = try await portPromise.wait()
 
                 #expect(try await app.client.get("http://localhost:\(port)/redirect_normal").status == .seeOther)
                 #expect(try await app.client.get("http://localhost:\(port)/redirect_permanent").status == .movedPermanently)
@@ -53,6 +58,14 @@ struct RequestTests {
     func testStreamingRequest() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            let portPromise = Promise<Int>()
+            app.serverConfiguration.onServerRunning = { channel in
+                guard let port = channel.localAddress?.port else {
+                    portPromise.fail(TestErrors.portNotSet)
+                    return
+                }
+                portPromise.complete(port)
+            }
 
             let testValue = String.randomDigits()
 
@@ -72,14 +85,8 @@ struct RequestTests {
                     try await app.startup()
                 }
 
-                #warning("Remove all these task.sleeps")
-                try await Task.sleep(for: .milliseconds(10))
-
-                let localAddress = try #require(app.sharedNewAddress.withLockedValue({ $0 }))
-                let ip = try #require(localAddress.ipAddress)
-                let port = try #require(localAddress.port)
-
-                var request = HTTPClientRequest(url: "http://\(ip):\(port)/stream")
+                let port = try await portPromise.wait()
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/stream")
                 request.method = .POST
                 request.body = .stream(testValue.utf8.async, length: .unknown)
 
@@ -224,6 +231,14 @@ struct RequestTests {
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            let portPromise = Promise<Int>()
+            app.serverConfiguration.onServerRunning = { channel in
+                guard let port = channel.localAddress?.port else {
+                    portPromise.fail(TestErrors.portNotSet)
+                    return
+                }
+                portPromise.complete(port)
+            }
 
             app.on(.post, "upload", body: .stream, use: { request async throws -> String  in
                 let buffer = try await request.body.collect(upTo: Int.max)
@@ -236,15 +251,9 @@ struct RequestTests {
                     try await app.startup()
                 }
 
-#warning("This is a workaround for the server not being ready yet.")
-                try await Task.sleep(for: .milliseconds(100))
-
-                let localAddress = try #require(app.sharedNewAddress.withLockedValue({ $0 }))
-                let ip = try #require(localAddress.ipAddress)
-                let port = try #require(localAddress.port)
-
+                let port = try await portPromise.wait()
                 let fiftyMB = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
-                var request = HTTPClientRequest(url: "http://\(ip):\(port)/upload")
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/upload")
                 request.method = .POST
                 request.body = .bytes(fiftyMB)
 

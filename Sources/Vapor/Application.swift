@@ -140,8 +140,13 @@ public final class Application: Sendable {
         static let defaultHostname = "127.0.0.1"
         static let defaultPort = 8080
 
-        public init(address: BindAddress) {
+        // Closure to run when the server is running - useful for grabbing
+        // information such as the port
+        public var onServerRunning: @Sendable (_ channel: any Channel) async -> ()
+
+        public init(address: BindAddress, onServerRunning: @Sendable @escaping (_ channel: any Channel) async -> ()) {
             self.address = address
+            self.onServerRunning = onServerRunning
         }
 
         /// Host name the server will bind to.
@@ -202,7 +207,7 @@ public final class Application: Sendable {
     public convenience init(
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
-        configuration: ServerConfiguration = .init(address: .hostname("127.0.0.1", port: 8080)),
+        configuration: ServerConfiguration = .init(address: .hostname("127.0.0.1", port: 8080), onServerRunning: { _ in }),
         services: ServiceConfiguration = .init()
     ) async throws {
         self.init(environment, eventLoopGroupProvider, configuration: configuration, services: services, internal: true)

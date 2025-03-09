@@ -67,6 +67,7 @@ extension Application.HTTP {
                     application.logger.info("Response sent with new Vapor 5 server")
 
                 }, onServerRunning: { channel in
+                    await self.application.serverConfiguration.onServerRunning(channel)
                     self.application.sharedNewAddress.withLockedValue { $0 = channel.localAddress }
                 }) as! HTTPServer<HTTP1Channel>
                 self.application.storage[Key.self] = new

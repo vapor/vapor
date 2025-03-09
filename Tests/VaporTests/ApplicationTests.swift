@@ -116,15 +116,21 @@ struct ApplicationTests {
             }
 
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            let portPromise = Promise<Int>()
+            app.serverConfiguration.onServerRunning = { channel in
+                guard let port = channel.localAddress?.port else {
+                    portPromise.fail(TestErrors.portNotSet)
+                    return
+                }
+                portPromise.complete(port)
+            }
 
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
                     try await app.startup()
                 }
 
-                try await Task.sleep(for: .milliseconds(100))
-
-                let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+                let port = try await portPromise.wait()
                 let res = try await app.client.get("http://localhost:\(port)/hello")
                 #expect(res.body?.string == "Hello, world!")
 
@@ -137,6 +143,14 @@ struct ApplicationTests {
     func testAutomaticPortPickingWorks() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            let portPromise = Promise<Int>()
+            app.serverConfiguration.onServerRunning = { channel in
+                guard let port = channel.localAddress?.port else {
+                    portPromise.fail(TestErrors.portNotSet)
+                    return
+                }
+                portPromise.complete(port)
+            }
 
             app.get("hello") { req in
                 "Hello, world!"
@@ -152,12 +166,12 @@ struct ApplicationTests {
                     }
                 }
 
-                try await Task.sleep(for: .milliseconds(50))
+                let port = try await portPromise.wait()
 
                 let address = try #require(app.sharedNewAddress.withLockedValue({ $0 }))
 
                 let ip = try #require(address.ipAddress)
-                let port = try #require(address.port)
+                #expect(port == address.port)
                 #expect("127.0.0.1" == ip)
                 #expect(port > 0)
                 #expect(port != 8080)
@@ -174,6 +188,14 @@ struct ApplicationTests {
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("0.0.0.0", port: 0)
+            let portPromise = Promise<Int>()
+            app.serverConfiguration.onServerRunning = { channel in
+                guard let port = channel.localAddress?.port else {
+                    portPromise.fail(TestErrors.portNotSet)
+                    return
+                }
+                portPromise.complete(port)
+            }
 
             struct AddressConfig: Content {
                 let hostname: String?
@@ -193,8 +215,7 @@ struct ApplicationTests {
                     }
                 }
 
-                try await Task.sleep(for: .milliseconds(50))
-
+                let waitedPort = try await portPromise.wait()
                 #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
                 #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
                 if case let .hostname(_, port) = app.serverConfiguration.address {
@@ -205,6 +226,7 @@ struct ApplicationTests {
                 }
 
                 let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+                #expect(waitedPort == port)
                 #expect(port > 0)
                 let response = try await app.client.get("http://localhost:\(port)/hello")
                 let returnedConfig = try await response.content.decode(AddressConfig.self)
