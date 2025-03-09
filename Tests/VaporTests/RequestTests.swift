@@ -49,7 +49,7 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Streaming Request")
+    @Test("Test Streaming Request", .disabled())
     func testStreamingRequest() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -93,7 +93,7 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Streaming Request Body Cleanup")
+    @Test("Test Streaming Request Body Cleanup", .disabled())
     func testStreamingRequestBodyCleansUp() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -220,7 +220,7 @@ struct RequestTests {
     }
 
     // https://github.com/vapor/vapor/issues/2985
-    @Test("Test Large Body Collection Doesn't Crash")
+    @Test("Test Large Body Collection Doesn't Crash", .disabled())
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)

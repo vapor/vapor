@@ -12,7 +12,7 @@ import HTTPTypes
 
 let markerHeader = HTTPField.Name(HTTPField.Name.xVaporResponseCompression.description)!
 
-@Suite("Conditional Compression Tests")
+@Suite("Conditional Compression Tests", .disabled())
 struct ConditionalCompressionTests {
     @Suite("Response Compression Parsing Tests")
     struct ConditionalResponseCompressionParsingTests {

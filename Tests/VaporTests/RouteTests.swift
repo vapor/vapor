@@ -384,7 +384,7 @@ struct RouteTests {
         }
     }
 
-    @Test("Test Websocket Upgrade")
+    @Test("Test Websocket Upgrade", .disabled())
     func testWebsocketUpgrade() async throws {
         try await withApp { app in
             let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!

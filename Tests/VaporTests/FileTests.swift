@@ -67,7 +67,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running(port: 0)).test(.get, "/file-stream") { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream") { res async in
                 #expect(res.status == .internalServerError)
             }
         }

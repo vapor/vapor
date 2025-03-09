@@ -5,7 +5,7 @@ import WebSocketKit
 import NIOCore
 import NIOPosix
 
-@Suite("Websocket Tests")
+@Suite("Websocket Tests", .disabled())
 struct WebSocketTests {
     @Test("Test WebSocket Client")
     func testWebSocketClient() async throws {

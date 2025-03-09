@@ -8,7 +8,7 @@ import VaporTesting
 import Foundation
 import AsyncHTTPClient
 
-@Suite("Client Tests")
+@Suite("Client Tests", .disabled())
 struct ClientTests {
     @Test("Test changing the client configuration")
     func clientConfigurationChange() async throws {

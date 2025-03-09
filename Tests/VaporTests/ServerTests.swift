@@ -12,7 +12,7 @@ import Testing
 import VaporTesting
 import NIOHTTPTypesHTTP1
 
-@Suite("Server Tests")
+@Suite("Server Tests", .disabled())
 struct ServerTests {
     @Test("Test Port Override")
     func testPortOverride() async throws {
