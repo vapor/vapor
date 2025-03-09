@@ -2,6 +2,7 @@ import HTTPServerNew
 import NIOCore
 
 extension HTTPServer: Server {
+    #warning("Consider now allowing address to be set in the start")
     public func start(address: Vapor.BindAddress?) async throws {
         if let address {
             guard case var .initial(childChannelSetup, configurtion, onRunning) = self.state else {

@@ -54,7 +54,7 @@ public func withAppResult<T>(_ block: (Application) async throws -> T) async thr
 ///     }
 /// }
 /// ```
-public func withApp(_ block: (Application) async throws -> Void) async throws {
+public func withApp(bindAddress: BindAddress? = nil, _ block: (Application) async throws -> Void) async throws {
     let app = try await Application(.testing)
     do {
         try await block(app)

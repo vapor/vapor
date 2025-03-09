@@ -12,7 +12,7 @@ struct ApplicationTests {
     func testApplicationStop() async throws {
         try await withApp { app in
             app.environment.arguments = ["serve"]
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
             try await app.startup()
             guard let running = app.running else {
                 Issue.record("app started without setting 'running'")
@@ -115,14 +115,14 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
 
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
                     try await app.startup()
                 }
 
-                try await Task.sleep(for: .milliseconds(10))
+                try await Task.sleep(for: .milliseconds(100))
 
                 let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
                 let res = try await app.client.get("http://localhost:\(port)/hello")
@@ -136,8 +136,7 @@ struct ApplicationTests {
     @Test("Test automatic port picking works")
     func testAutomaticPortPickingWorks() async throws {
         try await withApp { app in
-            app.http.server.configuration.hostname = "127.0.0.1"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.bindAddress = .hostname("127.0.0.1", port: 0)
 
             app.get("hello") { req in
                 "Hello, world!"
@@ -153,7 +152,7 @@ struct ApplicationTests {
                     }
                 }
 
-                try await Task.sleep(for: .milliseconds(10))
+                try await Task.sleep(for: .milliseconds(50))
 
                 let address = try #require(app.sharedNewAddress.withLockedValue({ $0 }))
 
@@ -161,6 +160,7 @@ struct ApplicationTests {
                 let port = try #require(address.port)
                 #expect("127.0.0.1" == ip)
                 #expect(port > 0)
+                #expect(port != 8080)
 
                 let response = try await app.client.get("http://localhost:\(port)/hello")
                 #expect("Hello, world!" == response.body?.string)
@@ -170,19 +170,18 @@ struct ApplicationTests {
         }
     }
 
-    @Test("Test configuration address details reflected after being set", .disabled())
+    @Test("Test configuration address details reflected after being set")
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
         try await withApp { app in
-            app.http.server.configuration.hostname = "0.0.0.0"
-            app.http.server.configuration.port = 0
+            app.serverConfiguration.bindAddress = .hostname("0.0.0.0", port: 0)
 
             struct AddressConfig: Content {
-                let hostname: String
-                let port: Int
+                let hostname: String?
+                let port: Int?
             }
 
             app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: req.application.http.server.configuration.hostname, port: req.application.http.server.configuration.port)
+                let config = AddressConfig(hostname: req.application.sharedNewAddress.withLockedValue({ $0 })?.hostname, port: req.application.sharedNewAddress.withLockedValue({ $0 })?.port)
                 return config
             }
 
@@ -198,9 +197,15 @@ struct ApplicationTests {
 
                 #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
                 #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
-                #expect(app.sharedNewAddress.withLockedValue({ $0 })?.port == app.http.server.configuration.port)
+                if case let .hostname(_, port) = app.serverConfiguration.bindAddress {
+                    #expect(0 == port)
+                } else {
+                    Issue.record("Bind address not right")
+                    return
+                }
 
                 let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+                #expect(port > 0)
                 let response = try await app.client.get("http://localhost:\(port)/hello")
                 let returnedConfig = try await response.content.decode(AddressConfig.self)
                 #expect(returnedConfig.hostname == "0.0.0.0")

@@ -120,6 +120,16 @@ public final class Application: Sendable {
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
     public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
+    // TODO: inline this when application is a struct
+    private let _serverConfiguration: NIOLockedValueBox<ServerConfiguration>
+    public var serverConfiguration: ServerConfiguration {
+        get {
+            self._serverConfiguration.withLockedValue { $0 }
+        }
+        set {
+            self._serverConfiguration.withLockedValue { $0 = newValue }
+        }
+    }
 
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
@@ -137,20 +147,29 @@ public final class Application: Sendable {
         }
     }
 
+    public struct ServerConfiguration: Sendable {
+        public var bindAddress: BindAddress
+
+        public init(bindAddress: BindAddress) {
+            self.bindAddress = bindAddress
+        }
+    }
+
     // MARK: - Initialization
 
     public convenience init(
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
+        configuration: ServerConfiguration = .init(bindAddress: .hostname("127.0.0.1", port: 8080)),
         services: ServiceConfiguration = .init()
     ) async throws {
-        self.init(environment, eventLoopGroupProvider, services: services, internal: true)
+        self.init(environment, eventLoopGroupProvider, configuration: configuration, services: services, internal: true)
         await self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
     
     // internal flag here is just to stop the compiler from complaining about duplicates
-    package init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, services: ServiceConfiguration, internal: Bool) {
+    package init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, configuration: ServerConfiguration, services: ServiceConfiguration, internal: Bool) {
         self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
@@ -168,6 +187,7 @@ public final class Application: Sendable {
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
         self.sharedNewAddress = .init(nil)
+        self._serverConfiguration = .init(configuration)
 
         // Service Setup
         if let viewRenderer = services.viewRenderer {

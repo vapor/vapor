@@ -13,7 +13,7 @@ extension Application.Servers.Provider {
 
     public static var httpNew: Self {
         .init {
-            $0.servers.use { $0.http.server.sharedNew }
+            $0.servers.use { $0.http.serverNew.shared }
         }
     }
 }
@@ -22,15 +22,28 @@ extension Application.HTTP {
     public var server: Server {
         .init(application: self.application)
     }
-    
-    public struct Server: Sendable {
+
+    public var serverNew: ServerNew {
+        .init(application: self.application)
+    }
+
+    public struct ServerNew: Sendable {
         let application: Application
 
-        public var sharedNew: HTTPServer<HTTP1Channel> {
-            if let existing = self.application.storage[NewKey.self] {
+        public var shared: HTTPServer<HTTP1Channel> {
+            if let existing = self.application.storage[Key.self] {
                 return existing
             } else {
-                let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: .init(), eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger, responder: { req, responseWriter, channel  in
+                let bindAddress: HTTPServerNew.BindAddress
+                if case let .hostname(ip, port) = self.application.serverConfiguration.bindAddress, let port, let ip {
+                    bindAddress = .hostname(ip, port: port)
+                } else if case let .unixDomainSocket(path) = self.application.serverConfiguration.bindAddress {
+                    bindAddress = .unixDomainSocket(path: path)
+                } else {
+                    bindAddress = .hostname()
+                }
+                let config = HTTPServerNew.ServerConfiguration(address: bindAddress)
+                let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: config, eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger, responder: { req, responseWriter, channel  in
                     application.logger.info("Request received with new Vapor 5 server")
 
                     let vaporRequest = Vapor.Request(
@@ -56,10 +69,18 @@ extension Application.HTTP {
                 }, onServerRunning: { channel in
                     self.application.sharedNewAddress.withLockedValue { $0 = channel.localAddress }
                 }) as! HTTPServer<HTTP1Channel>
-                self.application.storage[NewKey.self] = new
+                self.application.storage[Key.self] = new
                 return new
             }
         }
+
+        struct Key: StorageKey, Sendable {
+            typealias Value = HTTPServer<HTTP1Channel>
+        }
+    }
+
+    public struct Server: Sendable {
+        let application: Application
 
         public var shared: HTTPServerOld {
             if let existing = self.application.storage[Key.self] {
@@ -78,10 +99,6 @@ extension Application.HTTP {
 
         struct Key: StorageKey, Sendable {
             typealias Value = HTTPServerOld
-        }
-
-        struct NewKey: StorageKey, Sendable {
-            typealias Value = HTTPServer<HTTP1Channel>
         }
 
         /// The configuration for the HTTP server.
