@@ -4,7 +4,6 @@ import NIOHTTP1
 import Logging
 import RoutingKit
 import NIOConcurrencyHelpers
-import ServiceContextModule
 import HTTPTypes
 import HTTPServerNew
 
@@ -197,15 +196,6 @@ public final class Request: CustomStringConvertible, Sendable {
         }
     }
     
-    public var serviceContext: ServiceContext {
-        get {
-            self._serviceContext.withLockedValue { $0 }
-        }
-        set {
-            self._serviceContext.withLockedValue { $0 = newValue }
-        }
-    }
-    
     public var body: Body {
         return Body(self)
     }
@@ -245,9 +235,6 @@ public final class Request: CustomStringConvertible, Sendable {
     /// - Warning: A futures-based route handler **MUST** return an `EventLoopFuture` bound to this event loop.
     ///  If this is difficult or awkward to guarantee, use `EventLoopFuture.hop(to:)` to jump to this event loop.
     public let eventLoop: any EventLoop
-    
-    /// Whether Vapor should automatically propagate trace spans for this request. See `Application.traceAutoPropagation`
-    let traceAutoPropagation: Bool
     
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
@@ -293,7 +280,6 @@ public final class Request: CustomStringConvertible, Sendable {
     let requestBox: NIOLockedValueBox<RequestBox>
     private let _storage: NIOLockedValueBox<Storage>
     private let _logger: NIOLockedValueBox<Logger>
-    private let _serviceContext: NIOLockedValueBox<ServiceContext>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let newBody: NIOLockedValueBox<HTTPServerNew.RequestBody?>
 
@@ -349,8 +335,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var logger = logger
         logger[metadataKey: "request-id"] = .string(requestId)
         self._logger = .init(logger)
-        self._serviceContext = .init(.topLevel)
-        
+
         let storageBox = RequestBox(
             method: method,
             url: url,
@@ -364,24 +349,11 @@ public final class Request: CustomStringConvertible, Sendable {
         self.requestBox = .init(storageBox)
         self.id = requestId
         self.application = application
-        self.traceAutoPropagation = application.traceAutoPropagation
         
         self.remoteAddress = remoteAddress
         self.eventLoop = eventLoop
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
         self.newBody = .init(nil)
-    }
-    
-    /// Automatically restores tracing serviceContext around the provided closure
-    #warning("Remove")
-    func propagateTracingIfEnabled<T>(_ closure: () async throws -> T) async rethrows -> T {
-        if self.traceAutoPropagation {
-            return try await ServiceContext.withValue(self.serviceContext) {
-                try await closure()
-            }
-        } else {
-            return try await closure()
-        }
     }
 }

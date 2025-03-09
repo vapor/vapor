@@ -122,7 +122,6 @@ struct MiddlewareTests2 {
     @Test("Test Tracing Middleware")
     func testTracingMiddleware() async throws {
         try await withApp { app in
-            app.traceAutoPropagation = true
             let tracer = TestTracer()
             InstrumentationSystem.bootstrap(tracer)
 
@@ -140,10 +139,8 @@ struct MiddlewareTests2 {
             ).grouped(
                 TestServiceContextMiddleware()
             ).get("testTracing") { req -> String in
-                // Validates that TracingMiddleware sets the serviceContext
-                #expect(req.serviceContext != nil)
                 // Validates that TracingMiddleware exposes header extraction to backend
-                #expect(req.serviceContext.extracted == "extracted")
+                #expect(ServiceContext.current?.extracted == "extracted")
                 // Validates that the span's service context is propagated into the
                 // Task.local storage of the responder closure, thereby ensuring that
                 // spans created in the closure are nested under the request span.

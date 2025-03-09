@@ -37,18 +37,6 @@ public final class Application: Sendable {
         }
     }
     
-    /// If enabled, tracing propagation is automatically handled by restoring & setting `request.serviceContext` automatically across Vapor-internal EventLoopFuture boundaries.
-    /// If disabled, traces will not automatically nest, and the user should restore & set `request.serviceContext` manually where needed.
-    /// There are performance implications to enabling this feature.
-    public var traceAutoPropagation: Bool {
-        get {
-            self._traceAutoPropagation.withLockedValue { $0 }
-        }
-        set {
-            self._traceAutoPropagation.withLockedValue { $0 = newValue }
-        }
-    }
-    
     public struct Lifecycle: Sendable {
         var handlers: [any LifecycleHandler]
         init() {
@@ -116,7 +104,6 @@ public final class Application: Sendable {
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _logger: NIOLockedValueBox<Logger>
-    private let _traceAutoPropagation: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
     public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
@@ -235,7 +222,6 @@ public final class Application: Sendable {
         self._didShutdown = .init(false)
         let logger = Logger(label: "codes.vapor.application")
         self._logger = .init(logger)
-        self._traceAutoPropagation = .init(false)
         self._storage = .init(.init(logger: logger))
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
