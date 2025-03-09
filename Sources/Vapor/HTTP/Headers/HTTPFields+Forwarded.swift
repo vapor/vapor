@@ -20,7 +20,9 @@ extension HTTPFields {
 
             // Add values from deprecated headers.
             let bys = self[values: .via]
-            let fors = self[values: .xForwardedFor]
+            // This can have multiple values
+            let fors = self.parseFlattenDirectives(name: .xForwardedFor).map { String($0.value) }
+
             let hosts = self[values: .xForwardedHost]
             let protos = self[values: .xForwardedProto]
             for i in 0..<[bys.count, fors.count, hosts.count, protos.count].max()! {

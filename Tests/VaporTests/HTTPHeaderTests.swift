@@ -206,6 +206,17 @@ struct HTTPHeaderTests {
         ])
     }
 
+    @Test("Test Multiple Forwarded Headers Set Via HTTP Types (Deprecated)")
+    func testForwarded_multiple_deprecated_http_types() throws {
+        var headers = HTTPFields()
+        headers[values: .xForwardedFor] = ["192.0.2.43", "2001:db8:cafe::17"]
+
+        #expect(headers.forwarded.compactMap { $0.for } == [
+            "192.0.2.43",
+            "2001:db8:cafe::17",
+        ])
+    }
+
     @Test("Test Forwarded Header Serialization")
     func testForwarded_serialization() throws {
         var headers = HTTPFields()
