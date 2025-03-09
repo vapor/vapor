@@ -73,7 +73,7 @@ extension HTTPFields {
 
         /// Creates a new `CacheControl`.
         public init(
-            mustRevalidated: Bool = false,
+            mustRevalidate: Bool = false,
             noCache: Bool = false,
             noStore: Bool = false,
             noTransform: Bool = false,
@@ -89,7 +89,7 @@ extension HTTPFields {
             staleWhileRevalidate: Int? = nil,
             staleIfError: Int? = nil
         ) {
-            self.mustRevalidate = mustRevalidated
+            self.mustRevalidate = mustRevalidate
             self.noCache = noCache
             self.noStore = noStore
             self.noTransform = noTransform
