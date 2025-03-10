@@ -17,7 +17,8 @@ extension Application {
             }
         }
 
-        final class Storage: Sendable {
+        // We can make this unchecked as we're only storing a sendable closure and mutation is protected by the lock
+        final class Storage: @unchecked Sendable {
             // At first glance, one could think that using a
             // `NIOLockedValueBox<(@Sendable (Application) -> ServiceType)?>` for `makeService` would be sufficient
             // here. However, for some reason, caling `self.storage.makeService.withLockedValue({ $0 })` repeatedly in
