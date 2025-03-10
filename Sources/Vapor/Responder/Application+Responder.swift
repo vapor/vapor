@@ -44,7 +44,6 @@ extension Application {
             return factory(self.application)
         }
 
-#warning("Fix report metrics")
         public var `default`: any Vapor.Responder {
             DefaultResponder(
                 routes: self.application.routes,
