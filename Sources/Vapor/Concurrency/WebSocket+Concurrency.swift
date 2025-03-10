@@ -8,7 +8,6 @@ import Foundation
 extension Request {
 
     /// Upgrades an existing request to a websocket connection
-    @preconcurrency
     public func webSocket(
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
         shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPFields?) = { _ in [:] },
@@ -44,7 +43,6 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
-    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: PathComponent...,
@@ -64,7 +62,6 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
-    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: [PathComponent],
@@ -79,7 +76,6 @@ extension RoutesBuilder {
 }
 
 extension WebSocket {
-    @preconcurrency
     public static func connect(
         to url: String,
         headers: HTTPFields = [:],
@@ -99,7 +95,6 @@ extension WebSocket {
         )
     }
 
-    @preconcurrency
     public static func connect(
         to url: URL,
         headers: HTTPFields = [:],
@@ -120,7 +115,6 @@ extension WebSocket {
         )
     }
 
-    @preconcurrency
     public static func connect(
         scheme: String = "ws",
         host: String,

@@ -3,7 +3,7 @@ import WebSocketKit
 import HTTPTypes
 
 extension Request {
-     @preconcurrency public func webSocket(
+      public func webSocket(
          maxFrameSize: WebSocketMaxFrameSize = .`default`,
          shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPFields?>) = {
              $0.eventLoop.makeSucceededFuture([:])

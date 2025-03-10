@@ -111,7 +111,6 @@ public final class HTTPServerOld: Server, Sendable {
 
         /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
         /// This is the same as `NIOSSLCustomVerificationCallback` but just marked as `Sendable`
-        @preconcurrency
         public var customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)?
         
         /// The number of incoming TCP connections to accept per "tick" (i.e. each time through the server's event loop).

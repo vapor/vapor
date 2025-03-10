@@ -137,7 +137,6 @@ private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChanne
 }
 
 /// Conformance for any struct that performs an HTTP Upgrade
-@preconcurrency
 public protocol Upgrader: Sendable {
     func applyUpgrade(req: Request, res: Response) -> any HTTPServerProtocolUpgrader
 }
@@ -148,7 +147,7 @@ public struct WebSocketUpgrader: Upgrader, Sendable {
     var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPFields?>)
     var onUpgrade: @Sendable (WebSocket) -> ()
     
-    @preconcurrency public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPFields?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
+    public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPFields?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
         self.shouldUpgrade = shouldUpgrade
         self.onUpgrade = onUpgrade

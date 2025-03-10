@@ -2,7 +2,6 @@ import Logging
 import ConsoleKit
 
 extension LoggingSystem {
-    @preconcurrency
     public static func bootstrap(from environment: inout Environment, _ factory: @Sendable (Logger.Level) -> (@Sendable (String) -> any LogHandler)) throws {
         let level = try Logger.Level.detect(from: &environment)
 

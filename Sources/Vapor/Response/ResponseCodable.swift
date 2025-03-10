@@ -91,16 +91,4 @@ extension Content {
     }
 }
 
-#warning("Clean up")
-//extension EventLoopFuture: ResponseEncodable where Value: ResponseEncodable {
-//    // See `ResponseEncodable`.
-//    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-//        return self.flatMap { t in
-//            return request.propagateTracingIfEnabled {
-//                t.encodeResponse(for: request)
-//            }
-//        }
-//    }
-//}
-
 internal let staticStringHeaders: HTTPFields = [.contentType: "text/plain; charset=utf-8"]

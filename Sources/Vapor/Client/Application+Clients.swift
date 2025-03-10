@@ -16,7 +16,7 @@ extension Application {
         public struct Provider {
             let run: @Sendable (Application) -> ()
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -43,7 +43,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        @preconcurrency public func use(_ makeClient: @Sendable @escaping (Application) -> (any Client)) {
+        public func use(_ makeClient: @Sendable @escaping (Application) -> (any Client)) {
             self.storage.makeClient.withLockedValue { $0 = .init(factory: makeClient) }
         }
 
