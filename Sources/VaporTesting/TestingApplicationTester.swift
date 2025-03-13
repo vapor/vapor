@@ -27,7 +27,6 @@ extension Application: TestingApplicationTester {
 }
 
 extension TestingApplicationTester {
-    @discardableResult
     public func test(
         _ method: HTTPRequest.Method,
         _ path: String,
@@ -35,7 +34,7 @@ extension TestingApplicationTester {
         body: ByteBuffer? = nil,
         sourceLocation: SourceLocation = #_sourceLocation,
         afterResponse: (TestingHTTPResponse) async throws -> ()
-    ) async throws -> any TestingApplicationTester {
+    ) async throws {
         try await self.test(
             method,
             path,
@@ -47,7 +46,6 @@ extension TestingApplicationTester {
         )
     }
 
-    @discardableResult
     public func test(
         _ method: HTTPRequest.Method,
         _ path: String,
@@ -56,7 +54,7 @@ extension TestingApplicationTester {
         sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in },
         afterResponse: (TestingHTTPResponse) async throws -> () = { _ in }
-    ) async throws -> any TestingApplicationTester {
+    ) async throws {
         var request = TestingHTTPRequest(
             method: method,
             url: .init(path: path),
@@ -72,7 +70,6 @@ extension TestingApplicationTester {
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
         }
-        return self
     }
 
     public func sendRequest(

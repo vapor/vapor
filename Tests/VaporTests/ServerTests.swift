@@ -649,7 +649,7 @@ struct ServerTests {
 
             var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
             buffer.writeBytes(payload)
-            try await app.testing(method: .running(port: 0)).test(.post, "payload", body: buffer) { res in
+            try await app.testing(method: .running).test(.post, "payload", body: buffer) { res in
                 #expect(res.status == .ok)
             }
         }
@@ -665,7 +665,7 @@ struct ServerTests {
                 return HTTPStatus.ok
             }
 
-            try await app.testing(method: .running(port: 0)).test(.post, "drain", beforeRequest: { req in
+            try await app.testing(method: .running).test(.post, "drain", beforeRequest: { req in
                 try req.content.encode(["hello": "world"])
             }, afterResponse: { res in
                 #expect(res.status == .ok)
@@ -726,11 +726,13 @@ struct ServerTests {
             var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)
             buffer.writeString(String(repeating: "a", count: 10_000_000))
 
-            try await app.testing(method: .running(port: 0)).test(.post, "upload", beforeRequest: { req in
+            try await app.testing(method: .running).test(.post, "upload", beforeRequest: { req in
                 req.body = buffer
             }, afterResponse: { res in
                 #expect(res.status == .badRequest)
-            }).test(.post, "upload", beforeRequest: { req in
+            })
+
+            try await app.testing(method: .running).test(.post, "upload", beforeRequest: { req in
                 req.body = buffer
                 req.headers[.init("test")!] = "a"
             }, afterResponse: { res in

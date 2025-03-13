@@ -327,7 +327,9 @@ struct FileTests {
 
             try await app.testing().test(.get, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
                 #expect(res.status == .forbidden)
-            }.test(.get, "Utilities/foo.txt") { res async in
+            }
+
+            try await app.testing().test(.get, "Utilities/foo.txt") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "bar\n")
             }
@@ -343,7 +345,9 @@ struct FileTests {
             try await app.testing().test(.get, "Utilities/") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "<h1>Root Default</h1>\n")
-            }.test(.get, "Utilities/SubUtilities/") { res async in
+            }
+
+            try await app.testing().test(.get, "Utilities/SubUtilities/") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "<h1>Subdirectory Default</h1>\n")
             }
@@ -359,7 +363,9 @@ struct FileTests {
             try await app.testing().test(.get, "Utilities/") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "<h1>Root Default</h1>\n")
-            }.test(.get, "Utilities/SubUtilities/") { res async in
+            }
+
+            try await app.testing().test(.get, "Utilities/SubUtilities/") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "<h1>Root Default</h1>\n")
             }
@@ -392,7 +398,9 @@ struct FileTests {
 
             try await app.testing().test(.get, "Utilities") { res in
                 #expect(res.status == .movedPermanently)
-            }.test(.get, "Utilities/SubUtilities") { res in
+            }
+
+            try await app.testing().test(.get, "Utilities/SubUtilities") { res in
                 #expect(res.status == .movedPermanently)
             }
         }
@@ -413,10 +421,14 @@ struct FileTests {
             try await app.testing().test(.get, "Utilities?vaporTest=test") { res in
                 #expect(res.status == .movedPermanently)
                 #expect(res.headers[.location] == "/Utilities/?vaporTest=test")
-            }.test(.get, "Utilities/SubUtilities?vaporTest=test") { res in
+            }
+
+            try await app.testing().test(.get, "Utilities/SubUtilities?vaporTest=test") { res in
                 #expect(res.status == .movedPermanently)
                 #expect(res.headers[.location] == "/Utilities/SubUtilities/?vaporTest=test")
-            }.test(.get, "Utilities/SubUtilities?vaporTest=test#vapor") { res in
+            }
+
+            try await app.testing().test(.get, "Utilities/SubUtilities?vaporTest=test#vapor") { res in
                 #expect(res.status == .movedPermanently)
                 #expect(res.headers[.location] == "/Utilities/SubUtilities/?vaporTest=test#vapor")
             }
@@ -437,7 +449,9 @@ struct FileTests {
 
             try await app.testing().test(.get, "Utilities") { res in
                 #expect(res.status == .notFound)
-            }.test(.get, "Utilities/SubUtilities") { res in
+            }
+
+            try await app.testing().test(.get, "Utilities/SubUtilities") { res in
                 #expect(res.status == .notFound)
             }
         }

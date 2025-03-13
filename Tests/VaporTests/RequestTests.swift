@@ -263,7 +263,7 @@ struct RequestTests {
                 return peerAddress.description
             }
 
-            try await app.testing(method: .running(port: 0)).test(.get, "remote") { res in
+            try await app.testing(method: .running).test(.get, "remote") { res in
                 #expect(res.body.string == "[IPv4]192.0.2.60:80")
             }
         }
@@ -280,7 +280,7 @@ struct RequestTests {
                 return peerAddress.description
             }
 
-            try await app.testing(method: .running(port: 0)).test(.get, "remote") { res in
+            try await app.testing(method: .running).test(.get, "remote") { res in
                 #expect(res.body.string == "[IPv4]5.6.7.8:80")
             }
         }
@@ -333,7 +333,7 @@ struct RequestTests {
                 }
             }
 
-            try await app.testing(method: .running(port: 0)).test(.get, "remote", beforeRequest: { req in
+            try await app.testing(method: .running).test(.get, "remote", beforeRequest: { req in
                 req.headers[.xRequestId] = "test"
             }, afterResponse: { res in
                 #expect(res.body.string == "test")
@@ -348,7 +348,7 @@ struct RequestTests {
                 $0.remoteAddress?.description ?? "n/a"
             }
 
-            try await app.testing(method: .running(port: 0)).test(.get, "remote") { res in
+            try await app.testing(method: .running).test(.get, "remote") { res in
                 #expect(res.body.string.contains("IP"))
             }
         }

@@ -93,7 +93,9 @@ struct ErrorTests {
                 #expect(res.status == .internalServerError)
                 let abort = try await res.content.decode(AbortResponse.self)
                 #expect(abort.reason == "Foo")
-            }.test(.post, "foo", beforeRequest: { req in
+            }
+
+            try await app.testing().test(.post, "foo", beforeRequest: { req in
                 try req.content.encode(Foo(bar: 42))
             }, afterResponse: { res in
                 #expect(res.status == .internalServerError)
