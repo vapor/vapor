@@ -115,26 +115,9 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            let portPromise = Promise<Int>()
-            app.serverConfiguration.onServerRunning = { channel in
-                guard let port = channel.localAddress?.port else {
-                    portPromise.fail(TestErrors.portNotSet)
-                    return
-                }
-                portPromise.complete(port)
-            }
-
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask {
-                    try await app.startup()
-                }
-
-                let port = try await portPromise.wait()
+            try await withRunningApp(app: app) { port in
                 let res = try await app.client.get("http://localhost:\(port)/hello")
                 #expect(res.body?.string == "Hello, world!")
-
-                try await app.server.shutdown()
             }
         }
     }
@@ -142,44 +125,23 @@ struct ApplicationTests {
     @Test("Test automatic port picking works")
     func testAutomaticPortPickingWorks() async throws {
         try await withApp { app in
-            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            let portPromise = Promise<Int>()
-            app.serverConfiguration.onServerRunning = { channel in
-                guard let port = channel.localAddress?.port else {
-                    portPromise.fail(TestErrors.portNotSet)
-                    return
-                }
-                portPromise.complete(port)
-            }
-
             app.get("hello") { req in
                 "Hello, world!"
             }
 
             #expect(app.sharedNewAddress.withLockedValue({ $0 }) == nil)
 
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask {
-                    app.environment.arguments = ["serve"]
-                    await #expect(throws: Never.self) {
-                        try await app.startup()
-                    }
-                }
-
-                let port = try await portPromise.wait()
-
+            try await withRunningApp(app: app, portToUse: 0) { port in
                 let address = try #require(app.sharedNewAddress.withLockedValue({ $0 }))
 
                 let ip = try #require(address.ipAddress)
                 #expect(port == address.port)
-                #expect("127.0.0.1" == ip)
+                #expect("127.0.0.1" == ip || "::1" == ip)
                 #expect(port > 0)
                 #expect(port != 8080)
 
                 let response = try await app.client.get("http://localhost:\(port)/hello")
                 #expect("Hello, world!" == response.body?.string)
-
-                try await app.server.shutdown()
             }
         }
     }

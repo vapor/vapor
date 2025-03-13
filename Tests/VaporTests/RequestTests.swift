@@ -14,15 +14,6 @@ struct RequestTests {
     func testRedirect() async throws {
         try await withApp { app in
             app.http.client.configuration.redirectConfiguration = .disallow
-            app.serverConfiguration.address = .hostname("localhost", port: 0)
-            let portPromise = Promise<Int>()
-            app.serverConfiguration.onServerRunning = { channel in
-                guard let port = channel.localAddress?.port else {
-                    portPromise.fail(TestErrors.portNotSet)
-                    return
-                }
-                portPromise.complete(port)
-            }
 
             app.get("redirect_normal") {
                 $0.redirect(to: "foo", redirectType: .normal)
@@ -37,19 +28,11 @@ struct RequestTests {
                 $0.redirect(to: "foo", redirectType: .permanentPost)
             }
 
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask {
-                    try await app.server.start()
-                }
-
-                let port = try await portPromise.wait()
-
+            try await withRunningApp(app: app) { port throws in
                 #expect(try await app.client.get("http://localhost:\(port)/redirect_normal").status == .seeOther)
                 #expect(try await app.client.get("http://localhost:\(port)/redirect_permanent").status == .movedPermanently)
                 #expect(try await app.client.post("http://localhost:\(port)/redirect_temporary").status == .temporaryRedirect)
                 #expect(try await app.client.post("http://localhost:\(port)/redirect_permanentPost").status == .permanentRedirect)
-
-                try await app.server.shutdown()
             }
         }
     }
@@ -57,16 +40,6 @@ struct RequestTests {
     @Test("Test Streaming Request", .disabled())
     func testStreamingRequest() async throws {
         try await withApp { app in
-            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            let portPromise = Promise<Int>()
-            app.serverConfiguration.onServerRunning = { channel in
-                guard let port = channel.localAddress?.port else {
-                    portPromise.fail(TestErrors.portNotSet)
-                    return
-                }
-                portPromise.complete(port)
-            }
-
             let testValue = String.randomDigits()
 
             app.on(.post, "stream", body: .stream) { req in
@@ -79,13 +52,7 @@ struct RequestTests {
                 return string
             }
 
-            app.environment.arguments = ["serve"]
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask {
-                    try await app.startup()
-                }
-
-                let port = try await portPromise.wait()
+            try await withRunningApp(app: app) { port in
                 var request = HTTPClientRequest(url: "http://localhost:\(port)/stream")
                 request.method = .POST
                 request.body = .stream(testValue.utf8.async, length: .unknown)
@@ -94,8 +61,6 @@ struct RequestTests {
                 #expect(response.status == .ok)
                 let body = try await response.body.collect(upTo: 1024 * 1024)
                 #expect(body.string == testValue)
-
-                try await app.server.shutdown()
             }
         }
     }
@@ -230,28 +195,12 @@ struct RequestTests {
     @Test("Test Large Body Collection Doesn't Crash", .disabled())
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
-            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            let portPromise = Promise<Int>()
-            app.serverConfiguration.onServerRunning = { channel in
-                guard let port = channel.localAddress?.port else {
-                    portPromise.fail(TestErrors.portNotSet)
-                    return
-                }
-                portPromise.complete(port)
-            }
-
             app.on(.post, "upload", body: .stream, use: { request async throws -> String  in
                 let buffer = try await request.body.collect(upTo: Int.max)
                 return "Received \(buffer.readableBytes) bytes"
             })
-            
-            app.environment.arguments = ["serve"]
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask {
-                    try await app.startup()
-                }
 
-                let port = try await portPromise.wait()
+            try await withRunningApp(app: app) { port in
                 let fiftyMB = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
                 var request = HTTPClientRequest(url: "http://localhost:\(port)/upload")
                 request.method = .POST
@@ -263,8 +212,6 @@ struct RequestTests {
                     let body = try await response.body.collect(upTo: 1024 * 1024)
                     #expect(body.string == "Received \(fiftyMB.readableBytes) bytes")
                 }
-
-                try await app.server.shutdown()
             }
         }
     }

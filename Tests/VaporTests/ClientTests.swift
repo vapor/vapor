@@ -191,36 +191,13 @@ struct ClientTests {
             try await $0.eventLoop.scheduleTask(in: .seconds(1)) { SomeJSON() }.futureResult.get()
         }
 
-        let portPromise = Promise<Int>()
-        remoteApp.serverConfiguration.onServerRunning = { channel in
-            guard let port = channel.localAddress?.port else {
-                portPromise.fail(TestErrors.portNotSet)
-                return
-            }
-            portPromise.complete(port)
-        }
-
-        return try await withThrowingTaskGroup(of: Void.self) { group in
-            try await remoteApp.boot()
-            group.addTask {
-                try await remoteApp.server.start()
-            }
-
-            let remotePort = try await portPromise.wait()
-
-            let result: T
-            do {
-                result = try await block(remoteApp, remotePort)
-            } catch {
-                try? await remoteApp.server.shutdown()
-                try? await remoteApp.shutdown()
-                throw error
-            }
-            #warning("Shutting down the app should also shutdown the server")
-            try await remoteApp.server.shutdown()
-            try await remoteApp.shutdown()
+        let result = try await withRunningApp(app: remoteApp) { port in
+            let result = try await block(remoteApp, port)
             return result
         }
+
+        try await remoteApp.shutdown()
+        return result
     }
 }
 
