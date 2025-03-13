@@ -144,7 +144,7 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
-            if let newBody = self.request.newBody.withLockedValue({ $0 }) {
+            if let newBody = self.request.newBodyStorage.withLockedValue({ $0 }) {
                 let buffer = try await newBody.collect(upTo: request.application.routes.defaultMaxBodySize.value)
                 return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
             }
@@ -199,7 +199,12 @@ public final class Request: CustomStringConvertible, Sendable {
     public var body: Body {
         return Body(self)
     }
-    
+
+    #warning("Implement body size, dont' force unwrap")
+    public var newBody: NewBody {
+        NewBody(underlying: self.newBodyStorage.withLockedValue({ $0! }), maxBodySize: 16*1024)
+    }
+
     internal enum BodyStorage: Sendable {
         case none
         case collected(ByteBuffer)
@@ -281,7 +286,7 @@ public final class Request: CustomStringConvertible, Sendable {
     private let _storage: NIOLockedValueBox<Storage>
     private let _logger: NIOLockedValueBox<Logger>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
-    internal let newBody: NIOLockedValueBox<HTTPServerNew.RequestBody?>
+    internal let newBodyStorage: NIOLockedValueBox<HTTPServerNew.RequestBody?>
 
     public convenience init(
         application: Application,
@@ -354,6 +359,6 @@ public final class Request: CustomStringConvertible, Sendable {
         self.eventLoop = eventLoop
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
-        self.newBody = .init(nil)
+        self.newBodyStorage = .init(nil)
     }
 }

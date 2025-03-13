@@ -59,7 +59,7 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Client beforeSend()", .disabled())
+    @Test("Test Client beforeSend()")
     func testClientBeforeSend() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
@@ -74,7 +74,7 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Client Content", .disabled())
+    @Test("Test Client Content")
     func testClientContent() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
@@ -176,7 +176,7 @@ struct ClientTests {
                 $0[$1.name.canonicalName] = $1.value
             }
 
-            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
+            guard let json:[String:Any] = try await JSONSerialization.jsonObject(with: req.newBody.data!) as? [String:Any] else {
                 throw Abort(.badRequest)
             }
 

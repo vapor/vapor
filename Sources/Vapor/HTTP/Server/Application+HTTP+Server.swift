@@ -57,7 +57,7 @@ extension Application.HTTP {
                         byteBufferAllocator: application.byteBufferAllocator,
                         on: application.eventLoopGroup.any()
                     )
-                    vaporRequest.newBody.withLockedValue { $0 = req.body }
+                    vaporRequest.newBodyStorage.withLockedValue { $0 = req.body }
 
                     let vaporResponse = try await application.responder.current.respond(to: vaporRequest)
                     let httpResponse = HTTPResponse(status: vaporResponse.status, headerFields: vaporResponse.headers)

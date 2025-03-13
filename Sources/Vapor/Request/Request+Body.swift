@@ -1,6 +1,18 @@
 import NIOCore
+import HTTPServerNew
 
 extension Request {
+    public struct NewBody: Sendable {
+        let underlying: RequestBody
+        let maxBodySize: Int
+
+        public var data: ByteBuffer? {
+            get async throws {
+                try await self.underlying.collect(upTo: maxBodySize)
+            }
+        }
+    }
+
     public struct Body: CustomStringConvertible, Sendable {
         let request: Request
         
