@@ -85,9 +85,9 @@ public func withApp(address: BindAddress? = nil, _ block: (Application) async th
 ///    }
 /// }
 /// ```
-public func withRunningApp<T>(app: Application, portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
+public func withRunningApp<T>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
     return try await withThrowingTaskGroup(of: Void.self) { group in
-        app.serverConfiguration.address = .hostname("localhost", port: portToUse)
+        app.serverConfiguration.address = .hostname(hostname, port: portToUse)
         let portPromise = Promise<Int>()
         app.serverConfiguration.onServerRunning = { channel in
             guard let port = channel.localAddress?.port else {
@@ -97,7 +97,6 @@ public func withRunningApp<T>(app: Application, portToUse: Int = 0, _ block: (In
             portPromise.complete(port)
         }
         group.addTask {
-            app.logger.info("Will attempt to start server")
             try await app.server.start()
         }
 

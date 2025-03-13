@@ -27,44 +27,13 @@ extension Application {
         }
 
         package func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
-            app.logger.info("Will perform test in Live app")
-            return try await withThrowingTaskGroup(of: Void.self) { group in
-                app.serverConfiguration.address = .hostname(self.hostname, port: self.port)
-                let portPromise = Promise<Int>()
-                app.serverConfiguration.onServerRunning = { channel in
-                    guard let port = channel.localAddress?.port else {
-                        portPromise.fail(TestErrors.portNotSet)
-                        return
-                    }
-                    portPromise.complete(port)
-                }
-
-
-                group.addTask {
-                    app.logger.info("Will attempt to start server")
-                    do {
-                        try await app.server.start()
-                    } catch {
-                        print("tsentrsintersntirsteni")
-                    }
-                }
-
-                let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
+            return try await withRunningApp(app: app, hostname: self.hostname, portToUse: self.port) { port in
+                let client = HTTPClient.shared
 
                 do {
                     var path = request.url.path
                     path = path.hasPrefix("/") ? path : "/\(path)"
-
-                    let actualPort: Int
-
-                    app.logger.info("Will wait for port")
-                    if self.port == 0 {
-                        actualPort = try await portPromise.wait()
-                    } else {
-                        actualPort = self.port
-                    }
-
-                    var url = "http://\(self.hostname):\(actualPort)\(path)"
+                    var url = "http://\(self.hostname):\(port)\(path)"
                     if let query = request.url.query {
                         url += "?\(query)"
                     }
@@ -72,16 +41,9 @@ extension Application {
                     clientRequest.method = .init(request.method)
                     clientRequest.headers = .init(request.headers)
                     clientRequest.body = .bytes(request.body)
-                    app.logger.info("Sending request in test")
                     let response = try await client.execute(clientRequest, timeout: .seconds(30))
-                    app.logger.info("Received response in test")
                     // Collect up to 1MB
                     let responseBody = try await response.body.collect(upTo: 1024 * 1024)
-                    app.logger.info("Collected response body in test, shutting client down")
-                    try await client.shutdown()
-                    app.logger.info("Client shutdown, shutting server down")
-                    try await app.server.shutdown()
-                    app.logger.info("Server shutdown, returning response")
                     return TestingHTTPResponse(
                         status: .init(code: Int(response.status.code)),
                         headers: .init(response.headers, splitCookie: false),
@@ -91,8 +53,6 @@ extension Application {
                 } catch {
                     #warning("We should probably use a service group here and trigger a graceful shutdown")
                     app.logger.info("Caught error in test", metadata: ["error": "\(String(describing: error))"])
-                    try? await client.shutdown()
-                    try? await app.server.shutdown()
                     throw error
                 }
             }
