@@ -294,3 +294,13 @@ struct TestMiddleware: Middleware {
         return response
     }
 }
+
+struct TestController: RouteCollection {
+    func boot(routes: any RoutesBuilder) throws {
+        routes.get("test", use: testRoute)
+    }
+
+    func testRoute(_ req: Request) async throws -> String {
+        return "OK"
+    }
+}

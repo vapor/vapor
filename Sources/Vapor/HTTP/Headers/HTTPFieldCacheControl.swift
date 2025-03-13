@@ -177,7 +177,7 @@ extension HTTPFields {
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
 
-        private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
+        private static let exactMatch: [String: any WritableKeyPath<Self, Bool> & Sendable] = [
             "immutable": \.immutable,
             "must-revalidate": \.mustRevalidate,
             "no-cache": \.noCache,
@@ -189,7 +189,7 @@ extension HTTPFields {
             "only-if-cached": \.onlyIfCached
         ]
 
-        private static let prefix: [String: WritableKeyPath<Self, Int?>] = [
+        private static let prefix: [String: any WritableKeyPath<Self, Int?> & Sendable] = [
             "max-age": \.maxAge,
             "s-maxage": \.sMaxAge,
             "min-fresh": \.minFresh,
@@ -210,8 +210,3 @@ extension HTTPFields {
         }
     }
 }
-
-#warning("Resolve")
-//#if !$InferSendableFromCaptures
-extension Swift.WritableKeyPath: @unchecked Swift.Sendable {}
-//#endif
