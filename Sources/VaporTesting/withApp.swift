@@ -64,3 +64,49 @@ public func withApp(address: BindAddress? = nil, _ block: (Application) async th
     }
     try await app.shutdown()
 }
+
+/// Run code with a live running app. This will start the server, retrieve the allocated port and run the block of code.
+/// Useful when you need a live server but don't want to manually manage the lifecycle.
+///
+/// Usage:
+/// ```swift
+/// @Test
+/// func testRequest() async throws {
+///    try await withApp { app in
+///        app.get("hello") { req -> String in
+///            return "Hello, world!"
+///        }
+///
+///        try await withRunningApp(app: app) { port in
+///            let res = try await app.client.get("http://localhost:\(port)/hello")
+///            #expect(res.status == .ok)
+///            #expect(res.body.string == "Hello, world!")
+///        }
+///    }
+/// }
+/// ```
+public func withRunningApp(app: Application, portToUse: Int = 0, _ block: (Int) async throws -> Void) async throws {
+    return try await withThrowingTaskGroup(of: Void.self) { group in
+        app.serverConfiguration.address = .hostname("localhost", port: portToUse)
+        let portPromise = Promise<Int>()
+        app.serverConfiguration.onServerRunning = { channel in
+            guard let port = channel.localAddress?.port else {
+                portPromise.fail(TestErrors.portNotSet)
+                return
+            }
+            portPromise.complete(port)
+        }
+        group.addTask {
+            app.logger.info("Will attempt to start server")
+            try await app.server.start()
+        }
+
+        do {
+            try await block(try await portPromise.wait())
+            try await app.server.shutdown()
+        } catch {
+            try? await app.server.shutdown()
+            throw error
+        }
+    }
+}

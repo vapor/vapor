@@ -8,26 +8,21 @@ import VaporTesting
 import Foundation
 import AsyncHTTPClient
 
-@Suite("Client Tests", .disabled())
+@Suite("Client Tests")
 struct ClientTests {
     @Test("Test changing the client configuration")
     func clientConfigurationChange() async throws {
         try await withApp { app in
             app.http.client.configuration.redirectConfiguration = .disallow
-            app.serverConfiguration.address = .hostname("localhost", port: 0)
 
             app.get("redirect") {
                 $0.redirect(to: "foo")
             }
 
-            try await app.server.start()
-
-            let port = try #require(app.http.server.shared.localAddress?.port, "Failed to get port")
-            let res = try await app.client.get("http://localhost:\(port)/redirect")
-
-            #expect(res.status == .seeOther)
-
-            try await app.server.shutdown()
+            try await withRunningApp(app: app) { port in
+                let res = try await app.client.get("http://localhost:\(port)/redirect")
+                #expect(res.status == .seeOther)
+            }
         }
     }
 
@@ -35,26 +30,22 @@ struct ClientTests {
     func clientConfigurationCantBeChangedAfterClientHasBeenUsed() async throws {
         try await withApp { app in
             app.http.client.configuration.redirectConfiguration = .disallow
-            app.serverConfiguration.address = .hostname("localhost", port: 0)
 
             app.get("redirect") {
                 $0.redirect(to: "foo")
             }
 
-            try await app.server.start()
+            try await withRunningApp(app: app) { port in
+                _ = try await app.client.get("http://localhost:\(port)/redirect")
 
-            let port = try #require(app.http.server.shared.localAddress?.port, "Failed to get port")
-            _ = try await app.client.get("http://localhost:\(port)/redirect")
-
-            app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
-            let res = try await app.client.get("http://localhost:\(port)/redirect")
-            #expect(res.status == .seeOther)
-
-            try await app.server.shutdown()
+                app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
+                let res = try await app.client.get("http://localhost:\(port)/redirect")
+                #expect(res.status == .seeOther)
+            }
         }
     }
 
-    @Test("TestClient Response Codable")
+    @Test("Test Client Response Codable")
     func testClientResponseCodable() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
@@ -68,7 +59,7 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Client beforeSend()")
+    @Test("Test Client beforeSend()", .disabled())
     func testClientBeforeSend() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
@@ -83,7 +74,7 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Client Content")
+    @Test("Test Client Content", .disabled())
     func testClientContent() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
@@ -112,7 +103,7 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Boilerplate Content")
+    @Test("Test Boilerplate Client")
     func testBoilerplateClient() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
@@ -130,15 +121,10 @@ struct ClientTests {
                     }
                 }
 
-                app.environment.arguments = ["serve"]
-                try await app.boot()
-                try await app.startup()
-
-                let port = try #require(app.http.server.shared.localAddress?.port)
-                let res = try await app.client.get("http://localhost:\(port)/foo")
-                #expect(res.body?.string == "bar")
-
-                try await app.running?.onStop.get()
+                try await withRunningApp(app: app) { port in
+                    let res = try await app.client.get("http://localhost:\(port)/foo")
+                    #expect(res.body?.string == "bar")
+                }
             }
         }
     }
@@ -205,21 +191,36 @@ struct ClientTests {
             try await $0.eventLoop.scheduleTask(in: .seconds(1)) { SomeJSON() }.futureResult.get()
         }
 
-        remoteApp.environment.arguments = ["serve"]
-        try await remoteApp.boot()
-        try await remoteApp.startup()
-
-        let remotePort = try #require(remoteApp.http.server.shared.localAddress?.port, "Failed to get port")
-
-        let result: T
-        do {
-            result = try await block(remoteApp, remotePort)
-        } catch {
-            try? await remoteApp.shutdown()
-            throw error
+        let portPromise = Promise<Int>()
+        remoteApp.serverConfiguration.onServerRunning = { channel in
+            guard let port = channel.localAddress?.port else {
+                portPromise.fail(TestErrors.portNotSet)
+                return
+            }
+            portPromise.complete(port)
         }
-        try await remoteApp.shutdown()
-        return result
+
+        return try await withThrowingTaskGroup(of: Void.self) { group in
+            try await remoteApp.boot()
+            group.addTask {
+                try await remoteApp.server.start()
+            }
+
+            let remotePort = try await portPromise.wait()
+
+            let result: T
+            do {
+                result = try await block(remoteApp, remotePort)
+            } catch {
+                try? await remoteApp.server.shutdown()
+                try? await remoteApp.shutdown()
+                throw error
+            }
+            #warning("Shutting down the app should also shutdown the server")
+            try await remoteApp.server.shutdown()
+            try await remoteApp.shutdown()
+            return result
+        }
     }
 }
 

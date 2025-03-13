@@ -42,11 +42,7 @@ extension Application {
 
                 group.addTask {
                     app.logger.info("Will attempt to start server")
-                    do {
-                        try await app.server.start()
-                    } catch {
-                        print("tsentrsintersntirsteni")
-                    }
+                    try await app.server.start()
                 }
 
                 let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
