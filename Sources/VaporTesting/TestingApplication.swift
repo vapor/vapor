@@ -28,33 +28,45 @@ extension Application {
 
         package func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
             return try await withRunningApp(app: app, hostname: self.hostname, portToUse: self.port) { port in
-                let client = HTTPClient.shared
+                var request = request
+                request.url.host = self.hostname
+                request.url.port = port
+                return try await makeRequest(request)
+            }
+        }
 
-                do {
-                    var path = request.url.path
-                    path = path.hasPrefix("/") ? path : "/\(path)"
-                    var url = "http://\(self.hostname):\(port)\(path)"
-                    if let query = request.url.query {
-                        url += "?\(query)"
-                    }
-                    var clientRequest = HTTPClientRequest(url: url)
-                    clientRequest.method = .init(request.method)
-                    clientRequest.headers = .init(request.headers)
-                    clientRequest.body = .bytes(request.body)
-                    let response = try await client.execute(clientRequest, timeout: .seconds(30))
-                    // Collect up to 1MB
-                    let responseBody = try await response.body.collect(upTo: 1024 * 1024)
-                    return TestingHTTPResponse(
-                        status: .init(code: Int(response.status.code)),
-                        headers: .init(response.headers, splitCookie: false),
-                        body: responseBody,
-                        contentConfiguration: self.app.contentConfiguration
-                    )
-                } catch {
-                    #warning("We should probably use a service group here and trigger a graceful shutdown")
-                    app.logger.info("Caught error in test", metadata: ["error": "\(String(describing: error))"])
-                    throw error
+        package func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
+            let client = HTTPClient.shared
+
+            do {
+                var path = request.url.path
+                path = path.hasPrefix("/") ? path : "/\(path)"
+                guard let port = request.url.port else {
+                    throw TestErrors.missingPort
                 }
+                guard let hostname = request.url.host else {
+                    throw TestErrors.missingHostname
+                }
+                var url = "http://\(hostname):\(port)\(path)"
+                if let query = request.url.query {
+                    url += "?\(query)"
+                }
+                var clientRequest = HTTPClientRequest(url: url)
+                clientRequest.method = .init(request.method)
+                clientRequest.headers = .init(request.headers)
+                clientRequest.body = .bytes(request.body)
+                let response = try await client.execute(clientRequest, timeout: .seconds(30))
+                // Collect up to 1MB
+                let responseBody = try await response.body.collect(upTo: 1024 * 1024)
+                return TestingHTTPResponse(
+                    status: .init(code: Int(response.status.code)),
+                    headers: .init(response.headers, splitCookie: false),
+                    body: responseBody,
+                    contentConfiguration: self.app.contentConfiguration
+                )
+            } catch {
+                app.logger.info("Caught error in test", metadata: ["error": "\(String(describing: error))"])
+                throw error
             }
         }
     }
@@ -69,6 +81,10 @@ extension Application {
         package func performTest(
             request: TestingHTTPRequest
         ) async throws -> TestingHTTPResponse {
+            try await makeRequest(request)
+        }
+
+        package func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
             var headers = request.headers
             headers[.contentLength] = request.body.readableBytes.description
             let request = Request(
@@ -154,4 +170,6 @@ package final class Promise<Value: Sendable>: Sendable {
 
 package enum TestErrors: Error {
     case portNotSet
+    case missingPort
+    case missingHostname
 }

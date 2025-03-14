@@ -322,7 +322,7 @@ struct RouteTests {
         }
     }
 
-    @Test("Test Similar Routing Path", .disabled())
+    @Test("Test Similar Routing Path")
     func testSimilarRoutingPath() async throws {
         try await withApp { app in
             app.get("api","addresses") { req in
@@ -332,20 +332,19 @@ struct RouteTests {
                 "b"
             }
 
-            try await app.testing(method: .running).test(.get, "/api/addresses/") { res in
-                #expect(res.body.string == "a")
-            }
+            let testingApp = try await app.testing(method: .running)
+            try await withRunningApp(app: app) { port in
+                let rootResponse = try await testingApp.sendRequest(.get, "/api/addresses", port: port)
+                #expect(rootResponse.body.string == "a")
 
-            try await app.testing(method: .running).test(.get, "/api/addresses/search/test") { res in
-                #expect(res.body.string == "b")
-            }
+                let testResponse = try await testingApp.sendRequest(.get, "/api/addresses/search/test", port: port)
+                #expect(testResponse.body.string == "b")
 
-            try await app.testing(method: .running).test(.get, "/api/addresses/search/") { res in
-                #expect(res.status == .notFound)
-            }
+                let emptySearch = try await testingApp.sendRequest(.get, "/api/addresses/search", port: port)
+                #expect(emptySearch.status == .notFound)
 
-            try await app.testing(method: .running).test(.get, "/api/addresses/search") { res in
-                #expect(res.status == .notFound)
+                let emptySearchRoot = try await testingApp.sendRequest(.get, "/api/addresses/search/", port: port)
+                #expect(emptySearchRoot.status == .notFound)
             }
         }
     }
@@ -453,7 +452,7 @@ struct RouteTests {
         }
     }
 
-    @Test("Test Double Slash Route Access", .bug("https://github.com/vapor/vapor/issues/3137"), .bug("https://github.com/vapor/vapor/issues/3142"), .disabled())
+    @Test("Test Double Slash Route Access", .bug("https://github.com/vapor/vapor/issues/3137"), .bug("https://github.com/vapor/vapor/issues/3142"))
     func testDoubleSlashRouteAccess() async throws {
         try await withApp { app in
             app.get(":foo", ":bar", "buz") { req -> String in

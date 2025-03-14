@@ -5,6 +5,7 @@ import HTTPTypes
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
+    func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse
 }
 
 extension Application.Live: TestingApplicationTester {}
@@ -23,6 +24,10 @@ extension Application: TestingApplicationTester {
 
     public func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
         try await self.testing().performTest(request: request)
+    }
+
+    public func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
+        try await self.testing().makeRequest(request)
     }
 }
 
@@ -75,6 +80,8 @@ extension TestingApplicationTester {
     public func sendRequest(
         _ method: HTTPRequest.Method,
         _ path: String,
+        hostname: String = "localhost",
+        port: Int? = nil,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
         sourceLocation: SourceLocation = #_sourceLocation,
@@ -82,14 +89,14 @@ extension TestingApplicationTester {
     ) async throws -> TestingHTTPResponse {
         var request = TestingHTTPRequest(
             method: method,
-            url: .init(path: path),
+            url: .init(scheme: "http", host: hostname, port: port, path: path),
             headers: headers,
             body: body ?? ByteBufferAllocator().buffer(capacity: 0),
             contentConfigurtion: .default()
         )
         try await beforeRequest(&request)
         do {
-            return try await self.performTest(request: request)
+            return try await self.makeRequest(request)
         } catch {
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
