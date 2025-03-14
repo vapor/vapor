@@ -457,8 +457,7 @@ struct FileTests {
         }
     }
 
-    // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
-    @Test("Test Invalid Range Header Does Not Crash")
+    @Test("Test Invalid Range Header Does Not Crash", .bug("https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5"))
     func testInvalidRangeHeaderDoesNotCrash() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in

@@ -35,8 +35,7 @@ struct WebSocketTests {
         }
     }
 
-    // https://github.com/vapor/vapor/issues/1997
-    @Test("Test WebSocket 404")
+    @Test("Test WebSocket 404", .bug("https://github.com/vapor/vapor/issues/1997"))
     func testWebSocket404() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -66,8 +65,7 @@ struct WebSocketTests {
         }
     }
 
-    // https://github.com/vapor/vapor/issues/2009
-    @Test("Test WebSocket Server")
+    @Test("Test WebSocket Server", .bug("https://github.com/vapor/vapor/issues/2009"))
     func testWebSocketServer() async throws {
         try await withApp { app in
             app.webSocket("foo") { req, ws in

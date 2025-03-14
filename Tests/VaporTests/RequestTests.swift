@@ -191,8 +191,7 @@ struct RequestTests {
         }
     }
 
-    // https://github.com/vapor/vapor/issues/2985
-    @Test("Test Large Body Collection Doesn't Crash", .disabled())
+    @Test("Test Large Body Collection Doesn't Crash", .bug("https://github.com/vapor/vapor/issues/2985"), .disabled())
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
             app.on(.post, "upload", body: .stream, use: { request async throws -> String  in
