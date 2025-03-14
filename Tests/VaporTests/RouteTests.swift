@@ -458,44 +458,38 @@ struct RouteTests {
                 "\(try req.parameters.require("foo"))\(try req.parameters.require("bar"))"
             }
 
-            try await app.testing(method: .running).test(.get, "/foop/barp/buz") { res in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "foopbarp")
-            }
+            try await app.test(method: .running) { testApp in
+                let happyPath = try await testApp.sendRequest(.get, "/foop/barp/buz")
+                #expect(happyPath.body.string == "foopbarp")
+                #expect(happyPath.status == .ok)
 
-            try await app.testing(method: .running).test(.get, "//foop/barp/buz") { res in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "foopbarp")
-            }
+                let leadingDoubleSlash = try await testApp.sendRequest(.get, "//foop/barp/buz")
+                #expect(leadingDoubleSlash.body.string == "foopbarp")
+                #expect(leadingDoubleSlash.status == .ok)
 
-            try await app.testing(method: .running).test(.get, "//foop//barp/buz") { res in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "foopbarp")
-            }
+                let leadingAndMiddleDoubleSlash = try await testApp.sendRequest(.get, "//foop//barp/buz")
+                #expect(leadingAndMiddleDoubleSlash.body.string == "foopbarp")
+                #expect(leadingAndMiddleDoubleSlash.status == .ok)
 
-            try await app.testing(method: .running).test(.get, "//foop//barp//buz") { res in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "foopbarp")
-            }
+                let leadingMiddleAndTrailingDoubleSlash = try await testApp.sendRequest(.get, "//foop//barp//buz")
+                #expect(leadingMiddleAndTrailingDoubleSlash.body.string == "foopbarp")
+                #expect(leadingMiddleAndTrailingDoubleSlash.status == .ok)
 
-            try await app.testing(method: .running).test(.get, "/foop//barp/buz") { res in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "foopbarp")
-            }
+                let middleDoubleSlash = try await testApp.sendRequest(.get, "/foop//barp/buz")
+                #expect(middleDoubleSlash.body.string == "foopbarp")
+                #expect(middleDoubleSlash.status == .ok)
 
-            try await app.testing(method: .running).test(.get, "/foop//barp//buz") { res in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "foopbarp")
-            }
+                let middleAndTrailingDoubleSlash = try await testApp.sendRequest(.get, "/foop//barp//buz")
+                #expect(middleAndTrailingDoubleSlash.body.string == "foopbarp")
+                #expect(middleAndTrailingDoubleSlash.status == .ok)
 
-            try await app.testing(method: .running).test(.get, "/foop/barp//buz") { res in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "foopbarp")
-            }
+                let trailingDoubleSlash = try await testApp.sendRequest(.get, "/foop/barp//buz")
+                #expect(trailingDoubleSlash.body.string == "foopbarp")
+                #expect(trailingDoubleSlash.status == .ok)
 
-            try await app.testing(method: .running).test(.get, "//foop/barp//buz") { res in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "foopbarp")
+                let leadingAndTrailingDoubleSlash = try await testApp.sendRequest(.get, "//foop/barp//buz")
+                #expect(leadingAndTrailingDoubleSlash.body.string == "foopbarp")
+                #expect(leadingAndTrailingDoubleSlash.status == .ok)
             }
         }
     }
