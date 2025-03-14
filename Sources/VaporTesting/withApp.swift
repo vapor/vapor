@@ -97,6 +97,7 @@ public func withRunningApp<T>(app: Application, hostname: String = "localhost", 
             portPromise.complete(port)
         }
         group.addTask {
+            #warning("We need to handle this throwing and bubble the error up rather than hanging")
             try await app.server.start()
         }
 

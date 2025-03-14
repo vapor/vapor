@@ -332,18 +332,17 @@ struct RouteTests {
                 "b"
             }
 
-            let testingApp = try await app.testing(method: .running)
-            try await withRunningApp(app: app) { port in
-                let rootResponse = try await testingApp.sendRequest(.get, "/api/addresses", port: port)
+            try await app.test(method: .running) { testApp in
+                let rootResponse = try await testApp.sendRequest(.get, "/api/addresses")
                 #expect(rootResponse.body.string == "a")
 
-                let testResponse = try await testingApp.sendRequest(.get, "/api/addresses/search/test", port: port)
+                let testResponse = try await testApp.sendRequest(.get, "/api/addresses/search/test")
                 #expect(testResponse.body.string == "b")
 
-                let emptySearch = try await testingApp.sendRequest(.get, "/api/addresses/search", port: port)
+                let emptySearch = try await testApp.sendRequest(.get, "/api/addresses/search")
                 #expect(emptySearch.status == .notFound)
 
-                let emptySearchRoot = try await testingApp.sendRequest(.get, "/api/addresses/search/", port: port)
+                let emptySearchRoot = try await testApp.sendRequest(.get, "/api/addresses/search/")
                 #expect(emptySearchRoot.status == .notFound)
             }
         }

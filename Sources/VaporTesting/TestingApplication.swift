@@ -41,13 +41,10 @@ extension Application {
             do {
                 var path = request.url.path
                 path = path.hasPrefix("/") ? path : "/\(path)"
-                guard let port = request.url.port else {
-                    throw TestErrors.missingPort
-                }
-                guard let hostname = request.url.host else {
-                    throw TestErrors.missingHostname
-                }
-                var url = "http://\(hostname):\(port)\(path)"
+                #warning("This needs tidying up")
+                let portToUse = request.url.port ?? self.port
+                let hostnameToUse = request.url.host ?? self.hostname
+                var url = "http://\(hostnameToUse):\(portToUse)\(path)"
                 if let query = request.url.query {
                     url += "?\(query)"
                 }
