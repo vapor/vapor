@@ -401,6 +401,29 @@ final class AsyncRouteTests: XCTestCase {
             XCTAssertEqual(res.body.string, "foopbarp")
         }
     }
+
+    func testUnicodePath() throws {
+        app.get("Good👍") { req in
+            "👍"
+        }
+        app.get("ようこそ世界へ") { req in
+            "おめでとう"
+        }
+        app.get("ascii", "🙆‍♂️") { req in
+            "🙅‍♂️"
+        }
+        
+        try app.testable(method: .running(port: 0)).test(.GET, "/Good👍") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "👍")
+        }.test(.GET, "/ようこそ世界へ") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "おめでとう")
+        }.test(.GET, "/ascii/🙆‍♂️") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "🙅‍♂️")
+        }
+    }
 }
 
 extension Vapor.WebSocket: Swift.Hashable {
