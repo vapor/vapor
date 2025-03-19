@@ -105,6 +105,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
             switch self.requestState {
             case .ready: assertionFailure("Unexpected state: \(self.requestState)")
             case .awaitingBody(let request):
+                request.bodyStorage.withLockedValue { $0 = .collected(ByteBuffer()) }
                 context.fireChannelRead(self.wrapInboundOut(request))
             case .awaitingEnd(let request, let buffer):
                 request.bodyStorage.withLockedValue { $0 = .collected(buffer) }
