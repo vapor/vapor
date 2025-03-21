@@ -95,69 +95,70 @@ struct MiddlewareTests2 {
             try await app.testing().test(.get, "/foo.txt") { result async in
                 #expect(result.status == .ok)
                 #expect(result.body.string == "bar\n")
-                XCTAssertNil(result.headers[.cacheControl].first)
-            XCTAssertNil(result.headers[.age].first)
+                #expect(result.headers[.cacheControl] == nil)
+                #expect(result.headers[.age] == nil)
             }
         }
     }
-    
+
+    @Test("Test File MIddleware With Browser Default Cache Policy")
     func testFileMiddlewareWithBrowserDefaultCachePolicy() async throws {
-        var fileMiddleware: FileMiddleware!
-        
-        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .browserDefault), "FileMiddleware instantiation from Bundle should not fail")
-        
-        app.middleware.use(fileMiddleware)
-        
-        try await app.testable().test(.GET, "/foo.txt") { result async in
-            XCTAssertEqual(result.status, .ok)
-            XCTAssertEqual(result.body.string, "bar\n")
-            XCTAssertNil(result.headers[.cacheControl].first)
-            XCTAssertNil(result.headers[.age].first)
+        try await withApp { app in
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .browserDefault)
+            app.middleware.use(fileMiddleware)
+
+            try await app.testing().test(.get, "/foo.txt") { result async in
+                #expect(result.status == .ok)
+                #expect(result.body.string == "bar\n")
+                #expect(result.headers[.cacheControl] == nil)
+                #expect(result.headers[.age] == nil)
+            }
+
         }
     }
-    
+
+    @Test("Test File Middleware With No Cache Policy")
     func testFileMiddlewareWithNoCachePolicy() async throws {
-        var fileMiddleware: FileMiddleware!
-        
-        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .noCache), "FileMiddleware instantiation from Bundle should not fail")
-        
-        app.middleware.use(fileMiddleware)
-        
-        try await app.testable().test(.GET, "/foo.txt") { result async in
-            XCTAssertEqual(result.status, .ok)
-            XCTAssertEqual(result.body.string, "bar\n")
-            XCTAssertEqual(result.headers[.cacheControl].first, "no-cache")
-            XCTAssertNil(result.headers[.age].first)
+        try await withApp { app in
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .noCache)
+            app.middleware.use(fileMiddleware)
+
+            try await app.testing().test(.get, "/foo.txt") { result async in
+                #expect(result.status == .ok)
+                #expect(result.body.string == "bar\n")
+                #expect(result.headers[.cacheControl] == "no-cache")
+                #expect(result.headers[.age] == nil)
+            }
         }
     }
-    
+
+    @Test("Test File Middleware With Max Age Cache Policy")
     func testFileMiddlewareWithMaxAgeCachePolicy() async throws {
-        var fileMiddleware: FileMiddleware!
-        
-        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .cacheUpToDuration(.minutes(5))), "FileMiddleware instantiation from Bundle should not fail")
-        
-        app.middleware.use(fileMiddleware)
-        
-        try await app.testable().test(.GET, "/foo.txt") { result async in
-            XCTAssertEqual(result.status, .ok)
-            XCTAssertEqual(result.body.string, "bar\n")
-            XCTAssertEqual(result.headers[.cacheControl].first, "max-age=300")
-            XCTAssertEqual(result.headers[.age].first, "0")
+        try await withApp { app in
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .cacheUpToDuration(.minutes(5)))
+            app.middleware.use(fileMiddleware)
+
+            try await app.testing().test(.get, "/foo.txt") { result async in
+                #expect(result.status == .ok)
+                #expect(result.body.string == "bar\n")
+                #expect(result.headers[.cacheControl] == "max-age=300")
+                #expect(result.headers[.age] == "0")
+            }
         }
     }
-    
+
+    @Test("Test File Middleware With Custom Cache Policy")
     func testFileMiddlewareWithCustomCachePolicy() async throws {
-        var fileMiddleware: FileMiddleware!
-        
-        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .custom(cacheControlHeader: .init(isPublic: true), ageHeader: 10)), "FileMiddleware instantiation from Bundle should not fail")
-        
-        app.middleware.use(fileMiddleware)
-        
-        try await app.testable().test(.GET, "/foo.txt") { result async in
-            XCTAssertEqual(result.status, .ok)
-            XCTAssertEqual(result.body.string, "bar\n")
-            XCTAssertEqual(result.headers[.cacheControl].first, "public")
-            XCTAssertEqual(result.headers[.age].first, "10")
+        try await withApp { app in
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .custom(cacheControlHeader: .init(isPublic: true), ageHeader: 10))
+            app.middleware.use(fileMiddleware)
+
+            try await app.testing().test(.get, "/foo.txt") { result async in
+                #expect(result.status == .ok)
+                #expect(result.body.string == "bar\n")
+                #expect(result.headers[.cacheControl] == "public")
+                #expect(result.headers[.age] == "10")
+            }
         }
     }
 
