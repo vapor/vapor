@@ -253,17 +253,63 @@ public final class HTTPServerOld: Server, Sendable {
     public func start() async throws {
         var configuration = self.configuration
         
-//        switch address {
-//        case .none:
-//            /// Use the configuration as is.
-//            break
-//        case .hostname(let hostname, let port):
-//            /// Override the hostname, port, neither, or both.
-//            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
-//        case .unixDomainSocket:
-//            /// Override the socket path.
-//            configuration.address = address!
-//        }
+        switch address {
+        case .none: 
+            /// Use the configuration as is.
+            break
+        case .hostname(let hostname, let port): 
+            /// Override the hostname, port, neither, or both.
+            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
+        case .unixDomainSocket: 
+            /// Override the socket path.
+            configuration.address = address!
+        }
+
+        /// Log starting message for debugging before attempting to start the server.
+        configuration.logger.debug("Server starting on \(configuration.addressDescription)")
+        
+        /// Start the actual `HTTPServer`.
+        try self.connection.withLockedValue {
+            $0 = try HTTPServerConnection.start(
+                application: self.application,
+                server: self,
+                responder: self.responder,
+                configuration: configuration,
+                on: self.eventLoopGroup
+            ).wait()
+        }
+
+        /// Overwrite configuration with actual address, if applicable.
+        /// They may differ from the provided configuration if port 0 was provided, for example.
+        if let localAddress = self.localAddress {
+            if let hostname = localAddress.hostname, let port = localAddress.port {
+                configuration.address = .hostname(hostname, port: port)
+            } else if let pathname = localAddress.pathname {
+                configuration.address = .unixDomainSocket(path: pathname)
+            }
+        }
+
+        /// Log started message with the actual configuration.
+        configuration.logger.notice("Server started on \(configuration.addressDescription)")
+
+        self.configuration = configuration
+        self.didStart.withLockedValue { $0 = true }
+    }
+    
+    public func start(address: BindAddress?) async throws {
+        var configuration = self.configuration
+        
+        switch address {
+        case .none:
+            /// Use the configuration as is.
+            break
+        case .hostname(let hostname, let port):
+            /// Override the hostname, port, neither, or both.
+            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
+        case .unixDomainSocket:
+            /// Override the socket path.
+            configuration.address = address!
+        }
         
         /// Log starting message for debugging before attempting to start the server.
         configuration.logger.debug("Server starting on \(configuration.addressDescription)")
@@ -283,7 +329,7 @@ public final class HTTPServerOld: Server, Sendable {
         }
         
         /// Overwrite configuration with actual address, if applicable.
-        /// They may differ from the provided configuation if port 0 was provided, for example.
+        /// They may differ from the provided configuration if port 0 was provided, for example.
         if let localAddress = self.localAddress {
             if let hostname = localAddress.hostname, let port = localAddress.port {
                 configuration.address = .hostname(hostname, port: port)

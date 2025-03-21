@@ -19,7 +19,8 @@ extension Application {
         set { self.core.storage.asyncCommands.withLockedValue { $0 = newValue } }
     }
 
-    /// The application thread pool. Vapor provides a thread pool with 64 threads by default.
+    /// The application thread pool. Vapor uses `NIOSingletons.posixBlockingThreadPool` by default for this,
+    /// which defaults to a thread pool of size equal to the number of available cores.
     ///
     /// It's possible to configure the thread pool size by overriding this value with your own thread pool.
     ///
