@@ -1,13 +1,13 @@
-import NIOHTTP1
+import HTTPTypes
 
 /// Errors thrown while encoding/decoding `application/x-www-form-urlencoded` data.
-enum URLEncodedFormError: Error {
+enum URLEncodedFormError: Error, Equatable {
     case malformedKey(key: Substring)
     case reachedNestingLimit
 }
 
 extension URLEncodedFormError: AbortError {
-    var status: HTTPResponseStatus {
+    var status: HTTPResponse.Status {
         .badRequest
     }
 

@@ -1,4 +1,4 @@
-import NIOHTTP1
+import HTTPTypes
 
 /// Represents an encoded data-format, used in HTTP, HTML, email, and elsewhere.
 ///
@@ -49,7 +49,7 @@ import NIOHTTP1
 ///     ; Must be in quoted-string,
 ///     ; to use within parameter values
 ///
-public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Sendable {
+public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Sendable, Codable {
     /// See `Equatable`.
     public static func ==(lhs: HTTPMediaType, rhs: HTTPMediaType) -> Bool {
         guard lhs.type != "*" && rhs.type != "*" else {
@@ -130,7 +130,7 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
     }
     
     /// Parse a `MediaType` from directives.
-    init?(directives: [HTTPHeaders.Directive]) {
+    init?(directives: [HTTPFields.Directive]) {
         guard let value = directives.first, value.parameter == nil else {
             /// not a valid header value
             return nil

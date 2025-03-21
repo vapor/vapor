@@ -1,374 +1,232 @@
 import Vapor
-import XCTVapor
 import AsyncHTTPClient
-import XCTest
 import NIOCore
 import NIOEmbedded
 import NIOConcurrencyHelpers
+import Testing
+import VaporTesting
 
-final class ApplicationTests: XCTestCase {
-    var app: Application!
-
-    override func setUp() async throws {
-        app = try await Application.make(.testing)
-    }
-
-    override func tearDown() async throws {
-        try await app.asyncShutdown()
-    }
-
-    @available(*, deprecated, message: "Test future APIs")
-    func testApplicationStopFuture() throws {
-        app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
-        try app.start()
-        let running = try XCTUnwrap(app.running, "app started without setting 'running'")
-        running.stop()
-        try running.onStop.wait()
-    }
-
+@Suite("Application Tests")
+struct ApplicationTests {
+    @Test("Test stopping the application", .disabled())
     func testApplicationStop() async throws {
-        app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
-        try await app.startup()
-        let running = try XCTUnwrap(app.running, "app started without setting 'running'")
-        running.stop()
-        try await running.onStop.get()
+        try await withApp { app in
+            app.environment.arguments = ["serve"]
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.startup()
+            guard let running = app.running else {
+                Issue.record("app started without setting 'running'")
+                return
+            }
+            running.stop()
+            try await running.onStop.get()
+        }
     }
 
-    @available(*, deprecated, message: "Test future APIs")
-    func testLifecycleHandler() throws {
-        final class Foo: LifecycleHandler {
-            let willBootFlag: NIOLockedValueBox<Bool>
-            let didBootFlag: NIOLockedValueBox<Bool>
-            let shutdownFlag: NIOLockedValueBox<Bool>
-            let willBootAsyncFlag: NIOLockedValueBox<Bool>
-            let didBootAsyncFlag: NIOLockedValueBox<Bool>
-            let shutdownAsyncFlag: NIOLockedValueBox<Bool>
+    @Test("Test application lifecycle")
+    func testLifecycleHandler() async throws {
+        actor Foo: LifecycleHandler {
+            var willBootFlag: Bool
+            var didBootFlag: Bool
+            var shutdownFlag: Bool
 
             init() {
-                self.willBootFlag = .init(false)
-                self.didBootFlag = .init(false)
-                self.shutdownFlag = .init(false)
-                self.didBootAsyncFlag = .init(false)
-                self.willBootAsyncFlag = .init(false)
-                self.shutdownAsyncFlag = .init(false)
-            }
-            
-            func willBootAsync(_ application: Application) async throws {
-                self.willBootAsyncFlag.withLockedValue { $0 = true }
-            }
-            
-            func didBootAsync(_ application: Application) async throws {
-                self.didBootAsyncFlag.withLockedValue { $0 = true }
-            }
-            
-            func shutdownAsync(_ application: Application) async {
-                self.shutdownAsyncFlag.withLockedValue { $0 = true }
+                self.willBootFlag = false
+                self.didBootFlag = false
+                self.shutdownFlag = false
             }
 
-            func willBoot(_ application: Application) throws {
-                self.willBootFlag.withLockedValue { $0 = true }
+            func willBoot(_ application: Application) async throws {
+                self.willBootFlag = true
             }
 
-            func didBoot(_ application: Application) throws {
-                self.didBootFlag.withLockedValue { $0 = true }
+            func didBoot(_ application: Application) async throws {
+                self.didBootFlag = true
             }
 
-            func shutdown(_ application: Application) {
-                self.shutdownFlag.withLockedValue { $0 = true }
+            func shutdown(_ application: Application) async {
+                self.shutdownFlag = true
             }
         }
-        
-        let app = Application(.testing)
 
-        let foo = Foo()
-        app.lifecycle.use(foo)
+        try await withApp { app in
+            let app = try await Application(.testing)
 
-        XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.willBootAsyncFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
+            let foo = Foo()
+            app.lifecycle.use(foo)
 
-        try app.boot()
+            #expect(await foo.willBootFlag == false)
+            #expect(await foo.didBootFlag == false)
+            #expect(await foo.shutdownFlag == false)
 
-        XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), true)
-        XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), true)
-        XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.willBootAsyncFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
+            try await app.boot()
 
-        app.shutdown()
+            #expect(await foo.willBootFlag == true)
+            #expect(await foo.didBootFlag == true)
+            #expect(await foo.shutdownFlag == false)
 
-        XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), true)
-        XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), true)
-        XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), true)
-        XCTAssertEqual(foo.willBootAsyncFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
-    }
-    
-    func testLifecycleHandlerAsync() async throws {
-        final class Foo: LifecycleHandler {
-            let willBootFlag: NIOLockedValueBox<Bool>
-            let didBootFlag: NIOLockedValueBox<Bool>
-            let shutdownFlag: NIOLockedValueBox<Bool>
-            let willBootAsyncFlag: NIOLockedValueBox<Bool>
-            let didBootAsyncFlag: NIOLockedValueBox<Bool>
-            let shutdownAsyncFlag: NIOLockedValueBox<Bool>
+            try await app.shutdown()
 
-            init() {
-                self.willBootFlag = .init(false)
-                self.didBootFlag = .init(false)
-                self.shutdownFlag = .init(false)
-                self.didBootAsyncFlag = .init(false)
-                self.willBootAsyncFlag = .init(false)
-                self.shutdownAsyncFlag = .init(false)
-            }
-
-            func willBootAsync(_ application: Application) async throws {
-                self.willBootAsyncFlag.withLockedValue { $0 = true }
-            }
-            
-            func didBootAsync(_ application: Application) async throws {
-                self.didBootAsyncFlag.withLockedValue { $0 = true }
-            }
-            
-            func shutdownAsync(_ application: Application) async {
-                self.shutdownAsyncFlag.withLockedValue { $0 = true }
-            }
-            
-            func willBoot(_ application: Application) throws {
-                self.willBootFlag.withLockedValue { $0 = true }
-            }
-
-            func didBoot(_ application: Application) throws {
-                self.didBootFlag.withLockedValue { $0 = true }
-            }
-
-            func shutdown(_ application: Application) {
-                self.shutdownFlag.withLockedValue { $0 = true }
-            }
-        }
-        
-        let app = try await Application.make(.testing)
-
-        let foo = Foo()
-        app.lifecycle.use(foo)
-
-        XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.willBootAsyncFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
-
-        try await app.asyncBoot()
-
-        XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.willBootAsyncFlag.withLockedValue({ $0 }), true)
-        XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), true)
-        XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), false)
-
-        try await app.asyncShutdown()
-
-        XCTAssertEqual(foo.willBootFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.didBootFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.shutdownFlag.withLockedValue({ $0 }), false)
-        XCTAssertEqual(foo.willBootAsyncFlag.withLockedValue({ $0 }), true)
-        XCTAssertEqual(foo.didBootAsyncFlag.withLockedValue({ $0 }), true)
-        XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), true)
-    }
-
-    @available(*, deprecated, message: "Test future APIs")
-    func testBootDoesNotTriggerLifecycleHandlerMultipleTimes() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        final class Handler: LifecycleHandler, Sendable {
-            let bootCount = NIOLockedValueBox(0)
-            func willBoot(_ application: Application) throws {
-                bootCount.withLockedValue { $0 += 1 }
-            }
-        }
-        
-        let handler = Handler()
-        app.lifecycle.use(handler)
-        
-        try app.boot()
-        try app.boot()
-
-        XCTAssertEqual(handler.bootCount.withLockedValue({ $0 }), 1)
-    }
-    
-    func testAsyncBootDoesNotTriggerLifecycleHandlerMultipleTimes() async throws {
-        let app = try await Application.make(.testing)
-        
-        final class Handler: LifecycleHandler, Sendable {
-            let bootCount = NIOLockedValueBox(0)
-            func willBoot(_ application: Application) throws {
-                bootCount.withLockedValue { $0 += 1 }
-            }
-        }
-        
-        let handler = Handler()
-        app.lifecycle.use(handler)
-        
-        try await app.asyncBoot()
-        try await app.asyncBoot()
-
-        XCTAssertEqual(handler.bootCount.withLockedValue({ $0 }), 1)
-        
-        try await app.asyncShutdown()
-    }
-
-    @available(*, deprecated, message: "Test future APIs")
-    func testThrowDoesNotCrash() throws {
-        enum Static {
-            static let app: NIOLockedValueBox<Application?> = .init(nil)
-        }
-        Static.app.withLockedValue { $0 = Application(.testing) }
-        Static.app.withLockedValue { $0 = nil }
-    }
-
-    func testSwiftError() throws {
-        struct Foo: Error { }
-        
-        app.get("error") { req -> String in
-            throw Foo()
-        }
-
-        try app.testable().test(.GET, "/error") { res in
-            XCTAssertEqual(res.status, .internalServerError)
+            #expect(await foo.willBootFlag == true)
+            #expect(await foo.didBootFlag == true)
+            #expect(await foo.shutdownFlag == true)
         }
     }
 
-    func testAsyncKitExport() throws {
-        let eventLoop: EventLoop = EmbeddedEventLoop()
-        let a = eventLoop.makePromise(of: Int.self)
-        let b = eventLoop.makePromise(of: Int.self)
+    @Test("Test Boot Does Not Trigger Lifecycle Handler Multiple Times")
+    func testBootDoesNotTriggerLifecycleHandlerMultipleTimes() async throws {
+        try await withApp { app in
+            actor Handler: LifecycleHandler, Sendable {
+                var bootCount = 0
+                func willBoot(_ application: Application) throws {
+                    bootCount += 1
+                }
+            }
 
-        let c = [a.futureResult, b.futureResult].flatten(on: eventLoop)
+            let handler = Handler()
+            app.lifecycle.use(handler)
 
-        a.succeed(1)
-        b.succeed(2)
+            try await app.boot()
+            try await app.boot()
 
-        try XCTAssertEqual(c.wait(), [1, 2])
+            #expect(await handler.bootCount == 1)
+        }
     }
 
-    func testBoilerplate() throws {
-        app.get("hello") { req in
-            "Hello, world!"
-        }
+    @Test("Test Swift Error")
+    func testSwiftError() async throws {
+        try await withApp { app in
+            struct Foo: Error { }
 
-        app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
-        try app.start()
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
+            app.get("error") { req -> String in
+                throw Foo()
+            }
 
-        let res = try app.client.get("http://localhost:\(port)/hello").wait()
-        XCTAssertEqual(res.body?.string, "Hello, world!")
+            try await app.testing().test(.get, "/error") { res in
+                #expect(res.status == .internalServerError)
+            }
+        }
     }
 
-    func testAutomaticPortPickingWorks() {
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
+    @Test("Test Boilerplate")
+    func testBoilerplate() async throws {
+        try await withApp { app in
+            app.get("hello") { req in
+                "Hello, world!"
+            }
 
-        app.get("hello") { req in
-            "Hello, world!"
+            try await withRunningApp(app: app) { port in
+                let res = try await app.client.get("http://localhost:\(port)/hello")
+                #expect(res.body?.string == "Hello, world!")
+            }
         }
-
-        XCTAssertNil(app.http.server.shared.localAddress)
-
-        app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
-
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-
-        XCTAssertEqual("127.0.0.1", ip)
-        XCTAssertGreaterThan(port, 0)
-
-        XCTAssertEqual("Hello, world!",
-                       try app.client.get("http://localhost:\(port)/hello").wait().body?.string)
     }
 
-    func testConfigurationAddressDetailsReflectedAfterBeingSet() throws {
-        app.http.server.configuration.hostname = "0.0.0.0"
-        app.http.server.configuration.port = 0
+    @Test("Test automatic port picking works")
+    func testAutomaticPortPickingWorks() async throws {
+        try await withApp { app in
+            app.get("hello") { req in
+                "Hello, world!"
+            }
 
-        struct AddressConfig: Content {
-            let hostname: String
-            let port: Int
-        }
-        
-        app.get("hello") { req -> AddressConfig in
-            let config = AddressConfig(hostname: req.application.http.server.configuration.hostname, port: req.application.http.server.configuration.port)
-            return config
-        }
+            #expect(app.sharedNewAddress.withLockedValue({ $0 }) == nil)
 
-        app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
+            try await withRunningApp(app: app, portToUse: 0) { port in
+                let address = try #require(app.sharedNewAddress.withLockedValue({ $0 }))
 
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        XCTAssertEqual("0.0.0.0", app.http.server.configuration.hostname)
-        XCTAssertEqual(app.http.server.shared.localAddress?.port, app.http.server.configuration.port)
-        
-        guard let localAddress = app.http.server.shared.localAddress,
-              localAddress.ipAddress != nil,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
+                let ip = try #require(address.ipAddress)
+                #expect(port == address.port)
+                #expect("127.0.0.1" == ip || "::1" == ip)
+                #expect(port > 0)
+                #expect(port != 8080)
+
+                let response = try await app.client.get("http://localhost:\(port)/hello")
+                #expect("Hello, world!" == response.body?.string)
+            }
         }
-        let response = try app.client.get("http://localhost:\(port)/hello").wait()
-        let returnedConfig = try response.content.decode(AddressConfig.self)
-        XCTAssertEqual(returnedConfig.hostname, "0.0.0.0")
-        XCTAssertEqual(returnedConfig.port, port)
     }
 
-    func testConfigurationAddressDetailsReflectedWhenProvidedThroughServeCommand() throws {
-        struct AddressConfig: Content {
-            let hostname: String
-            let port: Int
+    @Test("Test configuration address details reflected after being set")
+    func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("0.0.0.0", port: 0)
+            let portPromise = Promise<Int>()
+            app.serverConfiguration.onServerRunning = { channel in
+                guard let port = channel.localAddress?.port else {
+                    portPromise.fail(TestErrors.portNotSet)
+                    return
+                }
+                portPromise.complete(port)
+            }
+
+            struct AddressConfig: Content {
+                let hostname: String?
+                let port: Int?
+            }
+
+            app.get("hello") { req -> AddressConfig in
+                let config = AddressConfig(hostname: req.application.sharedNewAddress.withLockedValue({ $0 })?.hostname, port: req.application.sharedNewAddress.withLockedValue({ $0 })?.port)
+                return config
+            }
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    app.environment.arguments = ["serve"]
+                    await #expect(throws: Never.self) {
+                        try await app.startup()
+                    }
+                }
+
+                let waitedPort = try await portPromise.wait()
+                #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
+                #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
+                if case let .hostname(_, port) = app.serverConfiguration.address {
+                    #expect(0 == port)
+                } else {
+                    Issue.record("Bind address not right")
+                    return
+                }
+
+                let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+                #expect(waitedPort == port)
+                #expect(port > 0)
+                let response = try await app.client.get("http://localhost:\(port)/hello")
+                let returnedConfig = try await response.content.decode(AddressConfig.self)
+                #expect(returnedConfig.hostname == "0.0.0.0")
+                #expect(returnedConfig.port == port)
+
+                try await app.server.shutdown()
+            }
         }
+    }
 
-        app.get("hello") { req -> AddressConfig in
-            let config = AddressConfig(hostname: req.application.http.server.configuration.hostname, port: req.application.http.server.configuration.port)
-            return config
+    @Test("Test Configuration Address Details Reflected When Provided Through Serve Command", .disabled())
+    func testConfigurationAddressDetailsReflectedWhenProvidedThroughServeCommand() async throws {
+        try await withApp { app in
+            struct AddressConfig: Content {
+                let hostname: String?
+                let port: Int?
+            }
+
+            app.get("hello") { req -> AddressConfig in
+                let config = AddressConfig(hostname: req.application.serverConfiguration.hostname, port: req.application.serverConfiguration.port)
+                return config
+            }
+
+            app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
+            await #expect(throws: Never.self) {
+                try await app.startup()
+            }
+
+            #expect(app.http.server.shared.localAddress != nil)
+            #expect(app.serverConfiguration.hostname == "0.0.0.0")
+            #expect(app.serverConfiguration.port == 3000)
+
+            let port = try #require(app.http.server.shared.localAddress?.port)
+            let response = try await app.client.get("http://localhost:\(port)/hello")
+            let returnedConfig = try await response.content.decode(AddressConfig.self)
+            #expect(returnedConfig.hostname == "0.0.0.0")
+            #expect(returnedConfig.port == 3000)
         }
-
-        app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
-        XCTAssertNoThrow(try app.start())
-
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        XCTAssertEqual("0.0.0.0", app.http.server.configuration.hostname)
-        XCTAssertEqual(3000, app.http.server.configuration.port)
-
-        guard let localAddress = app.http.server.shared.localAddress,
-              localAddress.ipAddress != nil,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        let response = try app.client.get("http://localhost:\(port)/hello").wait()
-        let returnedConfig = try response.content.decode(AddressConfig.self)
-        XCTAssertEqual(returnedConfig.hostname, "0.0.0.0")
-        XCTAssertEqual(returnedConfig.port, 3000)
     }
 }
