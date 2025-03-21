@@ -1,6 +1,7 @@
 import Foundation
 import NIOCore
 import _NIOFileSystem
+import HTTPTypes
 
 /// Serves static files from a public directory.
 ///
@@ -197,7 +198,7 @@ fileprivate extension String {
 extension FileMiddleware {
     /// The browser cache policy files should be served with.
     public struct CachePolicy: Sendable {
-        var cacheControlHeader: HTTPHeaders.CacheControl?
+        var cacheControlHeader: HTTPFields.CacheControl?
         var ageHeader: Int?
         
         /// The browser's default caching policy should be used.
@@ -222,7 +223,7 @@ extension FileMiddleware {
         ///   - cacheControlHeader: The `Cache-Control` header to use. If none is specified, any previous cache control header will be cleared.
         ///   - ageHeader: The `Age` header to use, in seconds. If none is specified, any previous age header will be cleared.
         /// - Returns: A cache policy with the specified headers.
-        public static func custom(cacheControlHeader: HTTPHeaders.CacheControl?, ageHeader: Int? = nil) -> CachePolicy {
+        public static func custom(cacheControlHeader: HTTPFields.CacheControl?, ageHeader: Int? = nil) -> CachePolicy {
             CachePolicy(cacheControlHeader: cacheControlHeader, ageHeader: ageHeader)
         }
     }
@@ -236,9 +237,9 @@ extension Response {
     func cachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
         self.headers.cacheControl = policy.cacheControlHeader
         if let age = policy.ageHeader {
-            self.headers.replaceOrAdd(name: .age, value: "\(age)")
+            self.headers[.age] = "\(age)"
         } else {
-            self.headers.remove(name: .age)
+            self.headers[.age] = nil
         }
         return self
     }
