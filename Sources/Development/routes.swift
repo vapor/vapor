@@ -3,6 +3,7 @@ import Vapor
 import NIOCore
 import NIOHTTP1
 import NIOConcurrencyHelpers
+import _NIOFileSystem
 
 struct Creds: Content {
     var email: String
@@ -178,10 +179,11 @@ public func routes(_ app: Application) throws {
         throw TestError()
     }
 
-    app.get("secret") { (req) -> EventLoopFuture<String> in
-        return Environment
-            .secret(key: "PASSWORD_SECRET", fileIO: req.application.fileio, on: req.eventLoop)
-            .unwrap(or: Abort(.badRequest))
+    app.get("secret") { req in
+        guard let secret = try await Environment.secret(path: "PASSWORD_SECRET") else {
+            throw Abort(.badRequest)
+        }
+        return secret
     }
 
     app.on(.POST, "max-256", body: .collect(maxSize: 256)) { req -> HTTPStatus in
@@ -189,13 +191,14 @@ public func routes(_ app: Application) throws {
         return .ok
     }
 
-    app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<HTTPStatus> in
+    @available(*, deprecated, message: "Testing deprecated functions")
+    func deprecatedUploadHandler(_ req: Request) -> EventLoopFuture<HTTPStatus> {
         enum BodyStreamWritingToDiskError: Error {
             case streamFailure(Error)
             case fileHandleClosedFailure(Error)
             case multipleFailures([BodyStreamWritingToDiskError])
         }
-        
+
         return req.application.fileio.openFile(
             path: Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? "",
             mode: .write,
@@ -236,6 +239,17 @@ public func routes(_ app: Application) throws {
             }
             return promise.futureResult
         }
+    }
+    app.on(.POST, "upload", body: .stream) { req -> HTTPStatus in
+        return try await FileSystem.shared.withFileHandle(
+            forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
+            options: .newFile(replaceExisting: true)) { handle in
+                var writer = handle.bufferedWriter()
+                for try await part in req.body {
+                    try await writer.write(contentsOf: part)
+                }
+                return .ok
+            }
     }
 
     let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware(number: 1))

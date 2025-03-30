@@ -11,6 +11,7 @@ public final class FileMiddleware: AsyncMiddleware {
     private let defaultFile: String?
     private let directoryAction: DirectoryAction
     private let advancedETagComparison: Bool
+    private let cachePolicy: CachePolicy
 
     public struct BundleSetupError: Equatable, Error {
         
@@ -41,11 +42,19 @@ public final class FileMiddleware: AsyncMiddleware {
     ///     an absolute path from the public directory root. If `nil`, no default files are served.
     ///     - directoryAction: Determines the action to take when the request doesn't have a trailing slash but matches a directory.
     ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
-    public init(publicDirectory: String, defaultFile: String? = nil, directoryAction: DirectoryAction = .none, advancedETagComparison: Bool = false) {
+    ///     - cacheControl: Specifies the browser's cache policy that should be used for all files. Defaults to the browser's default behavior ``CachePolicy/browserDefault``.
+    public init(
+        publicDirectory: String,
+        defaultFile: String? = nil,
+        directoryAction: DirectoryAction = .none,
+        advancedETagComparison: Bool = false,
+        cachePolicy: CachePolicy = .browserDefault
+    ) {
         self.publicDirectory = publicDirectory.addTrailingSlash()
         self.defaultFile = defaultFile
         self.directoryAction = directoryAction
         self.advancedETagComparison = advancedETagComparison
+        self.cachePolicy = cachePolicy
     }
     
     public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
@@ -80,7 +89,10 @@ public final class FileMiddleware: AsyncMiddleware {
                         
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
-                            return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                            return try await request
+                                .fileio
+                                .asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                                .cachePolicy(cachePolicy)
                         }
                     }
                 } else {
@@ -92,7 +104,10 @@ public final class FileMiddleware: AsyncMiddleware {
                 }
             } else {
                 // file exists, stream it
-                return try await request.fileio.asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                return try await request
+                    .fileio
+                    .asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                    .cachePolicy(cachePolicy)
             }
         }
         
@@ -106,6 +121,7 @@ public final class FileMiddleware: AsyncMiddleware {
     ///     - publicDirectory: The public directory to serve files from.
     ///     - defaultFile: The name of the default file to look for and serve if a request hits any public directory. Starting with `/` implies an absolute path from the public directory root. If `nil`, no default files are served.
     ///     - directoryAction: Determines the action to take when the request doesn't have a trailing slash but matches a directory.
+    ///     - cacheControl: Specifies the browser's cache policy that should be used for all files. Defaults to the browser's default behavior ``CachePolicy/browserDefault``.
     ///
     /// - important: Make sure the public directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
     /// - returns: A fully qualified FileMiddleware if the given `publicDirectory` can be served, throws a `BundleSetupError` otherwise
@@ -113,7 +129,8 @@ public final class FileMiddleware: AsyncMiddleware {
         bundle: Bundle,
         publicDirectory: String = "Public",
         defaultFile: String? = nil,
-        directoryAction: DirectoryAction = .none
+        directoryAction: DirectoryAction = .none,
+        cachePolicy: CachePolicy = .browserDefault
     ) throws {
         guard let bundleResourceURL = bundle.resourceURL else {
             throw BundleSetupError.bundleResourceURLIsNil
@@ -123,7 +140,12 @@ public final class FileMiddleware: AsyncMiddleware {
             throw BundleSetupError.publicDirectoryIsNotAFolder
         }
         
-        self.init(publicDirectory: publicDirectoryURL.path, defaultFile: defaultFile, directoryAction: directoryAction)
+        self.init(
+            publicDirectory: publicDirectoryURL.path,
+            defaultFile: defaultFile,
+            directoryAction: directoryAction,
+            cachePolicy: cachePolicy
+        )
     }
     
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory
@@ -169,5 +191,55 @@ fileprivate extension String {
             newPath += "/"
         }
         return newPath
+    }
+}
+
+extension FileMiddleware {
+    /// The browser cache policy files should be served with.
+    public struct CachePolicy: Sendable {
+        var cacheControlHeader: HTTPHeaders.CacheControl?
+        var ageHeader: Int?
+        
+        /// The browser's default caching policy should be used.
+        ///
+        /// In practice, this means the resource will be cached, but its completely out of your control as to when the browser will refresh it.
+        public static let browserDefault = CachePolicy()
+        
+        /// The browser will always ask before requesting the full file.
+        ///
+        /// This can be used if the files served change very often, or in development so any change to a file is immediately reflected.
+        public static let noCache = CachePolicy(cacheControlHeader: .init(noCache: true))
+        
+        /// The browser will cache the file for the specified duration.
+        ///
+        /// A typical cache duration may be 5 minutes, for instance: `.cacheUpToDuration(.minutes(5))`
+        public static func cacheUpToDuration(_ duration: TimeAmount) -> CachePolicy {
+            CachePolicy(cacheControlHeader: .init(maxAge: Int(duration.nanoseconds/1_000_000_000)), ageHeader: 0)
+        }
+        
+        /// A custom cache control policy that should be used for all files.
+        /// - Parameters:
+        ///   - cacheControlHeader: The `Cache-Control` header to use. If none is specified, any previous cache control header will be cleared.
+        ///   - ageHeader: The `Age` header to use, in seconds. If none is specified, any previous age header will be cleared.
+        /// - Returns: A cache policy with the specified headers.
+        public static func custom(cacheControlHeader: HTTPHeaders.CacheControl?, ageHeader: Int? = nil) -> CachePolicy {
+            CachePolicy(cacheControlHeader: cacheControlHeader, ageHeader: ageHeader)
+        }
+    }
+}
+
+extension Response {
+    /// Update the response with a cache policy.
+    /// - Parameter policy: The cache policy to use.
+    /// - Returns: The same response as the receiver.
+    @discardableResult
+    func cachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
+        self.headers.cacheControl = policy.cacheControlHeader
+        if let age = policy.ageHeader {
+            self.headers.replaceOrAdd(name: .age, value: "\(age)")
+        } else {
+            self.headers.remove(name: .age)
+        }
+        return self
     }
 }

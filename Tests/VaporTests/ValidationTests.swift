@@ -617,7 +617,7 @@ class ValidationTests: XCTestCase {
         assert("CASE2", fails: .case(of: SingleCaseEnum.self), "is not CASE1")
     }
 
-    func testCustomResponseMiddleware() throws {
+    func testCustomResponseMiddleware() async throws {
         // Test item
         struct User: Validatable {
             let name: String
@@ -632,8 +632,7 @@ class ValidationTests: XCTestCase {
         }
 
         // Setup
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        let app = try await Application.make(.testing)
 
         // Converts validation errors to a custom response.
         final class ValidationErrorMiddleware: Middleware {
@@ -695,7 +694,7 @@ class ValidationTests: XCTestCase {
         }
 
         // Test that the custom validation error middleware is working.
-        try app.test(.POST, "users", beforeRequest: { req in
+        try await app.test(.POST, "users", beforeRequest: { req async throws in
             try req.content.encode([
                 "name": "Vapor",
                 "age": "asdf"
@@ -705,6 +704,8 @@ class ValidationTests: XCTestCase {
             let content = try res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
             XCTAssertEqual(content.errors.count, 1)
         })
+
+        try await app.asyncShutdown()
     }
 
     func testValidateNullWhenNotRequired() throws {

@@ -7,6 +7,7 @@ import NIOPosix
 import func Android.sleep
 #endif
 
+@available(*, deprecated, message: "Test old future APIs")
 final class AuthenticationTests: XCTestCase {
     func testBearerAuthenticator() throws {
         struct Test: Authenticatable {
@@ -303,29 +304,21 @@ final class AuthenticationTests: XCTestCase {
 
     func testAsyncAuthenticator() throws {
         struct Test: Authenticatable {
-            static func authenticator(threadPool: NIOThreadPool) -> Authenticator {
+            static func authenticator(threadPool: NIOThreadPool) -> AsyncAuthenticator {
                 TestAuthenticator(threadPool: threadPool)
             }
             var name: String
         }
 
-        struct TestAuthenticator: BasicAuthenticator {
+        struct TestAuthenticator: AsyncBasicAuthenticator {
             typealias User = Test
             let threadPool: NIOThreadPool
 
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
-                let promise = request.eventLoop.makePromise(of: Void.self)
-                self.threadPool.submit { _ in
-                    sleep(1)
-                    request.eventLoop.execute {
-                        if basic.username == "test" && basic.password == "secret" {
-                            let test = Test(name: "Vapor")
-                            request.auth.login(test)
-                        }
-                        promise.succeed(())
-                    }
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
+                if basic.username == "test" && basic.password == "secret" {
+                    let test = Test(name: "Vapor")
+                    request.auth.login(test)
                 }
-                return promise.futureResult
             }
         }
 

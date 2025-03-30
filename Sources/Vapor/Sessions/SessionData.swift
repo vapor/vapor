@@ -18,40 +18,50 @@ public struct SessionData: Sendable {
     private var storage: [String: String]
     
     /// Creates a new empty session data container.
-    public init() { self.storage = [:] }
+    public init() {
+        self.storage = [:]
+    }
 
     /// Creates a session data container for the given data.
+    
     /// - Parameter data: The data to store in the container.
-    public init(initialData data: [String: String]) { self.storage = data }
+    public init(initialData data: [String: String]) {
+        self.storage = data
+    }
 
+    /// Get and set values in the container by key.
     public subscript(_ key: String) -> String? {
-        get { return self.storage[key] }
-        set(newValue) { self.storage[key] = newValue }
+        get { self.storage[key] }
+        set { self.storage[key] = newValue }
     }
 }
 
 // MARK: Equatable
-extension SessionData {
-    public static func ==(lhs: SessionData, rhs: SessionData) -> Bool {
-        return lhs.storage == rhs.storage
+
+extension SessionData: Equatable {
+    public static func == (lhs: SessionData, rhs: SessionData) -> Bool {
+        lhs.storage == rhs.storage
     }
 }
 
 // MARK: Codable
+
 extension SessionData: Codable {
     public init(from decoder: Decoder) throws {
-        self.storage = try .init(from: decoder)
+        let container = try decoder.singleValueContainer()
+        self.storage = try container.decode([String: String].self)
     }
 
     public func encode(to encoder: Encoder) throws {
-        try self.storage.encode(to: encoder)
+        var container = encoder.singleValueContainer()
+        try container.encode(self.storage)
     }
 }
 
 // MARK: ExpressibleByDictionaryLiteral
+
 extension SessionData: ExpressibleByDictionaryLiteral {
     public init(dictionaryLiteral elements: (String, String)...) {
-        let storage: [String: String] = elements.reduce(into: [:]) { $0[$1.0] = $1.1 }
-        self.init(initialData: storage)
+        self.init(initialData: .init(elements, uniquingKeysWith: { $1 }))
     }
 }

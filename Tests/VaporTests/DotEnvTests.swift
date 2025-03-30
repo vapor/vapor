@@ -5,7 +5,8 @@ import NIOPosix
 import NIOCore
 
 final class DotEnvTests: XCTestCase {
-    func testReadFile() throws {
+    @available(*, deprecated, message: "Test future API")
+    func testReadFileFuture() throws {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let pool = NIOThreadPool(numberOfThreads: 1)
         pool.start()
@@ -33,6 +34,31 @@ final class DotEnvTests: XCTestCase {
         """)
         try pool.syncShutdownGracefully()
         try elg.syncShutdownGracefully()
+    }
+
+    func testReadFile() async throws {
+        let fileio = NonBlockingFileIO(threadPool: NIOThreadPool.singleton)
+        let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+        let path = "/" + folder + "/Utilities/test.env"
+        let file = try await DotEnvFile.read(path: path, fileio: fileio)
+        let test = file.lines.map { $0.description }.joined(separator: "\n")
+        XCTAssertEqual(test, """
+        NODE_ENV=development
+        BASIC=basic
+        AFTER_LINE=after_line
+        UNDEFINED_EXPAND=$TOTALLY_UNDEFINED_ENV_KEY
+        EMPTY=
+        SINGLE_QUOTES=single_quotes
+        DOUBLE_QUOTES=double_quotes
+        EXPAND_NEWLINES=expand\nnewlines
+        DONT_EXPAND_NEWLINES_1=dontexpand\\nnewlines
+        DONT_EXPAND_NEWLINES_2=dontexpand\\nnewlines
+        EQUAL_SIGNS=equals==
+        RETAIN_INNER_QUOTES={"foo": "bar"}
+        RETAIN_INNER_QUOTES_AS_STRING={"foo": "bar"}
+        INCLUDE_SPACE=some spaced out string
+        USERNAME=therealnerdybeast@example.tld
+        """)
     }
 
     func testNoTrailingNewline() throws {

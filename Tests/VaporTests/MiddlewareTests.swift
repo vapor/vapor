@@ -8,8 +8,7 @@ final class MiddlewareTests: XCTestCase {
     var app: Application!
     
     override func setUp() async throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application.make(test)
+        app = try await Application.make(.testing)
     }
     
     override func tearDown() async throws {
@@ -121,6 +120,68 @@ final class MiddlewareTests: XCTestCase {
         try await app.testable().test(.GET, "/foo.txt") { result async in
             XCTAssertEqual(result.status, .ok)
             XCTAssertEqual(result.body.string, "bar\n")
+            XCTAssertNil(result.headers[.cacheControl].first)
+            XCTAssertNil(result.headers[.age].first)
+        }
+    }
+    
+    func testFileMiddlewareWithBrowserDefaultCachePolicy() async throws {
+        var fileMiddleware: FileMiddleware!
+        
+        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .browserDefault), "FileMiddleware instantiation from Bundle should not fail")
+        
+        app.middleware.use(fileMiddleware)
+        
+        try await app.testable().test(.GET, "/foo.txt") { result async in
+            XCTAssertEqual(result.status, .ok)
+            XCTAssertEqual(result.body.string, "bar\n")
+            XCTAssertNil(result.headers[.cacheControl].first)
+            XCTAssertNil(result.headers[.age].first)
+        }
+    }
+    
+    func testFileMiddlewareWithNoCachePolicy() async throws {
+        var fileMiddleware: FileMiddleware!
+        
+        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .noCache), "FileMiddleware instantiation from Bundle should not fail")
+        
+        app.middleware.use(fileMiddleware)
+        
+        try await app.testable().test(.GET, "/foo.txt") { result async in
+            XCTAssertEqual(result.status, .ok)
+            XCTAssertEqual(result.body.string, "bar\n")
+            XCTAssertEqual(result.headers[.cacheControl].first, "no-cache")
+            XCTAssertNil(result.headers[.age].first)
+        }
+    }
+    
+    func testFileMiddlewareWithMaxAgeCachePolicy() async throws {
+        var fileMiddleware: FileMiddleware!
+        
+        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .cacheUpToDuration(.minutes(5))), "FileMiddleware instantiation from Bundle should not fail")
+        
+        app.middleware.use(fileMiddleware)
+        
+        try await app.testable().test(.GET, "/foo.txt") { result async in
+            XCTAssertEqual(result.status, .ok)
+            XCTAssertEqual(result.body.string, "bar\n")
+            XCTAssertEqual(result.headers[.cacheControl].first, "max-age=300")
+            XCTAssertEqual(result.headers[.age].first, "0")
+        }
+    }
+    
+    func testFileMiddlewareWithCustomCachePolicy() async throws {
+        var fileMiddleware: FileMiddleware!
+        
+        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .custom(cacheControlHeader: .init(isPublic: true), ageHeader: 10)), "FileMiddleware instantiation from Bundle should not fail")
+        
+        app.middleware.use(fileMiddleware)
+        
+        try await app.testable().test(.GET, "/foo.txt") { result async in
+            XCTAssertEqual(result.status, .ok)
+            XCTAssertEqual(result.body.string, "bar\n")
+            XCTAssertEqual(result.headers[.cacheControl].first, "public")
+            XCTAssertEqual(result.headers[.age].first, "10")
         }
     }
     
@@ -177,19 +238,17 @@ final class MiddlewareTests: XCTestCase {
             return "done"
         }
 
-        try await app.testable(method: .running(hostname: "127.0.0.1", port: 8080)).test(
-            .GET,
-            "/testTracing?foo=bar",
-            beforeRequest: { request async in
-                request.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
-                request.headers.add(name: TestTracer.extractKey, value: "extracted")
-            },
-            afterResponse: { response async in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body.string, "done")
-            }
-        )
-        
+        try await app.server.start(address: .hostname("127.0.0.1", port: 0))
+
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
+        let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
+            req.headers.add(name: HTTPHeaders.Name.userAgent.description, value: "test")
+            req.headers.add(name: TestTracer.extractKey, value: "extracted")
+        }
+
+        XCTAssertEqual(response.status, .ok)
+        XCTAssertEqual(response.body?.string, "done")
+
         let span = try XCTUnwrap(tracer.spans.first)
         XCTAssertEqual(span.operationName, "GET /testTracing")
         
@@ -200,7 +259,7 @@ final class MiddlewareTests: XCTestCase {
         XCTAssertEqual(span.attributes["http.route"]?.toSpanAttribute(), "/testTracing")
         XCTAssertEqual(span.attributes["network.protocol.name"]?.toSpanAttribute(), "http")
         XCTAssertEqual(span.attributes["server.address"]?.toSpanAttribute(), "127.0.0.1")
-        XCTAssertEqual(span.attributes["server.port"]?.toSpanAttribute(), 8080)
+        XCTAssertEqual(span.attributes["server.port"]?.toSpanAttribute(), port.toSpanAttribute())
         XCTAssertEqual(span.attributes["url.query"]?.toSpanAttribute(), "foo=bar")
         
         XCTAssertEqual(span.attributes["client.address"]?.toSpanAttribute(), "127.0.0.1")
@@ -212,5 +271,7 @@ final class MiddlewareTests: XCTestCase {
         XCTAssertEqual(span.attributes["custom"]?.toSpanAttribute(), "custom")
         
         XCTAssertEqual(span.attributes["http.response.status_code"]?.toSpanAttribute(), 200)
+
+        await app.server.shutdown()
     }
 }

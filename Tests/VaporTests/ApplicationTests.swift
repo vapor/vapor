@@ -7,21 +7,36 @@ import NIOEmbedded
 import NIOConcurrencyHelpers
 
 final class ApplicationTests: XCTestCase {
-    func testApplicationStop() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(test)
-        defer { app.shutdown() }
+    var app: Application!
+
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+    }
+
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+    }
+
+    @available(*, deprecated, message: "Test future APIs")
+    func testApplicationStopFuture() throws {
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
         try app.start()
-        guard let running = app.running else {
-            XCTFail("app started without setting 'running'")
-            return
-        }
+        let running = try XCTUnwrap(app.running, "app started without setting 'running'")
         running.stop()
         try running.onStop.wait()
     }
 
+    func testApplicationStop() async throws {
+        app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
+        try await app.startup()
+        let running = try XCTUnwrap(app.running, "app started without setting 'running'")
+        running.stop()
+        try await running.onStop.get()
+    }
+
+    @available(*, deprecated, message: "Test future APIs")
     func testLifecycleHandler() throws {
         final class Foo: LifecycleHandler {
             let willBootFlag: NIOLockedValueBox<Bool>
@@ -170,6 +185,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.shutdownAsyncFlag.withLockedValue({ $0 }), true)
     }
 
+    @available(*, deprecated, message: "Test future APIs")
     func testBootDoesNotTriggerLifecycleHandlerMultipleTimes() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -210,7 +226,8 @@ final class ApplicationTests: XCTestCase {
         
         try await app.asyncShutdown()
     }
-    
+
+    @available(*, deprecated, message: "Test future APIs")
     func testThrowDoesNotCrash() throws {
         enum Static {
             static let app: NIOLockedValueBox<Application?> = .init(nil)
@@ -221,9 +238,6 @@ final class ApplicationTests: XCTestCase {
 
     func testSwiftError() throws {
         struct Foo: Error { }
-        
-        let app = Application(.testing)
-        defer { app.shutdown() }
         
         app.get("error") { req -> String in
             throw Foo()
@@ -248,9 +262,6 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testBoilerplate() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         app.get("hello") { req in
             "Hello, world!"
         }
@@ -271,10 +282,8 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testAutomaticPortPickingWorks() {
-        let app = Application(.testing)
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
-        defer { app.shutdown() }
 
         app.get("hello") { req in
             "Hello, world!"
@@ -301,11 +310,9 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testConfigurationAddressDetailsReflectedAfterBeingSet() throws {
-        let app = Application(.testing)
         app.http.server.configuration.hostname = "0.0.0.0"
         app.http.server.configuration.port = 0
-        defer { app.shutdown() }
-        
+
         struct AddressConfig: Content {
             let hostname: String
             let port: Int
@@ -336,9 +343,6 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testConfigurationAddressDetailsReflectedWhenProvidedThroughServeCommand() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
         struct AddressConfig: Content {
             let hostname: String
             let port: Int
