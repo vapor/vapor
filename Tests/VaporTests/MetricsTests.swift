@@ -4,7 +4,6 @@ import Metrics
 import VaporTesting
 import Testing
 
-//#if(compiler(>=6.1))
 @Suite("Metric Tests")
 struct MetricsTests {
     init() {
@@ -178,4 +177,3 @@ extension Trait where Self == MetricsTaskLocalTrait {
         }
     }
 }
-//#endif
