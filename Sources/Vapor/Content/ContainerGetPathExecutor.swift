@@ -2,12 +2,12 @@
 internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
     let result: D
     
-    static func userInfo(for keyPath: [CodingKey]) -> [CodingUserInfoKey: Sendable] {
+    static func userInfo(for keyPath: [any CodingKey]) -> [CodingUserInfoKey: any Sendable] {
         [.containerGetKeypath: keyPath]
     }
     
-    init(from decoder: Decoder) throws {
-        guard let keypath = decoder.userInfo[.containerGetKeypath] as? [CodingKey] else {
+    init(from decoder: any Decoder) throws {
+        guard let keypath = decoder.userInfo[.containerGetKeypath] as? [any CodingKey] else {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Container getter couldn't find keypath to fetch (broken Decoder?)"))
         }
         
@@ -56,7 +56,7 @@ fileprivate extension UnkeyedDecodingContainer {
     ///
     /// Tagged with "unsafe" because a call to this method _MUST_ be the final use of the container before it goes out
     /// of scope, which we can't make the compiler enforce.
-    func _unsafe_inplace_superDecoder() throws -> Decoder {
+    func _unsafe_inplace_superDecoder() throws -> any Decoder {
         var inplace = self
         return try inplace.superDecoder()
     }
@@ -65,7 +65,7 @@ fileprivate extension UnkeyedDecodingContainer {
 fileprivate extension Decoder {
     /// Request an unkeyed container, then "fast-forward" the container until the given index is found, the current
     /// index goes past it, or the end of the container is reached.
-    func unkeyedContainer(startingAt index: Int) throws -> UnkeyedDecodingContainer {
+    func unkeyedContainer(startingAt index: Int) throws -> any UnkeyedDecodingContainer {
         var container = try self.unkeyedContainer()
         
         while container.currentIndex < index, !container.isAtEnd {

@@ -1,6 +1,18 @@
 import NIOCore
+import HTTPServerNew
 
 extension Request {
+    public struct NewBody: Sendable {
+        let underlying: RequestBody
+        let maxBodySize: Int
+
+        public var data: ByteBuffer? {
+            get async throws {
+                try await self.underlying.collect(upTo: maxBodySize)
+            }
+        }
+    }
+
     public struct Body: CustomStringConvertible, Sendable {
         let request: Request
         
@@ -23,7 +35,7 @@ extension Request {
             }
         }
         
-        @preconcurrency public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
+         public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
                 stream.read { (result, promise) in

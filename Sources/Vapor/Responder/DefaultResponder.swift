@@ -2,22 +2,22 @@ import Foundation
 import Metrics
 @preconcurrency import RoutingKit
 import NIOCore
-import NIOHTTP1
 import Logging
+import HTTPTypes
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
     private let router: TrieRouter<CachedRoute>
-    private let notFoundResponder: Responder
+    private let notFoundResponder: any Responder
     private let reportMetrics: Bool
 
     private struct CachedRoute {
         let route: Route
-        let responder: Responder
+        let responder: any Responder
     }
 
     /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [Middleware] = [], reportMetrics: Bool = true) {
+    public init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
         let options = routes.caseInsensitive ?
             Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
         let router = TrieRouter(CachedRoute.self, options: options)
@@ -47,23 +47,17 @@ internal struct DefaultResponder: Responder {
     }
 
     /// See `Responder`
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
+    public func respond(to request: Request) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
-        let response: EventLoopFuture<Response>
-        if let cachedRoute = self.getRoute(for: request) {
-            request.route = cachedRoute.route
-            response = cachedRoute.responder.respond(to: request)
-        } else {
-            response = self.notFoundResponder.respond(to: request)
-        }
-        return response.always { result in
-            let status: HTTPStatus
-            switch result {
-            case .success(let response):
-                status = response.status
-            case .failure:
-                status = .internalServerError
+        let response: Response
+        do {
+            if let cachedRoute = self.getRoute(for: request) {
+                request.route = cachedRoute.route
+                response = try await cachedRoute.responder.respond(to: request)
+            } else {
+                response = try await self.notFoundResponder.respond(to: request)
             }
+            let status = response.status
             if self.reportMetrics {
                 self.updateMetrics(
                     for: request,
@@ -71,6 +65,16 @@ internal struct DefaultResponder: Responder {
                     statusCode: status.code
                 )
             }
+            return response
+        } catch {
+            if self.reportMetrics {
+                self.updateMetrics(
+                    for: request,
+                    startTime: startTime,
+                    statusCode: 500
+                )
+            }
+            throw error
         }
     }
     
@@ -81,16 +85,16 @@ internal struct DefaultResponder: Responder {
             .map(String.init)
         
         // If it's a HEAD request and a HEAD route exists, return that route...
-        if request.method == .HEAD, let route = self.router.route(
-            path: [HTTPMethod.HEAD.rawValue] + pathComponents,
+        if request.method == .head, let route = self.router.route(
+            path: [HTTPRequest.Method.head.rawValue] + pathComponents,
             parameters: &request.parameters
         ) {
             return route
         }
 
         // ...otherwise forward HEAD requests to GET route
-        let method = (request.method == .HEAD) ? .GET : request.method
-        
+        let method = (request.method == .head) ? .get : request.method
+
         return self.router.route(
             path: [method.rawValue] + pathComponents,
             parameters: &request.parameters
@@ -101,7 +105,7 @@ internal struct DefaultResponder: Responder {
     private func updateMetrics(
         for request: Request,
         startTime: UInt64,
-        statusCode: UInt
+        statusCode: Int
     ) {
         let pathForMetrics: String
         let methodForMetrics: String
@@ -136,15 +140,15 @@ internal struct DefaultResponder: Responder {
 }
 
 private struct NotFoundResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeFailedFuture(RouteNotFound())
+    func respond(to request: Request) async throws -> Response {
+        throw RouteNotFound()
     }
 }
 
 struct RouteNotFound: Error {}
 
 extension RouteNotFound: AbortError {    
-    var status: HTTPResponseStatus {
+    var status: HTTPResponse.Status {
         .notFound
     }
 }

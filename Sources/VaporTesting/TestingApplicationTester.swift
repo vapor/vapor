@@ -1,19 +1,19 @@
-import NIOHTTP1
 import NIOCore
-#if compiler(>=6.0) && canImport(Testing)
 import Testing
-#endif
+import Vapor
+import HTTPTypes
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
+    func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse
 }
 
 extension Application.Live: TestingApplicationTester {}
 extension Application.InMemory: TestingApplicationTester {}
 
 extension Application: TestingApplicationTester {
-    public func testing(method: Method = .inMemory) throws -> TestingApplicationTester {
-        try self.boot()
+    public func testing(method: Method = .inMemory) async throws -> any TestingApplicationTester {
+        try await self.boot()
         switch method {
         case .inMemory:
             return try InMemory(app: self)
@@ -25,109 +25,81 @@ extension Application: TestingApplicationTester {
     public func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
         try await self.testing().performTest(request: request)
     }
+
+    public func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
+        try await self.testing().makeRequest(request)
+    }
 }
 
-#if compiler(>=6.0) && canImport(Testing)
 extension TestingApplicationTester {
-    @discardableResult
     public func test(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: String,
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        fileID: String = #fileID,
-        filePath: String = #filePath,
-        line: Int = #line,
-        column: Int = #column,
+        sourceLocation: SourceLocation = #_sourceLocation,
         afterResponse: (TestingHTTPResponse) async throws -> ()
-    ) async throws -> TestingApplicationTester {
+    ) async throws {
         try await self.test(
             method,
             path,
             headers: headers,
             body: body,
-            fileID: fileID,
-            filePath: filePath,
-            line: line,
-            column: column,
+            sourceLocation: sourceLocation,
             beforeRequest: { _ in },
             afterResponse: afterResponse
         )
     }
 
-    @discardableResult
     public func test(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: String,
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        fileID: String = #fileID,
-        filePath: String = #filePath,
-        line: Int = #line,
-        column: Int = #column,
+        sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in },
         afterResponse: (TestingHTTPResponse) async throws -> () = { _ in }
-    ) async throws -> TestingApplicationTester {
+    ) async throws {
         var request = TestingHTTPRequest(
             method: method,
             url: .init(path: path),
             headers: headers,
-            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0),
+            contentConfigurtion: .default()
         )
         try await beforeRequest(&request)
         do {
             let response = try await self.performTest(request: request)
             try await afterResponse(response)
         } catch {
-            let sourceLocation = Testing.SourceLocation(
-                fileID: fileID,
-                filePath: filePath,
-                line: line,
-                column: column
-            )
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
         }
-        return self
     }
 
     public func sendRequest(
-        _ method: HTTPMethod,
+        _ method: HTTPRequest.Method,
         _ path: String,
-        headers: HTTPHeaders = [:],
+        hostname: String = "localhost",
+        port: Int? = nil,
+        headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        fileID: String = #fileID,
-        filePath: String = #filePath,
-        line: Int = #line,
-        column: Int = #column,
+        sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in }
     ) async throws -> TestingHTTPResponse {
-        VaporTestingContext.warnIfNotInSwiftTestingContext(
-            fileID: fileID,
-            filePath: filePath,
-            line: line,
-            column: column
-        )
-        
         var request = TestingHTTPRequest(
             method: method,
-            url: .init(path: path),
+            url: .init(scheme: "http", host: hostname, port: port, path: path),
             headers: headers,
-            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0),
+            contentConfigurtion: .default()
         )
         try await beforeRequest(&request)
         do {
-            return try await self.performTest(request: request)
+            return try await self.makeRequest(request)
         } catch {
-            let sourceLocation = Testing.SourceLocation(
-                fileID: fileID,
-                filePath: filePath,
-                line: line,
-                column: column
-            )
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
         }
     }
 }
-#endif

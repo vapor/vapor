@@ -1,20 +1,18 @@
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// Get and set `HTTPCookies` for an HTTP request
     /// This accesses the `"Cookie"` header.
     public var cookie: HTTPCookies? {
         get {
-            self.parseDirectives(name: .cookie).first.map {
-                HTTPCookies(directives: $0)
-            }
+            HTTPCookies(directives: self.parseFlattenDirectives(name: .cookie))
         }
         set {
             if let cookieHeader = newValue?.cookieHeader {
-                self.replaceOrAdd(name: .cookie, value: cookieHeader)
+                self[.cookie] = cookieHeader
             } else {
-                self.remove(name: .cookie)
+                self[.cookie] = nil
             }
         }
     }
@@ -36,10 +34,10 @@ extension HTTPHeaders {
             return cookies
         }
         set {
-            self.remove(name: .setCookie)
+            self[.setCookie] = nil
             if let cookies = newValue {
                 for cookieHeader in cookies.setCookieHeaders {
-                    self.add(name: .setCookie, value: cookieHeader)
+                    self.append(.init(name: .setCookie, value: cookieHeader))
                 }
             }
         }
@@ -50,7 +48,7 @@ struct HTTPSetCookie {
     var name: String
     var value: HTTPCookies.Value
     
-    init?(directives: [HTTPHeaders.Directive]) {
+    init?(directives: [HTTPFields.Directive]) {
         guard let name = directives.first, let value = name.parameter else {
             return nil
         }
@@ -241,7 +239,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         self.cookies = [:]
     }
     
-    init(directives: [HTTPHeaders.Directive]) {
+    init(directives: [HTTPFields.Directive]) {
         self.cookies = directives.reduce(into: [:], { (cookies, directive) in
             if let value = directive.parameter {
                 cookies[.init(directive.value)] = .init(string: .init(value))

@@ -1,9 +1,10 @@
+import HTTPTypes
 import Tracing
 
 /// Creates a trace and metadata for every request
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-spans/
-public final class TracingMiddleware: AsyncMiddleware {
+public final class TracingMiddleware: Middleware {
     private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
     
     /// Create a TracingMiddleware
@@ -20,8 +21,8 @@ public final class TracingMiddleware: AsyncMiddleware {
         self.setCustomAttributes = setCustomAttributes
     }
     
-    public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
-        var parentContext = request.serviceContext
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        var parentContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &parentContext, using: HTTPHeadersExtractor())
         
         return try await withSpan(
@@ -29,14 +30,7 @@ public final class TracingMiddleware: AsyncMiddleware {
             request.route?.description ?? "vapor_route_undefined",
             context: parentContext,
             ofKind: .server
-        ) { span in
-            // Set the request.serviceContext for the duration of this middleware & then reset it to parent
-            // Using this pattern in `withSpan` allows spans to nest across sequential future chains
-            request.serviceContext = span.context
-            defer {
-                request.serviceContext = parentContext
-            }
-            
+        ) { span in            
             // Attributes: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#http-server-semantic-conventions
             span.updateAttributes { attributes in
                 // Required
@@ -50,12 +44,17 @@ public final class TracingMiddleware: AsyncMiddleware {
                 }
                 
                 attributes["network.protocol.name"] = "http"
-                switch request.application.http.server.configuration.address {
-                    case let .hostname(address, port):
-                        attributes["server.address"] = address
-                        attributes["server.port"] = port
-                    case let .unixDomainSocket(path):
-                        attributes["server.address"] = path
+                let address = request.application.sharedNewAddress.withLockedValue({ $0 })
+                switch address {
+                case .v4:
+                    fallthrough
+                case .v6:
+                    attributes["server.address"] = address?.ipAddress
+                    attributes["server.port"] = address?.port
+                case .unixDomainSocket:
+                    attributes["server.address"] = address?.description
+                case .none:
+                    break
                 }
                 attributes["url.query"] = request.url.query
                 
@@ -64,7 +63,7 @@ public final class TracingMiddleware: AsyncMiddleware {
                 attributes["network.peer.address"] = request.remoteAddress?.ipAddress
                 attributes["network.peer.port"] = request.remoteAddress?.port
                 attributes["network.protocol.version"] = "\(request.version.major).\(request.version.minor)"
-                attributes["user_agent.original"] = request.headers[.userAgent].first
+                attributes["user_agent.original"] = request.headers[.userAgent]
                 
                 // Custom defined
                 setCustomAttributes(&attributes, request)
@@ -90,8 +89,11 @@ public final class TracingMiddleware: AsyncMiddleware {
 // correlation using the `traceparent` and `tracestate` headers. For more information, see
 // https://swiftpackageindex.com/apple/swift-distributed-tracing/main/documentation/tracing/instrumentyourlibrary#Handling-inbound-requests
 private struct HTTPHeadersExtractor: Extractor {
-    func extract(key name: String, from headers: HTTPHeaders) -> String? {
-        let headerValue = headers[name]
+    func extract(key name: String, from headers: HTTPFields) -> String? {
+        guard let headerName = HTTPField.Name(name) else {
+            return nil
+        }
+        let headerValue = headers[values: headerName]
         if headerValue.isEmpty {
             return nil
         } else {

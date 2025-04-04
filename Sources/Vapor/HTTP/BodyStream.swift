@@ -6,7 +6,7 @@ public enum BodyStreamResult: Sendable {
     case buffer(ByteBuffer)
     /// Indicates an error.
     /// There will be 0 or 1 of these. 0 if the stream closes cleanly.
-    case error(Error)
+    case error(any Error)
     /// Indicates the stream has completed.
     /// There will be 0 or 1 of these. 0 if the stream errors.
     case end
@@ -42,7 +42,7 @@ extension BodyStreamResult: CustomDebugStringConvertible {
 /// A type that represents the writable handle of a streamed ``Response`` body.
 public protocol BodyStreamWriter: Sendable {
     /// The eventloop upon which writes must be sent
-    var eventLoop: EventLoop { get }
+    var eventLoop: any EventLoop { get }
     
     /// Writes an event to a streaming HTTP body. If the `result` is `.end` or `.error`, the stream ends.
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?)

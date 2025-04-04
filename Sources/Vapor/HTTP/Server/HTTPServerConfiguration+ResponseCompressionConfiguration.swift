@@ -1,4 +1,4 @@
-extension HTTPServer.Configuration {
+extension HTTPServerOld.Configuration {
     /// Supported HTTP response compression options.
     public struct ResponseCompressionConfiguration: Sendable {
         /// The default initial byte buffer capacity to use for the compressor if none is specified.
@@ -43,19 +43,6 @@ extension HTTPServer.Configuration {
         public static var enabled: Self {
             .enabled(
                 initialByteBufferCapacity: defaultInitialByteBufferCapacity,
-                disallowedTypes: .incompressible,
-                allowRequestOverrides: true
-            )
-        }
-        
-        /// Enables compression with custom configuration.
-        @available(*, deprecated, renamed: "enabled(initialByteBufferCapacity:disallowedTypes:allowRequestOverrides:)", message: "Renamed to allow for more parameters.")
-        @_disfavoredOverload // TODO: Remove this overload in Vapor 5
-        public static func enabled(
-            initialByteBufferCapacity: Int
-        ) -> Self {
-            .enabled(
-                initialByteBufferCapacity: initialByteBufferCapacity,
                 disallowedTypes: .incompressible,
                 allowRequestOverrides: true
             )
@@ -156,7 +143,4 @@ extension HTTPServer.Configuration {
             set { storage.allowRequestOverrides = newValue }
         }
     }
-    
-    @available(*, deprecated, renamed: "ResponseCompressionConfiguration", message: "Renamed to ResponseCompressionConfiguration for clarity.")
-    public typealias CompressionConfiguration = ResponseCompressionConfiguration
 }

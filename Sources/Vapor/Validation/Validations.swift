@@ -8,7 +8,7 @@ public struct Validations: Sendable {
     }
     
     public mutating func add<T>(
-        _ key: ValidationKey,
+        _ key: BasicCodingKey,
         as type: T.Type = T.self,
         is validator: Validator<T> = .valid,
         required: Bool = true,
@@ -18,15 +18,15 @@ public struct Validations: Sendable {
     }
     
     public mutating func add(
-        _ key: ValidationKey,
-        result: ValidatorResult,
+        _ key: BasicCodingKey,
+        result: any ValidatorResult,
         customFailureDescription: String? = nil
     ) {
         self.storage.append(.init(key: key, result: result, customFailureDescription: customFailureDescription))
     }
 
     public mutating func add(
-        _ key: ValidationKey,
+        _ key: BasicCodingKey,
         required: Bool = true,
         customFailureDescription: String? = nil,
         _ nested: (inout Validations) -> ()
@@ -36,8 +36,8 @@ public struct Validations: Sendable {
         self.storage.append(.init(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription))
     }
     
-    @preconcurrency public mutating func add(
-        each key: ValidationKey,
+    public mutating func add(
+        each key: BasicCodingKey,
         required: Bool = true,
         customFailureDescription: String? = nil,
         _ handler: @Sendable @escaping (Int, inout Validations) -> ()
@@ -47,27 +47,27 @@ public struct Validations: Sendable {
     
     public func validate(request: Request) throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
-            throw Abort(.unprocessableEntity, reason: "Missing \"Content-Type\" header")
+            throw Abort(.unprocessableContent, reason: "Missing \"Content-Type\" header")
         }
         guard let body = request.body.data else {
-            throw Abort(.unprocessableEntity, reason: "Empty Body")
+            throw Abort(.unprocessableContent, reason: "Empty Body")
         }
-        let contentDecoder = try ContentConfiguration.global.requireDecoder(for: contentType)
+        let contentDecoder = try request.application.contentConfiguration.requireDecoder(for: contentType)
         return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
     
-    public func validate(query: URI) throws -> ValidationsResult {
-        let urlDecoder = try ContentConfiguration.global.requireURLDecoder()
+    public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
+        let urlDecoder = try contentConfiguration.requireURLDecoder()
         return try urlDecoder.decode(ValidationsExecutor.self, from: query, userInfo: [.pendingValidations: self]).results
     }
     
-    public func validate(json: String) throws -> ValidationsResult {
-        return try ContentConfiguration.global.requireDecoder(for: .json)
+    public func validate(json: String, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
+        return try contentConfiguration.requireDecoder(for: .json)
             .decode(ValidationsExecutor.self, from: .init(string: json), headers: [:], userInfo: [.pendingValidations: self]).results
     }
     
-    public func validate(_ decoder: Decoder) throws -> ValidationsResult {
-        let container = try decoder.container(keyedBy: ValidationKey.self)
+    public func validate(_ decoder: any Decoder) throws -> ValidationsResult {
+        let container = try decoder.container(keyedBy: BasicCodingKey.self)
         
         return try .init(results: self.storage.map {
             try .init(
@@ -100,14 +100,14 @@ fileprivate extension CodingUserInfoKey {
 fileprivate struct ValidationsExecutor: Decodable {
     let results: ValidationsResult
     
-    init(from decoder: Decoder) throws {
+    init(from decoder: any Decoder) throws {
         guard let pendingValidations = decoder.userInfo[.pendingValidations] as? Validations else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Validation executor couldn't find any validations to run (broken Decoder?)"))
         }
         try self.init(from: decoder, explicitValidations: pendingValidations)
     }
     
-    init(from decoder: Decoder, explicitValidations: Validations) throws {
+    init(from decoder: any Decoder, explicitValidations: Validations) throws {
         self.results = try explicitValidations.validate(decoder)
     }
 }
