@@ -1,22 +1,3 @@
-#if os(Linux)
-public typealias CodingKeyRepresentable = Swift.CodingKeyRepresentable
-#else
-/// This is an unwelcome stand-in for the ``Swift/CodingKeyRepresentable`` protocol that appeared in Swift 5.6.
-public protocol CodingKeyRepresentable {
-    var codingKey: any CodingKey { get }
-}
-
-/// This conformance is provided by the stdlib when ``CodingKeyRepresentable`` is available.
-extension String: Vapor.CodingKeyRepresentable {
-    public var codingKey: any CodingKey { BasicCodingKey.key(self) }
-}
-
-/// This conformance is provided by the stdlib when ``CodingKeyRepresentable`` is available.
-extension Int: Vapor.CodingKeyRepresentable {
-    public var codingKey: any CodingKey { BasicCodingKey.index(self) }
-}
-#endif
-
 extension Array where Element == any CodingKey {
     public var dotPath: String { self.map(\.stringValue).joined(separator: ".") }
 }

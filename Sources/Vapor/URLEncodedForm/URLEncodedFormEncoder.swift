@@ -223,7 +223,7 @@ private class _Encoder: Encoder, _Container {
         
         // See `KeyedEncodingContainerProtocol.superEncoder()`.
         func superEncoder() -> any Encoder {
-            let encoder = _Encoder(codingPath: self.codingPath + [BasicCodingKey.key("super")], configuration: self.configuration)
+            let encoder = _Encoder(codingPath: self.codingPath + ["super".codingKey], configuration: self.configuration)
             self.childContainers["super"] = encoder
             return encoder
         }
@@ -276,7 +276,7 @@ private class _Encoder: Encoder, _Container {
         
         func encode(_ value: some Encodable) throws {
             if let date = value as? Date {
-                let encodedDate = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: BasicCodingKey.index(self.count))
+                let encodedDate = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: self.count.codingKey)
                 switch self.configuration.arrayEncoding {
                 case .bracket:
                     var emptyStringChild = self.internalData.children[""] ?? []
@@ -296,7 +296,7 @@ private class _Encoder: Encoder, _Container {
                     self.internalData.values.append(value)
                 }
             } else {
-                let encoder = _Encoder(codingPath: self.codingPath + [BasicCodingKey.index(self.count)], configuration: configuration)
+                let encoder = _Encoder(codingPath: self.codingPath + [self.count.codingKey], configuration: configuration)
                 try value.encode(to: encoder)
                 let childData = try encoder.getData()
                 if childData.hasOnlyValues {
@@ -321,7 +321,7 @@ private class _Encoder: Encoder, _Container {
         {
             defer { self.count += 1 }
             let container = KeyedContainer<NestedKey>(
-                codingPath: self.codingPath + [BasicCodingKey.index(self.count)],
+                codingPath: self.codingPath + [self.count.codingKey],
                 configuration: self.configuration
             )
             self.childContainers[self.count] = container
@@ -342,7 +342,7 @@ private class _Encoder: Encoder, _Container {
         // See `UnkeyedEncodingContainer.superEncoder()`.
         func superEncoder() -> any Encoder {
             defer { self.count += 1 }
-            let encoder = _Encoder(codingPath: self.codingPath + [BasicCodingKey.index(self.count)], configuration: self.configuration)
+            let encoder = _Encoder(codingPath: self.codingPath + [self.count.codingKey], configuration: self.configuration)
             self.childContainers[self.count] = encoder
             return encoder
         }

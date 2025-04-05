@@ -15,14 +15,14 @@ internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
             if let index = $1.intValue {
                 try $0.unkeyedContainer(startingAt: index)._unsafe_inplace_superDecoder()
             } else {
-                return try $0.container(keyedBy: BasicCodingKey.self).superDecoder(forKey: .key($1.stringValue))
+                try $0.container(keyedBy: BasicCodingKey.self).superDecoder(forKey: .init($1))
             }
         }
         if let index = keypath.last?.intValue {
             var container = try lastDecoder.unkeyedContainer(startingAt: index)
             self.result = try container.decode(D.self)
         } else if let key = keypath.last?.stringValue {
-            self.result = try lastDecoder.container(keyedBy: BasicCodingKey.self).decode(D.self, forKey: .key(key))
+            self.result = try lastDecoder.container(keyedBy: BasicCodingKey.self).decode(D.self, forKey: .init(key))
         } else {
             self.result = try lastDecoder.singleValueContainer().decode(D.self)
         }
@@ -72,7 +72,7 @@ fileprivate extension Decoder {
             try container.skip()
         }
         guard container.currentIndex == index, !container.isAtEnd else {
-            throw DecodingError.keyNotFound(BasicCodingKey.index(index), .init(codingPath: container.codingPath, debugDescription: "Missing index \(index)"))
+            throw DecodingError.keyNotFound(index.codingKey, .init(codingPath: container.codingPath, debugDescription: "Missing index \(index)"))
         }
         return container
     }
