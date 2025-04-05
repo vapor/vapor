@@ -45,9 +45,12 @@ struct DefaultResponder: Responder {
         self.reportMetrics = reportMetrics
     }
 
-    /// See `Responder`
-    public func respond(to request: Request) async throws -> Response {
-        let startTime = DispatchTime.now().uptimeNanoseconds
+    // See `Responder.respond(to:)`
+    func respond(to request: Request) async throws -> Response {
+        // per https://github.com/swiftlang/swift-testing/blob/swift-6.1-RELEASE/Sources/Testing/Events/TimeValue.swift#L113
+        let epochDuration = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
+        let startTime = UInt64(epochDuration.components.seconds * 1_000_000_000 + (epochDuration.components.attoseconds / 1_000_000_000))
+
         let response: Response
         do {
             if let cachedRoute = self.getRoute(for: request) {
