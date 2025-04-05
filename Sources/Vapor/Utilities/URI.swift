@@ -27,7 +27,7 @@ import Foundation
 /// [`swift-foundation`]: https://github.com/apple/swift-foundation
 /// [`URL`]: https://developer.apple.com/documentation/foundation/url
 /// [`URLComponents`]: https://developer.apple.com/documentation/foundation/urlcomponents
-public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Hashable, Codable, Sendable {
+public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, ExpressibleByStringLiteral {
     private var components: URLComponents?
     
     public init(from decoder: any Decoder) throws {
@@ -203,8 +203,8 @@ public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Ha
             return self.components?.string ?? ""
         }
     }
-    
-    // See `ExpressibleByStringInterpolation.init(stringLiteral:)`.
+
+    // See `ExpressibleByStringLiteral.init(stringLiteral:)`.
     public init(stringLiteral value: String) {
         self.init(string: value)
     }
@@ -222,7 +222,7 @@ extension URI {
     ///
     /// [RFC 3986 § 3.1]: https://datatracker.ietf.org/doc/html/rfc3986#section-3.1
     /// [RGC 7595]: https://datatracker.ietf.org/doc/html/rfc7595
-    public struct Scheme: CustomStringConvertible, ExpressibleByStringInterpolation, Hashable, Codable, Sendable {
+    public struct Scheme: CustomStringConvertible, ExpressibleByStringLiteral, Hashable, Codable, Sendable {
         /// The string representation of the scheme.
         public let value: String?
         
