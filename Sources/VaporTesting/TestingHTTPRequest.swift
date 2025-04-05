@@ -24,7 +24,7 @@ public struct TestingHTTPRequest: Sendable {
         let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
-            return self.headers.contentType
+            self.headers.contentType
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
@@ -43,9 +43,7 @@ public struct TestingHTTPRequest: Sendable {
     }
 
     public var content: any ContentContainer {
-        get {
-            _ContentContainer(body: self.body, headers: self.headers, contentConfiguration: self.contentConfiguration)
-        }
+        get { _ContentContainer(body: self.body, headers: self.headers, contentConfiguration: self.contentConfiguration) }
         set {
             let content = (newValue as! _ContentContainer)
             self.body = content.body
@@ -63,17 +61,13 @@ public struct TestingHTTPRequest: Sendable {
             fatalError("Decoding from test request is not supported.")
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: any URLQueryEncoder) throws
-            where E: Encodable
-        {
+        mutating func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
             try encoder.encode(encodable, to: &self.url)
         }
     }
 
     public var query: any URLQueryContainer {
-        get {
-            _URLQueryContainer(url: url, contentConfiguration: self.contentConfiguration)
-        }
+        get { _URLQueryContainer(url: url, contentConfiguration: self.contentConfiguration) }
         set {
             let query = (newValue as! _URLQueryContainer)
             self.url = query.url

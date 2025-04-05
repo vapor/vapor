@@ -11,8 +11,7 @@ public protocol ContentEncoder: Sendable {
     /// Most encoders should implement this method by simply forwarding it to the encoder userInfo-aware version below,
     /// e.g. `try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])`. For legacy API compatibility
     /// reasons, the default protocol conformance will do the exact opposite.
-    func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields) throws
-        where E: Encodable
+    func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws
 
     /// "Encode object" method. The provided encodable object's contents must be stored in the provided
     /// ``NIOCore/ByteBuffer``, and any appropriate headers for the type of the content may be stored in the provided
@@ -21,8 +20,7 @@ public protocol ContentEncoder: Sendable {
     ///
     /// For legacy API compatibility reasons, the default protocol conformance for this method forwards it to the legacy
     /// encode method.
-    func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws
-        where E: Encodable
+    func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws
 }
 
 /// Conform a type to this protocol to make it usable for decoding data via Vapor's ``ContentConfiguration`` system.
@@ -47,9 +45,7 @@ public protocol ContentDecoder: Sendable {
 }
 
 extension ContentEncoder {
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws
-        where E: Encodable
-    {
+    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         try self.encode(encodable, to: &body, headers: &headers)
     }
 }

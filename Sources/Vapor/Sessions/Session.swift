@@ -5,7 +5,7 @@ import NIOConcurrencyHelpers
 /// Each session has a unique identifier that is used to look it up with each request
 /// to your app. This is usually done via HTTP cookies.
 ///
-/// See `Request.session()` and `SessionsMiddleware` for more information.
+/// See ``Request/session`` and ``SessionsMiddleware`` for more information.
 public final class Session: Sendable {
     /// This session's unique identifier. Usually a cookie value.
     public var id: SessionID? {
@@ -51,6 +51,7 @@ public final class Session: Sendable {
 
 public struct SessionID: Sendable, Equatable, Hashable {
     public let string: String
+    
     public init(string: String) {
         self.string = string
     }

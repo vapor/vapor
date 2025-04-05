@@ -11,7 +11,7 @@ import NIOCore
 ///
 ///     app.middleware.use(app.sessions.middleware)
 ///
-/// See `SessionsConfig` and `Sessions` for more information.
+/// See ``SessionsConfiguration`` and ``Sessions`` for more information.
 public final class SessionsMiddleware: Middleware {
     /// The cookie to work with
     let configuration: SessionsConfiguration
@@ -19,11 +19,11 @@ public final class SessionsMiddleware: Middleware {
     /// Session store.
     public let session: any SessionDriver
 
-    /// Creates a new `SessionsMiddleware`.
+    /// Creates a new ``SessionsMiddleware``.
     ///
     /// - parameters:
-    ///     - sessions: `Sessions` implementation to use for fetching and storing sessions.
-    ///     - configuration: `SessionsConfiguration` to use for naming and creating cookie values.
+    ///     - sessions: ``Sessions`` implementation to use for fetching and storing sessions.
+    ///     - configuration: ``SessionsConfiguration`` to use for naming and creating cookie values.
     public init(
         session: any SessionDriver,
         configuration: SessionsConfiguration = .default()

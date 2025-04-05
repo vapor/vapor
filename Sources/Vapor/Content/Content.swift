@@ -62,7 +62,7 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable, Sendable 
 
 extension Content {
     public static var defaultContentType: HTTPMediaType {
-        return .json
+        .json
     }
     
     public static func decodeRequest(_ request: Request) async throws -> Self {
@@ -87,13 +87,13 @@ extension Content {
 
 extension String: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .plainText
+        .plainText
     }
 }
 
 extension FixedWidthInteger where Self: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .plainText
+        .plainText
     }
 }
 
@@ -112,7 +112,7 @@ extension Bool: Content {}
 
 extension BinaryFloatingPoint where Self: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .plainText
+        .plainText
     }
 }
 extension Double: Content { }
@@ -120,12 +120,12 @@ extension Float: Content { }
 
 extension Array: Content, ResponseEncodable, RequestDecodable where Element: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .json
+        .json
     }
 }
 
 extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .json
+        .json
     }
 }

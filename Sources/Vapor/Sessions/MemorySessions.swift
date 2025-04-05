@@ -58,6 +58,6 @@ public struct MemorySessions: SessionDriver, Sendable {
     }
     
     private func generateID() -> SessionID {
-        return .init(string: [UInt8].random(count: 32).base64String())
+        .init(string: [UInt8].random(count: 32).base64String())
     }
 }

@@ -2,7 +2,8 @@ import NIOConcurrencyHelpers
 
 extension Request {
     /// Helper for accessing authenticated objects.
-    /// See `Authenticator` for more information.
+    ///
+    /// See ``Authenticator`` for more information.
     public var auth: Authentication {
         return .init(request: self)
     }
@@ -10,6 +11,7 @@ extension Request {
     /// Request helper for storing and fetching authenticated objects.
     public struct Authentication {
         let request: Request
+        
         init(request: Request) {
             self.request = request
         }

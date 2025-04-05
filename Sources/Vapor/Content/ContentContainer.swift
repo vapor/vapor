@@ -15,7 +15,7 @@ public protocol ContentContainer {
     func decode<D: Decodable>(_: D.Type, using decoder: any ContentDecoder) async throws -> D
 
     /// Use the provided ``ContentEncoder`` to write a value of type `E` to the container.
-    mutating func encode<E: Encodable>(_ encodable: E, using encoder: any ContentEncoder) throws
+    mutating func encode(_ encodable: some Encodable, using encoder: any ContentEncoder) throws
 }
 
 extension ContentContainer {
@@ -56,20 +56,20 @@ extension ContentContainer {
     }
 
     /// Serialize a ``Content`` object to the container, specifying an explicit content type.
-    public mutating func encode<C: Content>(_ content: C, as contentType: HTTPMediaType) throws {
+    public mutating func encode(_ content: some Content, as contentType: HTTPMediaType) throws {
         var content = content
         try self.encode(&content, as: contentType)
     }
     
     /// Serialize a ``Content`` object to the container without copying it, specifying an
     /// explicit content type.
-    public mutating func encode<C: Content>(_ content: inout C, as contentType: HTTPMediaType) throws {
+    public mutating func encode(_ content: inout some Content, as contentType: HTTPMediaType) throws {
         try content.beforeEncode()
         try self.encode(content, using: self.configuredEncoder(for: contentType))
     }
 
     /// Serialize an ``Encodable`` value to the container as the given ``HTTPMediaType``.
-    public mutating func encode<E: Encodable>(_ encodable: E, as contentType: HTTPMediaType) throws {
+    public mutating func encode(_ encodable: some Encodable, as contentType: HTTPMediaType) throws {
         try self.encode(encodable, using: self.configuredEncoder(for: contentType))
     }
 

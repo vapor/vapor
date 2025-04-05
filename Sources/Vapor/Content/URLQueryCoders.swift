@@ -7,17 +7,13 @@ public protocol URLQueryDecoder: Sendable {
 }
 
 public protocol URLQueryEncoder: Sendable {
-    func encode<E>(_ encodable: E, to url: inout URI) throws
-        where E: Encodable
+    func encode(_ encodable: some Encodable, to url: inout URI) throws
 
-    func encode<E>(_ encodable: E, to url: inout URI, userInfo: [CodingUserInfoKey: any Sendable]) throws
-        where E: Encodable
+    func encode(_ encodable: some Encodable, to url: inout URI, userInfo: [CodingUserInfoKey: any Sendable]) throws
 }
 
 extension URLQueryEncoder {
-    public func encode<E>(_ encodable: E, to url: inout URI, userInfo: [CodingUserInfoKey: any Sendable]) throws
-        where E: Encodable
-    {
+    public func encode(_ encodable: some Encodable, to url: inout URI, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         try self.encode(encodable, to: &url)
     }
 }

@@ -74,32 +74,24 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
         self.configuration = configuration
     }
     
-    /// ``ContentEncoder`` conformance.
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields) throws
-        where E: Encodable
-    {
+    // See `ContentEncoder.encode(_:to:headers:)`.
+    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
 
-    /// ``ContentEncoder`` conformance.
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws
-        where E: Encodable
-    {
+    // See `ContentEncoder.encode(_:to:headers:userInfo:)`.
+    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         headers.contentType = .urlEncodedForm
         try body.writeString(self.encode(encodable, userInfo: userInfo))
     }
     
-    /// ``URLQueryEncoder`` conformance.
-    public func encode<E>(_ encodable: E, to url: inout URI) throws
-        where E: Encodable
-    {
+    // See `URLQueryEncoder.encode(_:to:)`.
+    public func encode(_ encodable: some Encodable, to url: inout URI) throws {
         try self.encode(encodable, to: &url, userInfo: [:])
     }
     
-    /// ``URLQueryEncoder`` conformance.
-    public func encode<E>(_ encodable: E, to url: inout URI, userInfo: [CodingUserInfoKey: any Sendable]) throws
-        where E: Encodable
-    {
+    // See `URLQueryEncoder.encode(_:to:userInfo:)`.
+    public func encode(_ encodable: some Encodable, to url: inout URI, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         url.query = try self.encode(encodable, userInfo: userInfo)
     }
 
@@ -114,9 +106,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
     ///   - userInfo: Overrides the default coder user info.
     /// - Returns: Encoded ``String``
     /// - Throws: Any error that may occur while attempting to encode the specified type.
-    public func encode<E>(_ encodable: E, userInfo: [CodingUserInfoKey: any Sendable] = [:]) throws -> String
-        where E: Encodable
-    {
+    public func encode(_ encodable: some Encodable, userInfo: [CodingUserInfoKey: any Sendable] = [:]) throws -> String {
         var configuration = self.configuration  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
         if !userInfo.isEmpty {
             configuration.userInfo.merge(userInfo) { $1 }
@@ -191,15 +181,13 @@ private class _Encoder: Encoder, _Container {
             self.configuration = configuration
         }
         
-        /// See `KeyedEncodingContainerProtocol`
+        // See `KeyedEncodingContainerProtocol.encodeNil(forKey:)`.
         func encodeNil(forKey key: Key) throws {
             // skip
         }
         
-        /// See `KeyedEncodingContainerProtocol`
-        func encode<T>(_ value: T, forKey key: Key) throws
-            where T : Encodable
-        {
+        // See `KeyedEncodingContainerProtocol.encode(_:forKey:)`.
+        func encode(_ value: some Encodable, forKey key: Key) throws {
             if let date = value as? Date {
                 self.internalData.children[key.stringValue] = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: key)
             } else if let convertible = value as? any URLQueryFragmentConvertible {
@@ -211,7 +199,7 @@ private class _Encoder: Encoder, _Container {
             }
         }
         
-        /// See `KeyedEncodingContainerProtocol`
+        // See `KeyedEncodingContainerProtocol.nestedContainer(keyedBy:forKey:)`.
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey>
             where NestedKey: CodingKey
         {
@@ -223,7 +211,7 @@ private class _Encoder: Encoder, _Container {
             return .init(container)
         }
         
-        /// See `KeyedEncodingContainerProtocol`
+        // See `KeyedEncodingContainerProtocol.nestedUnkeyedContainer(_:forKey:)`.
         func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
             let container = UnkeyedContainer(
                 codingPath: self.codingPath + [key],
@@ -233,14 +221,14 @@ private class _Encoder: Encoder, _Container {
             return container
         }
         
-        /// See `KeyedEncodingContainerProtocol`
+        // See `KeyedEncodingContainerProtocol.superEncoder()`.
         func superEncoder() -> any Encoder {
             let encoder = _Encoder(codingPath: self.codingPath + [BasicCodingKey.key("super")], configuration: self.configuration)
             self.childContainers["super"] = encoder
             return encoder
         }
         
-        /// See `KeyedEncodingContainerProtocol`
+        // See `KeyedEncodingContainerProtocol.superEncoder(forKey:)`.
         func superEncoder(forKey key: Key) -> any Encoder {
             let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
             self.childContainers[key.stringValue] = encoder
@@ -286,7 +274,7 @@ private class _Encoder: Encoder, _Container {
             // skip
         }
         
-        func encode<T>(_ value: T) throws where T: Encodable {
+        func encode(_ value: some Encodable) throws {
             if let date = value as? Date {
                 let encodedDate = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: BasicCodingKey.index(self.count))
                 switch self.configuration.arrayEncoding {
@@ -327,7 +315,7 @@ private class _Encoder: Encoder, _Container {
             self.count += 1 // we don't want to do this if anything earlier threw an error
         }
         
-        /// See UnkeyedEncodingContainer.nestedContainer
+        // See `UnkeyedEncodingContainer.nestedContainer(keyedBy:)`.
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey>
             where NestedKey: CodingKey
         {
@@ -340,18 +328,18 @@ private class _Encoder: Encoder, _Container {
             return .init(container)
         }
         
-        /// See UnkeyedEncodingContainer.nestedUnkeyedContainer
+        // See `UnkeyedEncodingContainer.nestedUnkeyedContainer()`.
         func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
             defer { self.count += 1 }
             let container = UnkeyedContainer(
-                codingPath: self.codingPath + [BasicCodingKey.index(self.count)],
+                codingPath: self.codingPath + [self.count.codingKey],
                 configuration: self.configuration
             )
             self.childContainers[self.count] = container
             return container
         }
         
-        /// See UnkeyedEncodingContainer.superEncoder
+        // See `UnkeyedEncodingContainer.superEncoder()`.
         func superEncoder() -> any Encoder {
             defer { self.count += 1 }
             let encoder = _Encoder(codingPath: self.codingPath + [BasicCodingKey.index(self.count)], configuration: self.configuration)
@@ -362,7 +350,7 @@ private class _Encoder: Encoder, _Container {
 
     /// Private `SingleValueEncodingContainer`.
     private final class SingleValueContainer: SingleValueEncodingContainer, _Container {
-        /// See `SingleValueEncodingContainer`
+        // See `SingleValueEncodingContainer.codingPath`.
         var codingPath: [any CodingKey]
 
         func getData() throws -> URLEncodedFormData { self.data }
@@ -381,13 +369,13 @@ private class _Encoder: Encoder, _Container {
             self.configuration = configuration
         }
         
-        /// See `SingleValueEncodingContainer`
+        // See `SingleValueEncodingContainer.encodeNil()`.
         func encodeNil() throws {
             // skip
         }
         
-        /// See `SingleValueEncodingContainer`
-        func encode<T>(_ value: T) throws where T: Encodable {
+        // See `SingleValueEncodingContainer.encode(_:)`.
+        func encode(_ value: some Encodable) throws {
             if let date = value as? Date {
                 self.data = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: nil)
             } else if let convertible = value as? any URLQueryFragmentConvertible {
@@ -421,10 +409,9 @@ private extension URLEncodedFormEncoder.Configuration {
 
 private extension EncodingError {
     static func invalidValue(_ value: Any, at path: [any CodingKey]) -> EncodingError {
-        let pathString = path.map { $0.stringValue }.joined(separator: ".")
         let context = EncodingError.Context(
             codingPath: path,
-            debugDescription: "Invalid value at '\(pathString)': \(value)"
+            debugDescription: "Invalid value at '\(path.dotPath)': \(value)"
         )
         return Swift.EncodingError.invalidValue(value, context)
     }

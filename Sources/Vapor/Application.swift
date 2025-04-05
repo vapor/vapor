@@ -174,9 +174,9 @@ public final class Application: Sendable {
             get {
                 switch address {
                 case .hostname(_, let port):
-                    return port
+                    port
                 default:
-                    return nil
+                    nil
                 }
             }
             set {

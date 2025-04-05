@@ -7,7 +7,7 @@ public enum HTTPBodyStreamStrategy: Sendable {
     /// before the route handler is called. The application's configured default max body
     /// size will be used unless otherwise specified.
     ///
-    /// See `collect(maxSize:)` to specify a custom max collection size.
+    /// See ``collect(maxSize:)`` to specify a custom max collection size.
     public static var collect: HTTPBodyStreamStrategy {
         return .collect(maxSize: nil)
     }
@@ -28,128 +28,104 @@ public enum HTTPBodyStreamStrategy: Sendable {
 
 extension RoutesBuilder {
     @discardableResult
-    public func get<Response>(
+    public func get(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.get, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.get, path, use: closure)
     }
 
     @discardableResult
-    public func get<Response>(
+    public func get(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.get, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.get, path, use: closure)
     }
 
     @discardableResult
-    public func post<Response>(
+    public func post(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.post, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.post, path, use: closure)
     }
 
     @discardableResult
-    public func post<Response>(
+    public func post(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.post, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.post, path, use: closure)
     }
 
     @discardableResult
-    public func patch<Response>(
+    public func patch(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.patch, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.patch, path, use: closure)
     }
 
     @discardableResult
-    public func patch<Response>(
+    public func patch(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.patch, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.patch, path, use: closure)
     }
 
     @discardableResult
-    public func put<Response>(
+    public func put(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.put, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.put, path, use: closure)
     }
 
     @discardableResult
-    public func put<Response>(
+    public func put(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.put, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.put, path, use: closure)
     }
 
     @discardableResult
-    public func delete<Response>(
+    public func delete(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.delete, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.delete, path, use: closure)
     }
 
     @discardableResult
-    public func delete<Response>(
+    public func delete(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(.delete, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.delete, path, use: closure)
     }
 
     @discardableResult
-    public func on<Response>(
+    public func on(
         _ method: HTTPRequest.Method,
         _ path: PathComponent...,
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
-        return self.on(method, path, body: body, use: { request in
-            return try await closure(request)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(method, path, body: body, use: { request in
+            try await closure(request)
         })
     }
 
     @discardableResult
-    public func on<Response>(
+    public func on(
         _ method: HTTPRequest.Method,
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @Sendable @escaping (Request) async throws -> Response
-    ) -> Route
-    where Response: ResponseEncodable
-    {
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
         let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
                 _ = try await request.eventLoop.flatSubmit {

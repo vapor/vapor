@@ -13,7 +13,7 @@ internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
         
         let lastDecoder = try keypath.dropLast().reduce(decoder) {
             if let index = $1.intValue {
-                return try $0.unkeyedContainer(startingAt: index)._unsafe_inplace_superDecoder()
+                try $0.unkeyedContainer(startingAt: index)._unsafe_inplace_superDecoder()
             } else {
                 return try $0.container(keyedBy: BasicCodingKey.self).superDecoder(forKey: .key($1.stringValue))
             }

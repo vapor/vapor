@@ -3,15 +3,11 @@ import NIOCore
 import HTTPTypes
 
 extension JSONEncoder: ContentEncoder {
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields) throws
-        where E: Encodable
-    {
+    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
     
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws
-        where E: Encodable
-    {
+    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         headers.contentType = .json
         
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy

@@ -16,44 +16,28 @@ public final class Request: CustomStringConvertible, Sendable {
     ///     httpReq.method = .get
     ///
     public var method: HTTPRequest.Method {
-        get {
-            self.requestBox.withLockedValue { $0.method }
-        }
-        set {
-            self.requestBox.withLockedValue { $0.method = newValue }
-        }
+        get { self.requestBox.withLockedValue { $0.method } }
+        set { self.requestBox.withLockedValue { $0.method = newValue } }
     }
     
     /// The URL used on this request.
     public var url: URI {
-        get {
-            self.requestBox.withLockedValue { $0.url }
-        }
-        set {
-            self.requestBox.withLockedValue { $0.url = newValue }
-        }
+        get { self.requestBox.withLockedValue { $0.url } }
+        set { self.requestBox.withLockedValue { $0.url = newValue } }
     }
     
     /// The version for this HTTP request.
     public var version: HTTPVersion {
-        get {
-            self.requestBox.withLockedValue { $0.version }
-        }
-        set {
-            self.requestBox.withLockedValue { $0.version = newValue }
-        }
+        get { self.requestBox.withLockedValue { $0.version } }
+        set { self.requestBox.withLockedValue { $0.version = newValue } }
     }
     
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
     public var headers: HTTPFields {
-        get {
-            self.requestBox.withLockedValue { $0.headers }
-        }
-        set {
-            self.requestBox.withLockedValue { $0.headers = newValue }
-        }
+        get { self.requestBox.withLockedValue { $0.headers } }
+        set { self.requestBox.withLockedValue { $0.headers = newValue } }
     }
     
     /// A unique ID for the request.
@@ -70,12 +54,8 @@ public final class Request: CustomStringConvertible, Sendable {
     ///     req.route?.description // "GET /hello/:name"
     ///
     public var route: Route? {
-        get {
-            self.requestBox.withLockedValue { $0.route }
-        }
-        set {
-            self.requestBox.withLockedValue { $0.route = newValue }
-        }
+        get { self.requestBox.withLockedValue { $0.route } }
+        set { self.requestBox.withLockedValue { $0.route = newValue } }
     }
 
     /// We try to determine true peer address if load balancer or reversed proxy provided info in headers
@@ -88,14 +68,12 @@ public final class Request: CustomStringConvertible, Sendable {
     /// in 1. and 2. will use port 80 as default port, and  3. will have port number provided by NIO if any
     public var peerAddress: SocketAddress? {
         if let clientAddress = headers.forwarded.first?.for {
-            return try? SocketAddress.init(ipAddress: clientAddress, port: 80)
+            try? SocketAddress.init(ipAddress: clientAddress, port: 80)
+        } else if let xForwardedFor = headers[.xForwardedFor] {
+            try? SocketAddress.init(ipAddress: xForwardedFor, port: 80)
+        } else {
+            self.remoteAddress
         }
-
-        if let xForwardedFor = headers[.xForwardedFor] {
-            return try? SocketAddress.init(ipAddress: xForwardedFor, port: 80)
-        }
-
-        return self.remoteAddress
     }
 
     // MARK: Content
@@ -107,30 +85,24 @@ public final class Request: CustomStringConvertible, Sendable {
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
             where D: Decodable
         {
-            return try decoder.decode(D.self, from: self.request.url)
+            try decoder.decode(D.self, from: self.request.url)
         }
 
-        func encode<E>(_ encodable: E, using encoder: any URLQueryEncoder) throws
-            where E: Encodable
-        {
+        func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
             try encoder.encode(encodable, to: &self.request.url)
         }
     }
     
     public var query: any URLQueryContainer {
-        get {
-            return _URLQueryContainer(request: self, contentConfiguration: self.application.contentConfiguration)
-        }
-        set {
-            // ignore since Request is a reference type
-        }
+        get { _URLQueryContainer(request: self, contentConfiguration: self.application.contentConfiguration) }
+        set { } // ignore since Request is a reference type
     }
 
     private struct _ContentContainer: ContentContainer, Sendable {
         let request: Request
 
         var contentType: HTTPMediaType? {
-            return self.request.headers.contentType
+            self.request.headers.contentType
         }
 
         var contentConfiguration: ContentConfiguration {
@@ -177,27 +149,19 @@ public final class Request: CustomStringConvertible, Sendable {
     /// This container is used to read your `Decodable` type using a `ContentDecoder` implementation.
     /// If no `ContentDecoder` is provided, a `Request`'s `Content-Type` header is used to select a registered decoder.
     public var content: any ContentContainer {
-        get {
-            return _ContentContainer(request: self)
-        }
-        set {
-            // ignore since Request is a reference type
-        }
+        get { _ContentContainer(request: self) }
+        set { } // ignore since Request is a reference type
     }
     
     /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
     /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
     public var logger: Logger {
-        get {
-            self._logger.withLockedValue { $0 }
-        }
-        set {
-            self._logger.withLockedValue { $0 = newValue }
-        }
+        get { self._logger.withLockedValue { $0 } }
+        set { self._logger.withLockedValue { $0 = newValue } }
     }
     
     public var body: Body {
-        return Body(self)
+        Body(self)
     }
 
     #warning("Implement body size, dont' force unwrap")
@@ -214,15 +178,11 @@ public final class Request: CustomStringConvertible, Sendable {
     /// Get and set `HTTPCookies` for this `Request`
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
-        get {
-            return self.headers.cookie ?? .init()
-        }
-        set {
-            self.headers.cookie = newValue
-        }
+        get { self.headers.cookie ?? .init() }
+        set { self.headers.cookie = newValue }
     }
     
-    /// See `CustomStringConvertible`
+    // See `CustomStringConvertible.description`
     public var description: String {
         var desc: [String] = []
         desc.append("\(self.method) \(self.url) HTTP/\(self.version.major).\(self.version.minor)")
@@ -244,31 +204,19 @@ public final class Request: CustomStringConvertible, Sendable {
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters {
-        get {
-            self.requestBox.withLockedValue { $0.parameters }
-        }
-        set {
-            self.requestBox.withLockedValue { $0.parameters = newValue }
-        }
+        get { self.requestBox.withLockedValue { $0.parameters } }
+        set { self.requestBox.withLockedValue { $0.parameters = newValue } }
     }
 
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage {
-        get {
-            self._storage.withLockedValue { $0 }
-        }
-        set {
-            self._storage.withLockedValue { $0 = newValue }
-        }
+        get { self._storage.withLockedValue { $0 } }
+        set { self._storage.withLockedValue { $0 = newValue } }
     }
 
     public var byteBufferAllocator: ByteBufferAllocator {
-        get {
-            self.requestBox.withLockedValue { $0.byteBufferAllocator }
-        }
-        set {
-            self.requestBox.withLockedValue { $0.byteBufferAllocator = newValue }
-        }
+        get { self.requestBox.withLockedValue { $0.byteBufferAllocator } }
+        set { self.requestBox.withLockedValue { $0.byteBufferAllocator = newValue } }
     }
     
     struct RequestBox: Sendable {

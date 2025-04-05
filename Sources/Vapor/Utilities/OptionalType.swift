@@ -1,5 +1,3 @@
-import NIOCore
-
 /// Capable of being represented by an optional wrapped type.
 ///
 /// This protocol mostly exists to allow constrained extensions on generic
@@ -15,13 +13,14 @@ public protocol OptionalType: AnyOptionalType {
     static func makeOptionalType(_ wrapped: WrappedType?) -> Self
 }
 
-/// Conform concrete optional to `OptionalType`.
-/// See `OptionalType` for more information.
+/// Conform concrete `Optional` to ``OptionalType``.
+///
+/// See ``OptionalType`` for more information.
 extension Optional: OptionalType {
-    /// See `OptionalType.WrappedType`
+    // See `OptionalType.WrappedType`.
     public typealias WrappedType = Wrapped
     
-    /// See `OptionalType.wrapped`
+    // See `OptionalType.wrapped`.
     public var wrapped: Wrapped? {
         switch self {
         case .none: return nil
@@ -29,13 +28,13 @@ extension Optional: OptionalType {
         }
     }
     
-    /// See `OptionalType.makeOptionalType`
+    // See `OptionalType.makeOptionalType(_:)`.
     public static func makeOptionalType(_ wrapped: Wrapped?) -> Optional<Wrapped> {
         return wrapped
     }
 }
 
-/// Type-erased `OptionalType`
+/// Type-erased ``OptionalType``
 public protocol AnyOptionalType {
     /// Returns the wrapped type, if it exists.
     var anyWrapped: Any? { get }
@@ -45,9 +44,9 @@ public protocol AnyOptionalType {
 }
 
 extension AnyOptionalType where Self: OptionalType {
-    /// See `AnyOptionalType.anyWrapped`
+    // See `AnyOptionalType.anyWrapped`.
     public var anyWrapped: Any? { return wrapped }
     
-    /// See `AnyOptionalType.anyWrappedType`
+    // See `AnyOptionalType.anyWrappedType`.
     public static var anyWrappedType: Any.Type { return WrappedType.self }
 }

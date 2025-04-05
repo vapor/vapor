@@ -1,9 +1,9 @@
 import Foundation
-import Metrics
 @preconcurrency import RoutingKit
-import NIOCore
-import Logging
 import HTTPTypes
+import Logging
+import Metrics
+import NIOCore
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
@@ -16,12 +16,10 @@ internal struct DefaultResponder: Responder {
         let responder: any Responder
     }
 
-    /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
-        let options = routes.caseInsensitive ?
-            Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
-        let router = TrieRouter(CachedRoute.self, options: options)
-        
+    /// Creates a new ``DefaultResponder``.
+    init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
+        let router = TrieRouter(CachedRoute.self, options: routes.caseInsensitive ? [.caseInsensitive] : [])
+
         for route in routes.all {
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
@@ -32,10 +30,8 @@ internal struct DefaultResponder: Responder {
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
-                case .constant(let string):
-                    return string != ""
-                default:
-                    return true
+                case .constant(let string): string != ""
+                default: true
                 }
             }
             

@@ -6,7 +6,7 @@ import NIOCore
 public protocol URLQueryContainer {
     func decode<D: Decodable>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
 
-    mutating func encode<E: Encodable>(_ encodable: E, using encoder: any URLQueryEncoder) throws
+    mutating func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws
 
     var contentConfiguration: ContentConfiguration { get }
 }
@@ -15,19 +15,19 @@ extension URLQueryContainer {
     // MARK: - Encoding helpers
 
     /// Serialize a ``Content`` object to the container.
-    public mutating func encode<C: Content>(_ content: C) throws {
+    public mutating func encode(_ content: some Content) throws {
         var content = content
         try self.encode(&content)
     }
     
     /// Serialize a ``Content`` object to the container without copying it.
-    public mutating func encode<C: Content>(_ content: inout C) throws {
+    public mutating func encode(_ content: inout some Content) throws {
         try content.beforeEncode()
         try self.encode(content, using: self.configuredEncoder())
     }
 
     /// Serialize an ``Encodable`` value to the container.
-    public mutating func encode<E: Encodable>(_ encodable: E) throws {
+    public mutating func encode(_ encodable: some Encodable) throws {
         try self.encode(encodable, using: self.configuredEncoder())
     }
     

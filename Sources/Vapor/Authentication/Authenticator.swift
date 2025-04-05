@@ -1,16 +1,16 @@
 import NIOCore
 
 /// Capable of being authenticated.
-public protocol Authenticatable { }
+public protocol Authenticatable: Sendable { }
 
 /// Helper for creating authentication middleware.
 ///
-/// See `RequestAuthenticator` and `SessionAuthenticator` for more information.
+/// See ``RequestAuthenticator`` and ``SessionAuthenticator`` for more information.
 public protocol Authenticator: Middleware { }
 
-/// Help for creating authentication middleware based on `Request`.
+/// Help for creating authentication middleware based on ``Request``.
 ///
-/// `Authenticator`'s use the incoming request to check for authentication information.
+/// ``Authenticator``'s use the incoming request to check for authentication information.
 /// If valid authentication credentials are present, the authenticated user is added to `req.auth`.
 public protocol RequestAuthenticator: Authenticator {
     func authenticate(request: Request) async throws

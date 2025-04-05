@@ -15,7 +15,7 @@ extension RoutesBuilder {
     ///     - path: Group path components separated by commas.
     /// - returns: Newly created `Router` wrapped in the path.
     public func grouped(_ path: PathComponent...) -> any RoutesBuilder {
-        return self.grouped(path)
+        self.grouped(path)
     }
 
     /// Creates a new `Router` that will automatically prepend the supplied path components.
@@ -30,7 +30,7 @@ extension RoutesBuilder {
     ///     - path: Array of group path components.
     /// - returns: Newly created `Router` wrapped in the path.
     public func grouped(_ path: [PathComponent]) -> any RoutesBuilder {
-        return HTTPRoutesGroup(root: self, path: path)
+        HTTPRoutesGroup(root: self, path: path)
     }
 
     /// Creates a new `Router` that will automatically prepend the supplied path components.
@@ -46,7 +46,7 @@ extension RoutesBuilder {
     ///     - path: Group path components separated by commas.
     ///     - configure: Closure to configure the newly created `Router`.
     public func group(_ path: PathComponent..., configure: (any RoutesBuilder) throws -> ()) rethrows {
-        return try group(path, configure: configure)
+        try group(path, configure: configure)
     }
 
     /// Creates a new `Router` that will automatically prepend the supplied path components.
@@ -80,7 +80,7 @@ private final class HTTPRoutesGroup: RoutesBuilder {
         self.path = path
     }
     
-    /// See `HTTPRoutesBuilder`.
+    // See `RoutesBuilder.add(_:)`.
     func add(_ route: Route) {
         route.path = self.path + route.path
         self.root.add(route)

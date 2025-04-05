@@ -22,16 +22,16 @@ public struct Abort: AbortError, DebuggableError, Equatable {
         return .init(redirectType.status, headers: headers)
     }
 
-    /// See `Debuggable`
+    // See `Debuggable.identifier`.
     public var identifier: String
 
-    /// See `AbortError`
+    // See `AbortError.status`.
     public var status: HTTPResponse.Status
 
-    /// See `AbortError`.
+    // See `AbortError.headers`.
     public var headers: HTTPFields
 
-    /// See `AbortError`
+    // See `AbortError.reason`.
     public var reason: String
 
     /// Source location where this error was created.

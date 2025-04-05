@@ -15,7 +15,7 @@ public struct WebSocketMaxFrameSize: Sendable, ExpressibleByIntegerLiteral {
     }
 }
 
-// Deprecated
+// Deprecated (in favor of what?)
 extension RoutesBuilder {
     /// Adds a route for opening a web socket connection
     /// - parameters:
@@ -35,7 +35,7 @@ extension RoutesBuilder {
         },
         onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
     ) -> Route {
-        return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
+        self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
     }
 
     /// Adds a route for opening a web socket connection
@@ -56,7 +56,7 @@ extension RoutesBuilder {
         },
         onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
     ) -> Route {
-        return self.on(.get, path) { request -> Response in
+        self.on(.get, path) { request -> Response in
             let res = Response(status: .switchingProtocols)
             res.upgrader = WebSocketUpgrader(maxFrameSize: maxFrameSize, shouldUpgrade: {
                 shouldUpgrade(request)                

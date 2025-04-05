@@ -1,7 +1,7 @@
-import NIOCore
-import NIOPosix
 import AsyncKit
+import NIOCore
 import _NIOFileSystem
+import NIOPosix
 
 extension Environment {
     /// Load the content of a file at a given path as a secret.

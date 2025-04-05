@@ -106,12 +106,12 @@ extension DebuggableError {
 
 /// MARK: Custom...StringConvertible
 extension DebuggableError {
-    /// See `CustomDebugStringConvertible`
+    // See `CustomDebugStringConvertible.debugDescription`.
     public var debugDescription: String {
         self.debuggableHelp(format: .long)
     }
 
-    /// See `CustomStringConvertible`
+    // See `CustomStringConvertible.description`.
     public var description: String {
         self.debuggableHelp(format: .short)
     }

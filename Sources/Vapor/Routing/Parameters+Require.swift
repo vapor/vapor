@@ -8,7 +8,7 @@ extension Parameters {
     /// - parameters:
     ///     - name: The name of the parameter.
     public func require(_ name: String) throws -> String {
-        return try self.require(name, as: String.self)
+        try self.require(name, as: String.self)
     }
 
     /// Grabs the named parameter from the parameter bag, casting it to a `LosslessStringConvertible` type.

@@ -97,7 +97,7 @@ public final class Response: CustomStringConvertible, Sendable {
         }
     }
     
-    /// See `CustomStringConvertible`
+    // See `CustomStringConvertible.description`.
     public var description: String {
         var desc: [String] = []
         self.responseBox.withLockedValue { box in

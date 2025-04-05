@@ -50,7 +50,7 @@ import HTTPTypes
 ///     ; to use within parameter values
 ///
 public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Sendable, Codable {
-    /// See `Equatable`.
+    // See `Equatable.==(_:_:)`.
     public static func ==(lhs: HTTPMediaType, rhs: HTTPMediaType) -> Bool {
         guard lhs.type != "*" && rhs.type != "*" else {
             return true
@@ -63,38 +63,38 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
         return lhs.subType == "*" || rhs.subType == "*" || lhs.subType.caseInsensitiveCompare(rhs.subType) == .orderedSame
     }
     
-    /// The `MediaType`'s discrete or composite type. Usually one of the following.
+    /// The ``HTTPMediaType``'s discrete or composite type. Usually one of the following.
     ///
     ///     "text" / "image" / "audio" / "video" / "application
     ///     "message" / "multipart"
     ///     ...
     ///
-    /// In the `MediaType` `"application/json; charset=utf8"`:
+    /// In the ``HTTPMediaType`` `"application/json; charset=utf8"`:
     ///
     /// - `type`: `"application"`
     /// - `subtype`: `"json"`
     /// - `parameters`: `["charset": "utf8"]` 
     public var type: String
     
-    /// The `MediaType`'s specific type. Usually a unique string.
+    /// The ``HTTPMediaType``'s specific type. Usually a unique string.
     ///
-    /// In the `MediaType` `"application/json; charset=utf8"`:
+    /// In the ``HTTPMediaType`` `"application/json; charset=utf8"`:
     ///
     /// - `type`: `"application"`
     /// - `subtype`: `"json"`
     /// - `parameters`: `["charset": "utf8"]`
     public var subType: String
     
-    /// The `MediaType`'s metadata. Zero or more key/value pairs.
+    /// The ``HTTPMediaType``'s metadata. Zero or more key/value pairs.
     ///
-    /// In the `MediaType` `"application/json; charset=utf8"`:
+    /// In the ``HTTPMediaType`` `"application/json; charset=utf8"`:
     ///
     /// - `type`: `"application"`
     /// - `subtype`: `"json"`
     /// - `parameters`: `["charset": "utf8"]`
     public var parameters: [String: String]
     
-    /// Converts this `MediaType` into its string representation.
+    /// Converts this ``HTTPMediaType`` into its string representation.
     ///
     /// For example, the following media type:
     ///
@@ -111,25 +111,25 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
         return string
     }
     
-    /// See `CustomStringConvertible`.
+    // See `CustomStringConvertible.description`.
     public var description: String {
-        return serialize()
+        self.serialize()
     }
     
-    /// See `Hashable`.
+    // See `Hashable.hash(into:)`.
     public func hash(into hasher: inout Hasher) {
         self.type.hash(into: &hasher)
         self.subType.hash(into: &hasher)
     }
     
-    /// Create a new `MediaType`.
+    /// Create a new ``HTTPMediaType``.
     public init(type: String, subType: String, parameters: [String: String] = [:]) {
         self.type = type
         self.subType = subType
         self.parameters = parameters
     }
     
-    /// Parse a `MediaType` from directives.
+    /// Parse a ``HTTPMediaType`` from directives.
     init?(directives: [HTTPFields.Directive]) {
         guard let value = directives.first, value.parameter == nil else {
             /// not a valid header value
@@ -155,15 +155,15 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
         }
     }
     
-    /// Creates a `MediaType` from a file extension, if possible.
+    /// Creates a ``HTTPMediaType`` from a file extension, if possible.
     ///
     ///     guard let mediaType = MediaType.fileExtension("txt") else { ... }
     ///
     /// - parameters:
     ///     - ext: File extension (ie., "txt", "json", "html").
-    /// - returns: Newly created `MediaType`, `nil` if none was found.
+    /// - returns: Newly created ``HTTPMediaType``, `nil` if none was found.
     public static func fileExtension(_ ext: String) -> HTTPMediaType? {
-        return fileExtensionMediaTypeMapping[ext]
+        fileExtensionMediaTypeMapping[ext]
     }
 }
 
@@ -212,6 +212,7 @@ public struct HTTPMediaTypeSet: Sendable {
 }
 
 extension HTTPMediaTypeSet: ExpressibleByArrayLiteral {
+    // See `ExpressibleByArrayLiteral.init(arrayLiteral:)`.
     public init(arrayLiteral elements: HTTPMediaType...) {
         self = HTTPMediaTypeSet(mediaTypes: elements)
     }

@@ -117,7 +117,7 @@ extension Response {
             }
         }
         
-        /// See `CustomDebugStringConvertible`.
+        // See `CustomStringConvertible.description`.
         public var description: String {
             switch storage {
             case .none: return "<no body>"

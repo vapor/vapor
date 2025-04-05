@@ -47,9 +47,9 @@ public struct FileIO: Sendable {
 
     let fileSystem: FileSystem = .shared
 
-    /// Creates a new `FileIO`.
+    /// Creates a new ``FileIO``.
     ///
-    /// See `Request.fileio()` to create one.
+    /// Use ``Request/fileio`` to get one.
     internal init(allocator: ByteBufferAllocator, request: Request) {
         self.allocator = allocator
         self.request = request
@@ -87,6 +87,7 @@ public struct FileIO: Sendable {
     }
     
     // MARK: - Concurrency
+    
     /// Reads the contents of a file at the supplied path.
     ///
     ///     let data = try await req.fileio.collectFile(file: "/path/to/file.txt")

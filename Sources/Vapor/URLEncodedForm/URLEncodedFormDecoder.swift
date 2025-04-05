@@ -128,19 +128,6 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     /// - Returns: An instance of `D`.
     /// - Throws: Any error that may occur while attempting to decode the specified type.
     public func decode<D: Decodable>(_: D.Type, from string: String) throws -> D {
-        /// This overload did not previously exist; instead, the much more obvious approach of defaulting the
-        /// `userInfo` argument of ``decode(_:from:userInfo:)-6h3y5`` was taken. Unfortunately, this resulted
-        /// in the compiler calling ``decode(_:from:)-7fve9`` via ``URI``'s conformance to
-        /// `ExpressibleByStringInterpolation` preferentially when a caller did not provide their own user info (so,
-        /// always). This, completely accidentally, did the "right thing" in the past thanks to a quirk of the
-        /// ancient and badly broken C-based URI parser. That parser no longer being in use, it is now necessary to
-        /// provide the explicit overload to convince the compiler to do the right thing. (`@_disfavoredOverload` was
-        /// considered and rejected as an alternative option - using it caused an infinite loop between
-        /// ``decode(_:from:userInfo:)-893nd`` and ``URLQueryDecoder/decode(_:from:)`` when built on Linux.
-        ///
-        /// None of this, of course, was in any way whatsoever confusing in the slightest. Indeed, Tanner's choice to
-        /// makie ``URI`` `ExpressibleByStringInterpolation` (and, for that matter, `ExpressibleByStringLiteral`)
-        /// back in 2019 was unquestionably just, just a truly _awesome_ and _inspired_ design decision 🤥.
         try self.decode(D.self, from: string, userInfo: [:])
     }
 
@@ -181,7 +168,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
 
 // MARK: Private
 
-/// Private `Decoder`. See `URLEncodedFormDecoder` for public decoder.
+/// Private `Decoder`. See ``URLEncodedFormDecoder`` for public decoder.
 private struct _Decoder: Decoder {
     var data: URLEncodedFormData
     var configuration: URLEncodedFormDecoder.Configuration
@@ -285,7 +272,7 @@ private struct _Decoder: Decoder {
         func superDecoder() throws -> any Decoder {
             _Decoder(
                 data: self.data.children["super"] ?? [],
-                codingPath: self.codingPath + [BasicCodingKey.key("super")],
+                codingPath: self.codingPath + ["super".codingKey],
                 configuration: self.configuration
             )
         }
@@ -389,7 +376,7 @@ private struct _Decoder: Decoder {
                 let childData = self.data.children[String(self.currentIndex)]!
                 let decoder = _Decoder(
                     data: childData,
-                    codingPath: self.codingPath + [BasicCodingKey.index(self.currentIndex)],
+                    codingPath: self.codingPath + [self.currentIndex.codingKey],
                     configuration: self.configuration
                 )
                 
@@ -401,17 +388,17 @@ private struct _Decoder: Decoder {
                     return try self.configuration.decodeDate(
                         from: value,
                         codingPath: self.codingPath,
-                        forKey: BasicCodingKey.index(self.currentIndex)
+                        forKey: self.currentIndex.codingKey
                     ) as! T
                 } else if let convertible = T.self as? any URLQueryFragmentConvertible.Type {
                     guard let result = convertible.init(urlQueryFragmentValue: value) else {
-                        throw DecodingError.typeMismatch(T.self, at: self.codingPath + [BasicCodingKey.index(self.currentIndex)])
+                        throw DecodingError.typeMismatch(T.self, at: self.codingPath + [self.currentIndex.codingKey])
                     }
                     return result as! T
                 } else {
                     let decoder = _Decoder(
                         data: URLEncodedFormData(values: [value]),
-                        codingPath: self.codingPath + [BasicCodingKey.index(self.currentIndex)],
+                        codingPath: self.codingPath + [self.currentIndex.codingKey],
                         configuration: self.configuration
                     )
                     
@@ -421,11 +408,11 @@ private struct _Decoder: Decoder {
         }
         
         mutating func nestedContainer<NestedKey: CodingKey>(keyedBy: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> {
-            throw DecodingError.typeMismatch([String: any Decodable].self, at: self.codingPath + [BasicCodingKey.index(self.currentIndex)])
+            throw DecodingError.typeMismatch([String: any Decodable].self, at: self.codingPath + [self.currentIndex.codingKey])
         }
         
         mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
-            throw DecodingError.typeMismatch([any Decodable].self, at: self.codingPath + [BasicCodingKey.index(self.currentIndex)])
+            throw DecodingError.typeMismatch([any Decodable].self, at: self.codingPath + [self.currentIndex.codingKey])
         }
         
         mutating func superDecoder() throws -> any Decoder {
@@ -435,7 +422,7 @@ private struct _Decoder: Decoder {
             
             return _Decoder(
                 data: data,
-                codingPath: self.codingPath + [BasicCodingKey.index(self.currentIndex)],
+                codingPath: self.codingPath + [self.currentIndex.codingKey],
                 configuration: self.configuration
             )
         }
@@ -525,20 +512,18 @@ private extension URLEncodedFormDecoder.Configuration {
 
 private extension DecodingError {
     static func typeMismatch(_ type: Any.Type, at path: [any CodingKey]) -> DecodingError {
-        let pathString = path.map(\.stringValue).joined(separator: ".")
         let context = DecodingError.Context(
             codingPath: path,
-            debugDescription: "Data found at '\(pathString)' was not \(type)"
+            debugDescription: "Data found at '\(path.dotPath)' was not \(type)"
         )
         
         return .typeMismatch(type, context)
     }
     
     static func valueNotFound(_ type: Any.Type, at path: [any CodingKey]) -> DecodingError {
-        let pathString = path.map(\.stringValue).joined(separator: ".")
         let context = DecodingError.Context(
             codingPath: path,
-            debugDescription: "No \(type) was found at '\(pathString)'"
+            debugDescription: "No \(type) was found at '\(path.dotPath)'"
         )
         
         return .valueNotFound(type, context)

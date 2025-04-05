@@ -2,12 +2,11 @@ import NIOCore
 
 public protocol ViewRenderer: Sendable {
     func `for`(_ request: Request) -> any ViewRenderer
-    func render<E>(_ name: String, _ context: E) async throws -> View
-        where E: Encodable
+    func render(_ name: String, _ context: some Encodable) async throws -> View
 }
 
 extension ViewRenderer {
     public func render(_ name: String) async throws -> View {
-        return try await self.render(name, [String: String]())
+        try await self.render(name, [String: String]())
     }
 }
