@@ -1,13 +1,16 @@
 import Foundation
-@preconcurrency import RoutingKit
 import HTTPTypes
 import Logging
 import Metrics
 import NIOCore
+import RoutingKit
 
-/// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-internal struct DefaultResponder: Responder {
-    private let router: TrieRouter<CachedRoute>
+/// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.
+struct DefaultResponder: Responder {
+    /// It's safe to mark this `nonisolated(unsafe)` because there are only two mutating operations
+    /// on a `TrieRouter` (calling `.register(_at:)` or changing its `options`), and we never do either
+    /// of those after `init()`.
+    private nonisolated(unsafe) let router: TrieRouter<CachedRoute>
     private let notFoundResponder: any Responder
     private let reportMetrics: Bool
 
