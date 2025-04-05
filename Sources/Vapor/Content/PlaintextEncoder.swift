@@ -72,8 +72,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func encode(_ value: some Encodable) throws {
         if let data = value as? Data {
             // special case for data
-            let utf8Maybe = data.withUnsafeBytes({ $0.withMemoryRebound(to: CChar.self, { String(validatingCString: $0.baseAddress!) }) })
-            if let utf8 = utf8Maybe {
+            if let utf8 = String(validating: data, as: UTF8.self) {
                 self.plaintext = utf8
             } else {
                 self.plaintext = data.base64EncodedString()
