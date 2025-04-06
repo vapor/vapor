@@ -79,7 +79,13 @@ internal struct DefaultResponder: Responder {
         let pathComponents = request.url.path
             .split(separator: "/")
             .map(String.init)
-        
+            .map { path in
+                guard path.contains("%") else {
+                    return path
+                }
+                return path.removingPercentEncoding ?? path
+            }
+
         // If it's a HEAD request and a HEAD route exists, return that route...
         if request.method == .HEAD, let route = self.router.route(
             path: [HTTPMethod.HEAD.rawValue] + pathComponents,
