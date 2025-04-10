@@ -609,21 +609,18 @@ extension HTTPHeaders.Range.Value {
                 }
                 return (offset: numericCast(size - value), byteCount: value)
             case .within(let start, let end):
-                guard start >= 0, end >= 0, start < end, start <= size else {
+                guard start >= 0, end >= 0, start <= end, start <= size else {
                     logger.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }
+                    // Request past EOF, return up to EOF bytes
+                let end = min(end,size)
                 let (byteCount, overflow) =  (end - start).addingReportingOverflow(1)
                 guard !overflow else {
                     logger.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }
-                var byteCountToReqeust = byteCount
-                    // Request past EOF, return up to EOF bytes
-                if (end > size) {
-                    byteCountToReqeust = byteCount - (end - size)
-                }
-                return (offset: numericCast(start), byteCount: byteCountToReqeust)
+                return (offset: numericCast(start), byteCount: byteCount)
         }
     }
 }
