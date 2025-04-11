@@ -256,7 +256,7 @@ final class FileTests: XCTestCase {
 
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 10, end: 100000000)])
         try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
-            XCTAssertEqual(res.status, .badRequest)
+            XCTAssertEqual(res.status, .partialContent)
         }
     }
     
