@@ -614,7 +614,7 @@ extension HTTPHeaders.Range.Value {
                     throw Abort(.badRequest)
                 }
                     // Request past EOF, return up to EOF bytes
-                let end = min(end,size)
+                let end = min(end,size-start-1)
                 let (byteCount, overflow) =  (end - start).addingReportingOverflow(1)
                 guard !overflow else {
                     logger.debug("Requested range was invalid: \(start)-\(end)")
