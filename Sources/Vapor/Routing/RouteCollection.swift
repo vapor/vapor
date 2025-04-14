@@ -5,6 +5,7 @@ public protocol RouteCollection {
     /// - parameters:
     ///     - routes: `RoutesBuilder` to register any new routes to.
     func boot(routes: any RoutesBuilder) throws
+    #warning("Make this async")
 }
 
 extension RoutesBuilder {
