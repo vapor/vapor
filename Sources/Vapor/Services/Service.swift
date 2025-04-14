@@ -28,14 +28,10 @@ extension Application {
             // despite still accessing `_makeService` from within a closure (`{ self._makeService }`).
             let lock = NIOLock()
 
-            private var _makeService: @Sendable (Application) -> ServiceType
-            var makeService: @Sendable (Application) -> ServiceType {
-                get { self.lock.withLock { self._makeService } }
-                set { self.lock.withLock { self._makeService = newValue } }
-            }
+            let makeService: NIOLockedValueBox<(@Sendable (Application) -> ServiceType)?>
 
             init() {
-                self._makeService = { _ in fatalError("No service configured for \(ServiceType.self)") }
+                self.makeService = .init(nil)
             }
         }
 
@@ -44,7 +40,10 @@ extension Application {
         }
 
         public var service: ServiceType {
-            self.storage.makeService(self.application)
+            guard let makeService = self.storage.makeService.withLockedValue({ $0 }) else {
+                fatalError("No service configured for \(ServiceType.self)")
+            }
+            return makeService(self.application)
         }
 
         public func use(_ provider: Provider) {
@@ -52,7 +51,7 @@ extension Application {
         }
 
         public func use(_ makeService: @escaping @Sendable (Application) -> ServiceType) {
-            self.storage.makeService = makeService
+            self.storage.makeService.withLockedValue { $0 = makeService }
         }
 
         func initialize() -> Storage {
