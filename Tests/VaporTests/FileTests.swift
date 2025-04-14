@@ -254,9 +254,26 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         }
 
-        headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 10, end: 100000000)])
+        let offset = 10
+        headerRequest.range = .init(unit: .bytes, ranges: [.within(start: offset, end: 100000000)])
         try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             XCTAssertEqual(res.status, .partialContent)
+            // Test content-range and number of bytes returned
+            do {
+                var fileSize = 0
+                let attr: Dictionary? = try FileManager.default.attributesOfItem(atPath: #file)
+                if let _attr = attr {
+                    fileSize = _attr[.size] as? Int ?? 0
+                }
+                let range = res.headers.first(name: .contentRange)!.split(separator: "/").first!.split(separator: " ").last!
+                XCTAssertEqual(range, "10-\(fileSize)")
+                
+                let count = res.body.readableBytes
+                XCTAssertEqual(count, fileSize-offset)
+            }
+            catch {
+                XCTFail("Checking content-range should have succeeded")
+            }
         }
     }
     
