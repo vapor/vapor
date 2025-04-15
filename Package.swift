@@ -146,6 +146,7 @@ let package = Package(
                 .target(name: "XCTVapor"),
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
+                .product(name: "MetricsTestKit", package: "swift-metrics"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),
