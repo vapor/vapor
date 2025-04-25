@@ -1320,29 +1320,3 @@ private extension ByteBuffer {
         self = buffer
     }
 }
-
-#warning("Remove when future NIO implementation fixes this")
-extension SocketAddressError: @retroactive Equatable {
-    public static func == (lhs: SocketAddressError, rhs: SocketAddressError) -> Bool {
-        switch lhs {
-        case .unsupported:
-            return rhs == .unsupported
-        case .unixDomainSocketPathTooLong:
-            return rhs == .unixDomainSocketPathTooLong
-        case .failedToParseIPString(let string):
-            if case .failedToParseIPString(let other) = rhs {
-                return string == other
-            } else {
-                return false
-            }
-        case .unknown(host: let host, port: let port):
-            if case .unknown(host: let otherHost, port: let otherPort) = rhs {
-                return host == otherHost && port == otherPort
-            } else {
-                return false
-            }
-        }
-    }
-    
-
-}
