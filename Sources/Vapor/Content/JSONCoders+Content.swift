@@ -11,13 +11,21 @@ extension JSONEncoder: ContentEncoder {
         headers.contentType = .json
         
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
+            #if canImport(Darwin)
+            let existingUserInfo = self.userInfo
+            #else
+            // JSONEncoder.userInfo does not declare its values as Sendable yet on Linux.
+            // This appears to be an oversight, as JSONDecoder does not have the same issue.
+            let existingUserInfo = self.userInfo as! [CodingUserInfoKey: any Sendable]
+            #endif
+
             try body.writeBytes(JSONEncoder.custom(
                 dates: self.dateEncodingStrategy,
                 data: self.dataEncodingStrategy,
                 keys: self.keyEncodingStrategy,
                 format: self.outputFormatting,
                 floats: self.nonConformingFloatEncodingStrategy,
-                userInfo: self.userInfo.merging(userInfo) { $1 }
+                userInfo: existingUserInfo.merging(userInfo) { $1 }
             ).encode(encodable))
         } else {
             try body.writeBytes(self.encode(encodable))
