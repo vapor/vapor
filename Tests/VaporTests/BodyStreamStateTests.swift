@@ -1,90 +1,51 @@
 @testable import Vapor
-import XCTest
+import Testing
 import NIOCore
+import Foundation
 
-final class BodyStreamStateTests: XCTestCase {
+@Suite("Body Stream State Tests")
+struct BodyStreamStateTests {
+    @Test("Test Synchronous Body")
     func testSynchronous() throws {
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("Hello, world!")
 
         var state = HTTPBodyStreamState()
-        XCTAssertEqual(
-            state.didReadBytes(buffer),
-            .init(action: .write(buffer), callRead: false)
-        )
-        XCTAssertEqual(
-            state.didWrite(),
-            .init(action: .nothing, callRead: false)
-        )
-        XCTAssertEqual(
-            state.didReceiveReadRequest(),
-            .init(action: .nothing, callRead: true)
-        )
-        XCTAssertEqual(
-            state.didReadBytes(buffer),
-            .init(action: .write(buffer), callRead: false)
-        )
-        XCTAssertEqual(
-            state.didWrite(),
-            .init(action: .nothing, callRead: false)
-        )
-        XCTAssertEqual(
-            state.didEnd(),
-            .init(action: .close(nil), callRead: false)
-        )
+        #expect(state.didReadBytes(buffer) == .init(action: .write(buffer), callRead: false))
+        #expect(state.didWrite() == .init(action: .nothing, callRead: false))
+        #expect(state.didReceiveReadRequest() == .init(action: .nothing, callRead: true))
+        #expect(state.didReadBytes(buffer) == .init(action: .write(buffer), callRead: false))
+        #expect(state.didWrite() == .init(action: .nothing, callRead: false))
+        #expect(state.didEnd() == .init(action: .close(nil), callRead: false))
     }
 
+    @Test("Test Read During Write")
     func testReadDuringWrite() throws {
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("Hello, world!")
 
         var state = HTTPBodyStreamState()
-        XCTAssertEqual(
-            state.didReadBytes(buffer),
-            .init(action: .write(buffer), callRead: false)
-        )
-        XCTAssertEqual(
-            state.didReceiveReadRequest(),
-            .init(action: .nothing, callRead: false)
-        )
-        XCTAssertEqual(
-            state.didWrite(),
-            .init(action: .nothing, callRead: true)
-        )
-        XCTAssertEqual(
-            state.didEnd(),
-            .init(action: .close(nil), callRead: false)
-        )
+        #expect(state.didReadBytes(buffer) == .init(action: .write(buffer), callRead: false))
+        #expect(state.didReceiveReadRequest() == .init(action: .nothing, callRead: false))
+        #expect(state.didWrite() == .init(action: .nothing, callRead: true))
+        #expect(state.didEnd() == .init(action: .close(nil), callRead: false))
     }
 
+    @Test("Test Error During Write")
     func testErrorDuringWrite() throws {
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("Hello, world!")
         struct Test: Error { }
 
         var state = HTTPBodyStreamState()
-        XCTAssertEqual(
-            state.didReadBytes(buffer),
-            .init(action: .write(buffer), callRead: false)
-        )
-        XCTAssertEqual(
-            state.didReceiveReadRequest(),
-            .init(action: .nothing, callRead: false)
-        )
-        XCTAssertEqual(
-            state.didError(Test()),
-            .init(action: .nothing, callRead: false)
-        )
-        XCTAssertEqual(
-            state.didReadBytes(buffer),
-            .init(action: .nothing, callRead: false)
-        )
-        XCTAssertEqual(
-            state.didWrite(),
-            .init(action: .close(Test()), callRead: false)
-        )
+        #expect(state.didReadBytes(buffer) == .init(action: .write(buffer), callRead: false))
+        #expect(state.didReceiveReadRequest() == .init(action: .nothing, callRead: false))
+        #expect(state.didError(Test()) == .init(action: .nothing, callRead: false))
+        #expect(state.didReadBytes(buffer) == .init(action: .nothing, callRead: false))
+        #expect(state.didWrite() == .init(action: .close(Test()), callRead: false))
     }
 
+    @Test("Test Buffered Writes")
     func testBufferedWrites() throws {
         var a = ByteBufferAllocator().buffer(capacity: 0)
         a.writeString("a")
@@ -93,26 +54,11 @@ final class BodyStreamStateTests: XCTestCase {
         struct Test: Error { }
 
         var state = HTTPBodyStreamState()
-        XCTAssertEqual(
-            state.didReadBytes(a),
-            .init(action: .write(a), callRead: false)
-        )
-        XCTAssertEqual(
-            state.didReadBytes(b),
-            .init(action: .nothing, callRead: false)
-        )
-        XCTAssertEqual(
-            state.didEnd(),
-            .init(action: .nothing, callRead: false)
-        )
-        XCTAssertEqual(
-            state.didWrite(),
-            .init(action: .write(b), callRead: false)
-        )
-        XCTAssertEqual(
-            state.didWrite(),
-            .init(action: .close(nil), callRead: false)
-        )
+        #expect(state.didReadBytes(a) == .init(action: .write(a), callRead: false))
+        #expect(state.didReadBytes(b) == .init(action: .nothing, callRead: false))
+        #expect(state.didEnd() == .init(action: .nothing, callRead: false))
+        #expect(state.didWrite() == .init(action: .write(b), callRead: false))
+        #expect(state.didWrite() == .init(action: .close(nil), callRead: false))
     }
 }
 

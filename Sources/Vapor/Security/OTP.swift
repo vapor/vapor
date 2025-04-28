@@ -13,9 +13,9 @@ public enum OTPDigits: Int {
     /// Returns 10^digit.
     fileprivate var pow: UInt32 {
         switch self {
-        case .six: return 1_000_000
-        case .seven: return 10_000_000
-        case .eight: return 100_000_000
+        case .six: 1_000_000
+        case .seven: 10_000_000
+        case .eight: 100_000_000
         }
     }
 }
@@ -90,9 +90,9 @@ internal extension OTP {
         counter: UInt64
     ) -> String {
         switch self.digest {
-        case .sha1: return generate(Insecure.SHA1(), counter: counter)
-        case .sha256: return generate(SHA256(), counter: counter)
-        case .sha512: return generate(SHA512(), counter: counter)
+        case .sha1: self.generate(Insecure.SHA1(), counter: counter)
+        case .sha256: self.generate(SHA256(), counter: counter)
+        case .sha512: self.generate(SHA512(), counter: counter)
         }
     }
     
@@ -108,9 +108,9 @@ internal extension OTP {
         range: Int
     ) -> [String] {
         switch self.digest {
-        case .sha1: return generateOTPs(Insecure.SHA1(), counter: counter, range: range)
-        case .sha256: return generateOTPs(SHA256(), counter: counter, range: range)
-        case .sha512: return generateOTPs(SHA512(), counter: counter, range: range)
+        case .sha1: self.generateOTPs(Insecure.SHA1(), counter: counter, range: range)
+        case .sha256: self.generateOTPs(SHA256(), counter: counter, range: range)
+        case .sha512: self.generateOTPs(SHA512(), counter: counter, range: range)
         }
     }
 }
@@ -121,7 +121,7 @@ internal extension OTP {
 ///     let code = HOTP.SHA1(key: key).generate(counter: 0)
 ///     print(code) "208503"
 ///
-/// See `TOTP` for time-based one-time passwords.
+/// See ``TOTP`` for time-based one-time passwords.
 public struct HOTP: OTP {
     let key: SymmetricKey
     let digits: OTPDigits
@@ -148,7 +148,7 @@ public struct HOTP: OTP {
     public func generate(
         counter: UInt64
     ) -> String {
-        _generate(counter: counter)
+        self._generate(counter: counter)
     }
     
     /// Generates several HOTP's for a range.
@@ -162,7 +162,7 @@ public struct HOTP: OTP {
         counter: UInt64,
         range: Int
     ) -> [String] {
-        _generate(counter: counter, range: range)
+        self._generate(counter: counter, range: range)
     }
     
     /// Compute the HOTP for the key and the counter.
@@ -178,7 +178,7 @@ public struct HOTP: OTP {
         digits: OTPDigits = .six,
         counter: UInt64
     ) -> String {
-        return Self.init(key: key, digest: digest, digits: digits).generate(counter: counter)
+        Self.init(key: key, digest: digest, digits: digits).generate(counter: counter)
     }
 }
 
@@ -189,7 +189,7 @@ public struct HOTP: OTP {
 ///     let code = TOTP.SHA1(key: key).generate(time: Date())
 ///     print(code) "501247"
 ///
-/// See `HOTP` for hash-based one-time passwords.
+/// See ``HOTP`` for hash-based one-time passwords.
 public struct TOTP: OTP {
     let key: SymmetricKey
     let digits: OTPDigits
@@ -223,7 +223,7 @@ public struct TOTP: OTP {
         time: Date
     ) -> String {
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
-        return _generate(counter: UInt64(counter))
+        return self._generate(counter: UInt64(counter))
     }
     
     /// Generates several TOTP's for a range.
@@ -239,7 +239,7 @@ public struct TOTP: OTP {
         range: Int
     ) -> [String] {
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
-        return _generate(counter: UInt64(counter), range: range)
+        return self._generate(counter: UInt64(counter), range: range)
     }
     
     /// Compute the TOTP for the key, time interval and time.
@@ -257,7 +257,7 @@ public struct TOTP: OTP {
         interval: Int = 30,
         time: Date
     ) -> String {
-        return Self.init(key: key, digest: digest, digits: digits, interval: interval).generate(time: time)
+        Self.init(key: key, digest: digest, digits: digits, interval: interval).generate(time: time)
     }
 }
 

@@ -1,5 +1,5 @@
-import Foundation
 import ConsoleKit
+import Foundation
 
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have
 /// an `Environment` that can be used to dynamically register and configure services.
@@ -18,7 +18,8 @@ public struct Environment: Sendable, Equatable {
     // MARK: - Detection
     
     /// Detects the environment from `CommandLine.arguments`. Invokes `detect(from:)`.
-    /// - parameters:
+    ///
+    /// - Parameters:
     ///     - arguments: Command line arguments to detect environment from.
     /// - returns: The detected environment, or default env.
     public static func detect(arguments: [String] = ProcessInfo.processInfo.arguments) throws -> Environment {
@@ -26,11 +27,12 @@ public struct Environment: Sendable, Equatable {
         return try Environment.detect(from: &commandInput)
     }
     
-    /// Detects the environment from `CommandInput`. Parses the `--env` flag, with the
+    /// Detects the environment from ``CommandInput``. Parses the `--env` flag, with the
     /// `VAPOR_ENV` environment variable as a fallback.
-    /// - parameters:
-    ///     - arguments: `CommandInput` to parse `--env` flag from.
-    /// - returns: The detected environment, or default env.
+    ///
+    /// - Parameters:
+    ///   - arguments: ``CommandInput`` to parse `--env` flag from.
+    /// - Returns: The detected environment, or default env.
     public static func detect(from commandInput: inout CommandInput) throws -> Environment {
         self.sanitize(commandInput: &commandInput)
         
@@ -84,7 +86,7 @@ public struct Environment: Sendable, Equatable {
     /// resulting arguments, including the executable path.
     private static func sanitizeArguments(_ arguments: [String] = ProcessInfo.processInfo.arguments) -> [String] {
         var commandInput = CommandInput(arguments: arguments)
-        sanitize(commandInput: &commandInput)
+        self.sanitize(commandInput: &commandInput)
         return commandInput.executablePath + commandInput.arguments
     }
     
@@ -120,7 +122,7 @@ public struct Environment: Sendable, Equatable {
     
     // MARK: - Equatable
 
-    /// See `Equatable`
+    // See `Equatable.==(_:_:)`.
     public static func ==(lhs: Environment, rhs: Environment) -> Bool {
         return lhs.name == rhs.name
     }
@@ -142,10 +144,10 @@ public struct Environment: Sendable, Equatable {
     ///   availability of debug information.
     public var isRelease: Bool { !_isDebugAssertConfiguration() }
 
-    /// The command-line arguments for this `Environment`.
+    /// The command-line arguments for this ``Environment``.
     public var arguments: [String]
 
-    /// Exposes the `Environment`'s `arguments` property as a `CommandInput`.
+    /// Exposes ``Environment/arguments`` as a ``CommandInput``.
     public var commandInput: CommandInput {
         get { return CommandInput(arguments: arguments) }
         set { arguments = newValue.executablePath + newValue.arguments }
@@ -153,7 +155,7 @@ public struct Environment: Sendable, Equatable {
     
     // MARK: - Init
 
-    /// Create a new `Environment`.
+    /// Create a new ``Environment``.
     public init(name: String, arguments: [String] = ProcessInfo.processInfo.arguments) {
         self.name = name
         self.arguments = arguments

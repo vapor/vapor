@@ -1,28 +1,11 @@
-import NIOHTTP1
+import HTTPTypes
 
 /// Default implementation of `AbortError`. You can use this as a convenient method for throwing
 /// `AbortError`s without having to conform your own error-type to `AbortError`.
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public struct Abort: AbortError, DebuggableError {
-    /// Creates a redirecting `Abort` error.
-    ///
-    ///     throw Abort.redirect(to: "https://vapor.codes")"
-    ///
-    /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
-    /// Defaulting to non-permanent to prevent unexpected caching.
-    /// - Parameters:
-    ///   - location: The path to redirect to
-    ///   - type: The type of redirect to perform
-    /// - Returns: An abort error that provides a redirect to the specified location
-    @available(*, deprecated, renamed: "redirect(to:redirectType:)")
-    public static func redirect(to location: String, type: RedirectType) -> Abort {
-        var headers: HTTPHeaders = [:]
-        headers.replaceOrAdd(name: .location, value: location)
-        return .init(type.status, headers: headers)
-    }
-    
+public struct Abort: AbortError, DebuggableError, Equatable {
     /// Creates a redirecting `Abort` error.
     ///
     ///     throw Abort.redirect(to: "https://vapor.codes")
@@ -34,34 +17,30 @@ public struct Abort: AbortError, DebuggableError {
     ///   - redirectType: The type of redirect to perform
     /// - Returns: An abort error that provides a redirect to the specified location
     public static func redirect(to location: String, redirectType: Redirect = .normal) -> Abort {
-        var headers: HTTPHeaders = [:]
-        headers.replaceOrAdd(name: .location, value: location)
+        var headers: HTTPFields = [:]
+        headers[.location] = location
         return .init(redirectType.status, headers: headers)
     }
 
-    /// See `Debuggable`
+    // See `Debuggable.identifier`.
     public var identifier: String
 
-    /// See `AbortError`
-    public var status: HTTPResponseStatus
+    // See `AbortError.status`.
+    public var status: HTTPResponse.Status
 
-    /// See `AbortError`.
-    public var headers: HTTPHeaders
+    // See `AbortError.headers`.
+    public var headers: HTTPFields
 
-    /// See `AbortError`
+    // See `AbortError.reason`.
     public var reason: String
 
     /// Source location where this error was created.
     public var source: ErrorSource?
 
-    /// Stack trace at point of error creation.
-    @available(*, deprecated, message: "Captured stack traces are no longer supported by Vapor")
-    public var stackTrace: StackTrace?
-
     /// Create a new `Abort`, capturing current source location info.
     public init(
-        _ status: HTTPResponseStatus,
-        headers: HTTPHeaders = [:],
+        _ status: HTTPResponse.Status,
+        headers: HTTPFields = [:],
         reason: String? = nil,
         identifier: String? = nil,
         suggestedFixes: [String] = [],
@@ -82,33 +61,5 @@ public struct Abort: AbortError, DebuggableError {
             column: column,
             range: range
         )
-    }
-
-    @available(*, deprecated, message: "Captured stack traces are no longer supported by Vapor")
-    public init(
-        _ status: HTTPResponseStatus,
-        headers: HTTPHeaders = [:],
-        reason: String? = nil,
-        identifier: String? = nil,
-        suggestedFixes: [String] = [],
-        file: String = #fileID,
-        function: String = #function,
-        line: UInt = #line,
-        column: UInt = #column,
-        range: Range<UInt>? = nil,
-        stackTrace: StackTrace?
-    ) {
-        self.identifier = identifier ?? status.code.description
-        self.headers = headers
-        self.status = status
-        self.reason = reason ?? status.reasonPhrase
-        self.source = ErrorSource(
-            file: file,
-            function: function,
-            line: line,
-            column: column,
-            range: range
-        )
-        self.stackTrace = stackTrace
     }
 }
