@@ -43,6 +43,7 @@ jobs:
       with_release_mode_testing: true
       with_tsan: false
       with_musl: true
+      with_android: true
       extra_musl_flags: --target Vapor
       ios_xcodebuild_action: ''
       ios_scheme_name: Vapor
