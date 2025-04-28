@@ -61,18 +61,22 @@ struct DefaultResponder: Responder {
             }
             let status = response.status
             if self.reportMetrics {
+                let now = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
+                let nowNanos = UInt64(now.components.seconds * 1_000_000_000 + (now.components.attoseconds / 1_000_000_000))
                 self.updateMetrics(
                     for: request,
-                    startTime: startTime,
+                    elapsedTime: nowNanos - startTime,
                     statusCode: status.code
                 )
             }
             return response
         } catch {
+            let now = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
+            let nowNanos = UInt64(now.components.seconds * 1_000_000_000 + (now.components.attoseconds / 1_000_000_000))
             if self.reportMetrics {
                 self.updateMetrics(
                     for: request,
-                    startTime: startTime,
+                    elapsedTime: nowNanos - startTime,
                     statusCode: 500
                 )
             }
@@ -106,7 +110,7 @@ struct DefaultResponder: Responder {
     /// Records the requests metrics.
     private func updateMetrics(
         for request: Request,
-        startTime: UInt64,
+        elapsedTime: UInt64,
         statusCode: Int
     ) {
         let pathForMetrics: String
@@ -137,7 +141,7 @@ struct DefaultResponder: Responder {
             label: "http_request_duration_seconds",
             dimensions: dimensions,
             preferredDisplayUnit: .seconds
-        ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+        ).recordNanoseconds(elapsedTime)
     }
 }
 
