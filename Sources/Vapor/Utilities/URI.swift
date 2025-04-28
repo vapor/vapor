@@ -27,7 +27,7 @@ import Foundation
 /// [`swift-foundation`]: https://github.com/apple/swift-foundation
 /// [`URL`]: https://developer.apple.com/documentation/foundation/url
 /// [`URLComponents`]: https://developer.apple.com/documentation/foundation/urlcomponents
-public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, ExpressibleByStringLiteral {
+public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, ExpressibleByStringInterpolation {
     private var components: URLComponents?
     
     public init(from decoder: any Decoder) throws {
@@ -102,7 +102,7 @@ public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, Express
     ) {
         let path = path.first == "/" ? path : "/\(path)"
         var components: URLComponents!
-        
+
         if scheme.value == nil, userinfo == nil, host == nil, port == nil, query == nil, fragment == nil {
             // If only a path is given, treat it as a string to parse. (This behavior is awful, but must be kept for compatibility.)
             // In order to do this in a fully compatible way (where in this case "compatible" means "being stuck with
@@ -111,39 +111,21 @@ public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, Express
             // valid URI format according to spec) to avoid weird routing misbehaviors.
             components = URL(string: "/\(path.drop(while: { $0 == "/" }))").flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
         } else {
-            // N.B.: We perform percent encoding manually and unconditionally on each non-nil component because the
-            // behavior of URLComponents is completely different on Linux than on macOS for inputs which are already
-            // fully or partially percent-encoded, as well as inputs which contain invalid characters (especially
-            // for the host component). This is the only way to provide consistent behavior (and to avoid various
-            // fatalError()s in URLComponents on Linux).
             components = .init()
-            components.scheme = scheme.value?.addingPercentEncoding(withAllowedCharacters: .urlSchemeAllowed)
-            if let host {
-                if let creds = userinfo?.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false), !creds[0].isEmpty {
-                    components.percentEncodedUser = creds[0].addingPercentEncoding(withAllowedCharacters: .urlUserAllowed)
-                    if creds.count > 1, !creds[1].isEmpty {
-                        components.percentEncodedPassword = creds[1].addingPercentEncoding(withAllowedCharacters: .urlPasswordAllowed)
-                    }
+            components.scheme = scheme.value
+            if let creds = userinfo?.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false), !creds[0].isEmpty {
+                components.user = String(creds[0])
+                if creds.count > 1, !creds[1].isEmpty {
+                    components.password = String(creds[1])
                 }
-                // TODO: Use the `encodedHost` polyfill
-                #if canImport(Darwin)
-                if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
-                    components.encodedHost = host.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
-                } else {
-                    components.percentEncodedHost = host.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
-                }
-                #else
-                components.percentEncodedHost = host.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
-                #endif
-                components.port = port
-            } else {
-                // TODO: Should this be enforced?
-                // assert(userinfo == nil, "Can't provide userinfo without an authority (hostname)")
-                // assert(port == nil, "Can't provide userinfo without an authority (hostname)")
             }
-            components.percentEncodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlCorrectPathAllowed) ?? "/"
-            components.percentEncodedQuery = query?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
-            components.percentEncodedFragment = fragment?.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed)
+            if let host {
+                components.host = host
+                components.port = port
+            }
+            components.path = path
+            components.query = query
+            components.fragment = fragment
         }
         self.components = components
     }
@@ -176,7 +158,7 @@ public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, Express
     }
 
     public var path: String {
-        get { self.components?.percentEncodedPath.replacingOccurrences(of: "%3B", with: ";", options: .literal) ?? "/" }
+        get { self.components?.percentEncodedPath ?? "/" }
         set { self.components?.percentEncodedPath = newValue.withAllowedUrlDelimitersEncoded }
     }
 
@@ -191,17 +173,7 @@ public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, Express
     }
 
     public var string: String {
-        if urlPathAllowedIsBroken {
-            // On Linux and in older Xcode versions, URLComponents incorrectly treats `;` as *not* allowed in the path component.
-            let string = self.components?.string ?? ""
-            return string.replacingOccurrences(
-                of: "%3B", with: ";",
-                options: .literal, // N.B.: `rangeOfPath` never actually returns `nil`
-                range: self.components?.rangeOfPath ?? (string.startIndex..<string.startIndex)
-            )
-        } else {
-            return self.components?.string ?? ""
-        }
+        self.components?.string ?? ""
     }
 
     // See `ExpressibleByStringLiteral.init(stringLiteral:)`.
@@ -290,7 +262,7 @@ extension URI {
 
 // MARK: - Utilities
 
-extension StringProtocol {
+extension String {
     /// Apply percent-encoding to any unencoded instances of `[` and `]` in the string
     ///
     /// The `[` and `]` characters are considered "general delimiters" by [RFC 3986 § 2.2], and thus
@@ -307,33 +279,7 @@ extension StringProtocol {
     ///
     /// [RFC 3986 § 2.2]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
     fileprivate var withAllowedUrlDelimitersEncoded: String {
-        self.replacingOccurrences(of: "[", with: "%5B", options: .literal)
-            .replacingOccurrences(of: "]", with: "%5D", options: .literal)
+        self.replacing("[", with: "%5B")
+            .replacing("]", with: "%5D")
     }
 }
-
-extension CharacterSet {
-    /// The set of characters allowed in a URI scheme, as per [RFC 3986 § 3.1].
-    ///
-    /// [RFC 3986 § 3.1]: https://datatracker.ietf.org/doc/html/rfc3986#section-3.1
-    fileprivate static var urlSchemeAllowed: Self {
-        // Intersect the alphanumeric set plus additional characters with the host-allowed set to ensure
-        // we get only ASCII codepoints in the result.
-        .urlHostAllowed.intersection(.alphanumerics.union(.init(charactersIn: "+-.")))
-    }
-    
-    /// The set of characters allowed in a URI path, as per [RFC 3986 § 3.3].
-    ///
-    /// > Note: This is identical to the built-in `urlPathAllowed` on macOS; on Linux it adds the missing
-    /// > semicolon character to the set.
-    ///
-    /// [RFC 3986 § 3.3]: https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
-    fileprivate static var urlCorrectPathAllowed: Self {
-        .urlPathAllowed.union(.init(charactersIn: ";"))
-    }
-}
-
-/// On Linux and in older Xcode versions, URLComponents incorrectly treats `;` as *not* allowed in the path component.
-private let urlPathAllowedIsBroken: Bool = {
-    CharacterSet.urlPathAllowed != CharacterSet.urlCorrectPathAllowed
-}()
