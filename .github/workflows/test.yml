@@ -19,7 +19,7 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:6.0
+    container: swift:6.1
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v4
@@ -47,13 +47,3 @@ jobs:
       ios_xcodebuild_action: ''
       ios_scheme_name: Vapor
     secrets: inherit
-
-  test-parallel:
-    if: ${{ !(github.event.pull_request.draft || false) }}
-    runs-on: ubuntu-latest
-    container: swift:6.0
-    steps:
-      - name: Check out Vapor
-        uses: actions/checkout@v4
-      - name: Run tests
-        run: swift test --parallel
