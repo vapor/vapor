@@ -7,7 +7,7 @@ import Vapor
 /// ```swift
 /// @Test
 /// func helloWorld() async throws {
-///     try await withApp(/* whatever set up needed*/) { app in
+///     try await withApp(configure: configure) { app in
 ///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
 ///             #expect(res.status == .ok)
 ///             #expect(res.body.string == "Hello, world!")
@@ -15,11 +15,21 @@ import Vapor
 ///     }
 /// }
 /// ```
-public func withApp<T>(_ block: (Application) async throws -> T) async throws -> T {
+///
+/// - Parameters:
+///   - configure: The method where you should register services like routes, databases, providers, and more.
+///   - test: The method where you can perform your tests with the configured application.
+@discardableResult public func withApp<T>(
+    configure: ((Application) async throws -> Void)? = nil,
+    _ test: (Application) async throws -> T
+) async throws -> T {
     let app = try await Application.make(.testing)
     let result: T
     do {
-        result = try await block(app)
+        if let configure {
+            try await configure(app)
+        }
+        result = try await test(app)
     } catch {
         try? await app.asyncShutdown()
         throw error
