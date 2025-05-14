@@ -27,9 +27,7 @@ public func withApp<T>(
     let app = try await Application.make(.testing)
     let result: T
     do {
-        if let configure {
-            try await configure(app)
-        }
+        try await configure?(app)
         result = try await test(app)
     } catch {
         try? await app.asyncShutdown()
