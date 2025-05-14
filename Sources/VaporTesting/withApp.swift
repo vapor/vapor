@@ -18,7 +18,7 @@ import Vapor
 ///
 /// - Parameters:
 ///   - configure: A closure where you can register routes, databases, providers, and more.
-///   - test: The method where you can perform your tests with the configured application.
+///   - test: A closure which performs your actual test with the configured application.
 @discardableResult
 public func withApp<T>(
     configure: ((Application) async throws -> Void)? = nil,
