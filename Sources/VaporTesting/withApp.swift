@@ -36,3 +36,26 @@ public func withApp<T>(
     try await app.asyncShutdown()
     return result
 }
+
+
+/// Perform a test while handling lifecycle of the application.
+/// Feel free to create a custom function like this, tailored to your project.
+///
+/// Usage:
+/// ```swift
+/// @Test
+/// func helloWorld() async throws {
+///     try await withApp { app in
+///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
+///             #expect(res.status == .ok)
+///             #expect(res.body.string == "Hello, world!")
+///         })
+///     }
+/// }
+/// ```
+@discardableResult
+public func withApp<T>(
+    _ test: (Application) async throws -> T
+) async throws -> T {
+    try await withApp(configure: nil, test)
+}
