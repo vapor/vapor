@@ -17,7 +17,7 @@ import Vapor
 /// ```
 ///
 /// - Parameters:
-///   - configure: The method where you should register services like routes, databases, providers, and more.
+///   - configure: A closure where you can register routes, databases, providers, and more.
 ///   - test: The method where you can perform your tests with the configured application.
 @discardableResult
 public func withApp<T>(
