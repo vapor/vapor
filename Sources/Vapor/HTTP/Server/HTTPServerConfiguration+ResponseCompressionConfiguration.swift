@@ -37,7 +37,7 @@ extension HTTPServerOld.Configuration {
             )
         }
         
-        /// Enables compression by default, dissallowing already compressed types such as images or video, unless a route overrides the preference.
+        /// Enables compression by default, disallowing already compressed types such as images or video, unless a route overrides the preference.
         ///
         /// - SeeAlso: See ``ResponseCompressionMiddleware`` for more information on overriding compression preferences in routes.
         public static var enabled: Self {
@@ -67,7 +67,7 @@ extension HTTPServerOld.Configuration {
             ))
         }
         
-        /// Enables compression by default, but offers options to dissallow it for the specified types.
+        /// Enables compression by default, but offers options to disallow it for the specified types.
         ///
         /// - Parameters:
         ///   - initialByteBufferCapacity: The initial buffer capacity to use when instanciating the compressor.
