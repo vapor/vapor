@@ -5,8 +5,13 @@ import Logging
 import NIOHTTP1
 
 public enum EndpointCacheError: Swift.Error {
-    case unexpctedResponseStatus(HTTPStatus, uri: URI)
+    case unexpectedResponseStatus(HTTPStatus, uri: URI)
     case contentDecodeFailure(Error)
+
+    @available(*, deprecated, renamed: "unexpectedResponseStatus")
+    static func unexpctedResponseStatus(_ status: HTTPStatus, uri: URI) -> Self {
+        .unexpectedResponseStatus(status, uri: uri)
+    }
 }
 
 /// Handles the complexities of HTTP caching.
