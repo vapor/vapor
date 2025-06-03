@@ -10,12 +10,17 @@ public struct TestingHTTPRequest: Sendable {
     public var body: ByteBuffer
     public var contentConfiguration: ContentConfiguration
 
-    public init(method: HTTPRequest.Method, url: URI, headers: HTTPFields, body: ByteBuffer, contentConfigurtion: ContentConfiguration) {
+    public init(method: HTTPRequest.Method, url: URI, headers: HTTPFields, body: ByteBuffer, contentConfiguration: ContentConfiguration) {
         self.method = method
         self.url = url
         self.headers = headers
         self.body = body
-        self.contentConfiguration = contentConfigurtion
+        self.contentConfiguration = contentConfiguration
+    }
+
+    @available(*, deprecated, renamed: "init(method:url:headers:body:contentConfiguration:)")
+    public init(method: HTTPRequest.Method, url: URI, headers: HTTPFields, body: ByteBuffer, contentConfigurtion: ContentConfiguration) {
+        self.init(method: HTTPRequest.Method, url: url, headers: headers, body: body, contentConfiguration: contentConfigurtion)
     }
 
     private struct _ContentContainer: ContentContainer {
