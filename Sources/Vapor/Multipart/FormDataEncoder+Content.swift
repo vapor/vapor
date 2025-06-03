@@ -1,13 +1,13 @@
 import MultipartKit
-import NIOHTTP1
+import HTTPTypes
 import NIOCore
 
 extension FormDataEncoder: ContentEncoder {
-    public func encode<E: Encodable>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws {
+    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
 
-    public func encode<E: Encodable>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws {
+    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         let boundary = "----vaporBoundary\(randomBoundaryData())"
 
         headers.contentType = HTTPMediaType.formData(boundary: boundary)
@@ -15,9 +15,11 @@ extension FormDataEncoder: ContentEncoder {
             var actualEncoder = self  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
 
             actualEncoder.userInfo.merge(userInfo) { $1 }
-            return try actualEncoder.encode(encodable, boundary: boundary, into: &body)
+            let view = try actualEncoder.encode(encodable, boundary: boundary, to: ByteBufferView.self)
+            body.writeBytes(view)
         } else {
-            return try self.encode(encodable, boundary: boundary, into: &body)
+            let view = try self.encode(encodable, boundary: boundary, to: ByteBufferView.self)
+            body.writeBytes(view)
         }
     }
 }

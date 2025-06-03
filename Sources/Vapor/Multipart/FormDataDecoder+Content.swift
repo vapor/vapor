@@ -1,15 +1,15 @@
 import MultipartKit
-import NIOHTTP1
+import HTTPTypes
 import NIOCore
 
 extension FormDataDecoder: ContentDecoder {
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
         where D: Decodable
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
         where D: Decodable
     {
         guard let boundary = headers.contentType?.parameters["boundary"] else {
@@ -20,7 +20,7 @@ extension FormDataDecoder: ContentDecoder {
         let buffer = body.readBytes(length: body.readableBytes) ?? []
 
         guard Array("--\(boundary)\r\n--\(boundary)--\r".utf8) != buffer else {
-            throw Abort(.unprocessableEntity, identifier: "emptyMultipartFormData")
+            throw Abort(.unprocessableContent, identifier: "emptyMultipartFormData")
         }
 
         if !userInfo.isEmpty {

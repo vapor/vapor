@@ -23,13 +23,13 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
         response.responseBox.withLockedValue { box in
             // add a RFC1123 timestamp to the Date header to make this
             // a valid request
-            box.headers.add(name: "date", value: self.dateCache.currentTimestamp())
+            box.headers[.date] = self.dateCache.currentTimestamp()
             if let server = self.serverHeader {
-                box.headers.add(name: "server", value: server)
+                box.headers[.server] = server
             }
             
             // begin serializing
-            let responseHead = HTTPResponseHead(version: box.version, status: box.status, headers: box.headers)
+            let responseHead = HTTPResponseHead(version: box.version, status: .init(statusCode: box.status.code), headers: .init(box.headers, ))
             context.write(wrapOutboundOut(.head(responseHead)), promise: nil)
             
             if box.status == .noContent || box.forHeadRequest {
@@ -110,7 +110,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
     let count: Int?
     let currentCount: NIOLoopBoundBox<Int>
     let isComplete: NIOLockedValueBox<Bool>
-    let eventLoop: EventLoop
+    let eventLoop: any EventLoop
 
     enum Error: Swift.Error {
         case tooManyBytes

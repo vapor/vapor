@@ -1,27 +1,28 @@
 import Foundation
-import Metrics
-@preconcurrency import RoutingKit
-import NIOCore
-import NIOHTTP1
+import HTTPTypes
 import Logging
+import Metrics
+import NIOCore
+import RoutingKit
 
-/// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-internal struct DefaultResponder: Responder {
-    private let router: TrieRouter<CachedRoute>
-    private let notFoundResponder: Responder
+/// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.
+struct DefaultResponder: Responder {
+    /// It's safe to mark this `nonisolated(unsafe)` because there are only two mutating operations
+    /// on a `TrieRouter` (calling `.register(_at:)` or changing its `options`), and we never do either
+    /// of those after `init()`.
+    private nonisolated(unsafe) let router: TrieRouter<CachedRoute>
+    private let notFoundResponder: any Responder
     private let reportMetrics: Bool
 
     private struct CachedRoute {
         let route: Route
-        let responder: Responder
+        let responder: any Responder
     }
 
-    /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [Middleware] = [], reportMetrics: Bool = true) {
-        let options = routes.caseInsensitive ?
-            Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
-        let router = TrieRouter(CachedRoute.self, options: options)
-        
+    /// Creates a new ``DefaultResponder``.
+    init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
+        let router = TrieRouter(CachedRoute.self, options: routes.caseInsensitive ? [.caseInsensitive] : [])
+
         for route in routes.all {
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
@@ -32,10 +33,8 @@ internal struct DefaultResponder: Responder {
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
-                case .constant(let string):
-                    return string != ""
-                default:
-                    return true
+                case .constant(let string): string != ""
+                default: true
                 }
             }
             
@@ -46,31 +45,42 @@ internal struct DefaultResponder: Responder {
         self.reportMetrics = reportMetrics
     }
 
-    /// See `Responder`
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
-        let startTime = DispatchTime.now().uptimeNanoseconds
-        let response: EventLoopFuture<Response>
-        if let cachedRoute = self.getRoute(for: request) {
-            request.route = cachedRoute.route
-            response = cachedRoute.responder.respond(to: request)
-        } else {
-            response = self.notFoundResponder.respond(to: request)
-        }
-        return response.always { result in
-            let status: HTTPStatus
-            switch result {
-            case .success(let response):
-                status = response.status
-            case .failure:
-                status = .internalServerError
+    // See `Responder.respond(to:)`
+    func respond(to request: Request) async throws -> Response {
+        // per https://github.com/swiftlang/swift-testing/blob/swift-6.1-RELEASE/Sources/Testing/Events/TimeValue.swift#L113
+        let epochDuration = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
+        let startTime = UInt64(epochDuration.components.seconds * 1_000_000_000 + (epochDuration.components.attoseconds / 1_000_000_000))
+
+        let response: Response
+        do {
+            if let cachedRoute = self.getRoute(for: request) {
+                request.route = cachedRoute.route
+                response = try await cachedRoute.responder.respond(to: request)
+            } else {
+                response = try await self.notFoundResponder.respond(to: request)
             }
+            let status = response.status
             if self.reportMetrics {
+                let now = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
+                let nowNanos = UInt64(now.components.seconds * 1_000_000_000 + (now.components.attoseconds / 1_000_000_000))
                 self.updateMetrics(
                     for: request,
-                    startTime: startTime,
+                    elapsedTime: nowNanos - startTime,
                     statusCode: status.code
                 )
             }
+            return response
+        } catch {
+            let now = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
+            let nowNanos = UInt64(now.components.seconds * 1_000_000_000 + (now.components.attoseconds / 1_000_000_000))
+            if self.reportMetrics {
+                self.updateMetrics(
+                    for: request,
+                    elapsedTime: nowNanos - startTime,
+                    statusCode: 500
+                )
+            }
+            throw error
         }
     }
     
@@ -81,16 +91,16 @@ internal struct DefaultResponder: Responder {
             .map(String.init)
         
         // If it's a HEAD request and a HEAD route exists, return that route...
-        if request.method == .HEAD, let route = self.router.route(
-            path: [HTTPMethod.HEAD.rawValue] + pathComponents,
+        if request.method == .head, let route = self.router.route(
+            path: [HTTPRequest.Method.head.rawValue] + pathComponents,
             parameters: &request.parameters
         ) {
             return route
         }
 
         // ...otherwise forward HEAD requests to GET route
-        let method = (request.method == .HEAD) ? .GET : request.method
-        
+        let method = (request.method == .head) ? .get : request.method
+
         return self.router.route(
             path: [method.rawValue] + pathComponents,
             parameters: &request.parameters
@@ -100,8 +110,8 @@ internal struct DefaultResponder: Responder {
     /// Records the requests metrics.
     private func updateMetrics(
         for request: Request,
-        startTime: UInt64,
-        statusCode: UInt
+        elapsedTime: UInt64,
+        statusCode: Int
     ) {
         let pathForMetrics: String
         let methodForMetrics: String
@@ -131,20 +141,20 @@ internal struct DefaultResponder: Responder {
             label: "http_request_duration_seconds",
             dimensions: dimensions,
             preferredDisplayUnit: .seconds
-        ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+        ).recordNanoseconds(elapsedTime)
     }
 }
 
 private struct NotFoundResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeFailedFuture(RouteNotFound())
+    func respond(to request: Request) async throws -> Response {
+        throw RouteNotFound()
     }
 }
 
 struct RouteNotFound: Error {}
 
 extension RouteNotFound: AbortError {    
-    var status: HTTPResponseStatus {
+    var status: HTTPResponse.Status {
         .notFound
     }
 }

@@ -9,14 +9,14 @@ import CVaporBcrypt
 ///
 ///     try BCrypt.hash("vapor", cost: 4)
 ///
-/// BCrypt uses a random salt each time it creates a hash. To verify hashes, use the `verify(_:matches)` method.
+/// BCrypt uses a random salt each time it creates a hash. To verify hashes, use the ``BCryptDigest/verify(_:created:)` method.
 ///
 ///     let hash = try BCrypt.hash("vapor", cost: 4)
 ///     try BCrypt.verify("vapor", created: hash) // true
 ///
 /// https://en.wikipedia.org/wiki/Bcrypt
 public var Bcrypt: BCryptDigest {
-    return .init()
+    .init()
 }
 
 
@@ -25,7 +25,7 @@ public var Bcrypt: BCryptDigest {
 ///
 ///     try BCrypt.hash("vapor", cost: 4)
 ///
-/// See `BCrypt` for more information.
+/// See ``BCrypt`` for more information.
 public final class BCryptDigest {
     /// Creates a new `BCryptDigest`. Use the global `BCrypt` convenience variable.
     public init() { }
@@ -190,22 +190,22 @@ public final class BCryptDigest {
 
         /// Revision's length, including the `$` symbols
         var revisionCount: Int {
-            return 4
+            4
         }
 
         /// Salt's length (includes revision and cost info)
         var fullSaltCount: Int {
-            return 29
+            29
         }
 
         /// Checksum's length
         var checksumCount: Int {
-            return 31
+            31
         }
 
         /// Salt's length (does NOT include neither revision nor cost info)
         static var saltCount: Int {
-            return 22
+            22
         }
     }
 }
@@ -217,23 +217,23 @@ public enum BcryptError: Swift.Error, CustomStringConvertible, LocalizedError {
     case invalidHash
 
     public var errorDescription: String? {
-        return self.description
+        self.description
     }
 
     public var description: String {
-        return "Bcrypt error: \(self.reason)"
+        "Bcrypt error: \(self.reason)"
     }
 
     var reason: String {
         switch self {
         case .invalidCost:
-            return "Cost should be between 4 and 31"
+            "Cost should be between 4 and 31"
         case .invalidSalt:
-            return "Provided salt has the incorrect format"
+            "Provided salt has the incorrect format"
         case .hashFailure:
-            return "Unable to compute hash"
+            "Unable to compute hash"
         case .invalidHash:
-            return "Invalid hash formatting"
+            "Invalid hash formatting"
         }
     }
 }
