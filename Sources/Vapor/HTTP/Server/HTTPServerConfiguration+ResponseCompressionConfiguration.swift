@@ -64,7 +64,7 @@ extension HTTPServer.Configuration {
         /// Disables compression by default, but offers options to allow it for the specified types.
         ///
         /// - Parameters:
-        ///   - initialByteBufferCapacity: The initial buffer capacity to use when instanciating the compressor.
+        ///   - initialByteBufferCapacity: The initial buffer capacity to use when instantiating the compressor.
         ///   - allowedTypes: The types to allow to be compressed. If unspecified, no types will match, thus disabling compression unless explicitly overriden. Specify ``HTTPMediaTypeSet/compressible`` to use a default set of types that compress well.
         ///   - allowRequestOverrides: Allow routes and requests to explicitly enable compression. If unspecified, responses will not be compressed by default unless routes or responses explicitly enable it. See ``ResponseCompressionMiddleware`` for more information.
         /// - Returns: A response compression configuration.
@@ -83,7 +83,7 @@ extension HTTPServer.Configuration {
         /// Enables compression by default, but offers options to disallow it for the specified types.
         ///
         /// - Parameters:
-        ///   - initialByteBufferCapacity: The initial buffer capacity to use when instanciating the compressor.
+        ///   - initialByteBufferCapacity: The initial buffer capacity to use when instantiating the compressor.
         ///   - disallowedTypes: The types to prevent from being compressed. If unspecified, incompressible types will match, thus disabling compression for media types unless explicitly overriden. Specify ``HTTPMediaTypeSet/none`` to enable compression for all types by default.
         ///   - allowRequestOverrides: Allow routes and requests to explicitly disable compression. If unspecified, responses will be compressed by default unless routes or responses explicitly disable it. See ``ResponseCompressionMiddleware`` for more information.
         /// - Returns: A response compression configuration.
@@ -142,7 +142,7 @@ extension HTTPServer.Configuration {
         
         var storage: Storage
         
-        /// The initial buffer capacity to use when instanciating the compressor.
+        /// The initial buffer capacity to use when instantiating the compressor.
         public var initialByteBufferCapacity: Int {
             get { storage.initialByteBufferCapacity }
             set { storage.initialByteBufferCapacity = newValue }
