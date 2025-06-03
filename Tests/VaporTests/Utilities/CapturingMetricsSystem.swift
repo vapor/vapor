@@ -18,7 +18,7 @@ import Metrics
 import Foundation
 import NIOConcurrencyHelpers
 
-internal final class TaskLocalMetricsSysemWrapper: MetricsFactory {
+internal final class TaskLocalMetricsSystemWrapper: MetricsFactory {
     func makeCounter(label: String, dimensions: [(String, String)]) -> any CoreMetrics.CounterHandler {
         metrics.makeCounter(label: label, dimensions: dimensions)
     }

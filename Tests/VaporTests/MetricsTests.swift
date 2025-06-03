@@ -7,7 +7,7 @@ import Testing
 @Suite("Metric Tests")
 struct MetricsTests {
     init() {
-        MetricsSystem.bootstrapInternal(TaskLocalMetricsSysemWrapper())
+        MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
     }
 
     @Test("Test Metrics Increases Counter", .withMetrics(CapturingMetricsSystem("1")))
