@@ -9,7 +9,7 @@ public enum EndpointCacheError: Swift.Error {
     case contentDecodeFailure(Error)
 
     @available(*, deprecated, renamed: "unexpectedResponseStatus")
-    static func unexpctedResponseStatus(_ status: HTTPStatus, uri: URI) -> Self {
+    public static func unexpctedResponseStatus(_ status: HTTPStatus, uri: URI) -> Self {
         .unexpectedResponseStatus(status, uri: uri)
     }
 }
