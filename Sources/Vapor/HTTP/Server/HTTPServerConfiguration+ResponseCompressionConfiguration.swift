@@ -66,7 +66,7 @@ extension HTTPServer.Configuration {
         /// - Parameters:
         ///   - initialByteBufferCapacity: The initial buffer capacity to use when instanciating the compressor.
         ///   - allowedTypes: The types to allow to be compressed. If unspecified, no types will match, thus disabling compression unless explicitly overriden. Specify ``HTTPMediaTypeSet/compressible`` to use a default set of types that compress well.
-        ///   - allowRequestOverrides: Allow routes and requests to explicitely enable compression. If unspecified, responses will not be compressed by default unless routes or responses explicitely enable it. See ``ResponseCompressionMiddleware`` for more information.
+        ///   - allowRequestOverrides: Allow routes and requests to explicitly enable compression. If unspecified, responses will not be compressed by default unless routes or responses explicitly enable it. See ``ResponseCompressionMiddleware`` for more information.
         /// - Returns: A response compression configuration.
         public static func disabled(
             initialByteBufferCapacity: Int = defaultInitialByteBufferCapacity,
@@ -85,7 +85,7 @@ extension HTTPServer.Configuration {
         /// - Parameters:
         ///   - initialByteBufferCapacity: The initial buffer capacity to use when instanciating the compressor.
         ///   - disallowedTypes: The types to prevent from being compressed. If unspecified, incompressible types will match, thus disabling compression for media types unless explicitly overriden. Specify ``HTTPMediaTypeSet/none`` to enable compression for all types by default.
-        ///   - allowRequestOverrides: Allow routes and requests to explicitely disable compression. If unspecified, responses will be compressed by default unless routes or responses explicitely disable it. See ``ResponseCompressionMiddleware`` for more information.
+        ///   - allowRequestOverrides: Allow routes and requests to explicitly disable compression. If unspecified, responses will be compressed by default unless routes or responses explicitly disable it. See ``ResponseCompressionMiddleware`` for more information.
         /// - Returns: A response compression configuration.
         public static func enabled(
             initialByteBufferCapacity: Int = defaultInitialByteBufferCapacity,
@@ -148,7 +148,7 @@ extension HTTPServer.Configuration {
             set { storage.initialByteBufferCapacity = newValue }
         }
         
-        /// Allow routes and requests to explicitely override compression.
+        /// Allow routes and requests to explicitly override compression.
         ///
         /// - SeeAlso: See ``ResponseCompressionMiddleware`` for more information.
         public var allowRequestOverrides: Bool {
