@@ -104,7 +104,7 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
             self.uri, headers: headers
         ).flatMapThrowing { response -> ClientResponse in
             if !(response.status == .notModified || response.status == .ok) {
-                throw EndpointCacheError.unexpctedResponseStatus(response.status, uri: self.uri)
+                throw EndpointCacheError.unexpectedResponseStatus(response.status, uri: self.uri)
             }
 
             return response
