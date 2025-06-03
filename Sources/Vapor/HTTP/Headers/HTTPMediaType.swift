@@ -193,7 +193,7 @@ public struct HTTPMediaTypeSet: Sendable {
         guard let mediaSubTypeLookup = mediaTypeLookup[mediaType.type]
         else { return false }
         
-        /// If we alow any of the subtypes, stop here.
+        /// If we allow any of the subtypes, stop here.
         if mediaSubTypeLookup["*"] != nil { return true }
         
         /// Make sure we have an entry for the specific sub type:
