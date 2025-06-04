@@ -50,12 +50,12 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 ///
                 /// The latter parse has the correct semantics for an HTTP request's URL (which, in the absence of an
                 /// accompanying scheme, should never have a host); the former follows strict RFC 3986 rules.
-                let request = Request(
+                let request = try! Request(
                     application: self.application,
-                    method: head.method,
+                    method: .init(head.method),
                     url: .init(path: head.uri),
                     version: head.version,
-                    headersNoUpdate: head.headers,
+                    headersNoUpdate: .init(head.headers, splitCookie: false),
                     remoteAddress: context.channel.remoteAddress,
                     logger: self.application.logger,
                     byteBufferAllocator: context.channel.allocator,
@@ -79,7 +79,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 // because when a request is g-zipped, content-length refers to the gzipped length.
                 // Therefore, we can receive data after our expected end-of-request
                 // When decompressing data, more bytes come out than came in, so content-length does not represent the maximum length
-                if request.headers.first(name: .contentLength) == buffer.readableBytes.description {
+                if request.headers[.contentLength] == buffer.readableBytes.description {
                     self.requestState = .awaitingEnd(request, buffer)
                 } else {
                     let stream = Request.BodyStream(on: context.eventLoop, byteBufferAllocator: context.channel.allocator)
@@ -134,7 +134,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         }
     }
 
-    func errorCaught(context: ChannelHandlerContext, error: Error) {
+    func errorCaught(context: ChannelHandlerContext, error: any Error) {
         switch self.requestState {
         case .streamingBody(let stream):
             self.handleBodyStreamStateResult(
@@ -261,7 +261,7 @@ struct HTTPBodyStreamState: CustomStringConvertible {
         enum Action {
             case nothing
             case write(ByteBuffer)
-            case close(Error?)
+            case close((any Error)?)
         }
         let action: Action
         let callRead: Bool
@@ -288,7 +288,7 @@ struct HTTPBodyStreamState: CustomStringConvertible {
     private enum State {
         case idle
         case writing(BufferState)
-        case error(Error)
+        case error(any Error)
     }
 
     private var state: State
@@ -345,7 +345,7 @@ struct HTTPBodyStreamState: CustomStringConvertible {
         }
     }
 
-    mutating func didError(_ error: Error) -> Result {
+    mutating func didError(_ error: any Error) -> Result {
         switch self.state {
         case .idle:
             self.state = .error(error)

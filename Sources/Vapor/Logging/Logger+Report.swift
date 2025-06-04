@@ -7,7 +7,7 @@ extension Logger {
     /// - parameters:
     ///     - error: `Error` to log.
     public func report(
-        error: Error,
+        error: any Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         file: String = #fileID,
         function: String = #function,
@@ -17,7 +17,7 @@ extension Logger {
         let reason: String
         let level: Logger.Level
         switch error {
-        case let debuggable as DebuggableError:
+        case let debuggable as any DebuggableError:
             if self.logLevel <= .trace {
                 reason = debuggable.debuggableHelp(format: .long)
             } else {
@@ -25,7 +25,7 @@ extension Logger {
             }
             source = debuggable.source
             level = debuggable.logLevel
-        case let abort as AbortError:
+        case let abort as any AbortError:
             reason = abort.reason
             source = nil
             level = .warning

@@ -25,11 +25,11 @@ public struct File: Codable, Equatable, Sendable {
     }
     
     enum CodingKeys: String, CodingKey {
-        case data, filename
+        case data, filename, contentType
     }
     
     /// `Decodable` conformance.
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let data = try container.decode(Data.self, forKey: .data)
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
@@ -39,11 +39,14 @@ public struct File: Codable, Equatable, Sendable {
     }
     
     /// `Encodable` conformance.
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         let data = self.data.getData(at: self.data.readerIndex, length: self.data.readableBytes)
         try container.encode(data, forKey: .data)
         try container.encode(self.filename, forKey: .filename)
+        if let contentType {
+            try container.encode(contentType.serialize(), forKey: .contentType)
+        }
     }
     
     /// Creates a new `File`.

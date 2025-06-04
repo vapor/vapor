@@ -5,8 +5,8 @@ import NIOConcurrencyHelpers
 extension Application.Caches {
     /// In-memory cache. Thread safe.
     /// Not shared between multiple instances of your application.
-    public var memory: Cache {
-        MemoryCache(storage: self.memoryStorage, on: self.application.eventLoopGroup.next())
+    public var memory: any Cache {
+        MemoryCache(storage: self.memoryStorage)
     }
 
     private var memoryStorage: MemoryCacheStorage {
@@ -90,36 +90,24 @@ private actor MemoryCacheStorage: Sendable {
 
 private struct MemoryCache: Cache {
     let storage: MemoryCacheStorage
-    let eventLoop: EventLoop
-    
-    init(storage: MemoryCacheStorage, on eventLoop: EventLoop) {
+
+    init(storage: MemoryCacheStorage) {
         self.storage = storage
-        self.eventLoop = eventLoop
     }
     
-    func get<T>(_ key: String, as type: T.Type) -> EventLoopFuture<T?>
-        where T: Decodable & Sendable
-    {
-        self.eventLoop.makeFutureWithTask {
-            await self.storage.get(key)
-        }
+    func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable & Sendable {
+        await self.storage.get(key)
     }
     
-    func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
-        where T: Encodable & Sendable
-    {
-        self.set(key, to: value, expiresIn: nil)
+    func set<T>(_ key: String, to value: T?) async throws where T: Encodable & Sendable {
+        try await self.set(key, to: value, expiresIn: nil)
     }
     
-    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
-        where T: Encodable & Sendable
-    {
-        self.eventLoop.makeFutureWithTask {
-            await self.storage.set(key, to: value, expiresIn: expirationTime)
-        }
+    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T: Encodable & Sendable {
+        await self.storage.set(key, to: value, expiresIn: expirationTime)
     }
     
     func `for`(_ request: Request) -> MemoryCache {
-        .init(storage: self.storage, on: request.eventLoop)
+        .init(storage: self.storage)
     }
 }

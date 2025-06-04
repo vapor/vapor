@@ -3,7 +3,7 @@ import NIOConcurrencyHelpers
 
 extension Request {
     final class BodyStream: BodyStreamWriter, AsyncBodyStreamWriter {
-        let eventLoop: EventLoop
+        let eventLoop: any EventLoop
 
         var isBeingRead: Bool {
             self.handlerBuffer.value.handler != nil
@@ -20,7 +20,7 @@ extension Request {
         private let handlerBuffer: NIOLoopBoundBox<HandlerBufferContainer>
         private let allocator: ByteBufferAllocator
 
-        init(on eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
+        init(on eventLoop: any EventLoop, byteBufferAllocator: ByteBufferAllocator) {
             self.eventLoop = eventLoop
             self.isClosed = .init(false)
             self.handlerBuffer = .init(.init(handler: nil, buffer: []), eventLoop: eventLoop)
@@ -86,7 +86,7 @@ extension Request {
             }
         }
 
-        func consume(max: Int?, on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
+        func consume(max: Int?, on eventLoop: any EventLoop) -> EventLoopFuture<ByteBuffer> {
             // See https://github.com/vapor/vapor/issues/2906
             return eventLoop.flatSubmit {
                 let promise = eventLoop.makePromise(of: ByteBuffer.self)
@@ -95,7 +95,7 @@ extension Request {
                     switch chunk {
                     case .buffer(var buffer):
                         if let max = max, data.value.readableBytes + buffer.readableBytes >= max {
-                            promise.fail(Abort(.payloadTooLarge))
+                            promise.fail(Abort(.contentTooLarge))
                         } else {
                             data.value.writeBuffer(&buffer)
                         }

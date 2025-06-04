@@ -7,13 +7,14 @@ import NIOSSL
 import Logging
 import NIOPosix
 import NIOConcurrencyHelpers
+import HTTPTypes
 
 public enum HTTPVersionMajor: Equatable, Hashable, Sendable {
     case one
     case two
 }
 
-public final class HTTPServer: Server, Sendable {
+public final class HTTPServerOld: Server, Sendable {
     /// Engine server config struct.
     ///
     ///     let serverConfig = HTTPServerConfig.default(port: 8123)
@@ -31,7 +32,7 @@ public final class HTTPServer: Server, Sendable {
             get {
                 switch address {
                 case .hostname(let hostname, _):
-                    return hostname ?? Self.defaultHostname
+                    return hostname
                 default:
                     return Self.defaultHostname
                 }
@@ -41,7 +42,7 @@ public final class HTTPServer: Server, Sendable {
                 case .hostname(_, let port):
                     address = .hostname(newValue, port: port)
                 default:
-                    address = .hostname(newValue, port: nil)
+                    address = .hostname(newValue, port: Self.defaultPort)
                 }
             }
         }
@@ -51,7 +52,7 @@ public final class HTTPServer: Server, Sendable {
             get {
                 switch address {
                 case .hostname(_, let port):
-                    return port ?? Self.defaultPort
+                    return port
                 default:
                     return Self.defaultPort
                 }
@@ -61,7 +62,7 @@ public final class HTTPServer: Server, Sendable {
                 case .hostname(let hostname, _):
                     address = .hostname(hostname, port: newValue)
                 default:
-                    address = .hostname(nil, port: newValue)
+                    address = .hostname(Self.defaultHostname, port: newValue)
                 }
             }
         }
@@ -71,7 +72,7 @@ public final class HTTPServer: Server, Sendable {
             let scheme = tlsConfiguration == nil ? "http" : "https"
             switch address {
             case .hostname(let hostname, let port):
-                return "\(scheme)://\(hostname ?? Self.defaultHostname):\(port ?? Self.defaultPort)"
+                return "\(scheme)://\(hostname):\(port)"
             case .unixDomainSocket(let socketPath):
                 return "\(scheme)+unix: \(socketPath)"
             }
@@ -102,9 +103,6 @@ public final class HTTPServer: Server, Sendable {
         /// If set, this name will be serialized as the `Server` header in outgoing responses.
         public var serverName: String?
 
-        /// When `true`, report http metrics through `swift-metrics`
-        public var reportMetrics: Bool
-
         /// Any uncaught server or responder errors will go here.
         public var logger: Logger
 
@@ -113,7 +111,6 @@ public final class HTTPServer: Server, Sendable {
 
         /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
         /// This is the same as `NIOSSLCustomVerificationCallback` but just marked as `Sendable`
-        @preconcurrency
         public var customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)?
         
         /// The number of incoming TCP connections to accept per "tick" (i.e. each time through the server's event loop).
@@ -136,7 +133,6 @@ public final class HTTPServer: Server, Sendable {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
-            reportMetrics: Bool = true,
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
@@ -153,7 +149,6 @@ public final class HTTPServer: Server, Sendable {
                 supportVersions: supportVersions,
                 tlsConfiguration: tlsConfiguration,
                 serverName: serverName,
-                reportMetrics: reportMetrics,
                 logger: logger,
                 shutdownTimeout: shutdownTimeout,
                 customCertificateVerifyCallback: customCertificateVerifyCallback,
@@ -172,7 +167,6 @@ public final class HTTPServer: Server, Sendable {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
-            reportMetrics: Bool = true,
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
@@ -192,19 +186,11 @@ public final class HTTPServer: Server, Sendable {
             }
             self.tlsConfiguration = tlsConfiguration
             self.serverName = serverName
-            self.reportMetrics = reportMetrics
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
             self.customCertificateVerifyCallback = customCertificateVerifyCallback
             self.connectionsPerServerTick = connectionsPerServerTick
         }
-    }
-    
-    public var onShutdown: EventLoopFuture<Void> {
-        guard let connection = self.connection.withLockedValue({ $0 }) else {
-            fatalError("Server has not started yet")
-        }
-        return connection.channel.closeFuture
     }
 
     /// The configuration for the HTTP server.
@@ -241,9 +227,9 @@ public final class HTTPServer: Server, Sendable {
         }
     }
 
-    private let responder: Responder
+    private let responder: any Responder
     private let _configuration: NIOLockedValueBox<Configuration>
-    private let eventLoopGroup: EventLoopGroup
+    private let eventLoopGroup: any EventLoopGroup
     private let connection: NIOLockedValueBox<HTTPServerConnection?>
     private let didShutdown: NIOLockedValueBox<Bool>
     private let didStart: NIOLockedValueBox<Bool>
@@ -251,9 +237,9 @@ public final class HTTPServer: Server, Sendable {
     
     public init(
         application: Application,
-        responder: Responder,
+        responder: any Responder,
         configuration: Configuration,
-        on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton
+        on eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton
     ) {
         self.application = application
         self.responder = responder
@@ -264,21 +250,20 @@ public final class HTTPServer: Server, Sendable {
         self.connection = .init(nil)
     }
     
-    @available(*, noasync, message: "Use the async start() method instead.")
-    public func start(address: BindAddress?) throws {
+    public func start() async throws {
         var configuration = self.configuration
         
-        switch address {
-        case .none: 
-            /// Use the configuration as is.
-            break
-        case .hostname(let hostname, let port): 
-            /// Override the hostname, port, neither, or both.
-            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
-        case .unixDomainSocket: 
-            /// Override the socket path.
-            configuration.address = address!
-        }
+//        switch address {
+//        case .none: 
+//            /// Use the configuration as is.
+//            break
+//        case .hostname(let hostname, let port): 
+//            /// Override the hostname, port, neither, or both.
+//            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
+//        case .unixDomainSocket: 
+//            /// Override the socket path.
+//            configuration.address = address!
+//        }
 
         /// Log starting message for debugging before attempting to start the server.
         configuration.logger.debug("Server starting on \(configuration.addressDescription)")
@@ -329,7 +314,7 @@ public final class HTTPServer: Server, Sendable {
         /// Log starting message for debugging before attempting to start the server.
         configuration.logger.debug("Server starting on \(configuration.addressDescription)")
 
-        /// Start the actual `HTTPServer`.
+        /// Start the actual `HTTPServerOld`.
         let serverConnection = try await HTTPServerConnection.start(
             application: self.application,
             server: self,
@@ -360,23 +345,6 @@ public final class HTTPServer: Server, Sendable {
         self.didStart.withLockedValue { $0 = true }
     }
     
-    @available(*, noasync, message: "Use the async shutdown() method instead.")
-    public func shutdown() {
-        guard let connection = self.connection.withLockedValue({ $0 }) else {
-            return
-        }
-        self.configuration.logger.debug("Requesting HTTP server shutdown")
-        do {
-            try connection.close(timeout: self.configuration.shutdownTimeout).wait()
-        } catch {
-            self.configuration.logger.error("Could not stop HTTP server: \(error)")
-        }
-        self.configuration.logger.debug("HTTP server shutting down")
-        self.didShutdown.withLockedValue { $0 = true }
-        // Make sure we remove the connection reference in case we want to start up again
-        self.connection.withLockedValue { $0 = nil }
-    }
-    
     public func shutdown() async {
         guard let connection = self.connection.withLockedValue({ $0 }) else {
             return
@@ -400,20 +368,20 @@ public final class HTTPServer: Server, Sendable {
     deinit {
         let started = self.didStart.withLockedValue { $0 }
         let shutdown = self.didShutdown.withLockedValue { $0 }
-        assert(!started || shutdown, "HTTPServer did not shutdown before deinitializing")
+        assert(!started || shutdown, "HTTPServerOld did not shutdown before deinitializing")
     }
 }
 
 private final class HTTPServerConnection: Sendable {
-    let channel: Channel
+    let channel: any Channel
     let quiesce: ServerQuiescingHelper
     
     static func start(
         application: Application,
-        server: HTTPServer,
-        responder: Responder,
-        configuration: HTTPServer.Configuration,
-        on eventLoopGroup: EventLoopGroup
+        server: HTTPServerOld,
+        responder: any Responder,
+        configuration: HTTPServerOld.Configuration,
+        on eventLoopGroup: any EventLoopGroup
     ) -> EventLoopFuture<HTTPServerConnection> {
         let quiesce = ServerQuiescingHelper(group: eventLoopGroup)
         let bootstrap = ServerBootstrap(group: eventLoopGroup)
@@ -491,7 +459,7 @@ private final class HTTPServerConnection: Sendable {
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
         
-        let channel: EventLoopFuture<Channel>
+        let channel: EventLoopFuture<any Channel>
         switch configuration.address {
         case .hostname:
             channel = bootstrap.bind(host: configuration.hostname, port: configuration.port)
@@ -507,7 +475,7 @@ private final class HTTPServerConnection: Sendable {
         }
     }
     
-    init(channel: Channel, quiesce: ServerQuiescingHelper) {
+    init(channel: any Channel, quiesce: ServerQuiescingHelper) {
         self.channel = channel
         self.quiesce = quiesce
     }
@@ -543,12 +511,12 @@ extension HTTPResponseHead {
 extension ChannelPipeline {
     func addVaporHTTP2Handlers(
         application: Application,
-        responder: Responder,
-        configuration: HTTPServer.Configuration
+        responder: any Responder,
+        configuration: HTTPServerOld.Configuration
     ) -> EventLoopFuture<Void> {
         /// Create server pipeline array.
-        var handlers: [ChannelHandler] = []
-        
+        var handlers: [any ChannelHandler] = []
+
         let http2 = HTTP2FramePayloadToHTTP1ServerCodec()
         handlers.append(http2)
         
@@ -593,11 +561,11 @@ extension ChannelPipeline {
     
     func addVaporHTTP1Handlers(
         application: Application,
-        responder: Responder,
-        configuration: HTTPServer.Configuration
+        responder: any Responder,
+        configuration: HTTPServerOld.Configuration
     ) -> EventLoopFuture<Void> {
         /// Create server pipeline array.
-        var handlers: [RemovableChannelHandler] = []
+        var handlers: [any RemovableChannelHandler] = []
         
         /// Configure HTTP/1:
         /// Add http parsing and serializing.
@@ -672,19 +640,22 @@ extension NIOSSLServerHandler {
 }
 
 // MARK: Response Compression Helpers
-extension HTTPServer.Configuration.ResponseCompressionConfiguration {
+extension HTTPServerOld.Configuration.ResponseCompressionConfiguration {
     func makeCompressor() -> HTTPResponseCompressor {
         HTTPResponseCompressor(initialByteBufferCapacity: storage.initialByteBufferCapacity) { [storage] responseHeaders, isCompressionSupported in
+            guard var newHead = try? HTTPResponse(responseHeaders) else {
+                return .doNotCompress
+            }
             defer {
                 /// Always remove this marker header.
-                responseHeaders.headers.remove(name: .xVaporResponseCompression)
+                newHead.headerFields[.xVaporResponseCompression] = nil
             }
             
             /// If compression isn't supported, skip any further processing.
             guard isCompressionSupported else { return .doNotCompress }
             
             /// If we allow overrides, check for the response compression marker header value first before making any further checks:
-            if storage.allowRequestOverrides, let responseCompressionHeader = responseHeaders.headers.responseCompression.value {
+            if storage.allowRequestOverrides, let responseCompressionHeader = newHead.headerFields.responseCompression.value {
                 switch responseCompressionHeader {
                 case .enable: return .compressIfPossible
                 case .disable: return .doNotCompress
@@ -695,7 +666,7 @@ extension HTTPServer.Configuration.ResponseCompressionConfiguration {
             switch storage {
             case .enabled(_, let disallowedTypes, _):
                 /// If there were no explicit overrides, fallback to checking the content type against the disallowed set. If any type succeeds the check, disable compression:
-                let shouldDisable = responseHeaders.headers.parseDirectives(name: .contentType).contains { contentTypeDirectives in
+                let shouldDisable = newHead.headerFields.parseDirectives(name: .contentType).contains { contentTypeDirectives in
                     guard let mediaType = HTTPMediaType(directives: contentTypeDirectives)
                     else { return false }
                     
@@ -706,7 +677,7 @@ extension HTTPServer.Configuration.ResponseCompressionConfiguration {
                 return shouldDisable ? .doNotCompress : .compressIfPossible
             case .disabled(_, let allowedTypes, _):
                 /// If there were no explicit overrides, fallback to checking the content type against the allowed set. If all types succeed the check, enable compression:
-                let shouldEnable = responseHeaders.headers.parseDirectives(name: .contentType).allSatisfy { contentTypeDirectives in
+                let shouldEnable = newHead.headerFields.parseDirectives(name: .contentType).allSatisfy { contentTypeDirectives in
                     guard let mediaType = HTTPMediaType(directives: contentTypeDirectives)
                     else { return false }
                     

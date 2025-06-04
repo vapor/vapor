@@ -1,9 +1,10 @@
 import MultipartKit
-import NIOHTTP1
+import HTTPTypes
+import NIOCore
 
 extension File: MultipartPartConvertible {
-    public var multipart: MultipartPart? {
-        var part = MultipartPart(headers: [:], body: .init(self.data.readableBytesView))
+    public var multipart: MultipartPart<ByteBufferView>? {
+        var part = MultipartPart(headerFields: [:], body: self.data.readableBytesView)
         part.contentType = self.extension
             .flatMap { HTTPMediaType.fileExtension($0) }
             .flatMap { $0.serialize() }
@@ -11,25 +12,21 @@ extension File: MultipartPartConvertible {
         return part
     }
     
-    public init?(multipart: MultipartPart) {
+    public init?(multipart: MultipartPart<some MultipartPartBodyElement>) {
         guard let filename = multipart.filename else {
             return nil
         }
-        self.init(data: multipart.body, filename: filename)
+        self.init(data: ByteBuffer(bytes: multipart.body), filename: filename)
     }
 }
 
 extension MultipartPart {
     public var contentType: String? {
         get {
-            self.headers.first(name: .contentType)
+            self.headerFields[.contentType]
         }
         set {
-            if let value = newValue {
-                self.headers.replaceOrAdd(name: .contentType, value: value)
-            } else {
-                self.headers.remove(name: .contentType)
-            }
+            self.headerFields[.contentType] = newValue
         }
     }
     
@@ -47,12 +44,12 @@ extension MultipartPart {
         }
     }
     
-    public var contentDisposition: HTTPHeaders.ContentDisposition? {
+    public var contentDisposition: HTTPFields.ContentDisposition? {
         get {
-            self.headers.contentDisposition
+            self.headerFields.contentDisposition
         }
         set {
-            self.headers.contentDisposition = newValue
+            self.headerFields.contentDisposition = newValue
         }
     }
 }

@@ -16,10 +16,10 @@ import NIOCore
 ///         case int(Int)
 ///         case string(String)
 ///
-///         func encode(for req: Request) throws -> EventLoopFuture<Response> {
+///         func encode(for req: Request) async throws -> Response {
 ///             switch self {
-///             case .int(let i): return try i.encode(for: req)
-///             case .string(let s): return try s.encode(for: req)
+///             case .int(let i): return try await i.encode(for: req)
+///             case .string(let s): return try await s.encode(for: req)
 ///             }
 ///         }
 ///     }
@@ -34,17 +34,17 @@ import NIOCore
 ///
 public struct AnyResponse: ResponseEncodable {
     /// The wrapped `ResponseEncodable` type.
-    private let encodable: ResponseEncodable
+    private let encodable: any ResponseEncodable
 
     /// Creates a new `AnyResponse`.
     ///
     /// - parameters:
     ///     - encodable: Something `ResponseEncodable`.
-    public init(_ encodable: ResponseEncodable) {
+    public init(_ encodable: any ResponseEncodable) {
         self.encodable = encodable
     }
 
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        return self.encodable.encodeResponse(for: request)
+    public func encodeResponse(for request: Request) async throws -> Response {
+        try await self.encodable.encodeResponse(for: request)
     }
 }

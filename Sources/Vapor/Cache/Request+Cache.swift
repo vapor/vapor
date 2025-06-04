@@ -1,5 +1,5 @@
 extension Request {
-    public var cache: Cache {
+    public var cache: any Cache {
         self.application.cache.for(self)
     }
 }

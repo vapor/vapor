@@ -102,7 +102,7 @@ extension Request.Body: AsyncSequence {
     /// Using `.collected(_)` will load the entire request into memory
     /// which should be avoided for large file uploads.
     ///
-    /// Example: app.on(.POST, "/upload", body: .stream) { ... }
+    /// Example: app.on(.post, "/upload", body: .stream) { ... }
     private func checkBodyStorage() {
         switch request.bodyStorage.withLockedValue({ $0 }) {
         case .stream(_):
@@ -112,7 +112,7 @@ extension Request.Body: AsyncSequence {
         default:
             preconditionFailure("""
             AsyncSequence streaming should use a body of type .stream()
-            Example: app.on(.POST, "/upload", body: .stream) { ... }
+            Example: app.on(.post, "/upload", body: .stream) { ... }
            """)
         }
     }
@@ -127,7 +127,7 @@ extension Request.Body: AsyncSequence {
         
         let producer = NIOThrowingAsyncSequenceProducer.makeSequence(
             elementType: ByteBuffer.self,
-            failureType: Error.self,
+            failureType: (any Error).self,
             backPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies
                 .HighLowWatermark(lowWatermark: 5, highWatermark: 20),
             finishOnDeinit: true,

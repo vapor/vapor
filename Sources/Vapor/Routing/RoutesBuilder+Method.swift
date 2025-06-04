@@ -1,5 +1,5 @@
 import RoutingKit
-import NIOHTTP1
+import HTTPTypes
 
 /// Determines how an incoming HTTP request's body is collected.
 public enum HTTPBodyStreamStrategy: Sendable {
@@ -7,7 +7,7 @@ public enum HTTPBodyStreamStrategy: Sendable {
     /// before the route handler is called. The application's configured default max body
     /// size will be used unless otherwise specified.
     ///
-    /// See `collect(maxSize:)` to specify a custom max collection size.
+    /// See ``collect(maxSize:)`` to specify a custom max collection size.
     public static var collect: HTTPBodyStreamStrategy {
         return .collect(maxSize: nil)
     }
@@ -27,155 +27,113 @@ public enum HTTPBodyStreamStrategy: Sendable {
 }
 
 extension RoutesBuilder {
-    @preconcurrency
     @discardableResult
-    public func get<Response>(
+    public func get(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.GET, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.get, path, use: closure)
     }
 
-    @preconcurrency
     @discardableResult
-    public func get<Response>(
+    public func get(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.GET, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.get, path, use: closure)
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func post<Response>(
+    public func post(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.POST, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.post, path, use: closure)
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func post<Response>(
+    public func post(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.POST, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.post, path, use: closure)
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func patch<Response>(
+    public func patch(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.PATCH, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.patch, path, use: closure)
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func patch<Response>(
+    public func patch(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.PATCH, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.patch, path, use: closure)
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func put<Response>(
+    public func put(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.PUT, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.put, path, use: closure)
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func put<Response>(
+    public func put(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.PUT, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.put, path, use: closure)
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func delete<Response>(
+    public func delete(
         _ path: PathComponent...,
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.DELETE, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.delete, path, use: closure)
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func delete<Response>(
+    public func delete(
         _ path: [PathComponent],
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(.DELETE, path, use: closure)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.delete, path, use: closure)
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func on<Response>(
-        _ method: HTTPMethod,
+    public func on(
+        _ method: HTTPRequest.Method,
         _ path: PathComponent...,
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
-        return self.on(method, path, body: body, use: { request in
-            return try closure(request)
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(method, path, body: body, use: { request in
+            try await closure(request)
         })
     }
-    
-    @preconcurrency
+
     @discardableResult
-    public func on<Response>(
-        _ method: HTTPMethod,
+    public func on(
+        _ method: HTTPRequest.Method,
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @Sendable @escaping (Request) throws -> Response
-    ) -> Route
-        where Response: ResponseEncodable
-    {
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
         let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                return request.body.collect(
-                    max: max?.value ?? request.application.routes.defaultMaxBodySize.value
-                ).flatMapThrowing { _ in
-                    try request.propagateTracingIfEnabled {
-                        try closure(request)
-                    }
-                }.encodeResponse(for: request)
-            } else {
-                return try request.propagateTracingIfEnabled {
-                    try closure(request)
-                }.encodeResponse(for: request)
+                _ = try await request.eventLoop.flatSubmit {
+                    request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
+                }.get()
+
             }
+            return try await closure(request).encodeResponse(for: request)
         }
         let route = Route(
             method: method,

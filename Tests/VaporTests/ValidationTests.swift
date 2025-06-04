@@ -1,8 +1,11 @@
-import XCTest
 import Vapor
 import NIOCore
+import Testing
+import Foundation
 
-class ValidationTests: XCTestCase {
+@Suite("Validation Tests")
+struct ValidationTests {
+    @Test("Test Validate")
     func testValidate() throws {
         struct User: Validatable, Codable {
             enum Gender: String, CaseIterable, Codable {
@@ -113,10 +116,14 @@ class ValidationTests: XCTestCase {
             "isAdmin": true
         }
         """
-        XCTAssertNoThrow(try User.validate(json: valid))
+        #expect(throws: Never.self) {
+            try User.validate(json: valid)
+        }
 
         let validURL: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
-        XCTAssertNoThrow(try User.validate(query: validURL))
+        #expect(throws: Never.self) {
+            try User.validate(query: validURL)
+        }
 
         let invalidUser = """
         {
@@ -142,61 +149,74 @@ class ValidationTests: XCTestCase {
             ]
         }
         """
-        XCTAssertThrowsError(try User.validate(json: invalidUser)) { error in
-            XCTAssertEqual("\(error)", "name contains '!' (allowed: A-Z, a-z, 0-9)")
+
+        let jsonError = #expect(throws: ValidationsError.self) {
+            try User.validate(json: invalidUser)
         }
+        #expect(jsonError?.description == "name contains '!' (allowed: A-Z, a-z, 0-9)")
 
         let invalidUserURL: URI = "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
-        XCTAssertThrowsError(try User.validate(query: invalidUserURL)) { error in
-            XCTAssertEqual("\(error)", "name contains '!' (allowed: A-Z, a-z, 0-9)")
+        let urlError = #expect(throws: ValidationsError.self) {
+            try User.validate(query: invalidUserURL)
         }
+        #expect(urlError?.description == "name contains '!' (allowed: A-Z, a-z, 0-9)")
     }
-    
+
+    @Test("Test Validate International Email")
     func testValidateInternationalEmail() throws {
         struct Email: Validatable, Codable {
             var email: String?
-            
+
             init(email: String) {
                 self.email = email
             }
-            
+
             static func validations(_ v: inout Validations) {
                 // validate the international email is valid and is not nil
                 v.add("email", as: String?.self, is: !.nil && .internationalEmail)
                 v.add("email", as: String?.self, is: .internationalEmail && !.nil) // test other way
             }
         }
-        
+
         let valid = """
         {
             "email": "ß@tanner.xyz"
         }
         """
-        XCTAssertNoThrow(try Email.validate(json: valid))
-        
+        #expect(throws: Never.self) {
+            try Email.validate(json: valid)
+        }
+
         // N.B.: These two checks previously asserted against a URI containing the unencoded `ß` character.
         // Such a URI is semantically incorrect (per RFC 3986) and should have been considered a bug.
         let validURL: URI = "https://tanner.xyz/email?email=%C3%9F@tanner.xyz" // ß
-        XCTAssertNoThrow(try Email.validate(query: validURL))
-        
+        #expect(throws: Never.self) {
+            try Email.validate(query: validURL)
+        }
+
         let validURL2: URI = "https://tanner.xyz/email?email=me@%C3%9Fanner.xyz"
-        XCTAssertNoThrow(try Email.validate(query: validURL2))
-        
+        #expect(throws: Never.self) {
+            try Email.validate(query: validURL2)
+        }
+
         let invalidUser = """
         {
             "email": "me@tanner@.xyz",
         }
         """
-        XCTAssertThrowsError(try Email.validate(json: invalidUser)) { error in
-            XCTAssertEqual("\(error)", "email is not a valid email address, email is not a valid email address")
+        let jsonError = #expect(throws: ValidationsError.self) {
+            try Email.validate(json: invalidUser)
         }
+        #expect(jsonError?.description == "email is not a valid email address, email is not a valid email address")
         
         let invalidUserURL: URI = "https://tanner.xyz/email?email=me@tanner@.xyz"
-        XCTAssertThrowsError(try Email.validate(query: invalidUserURL)) { error in
-            XCTAssertEqual("\(error)", "email is not a valid email address, email is not a valid email address")
+        let urlError = #expect(throws: ValidationsError.self) {
+            try Email.validate(query: invalidUserURL)
         }
+        #expect(urlError?.description == "email is not a valid email address, email is not a valid email address")
     }
 
+    @Test("Test Validate Nested")
     func testValidateNested() throws {
         struct User: Validatable, Codable {
             var name: String
@@ -235,15 +255,19 @@ class ValidationTests: XCTestCase {
             }
         }
         """
-        XCTAssertThrowsError(try User.validate(json: invalidPetJSON)) { error in
-            XCTAssertEqual("\(error)", "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+        let jsonError = #expect(throws: ValidationsError.self) {
+            try User.validate(json: invalidPetJSON)
         }
+        #expect(jsonError?.description == "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+
         let invalidPetURL: URI = "https://tanner.xyz/user?name=Tanner&age=24&pet[name]=Zi!ek&pet[age]=3"
-        XCTAssertThrowsError(try User.validate(query: invalidPetURL)) { error in
-            XCTAssertEqual("\(error)", "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+        let urlError = #expect(throws: ValidationsError.self) {
+            try User.validate(query: invalidPetURL)
         }
+        #expect(urlError?.description == "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
     }
 
+    @Test("Test Validate Nested Each")
     func testValidateNestedEach() throws {
         struct User: Validatable {
             var name: String
@@ -292,9 +316,10 @@ class ValidationTests: XCTestCase {
             ]
         }
         """
-        XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
-            XCTAssertEqual("\(error)", "hobbies at index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and at index 1 title is less than minimum of 5 character(s)")
+        let jsonError = #expect(throws: ValidationsError.self) {
+            try User.validate(json: invalidNestedArray)
         }
+        #expect(jsonError?.description == "hobbies at index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and at index 1 title is less than minimum of 5 character(s)")
         
         let invalidNestedArray2 = """
         {
@@ -307,9 +332,10 @@ class ValidationTests: XCTestCase {
             ]
         }
         """
-        XCTAssertThrowsError(try User.validate(json: invalidNestedArray2)) { error in
-            XCTAssertEqual("\(error)", "hobbies is required, hobbies is required")
+        let jsonError2 = #expect(throws: ValidationsError.self) {
+            try User.validate(json: invalidNestedArray2)
         }
+        #expect(jsonError2?.description == "hobbies is required, hobbies is required")
         
         let invalidNestedArray3 = """
         {
@@ -327,9 +353,10 @@ class ValidationTests: XCTestCase {
             ]
         }
         """
-        XCTAssertThrowsError(try User.validate(json: invalidNestedArray3)) { error in
-            XCTAssertEqual("\(error)", "allergies at index 0 title contains '€' (allowed: A-Z, a-z)")
+        let jsonError3 = #expect(throws: ValidationsError.self) {
+            try User.validate(json: invalidNestedArray3)
         }
+        #expect(jsonError3?.description == "allergies at index 0 title contains '€' (allowed: A-Z, a-z)")
         
         let validNestedArray = """
         {
@@ -342,9 +369,12 @@ class ValidationTests: XCTestCase {
             ],
         }
         """
-        XCTAssertNoThrow(try User.validate(json: validNestedArray))
+        #expect(throws: Never.self) {
+            try User.validate(json: validNestedArray)
+        }
     }
 
+    @Test("Test Validate Nested Each Index")
     func testValidateNestedEachIndex() throws {
         struct User: Validatable {
             var name: String
@@ -371,7 +401,8 @@ class ValidationTests: XCTestCase {
             }
         }
 
-        XCTAssertNoThrow(try User.validate(json: """
+        #expect(throws: Never.self) {
+            try User.validate(json: """
         {
             "name": "Tanner",
             "age": 24,
@@ -384,9 +415,11 @@ class ValidationTests: XCTestCase {
                 }
             ]
         }
-        """))
+        """)
+        }
 
-        XCTAssertThrowsError(try User.validate(json: """
+        let validationError = #expect(throws: ValidationsError.self) {
+            try User.validate(json: """
         {
             "name": "Tanner",
             "age": 24,
@@ -399,11 +432,12 @@ class ValidationTests: XCTestCase {
                 }
             ]
         }
-        """)) { error in
-            XCTAssertEqual("\(error)", "hobbies at index 1 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9)")
+        """)
         }
+        #expect(validationError?.description == "hobbies at index 1 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9)")
     }
-    
+
+    @Test("Test Catch Error")
     func testCatchError() throws {
         struct User: Validatable, Codable {
             var name: String
@@ -423,150 +457,165 @@ class ValidationTests: XCTestCase {
         do {
             try User.validate(json: invalidUser)
         } catch let error as ValidationsError {
-            XCTAssertEqual(error.failures.count, 1)
+            #expect(error.failures.count == 1)
             let name = error.failures[0]
-            XCTAssertEqual(name.key.stringValue, "name")
-            XCTAssertEqual(name.result.isFailure, true)
-            XCTAssertEqual(name.result.failureDescription, "contains '!' (allowed: A-Z, a-z, 0-9)")
+            #expect(name.key.stringValue == "name")
+            #expect(name.result.isFailure == true)
+            #expect(name.result.failureDescription == "contains '!' (allowed: A-Z, a-z, 0-9)")
             let and = name.result as! ValidatorResults.And
             let count = and.left as! ValidatorResults.Range<Int>
-            XCTAssertEqual(count.result, .greaterThanOrEqualToMin(5))
+            #expect(count.result == .greaterThanOrEqualToMin(5))
             let character = and.right as! ValidatorResults.CharacterSet
-            XCTAssertEqual(character.invalidSlice, "!")
+            #expect(character.invalidSlice == "!")
         }
     }
-    
+
+    @Test("Test Not Readability")
     func testNotReadability() {
-        assert("vapor!🤠", fails: .ascii && .alphanumeric, "contains '🤠' (allowed: ASCII) and contains '!' (allowed: A-Z, a-z, 0-9)")
-        assert("vapor", fails: !(.ascii && .alphanumeric), "contains only ASCII and contains only A-Z, a-z, 0-9")
+        expect("vapor!🤠", fails: .ascii && .alphanumeric, "contains '🤠' (allowed: ASCII) and contains '!' (allowed: A-Z, a-z, 0-9)")
+        expect("vapor", fails: !(.ascii && .alphanumeric), "contains only ASCII and contains only A-Z, a-z, 0-9")
     }
 
+    @Test("Test ASCII")
     func testASCII() {
-        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .ascii)
-        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", fails: !.ascii, "contains only ASCII")
-        assert("\n\r\t", passes: .ascii)
-        assert("\n\r\t\u{129}", fails: .ascii, "contains 'ĩ' (allowed: ASCII)")
-        assert(" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~", passes: .ascii)
-        assert("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .ascii, "contains '🤠' (allowed: ASCII)")
+        expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .ascii)
+        expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", fails: !.ascii, "contains only ASCII")
+        expect("\n\r\t", passes: .ascii)
+        expect("\n\r\t\u{129}", fails: .ascii, "contains 'ĩ' (allowed: ASCII)")
+        expect(" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~", passes: .ascii)
+        expect("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .ascii, "contains '🤠' (allowed: ASCII)")
     }
-    
+
+    @Test("Test Collection ASCII")
     func testCollectionASCII() {
-        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], passes: .ascii)
-        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], fails: !.ascii, "contains only ASCII")
-        assert(["\n\r\t"], passes: .ascii)
-        assert(["\n\r\t", "\u{129}"], fails: .ascii, "string at index 1 contains 'ĩ' (allowed: ASCII)")
-        assert([" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"], passes: .ascii)
-        assert(["ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"], fails: .ascii, "string at index 0 contains '🤠' (allowed: ASCII)")
+        expect(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], passes: .ascii)
+        expect(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], fails: !.ascii, "contains only ASCII")
+        expect(["\n\r\t"], passes: .ascii)
+        expect(["\n\r\t", "\u{129}"], fails: .ascii, "string at index 1 contains 'ĩ' (allowed: ASCII)")
+        expect([" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"], passes: .ascii)
+        expect(["ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"], fails: .ascii, "string at index 0 contains '🤠' (allowed: ASCII)")
     }
 
+    @Test("Test Alphanumeric")
     func testAlphanumeric() {
-        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .alphanumeric)
-        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .alphanumeric, "contains '+' (allowed: A-Z, a-z, 0-9)")
+        expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .alphanumeric)
+        expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .alphanumeric, "contains '+' (allowed: A-Z, a-z, 0-9)")
     }
-    
+
+    @Test("Test Collection Alphanumeric")
     func testCollectionAlphanumeric() {
-        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], passes: .alphanumeric)
-        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef", "ghijklmnopqrstuvwxyz0123456789+/"], fails: .alphanumeric, "string at index 1 contains '+' (allowed: A-Z, a-z, 0-9)")
+        expect(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], passes: .alphanumeric)
+        expect(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef", "ghijklmnopqrstuvwxyz0123456789+/"], fails: .alphanumeric, "string at index 1 contains '+' (allowed: A-Z, a-z, 0-9)")
     }
 
+    @Test("Test Empty")
     func testEmpty() {
-        assert("", passes: .empty)
-        assert("something", fails: .empty, "is not empty")
-        assert([Int](), passes: .empty)
-        assert([Int](), fails: !.empty, "is empty")
-        assert([1, 2], fails: .empty, "is not empty")
-        assert([1, 2], passes: !.empty)
+        expect("", passes: .empty)
+        expect("something", fails: .empty, "is not empty")
+        expect([Int](), passes: .empty)
+        expect([Int](), fails: !.empty, "is empty")
+        expect([1, 2], fails: .empty, "is not empty")
+        expect([1, 2], passes: !.empty)
     }
 
+    @Test("Test Email")
     func testEmail() {
-        assert("tanner@vapor.codes", passes: .email)
-        assert("tanner@VAPOR.codes", passes: .email)
-        assert("tanner@vapor.codes", fails: !.email, "is a valid email address")
-        assert("tanner@VAPOR.codes", fails: !.email, "is a valid email address")
-        assert("tanner@vapor.codestanner@vapor.codes", fails: .email, "is not a valid email address")
-        assert("tanner@vapor.codes.", fails: .email, "is not a valid email address")
-        assert("tanner@@vapor.codes", fails: .email, "is not a valid email address")
-        assert("@vapor.codes", fails: .email, "is not a valid email address")
-        assert("tanner@codes", fails: .email, "is not a valid email address")
-        assert("asdf", fails: .email, "is not a valid email address")
-        assert("asdf", passes: !.email)
+        expect("tanner@vapor.codes", passes: .email)
+        expect("tanner@VAPOR.codes", passes: .email)
+        expect("tanner@vapor.codes", fails: !.email, "is a valid email address")
+        expect("tanner@VAPOR.codes", fails: !.email, "is a valid email address")
+        expect("tanner@vapor.codestanner@vapor.codes", fails: .email, "is not a valid email address")
+        expect("tanner@vapor.codes.", fails: .email, "is not a valid email address")
+        expect("tanner@@vapor.codes", fails: .email, "is not a valid email address")
+        expect("@vapor.codes", fails: .email, "is not a valid email address")
+        expect("tanner@codes", fails: .email, "is not a valid email address")
+        expect("asdf", fails: .email, "is not a valid email address")
+        expect("asdf", passes: !.email)
     }
-    
+
+    @Test("Test Email With Special Characters")
     func testEmailWithSpecialCharacters() {
-        assert("ß@b.com", passes: .internationalEmail)
-        assert("ß@b.com", fails: !.internationalEmail, "is a valid email address")
-        assert("b@ß.com", passes: .internationalEmail)
-        assert("b@ß.com", fails: !.internationalEmail, "is a valid email address")
+        expect("ß@b.com", passes: .internationalEmail)
+        expect("ß@b.com", fails: !.internationalEmail, "is a valid email address")
+        expect("b@ß.com", passes: .internationalEmail)
+        expect("b@ß.com", fails: !.internationalEmail, "is a valid email address")
     }
 
+    @Test("Test Range")
     func testRange() {
-        assert(4, passes: .range(-5...5))
-        assert(4, passes: .range(..<5))
-        assert(5, fails: .range(..<5), "is greater than maximum of 4")
-        assert(5, passes: .range(...10))
-        assert(11, fails: .range(...10), "is greater than maximum of 10")
-        assert(4, fails: !.range(-5...5), "is between -5 and 5")
-        assert(5, passes: .range(-5...5))
-        assert(-5, passes: .range(-5...5))
-        assert(6, fails: .range(-5...5), "is greater than maximum of 5")
-        assert(-6, fails: .range(-5...5), "is less than minimum of -5")
-        assert(.max, passes: .range(5...))
-        assert(4, fails: .range(5...), "is less than minimum of 5")
-        assert(-5, passes: .range(-5..<6))
-        assert(-4, passes: .range(-5..<6))
-        assert(5, passes: .range(-5..<6))
-        assert(-6, fails: .range(-5..<6), "is less than minimum of -5")
-        assert(6, fails: .range(-5..<6), "is greater than maximum of 5")
-        assert(6, passes: !.range(-5..<6))
-        assert(Float.nan, passes: !.range(-5..<6))
+        expect(4, passes: .range(-5...5))
+        expect(4, passes: .range(..<5))
+        expect(5, fails: .range(..<5), "is greater than maximum of 4")
+        expect(5, passes: .range(...10))
+        expect(11, fails: .range(...10), "is greater than maximum of 10")
+        expect(4, fails: !.range(-5...5), "is between -5 and 5")
+        expect(5, passes: .range(-5...5))
+        expect(-5, passes: .range(-5...5))
+        expect(6, fails: .range(-5...5), "is greater than maximum of 5")
+        expect(-6, fails: .range(-5...5), "is less than minimum of -5")
+        expect(.max, passes: .range(5...))
+        expect(4, fails: .range(5...), "is less than minimum of 5")
+        expect(-5, passes: .range(-5..<6))
+        expect(-4, passes: .range(-5..<6))
+        expect(5, passes: .range(-5..<6))
+        expect(-6, fails: .range(-5..<6), "is less than minimum of -5")
+        expect(6, fails: .range(-5..<6), "is greater than maximum of 5")
+        expect(6, passes: !.range(-5..<6))
+        expect(Float.nan, passes: !.range(-5..<6))
     }
 
+    @Test("Test Count Characters")
     func testCountCharacters() {
-        assert("1", passes: .count(1...6))
-        assert("1", fails: !.count(1...6), "is between 1 and 6 character(s)")
-        assert("123", passes: .count(1...6))
-        assert("123456", passes: .count(1...6))
-        assert("", fails: .count(1...6), "is less than minimum of 1 character(s)")
-        assert("1234567", fails: .count(1...6), "is greater than maximum of 6 character(s)")
+        expect("1", passes: .count(1...6))
+        expect("1", fails: !.count(1...6), "is between 1 and 6 character(s)")
+        expect("123", passes: .count(1...6))
+        expect("123456", passes: .count(1...6))
+        expect("", fails: .count(1...6), "is less than minimum of 1 character(s)")
+        expect("1234567", fails: .count(1...6), "is greater than maximum of 6 character(s)")
     }
 
+    @Test("Test Count Items")
     func testCountItems() {
-        assert([1], passes: .count(1...6))
-        assert([1], fails: !.count(1...6), "is between 1 and 6 item(s)")
-        assert([1], passes: .count(...1))
-        assert([1], fails: .count(..<1), "is greater than maximum of 0 item(s)")
-        assert([1, 2, 3], passes: .count(1...6))
-        assert([1, 2, 3, 4, 5, 6], passes: .count(1...6))
-        assert([Int](), fails: .count(1...6), "is less than minimum of 1 item(s)")
-        assert([1, 2, 3, 4, 5, 6, 7], fails: .count(1...6), "is greater than maximum of 6 item(s)")
+        expect([1], passes: .count(1...6))
+        expect([1], fails: !.count(1...6), "is between 1 and 6 item(s)")
+        expect([1], passes: .count(...1))
+        expect([1], fails: .count(..<1), "is greater than maximum of 0 item(s)")
+        expect([1, 2, 3], passes: .count(1...6))
+        expect([1, 2, 3, 4, 5, 6], passes: .count(1...6))
+        expect([Int](), fails: .count(1...6), "is less than minimum of 1 item(s)")
+        expect([1, 2, 3, 4, 5, 6, 7], fails: .count(1...6), "is greater than maximum of 6 item(s)")
     }
 
+    @Test("Test URL")
     func testURL() {
-        assert("https://www.somedomain.com/somepath.png", passes: .url)
-        assert("https://www.somedomain.com/somepath.png", fails: !.url, "is a valid URL")
-        assert("https://www.somedomain.com/", passes: .url)
-        assert("file:///Users/vapor/rocks/somePath.png", passes: .url)
-        assert("www.somedomain.com/", fails: .url, "is an invalid URL")
-        assert("bananas", fails: .url, "is an invalid URL")
-        assert("bananas", passes: !.url)
-    }
-    
-    func testValid() {
-        assert("some random string", passes: .valid)
-        assert(true, passes: .valid)
-        assert("123", passes: .valid)
-        assert([1, 2, 3], passes: .valid)
-        assert(Date.init(), passes: .valid)
-        assert("some random string", fails: !.valid, "is valid")
-        assert(true, fails: !.valid, "is valid")
-        assert("123", fails: !.valid, "is valid")
-    }
-    
-    func testPattern() {
-        assert("this are not numbers", fails: .pattern("^[0-9]*$"), "is not a valid pattern ^[0-9]*$")
-        assert("12345", passes: .pattern("^[0-9]*$"))
+        expect("https://www.somedomain.com/somepath.png", passes: .url)
+        expect("https://www.somedomain.com/somepath.png", fails: !.url, "is a valid URL")
+        expect("https://www.somedomain.com/", passes: .url)
+        expect("file:///Users/vapor/rocks/somePath.png", passes: .url)
+        expect("www.somedomain.com/", fails: .url, "is an invalid URL")
+        expect("bananas", fails: .url, "is an invalid URL")
+        expect("bananas", passes: !.url)
     }
 
+    @Test("Test Valid")
+    func testValid() {
+        expect("some random string", passes: .valid)
+        expect(true, passes: .valid)
+        expect("123", passes: .valid)
+        expect([1, 2, 3], passes: .valid)
+        expect(Date.init(), passes: .valid)
+        expect("some random string", fails: !.valid, "is valid")
+        expect(true, fails: !.valid, "is valid")
+        expect("123", fails: !.valid, "is valid")
+    }
+
+    @Test("Test Pattern")
+    func testPattern() {
+        expect("this are not numbers", fails: .pattern("^[0-9]*$"), "is not a valid pattern ^[0-9]*$")
+        expect("12345", passes: .pattern("^[0-9]*$"))
+    }
+
+    @Test("Test Preexisting ValidatorResult Is Included")
     func testPreexistingValidatorResultIsIncluded() throws {
         struct CustomValidatorResult: ValidatorResult {
             var isFailure: Bool {
@@ -582,41 +631,44 @@ class ValidationTests: XCTestCase {
         var validations = Validations()
         validations.add("key", result: CustomValidatorResult())
         let error = try validations.validate(json: "{}").error
-        XCTAssertEqual(error?.description, "key custom description")
+        #expect(error?.description == "key custom description")
     }
 
+    @Test("Test Double Negation Is Avoided")
     func testDoubleNegationIsAvoided() throws {
         var validations = Validations()
         validations.add("key", as: String.self, is: !.empty)
         let error = try validations.validate(json: #"{"key": ""}"#).error
-        XCTAssertEqual(error?.description, "key is empty")
+        #expect(error?.description == "key is empty")
     }
 
+    @Test("Test Case Of")
     func testCaseOf() {
         enum StringEnumType: String, CaseIterable {
             case case1, case2, case3 = "CASE3"
         }
-        assert("case1", passes: .case(of: StringEnumType.self))
-        assert("case2", passes: .case(of: StringEnumType.self))
-        assert("case1", fails: !.case(of: StringEnumType.self), "is case1, case2, or CASE3")
-        assert("case3", fails: .case(of: StringEnumType.self), "is not case1, case2, or CASE3")
+        expect("case1", passes: .case(of: StringEnumType.self))
+        expect("case2", passes: .case(of: StringEnumType.self))
+        expect("case1", fails: !.case(of: StringEnumType.self), "is case1, case2, or CASE3")
+        expect("case3", fails: .case(of: StringEnumType.self), "is not case1, case2, or CASE3")
 
         enum IntEnumType: Int, CaseIterable {
             case case1 = 1, case2 = 2
         }
-        assert(1, passes: .case(of: IntEnumType.self))
-        assert(2, passes: .case(of: IntEnumType.self))
-        assert(1, fails: !.case(of: IntEnumType.self), "is 1 or 2")
-        assert(3, fails: .case(of: IntEnumType.self), "is not 1 or 2")
+        expect(1, passes: .case(of: IntEnumType.self))
+        expect(2, passes: .case(of: IntEnumType.self))
+        expect(1, fails: !.case(of: IntEnumType.self), "is 1 or 2")
+        expect(3, fails: .case(of: IntEnumType.self), "is not 1 or 2")
 
         enum SingleCaseEnum: String, CaseIterable {
             case case1 = "CASE1"
         }
-        assert("CASE1", passes: .case(of: SingleCaseEnum.self))
-        assert("CASE1", fails: !.case(of: SingleCaseEnum.self), "is CASE1")
-        assert("CASE2", fails: .case(of: SingleCaseEnum.self), "is not CASE1")
+        expect("CASE1", passes: .case(of: SingleCaseEnum.self))
+        expect("CASE1", fails: !.case(of: SingleCaseEnum.self), "is CASE1")
+        expect("CASE2", fails: .case(of: SingleCaseEnum.self), "is not CASE1")
     }
 
+    @Test("Test Custom Response Middleware")
     func testCustomResponseMiddleware() async throws {
         // Test item
         struct User: Validatable {
@@ -632,7 +684,7 @@ class ValidationTests: XCTestCase {
         }
 
         // Setup
-        let app = try await Application.make(.testing)
+        let app = try await Application(.testing)
 
         // Converts validation errors to a custom response.
         final class ValidationErrorMiddleware: Middleware {
@@ -641,13 +693,15 @@ class ValidationTests: XCTestCase {
                 var errors: [String]
             }
 
-            func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-                next.respond(to: request).flatMapErrorThrowing { error in
-                    // Check to see if this is a validation error. 
+            func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+                do {
+                    return try await next.respond(to: request)
+                } catch {
+                    // Check to see if this is a validation error.
                     if let validationError = error as? ValidationsError {
                         // Convert each failed ValidatorResults to a String
                         // for the sake of this example.
-                        let errorMessages = validationError.failures.map { failure -> String in 
+                        let errorMessages = validationError.failures.map { failure -> String in
                             let reason: String
                             // The failure result will be one of the ValidatorResults subtypes.
                             //
@@ -694,20 +748,21 @@ class ValidationTests: XCTestCase {
         }
 
         // Test that the custom validation error middleware is working.
-        try await app.test(.POST, "users", beforeRequest: { req async throws in
+        try await app.testing().test(.post, "users", beforeRequest: { req async throws in
             try req.content.encode([
                 "name": "Vapor",
                 "age": "asdf"
             ])
         }, afterResponse: { res in 
-            XCTAssertEqual(res.status, .badRequest)
-            let content = try res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
-            XCTAssertEqual(content.errors.count, 1)
+            #expect(res.status == .badRequest)
+            let content = try await res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
+            #expect(content.errors.count == 1)
         })
 
-        try await app.asyncShutdown()
+        try await app.shutdown()
     }
 
+    @Test("Test Validate Null When Not Required")
     func testValidateNullWhenNotRequired() throws {
         struct Site: Validatable, Codable {
             var url: String?
@@ -726,41 +781,53 @@ class ValidationTests: XCTestCase {
             "url": null
         }
         """
-        XCTAssertNoThrow(try Site.validate(json: valid))
+        #expect(throws: Never.self) {
+            try Site.validate(json: valid)
+        }
 
         let valid2 = """
         {
         }
         """
-        XCTAssertNoThrow(try Site.validate(json: valid2))
+        #expect(throws: Never.self) {
+            try Site.validate(json: valid2)
+        }
 
         let valid3 = """
         {
             "name": "Tim"
         }
         """
-        XCTAssertNoThrow(try Site.validate(json: valid3))
+        #expect(throws: Never.self) {
+            try Site.validate(json: valid3)
+        }
 
         let valid4 = """
         {
             "name": null
         }
         """
-        XCTAssertNoThrow(try Site.validate(json: valid4))
+        #expect(throws: Never.self) {
+            try Site.validate(json: valid4)
+        }
 
         let valid5 = """
         {
             "number": 3
         }
         """
-        XCTAssertNoThrow(try Site.validate(json: valid5))
+        #expect(throws: Never.self) {
+            try Site.validate(json: valid5)
+        }
 
         let valid6 = """
         {
             "number": null
         }
         """
-        XCTAssertNoThrow(try Site.validate(json: valid6))
+        #expect(throws: Never.self) {
+            try Site.validate(json: valid6)
+        }
 
         let invalid1 = """
         {
@@ -771,11 +838,11 @@ class ValidationTests: XCTestCase {
         do {
             try Site.validate(json: invalid1)
         } catch let error as ValidationsError {
-            XCTAssertEqual(error.failures.count, 1)
+            #expect(error.failures.count == 1)
             let name = error.failures[0]
-            XCTAssertEqual(name.key.stringValue, "number")
-            XCTAssertEqual(name.result.isFailure, true)
-            XCTAssertEqual(name.result.failureDescription, "is not a(n) Int")
+            #expect(name.key.stringValue == "number")
+            #expect(name.result.isFailure == true)
+            #expect(name.result.failureDescription == "is not a(n) Int")
         }
 
         let invalid2 = """
@@ -786,41 +853,41 @@ class ValidationTests: XCTestCase {
         do {
             try Site.validate(json: invalid2)
         } catch let error as ValidationsError {
-            XCTAssertEqual(error.failures.count, 1)
+            #expect(error.failures.count == 1)
             let name = error.failures[0]
-            XCTAssertEqual(name.key.stringValue, "name")
-            XCTAssertEqual(name.result.isFailure, true)
-            XCTAssertEqual(name.result.failureDescription, "is not a(n) String")
+            #expect(name.key.stringValue == "name")
+            #expect(name.result.isFailure == true)
+            #expect(name.result.failureDescription == "is not a(n) String")
         }
     }
     
-
+    @Test("Test Custom Validator")
     func testCustomValidator() {
         let value = "test123"
         let validationDescription = "test \'\(value)'"
 
         // These tests are used to make sure that the custom validator pass and fail correctly.
-        assert(
+        expect(
             value,
             fails: !.custom(validationDescription) { x in
                 return x == value
             },
             "is successfully validated for custom validation '\(validationDescription)'."
         )
-        assert(
+        expect(
             value,
             passes: !.custom(validationDescription) { x in
                 return x != value
             }
         )
-        assert(
+        expect(
             value,
             fails: .custom(validationDescription) { x in
                 return x != value
             },
             "is not successfully validated for custom validation '\(validationDescription)'."
         )
-        assert(
+        expect(
             value,
             passes: .custom(validationDescription) { x in
                 return x == value
@@ -828,6 +895,7 @@ class ValidationTests: XCTestCase {
         )
     }
 
+    @Test("Test Custom Failure Descriptions")
     func testCustomFailureDescriptions() throws {
         struct User: Validatable {
             var name: String
@@ -882,34 +950,31 @@ class ValidationTests: XCTestCase {
             ]
         }
         """
-        XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
-            XCTAssertEqual("\(error)", "Something went wrong with the provided data, The provided name is invalid, A provided hobby value was not alphanumeric, A provided hobby value was empty")
+        let error = #expect(throws: ValidationsError.self) {
+            try User.validate(json: invalidNestedArray)
         }
-    }
-
-    override class func setUp() {
-        XCTAssert(isLoggingConfigured)
+        #expect(error?.description == "Something went wrong with the provided data, The provided name is invalid, A provided hobby value was not alphanumeric, A provided hobby value was empty")
     }
 }
 
-private func assert<T>(
+private func expect<T>(
     _ data: T,
     fails validator: Validator<T>,
     _ description: String,
-    file: StaticString = #filePath,
-    line: UInt = #line
+    sourceLocation: SourceLocation = #_sourceLocation
 ) {
     let result = validator.validate(data)
-    XCTAssert(result.isFailure, result.successDescription ?? "n/a", file: file, line: line)
-    XCTAssertEqual(description, result.failureDescription ?? "n/a", file: file, line: line)
+    let comment = Comment(stringLiteral: result.failureDescription ?? "n/a")
+    #expect(result.isFailure, comment, sourceLocation: sourceLocation)
+    #expect(description == result.failureDescription ?? "n/a", sourceLocation: sourceLocation)
 }
 
-private func assert<T>(
+private func expect<T>(
     _ data: T,
     passes validator: Validator<T>,
-    file: StaticString = #filePath,
-    line: UInt = #line
+    sourceLocation: SourceLocation = #_sourceLocation
 ) {
     let result = validator.validate(data)
-    XCTAssert(!result.isFailure, result.failureDescription ?? "n/a", file: file, line: line)
+    let comment = Comment(stringLiteral: result.failureDescription ?? "n/a")
+    #expect(!result.isFailure, comment, sourceLocation: sourceLocation)
 }

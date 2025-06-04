@@ -28,7 +28,7 @@ extension Request {
     }
     
     public var hasSession: Bool {
-        return self._sessionCache.session.withLockedValue { $0 != nil }
+        self._sessionCache.session.withLockedValue { $0 != nil }
     }
 
     private struct SessionCacheKey: StorageKey {

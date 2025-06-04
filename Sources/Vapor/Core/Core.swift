@@ -4,7 +4,7 @@ import NIOPosix
 import NIOConcurrencyHelpers
 
 extension Application {
-    public var console: Console {
+    public var console: any Console {
         get { self.core.storage.console.withLockedValue { $0 } }
         set { self.core.storage.console.withLockedValue { $0 = newValue } }
     }
@@ -54,14 +54,6 @@ extension Application {
         }
     }
 
-    public var fileio: NonBlockingFileIO {
-        .init(threadPool: self.threadPool)
-    }
-
-    public var allocator: ByteBufferAllocator {
-        self.core.storage.allocator
-    }
-
     public var running: Running? {
         get { self.core.storage.running.current.withLockedValue { $0 } }
         set { self.core.storage.running.current.withLockedValue { $0 = newValue } }
@@ -78,11 +70,10 @@ extension Application {
 
     public struct Core: Sendable {
         final class Storage: Sendable {
-            let console: NIOLockedValueBox<Console>
+            let console: NIOLockedValueBox<any Console>
             let commands: NIOLockedValueBox<Commands>
             let asyncCommands: NIOLockedValueBox<AsyncCommands>
             let threadPool: NIOLockedValueBox<NIOThreadPool>
-            let allocator: ByteBufferAllocator
             let running: Application.Running.Storage
             let directory: NIOLockedValueBox<DirectoryConfiguration>
 
@@ -95,22 +86,8 @@ extension Application {
                 let threadPool = NIOSingletons.posixBlockingThreadPool
                 threadPool.start()
                 self.threadPool = .init(threadPool)
-                self.allocator = .init()
                 self.running = .init()
                 self.directory = .init(.detect())
-            }
-        }
-
-        struct LifecycleHandler: Vapor.LifecycleHandler {
-            func shutdown(_ application: Application) {
-                do {
-                    try application.threadPool.syncShutdownGracefully()
-                } catch is NIOThreadPoolError.UnsupportedOperation {
-                    // ignore, singleton thread pool throws this error on shutdown attempts
-                    // see https://github.com/apple/swift-nio/blob/c51907a839e63ebf0ba2076bba73dd96436bd1b9/Sources/NIOPosix/NIOThreadPool.swift#L142-L147
-                } catch {
-                    application.logger.debug("Failed to shutdown thread pool", metadata: ["error": "\(error)"])
-                }
             }
         }
         
@@ -140,13 +117,9 @@ extension Application {
             return storage
         }
 
-        func initialize(asyncEnvironment: Bool) {
+        func initialize() {
             self.application.storage[Key.self] = .init()
-            if asyncEnvironment {
-                self.application.lifecycle.use(AsyncLifecycleHandler())
-            } else {
-                self.application.lifecycle.use(LifecycleHandler())
-            }
+            self.application.lifecycle.use(AsyncLifecycleHandler())
         }
     }
 }

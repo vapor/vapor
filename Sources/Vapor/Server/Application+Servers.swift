@@ -5,7 +5,7 @@ extension Application {
         .init(application: self)
     }
 
-    public var server: Server {
+    public var server: any Server {
         guard let makeServer = self.servers.storage.makeServer.withLockedValue({ $0.factory }) else {
             fatalError("No server configured. Configure with app.servers.use(...)")
         }
@@ -16,7 +16,7 @@ extension Application {
         public struct Provider {
             let run: @Sendable (Application) -> ()
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -27,7 +27,7 @@ extension Application {
 
         final class Storage: Sendable {
             struct ServerFactory {
-                let factory: (@Sendable (Application) -> Server)?
+                let factory: (@Sendable (Application) -> any Server)?
             }
             let makeServer: NIOLockedValueBox<ServerFactory>
             init() {
@@ -47,24 +47,11 @@ extension Application {
             provider.run(self.application)
         }
 
-        @preconcurrency public func use(_ makeServer: @Sendable @escaping (Application) -> (Server)) {
+        public func use(_ makeServer: @Sendable @escaping (Application) -> (any Server)) {
             self.storage.makeServer.withLockedValue { $0 = .init(factory: makeServer) }
         }
-
-        @available(*, noasync, renamed: "asyncCommand", message: "Use the async property instead.")
-        public var command: ServeCommand {
-            if let existing = self.application.storage.get(CommandKey.self) {
-                return existing
-            } else {
-                let new = ServeCommand()
-                self.application.storage.set(CommandKey.self, to: new) {
-                    $0.shutdown()
-                }
-                return new
-            }
-        }
         
-        public var asyncCommand: ServeCommand {
+        public var command: ServeCommand {
             get async {
                 if let existing = self.application.storage.get(CommandKey.self) {
                     return existing

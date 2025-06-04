@@ -9,7 +9,7 @@ extension Application {
         public struct Provider: Sendable {
             let run: @Sendable (Application) -> ()
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -24,15 +24,15 @@ extension Application {
             provider.run(self.application)
         }
 
-        @preconcurrency public func use(
-            _ makeVerifier: @Sendable @escaping (Application) -> (PasswordHasher)
+        public func use(
+            _ makeVerifier: @Sendable @escaping (Application) -> (any PasswordHasher)
         ) {
             self.storage.makeVerifier.withLockedValue { $0 = .init(factory: makeVerifier) }
         }
 
         final class Storage: Sendable {
             struct PasswordsFactory {
-                let factory: (@Sendable (Application) -> PasswordHasher)?
+                let factory: (@Sendable (Application) -> any PasswordHasher)?
             }
             let makeVerifier: NIOLockedValueBox<PasswordsFactory>
             init() {

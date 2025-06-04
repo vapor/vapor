@@ -37,25 +37,13 @@ public final class Application: Sendable {
         }
     }
     
-    /// If enabled, tracing propagation is automatically handled by restoring & setting `request.serviceContext` automatically across Vapor-internal EventLoopFuture boundaries.
-    /// If disabled, traces will not automatically nest, and the user should restore & set `request.serviceContext` manually where needed.
-    /// There are performance implications to enabling this feature.
-    public var traceAutoPropagation: Bool {
-        get {
-            self._traceAutoPropagation.withLockedValue { $0 }
-        }
-        set {
-            self._traceAutoPropagation.withLockedValue { $0 = newValue }
-        }
-    }
-    
     public struct Lifecycle: Sendable {
-        var handlers: [LifecycleHandler]
+        var handlers: [any LifecycleHandler]
         init() {
             self.handlers = []
         }
         
-        public mutating func use(_ handler: LifecycleHandler) {
+        public mutating func use(_ handler: any LifecycleHandler) {
             self.handlers.append(handler)
         }
     }
@@ -103,93 +91,172 @@ public final class Application: Sendable {
     }
     
     public enum EventLoopGroupProvider: Sendable {
-        case shared(EventLoopGroup)
-        @available(*, deprecated, renamed: "singleton", message: "Use '.singleton' for a shared 'EventLoopGroup', for better performance")
-        case createNew
-        
+        case shared(any EventLoopGroup)
         public static var singleton: EventLoopGroupProvider {
             .shared(MultiThreadedEventLoopGroup.singleton)
         }
     }
     
     public let eventLoopGroupProvider: EventLoopGroupProvider
-    public let eventLoopGroup: EventLoopGroup
+    public let eventLoopGroup: any EventLoopGroup
     internal let isBooted: NIOLockedValueBox<Bool>
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _logger: NIOLockedValueBox<Logger>
-    private let _traceAutoPropagation: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
-    
-    @available(*, noasync, message: "This initialiser cannot be used in async contexts, use Application.make(_:_:) instead")
-    @available(*, deprecated, message: "Migrate to using the async APIs. Use use Application.make(_:_:) instead")
+    public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
+    // TODO: inline this when application is a struct
+    private let _serverConfiguration: NIOLockedValueBox<ServerConfiguration>
+    public var serverConfiguration: ServerConfiguration {
+        get {
+            self._serverConfiguration.withLockedValue { $0 }
+        }
+        set {
+            self._serverConfiguration.withLockedValue { $0 = newValue }
+        }
+    }
+
+    // MARK: - Services
+    package let contentConfiguration: ContentConfiguration
+    public let byteBufferAllocator: ByteBufferAllocator = .init()
+    public let viewRenderer: any ViewRenderer
+    public let directoryConfiguration: DirectoryConfiguration
+
+    public struct ServiceConfiguration {
+        let contentConfiguration: ContentConfiguration
+        let viewRenderer: (any ViewRenderer)?
+
+        public init(contentConfiguration: ContentConfiguration = .default(), viewRenderer: (any ViewRenderer)? = nil) {
+            self.contentConfiguration = contentConfiguration
+            self.viewRenderer = viewRenderer
+        }
+    }
+
+    public struct ServerConfiguration: Sendable {
+        public var address: BindAddress
+
+        // Closure to run when the server is running - useful for grabbing
+        // information such as the port
+        public var onServerRunning: @Sendable (_ channel: any Channel) async -> ()
+        public var reportMetrics = true
+
+        public init(address: BindAddress, onServerRunning: @Sendable @escaping (_ channel: any Channel) async -> ()) {
+            self.address = address
+            self.onServerRunning = onServerRunning
+        }
+
+        /// Host name the server will bind to.
+        public var hostname: String? {
+            get {
+                switch address {
+                case .hostname(let hostname, _):
+                    return hostname
+                default:
+                    return nil
+                }
+            }
+            set {
+                if let newValue {
+                    switch address {
+                    case .hostname(_, let port):
+                        address = .hostname(newValue, port: port)
+                    default:
+                        address = .hostname(newValue)
+                    }
+                }
+            }
+        }
+
+        /// Port the server will bind to.
+        public var port: Int? {
+            get {
+                switch address {
+                case .hostname(_, let port):
+                    port
+                default:
+                    nil
+                }
+            }
+            set {
+                if let newValue {
+                    switch address {
+                    case .hostname(let hostname, _):
+                        address = .hostname(hostname, port: newValue)
+                    default:
+                        address = .hostname(port: newValue)
+                    }
+                }
+            }
+        }
+
+        /// A human-readable description of the configured address. Used in log messages when starting server.
+        var addressDescription: String {
+            #warning("Bring back")
+//            let scheme = tlsConfiguration == nil ? "http" : "https"
+            let scheme = "https"
+            switch address {
+            case .hostname(let hostname, let port):
+                return "\(scheme)://\(hostname):\(port)"
+            case .unixDomainSocket(let socketPath):
+                return "\(scheme)+unix: \(socketPath)"
+            }
+        }
+    }
+
+    // MARK: - Initialization
+
     public convenience init(
         _ environment: Environment = .development,
-        _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
-    ) {
-        self.init(environment, eventLoopGroupProvider, async: false)
-        self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
-        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
+        _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
+        configuration: ServerConfiguration = .init(address: .hostname("127.0.0.1", port: 8080), onServerRunning: { _ in }),
+        services: ServiceConfiguration = .init()
+    ) async throws {
+        self.init(environment, eventLoopGroupProvider, configuration: configuration, services: services, internal: true)
+        await self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
+        await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
     
-    // async flag here is just to stop the compiler from complaining about duplicates
-    private init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, async: Bool) {
+    // internal flag here is just to stop the compiler from complaining about duplicates
+    package init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, configuration: ServerConfiguration, services: ServiceConfiguration, internal: Bool) {
         self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
         case .shared(let group):
             self.eventLoopGroup = group
-        case .createNew:
-            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
         self._locks = .init(.init())
         self._didShutdown = .init(false)
         let logger = Logger(label: "codes.vapor.application")
         self._logger = .init(logger)
-        self._traceAutoPropagation = .init(false)
         self._storage = .init(.init(logger: logger))
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
-        self.core.initialize(asyncEnvironment: async)
+        self.contentConfiguration = services.contentConfiguration
+        self.directoryConfiguration = .detect()
+        self.sharedNewAddress = .init(nil)
+        self._serverConfiguration = .init(configuration)
+
+        // Service Setup
+        if let viewRenderer = services.viewRenderer {
+            self.viewRenderer = viewRenderer
+        } else {
+            self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory, logger: logger)
+        }
+
+        self.core.initialize()
         self.caches.initialize()
-        self.views.initialize()
         self.passwords.use(.bcrypt)
         self.sessions.initialize()
         self.sessions.use(.memory)
         self.responder.initialize()
         self.responder.use(.default)
         self.servers.initialize()
-        self.servers.use(.http)
+        self.servers.use(.httpNew)
         self.clients.initialize()
         self.clients.use(.http)
         self.asyncCommands.use(RoutesCommand(), as: "routes")
-    }
-    
-    public static func make(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton) async throws -> Application {
-        let app = Application(environment, eventLoopGroupProvider, async: true)
-        await app.asyncCommands.use(app.servers.asyncCommand, as: "serve", isDefault: true)
-        await DotEnvFile.load(for: app.environment, fileio: app.fileio, logger: app.logger)
-        return app
-    }
-
-    /// Starts the ``Application`` using the ``start()`` method, then waits for any running tasks to complete.
-    /// If your application is started without arguments, the default argument is used.
-    ///
-    /// Under normal circumstances, ``run()`` runs until a shutdown is triggered, then waits for the web server to
-    /// (manually) shut down before returning.
-    ///
-    /// > Warning: You should probably be using ``execute()`` instead of this method.
-    @available(*, noasync, message: "Use the async execute() method instead.")
-    public func run() throws {
-        do {
-            try self.start()
-            try self.running?.onStop.wait()
-        } catch {
-            self.logger.report(error: error)
-            throw error
-        }
     }
     
     /// Starts the ``Application`` asynchronous using the ``startup()`` method, then waits for any running tasks
@@ -206,19 +273,6 @@ public final class Application: Sendable {
             throw error
         }
     }
-
-    /// When called, this will execute the startup command provided through an argument. If no startup command is
-    /// provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
-    ///
-    /// If you start Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
-    /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
-    /// use ``run()`` instead.
-    ///
-    /// > Warning: You should probably be using ``startup()`` instead of this method.
-    @available(*, noasync, message: "Use the async startup() method instead.")
-    public func start() throws {
-        try self.eventLoopGroup.any().makeFutureWithTask { try await self.startup() }.wait()
-    }
     
     /// When called, this will asynchronously execute the startup command provided through an argument. If no startup
     /// command is provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
@@ -227,7 +281,7 @@ public final class Application: Sendable {
     /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
     /// use ``execute()`` instead.
     public func startup() async throws {
-        try await self.asyncBoot()
+        try await self.boot()
 
         let combinedCommands = AsyncCommands(
             commands: self.asyncCommands.commands.merging(self.commands.commands) { $1 },
@@ -239,23 +293,9 @@ public final class Application: Sendable {
         context.application = self
         try await self.console.run(combinedCommands, with: context)
     }
-
-    
-    @available(*, noasync, message: "This can potentially block the thread and should not be called in an async context", renamed: "asyncBoot()")
-    /// Called when the applications starts up, will trigger the lifecycle handlers
-    public func boot() throws {
-        try self.isBooted.withLockedValue { booted in
-            guard !booted else {
-                return
-            }
-            booted = true
-            try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
-            try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
-        }
-    }
     
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
-    public func asyncBoot() async throws {
+    public func boot() async throws {
         /// Skip the boot process if already booted
         guard !self.isBooted.withLockedValue({
             var result = true
@@ -266,66 +306,30 @@ public final class Application: Sendable {
         }
 
         for handler in self.lifecycle.handlers {
-            try await handler.willBootAsync(self)
+            try await handler.willBoot(self)
         }
         for handler in self.lifecycle.handlers {
-            try await handler.didBootAsync(self)
+            try await handler.didBoot(self)
         }
-    }
-
-    @available(*, noasync, message: "This can block the thread and should not be called in an async context", renamed: "asyncShutdown()")
-    public func shutdown() {
-        assert(!self.didShutdown, "Application has already shut down")
-        self.logger.debug("Application shutting down")
-
-        self.logger.trace("Shutting down providers")
-        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
-        self.lifecycle.handlers = []
-
-        self.logger.trace("Clearing Application storage")
-        self.storage.shutdown()
-        self.storage.clear()
-
-        switch self.eventLoopGroupProvider {
-        case .shared:
-            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
-        case .createNew:
-            self.logger.trace("Shutting down EventLoopGroup")
-            do {
-                try self.eventLoopGroup.syncShutdownGracefully()
-            } catch {
-                self.logger.warning("Shutting down EventLoopGroup failed: \(error)")
-            }
-        }
-
-        self._didShutdown.withLockedValue { $0 = true }
-        self.logger.trace("Application shutdown complete")
     }
     
-    public func asyncShutdown() async throws {
+    public func shutdown() async throws {
         assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
 
         self.logger.trace("Shutting down providers")
         for handler in self.lifecycle.handlers.reversed()  {
-            await handler.shutdownAsync(self)
+            await handler.shutdown(self)
         }
         self.lifecycle.handlers = []
 
         self.logger.trace("Clearing Application storage")
-        await self.storage.asyncShutdown()
+        await self.storage.shutdown()
         self.storage.clear()
 
         switch self.eventLoopGroupProvider {
         case .shared:
             self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
-        case .createNew:
-            self.logger.trace("Shutting down EventLoopGroup")
-            do {
-                try await self.eventLoopGroup.shutdownGracefully()
-            } catch {
-                self.logger.warning("Shutting down EventLoopGroup failed: \(error)")
-            }
         }
 
         self._didShutdown.withLockedValue { $0 = true }
@@ -334,10 +338,7 @@ public final class Application: Sendable {
 
     deinit {
         self.logger.trace("Application deinitialized, goodbye!")
-        if !self.didShutdown {
-            self.logger.error("Application.shutdown() was not called before Application deinitialized.")
-            self.shutdown()
-        }
+        assert(self.didShutdown, "Application.shutdown() was not called before Application deinitialized.")
     }
 }
 

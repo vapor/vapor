@@ -1,45 +1,48 @@
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 import Foundation
 
 public struct ClientResponse: Sendable {
     public var status: HTTPStatus
-    public var headers: HTTPHeaders
+    public var headers: HTTPFields
     public var body: ByteBuffer?
     private let byteBufferAllocator: ByteBufferAllocator
+    private let contentConfiguration: ContentConfiguration
 
-    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+    public init(status: HTTPStatus = .ok, headers: HTTPFields = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), contentConfiguration: ContentConfiguration = .default()) {
         self.status = status
         self.headers = headers
         self.body = body
         self.byteBufferAllocator = byteBufferAllocator
+        self.contentConfiguration = contentConfiguration
     }
 }
 
 extension ClientResponse {
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer?
-        var headers: HTTPHeaders
+        var headers: HTTPFields
         let allocator: ByteBufferAllocator
+        let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = self.allocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
             self.body = body
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: body, headers: self.headers)
         }
 
-        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var body = self.allocator.buffer(capacity: 0)
             var content = content
             try content.beforeEncode()
@@ -47,7 +50,7 @@ extension ClientResponse {
             self.body = body
         }
 
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
@@ -57,9 +60,9 @@ extension ClientResponse {
         }
     }
 
-    public var content: ContentContainer {
+    public var content: any ContentContainer {
         get {
-            return _ContentContainer(body: self.body, headers: self.headers, allocator: self.byteBufferAllocator)
+            return _ContentContainer(body: self.body, headers: self.headers, allocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
         }
         set {
             let container = (newValue as! _ContentContainer)
@@ -82,7 +85,7 @@ extension ClientResponse: CustomStringConvertible {
 }
 
 extension ClientResponse: ResponseEncodable {
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+    public func encodeResponse(for request: Request) async throws -> Response {
         let body: Response.Body
         if let buffer = self.body {
             body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
@@ -92,9 +95,10 @@ extension ClientResponse: ResponseEncodable {
         let response = Response(
             status: self.status,
             headers: self.headers,
-            body: body
+            body: body,
+            contentConfiguration: request.application.contentConfiguration
         )
-        return request.eventLoop.makeSucceededFuture(response)
+        return response
     }
 }
 
@@ -105,19 +109,20 @@ extension ClientResponse: Codable {
         case body = "body"
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.status = try container.decode(HTTPStatus.self, forKey: .status)
-        self.headers = try container.decode(HTTPHeaders.self, forKey: .headers)
+        self.headers = try container.decode(HTTPFields.self, forKey: .headers)
         let bodyString = try container.decode(String?.self, forKey: .body)
         guard let s = bodyString, let bodyData = [UInt8].init(decodingBase64: s) else {
             throw Abort(.internalServerError, reason: "Could not decode client response body from base64 string")
         }
         self.byteBufferAllocator = ByteBufferAllocator()
         self.body = self.byteBufferAllocator.buffer(bytes: bodyData)
+        self.contentConfiguration = .default()
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.status, forKey: .status)
         try container.encode(self.headers, forKey: .headers)
