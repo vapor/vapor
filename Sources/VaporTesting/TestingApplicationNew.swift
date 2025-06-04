@@ -39,7 +39,7 @@ extension VaporTestingRunner {
             url: .init(scheme: "http", host: hostname, port: port, path: path),
             headers: headers,
             body: body ?? ByteBufferAllocator().buffer(capacity: 0),
-            contentConfigurtion: .default()
+            contentConfiguration: .default()
         )
         try await beforeRequest(&request)
         do {
