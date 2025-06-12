@@ -140,10 +140,10 @@ public final class CORSMiddleware: Middleware {
         let response = request.isPreflight ? Response() : try await next.respond(to: request)
 
         // Modify response headers based on CORS settings
-        let originBasedAccessControlAllowHeader = self.configuration.allowedOrigin.header(forRequest: request)
+        let accessControlAllowOriginHeader = self.configuration.allowedOrigin.header(forRequest: request)
         response.responseBox.withLockedValue { box in
-            if !originBasedAccessControlAllowHeader.isEmpty {
-                box.headers[.accessControlAllowOrigin] = originBasedAccessControlAllowHeader
+            if !accessControlAllowOriginHeader.isEmpty {
+                box.headers[.accessControlAllowOrigin] = accessControlAllowOriginHeader
             }
 
             box.headers[.accessControlAllowMethods] = self.configuration.allowedMethods
@@ -161,7 +161,7 @@ public final class CORSMiddleware: Middleware {
                 box.headers[.accessControlAllowCredentials] = "true"
             }
 
-            if case .originBased = self.configuration.allowedOrigin, !originBasedAccessControlAllowHeader.isEmpty {
+            if self.configuration.allowedOrigin.variesByRequestOrigin, !accessControlAllowOriginHeader.isEmpty {
                 box.headers[.vary] = "origin"
             }
         }
@@ -176,5 +176,18 @@ private extension Request {
     var isPreflight: Bool {
         return self.method == .options && self.headers[.accessControlRequestMethod] != nil
     }
+}
+
+private extension CORSMiddleware.AllowOriginSetting {
+  /// Returns `true` when the value of `Access-Control-Allow-Origin`
+  /// depends on the incoming `Origin` header.
+  var variesByRequestOrigin: Bool {
+    switch self {
+    case .originBased, .any, .dynamic:
+      return true
+    default:
+      return false
+    }
+  }
 }
 

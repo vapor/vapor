@@ -49,6 +49,25 @@ struct MiddlewareTests2 {
         }
     }
 
+    @Test("Test CORS Middleware Any Allowed Origin")
+    func testCORSMiddlewareAnyAllowedOrigin() async throws {
+        try await withApp { app in
+            app.grouped(
+                CORSMiddleware(configuration: .init(allowedOrigin: .any(["foo", "bar"]), allowedMethods: [.get], allowedHeaders: [.origin]))
+            ).get("order") { req -> String in
+                return "done"
+            }
+
+            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "done")
+                #expect(res.headers[values: .vary] == ["origin"])
+                #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
+                #expect(res.headers[values: .accessControlAllowHeaders] == ["origin"])
+            }
+        }
+    }
+
     @Test("Test CORS Middleware Varied By Request Origin")
     func testCORSMiddlewareVariedByRequestOrigin() async throws {
         try await withApp { app in
