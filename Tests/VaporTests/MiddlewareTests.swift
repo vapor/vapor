@@ -4,6 +4,7 @@ import NIOCore
 import Tracing
 import Testing
 import VaporTesting
+import Foundation
 
 @Suite("Middleware Tests")
 struct MiddlewareTests2 {
@@ -74,6 +75,45 @@ struct MiddlewareTests2 {
                 CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.get], allowedHeaders: []))
             ).get("order") { req -> String in
                 return "done"
+            }
+
+            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "done")
+                #expect(res.headers[values: .vary] == [])
+                #expect(res.headers[values: .accessControlAllowOrigin] == [])
+                #expect(res.headers[values: .accessControlAllowHeaders] == [""])
+            }
+        }
+    }
+
+    @Test("Test CORS Middleware Dynamic Origin Allowed")
+    func testCORSMiddlewareDynamicOriginAllowed() async throws {
+        try await withApp { app in
+            app.grouped(
+                CORSMiddleware(configuration: .init(
+                    allowedOrigin: .dynamic({ req in
+                        guard let origin = req.headers[values: .origin].first else {
+                            return ""
+                        }
+                        let regex = try! NSRegularExpression(pattern: "http://example-[^/]+\\.com")
+                        let range = NSRange(location: 0, length: origin.utf16.count)
+                        let isMatch = regex.firstMatch(in: origin, options: [], range: range) != nil
+                        return isMatch ? origin : ""
+                    }),
+                    allowedMethods: [.get],
+                    allowedHeaders: []
+                ))
+            ).get("order") { req -> String in
+                return "done"
+            }
+
+            try await app.testing().test(.get, "/order", headers: [.origin: "http://example-123.com"]) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "done")
+                #expect(res.headers[values: .vary] == [])
+                #expect(res.headers[values: .accessControlAllowOrigin] == ["http://example-123.com"])
+                #expect(res.headers[values: .accessControlAllowHeaders] == [""])
             }
 
             try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
@@ -246,42 +286,6 @@ struct MiddlewareTests2 {
 
                 #expect(span.attributes["http.response.status_code"]?.toSpanAttribute() == 200)
             }
-
-//            try await app.server.start(address: .hostname("127.0.0.1", port: 0))
-//
-//            let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port, "Failed to get port")
-//            let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
-//                req.headers[.userAgent] = "test"
-//                req.headers[TestTracer.extractKey] = "extracted"
-//            }
-//
-//            #expect(response.status == .ok)
-//            #expect(response.body?.string == "done")
-//
-//            let span = try #require(tracer.spans.first)
-//            #expect(span.operationName == "GET /testTracing")
-//
-//            #expect(span.attributes["http.request.method"]?.toSpanAttribute() == "GET")
-//            #expect(span.attributes["url.path"]?.toSpanAttribute() == "/testTracing")
-//            #expect(span.attributes["url.scheme"]?.toSpanAttribute() == nil)
-//
-//            #expect(span.attributes["http.route"]?.toSpanAttribute() == "/testTracing")
-//            #expect(span.attributes["network.protocol.name"]?.toSpanAttribute() == "http")
-//            #expect(span.attributes["server.address"]?.toSpanAttribute() == "127.0.0.1")
-//            #expect(span.attributes["server.port"]?.toSpanAttribute() == port.toSpanAttribute())
-//            #expect(span.attributes["url.query"]?.toSpanAttribute() == "foo=bar")
-//
-//            #expect(span.attributes["client.address"]?.toSpanAttribute() == "127.0.0.1")
-//            #expect(span.attributes["network.peer.address"]?.toSpanAttribute() == "127.0.0.1")
-//            #expect(span.attributes["network.peer.port"]?.toSpanAttribute() != nil)
-//            #expect(span.attributes["network.protocol.version"]?.toSpanAttribute() == "1.1")
-//            #expect(span.attributes["user_agent.original"]?.toSpanAttribute() == "test")
-//
-//            #expect(span.attributes["custom"]?.toSpanAttribute() == "custom")
-//
-//            #expect(span.attributes["http.response.status_code"]?.toSpanAttribute() == 200)
-//
-//            try await app.server.shutdown()
         }
     }
 }

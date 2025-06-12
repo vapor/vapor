@@ -14,6 +14,7 @@ public final class CORSMiddleware: Middleware {
     /// - all: Uses wildcard to allow any origin.
     /// - any: A list of allowable origins.
     /// - custom: Uses custom string provided as an associated value.
+    /// - dynamic: Uses a closure to determine allow origin by ``Request``.
     public enum AllowOriginSetting: Sendable {
         /// Disallow any origin.
         case none
@@ -29,6 +30,9 @@ public final class CORSMiddleware: Middleware {
 
         /// Uses custom string provided as an associated value.
         case custom(String)
+
+        /// Uses a closure to determine allow origin by ``Request``.
+        case dynamic(@Sendable (Request) -> String)
 
         /// Creates the header string depending on the case of self.
         ///
@@ -46,6 +50,8 @@ public final class CORSMiddleware: Middleware {
                 return origins.contains(origin) ? origin : ""
             case .custom(let string):
                 return string
+            case .dynamic(let closure):
+                return closure(req)
             }
         }
     }
