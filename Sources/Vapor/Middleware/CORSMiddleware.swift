@@ -14,6 +14,7 @@ public final class CORSMiddleware: Middleware {
     /// - all: Uses wildcard to allow any origin.
     /// - any: A list of allowable origins.
     /// - custom: Uses custom string provided as an associated value.
+    /// - dynamic: Uses a closure to determine allow origin by ``Request``.
     public enum AllowOriginSetting: Sendable {
         /// Disallow any origin.
         case none
@@ -29,6 +30,9 @@ public final class CORSMiddleware: Middleware {
 
         /// Uses custom string provided as an associated value.
         case custom(String)
+
+        /// Uses a closure to determine allow origin by ``Request``.
+        case dynamic(@Sendable (Request) -> String)
 
         /// Creates the header string depending on the case of self.
         ///
@@ -46,6 +50,8 @@ public final class CORSMiddleware: Middleware {
                 return origins.contains(origin) ? origin : ""
             case .custom(let string):
                 return string
+            case .dynamic(let closure):
+                return closure(req)
             }
         }
     }
@@ -137,10 +143,10 @@ public final class CORSMiddleware: Middleware {
         
         return response.map { response in
             // Modify response headers based on CORS settings
-            let originBasedAccessControlAllowHeader = self.configuration.allowedOrigin.header(forRequest: request)
+            let accessControlAllowOriginHeader = self.configuration.allowedOrigin.header(forRequest: request)
             response.responseBox.withLockedValue { box in
-                if !originBasedAccessControlAllowHeader.isEmpty {
-                    box.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: originBasedAccessControlAllowHeader)
+                if !accessControlAllowOriginHeader.isEmpty {
+                    box.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: accessControlAllowOriginHeader)
                 }
 
                 box.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
@@ -158,7 +164,7 @@ public final class CORSMiddleware: Middleware {
                     box.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
                 }
 
-                if case .originBased = self.configuration.allowedOrigin, !originBasedAccessControlAllowHeader.isEmpty {
+                if self.configuration.allowedOrigin.variesByRequestOrigin, !accessControlAllowOriginHeader.isEmpty {
                     box.headers.add(name: .vary, value: "origin")
                 }
             }
@@ -174,5 +180,18 @@ private extension Request {
     var isPreflight: Bool {
         return self.method == .OPTIONS && self.headers[.accessControlRequestMethod].first != nil
     }
+}
+
+private extension CORSMiddleware.AllowOriginSetting {
+  /// Returns `true` when the value of `Access-Control-Allow-Origin`
+  /// depends on the incoming `Origin` header.
+  var variesByRequestOrigin: Bool {
+    switch self {
+    case .originBased, .any, .dynamic:
+      return true
+    default:
+      return false
+    }
+  }
 }
 

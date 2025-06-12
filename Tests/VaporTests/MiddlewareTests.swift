@@ -78,6 +78,22 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
+    func testCORSMiddlewareAnyAllowedOrigin() throws {
+        app.grouped(
+            CORSMiddleware(configuration: .init(allowedOrigin: .any(["foo", "bar"]), allowedMethods: [.GET], allowedHeaders: [.origin]))
+        ).get("order") { req -> String in
+            return "done"
+        }
+
+        try app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "done")
+            XCTAssertEqual(res.headers[.vary], ["origin"])
+            XCTAssertEqual(res.headers[.accessControlAllowOrigin], ["foo"])
+            XCTAssertEqual(res.headers[.accessControlAllowHeaders], ["origin"])
+        }
+    }
+
     func testCORSMiddlewareVariedByRequestOrigin() throws {
         app.grouped(
             CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.GET], allowedHeaders: [.origin]))
@@ -109,7 +125,43 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
         }
     }
-    
+
+  func testCORSMiddlewareDynamicOriginAllowed() throws {
+    app.grouped(
+      CORSMiddleware(configuration: .init(
+        allowedOrigin: .dynamic({ req in
+          guard let origin = req.headers[.origin].first else {
+            return ""
+          }
+
+          let regex = /http:\/\/example-[^\/]+\.com/
+          let isMatch = try? regex.wholeMatch(in: origin) != nil
+          return (isMatch ?? false) ? origin : ""
+        }),
+        allowedMethods: [.GET],
+        allowedHeaders: [],
+      ))
+    ).get("order") { req -> String in
+      return "done"
+    }
+
+    try app.testable().test(.GET, "/order", headers: ["Origin": "http://example-123.com"]) { res in
+      XCTAssertEqual(res.status, .ok)
+      XCTAssertEqual(res.body.string, "done")
+      XCTAssertEqual(res.headers[.vary], ["origin"])
+      XCTAssertEqual(res.headers[.accessControlAllowOrigin], ["http://example-123.com"])
+      XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
+    }
+
+    try app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+      XCTAssertEqual(res.status, .ok)
+      XCTAssertEqual(res.body.string, "done")
+      XCTAssertEqual(res.headers[.vary], ["origin"])
+      XCTAssertEqual(res.headers[.accessControlAllowOrigin], [])
+      XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
+    }
+  }
+
     func testFileMiddlewareFromBundle() async throws {
         var fileMiddleware: FileMiddleware!
         
