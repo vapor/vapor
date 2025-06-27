@@ -4,10 +4,10 @@ import NIOCore
 import Tracing
 import Testing
 import VaporTesting
-import Foundation
+import RegexBuilder
 
 @Suite("Middleware Tests")
-struct MiddlewareTests2 {
+struct MiddlewareTests {
     @Test("Test Middleware Order")
     func testMiddlewareOrder() async throws {
         try await withApp { app in
@@ -115,9 +115,16 @@ struct MiddlewareTests2 {
                         guard let origin = req.headers[values: .origin].first else {
                             return ""
                         }
-                        let regex = try! NSRegularExpression(pattern: "http://example-[^/]+\\.com")
-                        let range = NSRange(location: 0, length: origin.utf16.count)
-                        let isMatch = regex.firstMatch(in: origin, options: [], range: range) != nil
+                        let regex = Regex {
+                            Anchor.startOfLine
+                            "http://example-"
+                            OneOrMore {
+                                CharacterClass.digit
+                            }
+                            ".com"
+                            Anchor.endOfLine
+                        }
+                        let isMatch = origin.wholeMatch(of: regex) != nil
                         return isMatch ? origin : ""
                     }),
                     allowedMethods: [.get],
