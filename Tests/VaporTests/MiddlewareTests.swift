@@ -312,6 +312,42 @@ struct MiddlewareTests {
 
                 #expect(span.attributes["http.response.status_code"]?.toSpanAttribute() == 200)
             }
+
+//            try await app.server.start(address: .hostname("127.0.0.1", port: 0))
+//
+//            let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port, "Failed to get port")
+//            let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
+//                req.headers[.userAgent] = "test"
+//                req.headers[TestTracer.extractKey] = "extracted"
+//            }
+//
+//            #expect(response.status == .ok)
+//            #expect(response.body?.string == "done")
+//
+//            let span = try #require(tracer.spans.first)
+//            #expect(span.operationName == "GET /testTracing")
+//
+//            #expect(span.attributes["http.request.method"]?.toSpanAttribute() == "GET")
+//            #expect(span.attributes["url.path"]?.toSpanAttribute() == "/testTracing")
+//            #expect(span.attributes["url.scheme"]?.toSpanAttribute() == nil)
+//
+//            #expect(span.attributes["http.route"]?.toSpanAttribute() == "/testTracing")
+//            #expect(span.attributes["network.protocol.name"]?.toSpanAttribute() == "http")
+//            #expect(span.attributes["server.address"]?.toSpanAttribute() == "127.0.0.1")
+//            #expect(span.attributes["server.port"]?.toSpanAttribute() == port.toSpanAttribute())
+//            #expect(span.attributes["url.query"]?.toSpanAttribute() == "foo=bar")
+//
+//            #expect(span.attributes["client.address"]?.toSpanAttribute() == "127.0.0.1")
+//            #expect(span.attributes["network.peer.address"]?.toSpanAttribute() == "127.0.0.1")
+//            #expect(span.attributes["network.peer.port"]?.toSpanAttribute() != nil)
+//            #expect(span.attributes["network.protocol.version"]?.toSpanAttribute() == "1.1")
+//            #expect(span.attributes["user_agent.original"]?.toSpanAttribute() == "test")
+//
+//            #expect(span.attributes["custom"]?.toSpanAttribute() == "custom")
+//
+//            #expect(span.attributes["http.response.status_code"]?.toSpanAttribute() == 200)
+//
+//            try await app.server.shutdown()
         }
     }
 }
