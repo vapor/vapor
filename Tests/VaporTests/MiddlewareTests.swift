@@ -137,7 +137,7 @@ struct MiddlewareTests {
             try await app.testing().test(.get, "/order", headers: [.origin: "http://example-123.com"]) { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "done")
-                #expect(res.headers[values: .vary] == [])
+                #expect(res.headers[values: .vary] == ["origin"])
                 #expect(res.headers[values: .accessControlAllowOrigin] == ["http://example-123.com"])
                 #expect(res.headers[values: .accessControlAllowHeaders] == [""])
             }
