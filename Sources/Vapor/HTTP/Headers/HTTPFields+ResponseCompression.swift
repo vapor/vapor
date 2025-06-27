@@ -1,8 +1,8 @@
 import Foundation
 import HTTPTypes
 
-extension HTTPHeaders {
-    /// A marker header internal to vapor that explicitly allows or disallows response compression.
+extension HTTPFields {
+    /// A marker header internal to vapor that explicitely allows or disallows response compression.
     public struct ResponseCompression: Sendable, Hashable {
         enum Value: String {
             case enable
@@ -10,18 +10,18 @@ extension HTTPHeaders {
             case useDefault
         }
         
-        /// Explicitly use the server's default response compression determination.
+        /// Explicitely use the server's default response compression determination.
         public static let useDefault = ResponseCompression(value: .useDefault)
         
-        /// Implicitly use the server's default response compression determination.
+        /// Implicitely use the server's default response compression determination.
         ///
         /// This value has no effect when set as a route override
         public static let unset = ResponseCompression(value: nil)
         
-        /// Explicitly enable response compression.
+        /// Explicitely enable response compression.
         public static let enable = ResponseCompression(value: .enable)
         
-        /// Explicitly disable response compression.
+        /// Explicitely disable response compression.
         public static let disable = ResponseCompression(value: .disable)
         
         let value: Value?
@@ -39,7 +39,7 @@ extension HTTPHeaders {
         }
     }
 
-    /// A marker header internal to vapor that explicitly allows or disallows response compression.
+    /// A marker header internal to vapor that explicitely allows or disallows response compression.
     public var responseCompression: ResponseCompression {
         get { ResponseCompression(string: self[values: .xVaporResponseCompression].last.map { String ($0) }) }
         set {
