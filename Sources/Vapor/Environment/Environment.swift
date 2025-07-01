@@ -138,7 +138,7 @@ public struct Environment: Sendable, Equatable {
     /// providing warnings about configuration states that are not suitable for production.
     ///
     /// - Warning: This value is determined at compile time by configuration; it is not
-    ///   based on the actual environment name. This can lead to unxpected results, such
+    ///   based on the actual environment name. This can lead to unexpected results, such
     ///   as `Environment.production.isRelease == false`. This is done intentionally to
     ///   allow scenarios, such as testing production environment behaviors while retaining
     ///   availability of debug information.

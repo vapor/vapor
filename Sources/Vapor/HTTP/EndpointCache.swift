@@ -5,8 +5,13 @@ import Logging
 import HTTPTypes
 
 public enum EndpointCacheError: Swift.Error {
-    case unexpctedResponseStatus(HTTPStatus, uri: URI)
+    case unexpectedResponseStatus(HTTPStatus, uri: URI)
     case contentDecodeFailure(any Error)
+
+    @available(*, deprecated, renamed: "unexpectedResponseStatus")
+    public static func unexpctedResponseStatus(_ status: HTTPStatus, uri: URI) -> Self {
+        .unexpectedResponseStatus(status, uri: uri)
+    }
 }
 
 /// Handles the complexities of HTTP caching.
@@ -85,7 +90,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
         do {
             let response = try await client.get(self.uri, headers: headers)
             if !(response.status == .notModified || response.status == .ok) {
-                throw EndpointCacheError.unexpctedResponseStatus(response.status, uri: self.uri)
+                throw EndpointCacheError.unexpectedResponseStatus(response.status, uri: self.uri)
             }
 
             if let cacheControl = response.headers.cacheControl, cacheControl.noStore == true {
