@@ -18,11 +18,6 @@ public struct TestingHTTPRequest: Sendable {
         self.contentConfiguration = contentConfiguration
     }
 
-    @available(*, deprecated, renamed: "init(method:url:headers:body:contentConfiguration:)")
-    public init(method: HTTPRequest.Method, url: URI, headers: HTTPFields, body: ByteBuffer, contentConfigurtion: ContentConfiguration) {
-        self.init(method: method, url: url, headers: headers, body: body, contentConfiguration: contentConfigurtion)
-    }
-
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer
         var headers: HTTPFields
