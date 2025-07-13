@@ -166,10 +166,7 @@ public final class Request: CustomStringConvertible, Sendable {
 
     public var newBody: NewBody {
         guard let underlying = self.newBodyStorage.withLockedValue({ $0 }) else {
-            // Fallback to empty body when newBodyStorage is nil
-            let emptyBuffer = self.byteBufferAllocator.buffer(capacity: 0)
-            let emptyBody = HTTPServerNew.RequestBody(buffer: emptyBuffer)
-            return NewBody(underlying: emptyBody, maxBodySize: 16*1024)
+            fatalError("Request newBodyStorage was not properly initialized. This indicates a serious bug in the HTTP server integration.")
         }
         return NewBody(underlying: underlying, maxBodySize: 16*1024)
     }
