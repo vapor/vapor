@@ -60,7 +60,7 @@ struct VaporTestingTests {
     @Test
     func withAppConfiguration() async throws {
         try await withApp { app in         
-            try await app.testing().test(.GET, "hello") { res in
+            try await app.testing().test(.get, "hello") { res in
                 #expect(res.status == .notFound)
             }
         }
@@ -72,7 +72,7 @@ struct VaporTestingTests {
         }
 
         try await withApp(configure: configure) { app in         
-            try await app.testing().test(.GET, "hello") { res in
+            try await app.testing().test(.get, "hello") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Hello, world!")
             }
