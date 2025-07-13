@@ -164,9 +164,14 @@ public final class Request: CustomStringConvertible, Sendable {
         Body(self)
     }
 
-    #warning("Implement body size, dont' force unwrap")
     public var newBody: NewBody {
-        NewBody(underlying: self.newBodyStorage.withLockedValue({ $0! }), maxBodySize: 16*1024)
+        guard let underlying = self.newBodyStorage.withLockedValue({ $0 }) else {
+            // Fallback to empty body when newBodyStorage is nil
+            let emptyBuffer = self.byteBufferAllocator.buffer(capacity: 0)
+            let emptyBody = HTTPServerNew.RequestBody(buffer: emptyBuffer)
+            return NewBody(underlying: emptyBody, maxBodySize: 16*1024)
+        }
+        return NewBody(underlying: underlying, maxBodySize: 16*1024)
     }
 
     internal enum BodyStorage: Sendable {
