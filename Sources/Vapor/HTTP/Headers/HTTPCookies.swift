@@ -88,6 +88,8 @@ struct HTTPSetCookie {
                     return nil
                 }
                 self.value.sameSite = HTTPCookies.SameSitePolicy(rawValue: .init(parameter))
+            case "partitioned":
+                self.value.partitioned = true
             default:
                 return nil
             }
