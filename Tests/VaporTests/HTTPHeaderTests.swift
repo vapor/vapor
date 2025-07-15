@@ -157,8 +157,8 @@ final class HTTPHeaderTests: XCTestCase {
             let vaporSession = try XCTUnwrap(headers.setCookie?["vapor-session"])
             XCTAssertEqual(vaporSession.sameSite, HTTPCookies.SameSitePolicy.none)
             XCTAssertEqual(vaporSession.expires, Date(timeIntervalSince1970: 1622645877))
-            XCTAssertTrue(siwaState.isHTTPOnly)
-            XCTAssertTrue(siwaState.isSecure)
+            XCTAssertTrue(vaporSession.isHTTPOnly)
+            XCTAssertTrue(vaporSession.isSecure)
         }
     }
 
