@@ -1,6 +1,10 @@
 import XCTVapor
 import Vapor
 import XCTest
+#if os(Android)
+// sleep() is not imported by default on Android
+import func Android.sleep
+#endif
 
 final class AsyncAuthenticationTests: XCTestCase {
     

@@ -201,7 +201,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     func testUnknownType() async throws {
         app.get("resource") { request in
             var headers = HTTPHeaders()
-            headers.contentType = unknownType /// Not explicitely marked as compressible or not.
+            headers.contentType = unknownType /// Not explicitly marked as compressible or not.
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
@@ -231,7 +231,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     func testImage() async throws {
         app.get("resource") { request in
             var headers = HTTPHeaders()
-            headers.contentType = .png /// PNGs are explicitely called out as incompressible.
+            headers.contentType = .png /// PNGs are explicitly called out as incompressible.
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
@@ -261,7 +261,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     func testVideo() async throws {
         app.get("resource") { request in
             var headers = HTTPHeaders()
-            headers.contentType = .mpeg /// Videos are explicitely called out as incompressible, but as a class.
+            headers.contentType = .mpeg /// Videos are explicitly called out as incompressible, but as a class.
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
@@ -291,7 +291,7 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
     func testText() async throws {
         app.get("resource") { request in
             var headers = HTTPHeaders()
-            headers.contentType = .plainText /// Text types are explicitely called out as compressible, but as a class.
+            headers.contentType = .plainText /// Text types are explicitly called out as compressible, but as a class.
             return compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
         }
         
