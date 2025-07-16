@@ -147,7 +147,12 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         public var sameSite: SameSitePolicy?
       
         /// The cookie can only be read within the context of the top-level site it was set on.
-        public var isPartitioned: Bool
+        /// Note: Partitioned cookies must be set with Secure (`isSecure=true`)
+        public var isPartitioned: Bool {
+            willSet {
+                assert(self.isSecure, "Partitioned cookies must be set with isSecure=true")
+            }
+        }
         
         // MARK: Init
         
@@ -164,7 +169,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         ///     - isSecure: Limits the cookie to secure connections. If `sameSite` is `none`, this flag will be overridden with `true`. Defaults to `false`.
         ///     - isHTTPOnly: Does not expose the cookie over non-HTTP channels. Defaults to `false`.
         ///     - sameSite: See `HTTPSameSitePolicy`. Defaults to `lax`.
-        ///     - isPartitioned: The cookie can only be read within the context of the top-level site it was set on. Defaults to `false`.
+        ///     - isPartitioned: The cookie can only be read within the context of the top-level site it was set on. Defaults to `false`. Note: Partitioned cookies must be set with Secure (`isSecure=true`)
         public init(
             string: String,
             expires: Date? = nil,
