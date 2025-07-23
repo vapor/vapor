@@ -6,7 +6,7 @@ import NIOHTTP1
 /// Types that conform to this protocol can be returned in route closures.
 ///
 /// This is the async version of `ResponseEncodable`
-public protocol AsyncResponseEncodable {
+public protocol AsyncResponseEncodable: VaporSendableMetatype {
     /// Encodes an instance of `Self` to a `Response`.
     ///
     /// - parameters:
