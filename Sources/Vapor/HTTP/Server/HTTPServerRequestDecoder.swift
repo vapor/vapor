@@ -1,6 +1,7 @@
 import Logging
 import NIOCore
 import NIOHTTP1
+import NIOSSL
 import Foundation
 
 final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHandler {
@@ -23,13 +24,32 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         self.application.logger
     }
     var application: Application
-    
+
+    enum CertificateCache {
+        case miss
+        case hit(NIOSSLCertificate?)
+
+        mutating func lookup(_ updater: () throws -> NIOSSLCertificate?) -> NIOSSLCertificate? {
+            switch self {
+            case .miss:
+                let result = try? updater()
+                self = .hit(result)
+                return result
+            case .hit(let result):
+                return result
+            }
+        }
+    }
+
+    var peerCertificateCache: CertificateCache
+
     init(application: Application) {
         self.application = application
         self.requestState = .ready
         self.bodyStreamState = .init()
+        self.peerCertificateCache = .miss
     }
-    
+
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         assert(context.channel.eventLoop.inEventLoop)
         let part = self.unwrapInboundIn(data)
@@ -38,6 +58,11 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         case .head(let head):
             switch self.requestState {
             case .ready:
+                // The certificate will be set to nil if we cannot get the handler or if the peer does not present one.
+                // Since it is exchanged during the handshake, we only collect it once and cache it.
+                let peerCertificate = peerCertificateCache.lookup {
+                    try context.pipeline.syncOperations.nioSSL_peerCertificate()
+                }
                 /// Note: It is critical that `URI.init(path:)` is used here, _NOT_ `URI.init(string:)`. The following
                 /// example illustrates why:
                 ///
@@ -59,6 +84,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                     remoteAddress: context.channel.remoteAddress,
                     logger: self.application.logger,
                     byteBufferAllocator: context.channel.allocator,
+                    peerCertificate: peerCertificate,
                     on: context.channel.eventLoop
                 )
                 switch head.version.major {

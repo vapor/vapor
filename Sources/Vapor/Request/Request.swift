@@ -1,6 +1,7 @@
 import Foundation
 import NIOCore
 import NIOHTTP1
+import NIOSSL
 import Logging
 import RoutingKit
 import NIOConcurrencyHelpers
@@ -95,6 +96,11 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         return self.remoteAddress
+    }
+
+    /// The certificate of the peer. This returns nil if the client did not authenticate with a certificate.
+    public var peerCertificate: NIOSSLCertificate? {
+        return self.requestBox.withLockedValue { $0.peerCertificate }
     }
 
     // MARK: Content
@@ -277,6 +283,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var route: Route?
         var parameters: Parameters
         var byteBufferAllocator: ByteBufferAllocator
+        var peerCertificate: NIOSSLCertificate?
     }
     
     let requestBox: NIOLockedValueBox<RequestBox>
@@ -295,6 +302,7 @@ public final class Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        peerCertificate: NIOSSLCertificate? = nil,
         on eventLoop: EventLoop
     ) {
         self.init(
@@ -307,6 +315,7 @@ public final class Request: CustomStringConvertible, Sendable {
             remoteAddress: remoteAddress,
             logger: logger,
             byteBufferAllocator: byteBufferAllocator,
+            peerCertificate: peerCertificate,
             on: eventLoop
         )
         if let body = collectedBody {
@@ -324,6 +333,7 @@ public final class Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        peerCertificate: NIOSSLCertificate? = nil,
         on eventLoop: EventLoop
     ) {
         let requestId = headers.first(name: .xRequestId) ?? UUID().uuidString
@@ -347,7 +357,8 @@ public final class Request: CustomStringConvertible, Sendable {
             isKeepAlive: true,
             route: nil,
             parameters: .init(),
-            byteBufferAllocator: byteBufferAllocator
+            byteBufferAllocator: byteBufferAllocator,
+            peerCertificate: peerCertificate
         )
         self.requestBox = .init(storageBox)
         self.id = requestId
