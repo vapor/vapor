@@ -124,14 +124,17 @@ public final class Application: Sendable, Service {
     public let byteBufferAllocator: ByteBufferAllocator = .init()
     public let viewRenderer: any ViewRenderer
     public let directoryConfiguration: DirectoryConfiguration
+    public let passwordHasher: any PasswordHasher
 
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration
         let viewRenderer: (any ViewRenderer)?
+        let passwordHasher: any PasswordHasher
 
-        public init(contentConfiguration: ContentConfiguration = .default(), viewRenderer: (any ViewRenderer)? = nil) {
+        public init(contentConfiguration: ContentConfiguration = .default(), viewRenderer: (any ViewRenderer)? = nil, passwordHasher: any PasswordHasher = BcryptHasher()) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
+            self.passwordHasher = passwordHasher
         }
     }
 
@@ -245,6 +248,8 @@ public final class Application: Sendable, Service {
         } else {
             self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory, logger: logger)
         }
+
+        self.passwordHasher = services.passwordHasher
 
         self.core.initialize()
         self.caches.initialize()

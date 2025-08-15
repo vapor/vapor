@@ -1,23 +1,14 @@
 import Foundation
 import NIOPosix
 
-extension Application.Passwords.Provider {
-    public static var bcrypt: Self {
-        .bcrypt(cost: 12)
-    }
-    
-    public static func bcrypt(cost: Int) -> Self {
-        .init {
-            $0.passwords.use { _ in
-                BcryptHasher(cost: cost)
-            }
-        }
-    }
-}
-
-struct BcryptHasher: PasswordHasher {
+public struct BcryptHasher: PasswordHasher {
     let cost: Int
-    func hash<Password>(
+
+    public init(cost: Int = 12) {
+        self.cost = cost
+    }
+
+    public func hash<Password>(
         _ password: Password
     ) async throws -> [UInt8]
         where Password: DataProtocol & Sendable
@@ -29,7 +20,7 @@ struct BcryptHasher: PasswordHasher {
         return .init(digest.utf8)
     }
 
-    func verify<Password, Digest>(
+    public func verify<Password, Digest>(
         _ password: Password,
         created digest: Digest
     ) async throws -> Bool
