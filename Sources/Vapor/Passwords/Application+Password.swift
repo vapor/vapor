@@ -1,4 +1,5 @@
 import Foundation
+import NIOPosix
 
 extension Application {
     public var password: Password {
@@ -10,7 +11,7 @@ extension Application {
 
         public var async: AsyncPasswordHasher {
             self.sync.async(
-                on: self.application.threadPool,
+                on: NIOThreadPool.singleton,
                 hopTo: self.application.eventLoopGroup.next()
             )
         }
