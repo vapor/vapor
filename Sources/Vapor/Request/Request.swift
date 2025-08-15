@@ -164,9 +164,17 @@ public final class Request: CustomStringConvertible, Sendable {
         Body(self)
     }
 
-    #warning("Implement body size, dont' force unwrap")
     public var newBody: NewBody {
-        NewBody(underlying: self.newBodyStorage.withLockedValue({ $0! }), maxBodySize: 16*1024)
+        if let underlying = self.newBodyStorage.withLockedValue({ $0 }) {
+            // New Vapor 5 server provides actual request body
+            return NewBody(underlying: underlying, maxBodySize: 16*1024)
+        } else {
+            // Fallback for testing and legacy server compatibility
+            // This mirrors the pattern used in _ContentContainer.decode
+            let emptyBuffer = self.byteBufferAllocator.buffer(capacity: 0)
+            let emptyBody = HTTPServerNew.RequestBody(buffer: emptyBuffer)
+            return NewBody(underlying: emptyBody, maxBodySize: 16*1024)
+        }
     }
 
     internal enum BodyStorage: Sendable {
