@@ -22,11 +22,11 @@ jobs:
     container: swift:6.1
     steps:
       - name: Check out Vapor
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: vapor
       - name: Check out provider
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ matrix.provider }}
           path: provider

@@ -199,7 +199,7 @@ struct ConditionalCompressionTests {
             try await withCompressionApp { app in
                 app.get("resource") { request in
                     var headers = HTTPFields()
-                    headers.contentType = unknownType /// Not explicitely marked as compressible or not.
+                    headers.contentType = unknownType /// Not explicitly marked as compressible or not.
                     return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
@@ -232,7 +232,7 @@ struct ConditionalCompressionTests {
             try await withCompressionApp { app in
                 app.get("resource") { request in
                     var headers = HTTPFields()
-                    headers.contentType = .png /// PNGs are explicitely called out as incompressible.
+                    headers.contentType = .png /// PNGs are explicitly called out as incompressible.
                     return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
@@ -265,7 +265,7 @@ struct ConditionalCompressionTests {
             try await withCompressionApp { app in
                 app.get("resource") { request in
                     var headers = HTTPFields()
-                    headers.contentType = .mpeg /// Videos are explicitely called out as incompressible, but as a class.
+                    headers.contentType = .mpeg /// Videos are explicitly called out as incompressible, but as a class.
                     return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
@@ -298,7 +298,7 @@ struct ConditionalCompressionTests {
             try await withCompressionApp { app in
                 app.get("resource") { request in
                     var headers = HTTPFields()
-                    headers.contentType = .plainText /// Text types are explicitely called out as compressible, but as a class.
+                    headers.contentType = .plainText /// Text types are explicitly called out as compressible, but as a class.
                     return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
                 }
 
