@@ -5,107 +5,45 @@ import NIOCore
 
 @Suite("Password Tests")
 struct PasswordTests {
-
-    @Test("Test synchronous BCrypt service")
-    func syncBCryptService() async throws {
-        try await withApp { app in
-            let hash = try app.password.hash("vapor")
-            #expect(try BCryptDigest().verify("vapor", created: hash) == true)
-
-            let result = try app.password.verify("vapor", created: hash)
-            #expect(result == true)
-        }
+    @Test("Test BCrypt application password")
+    func testBCryptApplicationPassword() async throws {
+        try await assertApplicationPasswordVerifies(.bcrypt)
     }
 
-    @Test("Test synchronous plaintext service")
-    func syncPlaintextService() async throws {
+    @Test("Test plaintext application password")
+    func testPlaintextApplicationPassword() async throws {
+        try await assertApplicationPasswordVerifies(.plaintext)
+    }
+
+    @Test("Test application default password")
+    func testUsesProvider() async throws {
         try await withApp { app in
             app.passwords.use(.plaintext)
-
-            let hash = try app.password.hash("vapor")
-            #expect(hash == "vapor")
-
-            let result = try app.password.verify("vapor", created: hash)
-            #expect(result == true)
-        }
-    }
-
-    @Test("Test asynchronous BCrypt service")
-    func testAsyncBCryptRequestPassword() async throws {
-        try await assertAsyncRequestPasswordVerifies(.bcrypt)
-    }
-
-    @Test("Test asynchronous plaintext service")
-    func testAsyncPlaintextRequestPassword() async throws {
-        try await assertAsyncRequestPasswordVerifies(.plaintext)
-    }
-
-    @Test("Test asynchronous BCrypt application password")
-    func testAsyncBCryptApplicationPassword() async throws {
-        try await assertAsyncApplicationPasswordVerifies(.bcrypt)
-    }
-
-    @Test("Test asynchronous plaintext application password")
-    func testAsyncPlaintextApplicationPassword() async throws {
-        try await assertAsyncApplicationPasswordVerifies(.plaintext)
-    }
-
-    @Test("Test asynchronous application default password")
-    func testAsyncUsesProvider() async throws {
-        try await withApp { app in
-            app.passwords.use(.plaintext)
-            let hash = try await app.password.async(
-                on: app.threadPool,
-                hopTo: app.eventLoopGroup.next()
-            ).hash("vapor")
+            let hash = try await app.password.hasher.hash("vapor")
             #expect(hash == "vapor")
         }
     }
 
-    @Test("Test asynchronous application default password")
-    func testAsyncApplicationDefault() async throws {
+    @Test("Test application default password")
+    func testApplicationDefault() async throws {
         try await withApp { app in
             app.passwords.use(.plaintext)
-            let hash = try await app.password.async.hash("vapor")
+            let hash = try await app.password.hasher.hash("vapor")
             #expect(hash == "vapor")
         }
     }
     
-    private func assertAsyncApplicationPasswordVerifies(
+    private func assertApplicationPasswordVerifies(
         _ provider: Application.Passwords.Provider,
         sourceLocation: SourceLocation = #_sourceLocation
     ) async throws {
         try await withApp { app in
             app.passwords.use(provider)
 
-            let asyncHash = try await app.password
-                .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
-                .hash("vapor")
+            let hash = try await app.password.hasher.hash("vapor")
+            let verify = try await app.password.hasher.verify("vapor", created: hash)
 
-            let asyncVerify = try await app.password
-                .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
-                .verify("vapor", created: asyncHash)
-
-            #expect(asyncVerify == true, sourceLocation: sourceLocation)
-        }
-    }
-    
-    private func assertAsyncRequestPasswordVerifies(
-        _ provider: Application.Passwords.Provider,
-        sourceLocation: SourceLocation = #_sourceLocation
-    ) async throws {
-        try await withApp { app in
-            app.passwords.use(provider)
-
-            app.get("test") { req async throws -> String in
-                let digest = try await req.password.async.hash("vapor")
-                let verify = try await req.password.async.verify("vapor", created: digest)
-                return verify ? "true" : "false"
-            }
-
-            try await app.testing().test(.get, "test", afterResponse: { res in
-                #expect(res.body.string == "true", sourceLocation: sourceLocation)
-            })
+            #expect(verify == true, sourceLocation: sourceLocation)
         }
     }
 }

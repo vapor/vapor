@@ -9,14 +9,7 @@ extension Application {
     public struct Password: PasswordHasher {
         let application: Application
 
-        public var async: AsyncPasswordHasher {
-            self.sync.async(
-                on: NIOThreadPool.singleton,
-                hopTo: self.application.eventLoopGroup.next()
-            )
-        }
-
-        public var sync: any PasswordHasher {
+        public var hasher: any PasswordHasher {
             guard let makeVerifier = self.application.passwords.storage.makeVerifier.withLockedValue({ $0.factory }) else {
                 fatalError("No password verifier configured. Configure with app.passwords.use(...)")
             }
@@ -26,16 +19,16 @@ extension Application {
         public func verify<Password, Digest>(
             _ password: Password,
             created digest: Digest
-        ) throws -> Bool
+        ) async throws -> Bool
             where Password: DataProtocol, Digest: DataProtocol
         {
-            try self.sync.verify(password, created: digest)
+            try await self.hasher.verify(password, created: digest)
         }
 
-        public func hash<Password>(_ password: Password) throws -> [UInt8]
+        public func hash<Password>(_ password: Password) async throws -> [UInt8]
             where Password: DataProtocol
         {
-            try self.sync.hash(password)
+            try await self.hasher.hash(password)
         }
     }
 }
