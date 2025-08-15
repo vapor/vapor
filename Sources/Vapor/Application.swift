@@ -253,7 +253,6 @@ public final class Application: Sendable, Service {
 
         self.core.initialize()
         self.caches.initialize()
-        self.passwords.use(.bcrypt)
         self.sessions.initialize()
         self.sessions.use(.memory)
         self.responder.initialize()

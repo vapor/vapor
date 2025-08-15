@@ -60,8 +60,6 @@ struct MetricsTests {
                 let name: String
             }
 
-            print("Using CaputringMetricsSystems \(metrics.number)")
-
             app.routes.get("users", ":userID") { req -> User in
                 let userID = try req.parameters.require("userID", as: Int.self)
                 if userID == 1 {
@@ -98,8 +96,6 @@ struct MetricsTests {
     @Test("Test 404 Rewrites Path for Metrics to Avoid DOS Attack", .withMetrics(CapturingMetricsSystem("3")))
     func test404RewritesPathForMetricsToAvoidDOSAttack() async throws {
         try await withApp { app in
-            print("Using CaputringMetricsSystems \(metrics.number)")
-
             try await app.testing().test(.get, "/not/found") { res in
                 #expect(res.status == .notFound)
                 #expect(metrics.counters.count == 1)
@@ -126,8 +122,6 @@ struct MetricsTests {
     @Test("Test Metrics Disabled", .withMetrics(CapturingMetricsSystem("4")))
     func testMetricsDisabled() async throws {
         try await withApp { app in
-            print("Using CaputringMetricsSystems \(metrics.number)")
-
             app.serverConfiguration.reportMetrics = false
 
             struct User: Content {

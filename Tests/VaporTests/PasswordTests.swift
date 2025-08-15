@@ -7,43 +7,31 @@ import NIOCore
 struct PasswordTests {
     @Test("Test BCrypt application password")
     func testBCryptApplicationPassword() async throws {
-        try await assertApplicationPasswordVerifies(.bcrypt)
+        let appliation = try await Application(.testing, services: .init(passwordHasher: BcryptHasher(cost: 4)))
+            let hash = try await appliation.passwordHasher.hash("vapor")
+            #expect(hash != "vapor") // BCrypt should not return the plaintext password
+            let verify = try await appliation.passwordHasher.verify("vapor", created: hash)
+            #expect(verify == true)
+        try await appliation.shutdown()
     }
 
     @Test("Test plaintext application password")
     func testPlaintextApplicationPassword() async throws {
-        try await assertApplicationPasswordVerifies(.plaintext)
+        let appliation = try await Application(.testing, services: .init(passwordHasher: PlaintextHasher()))
+        let hash = try await appliation.passwordHasher.hash("vapor")
+        #expect(hash == "vapor") // Should be the same as plaintext
+        let verify = try await appliation.passwordHasher.verify("vapor", created: hash)
+        #expect(verify == true)
+        try await appliation.shutdown()
     }
 
     @Test("Test application default password")
     func testUsesProvider() async throws {
         try await withApp { app in
-            app.passwords.use(.plaintext)
-            let hash = try await app.password.hasher.hash("vapor")
-            #expect(hash == "vapor")
-        }
-    }
-
-    @Test("Test application default password")
-    func testApplicationDefault() async throws {
-        try await withApp { app in
-            app.passwords.use(.plaintext)
-            let hash = try await app.password.hasher.hash("vapor")
-            #expect(hash == "vapor")
-        }
-    }
-    
-    private func assertApplicationPasswordVerifies(
-        _ provider: Application.Passwords.Provider,
-        sourceLocation: SourceLocation = #_sourceLocation
-    ) async throws {
-        try await withApp { app in
-            app.passwords.use(provider)
-
-            let hash = try await app.password.hasher.hash("vapor")
-            let verify = try await app.password.hasher.verify("vapor", created: hash)
-
-            #expect(verify == true, sourceLocation: sourceLocation)
+            let hash = try await app.passwordHasher.hash("vapor")
+            #expect(hash != "vapor") // Defaults to BCrypt so should not match
+            let verify = try await app.passwordHasher.verify("vapor", created: hash)
+            #expect(verify == true)
         }
     }
 }
