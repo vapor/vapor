@@ -92,7 +92,7 @@ extension Application {
         }
         
         struct AsyncLifecycleHandler: Vapor.LifecycleHandler {
-            func shutdownAsync(_ application: Application) async {
+            func shutdown(_ application: Application) async {
                 do {
                     try await application.threadPool.shutdownGracefully()
                 } catch is NIOThreadPoolError.UnsupportedOperation {
