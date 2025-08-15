@@ -10,7 +10,7 @@ struct Entrypoint {
         let app = try await Application(env)
         do {
             try configure(app)
-            try await app.execute()
+            try await app.run()
             try await app.shutdown()
         } catch {
             try? await app.shutdown()

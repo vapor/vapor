@@ -3,9 +3,10 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
+import ServiceLifecycle
 
 /// Core type representing a Vapor application.
-public final class Application: Sendable {
+public final class Application: Sendable, Service {
     public var environment: Environment {
         get {
             self._environment.withLockedValue { $0 }
@@ -264,7 +265,7 @@ public final class Application: Sendable {
     ///
     /// Under normal circumstances, ``execute()`` runs until a shutdown is triggered, then wait for the web server to
     /// (manually) shut down before returning.
-    public func execute() async throws {
+    public func run() async throws {
         do {
             try await self.startup()
             try await self.running?.onStop.get()
