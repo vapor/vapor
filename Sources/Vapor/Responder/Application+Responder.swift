@@ -16,14 +16,14 @@ extension Application {
 
             let run: @Sendable (Application) -> ()
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
 
         final class Storage: Sendable {
             struct ResponderFactory {
-                let factory: (@Sendable (Application) -> Vapor.Responder)?
+                let factory: (@Sendable (Application) -> any Vapor.Responder)?
             }
             let factory: NIOLockedValueBox<ResponderFactory>
             init() {
@@ -37,18 +37,18 @@ extension Application {
 
         public let application: Application
 
-        public var current: Vapor.Responder {
+        public var current: any Vapor.Responder {
             guard let factory = self.storage.factory.withLockedValue({ $0.factory }) else {
                 fatalError("No responder configured. Configure with app.responder.use(...)")
             }
             return factory(self.application)
         }
 
-        public var `default`: Vapor.Responder {
+        public var `default`: any Vapor.Responder {
             DefaultResponder(
                 routes: self.application.routes,
                 middleware: self.application.middleware.resolve(),
-                reportMetrics: self.application.http.server.configuration.reportMetrics
+                reportMetrics: self.application.serverConfiguration.reportMetrics
             )
         }
 
@@ -56,7 +56,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        @preconcurrency public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.Responder)) {
+         public func use(_ factory: @Sendable @escaping (Application) -> (any Vapor.Responder)) {
             self.storage.factory.withLockedValue { $0 = .init(factory: factory) }
         }
 
@@ -74,7 +74,7 @@ extension Application {
 }
 
 extension Application.Responder: Responder {
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
-        self.current.respond(to: request)
+    public func respond(to request: Request) async throws -> Response {
+        try await self.current.respond(to: request)
     }
 }

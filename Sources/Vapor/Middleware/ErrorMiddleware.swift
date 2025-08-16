@@ -1,6 +1,6 @@
 import Foundation
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 
 /// Captures all errors and transforms them into an internal server error HTTP response.
 public final class ErrorMiddleware: Middleware {
@@ -20,18 +20,18 @@ public final class ErrorMiddleware: Middleware {
     ///     - environment: The environment to respect when presenting errors.
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
-            let status: HTTPResponseStatus, reason: String, source: ErrorSource
-            var headers: HTTPHeaders
+            let status: HTTPResponse.Status, reason: String, source: ErrorSource
+            var headers: HTTPFields
 
             // Inspect the error type and extract what data we can.
             switch error {
-            case let debugAbort as (DebuggableError & AbortError):
+            case let debugAbort as (any DebuggableError & AbortError):
                 (reason, status, headers, source) = (debugAbort.reason, debugAbort.status, debugAbort.headers, debugAbort.source ?? .capture())
                 
-            case let abort as AbortError:
+            case let abort as any AbortError:
                 (reason, status, headers, source) = (abort.reason, abort.status, abort.headers, .capture())
             
-            case let debugErr as DebuggableError:
+            case let debugErr as any DebuggableError:
                 (reason, status, headers, source) = (debugErr.reason, .internalServerError, [:], debugErr.source ?? .capture())
             
             default:
@@ -44,7 +44,7 @@ public final class ErrorMiddleware: Middleware {
             req.logger.report(error: error,
                               metadata: ["method" : "\(req.method.rawValue)",
                                          "url" : "\(req.url.string)",
-                                         "userAgent" : .array(req.headers["User-Agent"].map { "\($0)" })],
+                                         "userAgent" : .array(req.headers[values: .userAgent].map { "\($0)" })],
                               file: source.file,
                               function: source.function,
                               line: source.line)
@@ -52,7 +52,7 @@ public final class ErrorMiddleware: Middleware {
             // attempt to serialize the error to json
             let body: Response.Body
             do {
-                let encoder = try ContentConfiguration.global.requireEncoder(for: .json)
+                let encoder = try req.application.contentConfiguration.requireEncoder(for: .json)
                 var byteBuffer = req.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(ErrorResponse(error: true, reason: reason), to: &byteBuffer, headers: &headers)
                 
@@ -71,19 +71,21 @@ public final class ErrorMiddleware: Middleware {
     }
 
     /// Error-handling closure.
-    private let closure: @Sendable (Request, Error) -> (Response)
+    private let closure: @Sendable (Request, any Error) -> (Response)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    @preconcurrency public init(_ closure: @Sendable @escaping (Request, Error) -> (Response)) {
+    public init(_ closure: @Sendable @escaping (Request, any Error) -> (Response)) {
         self.closure = closure
     }
     
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        next.respond(to: request).flatMapErrorThrowing { error in
-            self.closure(request, error)
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        do {
+            return try await next.respond(to: request)
+        } catch {
+            return self.closure(request, error)
         }
     }
 }

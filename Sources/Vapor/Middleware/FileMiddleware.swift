@@ -1,11 +1,12 @@
 import Foundation
 import NIOCore
 import _NIOFileSystem
+import HTTPTypes
 
 /// Serves static files from a public directory.
 ///
 /// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.
-public final class FileMiddleware: AsyncMiddleware {
+public final class FileMiddleware: Middleware {
     /// The public directory. Guaranteed to end with a slash.
     private let publicDirectory: String
     private let defaultFile: String?
@@ -57,7 +58,7 @@ public final class FileMiddleware: AsyncMiddleware {
         self.cachePolicy = cachePolicy
     }
     
-    public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {
             throw Abort(.badRequest)
@@ -91,7 +92,7 @@ public final class FileMiddleware: AsyncMiddleware {
                             // If the default file exists, stream it
                             return try await request
                                 .fileio
-                                .asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                                .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
                                 .cachePolicy(cachePolicy)
                         }
                     }
@@ -106,7 +107,7 @@ public final class FileMiddleware: AsyncMiddleware {
                 // file exists, stream it
                 return try await request
                     .fileio
-                    .asyncStreamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                    .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
                     .cachePolicy(cachePolicy)
             }
         }
@@ -197,7 +198,7 @@ fileprivate extension String {
 extension FileMiddleware {
     /// The browser cache policy files should be served with.
     public struct CachePolicy: Sendable {
-        var cacheControlHeader: HTTPHeaders.CacheControl?
+        var cacheControlHeader: HTTPFields.CacheControl?
         var ageHeader: Int?
         
         /// The browser's default caching policy should be used.
@@ -222,7 +223,7 @@ extension FileMiddleware {
         ///   - cacheControlHeader: The `Cache-Control` header to use. If none is specified, any previous cache control header will be cleared.
         ///   - ageHeader: The `Age` header to use, in seconds. If none is specified, any previous age header will be cleared.
         /// - Returns: A cache policy with the specified headers.
-        public static func custom(cacheControlHeader: HTTPHeaders.CacheControl?, ageHeader: Int? = nil) -> CachePolicy {
+        public static func custom(cacheControlHeader: HTTPFields.CacheControl?, ageHeader: Int? = nil) -> CachePolicy {
             CachePolicy(cacheControlHeader: cacheControlHeader, ageHeader: ageHeader)
         }
     }
@@ -236,9 +237,9 @@ extension Response {
     func cachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
         self.headers.cacheControl = policy.cacheControlHeader
         if let age = policy.ageHeader {
-            self.headers.replaceOrAdd(name: .age, value: "\(age)")
+            self.headers[.age] = "\(age)"
         } else {
-            self.headers.remove(name: .age)
+            self.headers[.age] = nil
         }
         return self
     }

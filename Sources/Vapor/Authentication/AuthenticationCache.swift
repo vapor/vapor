@@ -2,7 +2,8 @@ import NIOConcurrencyHelpers
 
 extension Request {
     /// Helper for accessing authenticated objects.
-    /// See `Authenticator` for more information.
+    ///
+    /// See ``Authenticator`` for more information.
     public var auth: Authentication {
         return .init(request: self)
     }
@@ -10,6 +11,7 @@ extension Request {
     /// Request helper for storing and fetching authenticated objects.
     public struct Authentication {
         let request: Request
+        
         init(request: Request) {
             self.request = request
         }
@@ -18,25 +20,20 @@ extension Request {
 
 extension Request.Authentication {
     /// Authenticates the supplied instance for this request.
-    public func login<A>(_ instance: A)
-        where A: Authenticatable
-    {
-        self.cache[A.self] = UnsafeAuthenticationBox(instance)
+    public func login<A: Authenticatable>(_ instance: A) {
+        self.cache[A.self] = instance
     }
 
     /// Unauthenticates an authenticatable type.
-    public func logout<A>(_ type: A.Type = A.self)
-        where A: Authenticatable
-    {
+    public func logout<A: Authenticatable>(_ type: A.Type = A.self) {
         self.cache[A.self] = nil
     }
 
     /// Returns an instance of the supplied type. Throws if no
     /// instance of that type has been authenticated or if there
     /// was a problem.
-    @discardableResult public func require<A>(_ type: A.Type = A.self) throws -> A
-        where A: Authenticatable
-    {
+    @discardableResult
+    public func require<A: Authenticatable>(_ type: A.Type = A.self) throws -> A {
         guard let a = self.get(A.self) else {
             throw Abort(.unauthorized)
         }
@@ -44,36 +41,27 @@ extension Request.Authentication {
     }
 
     /// Returns the authenticated instance of the supplied type.
-    /// - note: `nil` if no type has been authed.
-    public func get<A>(_ type: A.Type = A.self) -> A?
-        where A: Authenticatable
-    {
-        return self.cache[A.self]?.authenticated
+    ///
+    /// > Note: `nil` if no type has been authentcated.
+    public func get<A: Authenticatable>(_ type: A.Type = A.self) -> A? {
+        self.cache[A.self]
     }
 
     /// Returns `true` if the type has been authenticated.
-    public func has<A>(_ type: A.Type = A.self) -> Bool
-        where A: Authenticatable
-    {
-        return self.get(A.self) != nil
+    public func has<A: Authenticatable>(_ type: A.Type = A.self) -> Bool {
+        self.get(A.self) != nil
     }
 
     private final class Cache: Sendable {
-        private let storage: NIOLockedValueBox<[ObjectIdentifier: Sendable]>
+        private let storage: NIOLockedValueBox<[ObjectIdentifier: any Sendable]>
 
         init() {
             self.storage = .init([:])
         }
 
-        internal subscript<A>(_ type: A.Type) -> UnsafeAuthenticationBox<A>?
-            where A: Authenticatable
-            {
-            get { 
-                storage.withLockedValue { $0[ObjectIdentifier(A.self)] as? UnsafeAuthenticationBox<A> }
-            }
-            set { 
-                storage.withLockedValue { $0[ObjectIdentifier(A.self)] = newValue }
-            }
+        subscript<A: Authenticatable>(_ type: A.Type) -> A? {
+            get { self.storage.withLockedValue { $0[ObjectIdentifier(A.self)] as? A } }
+            set { self.storage.withLockedValue { $0[ObjectIdentifier(A.self)] = newValue } }
         }
     }
 
@@ -94,24 +82,5 @@ extension Request.Authentication {
         set {
             self.request.storage[CacheKey.self] = newValue
         }
-    }
-}
-
-// This is to get around the fact that for legacy reasons we can't enforce Sendability on Authenticatable
-// types (e.g. Fluent 4 models can never be Sendable because they're reference types with mutable values
-// required by protocols and property wrappers). This allows us to store the Authenticatable type in a
-// safe-most-of-the-time way. This does introduce an edge case where type could be stored and mutated in
-// multiple places. But given how Vapor and its users use Authentication this should almost never
-// occur and it was decided the trade-off was acceptable
-// As the name implies, the usage of this is unsafe because it disables the sendable checking of the
-// compiler and does not add any synchronization.
-@usableFromInline
-internal struct UnsafeAuthenticationBox<A>: @unchecked Sendable {
-    @usableFromInline
-    let authenticated: A
-    
-    @inlinable
-    init(_ authenticated: A) {
-        self.authenticated = authenticated
     }
 }
