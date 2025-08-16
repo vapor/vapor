@@ -35,36 +35,21 @@ struct CacheTests {
 
     @Test("Test Custom Cache")
     func customCache() async throws {
-        try await withApp { app in
-            app.caches.use(.foo)
-            try await app.cache.set("1", to: "2", expiresIn: nil)
-            let value = try await app.cache.get("foo", as: String.self)
-            #expect(value == "bar")
-        }
+        let app = try await Application(.testing, services: .init(cache: .provided(FooCache())))
+        try await app.cache.set("1", to: "2", expiresIn: nil)
+        let value = try await app.cache.get("foo", as: String.self)
+        #expect(value == "bar")
+        try await app.shutdown()
     }
 }
 
-extension Application.Caches.Provider {
-    static var foo: Self {
-        .init { $0.caches.use { FooCache(on: $0.eventLoopGroup.any()) } }
-    }
-}
 
 // Always returns "bar" for key "foo".
 // That's all...
 struct FooCache: Cache {
-    let eventLoop: any EventLoop
-    init(on eventLoop: any EventLoop) {
-        self.eventLoop = eventLoop
-    }
-
     func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable & Sendable {
         return key == "foo" ? "bar" as? T : nil
     }
 
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T : Encodable, T : Sendable {}
-
-    func `for`(_ request: Request) -> FooCache {
-        return self
-    }
 }
