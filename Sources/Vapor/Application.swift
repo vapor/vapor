@@ -128,14 +128,26 @@ public final class Application: Sendable, Service {
 
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration
-        let viewRenderer: (any ViewRenderer)?
-        let passwordHasher: any PasswordHasher
+        let viewRenderer: ServiceOptionType<any ViewRenderer>
+        let passwordHasher: ServiceOptionType<any PasswordHasher>
+        let cache: ServiceOptionType<any Cache>
 
-        public init(contentConfiguration: ContentConfiguration = .default(), viewRenderer: (any ViewRenderer)? = nil, passwordHasher: any PasswordHasher = BcryptHasher()) {
+        public init(
+            contentConfiguration: ContentConfiguration = .default(),
+            viewRenderer: ServiceOptionType<any ViewRenderer> = .default,
+            passwordHasher: ServiceOptionType<any PasswordHasher> = .default,
+            cache: ServiceOptionType<any Cache> = .default
+        ) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
             self.passwordHasher = passwordHasher
+            self.cache = cache
         }
+    }
+
+    public enum ServiceOptionType<Service> {
+        case `default`
+        case provided(Service)
     }
 
     public struct ServerConfiguration: Sendable {
@@ -243,13 +255,19 @@ public final class Application: Sendable, Service {
         self._serverConfiguration = .init(configuration)
 
         // Service Setup
-        if let viewRenderer = services.viewRenderer {
-            self.viewRenderer = viewRenderer
-        } else {
-            self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory, logger: logger)
+        switch services.viewRenderer {
+            case .default:
+                self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory, logger: logger)
+            case .provided(let renderer):
+                self.viewRenderer = renderer
         }
 
-        self.passwordHasher = services.passwordHasher
+        switch services.passwordHasher {
+            case .default:
+                self.passwordHasher = BcryptHasher()
+            case .provided(let hasher):
+                self.passwordHasher = hasher
+        }
 
         self.core.initialize()
         self.caches.initialize()

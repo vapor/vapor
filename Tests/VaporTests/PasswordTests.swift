@@ -7,7 +7,7 @@ import NIOCore
 struct PasswordTests {
     @Test("Test BCrypt application password")
     func testBCryptApplicationPassword() async throws {
-        let appliation = try await Application(.testing, services: .init(passwordHasher: BcryptHasher(cost: 4)))
+        let appliation = try await Application(.testing, services: .init(passwordHasher: .provided(BcryptHasher(cost: 4))))
             let hash = try await appliation.passwordHasher.hash("vapor")
             #expect(hash != "vapor") // BCrypt should not return the plaintext password
             let verify = try await appliation.passwordHasher.verify("vapor", created: hash)
@@ -17,7 +17,7 @@ struct PasswordTests {
 
     @Test("Test plaintext application password")
     func testPlaintextApplicationPassword() async throws {
-        let appliation = try await Application(.testing, services: .init(passwordHasher: PlaintextHasher()))
+        let appliation = try await Application(.testing, services: .init(passwordHasher: .provided(PlaintextHasher())))
         let hash = try await appliation.passwordHasher.hash("vapor")
         #expect(hash == "vapor") // Should be the same as plaintext
         let verify = try await appliation.passwordHasher.verify("vapor", created: hash)

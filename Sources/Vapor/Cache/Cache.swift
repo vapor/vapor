@@ -21,5 +21,9 @@ extension Cache {
         return try await self.get(key, as: T.self)
     }
 
+    /// Set a cache value with no expiration time.
+    func set<T>(_ key: String, to value: T?) async throws where T: Encodable & Sendable {
+        return try await self.set(key, to: value, expiresIn: nil)
+    }
 
 }

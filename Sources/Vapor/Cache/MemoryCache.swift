@@ -99,10 +99,6 @@ private struct MemoryCache: Cache {
         await self.storage.get(key)
     }
     
-    func set<T>(_ key: String, to value: T?) async throws where T: Encodable & Sendable {
-        try await self.set(key, to: value, expiresIn: nil)
-    }
-    
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T: Encodable & Sendable {
         await self.storage.set(key, to: value, expiresIn: expirationTime)
     }
