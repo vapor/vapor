@@ -1,14 +1,11 @@
 import NIOCore
 /// Codable key-value pair cache.
-public protocol Cache {
+public protocol Cache: Sendable {
     /// Gets a decodable value from the cache. Returns `nil` if not found.
     func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable & Sendable
 
     /// Sets an encodable value into the cache with an expiry time. Existing values are replaced. If `nil`, removes value.
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T: Encodable & Sendable
-
-    /// Creates a request-specific cache instance.
-    func `for`(_ request: Request) -> Self
 }
 
 extension Cache {

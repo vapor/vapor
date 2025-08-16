@@ -125,6 +125,7 @@ public final class Application: Sendable, Service {
     public let viewRenderer: any ViewRenderer
     public let directoryConfiguration: DirectoryConfiguration
     public let passwordHasher: any PasswordHasher
+    public let cache: any Cache
 
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration
@@ -269,8 +270,14 @@ public final class Application: Sendable, Service {
                 self.passwordHasher = hasher
         }
 
+        switch services.cache {
+            case .default:
+                self.cache = MemoryCache()
+            case .provided(let cache):
+                self.cache = cache
+        }
+
         self.core.initialize()
-        self.caches.initialize()
         self.sessions.initialize()
         self.sessions.use(.memory)
         self.responder.initialize()

@@ -2,41 +2,6 @@ import Foundation
 import NIOCore
 import NIOConcurrencyHelpers
 
-extension Application.Caches {
-    /// In-memory cache. Thread safe.
-    /// Not shared between multiple instances of your application.
-    public var memory: any Cache {
-        MemoryCache(storage: self.memoryStorage)
-    }
-
-    private var memoryStorage: MemoryCacheStorage {
-        let lock = self.application.locks.lock(for: MemoryCacheKey.self)
-        lock.lock()
-        defer { lock.unlock() }
-        if let existing = self.application.storage.get(MemoryCacheKey.self) {
-            return existing
-        } else {
-            let new = MemoryCacheStorage()
-            self.application.storage.set(MemoryCacheKey.self, to: new)
-            return new
-        }
-    }
-}
-
-extension Application.Caches.Provider {
-    /// In-memory cache. Thread safe.
-    /// Not shared between multiple instances of your application.
-    public static var memory: Self {
-        .init {
-            $0.caches.use { $0.caches.memory }
-        }
-    }
-}
-
-private struct MemoryCacheKey: LockKey, StorageKey {
-    typealias Value = MemoryCacheStorage
-}
-
 private actor MemoryCacheStorage: Sendable {
     struct CacheEntryBox<T> {
         var expiresAt: Date?
@@ -88,11 +53,11 @@ private actor MemoryCacheStorage: Sendable {
     }
 }
 
-private struct MemoryCache: Cache {
-    let storage: MemoryCacheStorage
+internal struct MemoryCache: Cache {
+    fileprivate let storage: MemoryCacheStorage
 
-    init(storage: MemoryCacheStorage) {
-        self.storage = storage
+    init() {
+        self.storage = MemoryCacheStorage()
     }
     
     func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable & Sendable {
@@ -101,9 +66,5 @@ private struct MemoryCache: Cache {
     
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T: Encodable & Sendable {
         await self.storage.set(key, to: value, expiresIn: expirationTime)
-    }
-    
-    func `for`(_ request: Request) -> MemoryCache {
-        .init(storage: self.storage)
     }
 }
