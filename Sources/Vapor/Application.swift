@@ -30,15 +30,6 @@ public final class Application: Sendable, Service {
         self._didShutdown.withLockedValue { $0 }
     }
     
-    public var logger: Logger {
-        get {
-            self._logger.withLockedValue { $0 }
-        }
-        set {
-            self._logger.withLockedValue { $0 = newValue }
-        }
-    }
-    
     public struct Lifecycle: Sendable {
         var handlers: [any LifecycleHandler]
         init() {
@@ -105,7 +96,6 @@ public final class Application: Sendable, Service {
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
-    private let _logger: NIOLockedValueBox<Logger>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
     public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
@@ -130,6 +120,7 @@ public final class Application: Sendable, Service {
     public let passwordHasher: any PasswordHasher
     public let cache: any Cache
     public let client: any Client
+    public let logger: Logger
 
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration
@@ -138,6 +129,7 @@ public final class Application: Sendable, Service {
         let cache: ServiceOptionType<any Cache>
         let responder: ServiceOptionType<any Responder>
         let client: ServiceOptionType<any Client>
+        let logger: ServiceOptionType<Logger>
 
         public init(
             contentConfiguration: ContentConfiguration = .default(),
@@ -145,7 +137,8 @@ public final class Application: Sendable, Service {
             passwordHasher: ServiceOptionType<any PasswordHasher> = .default,
             cache: ServiceOptionType<any Cache> = .default,
             responder: ServiceOptionType<any Responder> = .default,
-            client: ServiceOptionType<any Client> = .default
+            client: ServiceOptionType<any Client> = .default,
+            logger: ServiceOptionType<Logger> = .default
         ) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
@@ -153,6 +146,7 @@ public final class Application: Sendable, Service {
             self.cache = cache
             self.responder = responder
             self.client = client
+            self.logger = logger
         }
     }
 
@@ -253,10 +247,17 @@ public final class Application: Sendable, Service {
         case .shared(let group):
             self.eventLoopGroup = group
         }
+
+        let logger: Logger
+        switch services.logger {
+        case .default:
+            logger = Logger(label: "codes.vapor.application")
+        case .provided(let customLogger):
+            logger = customLogger
+        }
+
         self._locks = .init(.init())
         self._didShutdown = .init(false)
-        let logger = Logger(label: "codes.vapor.application")
-        self._logger = .init(logger)
         self._storage = .init(.init(logger: logger))
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
@@ -296,6 +297,7 @@ public final class Application: Sendable, Service {
 
         self.responder = services.responder
         self.routes = Routes()
+        self.logger = logger
 
         self.core.initialize()
         self.sessions.initialize()
