@@ -51,79 +51,79 @@ struct EndpointCacheTests {
         }
     }
 
-//    @Test("Test cache is refreshed when cache age is expired")
-//    func testEndpointCacheMaxAge() async throws {
-//        try await withApp { app in
-//            let currentActor = CurrentActor()
-//            struct Test: Content {
-//                let number: Int
-//            }
-//
-//            app.clients.use(.responder)
-//
-//            app.get("number") { req -> Response in
-//                let res = Response()
-//                let current = await currentActor.getCurrent()
-//                try res.content.encode(Test(number: current))
-//                res.headers.cacheControl = .init(maxAge: 1)
-//                await currentActor.increment()
-//                return res
-//            }
-//
-//            let cache = EndpointCache<Test>(uri: "/number")
-//            do {
-//                let test = try await cache.get(
-//                    using: app.client,
-//                    logger: app.logger
-//                )
-//                #expect(test.number == 0)
-//            }
-//            do {
-//                let test = try await cache.get(
-//                    using: app.client,
-//                    logger: app.logger
-//                )
-//                #expect(test.number == 0)
-//            }
-//            // wait for expiry
-//            try await Task.sleep(for: .seconds(1))
-//            do {
-//                let test = try await cache.get(
-//                    using: app.client,
-//                    logger: app.logger
-//                )
-//                #expect(test.number == 1)
-//            }
-//        }
-//    }
-//
-//    @Test("Test cache only runs one request at once")
-//    func testEndpointCacheSequential() async throws {
-//        try await withApp { app in
-//            let currentActor = CurrentActor()
-//            struct Test: Content, Equatable {
-//                let number: Int
-//            }
-//
-//            app.clients.use(.responder)
-//
-//            app.get("number") { req -> Response in
-//                let res = Response()
-//                let current = await currentActor.getCurrent()
-//                try res.content.encode(Test(number: current))
-//                res.headers.cacheControl = .init(maxAge: 10)
-//                await currentActor.increment()
-//                try await Task.sleep(for: .seconds(1))
-//                return res
-//            }
-//
-//            let cache = EndpointCache<Test>(uri: "/number")
-//            async let request1 = cache.get(using: app.client, logger: app.logger)
-//            async let request2 = cache.get(using: app.client, logger: app.logger)
-//            try await Task.sleep(for: .milliseconds(100))
-//            #expect(try await request1 == request2)
-//            let current = await currentActor.current
-//            #expect(current == 1)
-//        }
-//    }
+    @Test("Test cache is refreshed when cache age is expired")
+    func testEndpointCacheMaxAge() async throws {
+        try await withApp { app in
+            let currentActor = CurrentActor()
+            struct Test: Content {
+                let number: Int
+            }
+
+            app.get("number") { req -> Response in
+                let res = Response()
+                let current = await currentActor.getCurrent()
+                try res.content.encode(Test(number: current))
+                res.headers.cacheControl = .init(maxAge: 1)
+                await currentActor.increment()
+                return res
+            }
+
+            try await withRunningApp(app: app) { port in
+                let cache = EndpointCache<Test>(uri: "http://localhost:\(port)/number")
+                do {
+                    let test = try await cache.get(
+                        using: app.client,
+                        logger: app.logger
+                    )
+                    #expect(test.number == 0)
+                }
+                do {
+                    let test = try await cache.get(
+                        using: app.client,
+                        logger: app.logger
+                    )
+                    #expect(test.number == 0)
+                }
+                // wait for expiry
+                try await Task.sleep(for: .seconds(1))
+                do {
+                    let test = try await cache.get(
+                        using: app.client,
+                        logger: app.logger
+                    )
+                    #expect(test.number == 1)
+                }
+            }
+        }
+    }
+
+    @Test("Test cache only runs one request at once")
+    func testEndpointCacheSequential() async throws {
+        try await withApp { app in
+            let currentActor = CurrentActor()
+            struct Test: Content, Equatable {
+                let number: Int
+            }
+
+            app.get("number") { req -> Response in
+                let res = Response()
+                let current = await currentActor.getCurrent()
+                try res.content.encode(Test(number: current))
+                res.headers.cacheControl = .init(maxAge: 10)
+                await currentActor.increment()
+                try await Task.sleep(for: .seconds(1))
+                return res
+            }
+
+            try await withRunningApp(app: app) { port in
+                let cache = EndpointCache<Test>(uri: "http://localhost:\(port)/number")
+                async let request1 = cache.get(using: app.client, logger: app.logger)
+                async let request2 = cache.get(using: app.client, logger: app.logger)
+                try await Task.sleep(for: .milliseconds(100))
+                #expect(try await request1 == request2)
+                let current = await currentActor.current
+                #expect(current == 1)
+            }
+        }
+    }
 }
