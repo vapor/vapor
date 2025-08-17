@@ -121,6 +121,7 @@ public final class Application: Sendable, Service {
 
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
+    package let responder: ServiceOptionType<any Responder>
     public let byteBufferAllocator: ByteBufferAllocator = .init()
     public let viewRenderer: any ViewRenderer
     public let directoryConfiguration: DirectoryConfiguration
@@ -132,21 +133,24 @@ public final class Application: Sendable, Service {
         let viewRenderer: ServiceOptionType<any ViewRenderer>
         let passwordHasher: ServiceOptionType<any PasswordHasher>
         let cache: ServiceOptionType<any Cache>
+        let responder: ServiceOptionType<any Responder>
 
         public init(
             contentConfiguration: ContentConfiguration = .default(),
             viewRenderer: ServiceOptionType<any ViewRenderer> = .default,
             passwordHasher: ServiceOptionType<any PasswordHasher> = .default,
-            cache: ServiceOptionType<any Cache> = .default
+            cache: ServiceOptionType<any Cache> = .default,
+            responder: ServiceOptionType<any Responder> = .default
         ) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
             self.passwordHasher = passwordHasher
             self.cache = cache
+            self.responder = responder
         }
     }
 
-    public enum ServiceOptionType<Service> {
+    public enum ServiceOptionType<Service: Sendable>: Sendable {
         case `default`
         case provided(Service)
     }
@@ -277,11 +281,11 @@ public final class Application: Sendable, Service {
                 self.cache = cache
         }
 
+        self.responder = services.responder
+
         self.core.initialize()
         self.sessions.initialize()
         self.sessions.use(.memory)
-        self.responder.initialize()
-        self.responder.use(.default)
         self.servers.initialize()
         self.servers.use(.httpNew)
         self.clients.initialize()

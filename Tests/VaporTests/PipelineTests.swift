@@ -30,8 +30,16 @@ struct PipelineTests {
 
             let asyncChannel = NIOAsyncTestingChannel()
 
+            let responder: any Responder
+            switch app.responder {
+            case .provided(let provided):
+                responder = provided
+            case .default:
+                responder = DefaultResponder(routes: app.routes)
+            }
+
             try await asyncChannel.testingEventLoop.flatSubmit {
-                asyncChannel.pipeline.addVaporHTTP1Handlers(application: app, responder: app.responder, configuration: app.http.server.configuration)
+                asyncChannel.pipeline.addVaporHTTP1Handlers(application: app, responder: responder, configuration: app.http.server.configuration)
             }.get()
 
             try await asyncChannel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\ntransfer-encoding: chunked\r\n\r\n1\r\na\r\n"))
@@ -188,8 +196,16 @@ struct PipelineTests {
 
             let asyncChannel = NIOAsyncTestingChannel()
 
+            let responder: any Responder
+            switch app.responder {
+            case .provided(let provided):
+                responder = provided
+            case .default:
+                responder = DefaultResponder(routes: app.routes)
+            }
+
             try await asyncChannel.testingEventLoop.flatSubmit {
-                asyncChannel.pipeline.addVaporHTTP1Handlers(application: app, responder: app.responder, configuration: app.http.server.configuration)
+                asyncChannel.pipeline.addVaporHTTP1Handlers(application: app, responder: responder, configuration: app.http.server.configuration)
             }.get()
 
             try await asyncChannel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n"))
@@ -207,10 +223,18 @@ struct PipelineTests {
                 }, count: 2))
             }
 
+            let responder: any Responder
+            switch app.responder {
+            case .provided(let provided):
+                responder = provided
+            case .default:
+                responder = DefaultResponder(routes: app.routes)
+            }
+
             let asyncChannel = NIOAsyncTestingChannel()
             try await asyncChannel.connect(to: .init(unixDomainSocketPath: "/foo"))
             try await asyncChannel.testingEventLoop.flatSubmit {
-                asyncChannel.pipeline.addVaporHTTP1Handlers(application: app, responder: app.responder, configuration: app.http.server.configuration)
+                asyncChannel.pipeline.addVaporHTTP1Handlers(application: app, responder: responder, configuration: app.http.server.configuration)
             }.get()
 
             #expect(asyncChannel.isActive == true)
@@ -229,11 +253,19 @@ struct PipelineTests {
     func invalidHttp() async throws {
         try await withApp { app in
             let channel = NIOAsyncTestingChannel()
+            let responder: any Responder
+            switch app.responder {
+            case .provided(let provided):
+                responder = provided
+            case .default:
+                responder = DefaultResponder(routes: app.routes)
+            }
+
             try await channel.connect(to: .init(unixDomainSocketPath: "/foo"))
             try await channel.testingEventLoop.flatSubmit {
                 channel.pipeline.addVaporHTTP1Handlers(
                     application: app,
-                    responder: app.responder,
+                    responder: responder,
                     configuration: app.http.server.configuration
                 )
             }.get()
@@ -379,11 +411,19 @@ struct PipelineTests {
                 return "slept \(ms)ms"
             }
 
+            let responder: any Responder
+            switch app.responder {
+            case .provided(let provided):
+                responder = provided
+            case .default:
+                responder = DefaultResponder(routes: app.routes)
+            }
+
             let channel = NIOAsyncTestingChannel()
             _ = try await (channel.eventLoop as! NIOAsyncTestingEventLoop).executeInContext {
                 channel.pipeline.addVaporHTTP1Handlers(
                     application: app,
-                    responder: app.responder,
+                    responder: responder,
                     configuration: app.http.server.configuration
                 )
             }

@@ -6,7 +6,7 @@ import NIOCore
 import RoutingKit
 
 /// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.
-struct DefaultResponder: Responder {
+package struct DefaultResponder: Responder {
     /// It's safe to mark this `nonisolated(unsafe)` because there are only two mutating operations
     /// on a `TrieRouter` (calling `.register(_at:)` or changing its `options`), and we never do either
     /// of those after `init()`.
@@ -20,7 +20,7 @@ struct DefaultResponder: Responder {
     }
 
     /// Creates a new ``DefaultResponder``.
-    init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
+    package init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
         let router = TrieRouter(CachedRoute.self, options: routes.caseInsensitive ? [.caseInsensitive] : [])
 
         for route in routes.all {
@@ -46,7 +46,7 @@ struct DefaultResponder: Responder {
     }
 
     // See `Responder.respond(to:)`
-    func respond(to request: Request) async throws -> Response {
+    package func respond(to request: Request) async throws -> Response {
         // per https://github.com/swiftlang/swift-testing/blob/swift-6.1-RELEASE/Sources/Testing/Events/TimeValue.swift#L113
         let epochDuration = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
         let startTime = UInt64(epochDuration.components.seconds * 1_000_000_000 + (epochDuration.components.attoseconds / 1_000_000_000))

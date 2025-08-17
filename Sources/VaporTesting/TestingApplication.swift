@@ -94,7 +94,14 @@ extension Application {
                 logger: app.logger,
                 on: self.app.eventLoopGroup.next()
             )
-            let res = try await self.app.responder.respond(to: request)
+            let responder: any Responder
+            switch self.app.responder {
+            case .provided(let provided):
+                responder = provided
+            case .default:
+                responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve(), reportMetrics: app.serverConfiguration.reportMetrics)
+            }
+            let res = try await responder.respond(to: request)
             return try await TestingHTTPResponse(
                 status: res.status,
                 headers: res.headers,

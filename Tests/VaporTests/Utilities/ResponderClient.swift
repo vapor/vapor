@@ -48,11 +48,11 @@ struct ResponderClient: Client {
 }
 
 extension Application.Clients.Provider {
-    static var responder: Self {
-        .init {
-            $0.clients.use {
-                ResponderClient(responder: $0.responder, application: $0)
-            }
-        }
-    }
+//    static var responder: Self {
+//        .init {
+//            $0.clients.use {
+//                ResponderClient(responder: $0.responder, application: $0)
+//            }
+//        }
+//    }
 }

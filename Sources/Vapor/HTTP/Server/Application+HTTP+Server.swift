@@ -43,6 +43,13 @@ extension Application.HTTP {
                     bindAddress = .hostname()
                 }
                 let config = HTTPServerNew.ServerConfiguration(address: bindAddress)
+                let responder: any Responder
+                switch self.application.responder {
+                case .default:
+                    responder = DefaultResponder(routes: self.application.routes, middleware: self.application.middleware.resolve(), reportMetrics: self.application.serverConfiguration.reportMetrics)
+                case .provided(let provided):
+                    responder = provided
+                }
                 let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: config, eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger, responder: { req, responseWriter, channel  in
                     application.logger.info("Request received with new Vapor 5 server")
 
@@ -59,7 +66,7 @@ extension Application.HTTP {
                     )
                     vaporRequest.newBodyStorage.withLockedValue { $0 = req.body }
 
-                    let vaporResponse = try await application.responder.current.respond(to: vaporRequest)
+                    let vaporResponse = try await responder.respond(to: vaporRequest)
                     let httpResponse = HTTPResponse(status: vaporResponse.status, headerFields: vaporResponse.headers)
 
                     var bodyWriter: any ResponseBodyWriter = try await responseWriter.writeHead(httpResponse)
@@ -87,9 +94,16 @@ extension Application.HTTP {
             if let existing = self.application.storage[Key.self] {
                 return existing
             } else {
+                let responder: any Responder
+                switch self.application.responder {
+                case .default:
+                    responder = DefaultResponder(routes: self.application.routes, middleware: self.application.middleware.resolve(), reportMetrics: self.application.serverConfiguration.reportMetrics)
+                case .provided(let provided):
+                    responder = provided
+                }
                 let new = HTTPServerOld.init(
                     application: self.application,
-                    responder: self.application.responder.current,
+                    responder: responder,
                     configuration: self.configuration,
                     on: self.application.eventLoopGroup
                 )
