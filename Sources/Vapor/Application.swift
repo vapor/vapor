@@ -210,9 +210,17 @@ public final class Application: Sendable, Service {
 
         /// A human-readable description of the configured address. Used in log messages when starting server.
         var addressDescription: String {
-            #warning("Bring back")
-//            let scheme = tlsConfiguration == nil ? "http" : "https"
-            let scheme = "https"
+            // Use HTTPS for standard secure ports, HTTP otherwise
+            let scheme: String
+            switch address {
+            case .hostname(_, let port):
+                // Port 443 (HTTPS), 8443 (dev HTTPS) use https, others use http
+                scheme = (port == 443 || port == 8443) ? "https" : "http"
+            case .unixDomainSocket:
+                // Unix domain sockets typically use http
+                scheme = "http"
+            }
+            
             switch address {
             case .hostname(let hostname, let port):
                 return "\(scheme)://\(hostname):\(port)"

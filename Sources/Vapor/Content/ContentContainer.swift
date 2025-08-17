@@ -78,17 +78,20 @@ extension ContentContainer {
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String? = req.content[at: "user", "name"]
-    #warning("Sort")
-//    public subscript<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) async -> D? {
-//        await self[D.self, at: path]
-//    }
+    public subscript<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) -> D? {
+        get async {
+            await self[D.self, at: Array(path)]
+        }
+    }
 
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String? = req.content[at: ["user", "name"]]
-//    public subscript<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) async -> D? {
-//        try? await self.get(D.self, at: path)
-//    }
+    public subscript<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) -> D? {
+        get async {
+            try? await self.get(D.self, at: path)
+        }
+    }
     
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
