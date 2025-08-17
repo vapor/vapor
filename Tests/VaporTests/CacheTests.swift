@@ -35,11 +35,11 @@ struct CacheTests {
 
     @Test("Test Custom Cache")
     func customCache() async throws {
-        let app = try await Application(.testing, services: .init(cache: .provided(FooCache())))
-        try await app.cache.set("1", to: "2", expiresIn: nil)
-        let value = try await app.cache.get("foo", as: String.self)
-        #expect(value == "bar")
-        try await app.shutdown()
+        try await withApp(services: .init(cache: .provided(FooCache()))) { app in
+            try await app.cache.set("1", to: "2", expiresIn: nil)
+            let value = try await app.cache.get("foo", as: String.self)
+            #expect(value == "bar")
+        }
     }
 }
 

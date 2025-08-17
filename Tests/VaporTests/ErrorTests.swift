@@ -109,22 +109,21 @@ struct ErrorTests {
     func testErrorMiddlewareUsesContentConfiguration() async throws {
         var contentConfiguration = ContentConfiguration.default()
         contentConfiguration.use(encoder: URLEncodedFormEncoder(), for: .json)
-        let app = try await Application(.testing, services: .init(contentConfiguration: contentConfiguration))
-        app.get("foo") { req -> String in
-            throw Abort(.internalServerError, reason: "Foo")
-        }
+        try await withApp(services: .init(contentConfiguration: contentConfiguration)) { app in
+            app.get("foo") { req -> String in
+                throw Abort(.internalServerError, reason: "Foo")
+            }
 
-        try await app.testing().test(.get, "foo") { res in
-            #expect(res.status == HTTPStatus.internalServerError)
-            let option1 = "error=true&reason=Foo"
-            let option2 = "reason=Foo&error=true"
-            guard res.body.string == option1 || res.body.string == option2 else {
-                Issue.record("Response does not match")
-                return
+            try await app.testing().test(.get, "foo") { res in
+                #expect(res.status == HTTPStatus.internalServerError)
+                let option1 = "error=true&reason=Foo"
+                let option2 = "reason=Foo&error=true"
+                guard res.body.string == option1 || res.body.string == option2 else {
+                    Issue.record("Response does not match")
+                    return
+                }
             }
         }
-
-        try await app.shutdown()
     }
 }
 

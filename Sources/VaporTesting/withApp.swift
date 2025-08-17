@@ -1,40 +1,5 @@
 import Vapor
 
-/// Perform a test while handling lifecycle of the application. Returns the result of the block
-/// Feel free to create a custom function like this, tailored to your project.
-///
-/// Usage:
-/// ```swift
-/// @Test
-/// func helloWorld() async throws {
-///     let status = try await withAppResult { app in
-///         app.get("hello") { req -> String in
-///             return "Hello, world!"
-///         }
-///
-///         let result: HTTPStatus? = nil
-///         try await app.testing().test(.get, "hello", afterResponse: { res async in
-///             #expect(res.status == .ok)
-///             result = res.status
-///             #expect(res.body.string == "Hello, world!")
-///         })
-///         return result
-///     }
-/// }
-/// ```
-public func withAppResult<T>(_ block: (Application) async throws -> T) async throws -> T {
-    let app = try await Application(.testing)
-    let result: T
-    do {
-        result = try await block(app)
-    } catch {
-        try? await app.shutdown()
-        throw error
-    }
-    try await app.shutdown()
-    return result
-}
-
 /// Perform a test while handling lifecycle of the application.
 /// Feel free to create a custom function like this, tailored to your project.
 ///
@@ -57,10 +22,14 @@ public func withAppResult<T>(_ block: (Application) async throws -> T) async thr
 @discardableResult
 public func withApp<T>(
     address: BindAddress? = nil,
+    services: Application.ServiceConfiguration = .init(),
     configure: ((Application) async throws -> Void)? = nil,
     _ test: (Application) async throws -> T
 ) async throws -> T {
-    let app = try await Application(.testing)
+    let app = try await Application(.testing, services: services)
+    if let address {
+        app.serverConfiguration.address = address
+    }
     let result: T
     do {
         try await configure?(app)
@@ -118,27 +87,4 @@ public func withRunningApp<T>(app: Application, hostname: String = "localhost", 
             throw error
         }
     }
-}
-
-
-/// Perform a test while handling lifecycle of the application.
-/// Feel free to create a custom function like this, tailored to your project.
-///
-/// Usage:
-/// ```swift
-/// @Test
-/// func helloWorld() async throws {
-///     try await withApp { app in
-///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
-///             #expect(res.status == .ok)
-///             #expect(res.body.string == "Hello, world!")
-///         })
-///     }
-/// }
-/// ```
-@discardableResult
-public func withApp<T>(
-    _ test: (Application) async throws -> T
-) async throws -> T {
-    try await withApp(configure: nil, test)
 }

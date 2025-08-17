@@ -431,20 +431,20 @@ struct ContentTests {
         // Me and my sadistic sense of humor.
         var contentConfiguration = ContentConfiguration.default()
         try contentConfiguration.use(decoder: contentConfiguration.requireDecoder(for: .json), for: .xml)
-        let app = try await Application(.testing, services: .init(contentConfiguration: contentConfiguration))
-        app.get("check") { (req: Request) -> String in
-            "\(req.headers[.init("X-Test-Value")!] ?? "MISSING").\(req.headers[.contentType] ?? "?")"
-        }
+        try await withApp(services: .init(contentConfiguration: contentConfiguration)) { app in
+            app.get("check") { (req: Request) -> String in
+                "\(req.headers[.init("X-Test-Value")!] ?? "MISSING").\(req.headers[.contentType] ?? "?")"
+            }
 
-        try await app.testing().test(.get, "/check", headers: [
-            .init("X-Test-Value")!: "PRESENT"
-        ], beforeRequest: { req in
-            try req.content.encode(["foo": "bar"], as: .json)
-            req.headers.contentType = .xml
-        }) { res in
-            #expect(res.body.string == "PRESENT.application/xml; charset=utf-8")
+            try await app.testing().test(.get, "/check", headers: [
+                .init("X-Test-Value")!: "PRESENT"
+            ], beforeRequest: { req in
+                try req.content.encode(["foo": "bar"], as: .json)
+                req.headers.contentType = .xml
+            }) { res in
+                #expect(res.body.string == "PRESENT.application/xml; charset=utf-8")
+            }
         }
-        try await app.shutdown()
     }
 
     @Test("Test Before Encode Content")
