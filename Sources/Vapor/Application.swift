@@ -25,7 +25,16 @@ public final class Application: Sendable, Service {
             self._storage.withLockedValue { $0 = newValue }
         }
     }
-    
+
+    public var logger: Logger {
+        get {
+            self._logger.withLockedValue { $0 }
+        }
+        set {
+            self._logger.withLockedValue { $0 = newValue }
+        }
+    }
+
     public var didShutdown: Bool {
         self._didShutdown.withLockedValue { $0 }
     }
@@ -96,6 +105,7 @@ public final class Application: Sendable, Service {
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
+    private let _logger: NIOLockedValueBox<Logger>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
     public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
@@ -120,7 +130,6 @@ public final class Application: Sendable, Service {
     public let passwordHasher: any PasswordHasher
     public let cache: any Cache
     public let client: any Client
-    public let logger: Logger
 
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration
@@ -297,7 +306,7 @@ public final class Application: Sendable, Service {
 
         self.responder = services.responder
         self.routes = Routes()
-        self.logger = logger
+        self._logger = .init(logger)
 
         self.core.initialize()
         self.sessions.initialize()

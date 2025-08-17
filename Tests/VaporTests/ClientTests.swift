@@ -110,10 +110,8 @@ struct ClientTests {
     @Test("Test Client Content")
     func testClientLogging() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
-            try await withApp { app in
-                let logs = TestLogHandler()
-                app.logger = logs.logger
-
+            let logs = TestLogHandler()
+            try await withApp(services: .init(logger: .provided(logs.logger))) { app in
                 _ = try await app.client.get("http://localhost:\(remoteAppPort)/status/201")
 
                 let metadata = logs.getMetadata()
