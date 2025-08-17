@@ -108,6 +108,7 @@ public final class Application: Sendable, Service {
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
     public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
+    public let routes: Routes
     // TODO: inline this when application is a struct
     private let _serverConfiguration: NIOLockedValueBox<ServerConfiguration>
     public var serverConfiguration: ServerConfiguration {
@@ -282,6 +283,7 @@ public final class Application: Sendable, Service {
         }
 
         self.responder = services.responder
+        self.routes = Routes()
 
         self.core.initialize()
         self.sessions.initialize()
