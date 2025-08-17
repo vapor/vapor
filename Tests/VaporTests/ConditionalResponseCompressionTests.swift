@@ -156,9 +156,10 @@ struct ConditionalCompressionTests {
 
                 app.http.server.configuration.supportVersions = [.one]
 
+                #warning("Fix")
                 /// Make sure the client doesn't keep the server open by re-using the connection.
-                app.http.client.configuration.maximumUsesPerConnection = 1
-                app.http.client.configuration.decompression = .enabled(limit: .none)
+//                app.http.client.configuration.maximumUsesPerConnection = 1
+//                app.http.client.configuration.decompression = .enabled(limit: .none)
 
                 try await block(app)
                 try await app.server.shutdown()

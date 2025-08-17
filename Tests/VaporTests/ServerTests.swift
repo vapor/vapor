@@ -212,7 +212,9 @@ struct ServerTests {
             app.http.server.configuration.requestDecompression = .disabled
 
             /// Make sure the client doesn't keep the server open by re-using the connection.
-            app.http.client.configuration.maximumUsesPerConnection = 1
+            var clientConfig = HTTPClient.Configuration()
+            clientConfig.maximumUsesPerConnection = 1
+            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: clientConfig)
 
             struct TestResponse: Content {
                 var content: ByteBuffer?
@@ -231,17 +233,16 @@ struct ServerTests {
             try await app.server.start()
             let port = try #require(app.http.server.shared.localAddress?.port)
 
-            let unsupportedNoncompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
-                request.body = compressedPayload
-            }
+            var unsupportedNoncompressedRequest = HTTPClientRequest(url: "http://localhost:\(port)/compressed")
+            unsupportedNoncompressedRequest.method = .POST
+            unsupportedNoncompressedRequest.body = .bytes(compressedPayload)
 
-            if let body = unsupportedNoncompressedResponse.body {
-                let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
-                #expect(decodedResponse.content == compressedPayload)
-                #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
-            } else {
-                Issue.record("Missing unsupportedNoncompressedResponse.body")
-            }
+            let unsupportedNoncompressedResponse = try await httpClient.execute(unsupportedNoncompressedRequest, deadline: .now())
+
+            let body = try await unsupportedNoncompressedResponse.body.collect(upTo: Int.max)
+            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
+            #expect(decodedResponse.content == compressedPayload)
+            #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
 
             // TODO: The server should probably reject this?
             let unsupportedCompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
@@ -285,6 +286,7 @@ struct ServerTests {
             }
 
             try await app.server.shutdown()
+            try await httpClient.shutdown()
         }
     }
 
@@ -323,10 +325,14 @@ struct ServerTests {
             clientConfig.certificateVerification = .none
             clientConfig.certificateChain = [.certificate(cert)]
             clientConfig.privateKey = .privateKey(key)
-            app.http.client.configuration.tlsConfiguration = clientConfig
+
+            var httpClientConfig = HTTPClient.Configuration()
+            httpClientConfig.tlsConfiguration = clientConfig
 
             /// Make sure the client doesn't keep the server open by re-using the connection.
-            app.http.client.configuration.maximumUsesPerConnection = 1
+            httpClientConfig.maximumUsesPerConnection = 1
+
+            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
 
             struct TestResponse: Content {
                 var content: ByteBuffer?
@@ -345,17 +351,16 @@ struct ServerTests {
             try await app.server.start()
             let port = try #require(app.http.server.shared.localAddress?.port)
 
-            let unsupportedNoncompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
-                request.body = compressedPayload
-            }
+            var unsupportedNoncompressedRequest = HTTPClientRequest(url: "https://localhost:\(port)/compressed")
+            unsupportedNoncompressedRequest.method = .POST
+            unsupportedNoncompressedRequest.body = .bytes(compressedPayload)
 
-            if let body = unsupportedNoncompressedResponse.body {
+            let unsupportedNoncompressedResponse = try await httpClient.execute(unsupportedNoncompressedRequest, timeout: .seconds(10))
+
+            let body = try await unsupportedNoncompressedResponse.body.collect(upTo: Int.max)
                 let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
                 #expect(decodedResponse.content == compressedPayload)
                 #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
-            } else {
-                Issue.record("Missing unsupportedNoncompressedResponse.body")
-            }
 
             // TODO: The server should probably reject this?
             let unsupportedCompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
@@ -399,6 +404,7 @@ struct ServerTests {
             }
 
             try await app.server.shutdown()
+            try await httpClient.shutdown()
         }
     }
 
@@ -412,9 +418,10 @@ struct ServerTests {
             app.http.server.configuration.supportVersions = [.one]
             app.http.server.configuration.responseCompression = .disabled
 
+            #warning("TODO")
             /// Make sure the client doesn't keep the server open by re-using the connection.
-            app.http.client.configuration.maximumUsesPerConnection = 1
-            app.http.client.configuration.decompression = .enabled(limit: .none)
+//            app.http.client.configuration.maximumUsesPerConnection = 1
+//            app.http.client.configuration.decompression = .enabled(limit: .none)
 
             app.get("compressed") { _ in compressiblePayload }
 
@@ -488,11 +495,12 @@ struct ServerTests {
             clientConfig.certificateVerification = .none
             clientConfig.certificateChain = [.certificate(cert)]
             clientConfig.privateKey = .privateKey(key)
-            app.http.client.configuration.tlsConfiguration = clientConfig
+#warning("TODO")
+//            app.http.client.configuration.tlsConfiguration = clientConfig
 
-            app.http.client.configuration.decompression = .enabled(limit: .none)
-            /// Make sure the client doesn't keep the server open by re-using the connection.
-            app.http.client.configuration.maximumUsesPerConnection = 1
+//            app.http.client.configuration.decompression = .enabled(limit: .none)
+//            /// Make sure the client doesn't keep the server open by re-using the connection.
+//            app.http.client.configuration.maximumUsesPerConnection = 1
 
             app.get("compressed") { _ in compressiblePayload }
 
@@ -814,7 +822,7 @@ struct ServerTests {
                 }
             }
             let response = ResponseDelegate(context: context)
-            _ = try await app.http.client.shared.execute(
+            _ = try await HTTPClient.shared.execute(
                 request: request,
                 delegate: response
             ).get()
@@ -858,9 +866,9 @@ struct ServerTests {
             })
         )
         
-        let a = try await app.http.client.shared.execute(request: request).get()
+        let a = try await HTTPClient.shared.execute(request: request).get()
         #expect(a.status == .ok)
-        let b = try await app.http.client.shared.execute(request: request).get()
+        let b = try await HTTPClient.shared.execute(request: request).get()
         #expect(b.status == .ok)
 
         try await app.shutdown()
@@ -994,7 +1002,7 @@ struct ServerTests {
                 method: .GET,
                 headers: ["connection": "keep-alive"]
             )
-            let a = try await app.http.client.shared.execute(request: request).get()
+            let a = try await HTTPClient.shared.execute(request: request).get()
             let newHeaders = HTTPFields(a.headers, splitCookie: false)
             #expect(newHeaders.connection == .keepAlive)
         }
@@ -1035,7 +1043,7 @@ struct ServerTests {
             let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
             // This originally was either a read timeout or deadline exceeded error
             await #expect(throws: HTTPClientError.deadlineExceeded) {
-                try await app.http.client.shared.execute(.POST,
+                try await HTTPClient.shared.execute(.POST,
                                                          url: "http://\(ip):\(port)/hello",
                                                          body: .byteBuffer(tenMB),
                                                          deadline: .now() + .milliseconds(100)).get()
@@ -1113,7 +1121,7 @@ struct ServerTests {
             let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
             // This originally was either a read timeout or deadline exceeded error
             await #expect(throws: HTTPClientError.deadlineExceeded) {
-                try await app.http.client.shared.execute(request: request,
+                try await HTTPClient.shared.execute(request: request,
                                                          delegate: delegate,
                                                          deadline: .now() + .milliseconds(500)).get()
             }
@@ -1159,7 +1167,8 @@ struct ServerTests {
             clientConfig.certificateVerification = .none
             clientConfig.certificateChain = [.certificate(cert)]
             clientConfig.privateKey = .privateKey(key)
-            app.http.client.configuration.tlsConfiguration = clientConfig
+            #warning("Fix")
+//            app.http.client.configuration.tlsConfiguration = clientConfig
 
             app.environment.arguments = ["serve"]
 
@@ -1175,7 +1184,7 @@ struct ServerTests {
                 url: "https://\(ip):\(port)/hello",
                 method: .GET
             )
-            let a = try await app.http.client.shared.execute(request: request).get()
+            let a = try await HTTPClient.shared.execute(request: request).get()
             #expect(a.body == ByteBuffer(string: "world"))
         }
     }
@@ -1200,8 +1209,9 @@ struct ServerTests {
             clientConfig.certificateVerification = .none
             clientConfig.certificateChain = [.certificate(cert)]
             clientConfig.privateKey = .privateKey(key)
-            app.http.client.configuration.tlsConfiguration = clientConfig
-            app.http.client.configuration.maximumUsesPerConnection = 1
+            #warning("Fix")
+//            app.http.client.configuration.tlsConfiguration = clientConfig
+//            app.http.client.configuration.maximumUsesPerConnection = 1
 
             app.environment.arguments = ["serve"]
 
@@ -1214,7 +1224,7 @@ struct ServerTests {
             let port = try #require(app.http.server.shared.localAddress?.port)
 
             /// Make a regular request
-            let a = try await app.http.client.shared.execute(
+            let a = try await HTTPClient.shared.execute(
                 request: try HTTPClient.Request(
                     url: "http://\(ip):\(port)/hello",
                     method: .GET
@@ -1237,7 +1247,7 @@ struct ServerTests {
             }
 
             /// Make a TLS request this time around
-            let b = try await app.http.client.shared.execute(
+            let b = try await HTTPClient.shared.execute(
                 request: try HTTPClient.Request(
                     url: "https://\(ip):\(port)/hello",
                     method: .GET
@@ -1248,7 +1258,7 @@ struct ServerTests {
 
             /// Non-TLS request should now fail
             await #expect(throws: HTTPClientError.remoteConnectionClosed) {
-                try await app.http.client.shared.execute(
+                try await HTTPClient.shared.execute(
                     request: try HTTPClient.Request(
                         url: "http://\(ip):\(port)/hello",
                         method: .GET

@@ -441,7 +441,7 @@ struct RouteTests {
     func testGH2716() async throws {
         try await withApp { app in
             app.get("client") { req in
-                let response = try await req.client.get("htp://localhost/status/2 1")
+                let response = try await req.application.client.get("htp://localhost/status/2 1")
                 return response.description
             }
 

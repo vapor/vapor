@@ -13,7 +13,7 @@ struct RequestTests {
     @Test("Test Redirect", .timeLimit(.minutes(1)))
     func testRedirect() async throws {
         try await withApp { app in
-            app.http.client.configuration.redirectConfiguration = .disallow
+            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: .init(redirectConfiguration: .disallow))
 
             app.get("redirect_normal") {
                 $0.redirect(to: "foo", redirectType: .normal)
@@ -29,11 +29,13 @@ struct RequestTests {
             }
 
             try await withRunningApp(app: app) { port throws in
-                #expect(try await app.client.get("http://localhost:\(port)/redirect_normal").status == .seeOther)
-                #expect(try await app.client.get("http://localhost:\(port)/redirect_permanent").status == .movedPermanently)
-                #expect(try await app.client.post("http://localhost:\(port)/redirect_temporary").status == .temporaryRedirect)
-                #expect(try await app.client.post("http://localhost:\(port)/redirect_permanentPost").status == .permanentRedirect)
+                #expect(try await httpClient.get("http://localhost:\(port)/redirect_normal").status == .seeOther)
+                #expect(try await httpClient.get("http://localhost:\(port)/redirect_permanent").status == .movedPermanently)
+                #expect(try await httpClient.post("http://localhost:\(port)/redirect_temporary").status == .temporaryRedirect)
+                #expect(try await httpClient.post("http://localhost:\(port)/redirect_permanentPost").status == .permanentRedirect)
             }
+
+            try await httpClient.shutdown()
         }
     }
 
@@ -57,7 +59,7 @@ struct RequestTests {
                 request.method = .POST
                 request.body = .stream(testValue.utf8.async, length: .unknown)
 
-                let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
                 #expect(response.status == .ok)
                 let body = try await response.body.collect(upTo: 1024 * 1024)
                 #expect(body.string == testValue)
@@ -91,7 +93,7 @@ struct RequestTests {
             var request = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
             request.method = .POST
             request.body = .stream(oneMB.async, length: .known(Int64(oneMB.count)))
-            if let response = try? await app.http.client.shared.execute(request, timeout: .seconds(5)) {
+            if let response = try? await HTTPClient.shared.execute(request, timeout: .seconds(5)) {
                 #expect(bytesTheServerRead.load(ordering: .relaxed) > 0)
                 #expect(response.status == .internalServerError)
             }
@@ -206,7 +208,7 @@ struct RequestTests {
                 request.body = .bytes(fiftyMB)
 
                 for _ in 0..<10 {
-                    let response: HTTPClientResponse = try await app.http.client.shared.execute(request, timeout: .seconds(5))
+                    let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
                     #expect(response.status == .ok)
                     let body = try await response.body.collect(upTo: 1024 * 1024)
                     #expect(body.string == "Received \(fiftyMB.readableBytes) bytes")
@@ -444,5 +446,19 @@ fileprivate extension String {
             string += String(Int.random(in: 0...9))
         }
         return string
+    }
+}
+
+extension HTTPClient {
+    func get(_ url: String) async throws -> HTTPClientResponse {
+        var request = HTTPClientRequest(url: url)
+        request.method = .GET
+        return try await self.execute(request, deadline: .now())
+    }
+
+    func post(_ url: String) async throws -> HTTPClientResponse {
+        var request = HTTPClientRequest(url: url)
+        request.method = .POST
+        return try await self.execute(request, deadline: .now())
     }
 }
