@@ -7,6 +7,9 @@ import NIOConcurrencyHelpers
 import Testing
 import VaporTesting
 import Foundation
+import HTTPTypes
+import NIOHTTP1
+import NIOHTTPTypesHTTP1
 
 @Suite("Request Tests")
 struct RequestTests {
@@ -450,9 +453,10 @@ fileprivate extension String {
 }
 
 extension HTTPClient {
-    func get(_ url: String) async throws -> HTTPClientResponse {
+    func get(_ url: String, headers: HTTPFields = .init()) async throws -> HTTPClientResponse {
         var request = HTTPClientRequest(url: url)
         request.method = .GET
+        request.headers = HTTPHeaders(headers)
         return try await self.execute(request, deadline: .distantFuture)
     }
 

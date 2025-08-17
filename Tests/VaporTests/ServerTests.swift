@@ -299,7 +299,7 @@ struct ServerTests {
                 return
             }
 
-            let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+            let cert = try #require(NIOSSLCertificate.fromPEMFile(clientCertPath.path).first)
             let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
 
             let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
@@ -418,45 +418,38 @@ struct ServerTests {
             app.http.server.configuration.supportVersions = [.one]
             app.http.server.configuration.responseCompression = .disabled
 
-            #warning("TODO")
             /// Make sure the client doesn't keep the server open by re-using the connection.
-//            app.http.client.configuration.maximumUsesPerConnection = 1
-//            app.http.client.configuration.decompression = .enabled(limit: .none)
+            var httpClientConfig = HTTPClient.Configuration()
+            httpClientConfig.maximumUsesPerConnection = 1
+            httpClientConfig.decompression = .enabled(limit: .none)
+            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
 
             app.get("compressed") { _ in compressiblePayload }
 
             try await app.server.start()
             let port = try #require(app.http.server.shared.localAddress?.port)
 
-            let unsupportedNoncompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-                request.headers[.acceptEncoding] = nil
-            }
-            #expect(unsupportedNoncompressedResponse.headers[.contentEncoding] != "gzip")
-            #expect(unsupportedNoncompressedResponse.headers[.contentLength] == "\(compressiblePayload.count)")
-            #expect(unsupportedNoncompressedResponse.body?.string == compressiblePayload)
+            let unsupportedNoncompressedResponse = try await httpClient.get("http://localhost:\(port)/compressed")
+            #expect(unsupportedNoncompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+            #expect(unsupportedNoncompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) == "\(compressiblePayload.count)")
+            try await #expect(unsupportedNoncompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
 
-            let unsupportedCompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-                request.headers[.acceptEncoding] = "gzip"
-            }
-            #expect(unsupportedCompressedResponse.headers[.contentEncoding] != "gzip")
-            #expect(unsupportedCompressedResponse.headers[.contentLength] == "\(compressiblePayload.count)")
-            #expect(unsupportedCompressedResponse.body?.string == compressiblePayload)
+            let unsupportedCompressedResponse = try await httpClient.get("http://localhost:\(port)/compressed", headers: .init(dictionaryLiteral: (.acceptEncoding, "gzip")))
+            #expect(unsupportedCompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+            #expect(unsupportedCompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) == "\(compressiblePayload.count)")
+            try await #expect(unsupportedCompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
 
             app.http.server.configuration.responseCompression = .enabled
 
-            let supportedUncompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-                request.headers[.acceptEncoding] = nil
-            }
-            #expect(supportedUncompressedResponse.headers[.contentEncoding] != "gzip")
-            #expect(supportedUncompressedResponse.headers[.contentLength] != "\(compressiblePayload.count)")
-            #expect(supportedUncompressedResponse.body?.string == compressiblePayload)
+            let supportedUncompressedResponse = try await httpClient.get("http://localhost:\(port)/compressed")
+            #expect(supportedUncompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+            #expect(supportedUncompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) != "\(compressiblePayload.count)")
+            try await #expect(supportedUncompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
 
-            let supportedCompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-                request.headers[.acceptEncoding] = "gzip"
-            }
-            #expect(supportedCompressedResponse.headers[.contentEncoding] == "gzip")
-            #expect(supportedCompressedResponse.headers[.contentLength] != "\(compressiblePayload.count)")
-            #expect(supportedCompressedResponse.body?.string == compressiblePayload)
+            let supportedCompressedResponse = try await httpClient.get("http://localhost:\(port)/compressed", headers: .init(dictionaryLiteral: (.acceptEncoding, "gzip")))
+            #expect(supportedCompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) == "gzip")
+            #expect(supportedCompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) != "\(compressiblePayload.count)")
+            try await #expect(supportedCompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
 
             try await app.server.shutdown()
         }
@@ -471,7 +464,7 @@ struct ServerTests {
                 return
             }
 
-            let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+            let cert = try #require(NIOSSLCertificate.fromPEMFile(clientCertPath.path).first)
             let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
 
             let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
@@ -495,49 +488,43 @@ struct ServerTests {
             clientConfig.certificateVerification = .none
             clientConfig.certificateChain = [.certificate(cert)]
             clientConfig.privateKey = .privateKey(key)
-#warning("TODO")
-//            app.http.client.configuration.tlsConfiguration = clientConfig
 
-//            app.http.client.configuration.decompression = .enabled(limit: .none)
-//            /// Make sure the client doesn't keep the server open by re-using the connection.
-//            app.http.client.configuration.maximumUsesPerConnection = 1
+            var httpClientConfig = HTTPClient.Configuration()
+            httpClientConfig.tlsConfiguration = clientConfig
+            httpClientConfig.decompression = .enabled(limit: .none)
+            /// Make sure the client doesn't keep the server open by re-using the connection.
+            httpClientConfig.maximumUsesPerConnection = 1
+            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
 
             app.get("compressed") { _ in compressiblePayload }
 
             try await app.server.start()
             let port = try #require(app.http.server.shared.localAddress?.port)
 
-            let unsupportedNoncompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-                request.headers[.acceptEncoding] = nil
-            }
-            #expect(unsupportedNoncompressedResponse.headers[.contentEncoding] != "gzip")
-            #expect(unsupportedNoncompressedResponse.headers[.contentLength] == "\(compressiblePayload.count)")
-            #expect(unsupportedNoncompressedResponse.body?.string == compressiblePayload)
+            let unsupportedNoncompressedResponse = try await httpClient.get("https://localhost:\(port)/compressed")
+            #expect(unsupportedNoncompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+            #expect(unsupportedNoncompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) == "\(compressiblePayload.count)")
+            try await #expect(unsupportedNoncompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
 
-            let unsupportedCompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-                request.headers[.acceptEncoding]  = "gzip"
-            }
-            #expect(unsupportedCompressedResponse.headers[.contentEncoding] != "gzip")
-            #expect(unsupportedCompressedResponse.headers[.contentLength] == "\(compressiblePayload.count)")
-            #expect(unsupportedCompressedResponse.body?.string == compressiblePayload)
+            let unsupportedCompressedResponse = try await httpClient.get("https://localhost:\(port)/compressed", headers: .init(dictionaryLiteral: (.acceptEncoding, "gzip")))
+            #expect(unsupportedCompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+            #expect(unsupportedCompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) == "\(compressiblePayload.count)")
+            try await #expect(unsupportedCompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
 
             app.http.server.configuration.responseCompression = .enabled
 
-            let supportedUncompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-                request.headers[.acceptEncoding] = nil
-            }
-            #expect(supportedUncompressedResponse.headers[.contentEncoding] != "gzip")
-            #expect(supportedUncompressedResponse.headers[.contentLength] != "\(compressiblePayload.count)")
-            #expect(supportedUncompressedResponse.body?.string == compressiblePayload)
+            let supportedUncompressedResponse = try await httpClient.get("https://localhost:\(port)/compressed")
+            #expect(supportedUncompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+            #expect(supportedUncompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) != "\(compressiblePayload.count)")
+            try await #expect(supportedUncompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
 
-            let supportedCompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-                request.headers[.acceptEncoding] = "gzip"
-            }
-            #expect(supportedCompressedResponse.headers[.contentEncoding] == "gzip")
-            #expect(supportedCompressedResponse.headers[.contentLength] != "\(compressiblePayload.count)")
-            #expect(supportedCompressedResponse.body?.string == compressiblePayload)
+            let supportedCompressedResponse = try await httpClient.get("https://localhost:\(port)/compressed", headers: .init(dictionaryLiteral: (.acceptEncoding, "gzip")))
+            #expect(supportedCompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) == "gzip")
+            #expect(supportedCompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) != "\(compressiblePayload.count)")
+            try await #expect(supportedCompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
 
             try await app.server.shutdown()
+            try await httpClient.shutdown()
         }
     }
 
@@ -1146,7 +1133,7 @@ struct ServerTests {
                 return
             }
 
-            let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+            let cert = try #require(NIOSSLCertificate.fromPEMFile(clientCertPath.path).first)
             let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
 
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -1167,8 +1154,10 @@ struct ServerTests {
             clientConfig.certificateVerification = .none
             clientConfig.certificateChain = [.certificate(cert)]
             clientConfig.privateKey = .privateKey(key)
-            #warning("Fix")
-//            app.http.client.configuration.tlsConfiguration = clientConfig
+
+            var httpClientConfig = HTTPClient.Configuration()
+            httpClientConfig.tlsConfiguration = clientConfig
+            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
 
             app.environment.arguments = ["serve"]
 
@@ -1180,12 +1169,12 @@ struct ServerTests {
             let ip = try #require(app.http.server.shared.localAddress?.ipAddress)
             let port = try #require(app.http.server.shared.localAddress?.port)
 
-            let request = try HTTPClient.Request(
-                url: "https://\(ip):\(port)/hello",
-                method: .GET
-            )
-            let a = try await HTTPClient.shared.execute(request: request).get()
-            #expect(a.body == ByteBuffer(string: "world"))
+            var request = HTTPClientRequest(url: "https://\(ip):\(port)/hello")
+            request.method = .GET
+            let a = try await httpClient.execute(request, timeout: .seconds(10))
+            try await #expect(a.body.collect(upTo: Int.max) == ByteBuffer(string: "world"))
+
+            try await httpClient.shutdown()
         }
     }
 
@@ -1198,7 +1187,7 @@ struct ServerTests {
                 return
             }
 
-            let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+            let cert = try #require(NIOSSLCertificate.fromPEMFile(clientCertPath.path).first)
             let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
 
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -1209,9 +1198,11 @@ struct ServerTests {
             clientConfig.certificateVerification = .none
             clientConfig.certificateChain = [.certificate(cert)]
             clientConfig.privateKey = .privateKey(key)
-            #warning("Fix")
-//            app.http.client.configuration.tlsConfiguration = clientConfig
-//            app.http.client.configuration.maximumUsesPerConnection = 1
+
+            var httpClientConfig = HTTPClient.Configuration()
+            httpClientConfig.tlsConfiguration = clientConfig
+            httpClientConfig.maximumUsesPerConnection = 1
+            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
 
             app.environment.arguments = ["serve"]
 
@@ -1224,14 +1215,11 @@ struct ServerTests {
             let port = try #require(app.http.server.shared.localAddress?.port)
 
             /// Make a regular request
-            let a = try await HTTPClient.shared.execute(
-                request: try HTTPClient.Request(
-                    url: "http://\(ip):\(port)/hello",
-                    method: .GET
-                )
-            ).get()
+            var httpRequest = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
+            httpRequest.method = .GET
+            let a = try await httpClient.execute(httpRequest, timeout: .seconds(10))
             #expect(a.headers["server"] == ["Old"])
-            #expect(a.body == ByteBuffer(string: "world"))
+            try await #expect(a.body.collect(upTo: Int.max) == ByteBuffer(string: "world"))
 
             /// Configure server name without stopping the server
             app.http.server.configuration.serverName = "New"
@@ -1247,23 +1235,18 @@ struct ServerTests {
             }
 
             /// Make a TLS request this time around
-            let b = try await HTTPClient.shared.execute(
-                request: try HTTPClient.Request(
-                    url: "https://\(ip):\(port)/hello",
-                    method: .GET
-                )
-            ).get()
+            var httpsRequest = HTTPClientRequest(url: "https://\(ip):\(port)/hello")
+            httpsRequest.method = .GET
+            let b = try await httpClient.execute(httpsRequest, timeout: .seconds(10))
             #expect(b.headers["server"] == ["New"])
-            #expect(b.body == ByteBuffer(string: "world"))
+            try await #expect(b.body.collect(upTo: Int.max) == ByteBuffer(string: "world"))
 
             /// Non-TLS request should now fail
             await #expect(throws: HTTPClientError.remoteConnectionClosed) {
-                try await HTTPClient.shared.execute(
-                    request: try HTTPClient.Request(
-                        url: "http://\(ip):\(port)/hello",
-                        method: .GET
-                    )).get()
+                try await httpClient.execute(httpRequest, timeout: .seconds(10))
             }
+
+            try await httpClient.shutdown()
         }
     }
 
