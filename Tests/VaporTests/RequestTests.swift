@@ -453,12 +453,15 @@ extension HTTPClient {
     func get(_ url: String) async throws -> HTTPClientResponse {
         var request = HTTPClientRequest(url: url)
         request.method = .GET
-        return try await self.execute(request, deadline: .now())
+        return try await self.execute(request, deadline: .distantFuture)
     }
 
-    func post(_ url: String) async throws -> HTTPClientResponse {
+    func post(_ url: String, body: ByteBuffer? = nil) async throws -> HTTPClientResponse {
         var request = HTTPClientRequest(url: url)
         request.method = .POST
-        return try await self.execute(request, deadline: .now())
+        if let body = body {
+            request.body = .bytes(body)
+        }
+        return try await self.execute(request, deadline: .distantFuture)
     }
 }
