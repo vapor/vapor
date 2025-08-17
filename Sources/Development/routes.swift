@@ -138,7 +138,7 @@ public func routes(_ app: Application) throws {
     }
 
     app.get("client") { req in
-        let response = try await req.client.get("http://httpbin.org/status/201")
+        let response = try await req.application.client.get("http://httpbin.org/status/201")
         return response.description
     }
 
@@ -149,7 +149,7 @@ public func routes(_ app: Application) throws {
             }
             var slideshow: Slideshow
         }
-        let response = try await req.client.get("http://httpbin.org/json")
+        let response = try await req.application.client.get("http://httpbin.org/json")
         let data = try await response.content.decode(HTTPBinResponse.self)
         return data.slideshow.title
     }
@@ -197,7 +197,7 @@ public func routes(_ app: Application) throws {
 
     let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in
-        let response = try await req.client.get("https://www.google.com")
+        let response = try await req.application.client.get("https://www.google.com")
         guard let body = response.body else {
             throw Abort(.internalServerError)
         }
@@ -205,7 +205,7 @@ public func routes(_ app: Application) throws {
     }
 
     asyncRoutes.get("client2") { req -> String in
-        let response = try await req.client.get("https://www.google.com")
+        let response = try await req.application.client.get("https://www.google.com")
         guard let body = response.body else {
             throw Abort(.internalServerError)
         }

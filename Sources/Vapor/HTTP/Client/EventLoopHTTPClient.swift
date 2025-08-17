@@ -3,29 +3,16 @@ import AsyncHTTPClient
 import Logging
 import Foundation
 
-extension HTTPClient {
-    func delegating(to eventLoop: any EventLoop, logger: Logger, byteBufferAllocator: ByteBufferAllocator, contentConfiguration: ContentConfiguration) -> any Client {
-        EventLoopHTTPClient(
-            http: self,
-            eventLoop: eventLoop,
-            logger: logger,
-            byteBufferAllocator: byteBufferAllocator,
-            contentConfiguration: contentConfiguration
-        )
-    }
-}
-
-private struct EventLoopHTTPClient: Client {
+internal struct VaporHTTPClient: Client {
     let http: HTTPClient
-    let eventLoop: any EventLoop
-    var logger: Logger?
+    var logger: Logger
     var byteBufferAllocator: ByteBufferAllocator
     let contentConfiguration: ContentConfiguration
 
     func send(_ clientRequest: ClientRequest) async throws -> ClientResponse {
         let urlString = clientRequest.url.string
         guard let url = URL(string: urlString) else {
-            self.logger?.debug("\(urlString) is an invalid URL")
+            self.logger.debug("\(urlString) is an invalid URL")
             throw Abort(.internalServerError, reason: "\(urlString) is an invalid URL")
         }
         let request = try HTTPClient.Request(
@@ -36,9 +23,8 @@ private struct EventLoopHTTPClient: Client {
         )
         let response = try await self.http.execute(
             request: request,
-            eventLoop: .delegate(on: self.eventLoop),
             deadline: clientRequest.timeout.map { .now() + $0 },
-            logger: logger
+            logger: logger,
         ).get()
         return ClientResponse(
             status: .init(code: Int(response.status.code)),
@@ -47,13 +33,5 @@ private struct EventLoopHTTPClient: Client {
             byteBufferAllocator: self.byteBufferAllocator,
             contentConfiguration: self.contentConfiguration
         )
-    }
-    
-    func logging(to logger: Logger) -> any Client {
-        return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: self.logger, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
-    }
-
-    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> any Client {
-        return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: self.logger, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
     }
 }

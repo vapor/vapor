@@ -10,41 +10,6 @@ import AsyncHTTPClient
 
 @Suite("Client Tests")
 struct ClientTests {
-    @Test("Test changing the client configuration")
-    func clientConfigurationChange() async throws {
-        try await withApp { app in
-            app.http.client.configuration.redirectConfiguration = .disallow
-
-            app.get("redirect") {
-                $0.redirect(to: "foo")
-            }
-
-            try await withRunningApp(app: app) { port in
-                let res = try await app.client.get("http://localhost:\(port)/redirect")
-                #expect(res.status == .seeOther)
-            }
-        }
-    }
-
-    @Test("Test that the client config can be changed after the client has already been used")
-    func clientConfigurationCantBeChangedAfterClientHasBeenUsed() async throws {
-        try await withApp { app in
-            app.http.client.configuration.redirectConfiguration = .disallow
-
-            app.get("redirect") {
-                $0.redirect(to: "foo")
-            }
-
-            try await withRunningApp(app: app) { port in
-                _ = try await app.client.get("http://localhost:\(port)/redirect")
-
-                app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
-                let res = try await app.client.get("http://localhost:\(port)/redirect")
-                #expect(res.status == .seeOther)
-            }
-        }
-    }
-
     @Test("Test Client Response Codable")
     func testClientResponseCodable() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
@@ -111,7 +76,7 @@ struct ClientTests {
 
                 app.get("foo") { req async throws -> String in
                     do {
-                        let response = try await req.client.get("http://localhost:\(remoteAppPort)/status/201")
+                        let response = try await req.application.client.get("http://localhost:\(remoteAppPort)/status/201")
                         #expect(response.status.code == 201)
                         req.application.running?.stop()
                         return "bar"
@@ -132,12 +97,12 @@ struct ClientTests {
     @Test("Test Custom Client")
     func testCustomClient() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
-            try await withApp { app in
-                app.clients.use(.custom)
+            let customClient = CustomClient()
+            try await withApp(services: .init(client: .provided(customClient))) { app in
                 _ = try await app.client.get("https://vapor.codes")
 
-                #expect(app.customClient.requests.count == 1)
-                #expect(app.customClient.requests.first?.url.host == "vapor.codes")
+                #expect(customClient.requests.count == 1)
+                #expect(customClient.requests.first?.url.host == "vapor.codes")
             }
         }
     }
@@ -202,7 +167,6 @@ struct ClientTests {
 }
 
 final class CustomClient: Client, Sendable {
-    let eventLoop: any EventLoop
     let _requests: NIOLockedValueBox<[ClientRequest]>
     let contentConfiguration: ContentConfiguration = .default()
     let byteBufferAllocator: ByteBufferAllocator = .init()
@@ -212,8 +176,7 @@ final class CustomClient: Client, Sendable {
         }
     }
 
-    init(eventLoop: any EventLoop, _requests: [ClientRequest] = []) {
-        self.eventLoop = eventLoop
+    init(_requests: [ClientRequest] = []) {
         self._requests = .init(_requests)
     }
 
@@ -221,44 +184,7 @@ final class CustomClient: Client, Sendable {
         self._requests.withLockedValue { $0.append(request) }
         return ClientResponse()
     }
-
-    func delegating(to eventLoop: any EventLoop) -> any Client {
-        self
-    }
-
-    func logging(to logger: Logger) -> any Client {
-        self
-    }
-
-    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> any Client {
-        self
-    }
 }
-
-extension Application {
-    struct CustomClientKey: StorageKey {
-        typealias Value = CustomClient
-    }
-
-    var customClient: CustomClient {
-        if let existing = self.storage[CustomClientKey.self] {
-            return existing
-        } else {
-            let new = CustomClient(eventLoop: self.eventLoopGroup.any())
-            self.storage[CustomClientKey.self] = new
-            return new
-        }
-    }
-}
-
-extension Application.Clients.Provider {
-    static var custom: Self {
-        .init {
-            $0.clients.use { $0.customClient }
-        }
-    }
-}
-
 
 final class TestLogHandler: LogHandler {
     

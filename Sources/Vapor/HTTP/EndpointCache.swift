@@ -36,7 +36,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     ///   - request: The `Request` which is initiating the download.
     ///   - logger: An optional logger
     public func get(on request: Request, logger: Logger? = nil) async throws -> T {
-        try await self.download(using: request.client, logger: logger ?? request.logger)
+        try await self.download(using: request.application.client, logger: logger ?? request.logger)
     }
 
     /// Downloads the resource.

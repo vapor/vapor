@@ -4,6 +4,7 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 import ServiceLifecycle
+import AsyncHTTPClient
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable, Service {
@@ -128,6 +129,7 @@ public final class Application: Sendable, Service {
     public let directoryConfiguration: DirectoryConfiguration
     public let passwordHasher: any PasswordHasher
     public let cache: any Cache
+    public let client: any Client
 
     public struct ServiceConfiguration {
         let contentConfiguration: ContentConfiguration
@@ -135,19 +137,22 @@ public final class Application: Sendable, Service {
         let passwordHasher: ServiceOptionType<any PasswordHasher>
         let cache: ServiceOptionType<any Cache>
         let responder: ServiceOptionType<any Responder>
+        let client: ServiceOptionType<any Client>
 
         public init(
             contentConfiguration: ContentConfiguration = .default(),
             viewRenderer: ServiceOptionType<any ViewRenderer> = .default,
             passwordHasher: ServiceOptionType<any PasswordHasher> = .default,
             cache: ServiceOptionType<any Cache> = .default,
-            responder: ServiceOptionType<any Responder> = .default
+            responder: ServiceOptionType<any Responder> = .default,
+            client: ServiceOptionType<any Client> = .default
         ) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
             self.passwordHasher = passwordHasher
             self.cache = cache
             self.responder = responder
+            self.client = client
         }
     }
 
@@ -282,6 +287,13 @@ public final class Application: Sendable, Service {
                 self.cache = cache
         }
 
+        switch services.client {
+        case .default:
+            self.client = VaporHTTPClient(http: HTTPClient.shared, logger: logger, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+        case .provided(let client):
+            self.client = client
+        }
+
         self.responder = services.responder
         self.routes = Routes()
 
@@ -290,8 +302,6 @@ public final class Application: Sendable, Service {
         self.sessions.use(.memory)
         self.servers.initialize()
         self.servers.use(.httpNew)
-        self.clients.initialize()
-        self.clients.use(.http)
         self.asyncCommands.use(RoutesCommand(), as: "routes")
     }
     
