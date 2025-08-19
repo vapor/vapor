@@ -21,7 +21,7 @@ struct AnyAsyncSequence<Element>: AsyncSequence {
     let makeAsyncIteratorCallback: @Sendable () -> AsyncIteratorNextCallback
 
     @inlinable
-    init<AS: AsyncSequence>(_ base: AS) where AS.Element == Element, AS: Sendable {
+    init<AS: AsyncSequence>(_ base: AS) where AS.Element == Element, AS: Sendable, AS.AsyncIterator: SendableMetatype {
         self.makeAsyncIteratorCallback = {
             var iterator = base.makeAsyncIterator()
             return {

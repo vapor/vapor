@@ -10,20 +10,6 @@ import AsyncHTTPClient
 
 @Suite("Client Tests")
 struct ClientTests {
-    @Test("Test Client Response Codable")
-    func testClientResponseCodable() async throws {
-        try await withRemoteApp { remoteApp, remoteAppPort in
-            try await withApp { app in
-                let res = try await app.client.get("http://localhost:\(remoteAppPort)/json")
-
-                let encoded = try JSONEncoder().encode(res)
-                let decoded = try JSONDecoder().decode(ClientResponse.self, from: encoded)
-
-                #expect(res == decoded)
-            }
-        }
-    }
-
     @Test("Test Client beforeSend()")
     func testClientBeforeSend() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in

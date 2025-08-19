@@ -1,6 +1,6 @@
 extension Validator {
     /// Validates that the data can be converted to a value of an enum type with iterable cases.
-    public static func `case`<E>(of enum: E.Type) -> Validator<T>
+    public static func `case`<E: Sendable>(of enum: E.Type) -> Validator<T>
         where E: RawRepresentable & CaseIterable, E.RawValue == T, T: CustomStringConvertible
     {
         .init {
@@ -13,7 +13,7 @@ extension Validator {
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether the data can be represented as a specific Enum case.
     public struct Case<T, E>
-        where E: RawRepresentable & CaseIterable, E.RawValue == T, T: CustomStringConvertible & Sendable
+        where E: RawRepresentable & CaseIterable & Sendable, E.RawValue == T, T: CustomStringConvertible & Sendable
     {
         /// The type of the enum to check.
         public let enumType: E.Type

@@ -102,39 +102,6 @@ extension ClientResponse: ResponseEncodable {
     }
 }
 
-extension ClientResponse: Codable {
-    private enum CodingKeys: String, CodingKey {
-        case status = "status"
-        case headers = "headers"
-        case body = "body"
-    }
-
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.status = try container.decode(HTTPStatus.self, forKey: .status)
-        self.headers = try container.decode(HTTPFields.self, forKey: .headers)
-        let bodyString = try container.decode(String?.self, forKey: .body)
-        guard let s = bodyString, let bodyData = [UInt8].init(decodingBase64: s) else {
-            throw Abort(.internalServerError, reason: "Could not decode client response body from base64 string")
-        }
-        self.byteBufferAllocator = ByteBufferAllocator()
-        self.body = self.byteBufferAllocator.buffer(bytes: bodyData)
-        self.contentConfiguration = .default()
-    }
-
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.status, forKey: .status)
-        try container.encode(self.headers, forKey: .headers)
-        if let body = self.body {
-            let string = body.readableBytesView.base64String()
-            try container.encode(string, forKey: .body)
-        } else {
-            try container.encodeNil(forKey: .body)
-        }
-    }
-}
-
 extension ClientResponse: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.status == rhs.status && lhs.headers == rhs.headers && lhs.body == rhs.body
