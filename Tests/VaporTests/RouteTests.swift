@@ -495,6 +495,7 @@ struct RouteTests {
     }
 }
 
+extension WebSocket: @retroactive Equatable {}
 extension WebSocket: Swift.Hashable {
     public static func == (lhs: WebSocket, rhs: WebSocket) -> Bool {
         lhs === rhs
