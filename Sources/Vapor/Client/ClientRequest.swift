@@ -7,7 +7,8 @@ public struct ClientRequest: Sendable {
     public var url: URI
     public var headers: HTTPFields
     public var body: ByteBuffer?
-    public var timeout: TimeAmount?
+    public var timeout: TimeAmount
+    public var maxResponseBodySize: Int
     private let byteBufferAllocator: ByteBufferAllocator
     private let contentConfiguration: ContentConfiguration
 
@@ -16,7 +17,8 @@ public struct ClientRequest: Sendable {
         url: URI = "/",
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        timeout: TimeAmount?,
+        timeout: TimeAmount? = nil,
+        maxResponseBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         contentConfiguration: ContentConfiguration = .default()
     ) {
@@ -24,28 +26,10 @@ public struct ClientRequest: Sendable {
         self.url = url
         self.headers = headers
         self.body = body
-        self.timeout = timeout
+        self.timeout = timeout ?? .seconds(30)
         self.byteBufferAllocator = byteBufferAllocator
         self.contentConfiguration = contentConfiguration
-    }
-
-    public init(
-        method: HTTPRequest.Method = .get,
-        url: URI = "/",
-        headers: HTTPFields = [:],
-        body: ByteBuffer? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        contentConfiguration: ContentConfiguration = .default()
-    ) {
-        self.init(
-            method: method,
-            url: url,
-            headers: headers,
-            body: body,
-            timeout: nil,
-            byteBufferAllocator: byteBufferAllocator,
-            contentConfiguration: contentConfiguration
-        )
+        self.maxResponseBodySize = maxResponseBodySize
     }
 }
 

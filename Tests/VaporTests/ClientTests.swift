@@ -107,7 +107,7 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Client Content")
+    @Test("Test Client Content", .disabled("Broken in AHC"), .bug("https://github.com/swift-server/async-http-client/issues/854"))
     func testClientLogging() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             let logs = TestLogHandler()
@@ -150,8 +150,9 @@ struct ClientTests {
             return AnythingResponse(headers: headers, json: jsonResponse)
         }
 
-        remoteApp.get("stalling") {
-            try await $0.eventLoop.scheduleTask(in: .seconds(1)) { SomeJSON() }.futureResult.get()
+        remoteApp.get("stalling") { _ in
+            try await Task.sleep(for: .seconds(1))
+            return SomeJSON()
         }
 
         let result = try await withRunningApp(app: remoteApp) { port in

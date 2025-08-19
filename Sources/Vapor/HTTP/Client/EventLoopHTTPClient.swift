@@ -2,6 +2,7 @@ import NIOCore
 import AsyncHTTPClient
 import Logging
 import Foundation
+import NIOHTTPTypesHTTP1
 
 internal struct VaporHTTPClient: Client {
     let http: HTTPClient
@@ -15,21 +16,20 @@ internal struct VaporHTTPClient: Client {
             self.logger.debug("\(urlString) is an invalid URL")
             throw Abort(.internalServerError, reason: "\(urlString) is an invalid URL")
         }
-        let request = try HTTPClient.Request(
-            url: url,
-            method: .init(clientRequest.method),
-            headers: .init(clientRequest.headers),
-            body: clientRequest.body.map { .byteBuffer($0) }
-        )
+        var request = HTTPClientRequest(url: url.absoluteString)
+        request.method = .init(clientRequest.method)
+        request.headers = .init(clientRequest.headers)
+        if let requestBody = clientRequest.body {
+            request.body = .bytes(requestBody)
+        }
         let response = try await self.http.execute(
-            request: request,
-            deadline: clientRequest.timeout.map { .now() + $0 },
-            logger: logger,
-        ).get()
-        return ClientResponse(
+            request,
+            deadline: .now() + clientRequest.timeout,
+            logger: self.logger)
+        return try await ClientResponse(
             status: .init(code: Int(response.status.code)),
             headers: .init(response.headers, splitCookie: false),
-            body: response.body,
+            body: response.body.collect(upTo: clientRequest.maxResponseBodySize),
             byteBufferAllocator: self.byteBufferAllocator,
             contentConfiguration: self.contentConfiguration
         )
