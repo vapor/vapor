@@ -5,12 +5,6 @@ import NIOCore
 import NIOConcurrencyHelpers
 
 extension Application.Servers.Provider {
-    public static var http: Self {
-        .init {
-            $0.servers.use { $0.http.server.shared }
-        }
-    }
-
     public static var httpNew: Self {
         .init {
             $0.servers.use { $0.http.serverNew.shared }
@@ -19,10 +13,6 @@ extension Application.Servers.Provider {
 }
 
 extension Application.HTTP {
-    public var server: Server {
-        .init(application: self.application)
-    }
-
     public var serverNew: ServerNew {
         .init(application: self.application)
     }
@@ -84,69 +74,6 @@ extension Application.HTTP {
 
         struct Key: StorageKey, Sendable {
             typealias Value = HTTPServer<HTTP1Channel>
-        }
-    }
-
-    public struct Server: Sendable {
-        let application: Application
-
-        public var shared: HTTPServerOld {
-            if let existing = self.application.storage[Key.self] {
-                return existing
-            } else {
-                let responder: any Responder
-                switch self.application.responder {
-                case .default:
-                    responder = DefaultResponder(routes: self.application.routes, middleware: self.application.middleware.resolve(), reportMetrics: self.application.serverConfiguration.reportMetrics)
-                case .provided(let provided):
-                    responder = provided
-                }
-                let new = HTTPServerOld.init(
-                    application: self.application,
-                    responder: responder,
-                    configuration: self.configuration,
-                    on: self.application.eventLoopGroup
-                )
-                self.application.storage[Key.self] = new
-                return new
-            }
-        }
-
-        struct Key: StorageKey, Sendable {
-            typealias Value = HTTPServerOld
-        }
-
-        /// The configuration for the HTTP server.
-        ///
-        /// Although the configuration can be changed after the server has started, a warning will be logged
-        /// and the configuration will be discarded if an option will no longer be considered.
-        /// 
-        /// These include the following properties, which are only read once when the server starts:
-        /// - ``HTTPServerOld/Configuration-swift.struct/address``
-        /// - ``HTTPServerOld/Configuration-swift.struct/hostname``
-        /// - ``HTTPServerOld/Configuration-swift.struct/port``
-        /// - ``HTTPServerOld/Configuration-swift.struct/backlog``
-        /// - ``HTTPServerOld/Configuration-swift.struct/reuseAddress``
-        /// - ``HTTPServerOld/Configuration-swift.struct/tcpNoDelay``
-        public var configuration: HTTPServerOld.Configuration {
-            get {
-                self.application.storage[ConfigurationKey.self] ?? .init(
-                    logger: self.application.logger
-                )
-            }
-            nonmutating set {
-                /// If a server is available, configure it directly, otherwise cache a configuration instance
-                /// here to be used until the server is instantiated.
-                if let server = self.application.storage[Key.self] {
-                    server.configuration = newValue
-                } else {
-                    self.application.storage[ConfigurationKey.self] = newValue
-                }
-            }
-        }
-
-        struct ConfigurationKey: StorageKey, Sendable {
-            typealias Value = HTTPServerOld.Configuration
         }
     }
 }

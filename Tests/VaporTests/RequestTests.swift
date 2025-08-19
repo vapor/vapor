@@ -84,21 +84,16 @@ struct RequestTests {
                 throw Abort(.internalServerError)
             }
 
-            app.environment.arguments = ["serve"]
-            try await app.startup()
-
-            let localAddress = try #require(app.http.server.shared.localAddress)
-            let ip = try #require(localAddress.ipAddress)
-            let port = try #require(localAddress.port)
-
-            var oneMBBB = ByteBuffer(repeating: 0x41, count: 1024 * 1024)
-            let oneMB = try #require(oneMBBB.readData(length: oneMBBB.readableBytes) as Data?)
-            var request = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
-            request.method = .POST
-            request.body = .stream(oneMB.async, length: .known(Int64(oneMB.count)))
-            if let response = try? await HTTPClient.shared.execute(request, timeout: .seconds(5)) {
-                #expect(bytesTheServerRead.load(ordering: .relaxed) > 0)
-                #expect(response.status == .internalServerError)
+            try await withRunningApp(app: app) { port in
+                var oneMBBB = ByteBuffer(repeating: 0x41, count: 1024 * 1024)
+                let oneMB = try #require(oneMBBB.readData(length: oneMBBB.readableBytes) as Data?)
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/hello")
+                request.method = .POST
+                request.body = .stream(oneMB.async, length: .known(Int64(oneMB.count)))
+                if let response = try? await HTTPClient.shared.execute(request, timeout: .seconds(5)) {
+                    #expect(bytesTheServerRead.load(ordering: .relaxed) > 0)
+                    #expect(response.status == .internalServerError)
+                }
             }
         }
     }
@@ -144,55 +139,50 @@ struct RequestTests {
                 }
             }
 
-            app.environment.arguments = ["serve"]
-            try await app.startup()
+            try await withRunningApp(app: app) { port in
+                final class ResponseDelegate: HTTPClientResponseDelegate {
+                    typealias Response = Void
 
-            let localAddress = try #require(app.http.server.shared.localAddress)
-            let ip = try #require(localAddress.ipAddress)
-            let port = try #require(localAddress.port)
+                    private let bytesTheClientSent: ManagedAtomic<Int>
 
-            final class ResponseDelegate: HTTPClientResponseDelegate {
-                typealias Response = Void
+                    init(bytesTheClientSent: ManagedAtomic<Int>) {
+                        self.bytesTheClientSent = bytesTheClientSent
+                    }
 
-                private let bytesTheClientSent: ManagedAtomic<Int>
+                    func didFinishRequest(task: HTTPClient.Task<Response>) throws -> Response {
+                        return ()
+                    }
 
-                init(bytesTheClientSent: ManagedAtomic<Int>) {
-                    self.bytesTheClientSent = bytesTheClientSent
+                    func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
+                        self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .sequentiallyConsistent)
+                    }
                 }
 
-                func didFinishRequest(task: HTTPClient.Task<Response>) throws -> Response {
-                    return ()
-                }
+                let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
+                let request = try! HTTPClient.Request(url: "http://localhost:\(port)/hello",
+                                                      method: .POST,
+                                                      headers: [:],
+                                                      body: .byteBuffer(tenMB))
+                let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
+                let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
+                await #expect(performing: {
+                    try await httpClient.execute(request: request, delegate: delegate, deadline: .now() + .milliseconds(500)).get()
 
-                func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
-                    self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .sequentiallyConsistent)
-                }
+                }, throws: { error in
+                    let httpClientError = try #require(error as? HTTPClientError)
+                    return httpClientError == HTTPClientError.readTimeout || httpClientError == HTTPClientError.deadlineExceeded
+                })
+
+                #expect(numberOfTimesTheServerGotOfferedBytes.load(ordering: .sequentiallyConsistent) == 1)
+                #expect(tenMB.readableBytes >= bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
+                #expect(tenMB.readableBytes >= bytesTheClientSent.load(ordering: .sequentiallyConsistent))
+                #expect(bytesTheClientSent.load(ordering: .sequentiallyConsistent) == 0) // We'd only see this if we sent the full 10 MB.
+                #expect(serverSawEnd.load(ordering: .sequentiallyConsistent) == false)
+                #expect(serverSawRequest.load(ordering: .sequentiallyConsistent) == true)
+
+                requestHandlerTask.withLockedValue { $0?.cancel() }
+                try await httpClient.shutdown()
             }
-
-            let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
-            let request = try! HTTPClient.Request(url: "http://\(ip):\(port)/hello",
-                                                  method: .POST,
-                                                  headers: [:],
-                                                  body: .byteBuffer(tenMB))
-            let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
-            let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
-            await #expect(performing: {
-                try await httpClient.execute(request: request, delegate: delegate, deadline: .now() + .milliseconds(500)).get()
-
-            }, throws: { error in
-                let httpClientError = try #require(error as? HTTPClientError)
-                return httpClientError == HTTPClientError.readTimeout || httpClientError == HTTPClientError.deadlineExceeded
-            })
-
-            #expect(numberOfTimesTheServerGotOfferedBytes.load(ordering: .sequentiallyConsistent) == 1)
-            #expect(tenMB.readableBytes >= bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
-            #expect(tenMB.readableBytes >= bytesTheClientSent.load(ordering: .sequentiallyConsistent))
-            #expect(bytesTheClientSent.load(ordering: .sequentiallyConsistent) == 0) // We'd only see this if we sent the full 10 MB.
-            #expect(serverSawEnd.load(ordering: .sequentiallyConsistent) == false)
-            #expect(serverSawRequest.load(ordering: .sequentiallyConsistent) == true)
-
-            requestHandlerTask.withLockedValue { $0?.cancel() }
-            try await httpClient.shutdown()
         }
     }
 

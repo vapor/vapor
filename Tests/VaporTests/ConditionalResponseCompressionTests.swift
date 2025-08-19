@@ -12,6 +12,7 @@ import HTTPTypes
 
 let markerHeader = HTTPField.Name(HTTPField.Name.xVaporResponseCompression.description)!
 
+#warning("Bring Back")
 @Suite("Conditional Compression Tests", .disabled())
 struct ConditionalCompressionTests {
     @Suite("Response Compression Parsing Tests")
@@ -115,620 +116,620 @@ struct ConditionalCompressionTests {
         }
     }
 
-    @Suite("Response Compression Server Tests")
-    struct ConditionalResponseCompressionServerTests {
-        func expectCompressed(
-            _ configuration: HTTPServerOld.Configuration.ResponseCompressionConfiguration,
-            on app: Application,
-            sourceLocation: SourceLocation = #_sourceLocation
-        ) async throws {
-            let port = try #require(app.http.server.shared.localAddress?.port)
-            app.http.server.configuration.responseCompression = configuration
-
-            let response = try await app.client.get("http://localhost:\(port)/resource") { request in
-                request.headers[.acceptEncoding] = "gzip"
-            }
-            #expect(response.headers[.contentEncoding] == "gzip", sourceLocation: sourceLocation)
-            #expect(response.headers[.contentLength] != "\(compressiblePayload.count)", sourceLocation: sourceLocation)
-            #expect(response.body?.string == compressiblePayload, sourceLocation: sourceLocation)
-        }
-
-        func expectUncompressed(
-            _ configuration: HTTPServerOld.Configuration.ResponseCompressionConfiguration,
-            on app: Application,
-            sourceLocation: SourceLocation = #_sourceLocation
-        ) async throws {
-            let port = try #require(app.http.server.shared.localAddress?.port)
-
-            app.http.server.configuration.responseCompression = configuration
-
-            let response = try await app.client.get("http://localhost:\(port)/resource") { request in
-                request.headers[.acceptEncoding] = "gzip"
-            }
-            #expect(response.headers[.contentEncoding] != "gzip", sourceLocation: sourceLocation)
-            #expect(response.headers[.contentLength] == "\(compressiblePayload.count)", sourceLocation: sourceLocation)
-            #expect(response.body?.string == compressiblePayload, sourceLocation: sourceLocation)
-        }
-
-        func withCompressionApp(_ block: (Application) async throws -> Void) async throws {
-            try await withApp { app in
-                app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-
-                app.http.server.configuration.supportVersions = [.one]
-
-                #warning("Fix")
-                /// Make sure the client doesn't keep the server open by re-using the connection.
-//                app.http.client.configuration.maximumUsesPerConnection = 1
-//                app.http.client.configuration.decompression = .enabled(limit: .none)
-
-                try await block(app)
-                try await app.server.shutdown()
-            }
-        }
-
-        @Test("Test Autodetecected Type")
-        func testAutoDetectedType() async throws {
-            try await withCompressionApp { app in
-                app.get("resource") { _ in compressiblePayload }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectCompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Unknown Type")
-        func testUnknownType() async throws {
-            try await withCompressionApp { app in
-                app.get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType /// Not explicitly marked as compressible or not.
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Image")
-        func testImage() async throws {
-            try await withCompressionApp { app in
-                app.get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = .png /// PNGs are explicitly called out as incompressible.
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectUncompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Video")
-        func testVideo() async throws {
-            try await withCompressionApp { app in
-                app.get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = .mpeg /// Videos are explicitly called out as incompressible, but as a class.
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectUncompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Text")
-        func testText() async throws {
-            try await withCompressionApp { app in
-                app.get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = .plainText /// Text types are explicitly called out as compressible, but as a class.
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectCompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Enabled By Response")
-        func testEnabledByResponse() async throws {
-            try await withCompressionApp { app in
-                app.get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    headers.responseCompression = .enable
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectCompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectCompressed(.disabled, on: app)
-                try await expectCompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Disabled By Response")
-        func testDisabledByResponse() async throws {
-            try await withCompressionApp { app in
-                app.get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    headers.responseCompression = .disable
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectUncompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Force Enabled By Response")
-        func testForceEnabledByResponse() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.disable).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    headers.responseCompression = .enable
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectCompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectCompressed(.disabled, on: app)
-                try await expectCompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Force Disabled By Response")
-        func testForceDisabledByResponse() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.enable).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    headers.responseCompression = .disable
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectUncompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Enabled By Route")
-        func testEnabledByRoute() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.enable).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectCompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectCompressed(.disabled, on: app)
-                try await expectCompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Tset Disabled By Route")
-        func testDisabledByRoute() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.disable).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectUncompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Disable By Route But Reset")
-        func testDisabledByRouteButReset() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.disable).responseCompression(.useDefault).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Enabled By ROute But Reset")
-        func testEnabledByRouteButReset() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.enable).responseCompression(.useDefault).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Disabled By Route Reset By Response")
-        func testDisabledByRouteResetByResponse() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.disable).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.responseCompression = .useDefault
-                    headers.contentType = unknownType
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Enabled By Route Reset By Response")
-        func testEnabledByRouteResetByResponse() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.enable).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.responseCompression = .useDefault
-                    headers.contentType = unknownType
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Noops Disabled By Route But Reset")
-        func testNoopsDisabledByRouteButReset() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.unset).responseCompression(.disable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-
-        @Test("Test Noops Enabled By Route But Reset")
-        func testNoopsEnabledByRouteButReset() async throws {
-            try await withCompressionApp { app in
-                app.responseCompression(.unset).responseCompression(.enable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { request in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
-                }
-
-                try await app.server.start()
-
-                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
-                try await expectUncompressed(.forceDisabled, on: app)
-                try await expectUncompressed(.disabled, on: app)
-                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
-                try await expectCompressed(.enabled, on: app)
-
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
-
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
-                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
-                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
-            }
-        }
-    }
+//    @Suite("Response Compression Server Tests")
+//    struct ConditionalResponseCompressionServerTests {
+//        func expectCompressed(
+//            _ configuration: HTTPServerOld.Configuration.ResponseCompressionConfiguration,
+//            on app: Application,
+//            sourceLocation: SourceLocation = #_sourceLocation
+//        ) async throws {
+//            let port = try #require(app.http.server.shared.localAddress?.port)
+//            app.http.server.configuration.responseCompression = configuration
+//
+//            let response = try await app.client.get("http://localhost:\(port)/resource") { request in
+//                request.headers[.acceptEncoding] = "gzip"
+//            }
+//            #expect(response.headers[.contentEncoding] == "gzip", sourceLocation: sourceLocation)
+//            #expect(response.headers[.contentLength] != "\(compressiblePayload.count)", sourceLocation: sourceLocation)
+//            #expect(response.body?.string == compressiblePayload, sourceLocation: sourceLocation)
+//        }
+//
+//        func expectUncompressed(
+//            _ configuration: HTTPServerOld.Configuration.ResponseCompressionConfiguration,
+//            on app: Application,
+//            sourceLocation: SourceLocation = #_sourceLocation
+//        ) async throws {
+//            let port = try #require(app.http.server.shared.localAddress?.port)
+//
+//            app.http.server.configuration.responseCompression = configuration
+//
+//            let response = try await app.client.get("http://localhost:\(port)/resource") { request in
+//                request.headers[.acceptEncoding] = "gzip"
+//            }
+//            #expect(response.headers[.contentEncoding] != "gzip", sourceLocation: sourceLocation)
+//            #expect(response.headers[.contentLength] == "\(compressiblePayload.count)", sourceLocation: sourceLocation)
+//            #expect(response.body?.string == compressiblePayload, sourceLocation: sourceLocation)
+//        }
+//
+//        func withCompressionApp(_ block: (Application) async throws -> Void) async throws {
+//            try await withApp { app in
+//                app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+//
+//                app.http.server.configuration.supportVersions = [.one]
+//
+//                #warning("Fix")
+//                /// Make sure the client doesn't keep the server open by re-using the connection.
+////                app.http.client.configuration.maximumUsesPerConnection = 1
+////                app.http.client.configuration.decompression = .enabled(limit: .none)
+//
+//                try await block(app)
+//                try await app.server.shutdown()
+//            }
+//        }
+//
+//        @Test("Test Autodetecected Type")
+//        func testAutoDetectedType() async throws {
+//            try await withCompressionApp { app in
+//                app.get("resource") { _ in compressiblePayload }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectCompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Unknown Type")
+//        func testUnknownType() async throws {
+//            try await withCompressionApp { app in
+//                app.get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType /// Not explicitly marked as compressible or not.
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Image")
+//        func testImage() async throws {
+//            try await withCompressionApp { app in
+//                app.get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = .png /// PNGs are explicitly called out as incompressible.
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectUncompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Video")
+//        func testVideo() async throws {
+//            try await withCompressionApp { app in
+//                app.get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = .mpeg /// Videos are explicitly called out as incompressible, but as a class.
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectUncompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Text")
+//        func testText() async throws {
+//            try await withCompressionApp { app in
+//                app.get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = .plainText /// Text types are explicitly called out as compressible, but as a class.
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectCompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Enabled By Response")
+//        func testEnabledByResponse() async throws {
+//            try await withCompressionApp { app in
+//                app.get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    headers.responseCompression = .enable
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectCompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectCompressed(.disabled, on: app)
+//                try await expectCompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Disabled By Response")
+//        func testDisabledByResponse() async throws {
+//            try await withCompressionApp { app in
+//                app.get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    headers.responseCompression = .disable
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectUncompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Force Enabled By Response")
+//        func testForceEnabledByResponse() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.disable).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    headers.responseCompression = .enable
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectCompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectCompressed(.disabled, on: app)
+//                try await expectCompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Force Disabled By Response")
+//        func testForceDisabledByResponse() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.enable).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    headers.responseCompression = .disable
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectUncompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Enabled By Route")
+//        func testEnabledByRoute() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.enable).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectCompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectCompressed(.disabled, on: app)
+//                try await expectCompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Tset Disabled By Route")
+//        func testDisabledByRoute() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.disable).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectUncompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Disable By Route But Reset")
+//        func testDisabledByRouteButReset() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.disable).responseCompression(.useDefault).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Enabled By ROute But Reset")
+//        func testEnabledByRouteButReset() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.enable).responseCompression(.useDefault).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Disabled By Route Reset By Response")
+//        func testDisabledByRouteResetByResponse() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.disable).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.responseCompression = .useDefault
+//                    headers.contentType = unknownType
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Enabled By Route Reset By Response")
+//        func testEnabledByRouteResetByResponse() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.enable).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.responseCompression = .useDefault
+//                    headers.contentType = unknownType
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Noops Disabled By Route But Reset")
+//        func testNoopsDisabledByRouteButReset() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.unset).responseCompression(.disable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//
+//        @Test("Test Noops Enabled By Route But Reset")
+//        func testNoopsEnabledByRouteButReset() async throws {
+//            try await withCompressionApp { app in
+//                app.responseCompression(.unset).responseCompression(.enable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { request in
+//                    var headers = HTTPFields()
+//                    headers.contentType = unknownType
+//                    return try await compressiblePayload.encodeResponse(status: .ok, headers: headers, for: request)
+//                }
+//
+//                try await app.server.start()
+//
+//                try await expectUncompressed(app.http.server.configuration.responseCompression, on: app) /// Default case
+//                try await expectUncompressed(.forceDisabled, on: app)
+//                try await expectUncompressed(.disabled, on: app)
+//                try await expectUncompressed(.enabledForCompressibleTypes, on: app)
+//                try await expectCompressed(.enabled, on: app)
+//
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true), on: app)
+//
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true), on: app)
+//                try await expectCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), on: app)
+//                try await expectUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true), on: app)
+//            }
+//        }
+//    }
 
     @Suite("Conditional Response Compression Route Tests")
     struct ConditionalResponseCompressionRouteTests {

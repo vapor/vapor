@@ -214,19 +214,16 @@ struct ApplicationTests {
             }
 
             app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
-            await #expect(throws: Never.self) {
-                try await app.startup()
+            try await withRunningApp(app: app) { port in
+                #expect(app.serverConfiguration.hostname == "0.0.0.0")
+                #expect(app.serverConfiguration.port == 3000)
+                #expect(port == 3000)
+
+                let response = try await app.client.get("http://localhost:\(port)/hello")
+                let returnedConfig = try await response.content.decode(AddressConfig.self)
+                #expect(returnedConfig.hostname == "0.0.0.0")
+                #expect(returnedConfig.port == 3000)
             }
-
-            #expect(app.http.server.shared.localAddress != nil)
-            #expect(app.serverConfiguration.hostname == "0.0.0.0")
-            #expect(app.serverConfiguration.port == 3000)
-
-            let port = try #require(app.http.server.shared.localAddress?.port)
-            let response = try await app.client.get("http://localhost:\(port)/hello")
-            let returnedConfig = try await response.content.decode(AddressConfig.self)
-            #expect(returnedConfig.hostname == "0.0.0.0")
-            #expect(returnedConfig.port == 3000)
         }
     }
 }
