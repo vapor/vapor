@@ -129,7 +129,7 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "RoutingKit", package: "routing-kit"),
-                .product(name: "WebSocketKit", package: "websocket-kit"),
+                .product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["Websockets"])),
                 .product(name: "MultipartKit", package: "multipart-kit"),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
