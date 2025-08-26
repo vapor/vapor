@@ -17,10 +17,12 @@ let package = Package(
         .trait(name: "Websockets"),
         .trait(name: "TLS"),
         .trait(name: "bcrypt"),
+        .trait(name: "HTTPClient"),
         .default(enabledTraits: [
             "Websockets",
             "TLS",
             "bcrypt",
+            "HTTPClient"
         ])
     ],
     dependencies: [
@@ -109,7 +111,7 @@ let package = Package(
         .target(
             name: "Vapor",
             dependencies: [
-                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["HTTPClient"])),
                 .target(name: "CVaporBcrypt", condition: .when(traits: ["bcrypt"])),
                 .product(name: "ConsoleKit", package: "console-kit"),
                 .product(name: "Logging", package: "swift-log"),
@@ -157,6 +159,7 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -167,6 +170,7 @@ let package = Package(
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),
