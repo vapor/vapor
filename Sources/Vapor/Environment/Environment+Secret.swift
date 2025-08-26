@@ -1,4 +1,3 @@
-import AsyncKit
 import NIOCore
 import _NIOFileSystem
 import NIOPosix

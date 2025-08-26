@@ -17,9 +17,6 @@ let package = Package(
         // HTTP client library built on SwiftNIO
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.24.0"),
 
-        // Sugary extensions for the SwiftNIO library
-        .package(url: "https://github.com/vapor/async-kit.git", from: "1.15.0"),
-
         // 💻 APIs for creating interactive CLI tools.
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.14.0"),
 
@@ -103,7 +100,6 @@ let package = Package(
             name: "Vapor",
             dependencies: [
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
-                .product(name: "AsyncKit", package: "async-kit"),
                 .target(name: "CVaporBcrypt"),
                 .product(name: "ConsoleKit", package: "console-kit"),
                 .product(name: "Logging", package: "swift-log"),
