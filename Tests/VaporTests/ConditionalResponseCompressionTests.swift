@@ -4,7 +4,6 @@ import AsyncHTTPClient
 import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers
-import NIOSSL
 import Atomics
 import Testing
 import VaporTesting
