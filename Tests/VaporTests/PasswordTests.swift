@@ -5,6 +5,7 @@ import NIOCore
 
 @Suite("Password Tests")
 struct PasswordTests {
+    #if bcrypt
     @Test("Test BCrypt application password")
     func testBCryptApplicationPassword() async throws {
         try await withApp(services: .init(passwordHasher: .provided(BcryptHasher(cost: 4)))) { app in
@@ -14,6 +15,7 @@ struct PasswordTests {
             #expect(verify == true)
         }
     }
+    #endif
 
     @Test("Test plaintext application password")
     func testPlaintextApplicationPassword() async throws {
@@ -29,7 +31,11 @@ struct PasswordTests {
     func testUsesProvider() async throws {
         try await withApp { app in
             let hash = try await app.passwordHasher.hash("vapor")
+            #if bcrypt
             #expect(hash != "vapor") // Defaults to BCrypt so should not match
+            #else
+            #expect(hash == "vapor") // Defaults to Plaintext so should match
+            #endif
             let verify = try await app.passwordHasher.verify("vapor", created: hash)
             #expect(verify == true)
         }

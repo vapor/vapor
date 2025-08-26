@@ -13,6 +13,16 @@ let package = Package(
         .library(name: "Vapor", targets: ["Vapor"]),
         .library(name: "VaporTesting", targets: ["VaporTesting"]),
     ],
+    traits: [
+        .trait(name: "Websockets"),
+        .trait(name: "TLS"),
+        .trait(name: "bcrypt"),
+        .default(enabledTraits: [
+            "Websockets",
+            "TLS",
+            "bcrypt",
+        ])
+    ],
     dependencies: [
         // HTTP client library built on SwiftNIO
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.24.0"),
@@ -100,7 +110,7 @@ let package = Package(
             name: "Vapor",
             dependencies: [
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
-                .target(name: "CVaporBcrypt"),
+                .target(name: "CVaporBcrypt", condition: .when(traits: ["bcrypt"])),
                 .product(name: "ConsoleKit", package: "console-kit"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "Metrics", package: "swift-metrics"),
@@ -115,7 +125,7 @@ let package = Package(
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOHTTP2", package: "swift-nio-http2"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
-                .product(name: "NIOWebSocket", package: "swift-nio"),
+                .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["Websockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "RoutingKit", package: "routing-kit"),

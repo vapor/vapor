@@ -285,7 +285,11 @@ public final class Application: Sendable, Service {
 
         switch services.passwordHasher {
             case .default:
+            #if bcrypt
                 self.passwordHasher = BcryptHasher()
+            #else
+                self.passwordHasher = PlaintextHasher()
+            #endif
             case .provided(let hasher):
                 self.passwordHasher = hasher
         }

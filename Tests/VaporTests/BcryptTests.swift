@@ -1,3 +1,4 @@
+#if bcrypt
 import Vapor
 import Testing
 
@@ -65,3 +66,4 @@ let tests: [(String, String)] = [
     ("$2a$06$.rCVZVOThsIa97pEDOxvGuRRgzG64bvtJ0938xuqzv18d3ZpQhstC", "abcdefghijklmnopqrstuvwxyz"),
     ("$2a$06$fPIsBO8qRqkjj273rfaOI.HtSV9jLDpTbZn782DC6/t7qT67P6FfO", "~!@#$%^&*()      ~!@#$%^&*()PNBFRD"),
 ]
+#endif

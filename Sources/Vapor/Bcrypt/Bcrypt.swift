@@ -1,3 +1,4 @@
+#if bcrypt
 import Foundation
 import CVaporBcrypt
 
@@ -237,3 +238,4 @@ public enum BcryptError: Swift.Error, CustomStringConvertible, LocalizedError {
         }
     }
 }
+#endif

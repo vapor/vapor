@@ -1,3 +1,4 @@
+#if bcrypt
 import Foundation
 import NIOPosix
 
@@ -34,3 +35,4 @@ public struct BcryptHasher: PasswordHasher {
         }
     }
 }
+#endif
