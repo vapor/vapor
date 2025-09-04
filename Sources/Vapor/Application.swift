@@ -129,13 +129,13 @@ public final class Application: Sendable {
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
-        self.init(environment, eventLoopGroupProvider, async: false)
+        self.init(environment, eventLoopGroupProvider, async: false, logger: Logger(label: "codes.vapor.application"))
         self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
     // async flag here is just to stop the compiler from complaining about duplicates
-    private init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, async: Bool) {
+    private init(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, async: Bool, logger: Logger) {
         self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
@@ -146,7 +146,6 @@ public final class Application: Sendable {
         }
         self._locks = .init(.init())
         self._didShutdown = .init(false)
-        let logger = Logger(label: "codes.vapor.application")
         self._logger = .init(logger)
         self._traceAutoPropagation = .init(false)
         self._storage = .init(.init(logger: logger))
@@ -168,7 +167,11 @@ public final class Application: Sendable {
     }
     
     public static func make(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton) async throws -> Application {
-        let app = Application(environment, eventLoopGroupProvider, async: true)
+        try await make(environment, eventLoopGroupProvider, logger: Logger(label: "codes.vapor.application"))
+    }
+
+    public static func make(_ environment: Environment = .development, _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton, logger: Logger) async throws -> Application {
+        let app = Application(environment, eventLoopGroupProvider, async: true, logger: logger)
         await app.asyncCommands.use(app.servers.asyncCommand, as: "serve", isDefault: true)
         await DotEnvFile.load(for: app.environment, fileio: app.fileio, logger: app.logger)
         return app
