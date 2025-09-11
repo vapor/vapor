@@ -55,7 +55,7 @@ struct FileTests {
             app.get("file-stream") { req -> Response in
                 var tmpPath: String
                 repeat {
-                    tmpPath = try await FileSystem.shared.temporaryDirectory.appending(UUID().uuidString).string
+                    tmpPath = try await FilePath(FileSystem.shared.temporaryDirectory.description).appending(UUID().uuidString).string
                 } while try await FileSystem.shared.info(forFileAt: .init(tmpPath)) != nil
 
                 return try await req.fileio.streamFile(at: tmpPath, advancedETagComparison: true) { result in
