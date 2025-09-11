@@ -19,7 +19,7 @@ extension JSONEncoder {
         keys keyStrategy: JSONEncoder.KeyEncodingStrategy? = nil,
         format outputFormatting: JSONEncoder.OutputFormatting? = nil,
         floats floatStrategy: JSONEncoder.NonConformingFloatEncodingStrategy? = nil,
-        userInfo: [CodingUserInfoKey: Any]? = nil
+        userInfo: [CodingUserInfoKey: any Sendable]? = nil
     ) -> JSONEncoder {
         let json = JSONEncoder()
         if let dateStrategy = dateStrategy {
@@ -61,7 +61,7 @@ extension JSONDecoder {
         data dataStrategy: JSONDecoder.DataDecodingStrategy? = nil,
         keys keyStrategy: JSONDecoder.KeyDecodingStrategy? = nil,
         floats floatStrategy: JSONDecoder.NonConformingFloatDecodingStrategy? = nil,
-        userInfo: [CodingUserInfoKey: Any]? = nil
+        userInfo: [CodingUserInfoKey: any Sendable]? = nil
     ) -> JSONDecoder {
         let json = JSONDecoder()
         if let dateStrategy = dateStrategy {
