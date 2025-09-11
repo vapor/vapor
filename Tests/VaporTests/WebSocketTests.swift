@@ -1,3 +1,4 @@
+#if Websockets
 import VaporTesting
 import Vapor
 import Testing
@@ -124,3 +125,4 @@ struct WebSocketTests {
         }
     }
 }
+#endif

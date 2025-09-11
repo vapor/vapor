@@ -1,3 +1,4 @@
+#if Websockets
 import RoutingKit
 import WebSocketKit
 import NIOCore
@@ -67,3 +68,4 @@ extension RoutesBuilder {
         }
     }
 }
+#endif

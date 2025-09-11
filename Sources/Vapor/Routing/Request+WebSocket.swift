@@ -1,3 +1,4 @@
+#if Websockets
 import NIOCore
 import WebSocketKit
 import HTTPTypes
@@ -19,3 +20,4 @@ extension Request {
          return res
      }
  }
+#endif

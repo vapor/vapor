@@ -4,7 +4,7 @@ concurrency:
   cancel-in-progress: true
 on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
-  push: { branches: [ main ] }
+  push: { branches: [main] }
 
 jobs:
   test-providers:
@@ -19,7 +19,7 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:6.1
+    container: swiftlang/swift:nightly-6.2-bookworm
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v5
@@ -34,7 +34,7 @@ jobs:
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests
         env:
-            SWIFT_DETERMINISTIC_HASHING: 1
+          SWIFT_DETERMINISTIC_HASHING: 1
         run: swift test --package-path ./provider
 
   unit-tests:
@@ -45,6 +45,17 @@ jobs:
       with_musl: true
       with_android: true
       extra_musl_flags: --target Vapor
-      ios_xcodebuild_action: ''
+      ios_xcodebuild_action: ""
       ios_scheme_name: Vapor
     secrets: inherit
+
+  package-traits:
+    runs-on: ubuntu-latest
+    container: swiftlang/swift:nightly-6.2-bookworm
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v5
+        with:
+          path: vapor
+      - name: Run tests with traits disabled
+        run: swift test --disable-default-traits

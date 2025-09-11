@@ -1,3 +1,4 @@
+#if HTTPClient
 import NIOCore
 import AsyncHTTPClient
 import Logging
@@ -35,3 +36,4 @@ internal struct VaporHTTPClient: Client {
         )
     }
 }
+#endif

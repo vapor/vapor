@@ -1,3 +1,4 @@
+#if Websockets
 import NIOPosix
 import NIOCore
 import HTTPTypes
@@ -138,3 +139,4 @@ extension WebSocket {
         ).get()
     }
 }
+#endif
