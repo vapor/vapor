@@ -34,7 +34,14 @@ extension HTTPHeaders {
     }
 }
 
-extension HTTPHeaders: Codable {
+#if compiler(>=6.1)
+extension HTTPHeaders: @retroactive Decodable {}
+extension HTTPHeaders: @retroactive Encodable {}
+#else
+extension HTTPHeaders: Codable {}
+#endif
+
+extension HTTPHeaders {
     private enum CodingKeys: String, CodingKey { case name, value }
     
     public init(from decoder: any Decoder) throws {

@@ -20,7 +20,14 @@ extension LoggingSystem {
     }
 }
 
-extension Logging.Logger.Level: Swift.LosslessStringConvertible {
+#if compiler(>=6.1)
+extension Logging.Logger.Level: @retroactive CustomStringConvertible {}
+extension Logging.Logger.Level: @retroactive Swift.LosslessStringConvertible {}
+#else
+extension Logging.Logger.Level: Swift.LosslessStringConvertible {}
+#endif
+
+extension Logging.Logger.Level {
     public init?(_ description: String) { self.init(rawValue: description.lowercased()) }
     public var description: String { self.rawValue }
 
