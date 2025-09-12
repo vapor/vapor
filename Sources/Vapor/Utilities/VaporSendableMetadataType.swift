@@ -1,5 +1,5 @@
-#if swift(>=6.2)
-public typealias VaporSendableMetatype = Any
-#else
+#if compiler(>=6.2)
 public typealias VaporSendableMetatype = SendableMetatype
+#else
+public typealias VaporSendableMetatype = Any
 #endif
