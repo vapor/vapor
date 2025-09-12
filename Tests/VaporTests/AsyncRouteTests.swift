@@ -405,7 +405,7 @@ final class AsyncRouteTests: XCTestCase {
 
 #if compiler(>=6.1)
 extension WebSocket: @retroactive Equatable {}
-extension Vapor.WebSocket: Swift.Hashable {}
+extension Vapor.WebSocket: @retroactive Swift.Hashable {}
 #else
 extension WebSocket: Equatable {}
 extension Vapor.WebSocket: Swift.Hashable {}
