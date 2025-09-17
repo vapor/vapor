@@ -5,6 +5,7 @@ import Logging
 import RoutingKit
 import NIOConcurrencyHelpers
 import ServiceContextModule
+import X509
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {
@@ -95,6 +96,12 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         return self.remoteAddress
+    }
+
+    /// The validated certificate chain. This returns nil if the peer did not authenticate with a certificate. Requires
+    /// configuring a `customCertificateVerifyCallbackWithMetadata` that performs the verification.
+    public var peerCertificateChain: ValidatedCertificateChain? {
+        return self.requestBox.withLockedValue { $0.peerCertificateChain }
     }
 
     // MARK: Content
@@ -276,6 +283,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var isKeepAlive: Bool
         var route: Route?
         var parameters: Parameters
+        var peerCertificateChain: ValidatedCertificateChain?
         var byteBufferAllocator: ByteBufferAllocator
     }
     
@@ -293,6 +301,7 @@ public final class Request: CustomStringConvertible, Sendable {
         headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        peerCertificateChain: ValidatedCertificateChain? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
@@ -305,6 +314,7 @@ public final class Request: CustomStringConvertible, Sendable {
             headersNoUpdate: headers,
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
+            peerCertificateChain: peerCertificateChain,
             logger: logger,
             byteBufferAllocator: byteBufferAllocator,
             on: eventLoop
@@ -322,6 +332,7 @@ public final class Request: CustomStringConvertible, Sendable {
         headersNoUpdate headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        peerCertificateChain: ValidatedCertificateChain? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
@@ -347,6 +358,7 @@ public final class Request: CustomStringConvertible, Sendable {
             isKeepAlive: true,
             route: nil,
             parameters: .init(),
+            peerCertificateChain: peerCertificateChain,
             byteBufferAllocator: byteBufferAllocator
         )
         self.requestBox = .init(storageBox)

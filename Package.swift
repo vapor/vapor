@@ -35,7 +35,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.81.0"),
 
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.34.0"),
 
         // HTTP/2 support for SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.28.0"),
@@ -66,6 +66,12 @@ let package = Package(
 
         // Low-level atomic operations
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
+
+        // X509 certificate types for the Swift ecosystem
+        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.14.0"),
+
+        // Work with certificate encoding schemes
+        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0")
     ],
     targets: [
         // C helpers
@@ -101,6 +107,8 @@ let package = Package(
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
+                .product(name: "X509", package: "swift-certificates"),
+                .product(name: "SwiftASN1", package: "swift-asn1"),
             ],
             swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
         ),
