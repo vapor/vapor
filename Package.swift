@@ -82,6 +82,9 @@ let package = Package(
 
         // Swift Types for HTTP Requests
         .package(url: "https://github.com/apple/swift-http-types", from: "1.0.0"),
+
+        // Collection algorithms
+        .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
     ],
     targets: [
         // C helpers
@@ -103,6 +106,7 @@ let package = Package(
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "Collections", package: "swift-collections"),
             ],
             swiftSettings: swiftSettings
         ),

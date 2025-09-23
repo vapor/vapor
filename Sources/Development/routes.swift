@@ -69,18 +69,19 @@ public func routes(_ app: Application) throws {
     app.get("json") { req -> [String: String] in
         return ["foo": "bar"]
     }.description("returns some test json")
-    
-    app.webSocket("ws") { req, ws in
-        ws.onText { ws, text in
-            ws.send(text.reversed())
-            if text == "close" {
-                ws.close(promise: nil)
-            }
-        }
 
-        let ip = req.remoteAddress?.description ?? "<no ip>"
-        ws.send("Hello 👋 \(ip)")
-    }
+    #warning("TODO")
+//    app.webSocket("ws") { req, ws in
+//        ws.onText { ws, text in
+//            ws.send(text.reversed())
+//            if text == "close" {
+//                ws.close(promise: nil)
+//            }
+//        }
+//
+//        let ip = req.remoteAddress?.description ?? "<no ip>"
+//        ws.send("Hello 👋 \(ip)")
+//    }
 
     app.on(.post, "file", body: .stream) { req in
         for try await part in req.body {
