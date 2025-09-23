@@ -195,5 +195,7 @@ let package = Package(
 var swiftSettings: [SwiftSetting] {
     [
         .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("MemberImportVisibility"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
     ]
 }
