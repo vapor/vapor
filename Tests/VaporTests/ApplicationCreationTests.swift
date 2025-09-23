@@ -1,23 +1,22 @@
 import Vapor
-import XCTVapor
-import XCTest
+import Testing
 import Logging
 
-final class ApplicationCreationTests: XCTestCase {
-    var app: Application!
+@Suite("Application Creation Tests")
+struct ApplicationCreationTests {
 
-    override func tearDown() async throws {
+    @Test("Create Default Logger")
+    func defaultLogger() async throws {
+        let app = try await Application(.testing)
+        #expect(app.logger.label == "codes.vapor.application")
         try await app.shutdown()
     }
 
-    func testCreateAsyncDefaultLogger() async throws {
-        app = try await Application(.testing)
-        XCTAssertEqual(app.logger.label, "codes.vapor.application")
-    }
-
-    func testCreateAsyncCustomLogger() async throws {
+    @Test("Create Custom Logger")
+    func customLogger() async throws {
         let logger = Logger(label: "custom")
-        app = try await Application(.testing, services: .init(logger: .provided(logger)))
-        XCTAssertEqual(app.logger.label, "custom")
+        let app = try await Application(.testing, services: .init(logger: .provided(logger)))
+        #expect(app.logger.label == "custom")
+        try await app.shutdown()
     }
 }
