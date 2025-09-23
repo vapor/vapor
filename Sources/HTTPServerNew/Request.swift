@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import NIOCore
-import NIOHTTPTypes
+public import HTTPTypes
+public import NIOCore
+public import NIOHTTPTypes
 
 /// Holds all the values required to process a request
 public struct Request: Sendable {

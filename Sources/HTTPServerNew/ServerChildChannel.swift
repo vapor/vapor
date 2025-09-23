@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
-import NIOCore
-import ServiceLifecycle
+public import Logging
+public import NIOCore
+public import ServiceLifecycle
 
 /// Protocol for typed server child channel
 public protocol ServerChildChannelValue: Sendable {

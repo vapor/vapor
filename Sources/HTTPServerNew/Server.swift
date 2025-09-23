@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
-import NIOCore
+public import Logging
+public import NIOCore
 import NIOExtras
 import NIOPosix
-import ServiceLifecycle
+public import ServiceLifecycle
 
 #if canImport(Network)
 import Network

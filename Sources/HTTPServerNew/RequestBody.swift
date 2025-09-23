@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import Collections
-import NIOConcurrencyHelpers
-import NIOCore
-import NIOHTTPTypes
+public import NIOConcurrencyHelpers
+public import NIOCore
+public import NIOHTTPTypes
 
 /// Request Body
 ///

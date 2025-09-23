@@ -14,8 +14,8 @@
 
 #if canImport(Network)
 import Foundation
-import Network
-import Security
+public import Network
+public import Security
 
 /// Wrapper for NIO transport services TLS options
 public struct TSTLSOptions: Sendable {
