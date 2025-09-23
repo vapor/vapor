@@ -14,12 +14,12 @@ let package = Package(
         .library(name: "VaporTesting", targets: ["VaporTesting"]),
     ],
     traits: [
-        .trait(name: "Websockets"),
+        .trait(name: "WebSockets"),
         .trait(name: "TLS"),
         .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
         .default(enabledTraits: [
-            "Websockets",
+            "WebSockets",
             "TLS",
             "bcrypt",
             "HTTPClient"
@@ -127,11 +127,11 @@ let package = Package(
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOHTTP2", package: "swift-nio-http2"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLS"])),
-                .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["Websockets"])),
+                .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "RoutingKit", package: "routing-kit"),
-                .product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["Websockets"])),
+                .product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
                 .product(name: "MultipartKit", package: "multipart-kit"),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
