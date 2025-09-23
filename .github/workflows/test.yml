@@ -19,7 +19,7 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swiftlang/swift:nightly-6.2-bookworm
+    container: swift:6.2-bookworm
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v5
@@ -33,8 +33,6 @@ jobs:
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests
-        env:
-          SWIFT_DETERMINISTIC_HASHING: 1
         run: swift test --package-path ./provider
 
   unit-tests:
@@ -51,11 +49,9 @@ jobs:
 
   package-traits:
     runs-on: ubuntu-latest
-    container: swiftlang/swift:nightly-6.2-bookworm
+    container: swift:6.2-bookworm
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v5
-        with:
-          path: vapor
       - name: Run tests with traits disabled
         run: swift test --disable-default-traits
