@@ -54,4 +54,5 @@ jobs:
       - name: Check out Vapor
         uses: actions/checkout@v5
       - name: Run tests with traits disabled
-        run: swift test --disable-default-traits
+        # Since we disable all traits here, we also disable HTTPClient, which is used by a lot of tests to send real requests. So just run a subset of tests that don't require it, since we're really just making sure it works.
+        run: swift test --disable-default-traits --filter "AuthenticationTests"
