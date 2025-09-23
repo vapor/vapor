@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import NIOCore
-import NIOHTTPTypes
+public import HTTPTypes
+public import NIOCore
+public import NIOHTTPTypes
 
 /// ResponseWriter that writes directly to AsyncChannel
 public struct ResponseWriter: ~Copyable {

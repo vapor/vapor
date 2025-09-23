@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #if canImport(Network)
-import Network
+public import Network
 import NIOTransportServices
 #endif
 

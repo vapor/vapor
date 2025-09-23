@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
-import NIOCore
-import NIOHTTPTypes
+public import Logging
+public import NIOCore
+public import NIOHTTPTypes
 
 public final class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
     public typealias InboundIn = HTTPRequestPart

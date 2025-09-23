@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import NIOCore
+public import HTTPTypes
+public import NIOCore
 
 /// HTTP Response Body part writer
 public protocol ResponseBodyWriter {

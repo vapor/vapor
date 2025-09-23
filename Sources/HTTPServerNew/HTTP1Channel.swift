@@ -13,10 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
-import Logging
-import NIOCore
-import NIOHTTPTypes
+public import Logging
+public import NIOCore
+public import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
+import NIOHTTP1
 
 /// Child channel for processing HTTP1
 public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {

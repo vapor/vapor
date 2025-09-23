@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
+public import NIOCore
 
 /// Delegate for `AvailableConnectionsChannelHandler` that defines if we should accept
 public protocol AvailableConnectionsDelegate: Sendable {
