@@ -10,7 +10,7 @@ package struct DefaultResponder: Responder {
     /// It's safe to mark this `nonisolated(unsafe)` because there are only two mutating operations
     /// on a `TrieRouter` (calling `.register(_at:)` or changing its `options`), and we never do either
     /// of those after `init()`.
-    private nonisolated(unsafe) let router: TrieRouter<CachedRoute>
+    private let router: TrieRouter<CachedRoute>
     private let notFoundResponder: any Responder
     private let reportMetrics: Bool
 
@@ -21,7 +21,7 @@ package struct DefaultResponder: Responder {
 
     /// Creates a new ``DefaultResponder``.
     package init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
-        let router = TrieRouter(CachedRoute.self, options: routes.caseInsensitive ? [.caseInsensitive] : [])
+        var routerBuilder = TrieRouterBuilder(CachedRoute.self, options: routes.caseInsensitive ? [.caseInsensitive] : [])
 
         for route in routes.all {
             // Make a copy of the route to cache middleware chaining.
@@ -38,9 +38,9 @@ package struct DefaultResponder: Responder {
                 }
             }
             
-            router.register(cached, at: [.constant(route.method.rawValue)] + path)
+            routerBuilder.register(cached, at: [.constant(route.method.rawValue)] + path)
         }
-        self.router = router
+        self.router = routerBuilder.build()
         self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
         self.reportMetrics = reportMetrics
     }

@@ -269,6 +269,8 @@ public final class Application: Sendable, Service {
 
         self._locks = .init(.init())
         self._didShutdown = .init(false)
+        self._logger = .init(logger)
+        self._traceAutoPropagation = .init(false)
         self._storage = .init(.init(logger: logger))
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
