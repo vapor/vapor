@@ -141,13 +141,18 @@ struct ClientTests {
             return SomeJSON()
         }
 
-        let result = try await withRunningApp(app: remoteApp) { port in
-            let result = try await block(remoteApp, port)
-            return result
-        }
+        do {
+            let result = try await withRunningApp(app: remoteApp) { port in
+                let result = try await block(remoteApp, port)
+                return result
+            }
 
-        try await remoteApp.shutdown()
-        return result
+            try await remoteApp.shutdown()
+            return result
+        } catch {
+            try await remoteApp.shutdown()
+            throw error
+        }
     }
 }
 
