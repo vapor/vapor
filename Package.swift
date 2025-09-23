@@ -14,13 +14,15 @@ let package = Package(
         .library(name: "VaporTesting", targets: ["VaporTesting"]),
     ],
     traits: [
-        .trait(name: "Websockets"),
+        .trait(name: "WebSockets"),
         .trait(name: "TLS"),
         .trait(name: "bcrypt"),
+        .trait(name: "HTTPClient"),
         .default(enabledTraits: [
-            "Websockets",
+            "WebSockets",
             "TLS",
             "bcrypt",
+            "HTTPClient"
         ])
     ],
     dependencies: [
@@ -80,6 +82,9 @@ let package = Package(
 
         // Swift Types for HTTP Requests
         .package(url: "https://github.com/apple/swift-http-types", from: "1.0.0"),
+
+        // Collection algorithms
+        .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
     ],
     targets: [
         // C helpers
@@ -101,6 +106,7 @@ let package = Package(
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "Collections", package: "swift-collections"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -109,7 +115,7 @@ let package = Package(
         .target(
             name: "Vapor",
             dependencies: [
-                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["HTTPClient"])),
                 .target(name: "CVaporBcrypt", condition: .when(traits: ["bcrypt"])),
                 .product(name: "ConsoleKit", package: "console-kit"),
                 .product(name: "Logging", package: "swift-log"),
@@ -124,12 +130,12 @@ let package = Package(
                 .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOHTTP2", package: "swift-nio-http2"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl"),
-                .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["Websockets"])),
+                .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLS"])),
+                .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "RoutingKit", package: "routing-kit"),
-                .product(name: "WebSocketKit", package: "websocket-kit"),
+                .product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
                 .product(name: "MultipartKit", package: "multipart-kit"),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
@@ -157,6 +163,7 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -167,6 +174,7 @@ let package = Package(
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),

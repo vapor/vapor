@@ -4,7 +4,9 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 import ServiceLifecycle
+#if HTTPClient
 import AsyncHTTPClient
+#endif
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable, Service {
@@ -304,7 +306,11 @@ public final class Application: Sendable, Service {
 
         switch services.client {
         case .default:
+            #if HTTPClient
             self.client = VaporHTTPClient(http: HTTPClient.shared, logger: logger, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+            #else
+            self.client = BlackholeClient(byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+            #endif
         case .provided(let client):
             self.client = client
         }

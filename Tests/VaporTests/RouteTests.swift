@@ -3,7 +3,6 @@ import Testing
 import VaporTesting
 import Vapor
 import HTTPTypes
-import WebSocketKit
 
 @Suite("Route Tests")
 struct RouteTests {
@@ -416,6 +415,7 @@ struct RouteTests {
         }
     }
 
+    #if Websockets
     @Test("Test Websocket Upgrade", .disabled())
     func testWebsocketUpgrade() async throws {
         try await withApp { app in
@@ -436,6 +436,7 @@ struct RouteTests {
             }
         }
     }
+    #endif
 
     @Test("Test URL Client Request with Invalid URL Does Not Crash", .bug("https://github.com/vapor/vapor/issues/2716"))
     func testGH2716() async throws {
@@ -492,16 +493,5 @@ struct RouteTests {
                 #expect(leadingAndTrailingDoubleSlash.status == .ok)
             }
         }
-    }
-}
-
-extension WebSocket: @retroactive Equatable {}
-extension WebSocket: Swift.Hashable {
-    public static func == (lhs: WebSocket, rhs: WebSocket) -> Bool {
-        lhs === rhs
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        ObjectIdentifier(self).hash(into: &hasher)
     }
 }

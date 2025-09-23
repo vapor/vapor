@@ -1,5 +1,10 @@
 import Foundation
+#if os(Linux)
+// TODO - remove when Crypto finally updated
+@preconcurrency import Crypto
+#else
 import Crypto
+#endif
 
 /// Supported OTP output sizes.
 public enum OTPDigits: Int, Sendable {
