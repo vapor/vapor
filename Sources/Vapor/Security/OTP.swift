@@ -1,5 +1,5 @@
 import Foundation
-#if os(linux)
+#if os(Linux)
 // TODO - remove when Crypto finally updated
 @preconcurrency import Crypto
 #else
