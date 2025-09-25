@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [swift, javascript, yaml]
+        language: [swift, github-actions, yaml]
 
     steps:
     - name: Checkout repository
