@@ -683,6 +683,16 @@ extension HTTPServer.Configuration.ResponseCompressionConfiguration {
             /// If compression isn't supported, skip any further processing.
             guard isCompressionSupported else { return .doNotCompress }
             
+            /// If there's no data to compress, skip compression altogether, otherwise compression is forced and in
+            /// some cases, like deflate, it looks like an empty body results in 8 bytes of compression. This in turn
+            /// results in the browser receiving Content-Length == 8, but no body, which errors with
+            /// net::ERR_CONTENT_LENGTH_MISMATCH.
+            if let contentLength = responseHeaders.headers.first(name: "Content-Length") {
+                guard contentLength != "0" else {
+                    return .doNotCompress
+                }
+            }
+            
             /// If we allow overrides, check for the response compression marker header value first before making any further checks:
             if storage.allowRequestOverrides, let responseCompressionHeader = responseHeaders.headers.responseCompression.value {
                 switch responseCompressionHeader {
