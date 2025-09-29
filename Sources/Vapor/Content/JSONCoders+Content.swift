@@ -1,4 +1,8 @@
+#if !canImport(Darwin) && compiler(<6.2)
+@preconcurrency import Foundation // JSONEncoder/Decoder.userInfo isn't any Sendable until 6.2
+#else
 import Foundation
+#endif
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1

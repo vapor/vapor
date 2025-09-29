@@ -1,4 +1,15 @@
 import Testing
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+@preconcurrency import Glibc
+#elseif canImport(Android)
+@preconcurrency import Android
+#elseif canImport(Musl)
+@preconcurrency import Musl
+#elseif canImport(WinSDK)
+@preconcurrency import WinSDK
+#endif
 
 public enum XCTVaporContext {
     @TaskLocal public static var emitWarningIfCurrentTestInfoIsAvailable: Bool?
