@@ -1,14 +1,12 @@
 #if !canImport(Darwin)
-#if compiler(>=6.0)
 import Dispatch
-#else
-@preconcurrency import Dispatch
-#endif
 #endif
 import Foundation
 import XCTest
 import Vapor
+import VaporTestUtils
 import NIOCore
+import NIOFoundationCompat
 import Logging
 import AsyncHTTPClient
 import NIOEmbedded
@@ -37,7 +35,7 @@ final class ClientTests: XCTestCase {
                 $0[$1.0] = $1.1
             }
             
-            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
+            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String: Any] else {
                 throw Abort(.badRequest)
             }
             

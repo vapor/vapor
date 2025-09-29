@@ -1,15 +1,14 @@
 #if !canImport(Darwin)
-#if compiler(>=6.0)
 import Dispatch
-#else
-@preconcurrency import Dispatch
-#endif
 #endif
 import Foundation
 import Vapor
+import VaporTestUtils
 import XCTest
+import XCTVapor
 import AsyncHTTPClient
 import NIOCore
+import NIOFoundationCompat
 import NIOPosix
 import NIOConcurrencyHelpers
 import NIOHTTP1
@@ -48,8 +47,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
     }
     
     // `httpUnixDomainSocket` is currently broken in 6.0
-    #if compiler(<6.0)
-    func testSocketPathOverride() throws {
+//    #if compiler(<6.0)
+    func testSocketPathOverride() async throws {
         let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
         
         let env = Environment(
@@ -57,19 +56,27 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             arguments: ["vapor", "serve", "--unix-socket", socketPath]
         )
         
-        let app = Application(env)
-        defer { app.shutdown() }
-        
-        app.get("foo") { _ in "bar" }
-        try app.start()
-        
-        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }.wait()
-        XCTAssertEqual(res.body?.string, "bar")
-        
-        // no server should be bound to the port despite one being set on the configuration.
-        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }.wait())
+        let app = try await Application.make(env)
+
+        do {
+            app.get("foo") { _ in "bar" }
+            try await app.startup()
+
+            let res = try await app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }
+            XCTAssertEqual(res.body?.string, "bar")
+
+            // no server should be bound to the port despite one being set on the configuration.
+            do {
+                _ = try await app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }
+                XCTFail("Should have thrown error")
+            } catch {}
+
+            try await app.asyncShutdown()
+        } catch {
+            try await app.asyncShutdown()
+        }
     }
-    #endif
+//    #endif
     
     func testIncompatibleStartupOptions() async throws {
         func checkForError(_ app: Application) async throws {

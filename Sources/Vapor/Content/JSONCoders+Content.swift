@@ -1,10 +1,11 @@
 import Foundation
 import NIOCore
+import NIOFoundationCompat
 import NIOHTTP1
 
-#if swift(<6.0)
-extension Foundation.JSONEncoder: @unchecked Swift.Sendable {}
-extension Foundation.JSONDecoder: @unchecked Swift.Sendable {}
+#if canImport(Darwin)
+extension JSONEncoder: @retroactive @unchecked Sendable {} // JSONEncoder Sendable conformance is not available before macOS 13.0/iOS 16.0/watchOS 9.0/tvOS 16.0
+extension JSONDecoder: @retroactive @unchecked Sendable {} // JSONDecoder Sendable conformance is not available before macOS 13.0/iOS 16.0/watchOS 9.0/tvOS 16.0
 #endif
 
 extension JSONEncoder: ContentEncoder {

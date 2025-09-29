@@ -1,0 +1,26 @@
+<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" id="technology">
+  <defs>
+  <style>
+    @media(prefers-color-scheme: dark) {
+      :root { --color-logo-shape: #000000; --color-logo-base: #ffffff; }
+    }
+    body[data-color-scheme="dark"] {
+      --color-logo-shape: #000000; --color-logo-base: #ffffff;
+    }
+  </style>
+  <path id="surface" d="m 6,47 l 58,-47 58,47 -58,45 z"/>
+  <path id="strut"   d="m 6,47 v 12 l 58,45 v -12 z"/>
+  <path id="shape"   d="m 47,31 c 0,0 2.6,21.9 7.7,26.6 7.5,7 17.5,7 23.9,1.9 6.5,-5.1 7.3,-13.9 -0.7,-20.9 -5.5,-4.8 -30.9,-7.7 -30.9,-7.7 z"/>
+  </defs>
+  <use href="#strut" fill="#9ee0ff"/>
+  <use href="#strut" fill="#6bd0ff" y="12"/>
+  <use href="#strut" fill="#38c0ff" y="24"/>
+  <g transform="matrix(-1 0 0 1 128 0)">
+    <use href="#strut" fill="#f29eff"/>
+    <use href="#strut" fill="#eb6bff" y="12"/>
+    <use href="#strut" fill="#e438ff" y="24"/>
+  </g>
+  <use href="#surface" style="fill: var(--color-logo-base, #000000);"/>
+  <use href="#shape" style="fill: var(--color-logo-shape, #ffffff);"/>
+</svg>
+

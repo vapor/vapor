@@ -1,4 +1,6 @@
 @testable import Vapor
+import VaporTestUtils
+import XCTVapor
 import enum NIOHTTP1.HTTPParserError
 import XCTest
 import AsyncHTTPClient
@@ -351,7 +353,7 @@ final class PipelineTests: XCTestCase {
     func testCorrectResponseOrder() async throws {
         app.get("sleep", ":ms") { req -> String in
             let ms = try req.parameters.require("ms", as: Int64.self)
-            try await Task.sleep(for: .milliseconds(ms))
+            try await Task.sleep(nanoseconds: UInt64(ms) * 1_000_000)
             return "slept \(ms)ms"
         }
 
@@ -390,7 +392,7 @@ final class PipelineTests: XCTestCase {
     func testCorrectResponseOrderOverVaporTCP() async throws {
         app.get("sleep", ":ms") { req -> String in
             let ms = try req.parameters.require("ms", as: Int64.self)
-            try await Task.sleep(for: .milliseconds(ms))
+            try await Task.sleep(nanoseconds: UInt64(ms) * 1_000_000)
             return "slept \(ms)ms"
         }
 
