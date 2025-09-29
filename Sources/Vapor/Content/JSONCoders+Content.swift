@@ -1,8 +1,4 @@
-#if !canImport(Darwin) && compiler(<6.2)
-@preconcurrency import Foundation // JSONEncoder/Decoder.userInfo isn't any Sendable until 6.2
-#else
 import Foundation
-#endif
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
@@ -23,16 +19,17 @@ extension JSONEncoder: ContentEncoder {
         where E: Encodable
     {
         headers.contentType = .json
-        
+
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
-            try body.writeBytes(JSONEncoder.custom(
+            let encoder = JSONEncoder.custom(
                 dates: self.dateEncodingStrategy,
                 data: self.dataEncodingStrategy,
                 keys: self.keyEncodingStrategy,
                 format: self.outputFormatting,
-                floats: self.nonConformingFloatEncodingStrategy,
-                userInfo: self.userInfo.merging(userInfo) { $1 }
-            ).encode(encodable))
+                floats: self.nonConformingFloatEncodingStrategy
+            ) // don't use userInfo parameter of `JSONEncoder.custom()` until Swift 6.2 is required
+            encoder.userInfo = self.userInfo.merging(userInfo) { $1 }
+            try body.writeBytes(encoder.encode(encodable))
         } else {
             try body.writeBytes(self.encode(encodable))
         }

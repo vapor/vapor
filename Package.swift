@@ -1,6 +1,5 @@
 // swift-tools-version:6.0
 import PackageDescription
-import Foundation
 
 let package = Package(
     name: "vapor",
