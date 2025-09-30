@@ -61,39 +61,6 @@ public final class Application: Sendable, Service {
         }
     }
     
-    public final class Locks: Sendable {
-        public let main: NIOLock
-        // Is there a type we can use to make this Sendable but reuse the existing lock we already have?
-        private let storage: NIOLockedValueBox<[ObjectIdentifier: NIOLock]>
-        
-        init() {
-            self.main = .init()
-            self.storage = .init([:])
-        }
-        
-        public func lock<Key>(for key: Key.Type) -> NIOLock
-        where Key: LockKey {
-            self.main.withLock {
-                self.storage.withLockedValue {
-                    $0.insertOrReturn(.init(), at: .init(Key.self))
-                }
-            }
-        }
-    }
-    
-    public var locks: Locks {
-        get {
-            self._locks.withLockedValue { $0 }
-        }
-        set {
-            self._locks.withLockedValue { $0 = newValue }
-        }
-    }
-    
-    public var sync: NIOLock {
-        self.locks.main
-    }
-    
     public enum EventLoopGroupProvider: Sendable {
         case shared(any EventLoopGroup)
         public static var singleton: EventLoopGroupProvider {
@@ -109,7 +76,6 @@ public final class Application: Sendable, Service {
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _logger: NIOLockedValueBox<Logger>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
-    private let _locks: NIOLockedValueBox<Locks>
     public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
     public let routes: Routes
     // TODO: inline this when application is a struct
@@ -267,7 +233,6 @@ public final class Application: Sendable, Service {
             logger = customLogger
         }
 
-        self._locks = .init(.init())
         self._didShutdown = .init(false)
         self._logger = .init(logger)
         self._storage = .init(.init(logger: logger))
