@@ -1,5 +1,6 @@
 import RoutingKit
 import HTTPTypes
+import NIOPosix
 
 /// Determines how an incoming HTTP request's body is collected.
 public enum HTTPBodyStreamStrategy: Sendable {
@@ -128,7 +129,7 @@ extension RoutesBuilder {
     ) -> Route {
         let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                _ = try await request.eventLoop.flatSubmit {
+                _ = try await MultiThreadedEventLoopGroup.singleton.any().flatSubmit {
                     request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
                 }.get()
 

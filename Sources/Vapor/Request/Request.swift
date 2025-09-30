@@ -196,12 +196,6 @@ public final class Request: CustomStringConvertible, Sendable {
     /// This address may not represent the original address of the peer, especially if Vapor receives its requests through a reverse-proxy such as nginx.
     public let remoteAddress: SocketAddress?
     
-    /// The `EventLoop` which is handling this `Request`. The route handler and any relevant middleware are invoked in this event loop.
-    ///
-    /// - Warning: A futures-based route handler **MUST** return an `EventLoopFuture` bound to this event loop.
-    ///  If this is difficult or awkward to guarantee, use `EventLoopFuture.hop(to:)` to jump to this event loop.
-    public let eventLoop: any EventLoop
-    
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters {
@@ -302,7 +296,6 @@ public final class Request: CustomStringConvertible, Sendable {
         self.application = application
         
         self.remoteAddress = remoteAddress
-        self.eventLoop = MultiThreadedEventLoopGroup.singleton.any()
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
         self.newBodyStorage = .init(nil)

@@ -83,12 +83,4 @@ extension String: ResponseEncodable {
     }
 }
 
-extension Content {
-    public func encodeResponse(for request: Request) async throws -> Response {
-        let response = Response(contentConfiguration: request.application.contentConfiguration)
-        try response.content.encode(self)
-        return response
-    }
-}
-
 internal let staticStringHeaders: HTTPFields = [.contentType: "text/plain; charset=utf-8"]

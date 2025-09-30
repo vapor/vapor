@@ -1,5 +1,6 @@
 import NIOCore
 import HTTPServerNew
+import NIOPosix
 
 extension Request {
     public struct NewBody: Sendable {
@@ -52,16 +53,17 @@ extension Request {
         }
         
         public func collect(max: Int? = 1 << 14) -> EventLoopFuture<ByteBuffer?> {
+            let eventLoop = MultiThreadedEventLoopGroup.singleton.any()
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
-                return stream.consume(max: max, on: self.request.eventLoop).map { buffer in
+                return stream.consume(max: max, on: eventLoop).map { buffer in
                     self.request.bodyStorage.withLockedValue({ $0 = .collected(buffer) })
                     return buffer
                 }
             case .collected(let buffer):
-                return self.request.eventLoop.makeSucceededFuture(buffer)
+                return eventLoop.makeSucceededFuture(buffer)
             case .none:
-                return self.request.eventLoop.makeSucceededFuture(nil)
+                return eventLoop.makeSucceededFuture(nil)
             }
         }
         
