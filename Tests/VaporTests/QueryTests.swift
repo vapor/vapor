@@ -73,8 +73,7 @@ struct QueryTests {
             let request1 = Request(
                 application: app,
                 method: .get,
-                url: .init(string: "/path?foo=a"),
-                on: app.eventLoopGroup.next()
+                url: .init(string: "/path?foo=a")
             )
 
             #expect(try request1.query.get(String.self, at: "foo") == "a")
@@ -102,8 +101,7 @@ struct QueryTests {
             let request2 = Request(
                 application: app,
                 method: .get,
-                url: .init(string: "/path"),
-                on: app.eventLoopGroup.next()
+                url: .init(string: "/path")
             )
             let error3 = #expect(throws: DecodingError.self) {
                 try request1.query.get(Int.self, at: "bar")
@@ -279,8 +277,7 @@ struct QueryTests {
             let req = Request(
                 application: app,
                 method: .get,
-                url: URI(string: "/"),
-                on: app.eventLoopGroup.next()
+                url: URI(string: "/")
             )
             req.url = .init(path: "/foo?bar=baz")
             let page1 = try req.query.get(Int?.self, at: "page")
@@ -301,8 +298,7 @@ struct QueryTests {
             let req = Request(
                 application: app,
                 method: .get,
-                url: URI(string: "/"),
-                on: app.eventLoopGroup.next()
+                url: URI(string: "/")
             )
             struct BarStruct : Content {
                 let bar: Bool
