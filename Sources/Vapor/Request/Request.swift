@@ -6,6 +6,7 @@ import RoutingKit
 import NIOConcurrencyHelpers
 import HTTPTypes
 import HTTPServerNew
+import NIOPosix
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {
@@ -246,7 +247,6 @@ public final class Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        on eventLoop: any EventLoop
     ) {
         self.init(
             application: application,
@@ -257,8 +257,7 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             logger: logger,
-            byteBufferAllocator: byteBufferAllocator,
-            on: eventLoop
+            byteBufferAllocator: byteBufferAllocator
         )
         if let body = collectedBody {
             self.headers.updateContentLength(body.readableBytes)
@@ -275,7 +274,6 @@ public final class Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        on eventLoop: any EventLoop
     ) {
         let requestId = headers[.xRequestId] ?? UUID().uuidString
         let bodyStorage: BodyStorage
@@ -304,7 +302,7 @@ public final class Request: CustomStringConvertible, Sendable {
         self.application = application
         
         self.remoteAddress = remoteAddress
-        self.eventLoop = eventLoop
+        self.eventLoop = MultiThreadedEventLoopGroup.singleton.any()
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
         self.newBodyStorage = .init(nil)

@@ -11,7 +11,7 @@ struct QueryTests {
     @Test("Test Query")
     func testQuery() async throws {
         try await withApp { app throws in
-            let request = Request(application: app, on: app.eventLoopGroup.next())
+            let request = Request(application: app)
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = "hello=world"
@@ -22,7 +22,7 @@ struct QueryTests {
     @Test("Test Query as Array")
     func testQueryAsArray() async throws {
         try await withApp { app throws in
-            let request = Request(application: app, on: app.eventLoopGroup.next())
+            let request = Request(application: app)
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = "hello=world&hello[]=you"
@@ -34,7 +34,7 @@ struct QueryTests {
     @Test("Test Wrapped Single Value Query Decoding", .bug("https://github.com/vapor/vapor/pull/2163"))
     func testWrappedSingleValueQueryDecoding() async throws {
         try await withApp { app throws in
-            let request = Request(application: app, on: app.eventLoopGroup.next())
+            let request = Request(application: app)
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = ""
@@ -58,7 +58,7 @@ struct QueryTests {
     @Test("Test Does Not Crash with an Array with Percent Encoding")
     func testNotCrashingArrayWithPercentEncoding() async throws {
         try await withApp { app throws in
-            let request = Request(application: app, on: app.eventLoopGroup.next())
+            let request = Request(application: app)
             request.headers.contentType = .json
             request.url.path = "/"
             request.url.query = "emailsToSearch%5B%5D=xyz"
@@ -244,7 +244,7 @@ struct QueryTests {
             var name: String
         }
         try await withApp { app in
-            let req = Request(application: app, on: app.eventLoopGroup.next())
+            let req = Request(application: app)
             try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
             #expect(req.url.query == "name=Vapor%20Test")
         }
@@ -341,7 +341,7 @@ struct QueryTests {
         }
         
         try await withApp { app in
-            let request = Request(application: app, on: app.eventLoopGroup.next())
+            let request = Request(application: app)
             request.headers.contentType = .json
             request.url.path = "/"
             request.url.query = "closedRange=1"

@@ -51,8 +51,7 @@ extension Application.HTTP {
                         headersNoUpdate: .init(req.headers),
                         remoteAddress: channel.remoteAddress,
                         logger: self.application.logger,
-                        byteBufferAllocator: application.byteBufferAllocator,
-                        on: application.eventLoopGroup.any()
+                        byteBufferAllocator: application.byteBufferAllocator
                     )
                     vaporRequest.newBodyStorage.withLockedValue { $0 = req.body }
 

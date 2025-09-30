@@ -91,8 +91,7 @@ extension Application {
                 headers: headers,
                 collectedBody: request.body.readableBytes == 0 ? nil : request.body,
                 remoteAddress: nil,
-                logger: app.logger,
-                on: self.app.eventLoopGroup.next()
+                logger: app.logger
             )
             let responder: any Responder
             switch self.app.responder {
