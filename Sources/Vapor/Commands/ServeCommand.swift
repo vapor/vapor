@@ -2,6 +2,7 @@
 import Foundation
 import ConsoleKit
 import NIOConcurrencyHelpers
+import NIOPosix
 
 /// Boots the application's server. Listens for `SIGINT` and `SIGTERM` for graceful shutdown.
 ///
@@ -81,7 +82,7 @@ public final class ServeCommand: AsyncCommand, Sendable {
         box.server = context.application.server
 
         // allow the server to be stopped or waited for
-        let promise = context.application.eventLoopGroup.next().makePromise(of: Void.self)
+        let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: Void.self)
         context.application.running = .start(using: promise)
         box.running = context.application.running
 

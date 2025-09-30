@@ -61,7 +61,6 @@ public final class Application: Sendable, Service {
         }
     }
     
-    internal let eventLoopGroup = MultiThreadedEventLoopGroup.singleton
     internal let isBooted: NIOLockedValueBox<Bool>
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
