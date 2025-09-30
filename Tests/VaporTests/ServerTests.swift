@@ -46,8 +46,6 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         try await app.asyncShutdown()
     }
     
-    // `httpUnixDomainSocket` is currently broken in 6.0
-//    #if compiler(<6.0)
     func testSocketPathOverride() async throws {
         let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
         
@@ -76,7 +74,6 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             try await app.asyncShutdown()
         }
     }
-//    #endif
     
     func testIncompatibleStartupOptions() async throws {
         func checkForError(_ app: Application) async throws {
