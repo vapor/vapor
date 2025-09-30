@@ -35,8 +35,8 @@ extension Request: RequestDecodable {
 extension ResponseEncodable {
     /// Asynchronously encodes `Self` into a `Response`, setting the supplied status and headers.
     ///
-    ///     router.post("users") { req -> EventLoopFuture<Response> in
-    ///         return try req.content
+    ///     router.post("users") { req -> Response in
+    ///         return try await req.content
     ///             .decode(User.self)
     ///             .save(on: req)
     ///             .encode(status: .created, for: req)
