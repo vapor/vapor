@@ -2,7 +2,7 @@ import NIOCore
 import NIOHTTP1
 import HTTPTypes
 import NIOHTTPTypes
-#if Websockets
+#if WebSockets
 import WebSocketKit
 import NIOWebSocket
 #endif
@@ -143,7 +143,7 @@ public protocol Upgrader: Sendable {
     func applyUpgrade(req: Request, res: Response) -> any HTTPServerProtocolUpgrader
 }
 
-#if Websockets
+#if WebSockets
 /// Handles upgrading an HTTP connection to a WebSocket
 public struct WebSocketUpgrader: Upgrader, Sendable {
     var maxFrameSize: WebSocketMaxFrameSize

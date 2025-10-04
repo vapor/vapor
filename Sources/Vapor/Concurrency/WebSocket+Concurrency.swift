@@ -1,4 +1,4 @@
-#if Websockets
+#if WebSockets
 import NIOPosix
 import NIOCore
 import HTTPTypes
