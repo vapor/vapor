@@ -51,7 +51,7 @@ struct WebSocketTests {
             await #expect(performing: {
                 try await WebSocket.connect(
                     to: "ws://localhost:\(port)/foo",
-                    on: app.eventLoopGroup.next()
+                    on: MultiThreadedEventLoopGroup.singleton.any()
                 ) { _ in  }
             }, throws: { error in
                 guard let error = error as? WebSocketClient.Error else {
@@ -78,10 +78,10 @@ struct WebSocketTests {
             try await app.startup()
 
             let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
-            let promise = app.eventLoopGroup.next().makePromise(of: String.self)
+            let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: String.self)
             WebSocket.connect(
                 to: "ws://localhost:\(port)/foo",
-                on: app.eventLoopGroup.next()
+                on: MultiThreadedEventLoopGroup.singleton.any()
             ) { ws in
                 // do nothing
                 ws.onText { ws, string in
@@ -109,10 +109,10 @@ struct WebSocketTests {
             try await app.startup()
 
             let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
-            let promise = app.eventLoopGroup.next().makePromise(of: String.self)
+            let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: String.self)
             WebSocket.connect(
                 to: "ws://localhost:\(port)/foo",
-                on: app.eventLoopGroup.next()
+                on: MultiThreadedEventLoopGroup.singleton.any()
             ) { ws in
                 ws.onText { ws, string in
                     promise.succeed(string)
