@@ -1,3 +1,4 @@
+#if Multipart
 import MultipartKit
 import HTTPTypes
 import NIOCore
@@ -35,3 +36,4 @@ private func randomBoundaryData() -> String {
     }
     return string
 }
+#endif
