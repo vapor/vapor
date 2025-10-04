@@ -415,7 +415,7 @@ struct RouteTests {
         }
     }
 
-    #if Websockets
+    #if WebSockets
     @Test("Test Websocket Upgrade", .disabled())
     func testWebsocketUpgrade() async throws {
         try await withApp { app in

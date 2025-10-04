@@ -1,4 +1,4 @@
-#if Websockets
+#if WebSockets
 import RoutingKit
 import WebSocketKit
 import NIOCore
