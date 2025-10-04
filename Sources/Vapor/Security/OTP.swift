@@ -1,9 +1,9 @@
 import Foundation
-#if os(Linux)
+#if canImport(Darwin)
+import Crypto
+#else
 // TODO - remove when Crypto finally updated
 @preconcurrency import Crypto
-#else
-import Crypto
 #endif
 
 /// Supported OTP output sizes.

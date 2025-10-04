@@ -1,4 +1,4 @@
-#if Websockets
+#if WebSockets
 import VaporTesting
 import Vapor
 import Testing
