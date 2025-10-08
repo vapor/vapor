@@ -12,7 +12,14 @@ extension HTTPStatus: ResponseEncodable {
     }
 }
 
-extension HTTPStatus: Codable {
+#if compiler(>=6.1)
+extension HTTPStatus: @retroactive Decodable {}
+extension HTTPStatus: @retroactive Encodable {}
+#else
+extension HTTPStatus: Codable {}
+#endif
+
+extension HTTPStatus {
     public init(from decoder: Decoder) throws {
         let code = try decoder.singleValueContainer().decode(Int.self)
         self = .init(statusCode: code)

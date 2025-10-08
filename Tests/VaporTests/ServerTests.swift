@@ -429,9 +429,9 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             return
         }
         
-        let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+        let cert = try NIOSSLCertificate.fromPEMFile(clientCertPath.path).first!
         let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
-        
+
         let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
         /// To regenerate, copy the above and run `% pbpaste | gzip | base64`. To verify, run `% pbpaste | base64 -d | gzip -d` instead.
         let compressedPayload = ByteBuffer(base64String: "H4sIANRAImYAA6tWSs7PLShKLS5OTVGyUohWyk6tBNJKZYk5palKOgqj/FH+KH+UP8of5RPmx9YCAMfjVAhQBgAA")!
@@ -604,7 +604,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             return
         }
         
-        let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+        let cert = try NIOSSLCertificate.fromPEMFile(clientCertPath.path).first!
         let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
         
         let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
@@ -1226,7 +1226,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             return
         }
         
-        let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+        let cert = try NIOSSLCertificate.fromPEMFile(clientCertPath.path).first!
         let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
                 
         app.http.server.configuration.hostname = "127.0.0.1"
@@ -1281,7 +1281,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             return
         }
         
-        let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+        let cert = try NIOSSLCertificate.fromPEMFile(clientCertPath.path).first!
         let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
                 
         app.http.server.configuration.hostname = "127.0.0.1"

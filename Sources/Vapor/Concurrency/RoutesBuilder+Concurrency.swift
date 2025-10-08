@@ -5,7 +5,7 @@ import RoutingKit
 extension RoutesBuilder {
     @discardableResult
     @preconcurrency
-    public func get<Response>(
+    public func get<Response: VaporSendableMetatype>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -16,7 +16,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func get<Response>(
+    public func get<Response: VaporSendableMetatype>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -27,7 +27,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func post<Response>(
+    public func post<Response: VaporSendableMetatype>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -38,7 +38,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func post<Response>(
+    public func post<Response: VaporSendableMetatype>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -49,7 +49,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func patch<Response>(
+    public func patch<Response: VaporSendableMetatype>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -60,7 +60,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func patch<Response>(
+    public func patch<Response: VaporSendableMetatype>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -71,7 +71,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func put<Response>(
+    public func put<Response: VaporSendableMetatype>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -82,7 +82,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func put<Response>(
+    public func put<Response: VaporSendableMetatype>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -93,7 +93,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func delete<Response>(
+    public func delete<Response: VaporSendableMetatype>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -104,7 +104,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func delete<Response>(
+    public func delete<Response: VaporSendableMetatype>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
@@ -115,7 +115,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func on<Response>(
+    public func on<Response: VaporSendableMetatype>(
         _ method: HTTPMethod,
         _ path: PathComponent...,
         body: HTTPBodyStreamStrategy = .collect,
@@ -130,7 +130,7 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
-    public func on<Response>(
+    public func on<Response: VaporSendableMetatype>(
         _ method: HTTPMethod,
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
