@@ -4,9 +4,10 @@ import NIOCore
 import Tracing
 import Testing
 import VaporTesting
+import RegexBuilder
 
 @Suite("Middleware Tests")
-struct MiddlewareTests2 {
+struct MiddlewareTests {
     @Test("Test Middleware Order")
     func testMiddlewareOrder() async throws {
         try await withApp { app in
@@ -48,6 +49,25 @@ struct MiddlewareTests2 {
         }
     }
 
+    @Test("Test CORS Middleware Any Allowed Origin")
+    func testCORSMiddlewareAnyAllowedOrigin() async throws {
+        try await withApp { app in
+            app.grouped(
+                CORSMiddleware(configuration: .init(allowedOrigin: .any(["foo", "bar"]), allowedMethods: [.get], allowedHeaders: [.origin]))
+            ).get("order") { req -> String in
+                return "done"
+            }
+
+            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "done")
+                #expect(res.headers[values: .vary] == ["origin"])
+                #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
+                #expect(res.headers[values: .accessControlAllowHeaders] == ["origin"])
+            }
+        }
+    }
+
     @Test("Test CORS Middleware Varied By Request Origin")
     func testCORSMiddlewareVariedByRequestOrigin() async throws {
         try await withApp { app in
@@ -74,6 +94,52 @@ struct MiddlewareTests2 {
                 CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.get], allowedHeaders: []))
             ).get("order") { req -> String in
                 return "done"
+            }
+
+            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "done")
+                #expect(res.headers[values: .vary] == [])
+                #expect(res.headers[values: .accessControlAllowOrigin] == [])
+                #expect(res.headers[values: .accessControlAllowHeaders] == [""])
+            }
+        }
+    }
+
+    @Test("Test CORS Middleware Dynamic Origin Allowed")
+    func testCORSMiddlewareDynamicOriginAllowed() async throws {
+        try await withApp { app in
+            app.grouped(
+                CORSMiddleware(configuration: .init(
+                    allowedOrigin: .dynamic({ req in
+                        guard let origin = req.headers[values: .origin].first else {
+                            return ""
+                        }
+                        let regex = Regex {
+                            Anchor.startOfLine
+                            "http://example-"
+                            OneOrMore {
+                                CharacterClass.digit
+                            }
+                            ".com"
+                            Anchor.endOfLine
+                        }
+                        let isMatch = origin.wholeMatch(of: regex) != nil
+                        return isMatch ? origin : ""
+                    }),
+                    allowedMethods: [.get],
+                    allowedHeaders: []
+                ))
+            ).get("order") { req -> String in
+                return "done"
+            }
+
+            try await app.testing().test(.get, "/order", headers: [.origin: "http://example-123.com"]) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "done")
+                #expect(res.headers[values: .vary] == ["origin"])
+                #expect(res.headers[values: .accessControlAllowOrigin] == ["http://example-123.com"])
+                #expect(res.headers[values: .accessControlAllowHeaders] == [""])
             }
 
             try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
