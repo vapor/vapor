@@ -267,6 +267,42 @@ final class AsyncAuthenticationTests: XCTestCase {
         }
     }
 
+    /// A regression test ensuring that if no auth cookie is provided, the `AsyncSessionAuthenticator`
+    /// does not end up creating an empty session and sending back `set-cookie`.
+    /// This is a valid use case when session-based auth is not required.
+    /// In the other test above (testSessionAuthentication), the `set-cookie` header is correctly omitted
+    /// because the guard middleware throws an error, which skips the `addCookies` method in
+    /// the `SessionsMiddleware`.
+    func testSessionNotCreatedWhenNoCookieProvided() async throws {
+        struct Test: Authenticatable, SessionAuthenticatable {
+            var sessionID: String
+        }
+
+        struct TestSessionAuthenticator: AsyncSessionAuthenticator {
+            typealias User = Test
+
+            func authenticate(sessionID: String, for request: Request) async throws {
+                request.auth.login(Test(sessionID: sessionID))
+            }
+        }
+
+        struct UserInfo: Content {
+            var name: String
+        }
+
+        app.routes.grouped([
+            app.sessions.middleware,
+            TestSessionAuthenticator(),
+        ]).get("test") { req -> UserInfo in
+            UserInfo(name: req.auth.get(Test.self)?.sessionID ?? "none")
+        }
+
+        try await app.testable().test(.GET, "/test") { res async in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertNil(res.headers.first(name: .setCookie))
+        }
+    }
+
     func testMiddlewareConfigExistential() async {
         struct Test: Authenticatable {
             static func authenticator() -> AsyncAuthenticator {
