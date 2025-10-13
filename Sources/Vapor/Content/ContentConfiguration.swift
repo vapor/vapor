@@ -1,5 +1,7 @@
 import Foundation
+#if Multipart
 import MultipartKit
+#endif
 import NIOConcurrencyHelpers
 
 /// Configures which ``Encoder``s and ``Decoder``s to use when interacting with data in HTTP messages.
@@ -41,9 +43,11 @@ public struct ContentConfiguration: Sendable {
         config.use(urlEncoder: URLEncodedFormEncoder())
         config.use(urlDecoder: URLEncodedFormDecoder())
         
+        #if Multipart
         // form-data
         config.use(encoder: FormDataEncoder(), for: .formData)
         config.use(decoder: FormDataDecoder(), for: .formData)
+        #endif
         
         return config
     }

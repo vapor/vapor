@@ -18,11 +18,13 @@ let package = Package(
         .trait(name: "TLS"),
         .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
+        .trait(name: "Multipart"),
         .default(enabledTraits: [
             "WebSockets",
             "TLS",
             "bcrypt",
-            "HTTPClient"
+            "HTTPClient",
+            "Multipart",
         ])
     ],
     dependencies: [
@@ -136,7 +138,7 @@ let package = Package(
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "RoutingKit", package: "routing-kit"),
                 .product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
-                .product(name: "MultipartKit", package: "multipart-kit"),
+                .product(name: "MultipartKit", package: "multipart-kit", condition: .when(traits: ["Multipart"])),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
