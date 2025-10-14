@@ -1,10 +1,5 @@
 import Foundation
-#if canImport(Darwin)
 import Crypto
-#else
-// TODO - remove when Crypto finally updated
-@preconcurrency import Crypto
-#endif
 
 /// Supported OTP output sizes.
 public enum OTPDigits: Int, Sendable {
