@@ -154,6 +154,7 @@ struct ContentTests {
         }
     }
 
+    #if Multipart
     @Test("Multipart Decode")
     func testMultipartDecode() async throws {
         let data = """
@@ -356,6 +357,7 @@ struct ContentTests {
             }
         }
     }
+    #endif
 
     @Test("Test URLEncoded Form Decode")
     func testURLEncodedFormDecode() async throws {

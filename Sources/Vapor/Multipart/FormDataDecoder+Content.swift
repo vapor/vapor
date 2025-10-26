@@ -1,3 +1,4 @@
+#if Multipart
 import MultipartKit
 import HTTPTypes
 import NIOCore
@@ -32,3 +33,4 @@ extension FormDataDecoder: ContentDecoder {
         }
     }
 }
+#endif

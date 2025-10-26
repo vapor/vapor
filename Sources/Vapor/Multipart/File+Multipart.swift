@@ -1,3 +1,4 @@
+#if Multipart
 import MultipartKit
 import HTTPTypes
 import NIOCore
@@ -53,3 +54,4 @@ extension MultipartPart {
         }
     }
 }
+#endif

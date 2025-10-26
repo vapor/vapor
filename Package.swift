@@ -18,11 +18,13 @@ let package = Package(
         .trait(name: "TLS"),
         .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
+        .trait(name: "Multipart"),
         .default(enabledTraits: [
             "WebSockets",
             "TLS",
             "bcrypt",
-            "HTTPClient"
+            "HTTPClient",
+            "Multipart",
         ])
     ],
     dependencies: [
@@ -33,7 +35,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.14.0"),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "5.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", branch: "v5"),
@@ -136,7 +138,7 @@ let package = Package(
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "RoutingKit", package: "routing-kit"),
                 .product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
-                .product(name: "MultipartKit", package: "multipart-kit"),
+                .product(name: "MultipartKit", package: "multipart-kit", condition: .when(traits: ["Multipart"])),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
