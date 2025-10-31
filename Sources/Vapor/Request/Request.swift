@@ -301,7 +301,36 @@ public final class Request: CustomStringConvertible, Sendable {
         headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
-        peerCertificateChain: ValidatedCertificateChain? = nil,
+        logger: Logger = .init(label: "codes.vapor.request"),
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        on eventLoop: EventLoop
+    ) {
+        self.init(
+            application: application,
+            method: method,
+            url: url,
+            version: version,
+            headersNoUpdate: headers,
+            collectedBody: collectedBody,
+            remoteAddress: remoteAddress,
+            logger: logger,
+            byteBufferAllocator: byteBufferAllocator,
+            on: eventLoop
+        )
+        if let body = collectedBody {
+            self.headers.updateContentLength(body.readableBytes)
+        }
+    }
+
+    public convenience init(
+        application: Application,
+        method: HTTPMethod = .GET,
+        url: URI = "/",
+        version: HTTPVersion = .init(major: 1, minor: 1),
+        headers: HTTPHeaders = .init(),
+        collectedBody: ByteBuffer? = nil,
+        remoteAddress: SocketAddress? = nil,
+        peerCertificateChain: ValidatedCertificateChain?,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
@@ -323,7 +352,35 @@ public final class Request: CustomStringConvertible, Sendable {
             self.headers.updateContentLength(body.readableBytes)
         }
     }
-    
+
+    @_disfavoredOverload
+    public convenience init(
+        application: Application,
+        method: HTTPMethod,
+        url: URI,
+        version: HTTPVersion = .init(major: 1, minor: 1),
+        headersNoUpdate headers: HTTPHeaders = .init(),
+        collectedBody: ByteBuffer? = nil,
+        remoteAddress: SocketAddress? = nil,
+        logger: Logger = .init(label: "codes.vapor.request"),
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        on eventLoop: EventLoop
+    ) {
+        self.init(
+            application: application,
+            method: method,
+            url: url,
+            version: version,
+            headersNoUpdate: headers,
+            collectedBody: collectedBody,
+            remoteAddress: remoteAddress,
+            peerCertificateChain: nil,
+            logger: logger,
+            byteBufferAllocator: byteBufferAllocator,
+            on: eventLoop
+        )
+    }
+
     public init(
         application: Application,
         method: HTTPMethod,
@@ -332,7 +389,7 @@ public final class Request: CustomStringConvertible, Sendable {
         headersNoUpdate headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
-        peerCertificateChain: ValidatedCertificateChain? = nil,
+        peerCertificateChain: ValidatedCertificateChain?,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
@@ -371,7 +428,7 @@ public final class Request: CustomStringConvertible, Sendable {
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
     }
-    
+
     /// Automatically restores tracing serviceContext around the provided closure
     func propagateTracingIfEnabled<T>(_ closure: () throws -> T) rethrows -> T {
         if self.traceAutoPropagation {
