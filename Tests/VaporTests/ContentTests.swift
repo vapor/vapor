@@ -13,8 +13,7 @@ struct ContentTests {
         try await withApp { app throws in
             let request = Request(
                 application: app,
-                collectedBody: .init(string: #"{"hello": "world"}"#),
-                on: app.eventLoopGroup.any()
+                collectedBody: .init(string: #"{"hello": "world"}"#)
             )
             request.headers.contentType = .json
             #expect(try await request.content.get(at: "hello") == "world")
@@ -56,8 +55,7 @@ struct ContentTests {
         try await withApp { app throws in
             let request = Request(
                 application: app,
-                collectedBody: .init(string: complexJSON),
-                on: app.eventLoopGroup.any()
+                collectedBody: .init(string: complexJSON)
             )
             request.headers.contentType = .json
             #expect(try await request.content.get(at: "batters", "batter", 1, "type") == "Chocolate")
@@ -469,8 +467,7 @@ struct ContentTests {
         try await withApp { app in
             let request = Request(
                 application: app,
-                collectedBody: body,
-                on: app.eventLoopGroup.any()
+                collectedBody: body
             )
 
             request.headers.contentType = .json
@@ -488,8 +485,7 @@ struct ContentTests {
         try await withApp { app in
             let request = Request(
                 application: app,
-                collectedBody: body,
-                on: app.eventLoopGroup.any()
+                collectedBody: body
             )
 
             request.headers.contentType = .jsonAPI
@@ -504,8 +500,7 @@ struct ContentTests {
         try await withApp { app in
             let request = Request(
                 application: app,
-                collectedBody: .init(string: ""),
-                on: app.eventLoopGroup.any()
+                collectedBody: .init(string: "")
             )
             request.url.query = "name=before+decode"
             request.headers.contentType = .json
@@ -522,8 +517,7 @@ struct ContentTests {
         try await withApp { app throws in
             let request = Request(
                 application: app,
-                collectedBody: .init(string: ""),
-                on: app.eventLoopGroup.any()
+                collectedBody: .init(string: "")
             )
             request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
             request.headers.contentType = .urlEncodedForm
@@ -549,7 +543,7 @@ struct ContentTests {
     @Test("Test Snake Case Coding Key Error")
     func testSnakeCaseCodingKeyError() async throws {
         try await withApp { app in
-            let req = Request(application: app, on: app.eventLoopGroup.any())
+            let req = Request(application: app)
             try req.content.encode([
                 "title": "The title"
             ], as: .json)
@@ -580,8 +574,7 @@ struct ContentTests {
                 method: .get,
                 url: URI(string: "https://vapor.codes"),
                 headersNoUpdate: [.contentType: "application/json"],
-                collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
-                on: app.eventLoopGroup.any()
+                collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#)
             )
 
             struct DecodeModel: Content {
@@ -598,7 +591,7 @@ struct ContentTests {
     @Test("Test ValueNotFoundError")
     func testValueNotFoundError() async throws {
         try await withApp { app in
-            let req = Request(application: app, on: app.eventLoopGroup.any())
+            let req = Request(application: app)
             try req.content.encode([
                 "items": ["1"]
             ], as: .json)
@@ -627,7 +620,7 @@ struct ContentTests {
     @Test("Test Type Mismatch Error")
     func testTypeMismatchError() async throws {
         try await withApp { app in
-            let req = Request(application: app, on: app.eventLoopGroup.any())
+            let req = Request(application: app)
             try req.content.encode([
                 "item": [
                     "title": "The title"

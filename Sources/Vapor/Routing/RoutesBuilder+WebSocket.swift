@@ -3,6 +3,7 @@ import RoutingKit
 import WebSocketKit
 import NIOCore
 import HTTPTypes
+import NIOPosix
 
 public struct WebSocketMaxFrameSize: Sendable, ExpressibleByIntegerLiteral {
     let value: Int
@@ -31,8 +32,8 @@ extension RoutesBuilder {
     public func webSocket(
         _ path: PathComponent...,
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPFields?>) = {
-            $0.eventLoop.makeSucceededFuture([:])
+        shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPFields?>) = { _ in
+            MultiThreadedEventLoopGroup.singleton.any().makeSucceededFuture([:])
         },
         onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
     ) -> Route {
@@ -52,8 +53,8 @@ extension RoutesBuilder {
     public func webSocket(
         _ path: [PathComponent],
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPFields?>) = {
-            $0.eventLoop.makeSucceededFuture([:])
+        shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPFields?>) = { _ in
+            MultiThreadedEventLoopGroup.singleton.any().makeSucceededFuture([:])
         },
         onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
     ) -> Route {

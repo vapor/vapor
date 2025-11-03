@@ -227,8 +227,8 @@ struct RequestTests {
     @Test("Test Request IDs are Unique")
     func testRequestIdsAreUnique() async throws {
         try await withApp { app in
-            let request1 = Request(application: app, on: app.eventLoopGroup.next())
-            let request2 = Request(application: app, on: app.eventLoopGroup.next())
+            let request1 = Request(application: app)
+            let request2 = Request(application: app)
 
             #expect(request1.id != request2.id)
         }
@@ -237,7 +237,7 @@ struct RequestTests {
     @Test("Test Request ID in Logger Metadata")
     func testRequestIdInLoggerMetadata() async throws {
         try await withApp { app in
-            let request = Request(application: app, on: app.eventLoopGroup.next())
+            let request = Request(application: app)
             guard case .string(let string) = request.logger[metadataKey: "request-id"] else {
                 Issue.record("Did not find request-id key in logger metadata.")
                 return

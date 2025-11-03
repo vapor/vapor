@@ -69,14 +69,10 @@ extension Content {
         try await request.content.decode(Self.self)
     }
     
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+    public func encodeResponse(for request: Request) async throws -> Response {
         let response = Response(contentConfiguration: request.application.contentConfiguration)
-        do {
-            try response.content.encode(self)
-        } catch {
-            return request.eventLoop.makeFailedFuture(error)
-        }
-        return request.eventLoop.makeSucceededFuture(response)
+        try response.content.encode(self)
+        return response
     }
 
     public mutating func beforeEncode() throws { }

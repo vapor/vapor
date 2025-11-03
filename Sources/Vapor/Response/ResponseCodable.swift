@@ -35,8 +35,8 @@ extension Request: RequestDecodable {
 extension ResponseEncodable {
     /// Asynchronously encodes `Self` into a `Response`, setting the supplied status and headers.
     ///
-    ///     router.post("users") { req -> EventLoopFuture<Response> in
-    ///         return try req.content
+    ///     router.post("users") { req -> Response in
+    ///         return try await req.content
     ///             .decode(User.self)
     ///             .save(on: req)
     ///             .encode(status: .created, for: req)
@@ -80,14 +80,6 @@ extension String: ResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
         let res = Response(headers: staticStringHeaders, body: .init(string: self), contentConfiguration: request.application.contentConfiguration)
         return res
-    }
-}
-
-extension Content {
-    public func encodeResponse(for request: Request) async throws -> Response {
-        let response = Response(contentConfiguration: request.application.contentConfiguration)
-        try response.content.encode(self)
-        return response
     }
 }
 

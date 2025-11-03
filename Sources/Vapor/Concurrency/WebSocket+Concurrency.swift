@@ -5,6 +5,7 @@ import HTTPTypes
 import WebSocketKit
 import RoutingKit
 import Foundation
+import NIOPosix
 
 extension Request {
 
@@ -17,7 +18,7 @@ extension Request {
         webSocket(
             maxFrameSize: maxFrameSize,
             shouldUpgrade: { request in
-                let promise = request.eventLoop.makePromise(of: HTTPFields?.self)
+                let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: HTTPFields?.self)
                 promise.completeWithTask {
                     try await shouldUpgrade(request)
                 }

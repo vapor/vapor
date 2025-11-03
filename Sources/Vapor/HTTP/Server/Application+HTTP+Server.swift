@@ -3,6 +3,7 @@ import NIOHTTPTypes
 import HTTPTypes
 import NIOCore
 import NIOConcurrencyHelpers
+import NIOPosix
 
 extension Application.Servers.Provider {
     public static var httpNew: Self {
@@ -40,7 +41,7 @@ extension Application.HTTP {
                 case .provided(let provided):
                     responder = provided
                 }
-                let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: config, eventLoopGroup: self.application.eventLoopGroup, logger: self.application.logger, responder: { req, responseWriter, channel  in
+                let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: config, eventLoopGroup: MultiThreadedEventLoopGroup.singleton, logger: self.application.logger, responder: { req, responseWriter, channel  in
                     application.logger.info("Request received with new Vapor 5 server")
 
                     let vaporRequest = Vapor.Request(
@@ -51,8 +52,7 @@ extension Application.HTTP {
                         headersNoUpdate: .init(req.headers),
                         remoteAddress: channel.remoteAddress,
                         logger: self.application.logger,
-                        byteBufferAllocator: application.byteBufferAllocator,
-                        on: application.eventLoopGroup.any()
+                        byteBufferAllocator: application.byteBufferAllocator
                     )
                     vaporRequest.newBodyStorage.withLockedValue { $0 = req.body }
 
