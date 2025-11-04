@@ -1,4 +1,3 @@
-#if compiler(>=6.0) && canImport(Testing)
 import VaporTesting
 import Testing
 
@@ -79,4 +78,3 @@ struct VaporTestingTests {
         }
     }
 }
-#endif

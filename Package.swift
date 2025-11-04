@@ -1,6 +1,5 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 import PackageDescription
-import Foundation
 
 let package = Package(
     name: "vapor",
@@ -110,7 +109,7 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
             ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            swiftSettings: swiftSettings
         ),
 
         // Development
@@ -120,7 +119,7 @@ let package = Package(
                 .target(name: "Vapor"),
             ],
             resources: [.copy("Resources")],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            swiftSettings: swiftSettings
         ),
 
         // Testing
@@ -129,7 +128,7 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
             ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            swiftSettings: swiftSettings
         ),
         .target(
             name: "VaporTesting",
@@ -137,7 +136,7 @@ let package = Package(
                 .target(name: "VaporTestUtils"),
                 .target(name: "Vapor"),
             ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            swiftSettings: swiftSettings
         ),
         .target(
             name: "XCTVapor",
@@ -145,7 +144,7 @@ let package = Package(
                 .target(name: "VaporTestUtils"),
                 .target(name: "Vapor"),
             ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "VaporTests",
@@ -166,10 +165,16 @@ let package = Package(
                 .copy("Utilities/expired.key"),
                 .copy("Utilities/long-test-file.txt"),
             ],
-            swiftSettings: [
-                .enableUpcomingFeature("BareSlashRegexLiterals"),
-                .enableExperimentalFeature("StrictConcurrency=complete"),
-            ]
+            swiftSettings: swiftSettings
         ),
     ]
 )
+
+var swiftSettings: [SwiftSetting] { [
+    //.enableUpcomingFeature("ExistentialAny"),
+    //.enableUpcomingFeature("InternalImportsByDefault"),
+    .enableUpcomingFeature("MemberImportVisibility"),
+    .enableUpcomingFeature("InferIsolatedConformances"),
+    //.enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+    .enableUpcomingFeature("ImmutableWeakCaptures"),
+] }

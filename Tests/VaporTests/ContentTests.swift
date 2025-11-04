@@ -531,17 +531,10 @@ final class ContentTests: XCTestCase {
             let badJson: String
         }
         XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
-            #if compiler(>=6.0)
             XCTAssertContains(
                 (error as? AbortError)?.reason,
                 #"Data corrupted at path ''. The given data was not valid JSON"#
             )
-            #else
-            XCTAssertContains(
-                (error as? AbortError)?.reason,
-                #"Data corrupted at path ''. The given data was not valid JSON. Underlying error: "#
-            )
-            #endif
         }
     }
 
