@@ -150,6 +150,7 @@ let package = Package(
             name: "VaporTests",
             dependencies: [
                 .product(name: "NIOTestUtils", package: "swift-nio"),
+                .product(name: "SwiftASN1", package: "swift-asn1"),
                 .target(name: "XCTVapor"),
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),

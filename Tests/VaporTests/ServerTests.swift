@@ -15,6 +15,7 @@ import NIOHTTP1
 import NIOSSL
 import Atomics
 import X509
+import SwiftASN1
 
 final class ServerTests: XCTestCase, @unchecked Sendable {
     var app: Application!
