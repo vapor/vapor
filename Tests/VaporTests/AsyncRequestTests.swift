@@ -2,6 +2,7 @@ import XCTVapor
 import XCTest
 import Vapor
 import NIOCore
+import NIOFoundationCompat
 import AsyncHTTPClient
 import Atomics
 import NIOConcurrencyHelpers

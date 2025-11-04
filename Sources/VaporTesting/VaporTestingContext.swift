@@ -1,5 +1,15 @@
-#if compiler(>=6.0) && canImport(Testing)
 import Testing
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+@preconcurrency import Glibc
+#elseif canImport(Android)
+@preconcurrency import Android
+#elseif canImport(Musl)
+@preconcurrency import Musl
+#elseif canImport(WinSDK)
+@preconcurrency import WinSDK
+#endif
 
 public enum VaporTestingContext {
     @TaskLocal public static var emitWarningIfCurrentTestInfoIsUnavailable: Bool?
@@ -34,4 +44,3 @@ public enum VaporTestingContext {
         }
     }
 }
-#endif

@@ -19,7 +19,7 @@ final class FileTests: XCTestCase {
     
     func testStreamFile() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch { 
@@ -56,7 +56,7 @@ final class FileTests: XCTestCase {
 
     func testStreamFileConnectionClose() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true)
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
         }
 
         var headers = HTTPHeaders()
@@ -91,7 +91,7 @@ final class FileTests: XCTestCase {
 
     func testAdvancedETagHeaders() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -101,7 +101,7 @@ final class FileTests: XCTestCase {
         }
 
         try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
-            let fileData = try Data(contentsOf: URL(fileURLWithPath: #file))
+            let fileData = try Data(contentsOf: URL(fileURLWithPath: #filePath))
             let digest = SHA256.hash(data: fileData)
             let eTag = res.headers.first(name: "etag")
             XCTAssertEqual(eTag, digest.hex)
@@ -110,7 +110,7 @@ final class FileTests: XCTestCase {
 
     func testSimpleETagHeaders() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: false) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { result in
                 do {
                     try result.get()
                 } catch {
@@ -120,7 +120,7 @@ final class FileTests: XCTestCase {
         }
 
         try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
-            let attributes = try FileManager.default.attributesOfItem(atPath: #file)
+            let attributes = try FileManager.default.attributesOfItem(atPath: #filePath)
             let modifiedAt = attributes[.modificationDate] as! Date
             let fileSize = (attributes[.size] as? NSNumber)!.intValue
             let fileETag = "\"\(Int(modifiedAt.timeIntervalSince1970))-\(fileSize)\""
@@ -131,7 +131,7 @@ final class FileTests: XCTestCase {
     
     func testStreamFileContentHeaderTail() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -143,15 +143,14 @@ final class FileTests: XCTestCase {
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
         try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
-            
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
             
-            let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
-            let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
-            
-            let range = upperRange - lowerRange + 1
-            let length = Int(contentLength!)!
+            let lowerRange = (contentRange?.split(separator: "-")[0].split(separator: " ")[1]).map(String.init(_:)).flatMap(Int.init(_:))
+            let upperRange = (contentRange?.split(separator: "-")[1].split(separator: "/")[0]).map(String.init(_:)).flatMap(Int.init(_:))
+
+            let range = (upperRange ?? Int.min) - (lowerRange ?? Int.min) + 1
+            let length = Int(contentLength ?? "-1")
 
             XCTAssertTrue(range == length)
         }
@@ -159,7 +158,7 @@ final class FileTests: XCTestCase {
     
     func testStreamFileContentHeaderStart() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -171,15 +170,14 @@ final class FileTests: XCTestCase {
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
         try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
-            
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
             
-            let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
-            let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
-            
-            let range = upperRange - lowerRange + 1
-            let length = Int(contentLength!)!
+            let lowerRange = (contentRange?.split(separator: "-")[0].split(separator: " ")[1]).map(String.init(_:)).flatMap(Int.init(_:))
+            let upperRange = (contentRange?.split(separator: "-")[1].split(separator: "/")[0]).map(String.init(_:)).flatMap(Int.init(_:))
+
+            let range = (upperRange ?? Int.min) - (lowerRange ?? Int.min) + 1
+            let length = Int(contentLength ?? "-1")
 
             XCTAssertTrue(range == length)
         }
@@ -187,7 +185,7 @@ final class FileTests: XCTestCase {
     
     func testStreamFileContentHeadersWithin() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -199,15 +197,14 @@ final class FileTests: XCTestCase {
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
         try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
-            
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
             
-            let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
-            let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
-            
-            let range = upperRange - lowerRange + 1
-            let length = Int(contentLength!)!
+            let lowerRange = (contentRange?.split(separator: "-")[0].split(separator: " ")[1]).map(String.init(_:)).flatMap(Int.init(_:))
+            let upperRange = (contentRange?.split(separator: "-")[1].split(separator: "/")[0]).map(String.init(_:)).flatMap(Int.init(_:))
+
+            let range = (upperRange ?? Int.min) - (lowerRange ?? Int.min) + 1
+            let length = Int(contentLength ?? "-1")
 
             XCTAssertTrue(range == length)
         }
@@ -215,7 +212,7 @@ final class FileTests: XCTestCase {
 
     func testStreamFileContentHeadersOnlyFirstByte() async throws {
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -230,7 +227,7 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.status, .partialContent)
 
             XCTAssertEqual(res.headers.first(name: .contentLength), "1")
-            let range = res.headers.first(name: .contentRange)!.split(separator: "/").first!.split(separator: " ").last!
+            let range = res.headers.first(name: .contentRange)?.split(separator: "/").first?.split(separator: " ").last
             XCTAssertEqual(range, "0-0")
 
             XCTAssertEqual(res.body.readableBytes, 1)
@@ -239,7 +236,7 @@ final class FileTests: XCTestCase {
     
     func testStreamFileContentHeadersWithinFail() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -262,7 +259,7 @@ final class FileTests: XCTestCase {
     
     func testStreamFileContentHeadersStartFail() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -285,7 +282,7 @@ final class FileTests: XCTestCase {
     
     func testStreamFileContentHeadersTailFail() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -449,7 +446,7 @@ final class FileTests: XCTestCase {
     // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
     func testInvalidRangeHeaderDoesNotCrash() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
-            return req.fileio.streamFile(at: #file, advancedETagComparison: true)
+            return req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
         }
 
         var headers = HTTPHeaders()
