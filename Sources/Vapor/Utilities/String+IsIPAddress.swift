@@ -1,5 +1,5 @@
 import Foundation
-import CNIOLinux
+import NIOCore
 #if canImport(Android)
 import Android
 #endif
