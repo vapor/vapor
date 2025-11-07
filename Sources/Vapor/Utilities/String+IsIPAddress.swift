@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(CNIOLinux)
 import CNIOLinux
+#endif
 #if canImport(Android)
 import Android
 #endif
