@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(Darwin)
+#if canImport(Darwin) && compiler(>=6.1)
 import Crypto
 #else
 @preconcurrency import Crypto

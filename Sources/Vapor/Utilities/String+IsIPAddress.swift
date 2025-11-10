@@ -1,4 +1,5 @@
 import Foundation
+import NIOCore
 #if canImport(Android)
 import Android
 #endif
