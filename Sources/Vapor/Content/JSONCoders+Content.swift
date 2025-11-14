@@ -1,35 +1,34 @@
 import Foundation
 import NIOCore
+import HTTPTypes
 import NIOFoundationCompat
-import NIOHTTP1
-
-#if canImport(Darwin)
-extension JSONEncoder: @retroactive @unchecked Sendable {} // JSONEncoder Sendable conformance is not available before macOS 13.0/iOS 16.0/watchOS 9.0/tvOS 16.0
-extension JSONDecoder: @retroactive @unchecked Sendable {} // JSONDecoder Sendable conformance is not available before macOS 13.0/iOS 16.0/watchOS 9.0/tvOS 16.0
-#endif
 
 extension JSONEncoder: ContentEncoder {
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
-        where E: Encodable
-    {
+    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
     
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
-        where E: Encodable
-    {
+    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         headers.contentType = .json
 
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
-            let encoder = JSONEncoder.custom(
+            #if canImport(Darwin)
+            let existingUserInfo = self.userInfo
+            #else
+            #warning("Check")
+            // JSONEncoder.userInfo does not declare its values as Sendable yet on Linux.
+            // This appears to be an oversight, as JSONDecoder does not have the same issue.
+            let existingUserInfo = self.userInfo as! [CodingUserInfoKey: any Sendable]
+            #endif
+
+            try body.writeBytes(JSONEncoder.custom(
                 dates: self.dateEncodingStrategy,
                 data: self.dataEncodingStrategy,
                 keys: self.keyEncodingStrategy,
                 format: self.outputFormatting,
-                floats: self.nonConformingFloatEncodingStrategy
-            ) // don't use userInfo parameter of `JSONEncoder.custom()` until Swift 6.2 is required
-            encoder.userInfo = self.userInfo.merging(userInfo) { $1 }
-            try body.writeBytes(encoder.encode(encodable))
+                floats: self.nonConformingFloatEncodingStrategy,
+                userInfo: existingUserInfo.merging(userInfo) { $1 }
+            ).encode(encodable))
         } else {
             try body.writeBytes(self.encode(encodable))
         }
@@ -37,13 +36,13 @@ extension JSONEncoder: ContentEncoder {
 }
 
 extension JSONDecoder: ContentDecoder {
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
         where D: Decodable
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
         where D: Decodable
     {
         let data = body.getData(at: body.readerIndex, length: body.readableBytes) ?? Data()
@@ -54,12 +53,8 @@ extension JSONDecoder: ContentDecoder {
             actualDecoder.dataDecodingStrategy = self.dataDecodingStrategy
             actualDecoder.nonConformingFloatDecodingStrategy = self.nonConformingFloatDecodingStrategy
             actualDecoder.keyDecodingStrategy = self.keyDecodingStrategy
-            #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-            if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
-                actualDecoder.allowsJSON5 = self.allowsJSON5
-                actualDecoder.assumesTopLevelDictionary = self.assumesTopLevelDictionary
-            }
-            #endif
+            actualDecoder.allowsJSON5 = self.allowsJSON5
+            actualDecoder.assumesTopLevelDictionary = self.assumesTopLevelDictionary
             actualDecoder.userInfo = self.userInfo.merging(userInfo) { $1 }
             return try actualDecoder.decode(D.self, from: data)
         } else {

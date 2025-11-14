@@ -1,26 +1,25 @@
 import NIOCore
 
 /// Capable of being authenticated.
-public protocol Authenticatable { }
+public protocol Authenticatable: Sendable { }
 
 /// Helper for creating authentication middleware.
 ///
-/// See `RequestAuthenticator` and `SessionAuthenticator` for more information.
+/// See ``RequestAuthenticator`` and ``SessionAuthenticator`` for more information.
 public protocol Authenticator: Middleware { }
 
-/// Help for creating authentication middleware based on `Request`.
+/// Help for creating authentication middleware based on ``Request``.
 ///
-/// `Authenticator`'s use the incoming request to check for authentication information.
+/// ``Authenticator``'s use the incoming request to check for authentication information.
 /// If valid authentication credentials are present, the authenticated user is added to `req.auth`.
 public protocol RequestAuthenticator: Authenticator {
-    func authenticate(request: Request) -> EventLoopFuture<Void>
+    func authenticate(request: Request) async throws
 }
 
 extension RequestAuthenticator {
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        return self.authenticate(request: request).flatMap {
-            next.respond(to: request)
-        }
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        try await self.authenticate(request: request)
+        return try await next.respond(to: request)
     }
 }
 
@@ -28,15 +27,15 @@ extension RequestAuthenticator {
 
 /// Helper for creating authentication middleware using the Basic authorization header.
 public protocol BasicAuthenticator: RequestAuthenticator {
-    func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void>
+    func authenticate(basic: BasicAuthorization, for request: Request) async throws
 }
 
 extension BasicAuthenticator {
-    public func authenticate(request: Request) -> EventLoopFuture<Void> {
+    public func authenticate(request: Request) async throws {
         guard let basicAuthorization = request.headers.basicAuthorization else {
-            return request.eventLoop.makeSucceededFuture(())
+            return
         }
-        return self.authenticate(basic: basicAuthorization, for: request)
+        return try await self.authenticate(basic: basicAuthorization, for: request)
     }
 }
 
@@ -44,15 +43,15 @@ extension BasicAuthenticator {
 
 /// Helper for creating authentication middleware using the Bearer authorization header.
 public protocol BearerAuthenticator: RequestAuthenticator {
-    func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void>
+    func authenticate(bearer: BearerAuthorization, for request: Request) async throws
 }
 
 extension BearerAuthenticator {
-    public func authenticate(request: Request) -> EventLoopFuture<Void> {
+    public func authenticate(request: Request) async throws {
         guard let bearerAuthorization = request.headers.bearerAuthorization else {
-            return request.eventLoop.makeSucceededFuture(())
+            return
         }
-        return self.authenticate(bearer: bearerAuthorization, for: request)
+        return try await self.authenticate(bearer: bearerAuthorization, for: request)
     }
 }
 
@@ -61,19 +60,14 @@ extension BearerAuthenticator {
 /// Helper for creating authentication middleware using request body contents.
 public protocol CredentialsAuthenticator: RequestAuthenticator {
     associatedtype Credentials: Content
-    func authenticate(credentials: Credentials, for request: Request) -> EventLoopFuture<Void>
+    func authenticate(credentials: Credentials, for request: Request) async throws
 }
 
 extension CredentialsAuthenticator {
-    public func authenticate(request: Request) -> EventLoopFuture<Void> {
-        return request.body.collect(max: nil).flatMap { _ -> EventLoopFuture<Void> in
-            let credentials: Credentials
-            do {
-                credentials = try request.content.decode(Credentials.self)
-            } catch {
-                return request.eventLoop.makeSucceededFuture(())
-            }
-            return self.authenticate(credentials: credentials, for: request)
+    public func authenticate(request: Request) async throws {
+        _ = try await request.body.collect(max: nil).get()
+        if let credentials = try? await request.content.decode(Credentials.self) {
+            try await self.authenticate(credentials: credentials, for: request)
         }
     }
 }

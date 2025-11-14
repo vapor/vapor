@@ -2,6 +2,7 @@
 import Foundation
 import ConsoleKit
 import NIOConcurrencyHelpers
+import NIOPosix
 
 /// Boots the application's server. Listens for `SIGINT` and `SIGTERM` for graceful shutdown.
 ///
@@ -42,8 +43,8 @@ public final class ServeCommand: AsyncCommand, Sendable {
     struct SendableBox: Sendable {
         var didShutdown: Bool
         var running: Application.Running?
-        var signalSources: [DispatchSourceSignal]
-        var server: Server?
+        var signalSources: [any DispatchSourceSignal]
+        var server: (any Server)?
     }
 
     private let box: NIOLockedValueBox<SendableBox>
@@ -58,20 +59,22 @@ public final class ServeCommand: AsyncCommand, Sendable {
     public func run(using context: CommandContext, signature: Signature) async throws {
         switch (signature.hostname, signature.port, signature.bind, signature.socketPath) {
         case (.none, .none, .none, .none): // use defaults
-            try await context.application.server.start(address: nil)
-            
+            try await context.application.server.start()
+
         case (.none, .none, .none, .some(let socketPath)): // unix socket
-            try await context.application.server.start(address: .unixDomainSocket(path: socketPath))
-            
+            context.application.serverConfiguration.address = .unixDomainSocket(path: socketPath)
+            try await context.application.server.start()
+
         case (.none, .none, .some(let address), .none): // bind ("hostname:port")
             let hostname = address.split(separator: ":").first.flatMap(String.init)
             let port = address.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-            
-            try await context.application.server.start(address: .hostname(hostname, port: port))
-            
+            context.application.serverConfiguration.address = .hostname(hostname!, port: port!)
+            try await context.application.server.start()
+
         case (let hostname, let port, .none, .none): // hostname / port
-            try await context.application.server.start(address: .hostname(hostname, port: port))
-            
+            context.application.serverConfiguration.address = .hostname(hostname!, port: port!)
+            try await context.application.server.start()
+
         default: throw Error.incompatibleFlags
         }
         
@@ -79,7 +82,7 @@ public final class ServeCommand: AsyncCommand, Sendable {
         box.server = context.application.server
 
         // allow the server to be stopped or waited for
-        let promise = context.application.eventLoopGroup.next().makePromise(of: Void.self)
+        let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: Void.self)
         context.application.running = .start(using: promise)
         box.running = context.application.running
 
@@ -103,25 +106,12 @@ public final class ServeCommand: AsyncCommand, Sendable {
         makeSignalSource(SIGINT)
         self.box.withLockedValue { $0 = box }
     }
-
-    @available(*, noasync, message: "Use the async asyncShutdown() method instead.")
-    func shutdown() {
-        var box = self.box.withLockedValue { $0 }
-        box.didShutdown = true
-        box.running?.stop()
-        if let server = box.server {
-            server.shutdown()
-        }
-        box.signalSources.forEach { $0.cancel() } // clear refs
-        box.signalSources = []
-        self.box.withLockedValue { $0 = box }
-    }
     
     func asyncShutdown() async {
         var box = self.box.withLockedValue { $0 }
         box.didShutdown = true
         box.running?.stop()
-        await box.server?.shutdown()
+        try? await box.server?.shutdown()
         box.signalSources.forEach { $0.cancel() } // clear refs
         box.signalSources = []
         self.box.withLockedValue { $0 = box }

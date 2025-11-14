@@ -7,12 +7,12 @@ public struct View: ResponseEncodable, Sendable {
         self.data = data
     }
 
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+    public func encodeResponse(for request: Request) async throws -> Response {
         let response = Response()
         response.responseBox.withLockedValue { box in
             box.headers.contentType = .html
-            box.body = .init(buffer: self.data, byteBufferAllocator: request.byteBufferAllocator)
+            box.body = .init(buffer: self.data)
         }
-        return request.eventLoop.makeSucceededFuture(response)
+        return response
     }
 }
