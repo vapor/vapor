@@ -40,8 +40,6 @@ extension Environment {
     ///
     /// ````
     ///
-    /// - Important: Do _not_ use `.wait()` if loading a secret at any time after the app has booted, such as while
-    ///   handling a `Request`. Chain the result as you would any other future instead.
     public static func secret(key: String) async throws -> String? {
         guard let filePath = self.get(key) else {
             return nil
