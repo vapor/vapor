@@ -3,6 +3,7 @@ import Foundation
 import Vapor
 import AsyncHTTPClient
 import NIOCore
+import NIOFoundationCompat
 import NIOPosix
 import NIOConcurrencyHelpers
 import HTTPTypes
@@ -11,6 +12,8 @@ import Atomics
 import Testing
 import VaporTesting
 import NIOHTTPTypesHTTP1
+import X509
+import SwiftASN1
 
 #warning("Bring back")
 @Suite("Server Tests", .disabled())
@@ -1262,6 +1265,62 @@ struct ServerTests {
 //            #expect(app.serverConfiguration.port == app.sharedNewAddress.withLockedValue({ $0 })?.port)
 //        }
 //    }
+//
+//    func testCanOverrideCertValidationWithMetadata() async throws {
+//         guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
+//               let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
+//             XCTFail("Cannot load expired cert and associated key")
+//             return
+//         }
+
+//         let certs = try NIOSSLCertificate.fromPEMFile(clientCertPath.path)
+//         let certSources = certs.map { NIOSSLCertificateSource.certificate($0) }
+//         let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
+
+//         var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: certSources, privateKey: .privateKey(key))
+//         serverConfig.certificateVerification = .noHostnameVerification
+
+//         app.http.server.configuration.tlsConfiguration = serverConfig
+//         app.http.server.configuration.customCertificateVerifyCallbackWithMetadata = { @Sendable peerCerts, successPromise in
+//             // This lies and accepts the above cert, which has actually expired.
+//             XCTAssertEqual(peerCerts, certs)
+//             successPromise.succeed(
+//                 .certificateVerified(
+//                     VerificationMetadata(ValidatedCertificateChain(peerCerts))
+//                 )
+//             )
+//         }
+
+//         // We need to disable verification on the client, because the cert we're using has expired, and we want to
+//         // _send_ a client cert.
+//         var clientConfig = TLSConfiguration.makeClientConfiguration()
+//         clientConfig.certificateVerification = .none
+//         clientConfig.certificateChain = certSources
+//         clientConfig.privateKey = .privateKey(key)
+//         app.http.client.configuration.tlsConfiguration = clientConfig
+
+//         app.environment.arguments = ["serve"]
+
+//         app.get("hello") { req in
+//             let certChain: X509.ValidatedCertificateChain = try XCTUnwrap(req.peerCertificateChain)
+//             XCTAssertEqual(certChain.count, 1)
+//             XCTAssertEqual(certChain.leaf, try X509.Certificate(derEncoded: try certs.first!.toDERBytes()))
+//             return "world"
+//         }
+
+//         try await app.server.start(address: BindAddress.hostname("127.0.0.1", port: 0))
+
+//         let localAddress = try XCTUnwrap(app.http.server.shared.localAddress)
+//         guard let ip = localAddress.ipAddress, let port = localAddress.port else {
+//             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+//             return
+//         }
+
+//         let a = try await app.client.get("https://\(ip):\(port)/hello")
+//         XCTAssertEqual(a.body, ByteBuffer(string: "world"))
+
+//         await app.server.shutdown()
+//     }
 }
 
 extension Application.Servers.Provider {

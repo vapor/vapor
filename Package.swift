@@ -38,13 +38,13 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
 
         // 🚍 High-performance trie-node router.
-        .package(url: "https://github.com/vapor/routing-kit.git", branch: "v5"),
+        .package(url: "https://github.com/vapor/routing-kit.git", from: "5.0.0-beta"),
 
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.82.0"),
 
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.34.0"),
 
         // HTTP/2 support for SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.28.0"),
@@ -87,6 +87,11 @@ let package = Package(
 
         // Collection algorithms
         .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
+        // X509 certificate types for the Swift ecosystem
+        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.14.0"),
+
+        // Work with certificate encoding schemes
+        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0")
     ],
     targets: [
         // C helpers
@@ -145,6 +150,8 @@ let package = Package(
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
                 .target(name: "HTTPServerNew"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "X509", package: "swift-certificates"),
+                .product(name: "SwiftASN1", package: "swift-asn1"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -173,6 +180,7 @@ let package = Package(
             name: "VaporTests",
             dependencies: [
                 .product(name: "NIOTestUtils", package: "swift-nio"),
+                .product(name: "SwiftASN1", package: "swift-asn1"),
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
@@ -194,8 +202,11 @@ let package = Package(
     ]
 )
 
-var swiftSettings: [SwiftSetting] {
-    [
-        .enableUpcomingFeature("ExistentialAny"),
-    ]
-}
+var swiftSettings: [SwiftSetting] { [
+    .enableUpcomingFeature("ExistentialAny"),
+    //.enableUpcomingFeature("InternalImportsByDefault"),
+    // .enableUpcomingFeature("MemberImportVisibility"),
+    .enableUpcomingFeature("InferIsolatedConformances"),
+    //.enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+    .enableUpcomingFeature("ImmutableWeakCaptures"),
+] }

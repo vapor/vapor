@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   build-and-deploy:
@@ -10,5 +13,5 @@ jobs:
      secrets: inherit
      with:
        package_name: vapor
-       modules: Vapor,XCTVapor,VaporTesting
-       pathsToInvalidate: /vapor/* /xctvapor/* /vaportesting/*
+       modules: Vapor,VaporTesting
+       pathsToInvalidate: /vapor/* /vaportesting/*

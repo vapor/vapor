@@ -1,6 +1,7 @@
 import Foundation
 import NIOCore
 import HTTPTypes
+import NIOFoundationCompat
 
 extension JSONEncoder: ContentEncoder {
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
@@ -9,11 +10,12 @@ extension JSONEncoder: ContentEncoder {
     
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         headers.contentType = .json
-        
+
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
             #if canImport(Darwin)
             let existingUserInfo = self.userInfo
             #else
+            #warning("Check")
             // JSONEncoder.userInfo does not declare its values as Sendable yet on Linux.
             // This appears to be an oversight, as JSONDecoder does not have the same issue.
             let existingUserInfo = self.userInfo as! [CodingUserInfoKey: any Sendable]

@@ -21,7 +21,10 @@ package struct DefaultResponder: Responder {
 
     /// Creates a new ``DefaultResponder``.
     package init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
-        var routerBuilder = TrieRouterBuilder(CachedRoute.self, options: routes.caseInsensitive ? [.caseInsensitive] : [])
+        let config = TrieRouter<CachedRoute>.Configuration(
+            isCaseInsensitive: routes.caseInsensitive
+        )
+        var routerBuilder = TrieRouterBuilder(CachedRoute.self, config: config)
 
         for route in routes.all {
             // Make a copy of the route to cache middleware chaining.

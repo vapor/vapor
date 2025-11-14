@@ -44,6 +44,7 @@ extension Application.HTTP {
                 let new: HTTPServer<HTTP1Channel> = try! HTTPServerBuilder.http1().buildServer(configuration: config, eventLoopGroup: MultiThreadedEventLoopGroup.singleton, logger: self.application.logger, responder: { req, responseWriter, channel  in
                     application.logger.info("Request received with new Vapor 5 server")
 
+                    #warning("Implement peer certificate chain")
                     let vaporRequest = Vapor.Request(
                         application: self.application,
                         method: req.method,
@@ -51,6 +52,7 @@ extension Application.HTTP {
                         version: .init(major: 1, minor: 1),
                         headersNoUpdate: .init(req.headers),
                         remoteAddress: channel.remoteAddress,
+                        peerCertificateChain: nil,
                         logger: self.application.logger,
                         byteBufferAllocator: application.byteBufferAllocator
                     )

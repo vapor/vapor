@@ -7,6 +7,8 @@ import NIOConcurrencyHelpers
 import HTTPTypes
 import HTTPServerNew
 import NIOPosix
+import ServiceContextModule
+import X509
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {
@@ -75,6 +77,12 @@ public final class Request: CustomStringConvertible, Sendable {
         } else {
             self.remoteAddress
         }
+    }
+
+    /// The validated certificate chain. This returns nil if the peer did not authenticate with a certificate. Requires
+    /// configuring a `customCertificateVerifyCallbackWithMetadata` that performs the verification.
+    public var peerCertificateChain: ValidatedCertificateChain? {
+        return self.requestBox.withLockedValue { $0.peerCertificateChain }
     }
 
     // MARK: Content
@@ -222,6 +230,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var isKeepAlive: Bool
         var route: Route?
         var parameters: Parameters
+        var peerCertificateChain: ValidatedCertificateChain?
         var byteBufferAllocator: ByteBufferAllocator
     }
     
@@ -231,6 +240,7 @@ public final class Request: CustomStringConvertible, Sendable {
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let newBodyStorage: NIOLockedValueBox<HTTPServerNew.RequestBody?>
 
+    #warning("Sort out all these initialisers")
     public convenience init(
         application: Application,
         method: HTTPRequest.Method = .get,
@@ -250,6 +260,7 @@ public final class Request: CustomStringConvertible, Sendable {
             headersNoUpdate: headers,
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
+            peerCertificateChain: nil,
             logger: logger,
             byteBufferAllocator: byteBufferAllocator
         )
@@ -257,7 +268,62 @@ public final class Request: CustomStringConvertible, Sendable {
             self.headers.updateContentLength(body.readableBytes)
         }
     }
-    
+
+    public convenience init(
+        application: Application,
+        method: HTTPRequest.Method = .get,
+        url: URI = "/",
+        version: HTTPVersion = .init(major: 1, minor: 1),
+        headers: HTTPFields = .init(),
+        collectedBody: ByteBuffer? = nil,
+        remoteAddress: SocketAddress? = nil,
+        peerCertificateChain: ValidatedCertificateChain?,
+        logger: Logger = .init(label: "codes.vapor.request"),
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+    ) {
+        self.init(
+            application: application,
+            method: method,
+            url: url,
+            version: version,
+            headersNoUpdate: headers,
+            collectedBody: collectedBody,
+            remoteAddress: remoteAddress,
+            peerCertificateChain: peerCertificateChain,
+            logger: logger,
+            byteBufferAllocator: byteBufferAllocator
+        )
+        if let body = collectedBody {
+            self.headers.updateContentLength(body.readableBytes)
+        }
+    }
+
+    @_disfavoredOverload
+    public convenience init(
+        application: Application,
+        method: HTTPRequest.Method,
+        url: URI,
+        version: HTTPVersion = .init(major: 1, minor: 1),
+        headersNoUpdate headers: HTTPFields = .init(),
+        collectedBody: ByteBuffer? = nil,
+        remoteAddress: SocketAddress? = nil,
+        logger: Logger = .init(label: "codes.vapor.request"),
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+    ) {
+        self.init(
+            application: application,
+            method: method,
+            url: url,
+            version: version,
+            headersNoUpdate: headers,
+            collectedBody: collectedBody,
+            remoteAddress: remoteAddress,
+            peerCertificateChain: nil,
+            logger: logger,
+            byteBufferAllocator: byteBufferAllocator
+        )
+    }
+
     public init(
         application: Application,
         method: HTTPRequest.Method,
@@ -266,6 +332,7 @@ public final class Request: CustomStringConvertible, Sendable {
         headersNoUpdate headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        peerCertificateChain: ValidatedCertificateChain?,
         logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
     ) {
@@ -289,6 +356,7 @@ public final class Request: CustomStringConvertible, Sendable {
             isKeepAlive: true,
             route: nil,
             parameters: .init(),
+            peerCertificateChain: peerCertificateChain,
             byteBufferAllocator: byteBufferAllocator
         )
         self.requestBox = .init(storageBox)

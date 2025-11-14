@@ -1,6 +1,19 @@
-import Foundation
-#if canImport(Android)
+#if canImport(Glibc)
+import Glibc
+#if canImport(CNIOLinux)
+/// Until the Glibc Swift module is fixed, it's possible that the system header files on which the helpers in this file
+/// rely are misattributed to another module in a very parallel build, in this case CNIOLinux, which also imports
+/// `in.h`, which defines `in_addr` and `in6_addr`.
+///
+/// See: https://github.com/swiftlang/swift/issues/85427
+import CNIOLinux
+#endif
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Android)
 import Android
+#else
+import Darwin
 #endif
 
 extension String {

@@ -1,6 +1,7 @@
 import Vapor
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOFoundationCompat
 import Logging
 import NIOEmbedded
 import Testing
@@ -38,7 +39,7 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Client Tiemout")
+    @Test("Test Client Timeout")
     func testClientTimeout() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in

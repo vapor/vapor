@@ -282,6 +282,8 @@ public extension HTTPMediaType {
     static let jxl = HTTPMediaType(type: "image", subType: "jxl")
     /// AVIF image.
     static let avif = HTTPMediaType(type: "image", subType: "avif")
+    /// HEIC (HEVC in HEIF) image
+    static let heic = HTTPMediaType(type: "image", subType: "heic")
     /// Basic audio.
     static let audio = HTTPMediaType(type: "audio", subType: "basic")
     /// MIDI audio.
@@ -701,6 +703,7 @@ let fileExtensionMediaTypeMapping: [String: HTTPMediaType] = [
     "webp": HTTPMediaType.webp,
     "jxl": HTTPMediaType.jxl,
     "avif": HTTPMediaType.avif,
+    "heic": HTTPMediaType.heic,
     "djvu": HTTPMediaType(type: "image", subType: "vnd.djvu"),
     "djv": HTTPMediaType(type: "image", subType: "vnd.djvu"),
     "ico": HTTPMediaType(type: "image", subType: "vnd.microsoft.icon"),
@@ -909,6 +912,7 @@ extension HTTPMediaTypeSet {
         HTTPMediaType.webp,
         HTTPMediaType.jxl,
         HTTPMediaType.avif,
+        HTTPMediaType.heic,
         HTTPMediaType(type: "image", subType: "vnd.djvu"),
         HTTPMediaType(type: "image", subType: "vnd.microsoft.icon"),
         HTTPMediaType(type: "image", subType: "vnd.wap.wbmp"),

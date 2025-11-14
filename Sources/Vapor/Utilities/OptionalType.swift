@@ -1,3 +1,5 @@
+#warning("Do we need this anymore?")
+
 /// Capable of being represented by an optional wrapped type.
 ///
 /// This protocol mostly exists to allow constrained extensions on generic

@@ -1,5 +1,9 @@
 import Foundation
+#if canImport(Darwin) && compiler(>=6.1)
 import Crypto
+#else
+@preconcurrency import Crypto
+#endif
 
 /// Supported OTP output sizes.
 public enum OTPDigits: Int, Sendable {

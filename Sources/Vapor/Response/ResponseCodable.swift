@@ -1,4 +1,5 @@
 import HTTPTypes
+import NIOConcurrencyHelpers
 
 /// Can convert `self` to a `Response`.
 ///
