@@ -1,5 +1,6 @@
 // swift-tools-version:6.2
 import PackageDescription
+import CompilerPluginSupport
 
 let package = Package(
     name: "vapor",
@@ -19,12 +20,14 @@ let package = Package(
         .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
         .trait(name: "Multipart"),
+        .trait(name: "MacroRouting"),
         .default(enabledTraits: [
             "WebSockets",
             "TLS",
             "bcrypt",
             "HTTPClient",
             "Multipart",
+            "MacroRouting",
         ])
     ],
     dependencies: [
@@ -87,11 +90,15 @@ let package = Package(
 
         // Collection algorithms
         .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
+
         // X509 certificate types for the Swift ecosystem
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.14.0"),
 
         // Work with certificate encoding schemes
-        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0")
+        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0"),
+
+        // Swift syntax parsing and generation
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
     ],
     targets: [
         // C helpers
@@ -152,6 +159,23 @@ let package = Package(
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
+            ],
+            swiftSettings: swiftSettings
+        ),
+
+        .macro(
+            name: "VaporMacros",
+            dependencies: [
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
+            ]
+        ),
+
+        .target(
+            name: "VaporMacrosInterface",
+            dependencies: [
+                "VaporMacros",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
             ],
             swiftSettings: swiftSettings
         ),
