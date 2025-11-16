@@ -258,6 +258,8 @@ public func routes(_ app: Application) throws {
             }
         }
     }
+
+    try app.register(collection: UserController())
 }
 
 struct TestError: AbortError, DebuggableError {
@@ -310,7 +312,7 @@ struct TestController: RouteCollection {
 }
 
 @Controller
-struct UserController {
+struct UserController: RouteCollection {
     @GET("api", "macros", "users")
     func getUsers(req: Request) async throws -> String {
         return "users"
