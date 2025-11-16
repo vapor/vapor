@@ -62,7 +62,7 @@ public struct ControllerMacro: MemberAttributeMacro, MemberMacro {
             return nil
         }
         
-        // Generate the registration function
+        // Generate the RouteCollection boot function
         var registrationBody = ""
         
         for (method, pathComponents, _) in functions {
