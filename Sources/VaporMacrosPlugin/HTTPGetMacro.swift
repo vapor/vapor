@@ -16,37 +16,59 @@ public struct HTTPGetMacro: PeerMacro {
         guard case let .argumentList(arguments) = node.arguments else {
             throw MacroError.missingArguments
         }
-        
+
+        var funcParameters: [FunctionParameterSyntax] = []
+
+        // Get all the parameters for the function we're wrapping
+        for (index, parameter) in funcDecl.signature.parameterClause.parameters.enumerated() {
+            // Make sure the first is the request
+            if index == 0 {
+                guard parameter.type.description == "Request" else {
+                    throw MacroError.missingRequest
+                }
+            } else {
+                // Otherwise store them for late
+                funcParameters.append(parameter)
+            }
+        }
+
         // Parse path components and parameter types
-        var pathComponents: [String] = []
         var parameterTypes: [String] = []
-        
+        // Store the different types we've seen so we have the correct index for repeating types
+        var foundParameters: [String: Int] = [:]
+
         for arg in arguments {
             let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
             
             if exprStr.hasSuffix(".self") {
                 let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
-                pathComponents.append(":\(typeName.lowercased())")
+                if let oldIndex = foundParameters[typeName] {
+                    let newIndex = oldIndex + 1
+                    foundParameters[typeName] = newIndex
+                } else {
+                    foundParameters[typeName] = 0
+                }
                 parameterTypes.append(typeName)
-            } else {
-                let cleaned = exprStr.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-                pathComponents.append(cleaned)
             }
         }
-        
+
+        guard foundParameters.count == parameterTypes.count else {
+            throw MacroError.missingArguments
+        }
+
         let functionName = funcDecl.name.text
-        let pathString = pathComponents.joined(separator: "\", \"")
-        
+
         // Generate wrapper that extracts path parameters
         var parameterExtraction = ""
         var callParameters = "req: req"
         
         for (index, paramType) in parameterTypes.enumerated() {
-            let paramName = "\(paramType.lowercased())"
+            let functionParameterName = funcParameters[index].firstName.text
+            let parameterName = "\(paramType.lowercased())\(index)"
             parameterExtraction += """
-            let \(paramName) = try req.parameters.require("\(paramType.lowercased())-\(index)", as: \(paramType).self)            
+            let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(index)", as: \(paramType).self)            
             """
-            callParameters += ", \(paramName): \(paramName)"
+            callParameters += ", \(functionParameterName): \(parameterName)"
         }
         
         let wrapperFunc: DeclSyntax = """

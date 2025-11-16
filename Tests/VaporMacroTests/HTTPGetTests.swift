@@ -46,8 +46,8 @@ final class HTTPMethodMacroTests: XCTestCase {
             }
             
             func _route_getUser(req: Request) async throws -> Response {
-                let int = try req.parameters.require("int-0", as: Int.self)
-                let result = try await getUser(req: req, id: int)
+                let int0 = try req.parameters.require("int0", as: Int.self)
+                let result = try await getUser(req: req, id: int0)
                 return try await result.encodeResponse(for: req)
             }
             """,
