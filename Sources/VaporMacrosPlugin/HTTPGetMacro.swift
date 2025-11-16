@@ -34,25 +34,17 @@ public struct HTTPGetMacro: PeerMacro {
 
         // Parse path components and parameter types
         var parameterTypes: [String] = []
-        // Store the different types we've seen so we have the correct index for repeating types
-        var foundParameters: [String: Int] = [:]
 
         for arg in arguments {
             let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
             
             if exprStr.hasSuffix(".self") {
                 let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
-                if let oldIndex = foundParameters[typeName] {
-                    let newIndex = oldIndex + 1
-                    foundParameters[typeName] = newIndex
-                } else {
-                    foundParameters[typeName] = 0
-                }
                 parameterTypes.append(typeName)
             }
         }
 
-        guard foundParameters.count == parameterTypes.count else {
+        guard funcParameters.count == parameterTypes.count else {
             throw MacroError.missingArguments
         }
 
