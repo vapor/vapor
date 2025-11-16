@@ -1,4 +1,4 @@
-import class Foundation.Bundle
+import Foundation
 import Vapor
 import NIOCore
 import HTTPTypes
@@ -315,4 +315,9 @@ struct UserController: RouteCollection {
     func getUsers(req: Request) async throws -> String {
         return "users"
     }
+
+//    @GET("api", "macros", "users", Int.self)
+//    func getUser(req: Request, id: Int) async throws -> String {
+//        return "user with id: \(id)"
+//    }
 }
