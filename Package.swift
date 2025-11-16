@@ -176,7 +176,6 @@ let package = Package(
             name: "VaporMacros",
             dependencies: [
                 "VaporMacrosPlugin",
-                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
             ],
             swiftSettings: swiftSettings
         ),
