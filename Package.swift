@@ -167,17 +167,18 @@ let package = Package(
         ),
 
         .macro(
-            name: "VaporMacros",
+            name: "VaporMacrosPlugin",
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
 
         .target(
-            name: "VaporMacrosInterface",
+            name: "VaporMacros",
             dependencies: [
-                "VaporMacros",
+                "VaporMacrosPlugin",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
             ],
             swiftSettings: swiftSettings
@@ -188,6 +189,7 @@ let package = Package(
             name: "Development",
             dependencies: [
                 .target(name: "Vapor"),
+                "VaporMacros",
             ],
             resources: [.copy("Resources")],
             swiftSettings: swiftSettings
