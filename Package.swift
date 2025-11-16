@@ -229,6 +229,14 @@ let package = Package(
             ],
             swiftSettings: swiftSettings
         ),
+        .testTarget(
+            name: "VaporMacroTests",
+            dependencies: [
+                "VaporMacrosPlugin",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+            ],
+            swiftSettings: swiftSettings
+        ),
     ]
 )
 

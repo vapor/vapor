@@ -44,10 +44,7 @@ public struct HTTPGetMacro: PeerMacro {
         for (index, paramType) in parameterTypes.enumerated() {
             let paramName = "\(paramType.lowercased())"
             parameterExtraction += """
-            guard let \(paramName) = req.parameters.get("\(paramType.lowercased())", as: \(paramType).self) else {
-                throw Abort(.badRequest, reason: "Invalid \(paramType.lowercased()) parameter")
-            }
-            
+            let \(paramName) = try req.parameters.require("\(paramType.lowercased())-\(index)", as: \(paramType).self)            
             """
             callParameters += ", \(paramName): \(paramName)"
         }
