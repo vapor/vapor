@@ -4,6 +4,7 @@ import NIOCore
 import HTTPTypes
 import NIOConcurrencyHelpers
 import _NIOFileSystem
+import VaporMacros
 
 struct Creds: Content {
     var email: String
@@ -303,5 +304,13 @@ struct TestController: RouteCollection {
 
     func testRoute(_ req: Request) async throws -> String {
         return "OK"
+    }
+}
+
+@Controller
+struct UserController {
+    @GET("api", "macros", "users")
+    func getUsers(req: Request) async throws -> String {
+        return "users"
     }
 }
