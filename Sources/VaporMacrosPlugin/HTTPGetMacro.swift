@@ -65,7 +65,8 @@ public struct HTTPGetMacro: PeerMacro {
         
         let wrapperFunc: DeclSyntax = """
         func _route_\(raw: functionName)(req: Request) async throws -> Response {
-        \(raw: parameterExtraction.isEmpty ? "" : "    \(parameterExtraction)")    let result = try await \(raw: functionName)(\(raw: callParameters))
+        \(raw: parameterExtraction.isEmpty ? "" : "    \(parameterExtraction)")
+            let result = try await \(raw: functionName)(\(raw: callParameters))
             return try await result.encodeResponse(for: req)
         }
         """
