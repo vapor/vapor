@@ -1,13 +1,19 @@
 enum MacroError: Error, CustomStringConvertible {
     case notAFunction
     case missingArguments
-    
+    case missingRequest
+    case invalidNumberOfParameters(Int, Int)
+
     var description: String {
         switch self {
         case .notAFunction:
-            return "@GET can only be applied to functions"
+            "@GET can only be applied to functions"
         case .missingArguments:
-            return "@GET requires path components as arguments"
+            "@GET requires path components as arguments"
+        case .missingRequest:
+            "The first parameter to the function must be a Request"
+        case .invalidNumberOfParameters(let macro, let function):
+            "The macro defines \(macro) arguments, but the function has \(function)"
         }
     }
 }
