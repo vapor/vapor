@@ -310,7 +310,7 @@ struct TestController: RouteCollection {
 }
 
 @Controller
-struct UserController: RouteCollection {
+struct UserController {
     @GET("api", "macros", "users")
     func getUsers(req: Request) async throws -> String {
         return "users"

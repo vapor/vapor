@@ -1,10 +1,10 @@
 import HTTPTypes
+import Vapor
 
-@attached(member, names: arbitrary)
-@attached(memberAttribute)
+@attached(extension, conformances: RouteCollection, names: named(boot(routes:)))
 public macro Controller() = #externalMacro(
     module: "VaporMacrosPlugin",
-    type: "ControllerMacro"
+    type: "ControllerMacro",
 )
 
 @attached(peer, names: arbitrary)
