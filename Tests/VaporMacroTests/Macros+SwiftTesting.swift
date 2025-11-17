@@ -1,6 +1,8 @@
 import Testing
 import SwiftSyntaxMacrosGenericTestSupport
 import SwiftSyntaxMacroExpansion
+
+#if canImport(VaporMacrosPlugin)
 import VaporMacrosPlugin
 
 enum FailureHandler {
@@ -26,3 +28,5 @@ let testMacros: [String: MacroSpec] = [
     "HTTP": MacroSpec(type: HTTPMethodMacro.self),
     "Controller": MacroSpec(type: ControllerMacro.self),
 ]
+
+#endif
