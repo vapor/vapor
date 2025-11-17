@@ -264,20 +264,10 @@ public func routes(_ app: Application) throws {
 
     try app.register(collection: UserController())
 
-    // @GET(on: app, "macros", Int.self)
-    // @Sendable
-    // func macroRoute(req: Request, id: Int) async throws -> String {
-    //     return "macro route with id: \(id)"
-    // }
-
-//    @Sendable
-//    func _route_macroRoute(req: Request) async throws -> Response {
-//        let int0 = try req.parameters.require("int0", as: Int.self)
-//        let result: some ResponseEncodable = try await macroRoute(req: req, id: int0)
-//        return try await result.encodeResponse(for: req)
-//    }
-//
-//    app.on(.get, "macros", ":int0", use: _route_macroRoute)
+    @GET(on: app, "macros", Int.self)
+    @Sendable func macroRoute(req: Request, id: Int) async throws -> String {
+        return "macro route with id: \(id)"
+    }
 }
 
 struct TestError: AbortError, DebuggableError {
@@ -353,7 +343,7 @@ struct UserController {
 
     @POST("api", "macros", "lots", UUID.self, Int.self, String.self, Int.self)
     func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String, anotherNumber: Int) async throws -> String {
-        return "uuid: \(uuid), number: \(number), text: \(text), anotherNumber: \(anotherNumber)"
+        return "uuid: \(uuid), number: (number), text: \(text), anotherNumber: \(anotherNumber)"
     }
 
     @POST("api", "macros", "sync")
