@@ -16,6 +16,11 @@ public func routes(_ app: Application) throws {
         return "123" as StaticString
     }
 
+    app.get("hello", ":uuid") { req in
+        let uuid = try req.parameters.require("uuid", as: UUID.self)
+        return uuid.uuidString
+    }
+
     #warning("Fix")
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
 //    app.on(.post, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
@@ -329,5 +334,10 @@ struct UserController {
     @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
     func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
         return "custom HTTP method"
+    }
+
+    @POST("api", "macros", "lots", UUID.self, Int.self, String.self)
+    func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String) async throws -> String {
+        return "uuid: \(uuid), number: \(number), text: \(text)"
     }
 }
