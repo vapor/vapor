@@ -18,7 +18,7 @@ struct HTTPMethodMacroTests {
             }
             
             func _route_getUsers(req: Request) async throws -> Response {
-                let result = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -43,7 +43,7 @@ struct HTTPMethodMacroTests {
             
             func _route_getUser(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
-                let result = try await getUser(req: req, id: int0)
+                let result: some ResponseEncodable = try await getUser(req: req, id: int0)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -69,7 +69,7 @@ struct HTTPMethodMacroTests {
             func _route_getUser(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let int1 = try req.parameters.require("int1", as: Int.self)
-                let result = try await getUser(req: req, userID: int0, clientID: int1)
+                let result: some ResponseEncodable = try await getUser(req: req, userID: int0, clientID: int1)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -95,7 +95,7 @@ struct HTTPMethodMacroTests {
             func _route_getUser(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let uuid1 = try req.parameters.require("uuid1", as: UUID.self)
-                let result = try await getUser(req: req, id: int0, uniqueID: uuid1)
+                let result: some ResponseEncodable = try await getUser(req: req, id: int0, uniqueID: uuid1)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -120,7 +120,7 @@ struct HTTPMethodMacroTests {
             
             func _route_getUser(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
-                let result = try await getUser(req: req, id: int0)
+                let result: some ResponseEncodable = try await getUser(req: req, id: int0)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -188,7 +188,7 @@ struct HTTPMethodMacroTests {
             }
             
             func _route_getUsers(req: Request) async throws -> Response {
-                let result = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -212,7 +212,7 @@ struct HTTPMethodMacroTests {
             }
             
             func _route_getUsers(req: Request) async throws -> Response {
-                let result = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -236,7 +236,7 @@ struct HTTPMethodMacroTests {
             }
             
             func _route_getUsers(req: Request) async throws -> Response {
-                let result = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -260,7 +260,7 @@ struct HTTPMethodMacroTests {
             }
             
             func _route_getUsers(req: Request) async throws -> Response {
-                let result = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -284,7 +284,7 @@ struct HTTPMethodMacroTests {
             }
             
             func _route_getUsers(req: Request) async throws -> Response {
-                let result = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
             """,
@@ -308,10 +308,78 @@ struct HTTPMethodMacroTests {
             }
             
             func _route_getUsers(req: Request) async throws -> Response {
-                let result = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
             """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test sync macro")
+    func testSyncRoute() {
+        assertMacroExpansion(
+            """
+            @GET("sync")
+            func syncRoute(req: Request) throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func syncRoute(req: Request) throws -> String {
+                return "Users"
+            }
+            
+            func _route_syncRoute(req: Request) async throws -> Response {
+                let result: some ResponseEncodable = try getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test macro fails when missing Request parameter")
+    func testGetMacroFailsWhenMissingRequestParameter() {
+        assertMacroExpansion(
+            """
+            @GET("api", "macros", "users", Int.self)
+            func getUser(id: Int) async throws -> String {
+                return "user with id: \\(userID)"
+            }
+            """,
+            expandedSource: """
+            func getUser(id: Int) async throws -> String {
+                return "user with id: \\(userID)"
+            }
+            """,
+            diagnostics: [
+                DiagnosticSpec(message: "The @GET macro defines 2 arguments, but the function has 1", line: 1, column: 1)
+            ],
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test macro fails when missing no parameters")
+    func testGetMacroFailsWhenNoParameters() {
+        assertMacroExpansion(
+            """
+            @GET("api", "macros", "users")
+            func getUser() async throws -> String {
+                return "user with id: \\(userID)"
+            }
+            """,
+            expandedSource: """
+            func getUser() async throws -> String {
+                return "user with id: \\(userID)"
+            }
+            """,
+            diagnostics: [
+                DiagnosticSpec(message: "The @GET macro defines 2 arguments, but the function has 1", line: 1, column: 1)
+            ],
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
         )
