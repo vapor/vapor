@@ -8,6 +8,10 @@ import SwiftSyntaxMacroExpansion
 
 let testMacros: [String: MacroSpec] = [
     "GET": MacroSpec(type: HTTPGetMacro.self),
+    "POST": MacroSpec(type: HTTPPostMacro.self),
+    "PUT": MacroSpec(type: HTTPPutMacro.self),
+    "DELETE": MacroSpec(type: HTTPDeleteMacro.self),
+    "PATCH": MacroSpec(type: HTTPPatchMacro.self),
 ]
 
 @Suite("HTTP Method Macro Tests")
@@ -153,7 +157,7 @@ struct HTTPMethodMacroTests {
             }
             """,
             diagnostics: [
-                DiagnosticSpec(message: "The macro defines 2 arguments, but the function has 1", line: 1, column: 1)
+                DiagnosticSpec(message: "The @GET macro defines 2 arguments, but the function has 1", line: 1, column: 1)
             ],
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -175,7 +179,7 @@ struct HTTPMethodMacroTests {
             }
             """,
             diagnostics: [
-                DiagnosticSpec(message: "The macro defines 1 arguments, but the function has 2", line: 1, column: 1)
+                DiagnosticSpec(message: "The @GET macro defines 1 arguments, but the function has 2", line: 1, column: 1)
             ],
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -196,7 +200,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_postUsers(req: Request) async throws -> Response {
+            func _route_getUsers(req: Request) async throws -> Response {
                 let result = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -220,7 +224,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_putUsers(req: Request) async throws -> Response {
+            func _route_getUsers(req: Request) async throws -> Response {
                 let result = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -244,7 +248,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_patchUsers(req: Request) async throws -> Response {
+            func _route_getUsers(req: Request) async throws -> Response {
                 let result = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -258,7 +262,7 @@ struct HTTPMethodMacroTests {
     func testDeleteMacro() {
         assertMacroExpansion(
             """
-            @DELTE("api", "macros", "users")
+            @DELETE("api", "macros", "users")
             func getUsers(req: Request) async throws -> String {
                 return "Users"
             }
@@ -268,7 +272,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_deleteUsers(req: Request) async throws -> Response {
+            func _route_getUsers(req: Request) async throws -> Response {
                 let result = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
