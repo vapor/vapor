@@ -332,7 +332,7 @@ struct HTTPMethodMacroTests {
             }
             
             func _route_syncRoute(req: Request) async throws -> Response {
-                let result: some ResponseEncodable = try getUsers(req: req)
+                let result: some ResponseEncodable = try syncRoute(req: req)
                 return try await result.encodeResponse(for: req)
             }
             """,
