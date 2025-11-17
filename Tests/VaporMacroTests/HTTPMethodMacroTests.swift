@@ -356,7 +356,7 @@ struct HTTPMethodMacroTests {
             }
             """,
             diagnostics: [
-                DiagnosticSpec(message: "The @GET macro defines 2 arguments, but the function has 1", line: 1, column: 1)
+                DiagnosticSpec(message: "The first parameter to the function must be a Request", line: 1, column: 1)
             ],
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -378,7 +378,7 @@ struct HTTPMethodMacroTests {
             }
             """,
             diagnostics: [
-                DiagnosticSpec(message: "The @GET macro defines 2 arguments, but the function has 1", line: 1, column: 1)
+                DiagnosticSpec(message: "The first parameter to the function must be a Request", line: 1, column: 1)
             ],
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
