@@ -24,6 +24,11 @@ enum HTTPMethodMacroUtilities {
 
         var funcParameters: [FunctionParameterSyntax] = []
 
+        // Make sure it isn't empty
+        guard !funcDecl.signature.parameterClause.parameters.isEmpty else {
+            throw MacroError.missingRequest
+        }
+
         // Get all the parameters for the function we're wrapping
         for (index, parameter) in funcDecl.signature.parameterClause.parameters.enumerated() {
             // Make sure the first is the request
@@ -76,7 +81,7 @@ enum HTTPMethodMacroUtilities {
 
         let wrapperFunc: DeclSyntax = """
         func _route_\(raw: functionName)(req: Request) async throws -> Response {
-            \(raw: parameterExtraction)let result = try await \(raw: functionName)(\(raw: callParameters))
+            \(raw: parameterExtraction)let result: some ResponseEncodable = try await \(raw: functionName)(\(raw: callParameters))
             return try await result.encodeResponse(for: req)
         }
         """
