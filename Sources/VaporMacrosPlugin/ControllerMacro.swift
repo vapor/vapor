@@ -14,7 +14,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
 
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingExtensionsOf type: some TypeSyntaxProtocol, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax] {
         // Find all functions with route macros
-        let functions = try declaration.memberBlock.members.compactMap { member -> (String, [String], [String], Bool)? in
+        let functions = try declaration.memberBlock.members.compactMap { member -> (FunctionDeclSyntax, String, [String], [String], Bool)? in
             guard let funcDecl = member.decl.as(FunctionDeclSyntax.self) else {
                 return nil
             }
@@ -41,7 +41,6 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     httpMethod = identifier.name.text
                     customHTTPMethod = false
                 }
-                let functionName = funcDecl.name.text
 
                 // Parse path components
                 var pathComponents: [String] = []
@@ -66,7 +65,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     }
                 }
 
-                return (httpMethod, pathComponents, parameterTypes, customHTTPMethod)
+                return (funcDecl, httpMethod, pathComponents, parameterTypes, customHTTPMethod)
             }
 
             return nil
@@ -75,34 +74,17 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
         // Generate the RouteCollection boot function
         var registrationBody = ""
 
-        for (method, pathComponents, _, customHTTPMethod) in functions {
+        for (functionDeclaration, method, pathComponents, _, customHTTPMethod) in functions {
             let path = pathComponents.joined(separator: "\", \"")
             let methodLower = method.lowercased()
 
-            // Find the function name from the original declaration
-            if let funcDecl = declaration.memberBlock.members.compactMap({
-                $0.decl.as(FunctionDeclSyntax.self)
-            }).first(where: { funcDecl in
-                funcDecl.attributes.contains { attr in
-                    guard case let .attribute(attrNode) = attr,
-                          let identifier = attrNode.attributeName.as(IdentifierTypeSyntax.self) else {
-                        return false
-                    }
-                    if customHTTPMethod {
-                        return identifier.name.text == "HTTP"
-                    } else {
-                        return identifier.name.text == method
-                    }
-                }
-            }) {
-                let functionName = funcDecl.name.text
-                registrationBody += """
-                routes.\(methodLower)("\(path)") { req async throws in
-                    try await self.\(functionName)(req: req)
-                }
-                
-                """
+            let functionName = "_route_\(functionDeclaration.name.text)"
+            registrationBody += """
+            routes.\(methodLower)("\(path)") { req async throws in
+                try await self.\(functionName)(req: req)
             }
+            
+            """
         }
 
         let registrationFunc: DeclSyntax = """

@@ -30,7 +30,7 @@ struct ControllerMacroTests {
             extension UserController: RouteCollection {
                 func boot(routes: any RoutesBuilder) throws {
                 routes.get("api", "macros", "users") { req async throws in
-                    try await self.getUsers(req: req)
+                    try await self._route_getUsers(req: req)
                 }
             
                 }
@@ -96,13 +96,13 @@ struct ControllerMacroTests {
             extension UserController: RouteCollection {
                 func boot(routes: any RoutesBuilder) throws {
                 routes.get("api", "macros", "users") { req async throws in
-                    try await self.getUsers(req: req)
+                    try await self._route_getUsers(req: req)
                 }
                 routes.get("api", "macros", ":int0") { req async throws in
-                    try await self.getUser(req: req)
+                    try await self._route_getUser(req: req)
                 }
                 routes.get("api", "macros", "users", ":bool0") { req async throws in
-                    try await self.deleteUser(req: req)
+                    try await self._route_deleteUser(req: req)
                 }
                 }
             }
@@ -204,22 +204,22 @@ struct ControllerMacroTests {
             extension UserController: RouteCollection {
                 func boot(routes: any RoutesBuilder) throws {
                 routes.get("api", "macros", "users") { req async throws in
-                    try await self.getUsers(req: req)
+                    try await self._route_getUsers(req: req)
                 }
                 routes.post("api", "macros", "users") { req async throws in
-                    try await self.createUser(req: req)
+                    try await self._route_createUser(req: req)
                 }
                 routes.delete("api", "macros", "users") { req async throws in
-                    try await self.deleteUser(req: req)
+                    try await self._route_deleteUser(req: req)
                 }
                 routes.patch("api", "macros", "users") { req async throws in
-                    try await self.patchUser(req: req)
+                    try await self._route_patchUser(req: req)
                 }
                 routes.put("api", "macros", "users") { req async throws in
-                    try await self.putUser(req: req)
+                    try await self._route_putUser(req: req)
                 }
                 routes.options("api", "macros", "users") { req async throws in
-                    try await self.optionsUser(req: req)
+                    try await self._route_optionsUser(req: req)
                 }
             
                 }
