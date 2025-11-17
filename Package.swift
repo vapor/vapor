@@ -179,6 +179,7 @@ let package = Package(
             name: "VaporMacros",
             dependencies: [
                 "VaporMacrosPlugin",
+                .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
             swiftSettings: swiftSettings
         ),

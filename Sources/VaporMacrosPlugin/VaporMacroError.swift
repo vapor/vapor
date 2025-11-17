@@ -3,6 +3,7 @@ enum MacroError: Error, CustomStringConvertible {
     case missingArguments(String)
     case missingRequest
     case invalidNumberOfParameters(String, Int, Int)
+    case invalidHTTPMethod(String)
 
     var description: String {
         switch self {
@@ -14,6 +15,8 @@ enum MacroError: Error, CustomStringConvertible {
             "The first parameter to the function must be a Request"
         case .invalidNumberOfParameters(let macroName, let macro, let function):
             "The @\(macroName) macro defines \(macro) arguments, but the function has \(function)"
+        case .invalidHTTPMethod(let method):
+            "\(method) is not a valid HTTP Method"
         }
     }
 }

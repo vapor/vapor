@@ -1,80 +1,34 @@
-import SwiftSyntax
 import SwiftSyntaxMacros
-import SwiftSyntaxBuilder
-import Foundation
+import SwiftSyntax
 import HTTPTypes
 
-enum HTTPMethodMacroUtilities {
+public struct HTTPMethodMacro: PeerMacro {
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
-        in context: some MacroExpansionContext,
-        for method: HTTPRequest.Method
+        in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        let macroName = node.attributeName.trimmedDescription
-
-        guard let funcDecl = declaration.as(FunctionDeclSyntax.self) else {
-            throw MacroError.notAFunction(macroName)
+        // Get the first parameter for the macro
+        guard let arguments = node.arguments?.as(LabeledExprListSyntax.self),
+              let firstArg = arguments.first else {
+            throw MacroError.missingArguments("Method")
         }
 
-        guard case let .argumentList(arguments) = node.arguments else {
-            throw MacroError.missingArguments(macroName)
-        }
+        let methodExpr = firstArg.expression
 
-        var funcParameters: [FunctionParameterSyntax] = []
-
-        // Get all the parameters for the function we're wrapping
-        for (index, parameter) in funcDecl.signature.parameterClause.parameters.enumerated() {
-            // Make sure the first is the request
-            if index == 0 {
-                guard parameter.type.description == "Request" else {
-                    throw MacroError.missingRequest
-                }
-            } else {
-                // Otherwise store them for late
-                funcParameters.append(parameter)
+        // Check if it's a member access (like .get, .post)
+        let httpMethod: HTTPRequest.Method
+        if let memberAccess = methodExpr.as(MemberAccessExprSyntax.self) {
+            let methodName = memberAccess.declName.baseName.text
+            guard let httpMethodFound = HTTPRequest.Method(methodName) else {
+                throw MacroError.invalidHTTPMethod(methodName)
             }
+            httpMethod = httpMethodFound
+        } else {
+            throw MacroError.invalidHTTPMethod(methodExpr.description)
         }
 
-        // Parse path components and parameter types
-        var parameterTypes: [String] = []
-
-        for arg in arguments {
-            let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
-
-            if exprStr.hasSuffix(".self") {
-                let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
-                parameterTypes.append(typeName)
-            }
-        }
-
-        guard funcParameters.count == parameterTypes.count else {
-            throw MacroError.invalidNumberOfParameters(macroName, parameterTypes.count, funcParameters.count)
-        }
-
-        let functionName = funcDecl.name.text
-
-        // Generate wrapper that extracts path parameters
-        var parameterExtraction = ""
-        var callParameters = "req: req"
-
-        for (index, paramType) in parameterTypes.enumerated() {
-            let functionParameterName = funcParameters[index].firstName.text
-            let parameterName = "\(paramType.lowercased())\(index)"
-            parameterExtraction += """
-            let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(index)", as: \(paramType).self)
-            
-            """
-            callParameters += ", \(functionParameterName): \(parameterName)"
-        }
-
-        let wrapperFunc: DeclSyntax = """
-        func _route_\(raw: functionName)(req: Request) async throws -> Response {
-            \(raw: parameterExtraction)let result = try await \(raw: functionName)(\(raw: callParameters))
-            return try await result.encodeResponse(for: req)
-        }
-        """
-
-        return [wrapperFunc]
+        return try HTTPMethodMacroUtilities.expansion(of: node, providingPeersOf: declaration, in: context, for: httpMethod, customHTTPMethod: true)
     }
 }
+
