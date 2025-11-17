@@ -1,19 +1,5 @@
-import SwiftSyntax
-import SwiftSyntaxBuilder
-import SwiftSyntaxMacros
-import VaporMacrosPlugin
 import Testing
 import SwiftSyntaxMacrosGenericTestSupport
-import SwiftSyntaxMacroExpansion
-
-let testMacros: [String: MacroSpec] = [
-    "GET": MacroSpec(type: HTTPGetMacro.self),
-    "POST": MacroSpec(type: HTTPPostMacro.self),
-    "PUT": MacroSpec(type: HTTPPutMacro.self),
-    "DELETE": MacroSpec(type: HTTPDeleteMacro.self),
-    "PATCH": MacroSpec(type: HTTPPatchMacro.self),
-    "HTTP": MacroSpec(type: HTTPMethodMacro.self),
-]
 
 @Suite("HTTP Method Macro Tests")
 struct HTTPMethodMacroTests {
