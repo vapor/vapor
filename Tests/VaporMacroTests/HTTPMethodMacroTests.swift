@@ -1,15 +1,18 @@
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-import SwiftSyntaxMacrosTestSupport
 import VaporMacrosPlugin
-import XCTest
+import Testing
+import SwiftSyntaxMacrosGenericTestSupport
+import SwiftSyntaxMacroExpansion
 
-let testMacros: [String: any Macro.Type] = [
-    "GET": HTTPGetMacro.self,
+let testMacros: [String: MacroSpec] = [
+    "GET": MacroSpec(type: HTTPGetMacro.self),
 ]
 
-final class HTTPMethodMacroTests: XCTestCase {
+@Suite("HTTP Method Macro Tests")
+struct HTTPMethodMacroTests {
+    @Test("Test GET macro")
     func testGetMacro() {
         assertMacroExpansion(
             """
@@ -28,10 +31,12 @@ final class HTTPMethodMacroTests: XCTestCase {
                 return try await result.encodeResponse(for: req)
             }
             """,
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test GET macro with dynamic path parameter")
     func testGetMacroWithDynamicPathParameter() {
         assertMacroExpansion(
             """
@@ -51,10 +56,12 @@ final class HTTPMethodMacroTests: XCTestCase {
                 return try await result.encodeResponse(for: req)
             }
             """,
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test GET macro with multiple dynamic path parameters of same type")
     func testGetMacroWithMultipleDynamicPathParametersOfSameType() {
         assertMacroExpansion(
             """
@@ -75,10 +82,12 @@ final class HTTPMethodMacroTests: XCTestCase {
                 return try await result.encodeResponse(for: req)
             }
             """,
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test GET macro with multiple dynamic path parameters of different types")
     func testGetMacroWithMultipleDynamicPathParametersOfDifferentTypes() {
         assertMacroExpansion(
             """
@@ -99,10 +108,12 @@ final class HTTPMethodMacroTests: XCTestCase {
                 return try await result.encodeResponse(for: req)
             }
             """,
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test GET macro with internal and external parameter names")
     func testGetMacroWithInternalAndExternalParameterNames() {
         assertMacroExpansion(
             """
@@ -122,10 +133,12 @@ final class HTTPMethodMacroTests: XCTestCase {
                 return try await result.encodeResponse(for: req)
             }
             """,
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test GET macro fails when extra function parameter")
     func testGetMacroFailsWhenExtraMacroParameter() {
         assertMacroExpansion(
             """
@@ -142,10 +155,12 @@ final class HTTPMethodMacroTests: XCTestCase {
             diagnostics: [
                 DiagnosticSpec(message: "The macro defines 2 arguments, but the function has 1", line: 1, column: 1)
             ],
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test GET macro fails when extra function parameter")
     func testGetMacroFailsWhenExtraFunctionParameter() {
         assertMacroExpansion(
             """
@@ -162,10 +177,12 @@ final class HTTPMethodMacroTests: XCTestCase {
             diagnostics: [
                 DiagnosticSpec(message: "The macro defines 1 arguments, but the function has 2", line: 1, column: 1)
             ],
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test POST macro")
     func testPostMacro() {
         assertMacroExpansion(
             """
@@ -184,10 +201,12 @@ final class HTTPMethodMacroTests: XCTestCase {
                 return try await result.encodeResponse(for: req)
             }
             """,
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test PUT macro")
     func testPutMacro() {
         assertMacroExpansion(
             """
@@ -206,10 +225,12 @@ final class HTTPMethodMacroTests: XCTestCase {
                 return try await result.encodeResponse(for: req)
             }
             """,
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test PATCH macro")
     func testPatchMacro() {
         assertMacroExpansion(
             """
@@ -228,10 +249,12 @@ final class HTTPMethodMacroTests: XCTestCase {
                 return try await result.encodeResponse(for: req)
             }
             """,
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 
+    @Test("Test DELETE macro")
     func testDeleteMacro() {
         assertMacroExpansion(
             """
@@ -250,7 +273,8 @@ final class HTTPMethodMacroTests: XCTestCase {
                 return try await result.encodeResponse(for: req)
             }
             """,
-            macros: testMacros
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
         )
     }
 }

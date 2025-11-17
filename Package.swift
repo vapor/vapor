@@ -233,7 +233,8 @@ let package = Package(
             name: "VaporMacroTests",
             dependencies: [
                 "VaporMacrosPlugin",
-                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
             ],
             swiftSettings: swiftSettings
         ),
