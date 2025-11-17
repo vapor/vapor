@@ -3,28 +3,22 @@ import SwiftSyntaxMacros
 import SwiftSyntaxBuilder
 import Foundation
 
-public struct ControllerMacro: MemberAttributeMacro, MemberMacro {
-    public static func expansion(
-        of node: AttributeSyntax,
-        attachedTo declaration: some DeclGroupSyntax,
-        providingAttributesFor member: some DeclSyntaxProtocol,
-        in context: some MacroExpansionContext
-    ) throws -> [AttributeSyntax] {
-        // This adds the peer macros to each function, if needed
-        return []
+public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro {
+    public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingAttributesFor member: some DeclSyntaxProtocol, in context: some MacroExpansionContext) throws -> [AttributeSyntax] {
+        []
     }
-    
-    public static func expansion(
-        of node: AttributeSyntax,
-        providingMembersOf declaration: some DeclGroupSyntax,
-        in context: some MacroExpansionContext
-    ) throws -> [DeclSyntax] {
+
+    public static func expansion(of node: AttributeSyntax, providingMembersOf declaration: some DeclGroupSyntax, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [DeclSyntax] {
+        []
+    }
+
+    public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingExtensionsOf type: some TypeSyntaxProtocol, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax] {
         // Find all functions with route macros
         let functions = declaration.memberBlock.members.compactMap { member -> (String, [String], [String])? in
             guard let funcDecl = member.decl.as(FunctionDeclSyntax.self) else {
                 return nil
             }
-            
+
             // Look for HTTP method attributes
             for attribute in funcDecl.attributes {
                 guard case let .attribute(attr) = attribute,
@@ -33,17 +27,17 @@ public struct ControllerMacro: MemberAttributeMacro, MemberMacro {
                       case let .argumentList(arguments) = attr.arguments else {
                     continue
                 }
-                
+
                 let httpMethod = identifier.name.text
                 let functionName = funcDecl.name.text
-                
+
                 // Parse path components
                 var pathComponents: [String] = []
                 var parameterTypes: [String] = []
-                
+
                 for arg in arguments {
                     let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
-                    
+
                     // Check if it's a type (contains .self)
                     if exprStr.hasSuffix(".self") {
                         let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
@@ -55,23 +49,23 @@ public struct ControllerMacro: MemberAttributeMacro, MemberMacro {
                         pathComponents.append(cleaned)
                     }
                 }
-                
+
                 return (httpMethod, pathComponents, parameterTypes)
             }
-            
+
             return nil
         }
-        
+
         // Generate the RouteCollection boot function
         var registrationBody = ""
-        
+
         for (method, pathComponents, _) in functions {
             let path = pathComponents.joined(separator: "\", \"")
             let methodLower = method.lowercased()
-            
+
             // Find the function name from the original declaration
-            if let funcDecl = declaration.memberBlock.members.compactMap({ 
-                $0.decl.as(FunctionDeclSyntax.self) 
+            if let funcDecl = declaration.memberBlock.members.compactMap({
+                $0.decl.as(FunctionDeclSyntax.self)
             }).first(where: { funcDecl in
                 funcDecl.attributes.contains { attr in
                     guard case let .attribute(attrNode) = attr,
@@ -90,13 +84,23 @@ public struct ControllerMacro: MemberAttributeMacro, MemberMacro {
                 """
             }
         }
-        
+
         let registrationFunc: DeclSyntax = """
         func boot(routes: any RoutesBuilder) throws {
         \(raw: registrationBody.trimmingCharacters(in: .whitespacesAndNewlines))
         }
         """
-        
-        return [registrationFunc]
+
+        let extensionSyntax: DeclSyntax = """
+        extension \(type.trimmed): RouteCollection {
+            \(registrationFunc)
+        }
+        """
+
+        guard let extensionDecl = extensionSyntax.as(ExtensionDeclSyntax.self) else {
+            return []
+        }
+
+        return [extensionDecl]
     }
 }
