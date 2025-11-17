@@ -230,4 +230,80 @@ struct ControllerMacroTests {
             failureHandler: FailureHandler.instance
         )
     }
+
+    @Test("Test Controller with Root Route with Brackets")
+    func testControllerWithRootRouteBrackets() async throws {
+        assertMacroExpansion(
+            """
+            @Controller
+            struct UserController {
+                @GET()
+                func getUsers(req: Request) async throws -> String {
+                    return "Users"
+                }
+            }
+            """,
+            expandedSource: """
+            struct UserController {
+                func getUsers(req: Request) async throws -> String {
+                    return "Users"
+                }
+            
+                func _route_getUsers(req: Request) async throws -> Response {
+                    let result = try await getUsers(req: req)
+                    return try await result.encodeResponse(for: req)
+                }
+            }
+            
+            extension UserController: RouteCollection {
+                func boot(routes: any RoutesBuilder) throws {
+                routes.get { req async throws in
+                    try await self._route_getUsers(req: req)
+                }
+            
+                }
+            }
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test Controller with Root Route with No Brackets")
+    func testControllerWithRootRouteNoBrackets() async throws {
+        assertMacroExpansion(
+            """
+            @Controller
+            struct UserController {
+                @GET
+                func getUsers(req: Request) async throws -> String {
+                    return "Users"
+                }
+            }
+            """,
+            expandedSource: """
+            struct UserController {
+                func getUsers(req: Request) async throws -> String {
+                    return "Users"
+                }
+            
+                func _route_getUsers(req: Request) async throws -> Response {
+                    let result = try await getUsers(req: req)
+                    return try await result.encodeResponse(for: req)
+                }
+            }
+            
+            extension UserController: RouteCollection {
+                func boot(routes: any RoutesBuilder) throws {
+                routes.get { req async throws in
+                    try await self._route_getUsers(req: req)
+                }
+            
+                }
+            }
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
 }
