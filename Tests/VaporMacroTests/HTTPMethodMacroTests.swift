@@ -386,6 +386,86 @@ struct HTTPMethodMacroTests {
             failureHandler: FailureHandler.instance
         )
     }
+
+    @Test("Test GET macro with RoutesBuilder passed in")
+    func testGetMacroWithRoutesBuilderPassedIn() {
+        assertMacroExpansion(
+            """
+            @GET(on: app, "api", "macros", "users")
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            
+            func _route_getUsers(req: Request) async throws -> Response {
+                let result: some ResponseEncodable = try await getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+
+            app.get("api", "macros", "users", use: _route_getUsers)
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test GET macro with RoutesBuilder passed in")
+    func testGetMacroWithRoutesBuilderPassedInWithDynamicPathParameters() {
+        assertMacroExpansion(
+            """
+            @GET(on: app, "api", "macros", "users", Int.self)
+            func getUsers(req: Request, userID: Int) async throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func getUsers(req: Request, userID: Int) async throws -> String {
+                return "Users"
+            }
+            
+            func _route_getUsers(req: Request) async throws -> Response {
+                let int0 = try req.parameters.require("int0", as: Int.self)
+                let result: some ResponseEncodable = try await getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+
+            app.get("api", "macros", "users", ":int0", use: _route_getUsers)
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test HTTP Method macro with RoutesBuilder passed in")
+    func testHTTPMethodMacroWithRoutesBuilderPassedInWithDynamicPathParameters() {
+        assertMacroExpansion(
+            """
+            @HTTP(on: app, .options, "api", "macros", "users", Int.self)
+            func getUsers(req: Request, userID: Int) async throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func getUsers(req: Request, userID: Int) async throws -> String {
+                return "Users"
+            }
+            
+            func _route_getUsers(req: Request) async throws -> Response {
+                let int0 = try req.parameters.require("int0", as: Int.self)
+                let result: some ResponseEncodable = try await getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+
+            app.on(.options, "api", "macros", "users", ":int0", use: _route_getUsers)
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
 }
 
 #endif

@@ -346,6 +346,7 @@ struct UserController {
         "Sync"
     }
 
+//    These routes are expected not to compile and are here to demonstate/test that
 //    @GET("NotResponseCodable")
 //    func testNotARoute(req: Request) async throws -> NotContentType {
 //        NotContentType(something: "")
