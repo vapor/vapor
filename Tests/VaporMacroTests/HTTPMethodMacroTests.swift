@@ -406,7 +406,7 @@ struct HTTPMethodMacroTests {
                 return try await result.encodeResponse(for: req)
             }
 
-            app.get("api", "macros", "users", use: _route_getUsers)
+            app.on(.get, "api", "macros", "users", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -417,7 +417,7 @@ struct HTTPMethodMacroTests {
     func testGetMacroWithRoutesBuilderPassedInWithDynamicPathParameters() {
         assertMacroExpansion(
             """
-            @GET(on: app, "api", "macros", "users", Int.self)
+            @GET(on: routes, "api", "macros", "users", Int.self)
             func getUsers(req: Request, userID: Int) async throws -> String {
                 return "Users"
             }
@@ -429,11 +429,11 @@ struct HTTPMethodMacroTests {
             
             func _route_getUsers(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
-                let result: some ResponseEncodable = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req, userID: int0)
                 return try await result.encodeResponse(for: req)
             }
 
-            app.get("api", "macros", "users", ":int0", use: _route_getUsers)
+            routes.on(.get, "api", "macros", "users", ":int0", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
