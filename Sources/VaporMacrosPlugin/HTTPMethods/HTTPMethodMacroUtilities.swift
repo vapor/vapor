@@ -18,8 +18,9 @@ enum HTTPMethodMacroUtilities {
             throw MacroError.notAFunction(macroName)
         }
 
-        guard case let .argumentList(arguments) = node.arguments else {
-            throw MacroError.missingArguments(macroName)
+        let arguments: LabeledExprListSyntax? = switch node.arguments {
+        case .argumentList(let arguments): arguments
+        default: nil
         }
 
         var funcParameters: [FunctionParameterSyntax] = []
@@ -45,17 +46,19 @@ enum HTTPMethodMacroUtilities {
         // Parse path components and parameter types
         var parameterTypes: [String] = []
 
-        for (index, argument) in arguments.enumerated() {
-            // If this is a custom HTTP method we need to ignore the first argument, as that's the custom HTTP method
-            if customHTTPMethod && index == 0 {
-                continue
-            }
+        if let arguments {
+            for (index, argument) in arguments.enumerated() {
+                // If this is a custom HTTP method we need to ignore the first argument, as that's the custom HTTP method
+                if customHTTPMethod && index == 0 {
+                    continue
+                }
 
-            let exprStr = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                let exprStr = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
 
-            if exprStr.hasSuffix(".self") {
-                let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
-                parameterTypes.append(typeName)
+                if exprStr.hasSuffix(".self") {
+                    let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
+                    parameterTypes.append(typeName)
+                }
             }
         }
 

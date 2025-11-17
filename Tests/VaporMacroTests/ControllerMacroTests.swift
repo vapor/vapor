@@ -22,14 +22,14 @@ struct ControllerMacroTests {
                 }
             
                 func _route_getUsers(req: Request) async throws -> Response {
-                    let result = try await getUsers(req: req)
+                    let result: some ResponseEncodable = try await getUsers(req: req)
                     return try await result.encodeResponse(for: req)
                 }
             }
             
             extension UserController: RouteCollection {
                 func boot(routes: any RoutesBuilder) throws {
-                routes.get("api", "macros", "users") { req async throws in
+                routes.get("api", "macros", "users") { req async throws -> Response in
                     try await self._route_getUsers(req: req)
                 }
             
@@ -70,7 +70,7 @@ struct ControllerMacroTests {
                 }
             
                 func _route_getUsers(req: Request) async throws -> Response {
-                    let result = try await getUsers(req: req)
+                    let result: some ResponseEncodable = try await getUsers(req: req)
                     return try await result.encodeResponse(for: req)
                 }
                 func getUser(req: Request, userID: Int) async throws -> String {
@@ -79,7 +79,7 @@ struct ControllerMacroTests {
             
                 func _route_getUser(req: Request) async throws -> Response {
                     let int0 = try req.parameters.require("int0", as: Int.self)
-                    let result = try await getUser(req: req, userID: int0)
+                    let result: some ResponseEncodable = try await getUser(req: req, userID: int0)
                     return try await result.encodeResponse(for: req)
                 }
                 func deleteUser(req: Request, delete: Bool) async throws -> String {
@@ -88,20 +88,20 @@ struct ControllerMacroTests {
             
                 func _route_deleteUser(req: Request) async throws -> Response {
                     let bool0 = try req.parameters.require("bool0", as: Bool.self)
-                    let result = try await deleteUser(req: req, delete: bool0)
+                    let result: some ResponseEncodable = try await deleteUser(req: req, delete: bool0)
                     return try await result.encodeResponse(for: req)
                 }
             }
             
             extension UserController: RouteCollection {
                 func boot(routes: any RoutesBuilder) throws {
-                routes.get("api", "macros", "users") { req async throws in
+                routes.get("api", "macros", "users") { req async throws -> Response in
                     try await self._route_getUsers(req: req)
                 }
-                routes.get("api", "macros", "users", ":int0") { req async throws in
+                routes.get("api", "macros", "users", ":int0") { req async throws -> Response in
                     try await self._route_getUser(req: req)
                 }
-                routes.get("api", "macros", "users", ":bool0") { req async throws in
+                routes.get("api", "macros", "users", ":bool0") { req async throws -> Response in
                     try await self._route_deleteUser(req: req)
                 }
             
@@ -157,7 +157,7 @@ struct ControllerMacroTests {
                 }
             
                 func _route_getUsers(req: Request) async throws -> Response {
-                    let result = try await getUsers(req: req)
+                    let result: some ResponseEncodable = try await getUsers(req: req)
                     return try await result.encodeResponse(for: req)
                 }
                 func createUser(req: Request) async throws -> String {
@@ -165,7 +165,7 @@ struct ControllerMacroTests {
                 }
             
                 func _route_createUser(req: Request) async throws -> Response {
-                    let result = try await createUser(req: req)
+                    let result: some ResponseEncodable = try await createUser(req: req)
                     return try await result.encodeResponse(for: req)
                 }
                 func deleteUser(req: Request) async throws -> String {
@@ -173,7 +173,7 @@ struct ControllerMacroTests {
                 }
             
                 func _route_deleteUser(req: Request) async throws -> Response {
-                    let result = try await deleteUser(req: req)
+                    let result: some ResponseEncodable = try await deleteUser(req: req)
                     return try await result.encodeResponse(for: req)
                 }
                 func patchUser(req: Request) async throws -> String {
@@ -181,7 +181,7 @@ struct ControllerMacroTests {
                 }
             
                 func _route_patchUser(req: Request) async throws -> Response {
-                    let result = try await patchUser(req: req)
+                    let result: some ResponseEncodable = try await patchUser(req: req)
                     return try await result.encodeResponse(for: req)
                 }
                 func putUser(req: Request) async throws -> String {
@@ -189,7 +189,7 @@ struct ControllerMacroTests {
                 }
             
                 func _route_putUser(req: Request) async throws -> Response {
-                    let result = try await putUser(req: req)
+                    let result: some ResponseEncodable = try await putUser(req: req)
                     return try await result.encodeResponse(for: req)
                 }
                 func optionsUser(req: Request) async throws -> String {
@@ -197,29 +197,29 @@ struct ControllerMacroTests {
                 }
             
                 func _route_optionsUser(req: Request) async throws -> Response {
-                    let result = try await optionsUser(req: req)
+                    let result: some ResponseEncodable = try await optionsUser(req: req)
                     return try await result.encodeResponse(for: req)
                 }
             }
             
             extension UserController: RouteCollection {
                 func boot(routes: any RoutesBuilder) throws {
-                routes.get("api", "macros", "users") { req async throws in
+                routes.get("api", "macros", "users") { req async throws -> Response in
                     try await self._route_getUsers(req: req)
                 }
-                routes.post("api", "macros", "users") { req async throws in
+                routes.post("api", "macros", "users") { req async throws -> Response in
                     try await self._route_createUser(req: req)
                 }
-                routes.delete("api", "macros", "users") { req async throws in
+                routes.delete("api", "macros", "users") { req async throws -> Response in
                     try await self._route_deleteUser(req: req)
                 }
-                routes.patch("api", "macros", "users") { req async throws in
+                routes.patch("api", "macros", "users") { req async throws -> Response in
                     try await self._route_patchUser(req: req)
                 }
-                routes.put("api", "macros", "users") { req async throws in
+                routes.put("api", "macros", "users") { req async throws -> Response in
                     try await self._route_putUser(req: req)
                 }
-                routes.options("api", "macros", "users") { req async throws in
+                routes.options("api", "macros", "users") { req async throws -> Response in
                     try await self._route_optionsUser(req: req)
                 }
             
@@ -250,14 +250,14 @@ struct ControllerMacroTests {
                 }
             
                 func _route_getUsers(req: Request) async throws -> Response {
-                    let result = try await getUsers(req: req)
+                    let result: some ResponseEncodable = try await getUsers(req: req)
                     return try await result.encodeResponse(for: req)
                 }
             }
             
             extension UserController: RouteCollection {
                 func boot(routes: any RoutesBuilder) throws {
-                routes.get { req async throws in
+                routes.get { req async throws -> Response in
                     try await self._route_getUsers(req: req)
                 }
             
@@ -288,14 +288,14 @@ struct ControllerMacroTests {
                 }
             
                 func _route_getUsers(req: Request) async throws -> Response {
-                    let result = try await getUsers(req: req)
+                    let result: some ResponseEncodable = try await getUsers(req: req)
                     return try await result.encodeResponse(for: req)
                 }
             }
             
             extension UserController: RouteCollection {
                 func boot(routes: any RoutesBuilder) throws {
-                routes.get { req async throws in
+                routes.get { req async throws -> Response in
                     try await self._route_getUsers(req: req)
                 }
             
