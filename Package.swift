@@ -13,6 +13,7 @@ let package = Package(
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
         .library(name: "VaporTesting", targets: ["VaporTesting"]),
+        .library(name: "VaporMacros", targets: ["VaporMacros"]),
     ],
     traits: [
         .trait(name: "WebSockets"),

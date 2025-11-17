@@ -8,37 +8,37 @@ public macro Controller() = #externalMacro(
 )
 
 @attached(peer, names: arbitrary)
-public macro GET(_ pathComponents: Any...) = #externalMacro(
+public macro GET(on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPGetMacro"
 )
 
 @attached(peer, names: arbitrary)
-public macro POST(_ pathComponents: Any...) = #externalMacro(
+public macro POST(on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPPostMacro"
 )
 
 @attached(peer, names: arbitrary)
-public macro PUT(_ pathComponents: Any...) = #externalMacro(
+public macro PUT(on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPPutMacro"
 )
 
 @attached(peer, names: arbitrary)
-public macro DELETE(_ pathComponents: Any...) = #externalMacro(
+public macro DELETE(on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPDeleteMacro"
 )
 
 @attached(peer, names: arbitrary)
-public macro PATCH(_ pathComponents: Any...) = #externalMacro(
+public macro PATCH(on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPPatchMacro"
 )
 
 @attached(peer, names: arbitrary)
-public macro HTTP(_ method: HTTPRequest.Method, _ pathComponents: Any...) = #externalMacro(
+public macro HTTP(on routeBuilder: (any RoutesBuilder)? = nil, _ method: HTTPRequest.Method, _ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPMethodMacro"
 )
