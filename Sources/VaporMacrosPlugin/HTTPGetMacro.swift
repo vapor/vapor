@@ -45,7 +45,7 @@ public struct HTTPGetMacro: PeerMacro {
         }
 
         guard funcParameters.count == parameterTypes.count else {
-            throw MacroError.missingArguments
+            throw MacroError.invalidNumberOfParameters(parameterTypes.count, funcParameters.count)
         }
 
         let functionName = funcDecl.name.text
@@ -58,15 +58,15 @@ public struct HTTPGetMacro: PeerMacro {
             let functionParameterName = funcParameters[index].firstName.text
             let parameterName = "\(paramType.lowercased())\(index)"
             parameterExtraction += """
-            let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(index)", as: \(paramType).self)            
+            let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(index)", as: \(paramType).self)
+            
             """
             callParameters += ", \(functionParameterName): \(parameterName)"
         }
         
         let wrapperFunc: DeclSyntax = """
         func _route_\(raw: functionName)(req: Request) async throws -> Response {
-        \(raw: parameterExtraction.isEmpty ? "" : "    \(parameterExtraction)")
-            let result = try await \(raw: functionName)(\(raw: callParameters))
+            \(raw: parameterExtraction)let result = try await \(raw: functionName)(\(raw: callParameters))
             return try await result.encodeResponse(for: req)
         }
         """
