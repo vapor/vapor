@@ -316,18 +316,18 @@ struct UserController {
         return "users"
     }
 
-    @HTTP(.patch, "api", "macros", "users", "custom")
-    func getCustomHTTPMethod(req: Request) async throws -> String {
-        return "custom HTTP method"
-    }
+//    @HTTP(.patch, "api", "macros", "users", "custom")
+//    func getCustomHTTPMethod(req: Request) async throws -> String {
+//        return "custom HTTP method"
+//    }
 
     @GET("api", "macros", "users", Int.self)
     func getUser(req: Request, id: Int) async throws -> String {
         return "user with id: \(id)"
     }
 
-    @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
-    func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
-        return "custom HTTP method"
-    }
+//    @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
+//    func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
+//        return "custom HTTP method"
+//    }
 }
