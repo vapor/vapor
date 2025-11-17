@@ -98,12 +98,13 @@ struct ControllerMacroTests {
                 routes.get("api", "macros", "users") { req async throws in
                     try await self._route_getUsers(req: req)
                 }
-                routes.get("api", "macros", ":int0") { req async throws in
+                routes.get("api", "macros", "users", ":int0") { req async throws in
                     try await self._route_getUser(req: req)
                 }
                 routes.get("api", "macros", "users", ":bool0") { req async throws in
                     try await self._route_deleteUser(req: req)
                 }
+            
                 }
             }
             """,
