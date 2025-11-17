@@ -10,5 +10,6 @@ struct VaporMacrosPlugin: CompilerPlugin {
         HTTPPostMacro.self,
         HTTPDeleteMacro.self,
         HTTPPatchMacro.self,
+        HTTPMethodMacro.self,
     ]
 }

@@ -12,6 +12,7 @@ let testMacros: [String: MacroSpec] = [
     "PUT": MacroSpec(type: HTTPPutMacro.self),
     "DELETE": MacroSpec(type: HTTPDeleteMacro.self),
     "PATCH": MacroSpec(type: HTTPPatchMacro.self),
+    "HTTP": MacroSpec(type: HTTPMethodMacro.self),
 ]
 
 @Suite("HTTP Method Macro Tests")
@@ -263,6 +264,54 @@ struct HTTPMethodMacroTests {
         assertMacroExpansion(
             """
             @DELETE("api", "macros", "users")
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            
+            func _route_getUsers(req: Request) async throws -> Response {
+                let result = try await getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test HTTP Method macro")
+    func testHTTPMethodMacro() {
+        assertMacroExpansion(
+            """
+            @HTTP(.get, "api", "macros", "users")
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            
+            func _route_getUsers(req: Request) async throws -> Response {
+                let result = try await getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test HTTP Method macro with fully qualified method")
+    func testHTTPMethodMacroFullyQualifiedMethod() {
+        assertMacroExpansion(
+            """
+            @HTTP(HTTPRequest.Method.get, "api", "macros", "users")
             func getUsers(req: Request) async throws -> String {
                 return "Users"
             }
