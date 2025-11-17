@@ -32,22 +32,26 @@ enum HTTPMethodMacroUtilities {
 
         // Get all the parameters for the function we're wrapping
         for (index, parameter) in funcDecl.signature.parameterClause.parameters.enumerated() {
-            // Make sure the first is the request
+            // Make sure the first is the request followed by Request
             if index == 0 {
                 guard parameter.type.description == "Request" else {
                     throw MacroError.missingRequest
                 }
             } else {
-                // Otherwise store them for late
                 funcParameters.append(parameter)
             }
         }
 
         // Parse path components and parameter types
         var parameterTypes: [String] = []
+        var routeRegistrationVariable: String? = nil
 
         if let arguments {
             for (index, argument) in arguments.enumerated() {
+                if argument.label?.text == "on" {
+                    routeRegistrationVariable = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                    continue
+                }
                 // If this is a custom HTTP method we need to ignore the first argument, as that's the custom HTTP method
                 if customHTTPMethod && index == 0 {
                     continue
@@ -90,6 +94,42 @@ enum HTTPMethodMacroUtilities {
             return try await result.encodeResponse(for: req)
         }
         """
+
+        if let routeRegistrationVariable {
+            var currentDynamicPathParameterIndex = 0
+            var pathComponents: [String] = []
+            if let arguments {
+                for (index, arg) in arguments.enumerated() {
+                    // Discard the first one (the place to register the routes) and if we're a custom HTTP method, discard the next one
+                    if index == 0 || customHTTPMethod && index == 1 {
+                        continue
+                    }
+                    let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    // Check if it's a type (contains .self)
+                    if exprStr.hasSuffix(".self") {
+                        let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
+                        pathComponents.append(":\(typeName.lowercased())\(currentDynamicPathParameterIndex)")
+                        currentDynamicPathParameterIndex += 1
+                    } else {
+                        // It's a string literal
+                        let cleaned = exprStr.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+                        pathComponents.append(cleaned)
+                    }
+                }
+            }
+
+            let path = pathComponents.joined(separator: "\", \"")
+            let pathRegistration = if path == "" {
+                ""
+            } else {
+                ", \"\(path)\""
+            }
+            let routeRegistration: DeclSyntax = """
+            \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration), use: _route_\(raw: functionName))
+            """
+            return [wrapperFunc, routeRegistration]
+        }
 
         return [wrapperFunc]
     }
