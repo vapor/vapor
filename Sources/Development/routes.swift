@@ -336,8 +336,27 @@ struct UserController {
         return "custom HTTP method"
     }
 
-    @POST("api", "macros", "lots", UUID.self, Int.self, String.self)
-    func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String) async throws -> String {
-        return "uuid: \(uuid), number: \(number), text: \(text)"
+    @POST("api", "macros", "lots", UUID.self, Int.self, String.self, Int.self)
+    func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String, anotherNumber: Int) async throws -> String {
+        return "uuid: \(uuid), number: \(number), text: \(text), anotherNumber: \(anotherNumber)"
     }
+
+    @POST("api", "macros", "sync")
+    func syncRoute(req: Request) throws -> String {
+        "Sync"
+    }
+
+//    @GET("NotResponseCodable")
+//    func testNotARoute(req: Request) async throws -> NotContentType {
+//        NotContentType(something: "")
+//    }
+
+//    @GET("Void")
+//    func testVoidRoute(req: Request) throws {
+//
+//    }
+}
+
+struct NotContentType {
+    let something: String
 }
