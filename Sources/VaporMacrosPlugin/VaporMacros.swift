@@ -4,8 +4,11 @@ import SwiftCompilerPlugin
 @main
 struct VaporMacrosPlugin: CompilerPlugin {
     let providingMacros: [any Macro.Type] = [
-        // Register your macros here
         ControllerMacro.self,
         HTTPGetMacro.self,
+        HTTPPutMacro.self,
+        HTTPPostMacro.self,
+        HTTPDeleteMacro.self,
+        HTTPPatchMacro.self,
     ]
 }

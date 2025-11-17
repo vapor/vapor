@@ -2,19 +2,23 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftSyntaxBuilder
 import Foundation
+import HTTPTypes
 
-public struct HTTPGetMacro: PeerMacro {
+enum HTTPMethodMacroUtilities {
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
-        in context: some MacroExpansionContext
+        in context: some MacroExpansionContext,
+        for method: HTTPRequest.Method
     ) throws -> [DeclSyntax] {
+        let macroName = node.attributeName.trimmedDescription
+
         guard let funcDecl = declaration.as(FunctionDeclSyntax.self) else {
-            throw MacroError.notAFunction
+            throw MacroError.notAFunction(macroName)
         }
-        
+
         guard case let .argumentList(arguments) = node.arguments else {
-            throw MacroError.missingArguments
+            throw MacroError.missingArguments(macroName)
         }
 
         var funcParameters: [FunctionParameterSyntax] = []
@@ -37,7 +41,7 @@ public struct HTTPGetMacro: PeerMacro {
 
         for arg in arguments {
             let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
-            
+
             if exprStr.hasSuffix(".self") {
                 let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
                 parameterTypes.append(typeName)
@@ -45,7 +49,7 @@ public struct HTTPGetMacro: PeerMacro {
         }
 
         guard funcParameters.count == parameterTypes.count else {
-            throw MacroError.invalidNumberOfParameters(parameterTypes.count, funcParameters.count)
+            throw MacroError.invalidNumberOfParameters(macroName, parameterTypes.count, funcParameters.count)
         }
 
         let functionName = funcDecl.name.text
@@ -53,7 +57,7 @@ public struct HTTPGetMacro: PeerMacro {
         // Generate wrapper that extracts path parameters
         var parameterExtraction = ""
         var callParameters = "req: req"
-        
+
         for (index, paramType) in parameterTypes.enumerated() {
             let functionParameterName = funcParameters[index].firstName.text
             let parameterName = "\(paramType.lowercased())\(index)"
@@ -63,14 +67,14 @@ public struct HTTPGetMacro: PeerMacro {
             """
             callParameters += ", \(functionParameterName): \(parameterName)"
         }
-        
+
         let wrapperFunc: DeclSyntax = """
         func _route_\(raw: functionName)(req: Request) async throws -> Response {
             \(raw: parameterExtraction)let result = try await \(raw: functionName)(\(raw: callParameters))
             return try await result.encodeResponse(for: req)
         }
         """
-        
+
         return [wrapperFunc]
     }
 }

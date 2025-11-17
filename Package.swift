@@ -170,6 +170,7 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
             swiftSettings: swiftSettings
         ),
