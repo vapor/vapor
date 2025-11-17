@@ -165,4 +165,92 @@ final class HTTPMethodMacroTests: XCTestCase {
             macros: testMacros
         )
     }
+
+    func testPostMacro() {
+        assertMacroExpansion(
+            """
+            @POST("api", "macros", "users")
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            
+            func _route_postUsers(req: Request) async throws -> Response {
+                let result = try await getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    func testPutMacro() {
+        assertMacroExpansion(
+            """
+            @PUT("api", "macros", "users")
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            
+            func _route_putUsers(req: Request) async throws -> Response {
+                let result = try await getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    func testPatchMacro() {
+        assertMacroExpansion(
+            """
+            @PATCH("api", "macros", "users")
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            
+            func _route_patchUsers(req: Request) async throws -> Response {
+                let result = try await getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    func testDeleteMacro() {
+        assertMacroExpansion(
+            """
+            @DELTE("api", "macros", "users")
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            """,
+            expandedSource: """
+            func getUsers(req: Request) async throws -> String {
+                return "Users"
+            }
+            
+            func _route_deleteUsers(req: Request) async throws -> Response {
+                let result = try await getUsers(req: req)
+                return try await result.encodeResponse(for: req)
+            }
+            """,
+            macros: testMacros
+        )
+    }
 }
