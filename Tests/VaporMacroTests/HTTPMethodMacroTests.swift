@@ -1,6 +1,8 @@
 import Testing
 import SwiftSyntaxMacrosGenericTestSupport
 
+#if canImport(VaporMacrosPlugin)
+
 @Suite("HTTP Method Macro Tests")
 struct HTTPMethodMacroTests {
     @Test("Test GET macro")
@@ -385,3 +387,5 @@ struct HTTPMethodMacroTests {
         )
     }
 }
+
+#endif
