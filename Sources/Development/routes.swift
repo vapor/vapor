@@ -263,6 +263,21 @@ public func routes(_ app: Application) throws {
     }
 
     try app.register(collection: UserController())
+
+    // @GET(on: app, "macros", Int.self)
+    // @Sendable
+    // func macroRoute(req: Request, id: Int) async throws -> String {
+    //     return "macro route with id: \(id)"
+    // }
+
+//    @Sendable
+//    func _route_macroRoute(req: Request) async throws -> Response {
+//        let int0 = try req.parameters.require("int0", as: Int.self)
+//        let result: some ResponseEncodable = try await macroRoute(req: req, id: int0)
+//        return try await result.encodeResponse(for: req)
+//    }
+//
+//    app.on(.get, "macros", ":int0", use: _route_macroRoute)
 }
 
 struct TestError: AbortError, DebuggableError {

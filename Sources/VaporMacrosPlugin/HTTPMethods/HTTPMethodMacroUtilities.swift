@@ -89,7 +89,7 @@ enum HTTPMethodMacroUtilities {
         let isAsyncFunction = funcDecl.signature.effectSpecifiers?.asyncSpecifier != nil
 
         let wrapperFunc: DeclSyntax = """
-        func _route_\(raw: functionName)(req: Request) async throws -> Response {
+        @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
             \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
             return try await result.encodeResponse(for: req)
         }

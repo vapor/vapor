@@ -19,7 +19,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -43,7 +43,7 @@ struct HTTPMethodMacroTests {
                 return "user with id: \\(id)"
             }
             
-            func _route_getUser(req: Request) async throws -> Response {
+            @Sendable func _route_getUser(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let result: some ResponseEncodable = try await getUser(req: req, id: int0)
                 return try await result.encodeResponse(for: req)
@@ -68,7 +68,7 @@ struct HTTPMethodMacroTests {
                 return "user with id: \\(id)"
             }
             
-            func _route_getUser(req: Request) async throws -> Response {
+            @Sendable func _route_getUser(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let int1 = try req.parameters.require("int1", as: Int.self)
                 let result: some ResponseEncodable = try await getUser(req: req, userID: int0, clientID: int1)
@@ -94,7 +94,7 @@ struct HTTPMethodMacroTests {
                 return "user with id: \\(id)"
             }
             
-            func _route_getUser(req: Request) async throws -> Response {
+            @Sendable func _route_getUser(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let uuid1 = try req.parameters.require("uuid1", as: UUID.self)
                 let result: some ResponseEncodable = try await getUser(req: req, id: int0, uniqueID: uuid1)
@@ -120,7 +120,7 @@ struct HTTPMethodMacroTests {
                 return "user with id: \\(userID)"
             }
             
-            func _route_getUser(req: Request) async throws -> Response {
+            @Sendable func _route_getUser(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let result: some ResponseEncodable = try await getUser(req: req, id: int0)
                 return try await result.encodeResponse(for: req)
@@ -189,7 +189,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -213,7 +213,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -237,7 +237,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -261,7 +261,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -285,7 +285,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -309,7 +309,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -333,7 +333,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_syncRoute(req: Request) async throws -> Response {
+            @Sendable func _route_syncRoute(req: Request) async throws -> Response {
                 let result: some ResponseEncodable = try syncRoute(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -401,7 +401,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
@@ -427,7 +427,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let result: some ResponseEncodable = try await getUsers(req: req, userID: int0)
                 return try await result.encodeResponse(for: req)
@@ -454,7 +454,7 @@ struct HTTPMethodMacroTests {
                 return "Users"
             }
             
-            func _route_getUsers(req: Request) async throws -> Response {
+            @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
