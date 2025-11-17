@@ -77,17 +77,16 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
             }) {
                 let functionName = funcDecl.name.text
                 registrationBody += """
-                    routes.\(methodLower)("\(path)") { req async throws in
-                        try await self.\(functionName)(req: req)
-                    }
-                    
+                routes.\(methodLower)("\(path)") { req async throws in
+                    try await self.\(functionName)(req: req)
+                }
                 """
             }
         }
 
         let registrationFunc: DeclSyntax = """
         func boot(routes: any RoutesBuilder) throws {
-        \(raw: registrationBody.trimmingCharacters(in: .whitespacesAndNewlines))
+        \(raw: registrationBody)
         }
         """
 
