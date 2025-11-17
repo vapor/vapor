@@ -80,6 +80,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                 routes.\(methodLower)("\(path)") { req async throws in
                     try await self.\(functionName)(req: req)
                 }
+                
                 """
             }
         }
