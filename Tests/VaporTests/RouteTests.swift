@@ -494,4 +494,27 @@ struct RouteTests {
             }
         }
     }
+
+    @Test("Unicode Routing", .bug("https://github.com/vapor/vapor/issues/3309"))
+    func unicodeRouting() async throws {
+        try await withApp { app in
+            app.get("Good👍") { req in
+                return "👍"
+            }
+            app.get("ようこそ世界へ") { req in
+                return "おめでとう"
+            }
+
+            try await app.test(method: .running) { testApp in
+                let emoticon = try await testApp.sendRequest(.get, "/Good👍")
+                #expect(emoticon.body.string == "👍")
+                #expect(emoticon.status == .ok)
+
+                let japanese = try await testApp.sendRequest(.get, "/ようこそ世界へ")
+                #expect(japanese.body.string == "おめでとう")
+                #expect(japanese.status == .ok)
+            }
+        }
+    }
+
 }
