@@ -109,6 +109,26 @@ extension RoutesBuilder {
     }
 
     @discardableResult
+    public func all(
+        _ path: PathComponent...,
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> [Route] {
+        [HTTPRequest.Method.get, .post, .put, .patch, .delete].map {
+            self.on($0, path, use: closure)
+        }
+    }
+
+    @discardableResult
+    public func all(
+        _ path: [PathComponent],
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> [Route] {
+        [HTTPRequest.Method.get, .post, .put, .patch, .delete].map {
+            self.on($0, path, use: closure)
+        }
+    }
+
+    @discardableResult
     public func on(
         _ method: HTTPRequest.Method,
         _ path: PathComponent...,
