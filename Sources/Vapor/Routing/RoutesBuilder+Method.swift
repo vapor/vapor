@@ -113,7 +113,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> [Route] {
-        [HTTPRequest.Method.get, .post, .put, .patch, .delete].map {
+        [HTTPRequest.Method.get, .post, .put, .patch, .delete, .head, .options].map {
             self.on($0, path, use: closure)
         }
     }
@@ -123,7 +123,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> [Route] {
-        [HTTPRequest.Method.get, .post, .put, .patch, .delete].map {
+        [HTTPRequest.Method.get, .post, .put, .patch, .delete, .head, .options].map {
             self.on($0, path, use: closure)
         }
     }

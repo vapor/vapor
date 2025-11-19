@@ -494,4 +494,21 @@ struct RouteTests {
             }
         }
     }
+
+    @Test("Catch all HTTP methods", .bug("https://github.com/vapor/vapor/issues/1887#event-20997694543"))
+    func testCatchAllHTTPMethods() async throws {
+        try await withApp { app in
+            app.routes.all("universal") { req -> String in
+                req.method.rawValue
+            }
+
+            let methods: [HTTPRequest.Method] = [.get, .post, .put, .patch, .delete, .head, .options]
+            for method in methods {
+                try await app.testing().test(method, "/universal") { res in
+                    #expect(res.status == .ok)
+                    #expect(res.body.string == method.rawValue)
+                }
+            }
+        }
+    }
 }
