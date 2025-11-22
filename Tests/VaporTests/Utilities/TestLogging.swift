@@ -1,10 +1,10 @@
+import Configuration
 import Foundation
 import Logging
 import Vapor
 
 let isLoggingConfigured: Bool = {
-    var env = Environment.testing
-    try! LoggingSystem.bootstrap(from: &env)
+    try! LoggingSystem.bootstrap(from: ConfigReader(provider: InMemoryProvider(values: ["log.level": "debug"])))
     return true
 }()
 
