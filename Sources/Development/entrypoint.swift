@@ -1,13 +1,20 @@
+import Configuration
 import Vapor
 import Logging
 
 @main
 struct Entrypoint {
     static func main() async throws {
-        var env = try Environment.detect()
-        try LoggingSystem.bootstrap(from: &env)
+        let config = ConfigReader(providers: [
+                // The `CommandLineArgumentsProvider` requires the `CommandLineArgumentsSupport` package trait
+                // CommandLineArgumentsProvider(),
+                EnvironmentVariablesProvider(),
+            ]
+        )
+        let env = try Environment.detect(from: config)
+        try LoggingSystem.bootstrap(from: config)
 
-        let app = try await Application(env)
+        let app = try await Application(env, configReader: config)
         do {
             try configure(app)
             try await app.run()

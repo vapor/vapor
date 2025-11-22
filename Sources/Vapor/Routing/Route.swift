@@ -1,6 +1,5 @@
 import RoutingKit
 import NIOConcurrencyHelpers
-import ConsoleKit
 import HTTPTypes
 
 public final class Route: CustomStringConvertible, Sendable {

@@ -1,4 +1,4 @@
-import ConsoleKit
+import Configuration
 import Foundation
 
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have
@@ -17,77 +17,46 @@ import Foundation
 public struct Environment: Sendable, Equatable {
     // MARK: - Detection
     
-    /// Detects the environment from `CommandLine.arguments`. Invokes `detect(from:)`.
+    /// Detects the environment from `ConfigReader`. Parses the `vapor.env` flag.
     ///
     /// - Parameters:
-    ///     - arguments: Command line arguments to detect environment from.
-    /// - returns: The detected environment, or default env.
-    public static func detect(arguments: [String] = ProcessInfo.processInfo.arguments) throws -> Environment {
-        var commandInput = CommandInput(arguments: arguments)
-        return try Environment.detect(from: &commandInput)
-    }
-    
-    /// Detects the environment from ``CommandInput``. Parses the `--env` flag, with the
-    /// `VAPOR_ENV` environment variable as a fallback.
-    ///
-    /// - Parameters:
-    ///   - arguments: ``CommandInput`` to parse `--env` flag from.
+    ///   - config: `ConfigReader` to parse `vapor.env` flag from.
     /// - Returns: The detected environment, or default env.
-    public static func detect(from commandInput: inout CommandInput) throws -> Environment {
-        self.sanitize(commandInput: &commandInput)
-        
-        struct EnvironmentSignature: CommandSignature {
-            @Option(name: "env", short: "e", help: "Change the application's environment")
-            var environment: String?
-        }
-
-        var env: Environment
-        switch try EnvironmentSignature(from: &commandInput).environment ??
-            Environment.process.VAPOR_ENV
-        {
-            case "prod", "production": env = .production
-            case "dev", "development", .none: env = .development
-            case "test", "testing": env = .testing
-            case .some(let name): env = .init(name: name)
-        }
-        env.commandInput = commandInput
-        return env
+    public static func detect(from config: ConfigReader) throws -> Environment {
+        config.string(forKey: "vapor.env", as: Environment.self, default: .development)
     }
     
     /// Performs stripping of user defaults overrides where and when appropriate.
-    private static func sanitize(commandInput: inout CommandInput) {
+    private static func sanitize(arguments: [String] = ProcessInfo.processInfo.arguments) -> [String] {
+        precondition(arguments.count >= 1, "At least one argument (the executable path) is required")
+        var arguments = arguments
+        let executablePath = [arguments.removeFirst()]
+        let executable = executablePath.joined(separator: " ")
         #if Xcode
         // Strip all leading arguments matching the pattern for assignment to the `NSArgumentsDomain`
         // of `UserDefaults`. Matching this pattern means being prefixed by `-NS` or `-Apple` and being
         // followed by a value argument. Since this is mainly just to get around Xcode's habit of
         // passing a bunch of these when no other arguments are specified in a test scheme, we ignore
         // any that don't match the Apple patterns and assume the app knows what it's doing.
-        while (commandInput.arguments.first?.prefix(6) == "-Apple" || commandInput.arguments.first?.prefix(3) == "-NS"),
-              commandInput.arguments.count > 1 {
-            commandInput.arguments.removeFirst(2)
+        while (arguments.first?.prefix(6) == "-Apple" || arguments.first?.prefix(3) == "-NS"),
+              arguments.count > 1 {
+            arguments.removeFirst(2)
         }
         #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
         // When tests are invoked directly through SwiftPM using `--filter`, SwiftPM will pass `-XCTest <filter>` to the
         // runner binary, and also the test bundle path unconditionally. These must be stripped for Vapor to be satisfied
         // with the validity of the arguments. We detect this case reliably the hard way, by looking for the `xctest`
         // runner executable and a leading argument with the `.xctest` bundle suffix.
-        if commandInput.executable.hasSuffix("/usr/bin/xctest") {
-            if commandInput.arguments.first?.lowercased() == "-xctest" && commandInput.arguments.count > 1 {
-                commandInput.arguments.removeFirst(2)
+        if executable.hasSuffix("/usr/bin/xctest") {
+            if arguments.first?.lowercased() == "-xctest" && arguments.count > 1 {
+                arguments.removeFirst(2)
             }
-            if commandInput.arguments.first?.hasSuffix(".xctest") ?? false {
-                commandInput.arguments.removeFirst()
+            if arguments.first?.hasSuffix(".xctest") ?? false {
+                arguments.removeFirst()
             }
         }
         #endif
-    }
-    
-    /// Invokes `sanitize(commandInput:)` over a set of raw arguments and returns the
-    /// resulting arguments, including the executable path.
-    private static func sanitizeArguments(_ arguments: [String] = ProcessInfo.processInfo.arguments) -> [String] {
-        var commandInput = CommandInput(arguments: arguments)
-        self.sanitize(commandInput: &commandInput)
-        return commandInput.executablePath + commandInput.arguments
+        return executablePath + arguments
     }
     
     // MARK: - Presets
@@ -103,7 +72,7 @@ public struct Environment: Sendable, Equatable {
     /// Performs an explicit sanitization step because this preset is often used directly in unit tests, without the
     /// benefit of the logic usually invoked through either form of `detect()`. This means that when `--env test` is
     /// explicitly specified, the sanitize logic is run twice, but this should be harmless.
-    public static var testing: Environment { .init(name: "testing", arguments: sanitizeArguments()) }
+    public static var testing: Environment { .init(name: "testing", arguments: sanitize()) }
 
     /// Creates a custom environment.
     public static func custom(name: String) -> Environment { .init(name: name) }
@@ -146,12 +115,6 @@ public struct Environment: Sendable, Equatable {
 
     /// The command-line arguments for this ``Environment``.
     public var arguments: [String]
-
-    /// Exposes ``Environment/arguments`` as a ``CommandInput``.
-    public var commandInput: CommandInput {
-        get { return CommandInput(arguments: arguments) }
-        set { arguments = newValue.executablePath + newValue.arguments }
-    }
     
     // MARK: - Init
 
@@ -159,5 +122,20 @@ public struct Environment: Sendable, Equatable {
     public init(name: String, arguments: [String] = ProcessInfo.processInfo.arguments) {
         self.name = name
         self.arguments = arguments
+    }
+}
+
+extension Environment: ExpressibleByConfigString {
+    public init?(configString: String) {
+        switch configString {
+        case "prod", "production": self = .production
+        case "dev", "development": self = .development
+        case "test", "testing": self = .testing
+        default: self = .init(name: configString)
+        }
+    }
+
+    public var description: String {
+        self.name
     }
 }

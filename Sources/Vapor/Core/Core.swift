@@ -1,24 +1,8 @@
-import ConsoleKit
 import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers
 
 extension Application {
-    public var console: any Console {
-        get { self.core.storage.console.withLockedValue { $0 } }
-        set { self.core.storage.console.withLockedValue { $0 = newValue } }
-    }
-
-    public var commands: Commands {
-        get { self.core.storage.commands.withLockedValue { $0 } }
-        set { self.core.storage.commands.withLockedValue { $0 = newValue } }
-    }
-
-    public var asyncCommands: AsyncCommands {
-        get { self.core.storage.asyncCommands.withLockedValue { $0 } }
-        set { self.core.storage.asyncCommands.withLockedValue { $0 = newValue } }
-    }
-
     public var running: Running? {
         get { self.core.storage.running.current.withLockedValue { $0 } }
         set { self.core.storage.running.current.withLockedValue { $0 = newValue } }
@@ -35,18 +19,10 @@ extension Application {
 
     public struct Core: Sendable {
         final class Storage: Sendable {
-            let console: NIOLockedValueBox<any Console>
-            let commands: NIOLockedValueBox<Commands>
-            let asyncCommands: NIOLockedValueBox<AsyncCommands>
             let running: Application.Running.Storage
             let directory: NIOLockedValueBox<DirectoryConfiguration>
 
             init() {
-                self.console = .init(Terminal())
-                self.commands = .init(Commands())
-                var asyncCommands = AsyncCommands()
-                asyncCommands.use(BootCommand(), as: "boot")
-                self.asyncCommands = .init(AsyncCommands())
                 self.running = .init()
                 self.directory = .init(.detect())
             }

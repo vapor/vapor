@@ -109,7 +109,7 @@ struct ClientTests {
 
     // MARK: - Helpers
     func withRemoteApp<T>(_ block: (Application, Int) async throws -> T) async throws -> T {
-        let remoteApp = try await Application(.testing)
+        let remoteApp = try await Application(.testing, configReader: testConfigReader)
         remoteApp.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
         remoteApp.get("json") { _ in
