@@ -40,7 +40,7 @@ public struct RouteRegistrationMacro: PeerMacro {
             
             // Second is the HTTP Method
             if index == 1 {
-                let httpMethodStr = argument.expression.trimmedDescription.lowercased()
+                let httpMethodStr = argument.expression.trimmedDescription.replacing(".", with: "").uppercased()
 
                 guard let parsedHTTPMethod = HTTPRequest.Method(rawValue: httpMethodStr) else {
                     throw MacroError.missingArguments("Internal Error")
@@ -65,7 +65,7 @@ public struct RouteRegistrationMacro: PeerMacro {
         }
 
         let routeRegistration: DeclSyntax = """
-        let _ = \(raw: routeBuilder).on(.\(raw: httpMethod.rawValue)\(raw: pathParameterValue), use: \(raw: routeHandler))
+        let _ = \(raw: routeBuilder).on(.\(raw: httpMethod.rawValue.lowercased())\(raw: pathParameterValue), use: \(raw: routeHandler))
         """
         return [routeRegistration]
     }
