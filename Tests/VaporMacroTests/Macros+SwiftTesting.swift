@@ -27,6 +27,7 @@ let testMacros: [String: MacroSpec] = [
     "PATCH": MacroSpec(type: HTTPPatchMacro.self),
     "HTTP": MacroSpec(type: HTTPMethodMacro.self),
     "Controller": MacroSpec(type: ControllerMacro.self),
+    "RouteRegistration": MacroSpec(type: RouteRegistrationMacro.self)
 ]
 
 #endif

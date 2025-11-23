@@ -269,10 +269,10 @@ public func routes(_ app: Application) throws {
         return "Hello"
     }
 
-    @GET(on: app, "macros", Int.self)
-    @Sendable func macroRoute(req: Request, id: Int) async throws -> String {
-        return "macro route with id: \(id)"
-    }
+//    @GET(on: app, "macros", Int.self)
+//    @Sendable func macroRoute(req: Request, id: Int) async throws -> String {
+//        return "macro route with id: \(id)"
+//    }
 }
 
 struct TestError: AbortError, DebuggableError {

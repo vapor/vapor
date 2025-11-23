@@ -44,7 +44,7 @@ public macro HTTP(on routeBuilder: (any RoutesBuilder)? = nil, _ method: HTTPReq
 )
 
 @attached(peer, names: arbitrary)
-public macro RouteRegistration() = #externalMacro(
+public macro RouteRegistration(routeBuilder: any RoutesBuilder) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "RouteRegistrationMacro",
 )

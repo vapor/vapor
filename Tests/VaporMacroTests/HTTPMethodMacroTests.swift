@@ -406,7 +406,7 @@ struct HTTPMethodMacroTests {
                 return try await result.encodeResponse(for: req)
             }
 
-            app.on(.get, "api", "macros", "users", use: _route_getUsers)
+            let _ = app.on(.get, "api", "macros", "users", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -433,7 +433,7 @@ struct HTTPMethodMacroTests {
                 return try await result.encodeResponse(for: req)
             }
 
-            routes.on(.get, "api", "macros", "users", ":int0", use: _route_getUsers)
+            let _ = routes.on(.get, "api", "macros", "users", ":int0", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -460,7 +460,7 @@ struct HTTPMethodMacroTests {
                 return try await result.encodeResponse(for: req)
             }
 
-            app.on(.options, "api", "macros", "users", ":int0", use: _route_getUsers)
+            let _ = app.on(.options, "api", "macros", "users", ":int0", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance

@@ -126,7 +126,7 @@ enum HTTPMethodMacroUtilities {
                 ", \"\(path)\""
             }
             let routeRegistration: DeclSyntax = """
-            @RouteRegistration
+            @RouteRegistration(routeBuilder: \(raw: routeRegistrationVariable), method: \(raw: method.rawValue))
             @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
                 \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
                 return try await result.encodeResponse(for: req)
