@@ -10,8 +10,16 @@ public struct HTTPMethodMacro: PeerMacro {
     ) throws -> [DeclSyntax] {
         // Get the first parameter for the macro
         guard let arguments = node.arguments?.as(LabeledExprListSyntax.self),
-              let firstArg = arguments.first else {
+              var firstArg = arguments.first else {
             throw MacroError.missingArguments("Method")
+        }
+
+        if firstArg.label?.description == "on" {
+            // We're not in a controller and have a routes builder passed in, so get the next argument
+            guard let nextArgument = arguments.dropFirst().first else {
+                throw MacroError.missingArguments("Method")
+            }
+            firstArg = nextArgument
         }
 
         let methodExpr = firstArg.expression

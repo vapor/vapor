@@ -451,10 +451,9 @@ struct HTTPMethodMacroTests {
             func getUsers(req: Request, userID: Int) async throws -> String {
                 return "Users"
             }
-            
             @Sendable func _route_getUsers(req: Request) async throws -> Response {
                 let int0 = try req.parameters.require("int0", as: Int.self)
-                let result: some ResponseEncodable = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req, userID: int0)
                 return try await result.encodeResponse(for: req)
             }
 
