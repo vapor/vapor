@@ -22,8 +22,7 @@ public struct RouteRegistrationMacro: PeerMacro {
         let routeHandler = funcDecl.name.trimmedDescription
 
         // Parse path components and parameter types
-        var parameterTypes: [String] = []
-        var routeRegistrationVariable: String? = nil
+        var pathParameters: [String] = []
 
         guard let arguments, arguments.count >= 2 else {
             throw MacroError.missingArguments("Internal Error")
@@ -51,18 +50,12 @@ public struct RouteRegistrationMacro: PeerMacro {
                 continue
             }
 
-            let exprStr = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
-
-            if exprStr.hasSuffix(".self") {
-                let typeName = exprStr.replacing(".self", with: "")
-                parameterTypes.append(typeName)
-            }
+            pathParameters.append(argument.expression.trimmedDescription)
         }
 
         guard let routeBuilder, let httpMethod else {
             throw MacroError.missingArguments("Internal Error")
         }
-        // let functionName = funcDecl.name.text
 
         // // Generate wrapper that extracts path parameters
         // var parameterExtraction = ""
@@ -129,8 +122,15 @@ public struct RouteRegistrationMacro: PeerMacro {
 
         // return [wrapperFunc]
 
+        let pathParameterValue: String
+        if pathParameters.count > 0 {
+            pathParameterValue = ", \(pathParameters.joined(separator: ","))"
+        } else {
+            pathParameterValue = ""
+        }
+
         let routeRegistration: DeclSyntax = """
-        let _ = \(raw: routeBuilder).on(.\(raw: httpMethod.rawValue), "hello", use: \(raw: routeHandler))
+        let _ = \(raw: routeBuilder).on(.\(raw: httpMethod.rawValue)\(raw: pathParameterValue), use: \(raw: routeHandler))
         """
         return [routeRegistration]
     }
