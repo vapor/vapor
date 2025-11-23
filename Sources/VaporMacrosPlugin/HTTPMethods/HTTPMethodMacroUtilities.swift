@@ -126,11 +126,11 @@ enum HTTPMethodMacroUtilities {
                 ", \"\(path)\""
             }
             let routeRegistration: DeclSyntax = """
+            @RouteRegistration
             @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
                 \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
                 return try await result.encodeResponse(for: req)
             }
-            let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration), use: _route_\(raw: functionName)(req:))
             """
             return [routeRegistration]
         }

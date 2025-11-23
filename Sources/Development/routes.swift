@@ -264,6 +264,11 @@ public func routes(_ app: Application) throws {
 
     try app.register(collection: UserController())
 
+    @Sendable
+    func testRoute(req: Request) -> String {
+        return "Hello"
+    }
+
     @GET(on: app, "macros", Int.self)
     @Sendable func macroRoute(req: Request, id: Int) async throws -> String {
         return "macro route with id: \(id)"
