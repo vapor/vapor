@@ -60,7 +60,7 @@ enum HTTPMethodMacroUtilities {
                 let exprStr = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
 
                 if exprStr.hasSuffix(".self") {
-                    let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
+                    let typeName = exprStr.replacing(".self", with: "")
                     parameterTypes.append(typeName)
                 }
             }
@@ -108,7 +108,7 @@ enum HTTPMethodMacroUtilities {
 
                     // Check if it's a type (contains .self)
                     if exprStr.hasSuffix(".self") {
-                        let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
+                        let typeName = exprStr.replacing(".self", with: "")
                         pathComponents.append(":\(typeName.lowercased())\(currentDynamicPathParameterIndex)")
                         currentDynamicPathParameterIndex += 1
                     } else {
@@ -130,7 +130,7 @@ enum HTTPMethodMacroUtilities {
                 \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
                 return try await result.encodeResponse(for: req)
             }
-            let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration), use: _route_\(raw: functionName))
+            let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration), use: _route_\(raw: functionName)(req:))
             """
             return [routeRegistration]
         }

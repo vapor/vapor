@@ -38,7 +38,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     guard let argument = arguments?.first else {
                         throw MacroError.missingArguments("Controller")
                     }
-                    httpMethod = argument.expression.description.replacingOccurrences(of: ".", with: "")
+                    httpMethod = argument.expression.description.replacing(".", with: "")
                     customHTTPMethod = true
                 } else {
                     httpMethod = identifier.name.text
@@ -58,7 +58,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
 
                         // Check if it's a type (contains .self)
                         if exprStr.hasSuffix(".self") {
-                            let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
+                            let typeName = exprStr.replacing(".self", with: "")
                             pathComponents.append(":\(typeName.lowercased())\(currentDynamicPathParameterIndex)")
                             currentDynamicPathParameterIndex += 1
                         } else {

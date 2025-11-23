@@ -228,8 +228,8 @@ extension DotEnvFile {
             switch (first, last) {
             case ("\"", "\""):
                 // double quoted strings support escaped \n
-                return value.dropFirst().dropLast()
-                    .replacingOccurrences(of: "\\n", with: "\n")
+                return String(value.dropFirst().dropLast()
+                    .replacing("\\n", with: "\n"))
             case ("'", "'"):
                 // single quoted strings just need quotes removed
                 return value.dropFirst().dropLast() + ""

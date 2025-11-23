@@ -123,7 +123,7 @@ struct URITests {
         let untrustedInput = "[https://vapor.codes.somewhere-else.test:](https://vapor.codes.somewhere-else.test/\(zeros)443)[\(zeros)](https://vapor.codes.somewhere-else.test/\(zeros)443)[443](https://vapor.codes.somewhere-else.test/\(zeros)443)"
     
         let readableInAssertionOutput = untrustedInput
-            .replacingOccurrences(of: zeros, with: "00...00")
+            .replacing(zeros, with: "00...00")
             .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
         let uri = URI(string: untrustedInput)
 
@@ -136,7 +136,7 @@ struct URITests {
         if #available(macOS 14, iOS 17, watchOS 10, tvOS 17, *) {
             // TODO: It is not clear why the "encode the first colon as %3A but none of the others" behavior appears, and why only on Darwin
             #expect(
-                uri.path.replacingOccurrences(of: zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1) ==
+                uri.path.replacing(zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1) ==
                 readableInAssertionOutput.replacing("%3A", with: ":", maxReplacements: 1)
             )
         } else {

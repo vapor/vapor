@@ -115,8 +115,8 @@ extension HTTPFields {
             var cache = CacheControl()
 
             value
-                .replacingOccurrences(of: " ", with: "")
-                .replacingOccurrences(of: "\t", with: "")
+                .replacing(" ", with: "")
+                .replacing("\t", with: "")
                 .lowercased()
                 .split(separator: ",")
                 .forEach {
