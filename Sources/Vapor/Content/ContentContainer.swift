@@ -100,7 +100,7 @@ extension ContentContainer {
 
     /// Determine if the current content has a parameter defined at the supplied keypath in this container.
     ///
-    ///     let contains = req.content.contains("foo")
+    ///     let contains = req.content.contains(at: "foo")
     public func contains(at path: CodingKeyRepresentable) -> Bool {
         do {
             let _ = try self.get(String.self, at: path)
