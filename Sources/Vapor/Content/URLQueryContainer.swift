@@ -79,6 +79,18 @@ extension URLQueryContainer {
         try self.get(D.self, path: path.map(\.codingKey))
     }
 
+    /// Determine if the current query has a parameter defined at the supplied keypath in this container.
+    ///
+    ///     let contains = req.query.contains("foo")
+    public func contains(at path: CodingKeyRepresentable) -> Bool {
+        do {
+            let _ = try self.get(String.self, at: path)
+            return true
+        } catch {
+            return false
+        }
+    }
+
     // MARK: Private
 
     /// Execute a "get at coding key path" operation.

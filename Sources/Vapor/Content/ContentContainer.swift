@@ -97,6 +97,18 @@ extension ContentContainer {
     public func get<D: Decodable>(_: D.Type = D.self, at path: CodingKeyRepresentable...) throws -> D {
         try self.get(at: path)
     }
+
+    /// Determine if the current content has a parameter defined at the supplied keypath in this container.
+    ///
+    ///     let contains = req.content.contains("foo")
+    public func contains(at path: CodingKeyRepresentable) -> Bool {
+        do {
+            let _ = try self.get(String.self, at: path)
+            return true
+        } catch {
+            return false
+        }
+    }
     
     /// Fetch a single ``Decodable`` value at the supplied keypath in this container.
     ///

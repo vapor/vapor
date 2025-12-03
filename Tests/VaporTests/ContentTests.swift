@@ -26,6 +26,17 @@ final class ContentTests: XCTestCase {
         try XCTAssertEqual(request.content.get(at: "hello"), "world")
     }
 
+    func testContentContains() throws {
+        let request = Request(
+            application: app,
+            collectedBody: .init(string: #"{"hello": "world"}"#),
+            on: EmbeddedEventLoop()
+        )
+        request.headers.contentType = .json
+        XCTAssertEqual(request.content.contains(at: "hello"), true)
+        XCTAssertEqual(request.content.contains(at: "world"), false)
+    }
+
     func testComplexContent() throws {
         // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
         let complexJSON = """

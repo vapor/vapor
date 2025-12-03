@@ -108,6 +108,56 @@ final class QueryTests: XCTestCase {
         XCTAssertEqual(req.query[String.self, at: "foo"], nil)
     }
 
+    // https://github.com/vapor/vapor/issues/3343
+    func testQueryContains() throws {
+        var req: Request
+
+        //
+        req = Request(
+            application: app,
+            method: .GET,
+            url: .init(string: "/path?foo=a"),
+            on: app.eventLoopGroup.next()
+        )
+
+        XCTAssertEqual(req.query.contains(at: "foo"), true)
+        XCTAssertEqual(req.query.contains(at: "bar"), false)
+        XCTAssertEqual(req.query.contains(at: ""), false)
+
+        req = Request(
+            application: app,
+            method: .GET,
+            url: .init(string: "/path?foo=1"),
+            on: app.eventLoopGroup.next()
+        )
+
+        XCTAssertEqual(req.query.contains(at: "foo"), true)
+        XCTAssertEqual(req.query.contains(at: "bar"), false)
+        XCTAssertEqual(req.query.contains(at: ""), false)
+
+        req = Request(
+            application: app,
+            method: .GET,
+            url: .init(string: "/path?foo={bar:baz}"),
+            on: app.eventLoopGroup.next()
+        )
+
+        XCTAssertEqual(req.query.contains(at: "foo"), true)
+        XCTAssertEqual(req.query.contains(at: "bar"), false)
+        XCTAssertEqual(req.query.contains(at: ""), false)
+
+        req = Request(
+            application: app,
+            method: .GET,
+            url: .init(string: "/path?foo=1&foo=2"),
+            on: app.eventLoopGroup.next()
+        )
+
+        XCTAssertEqual(req.query.contains(at: "foo"), true)
+        XCTAssertEqual(req.query.contains(at: "bar"), false)
+        XCTAssertEqual(req.query.contains(at: ""), false)
+    }
+
     // https://github.com/vapor/vapor/issues/1537
     func testQueryStringRunning() throws {
         app.routes.get("todos") { req in
