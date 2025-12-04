@@ -81,13 +81,18 @@ extension URLQueryContainer {
 
     /// Determine if the current query has a parameter defined at the supplied keypath in this container.
     ///
-    ///     let contains = req.query.contains(at: "foo")
-    public func contains(at path: CodingKeyRepresentable) -> Bool {
+    ///     let contains = try req.query.contains(at: "foo")
+    public func contains(at path: CodingKeyRepresentable) throws -> Bool {
         do {
             let _ = try self.get(String.self, at: path)
             return true
-        } catch {
+        } catch DecodingError.keyNotFound {
             return false
+        } catch DecodingError.valueNotFound {
+            return false
+        } catch (let e) {
+            debugPrint("Error :: \(e)")
+            throw e
         }
     }
 
