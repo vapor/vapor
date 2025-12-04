@@ -120,9 +120,9 @@ final class QueryTests: XCTestCase {
             on: app.eventLoopGroup.next()
         )
 
-        XCTAssertEqual(req.query.contains(at: "foo"), true)
-        XCTAssertEqual(req.query.contains(at: "bar"), false)
-        XCTAssertEqual(req.query.contains(at: ""), false)
+        XCTAssertEqual(try req.query.contains(at: "foo"), true)
+        XCTAssertEqual(try req.query.contains(at: "bar"), false)
+        XCTAssertEqual(try req.query.contains(at: ""), false)
 
         req = Request(
             application: app,
@@ -131,9 +131,9 @@ final class QueryTests: XCTestCase {
             on: app.eventLoopGroup.next()
         )
 
-        XCTAssertEqual(req.query.contains(at: "foo"), true)
-        XCTAssertEqual(req.query.contains(at: "bar"), false)
-        XCTAssertEqual(req.query.contains(at: ""), false)
+        XCTAssertEqual(try req.query.contains(at: "foo"), true)
+        XCTAssertEqual(try req.query.contains(at: "bar"), false)
+        XCTAssertEqual(try req.query.contains(at: ""), false)
 
         req = Request(
             application: app,
@@ -142,9 +142,9 @@ final class QueryTests: XCTestCase {
             on: app.eventLoopGroup.next()
         )
 
-        XCTAssertEqual(req.query.contains(at: "foo"), true)
-        XCTAssertEqual(req.query.contains(at: "bar"), false)
-        XCTAssertEqual(req.query.contains(at: ""), false)
+        XCTAssertEqual(try req.query.contains(at: "foo"), true)
+        XCTAssertEqual(try req.query.contains(at: "bar"), false)
+        XCTAssertEqual(try req.query.contains(at: ""), false)
 
         req = Request(
             application: app,
@@ -153,9 +153,9 @@ final class QueryTests: XCTestCase {
             on: app.eventLoopGroup.next()
         )
 
-        XCTAssertEqual(req.query.contains(at: "foo"), true)
-        XCTAssertEqual(req.query.contains(at: "bar"), false)
-        XCTAssertEqual(req.query.contains(at: ""), false)
+        XCTAssertEqual(try req.query.contains(at: "foo"), true)
+        XCTAssertEqual(try req.query.contains(at: "bar"), false)
+        XCTAssertEqual(try req.query.contains(at: ""), false)
     }
 
     // https://github.com/vapor/vapor/issues/1537

@@ -33,8 +33,8 @@ final class ContentTests: XCTestCase {
             on: EmbeddedEventLoop()
         )
         request.headers.contentType = .json
-        XCTAssertEqual(request.content.contains(at: "hello"), true)
-        XCTAssertEqual(request.content.contains(at: "world"), false)
+        XCTAssertEqual(try request.content.contains(at: "hello"), true)
+        XCTAssertEqual(try request.content.contains(at: "world"), false)
     }
 
     func testComplexContent() throws {
