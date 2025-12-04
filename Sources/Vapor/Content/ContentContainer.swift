@@ -110,7 +110,6 @@ extension ContentContainer {
         } catch DecodingError.valueNotFound {
             return false
         } catch (let e) {
-            debugPrint("Error :: \(e)")
             throw e
         }
     }
