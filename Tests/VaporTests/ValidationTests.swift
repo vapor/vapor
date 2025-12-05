@@ -3,6 +3,8 @@ import NIOCore
 import Testing
 import Foundation
 import VaporTesting
+import HTTPTypes
+import RoutingKit
 
 @Suite("Validation Tests")
 struct ValidationTests {
@@ -209,7 +211,7 @@ struct ValidationTests {
             try Email.validate(json: invalidUser)
         }
         #expect(jsonError?.description == "email is not a valid email address, email is not a valid email address")
-        
+
         let invalidUserURL: URI = "https://tanner.xyz/email?email=me@tanner@.xyz"
         let urlError = #expect(throws: ValidationsError.self) {
             try Email.validate(query: invalidUserURL)
@@ -282,7 +284,7 @@ struct ValidationTests {
                     self.title = title
                 }
             }
-            
+
             struct Allergy: Codable {
                 var title: String
                 init(title: String) {
@@ -321,7 +323,7 @@ struct ValidationTests {
             try User.validate(json: invalidNestedArray)
         }
         #expect(jsonError?.description == "hobbies at index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and at index 1 title is less than minimum of 5 character(s)")
-        
+
         let invalidNestedArray2 = """
         {
             "name": "Tanner",
@@ -337,7 +339,7 @@ struct ValidationTests {
             try User.validate(json: invalidNestedArray2)
         }
         #expect(jsonError2?.description == "hobbies is required, hobbies is required")
-        
+
         let invalidNestedArray3 = """
         {
             "name": "Tanner",
@@ -358,7 +360,7 @@ struct ValidationTests {
             try User.validate(json: invalidNestedArray3)
         }
         #expect(jsonError3?.description == "allergies at index 0 title contains '€' (allowed: A-Z, a-z)")
-        
+
         let validNestedArray = """
         {
             "name": "Tanner",
@@ -858,7 +860,7 @@ struct ValidationTests {
             #expect(name.result.failureDescription == "is not a(n) String")
         }
     }
-    
+
     @Test("Test Custom Validator")
     func testCustomValidator() {
         let value = "test123"

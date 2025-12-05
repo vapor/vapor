@@ -3,6 +3,8 @@ import Metrics
 @testable import CoreMetrics
 import VaporTesting
 import Testing
+import RoutingKit
+import HTTPTypes
 
 @Suite("Metric Tests")
 struct MetricsTests {

@@ -5,6 +5,8 @@ import NIOEmbedded
 import NIOConcurrencyHelpers
 import Testing
 import VaporTesting
+import HTTPTypes
+import RoutingKit
 
 @Suite("Application Tests")
 struct ApplicationTests {

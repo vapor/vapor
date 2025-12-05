@@ -5,6 +5,8 @@ import Tracing
 import Testing
 import VaporTesting
 import RegexBuilder
+import RoutingKit
+import NIOConcurrencyHelpers
 
 @Suite("Middleware Tests")
 struct MiddlewareTests {
