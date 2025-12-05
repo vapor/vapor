@@ -25,9 +25,7 @@ struct AnyAsyncSequence<Element>: AsyncSequence {
         self.makeAsyncIteratorCallback = {
             var iterator = base.makeAsyncIterator()
             return {
-                #warning("Fix")
-                fatalError()
-//                try await iterator.next()
+                try await iterator.next()
             }
         }
     }
