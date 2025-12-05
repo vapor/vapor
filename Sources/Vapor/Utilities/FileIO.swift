@@ -122,8 +122,9 @@ public struct FileIO: Sendable {
         at path: String,
         chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
         offset: Int64? = nil,
-        byteCount: Int? = nil
-    ) async throws -> FileChunks {
+        byteCount: Int? = nil,
+        processChunks: @Sendable (FileChunks) async throws -> Void
+    ) async throws {
         let filePath = FilePath(path)
 
         return try await fileSystem.withFileHandle(forReadingAt: filePath) { readHandle in
@@ -138,7 +139,7 @@ public struct FileIO: Sendable {
             } else {
                 chunks = readHandle.readChunks(chunkLength: .bytes(chunkSize))
             }
-            return chunks
+            try await processChunks(chunks)
         }
     }
 
@@ -264,16 +265,17 @@ public struct FileIO: Sendable {
 
         response.body = .init(asyncStream: { stream in
             do {
-                let chunks = try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount)
-                do {
-                    for try await chunk in chunks {
-                        try await stream.writeBuffer(chunk)
+                try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount) { chunks in
+                    do {
+                        for try await chunk in chunks {
+                            try await stream.writeBuffer(chunk)
+                        }
+                    } catch {
+                        throw error
                     }
-                } catch {
-                    throw error
+                    try await stream.write(.end)
+                    try await onCompleted(.success(()))
                 }
-                try await stream.write(.end)
-                try await onCompleted(.success(()))
             } catch {
                 try? await stream.write(.error(error))
                 try await onCompleted(.failure(error))
