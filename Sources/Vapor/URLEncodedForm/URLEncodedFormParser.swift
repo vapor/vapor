@@ -1,7 +1,9 @@
+import Foundation
+
 /// Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue` into
 internal struct URLEncodedFormParser {
     init() { }
-    
+
     func parse(_ query: String) throws -> URLEncodedFormData {
         let plusDecodedQuery = query.replacingOccurrences(of: "+", with: "%20")
         var result: URLEncodedFormData = []
@@ -31,7 +33,7 @@ internal struct URLEncodedFormParser {
         guard let percentDecodedKey = key.removingPercentEncoding else {
             throw URLEncodedFormError.malformedKey(key: key)
         }
-        return try percentDecodedKey.split(separator: "[").enumerated().map { (i, part) in 
+        return try percentDecodedKey.split(separator: "[").enumerated().map { (i, part) in
             switch i {
             case 0:
                 return String(part)

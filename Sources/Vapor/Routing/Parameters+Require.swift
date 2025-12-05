@@ -1,4 +1,6 @@
 import RoutingKit
+import HTTPTypes
+import Logging
 
 extension Parameters {
     /// Grabs the named parameter from the parameter bag.

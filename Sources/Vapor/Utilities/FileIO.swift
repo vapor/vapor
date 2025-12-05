@@ -6,6 +6,7 @@ import Logging
 import Crypto
 import NIOConcurrencyHelpers
 import _NIOFileSystemFoundationCompat
+import NIOHTTP1
 
 extension Request {
     public var fileio: FileIO {
@@ -41,7 +42,7 @@ extension Request {
 public struct FileIO: Sendable {
     /// ByteBufferAllocator to use for generating buffers.
     private let allocator: ByteBufferAllocator
-    
+
     /// HTTP request context.
     let request: Request
 
@@ -54,7 +55,7 @@ public struct FileIO: Sendable {
         self.allocator = allocator
         self.request = request
     }
-    
+
     private func read(
         path: String,
         fromOffset offset: Int64,
@@ -85,9 +86,9 @@ public struct FileIO: Sendable {
             }
         }
     }
-    
+
     // MARK: - Concurrency
-    
+
     /// Reads the contents of a file at the supplied path.
     ///
     ///     let data = try await req.fileio.collectFile(file: "/path/to/file.txt")
@@ -102,7 +103,7 @@ public struct FileIO: Sendable {
         }
         return try await self.read(path: path, fromOffset: 0, byteCount: Int(fileSize))
     }
-    
+
     /// Wrapper around `NIOFileSystem.FileChunks`.
     /// This can be removed once `NIOFileSystem` reaches a stable API.
     public struct FileChunks: AsyncSequence {
@@ -133,7 +134,7 @@ public struct FileIO: Sendable {
                 return chunk
             }
         }
-        
+
         public func closeHandle() async throws {
             try await self.fileHandle.close()
         }
@@ -164,11 +165,11 @@ public struct FileIO: Sendable {
         byteCount: Int? = nil
     ) async throws -> FileChunks {
         let filePath = FilePath(path)
-        
+
         let readHandle = try await fileSystem.openFile(forReadingAt: filePath)
-        
+
         let chunks: _NIOFileSystem.FileChunks
-        
+
         if let offset {
             if let byteCount {
                 chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(chunkSize))
@@ -181,7 +182,7 @@ public struct FileIO: Sendable {
 
         return FileChunks(fileChunks: chunks, fileHandle: readHandle)
     }
-    
+
     /// Write the contents of buffer to a file at the supplied path.
     ///
     ///     let data = ByteBuffer(string: "ByteBuffer")
@@ -252,7 +253,7 @@ public struct FileIO: Sendable {
             // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
             eTag = "\"\(fileInfo.lastDataModificationTime.seconds)-\(fileInfo.size)\""
         }
-        
+
         // Create empty headers array.
         var headers: HTTPFields = [:]
 
@@ -301,7 +302,7 @@ public struct FileIO: Sendable {
         {
             response.headers.contentType = type
         }
-        
+
         response.body = .init(asyncStream: { stream in
             do {
                 let chunks = try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount)
@@ -327,7 +328,7 @@ public struct FileIO: Sendable {
 }
 
 extension HTTPFields.Range.Value {
-    
+
     fileprivate func asByteBufferBounds(withMaxSize size: Int, logger: Logger) throws -> (offset: Int64, byteCount: Int) {
         switch self {
             case .start(let value):

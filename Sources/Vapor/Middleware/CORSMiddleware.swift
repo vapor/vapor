@@ -1,5 +1,6 @@
 import NIOCore
 import HTTPTypes
+import NIOConcurrencyHelpers
 
 /// Middleware that adds support for CORS settings in request responses.
 /// For configuration of this middleware please use the `CORSMiddleware.Configuration` object.
@@ -24,7 +25,7 @@ public final class CORSMiddleware: Middleware {
 
         /// Uses wildcard to allow any origin.
         case all
-        
+
         /// A list of allowable origins.
         case any([String])
 
@@ -119,7 +120,7 @@ public final class CORSMiddleware: Middleware {
 
     /// Configuration used for populating headers in response for CORS requests.
     public let configuration: Configuration
-    
+
     /// Creates a CORS middleware with the specified configuration.
     ///
     /// - parameters:

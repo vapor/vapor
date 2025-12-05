@@ -6,6 +6,7 @@ import WebSocketKit
 import RoutingKit
 import Foundation
 import NIOPosix
+import NIOHTTPTypesHTTP1
 
 extension Request {
 
