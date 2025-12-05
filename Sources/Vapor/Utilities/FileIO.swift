@@ -104,46 +104,6 @@ public struct FileIO: Sendable {
         return try await self.read(path: path, fromOffset: 0, byteCount: Int(fileSize))
     }
 
-    /// Wrapper around `NIOFileSystem.FileChunks`.
-    /// This can be removed once `NIOFileSystem` reaches a stable API.
-    public struct FileChunks: AsyncSequence {
-        public typealias Element = ByteBuffer
-        private let fileHandle: any _NIOFileSystem.FileHandleProtocol
-        private let fileChunks: _NIOFileSystem.FileChunks
-
-        init(fileChunks: _NIOFileSystem.FileChunks, fileHandle: some _NIOFileSystem.FileHandleProtocol) {
-            self.fileChunks = fileChunks
-            self.fileHandle = fileHandle
-        }
-
-        public struct FileChunksIterator: AsyncIteratorProtocol {
-            private var iterator: _NIOFileSystem.FileChunks.AsyncIterator
-            private let fileHandle: any _NIOFileSystem.FileHandleProtocol
-
-            fileprivate init(wrapping iterator: _NIOFileSystem.FileChunks.AsyncIterator, fileHandle: some _NIOFileSystem.FileHandleProtocol) {
-                self.iterator = iterator
-                self.fileHandle = fileHandle
-            }
-
-            public mutating func next() async throws -> ByteBuffer? {
-                let chunk = try await iterator.next()
-                if chunk == nil {
-                    // For convenience's sake, close when we hit EOF. Closing on error is left up to the caller.
-                    try await fileHandle.close()
-                }
-                return chunk
-            }
-        }
-
-        public func closeHandle() async throws {
-            try await self.fileHandle.close()
-        }
-
-        public func makeAsyncIterator() -> FileChunksIterator {
-            FileChunksIterator(wrapping: fileChunks.makeAsyncIterator(), fileHandle: fileHandle)
-        }
-    }
-
     /// Reads the contents of a file at the supplied path in chunks.
     ///
     ///    for try await chunk in try await req.fileio.readFile(at: "/path/to/file.txt") {
@@ -166,21 +126,20 @@ public struct FileIO: Sendable {
     ) async throws -> FileChunks {
         let filePath = FilePath(path)
 
-        let readHandle = try await fileSystem.openFile(forReadingAt: filePath)
+        return try await fileSystem.withFileHandle(forReadingAt: filePath) { readHandle in
+            let chunks: FileChunks
 
-        let chunks: _NIOFileSystem.FileChunks
-
-        if let offset {
-            if let byteCount {
-                chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(chunkSize))
+            if let offset {
+                if let byteCount {
+                    chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(chunkSize))
+                } else {
+                    chunks = readHandle.readChunks(in: offset..., chunkLength: .bytes(chunkSize))
+                }
             } else {
-                chunks = readHandle.readChunks(in: offset..., chunkLength: .bytes(chunkSize))
+                chunks = readHandle.readChunks(chunkLength: .bytes(chunkSize))
             }
-        } else {
-            chunks = readHandle.readChunks(chunkLength: .bytes(chunkSize))
+            return chunks
         }
-
-        return FileChunks(fileChunks: chunks, fileHandle: readHandle)
     }
 
     /// Write the contents of buffer to a file at the supplied path.
@@ -310,9 +269,7 @@ public struct FileIO: Sendable {
                     for try await chunk in chunks {
                         try await stream.writeBuffer(chunk)
                     }
-                    try? await chunks.closeHandle()
                 } catch {
-                    try? await chunks.closeHandle()
                     throw error
                 }
                 try await stream.write(.end)
