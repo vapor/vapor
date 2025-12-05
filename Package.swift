@@ -207,6 +207,9 @@ var swiftSettings: [SwiftSetting] { [
     //.enableUpcomingFeature("InternalImportsByDefault"),
     .enableUpcomingFeature("MemberImportVisibility"),
     .enableUpcomingFeature("InferIsolatedConformances"),
-    //.enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+    // .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
     .enableUpcomingFeature("ImmutableWeakCaptures"),
+    .enableExperimentalFeature("SuppressedAssociatedTypes"),
+    .enableExperimentalFeature("LifetimeDependence"),
+    .enableUpcomingFeature("LifetimeDependence"),
 ] }
