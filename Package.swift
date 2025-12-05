@@ -103,6 +103,8 @@ let package = Package(
 
         // Swift syntax parsing and generation
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
+        // HTTP Server for low level request and response handling
+        .package(url: "git@github.com:swift-server/swift-http-server", branch: "main")
     ],
     targets: [
         // C helpers
@@ -163,6 +165,7 @@ let package = Package(
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
+                .product(name: "HTTPServer", package: "swift-http-server"),
             ],
             swiftSettings: swiftSettings
         ),
