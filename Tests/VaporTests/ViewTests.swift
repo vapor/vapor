@@ -2,6 +2,8 @@ import Vapor
 import NIOCore
 import VaporTesting
 import Testing
+import HTTPTypes
+import RoutingKit
 
 @Suite("View Tests")
 struct ViewTests {

@@ -1,4 +1,5 @@
 import NIOCore
+import NIOConcurrencyHelpers
 
 /// Uses HTTP cookies to save and restore sessions for connecting clients.
 ///

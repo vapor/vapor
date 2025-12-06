@@ -3,6 +3,8 @@ import Testing
 import VaporTesting
 import Vapor
 import HTTPTypes
+import RoutingKit
+import Foundation
 
 @Suite("Route Tests")
 struct RouteTests {

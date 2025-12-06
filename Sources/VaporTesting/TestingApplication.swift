@@ -2,6 +2,10 @@ import AsyncHTTPClient
 import Vapor
 import NIOPosix
 import NIOCore
+import NIOHTTPTypesHTTP1
+import Logging
+import NIOHTTP1
+import HTTPTypes
 
 extension Application {
     public enum Method {

@@ -6,20 +6,22 @@ import NIOHTTPTypes
 import WebSocketKit
 import NIOWebSocket
 #endif
+import NIOHTTPTypesHTTP1
+import NIOConcurrencyHelpers
 
 final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Request
     typealias OutboundIn = Response
     typealias OutboundOut = Response
-    
-    
+
+
     private enum UpgradeState {
         case ready
         case pending(Request, UpgradeBufferHandler)
         case upgraded
     }
-    
-    
+
+
     private var upgradeState: UpgradeState
     let httpRequestDecoder: ByteToMessageHandler<HTTPRequestDecoder>
     let httpHandlers: [any RemovableChannelHandler]
@@ -32,10 +34,10 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         self.httpRequestDecoder = httpRequestDecoder
         self.httpHandlers = httpHandlers
     }
-    
+
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let req = self.unwrapInboundIn(data)
-        
+
         // check if request is upgrade
         let connectionHeaders = req.headers[values: .connection].map { $0.lowercased() }
         if connectionHeaders.contains("upgrade") {
@@ -47,20 +49,20 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                 self.errorCaught(context: context, error: error)
             }
         }
-        
+
         context.fireChannelRead(data)
     }
-    
+
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let res = self.unwrapOutboundIn(data)
-        
+
         struct SendableBox {
             let context: ChannelHandlerContext
             let buffer: UpgradeBufferHandler
             var handler: HTTPServerUpgradeHandler
             let protocolUpgrader: any HTTPServerProtocolUpgrader
         }
-        
+
         // check upgrade
         switch self.upgradeState {
         case .pending(let req, let buffer):
@@ -119,18 +121,18 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
 
 private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = ByteBuffer
-    
+
     var buffer: [ByteBuffer]
-    
+
     init() {
         self.buffer = []
     }
-    
+
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let data = self.unwrapInboundIn(data)
         self.buffer.append(data)
     }
-    
+
     func handlerRemoved(context: ChannelHandlerContext) {
         for data in self.buffer {
             context.fireChannelRead(NIOAny(data))
@@ -149,13 +151,13 @@ public struct WebSocketUpgrader: Upgrader, Sendable {
     var maxFrameSize: WebSocketMaxFrameSize
     var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPFields?>)
     var onUpgrade: @Sendable (WebSocket) -> ()
-    
+
     public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPFields?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
         self.shouldUpgrade = shouldUpgrade
         self.onUpgrade = onUpgrade
     }
-    
+
     public func applyUpgrade(req: Request, res: Response) -> any HTTPServerProtocolUpgrader {
         let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: self.maxFrameSize.value, automaticErrorHandling: false, shouldUpgrade: { _, _ in
             return self.shouldUpgrade().map { headers in
@@ -168,7 +170,7 @@ public struct WebSocketUpgrader: Upgrader, Sendable {
         }, upgradePipelineHandler: { channel, req in
             return WebSocket.server(on: channel, onUpgrade: self.onUpgrade)
         })
-        
+
         return webSocketUpgrader
     }
 }

@@ -17,7 +17,7 @@ import NIOCore
 import NIOHTTPTypes
 
 /// ResponseWriter that writes directly to AsyncChannel
-public struct ResponseWriter: ~Copyable {
+public struct ResponseWriter: ~Copyable, Sendable {
     @usableFromInline
     let outbound: NIOAsyncChannelOutboundWriter<HTTPResponsePart>
 

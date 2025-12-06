@@ -1,6 +1,9 @@
 import Vapor
 import VaporTesting
 import Testing
+import Logging
+import HTTPTypes
+import RoutingKit
 
 @Suite("Logging Tests")
 struct LoggingTests {

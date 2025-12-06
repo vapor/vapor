@@ -1,5 +1,6 @@
 import NIOCore
 import NIOConcurrencyHelpers
+import HTTPTypes
 
 extension Request {
     final class BodyStream: BodyStreamWriter, AsyncBodyStreamWriter {
@@ -8,7 +9,7 @@ extension Request {
         var isBeingRead: Bool {
             self.handlerBuffer.value.handler != nil
         }
-        
+
         /// **WARNING** This should only be used when we know we're on an event loop
         ///
         struct HandlerBufferContainer: @unchecked Sendable {
@@ -26,7 +27,7 @@ extension Request {
             self.handlerBuffer = .init(.init(handler: nil, buffer: []), eventLoop: eventLoop)
             self.allocator = byteBufferAllocator
         }
-        
+
         func read(_ handler: @escaping @Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
             if self.eventLoop.inEventLoop {
                 read0(handler)
@@ -36,7 +37,7 @@ extension Request {
                 }
             }
         }
-        
+
         func read0(_ handler: @escaping @Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
             self.eventLoop.preconditionInEventLoop()
             self.handlerBuffer.value.handler = handler
@@ -45,7 +46,7 @@ extension Request {
             }
             self.handlerBuffer.value.buffer = []
         }
-        
+
         func write(_ result: BodyStreamResult) async throws {
             // Explicitly adds the ELF because Swift 5.6 fails to infer the return type
             try await self.eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
@@ -65,14 +66,14 @@ extension Request {
                 }
             }
         }
-        
+
         private func write0(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
             switch chunk {
             case .end, .error:
                 self.isClosed.withLockedValue { $0 = true }
             case .buffer: break
             }
-            
+
             if let handler = self.handlerBuffer.value.handler {
                 handler(chunk, promise)
                 // remove reference to handler
@@ -104,7 +105,7 @@ extension Request {
                     }
                     next?.succeed(())
                 }
-                
+
                 return promise.futureResult
             }
         }

@@ -92,6 +92,7 @@ extension Request.Body: AsyncSequence {
             self.underlying = underlying
         }
 
+        @concurrent
         public mutating func next() async throws -> ByteBuffer? {
             return try await self.underlying.next()
         }

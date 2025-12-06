@@ -4,6 +4,8 @@ import AsyncHTTPClient
 import Logging
 import Foundation
 import NIOHTTPTypesHTTP1
+import HTTPTypes
+import NIOHTTP1
 
 internal struct VaporHTTPClient: Client {
     let http: HTTPClient
