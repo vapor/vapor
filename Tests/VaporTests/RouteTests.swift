@@ -369,7 +369,7 @@ struct RouteTests {
         }
 
         try await withApp { app in
-            try app.register(collection: Foo())
+            try await app.register(collection: Foo())
 
             try await app.test(.get, "foo") { res in
                 #expect(res.body.string == "bar")

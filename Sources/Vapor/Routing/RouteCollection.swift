@@ -4,8 +4,7 @@ public protocol RouteCollection {
     ///
     /// - parameters:
     ///     - routes: `RoutesBuilder` to register any new routes to.
-    func boot(routes: any RoutesBuilder) throws
-    #warning("Make this async")
+    func boot(routes: any RoutesBuilder) async throws
 }
 
 extension RoutesBuilder {
@@ -13,7 +12,7 @@ extension RoutesBuilder {
     ///
     /// - parameters:
     ///     - collection: `RouteCollection` to register.
-    public func register(collection: any RouteCollection) throws {
-        try collection.boot(routes: self)
+    public func register(collection: any RouteCollection) async throws {
+        try await collection.boot(routes: self)
     }
 }
