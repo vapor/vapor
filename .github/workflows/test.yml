@@ -22,11 +22,11 @@ jobs:
     container: swift:6.2-bookworm
     steps:
       - name: Check out Vapor
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: vapor
       - name: Check out provider
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ matrix.provider }}
           path: provider
@@ -52,7 +52,7 @@ jobs:
     container: swift:6.2-bookworm
     steps:
       - name: Check out Vapor
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Run tests with traits disabled
         # Since we disable all traits here, we also disable HTTPClient, which is used by a lot of tests to send real requests. So just run a subset of tests that don't require it, since we're really just making sure it works.
         run: swift test --disable-default-traits --filter "AuthenticationTests"
