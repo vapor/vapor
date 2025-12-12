@@ -32,9 +32,10 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.24.0"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", exact: "5.0.0-alpha.1"),
+        .package(url: "https://github.com/vapor/console-kit.git", exact: "5.0.0-alpha.3"),
 
-        .package(url: "https://github.com/apple/swift-configuration", .upToNextMinor(from: "0.2.0")),
+        // API package for reading configuration.
+        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0"),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
@@ -55,7 +56,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.24.0"),
 
         // Swift logging API
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-log.git", branch: "main"),
 
         // Swift metrics API
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),

@@ -1,4 +1,5 @@
 import Configuration
+import ConsoleLogger
 import Vapor
 import Logging
 
@@ -12,7 +13,7 @@ struct Entrypoint {
             ]
         )
         let env = try Environment.detect(from: config)
-        try LoggingSystem.bootstrap(from: config)
+        LoggingSystem.bootstrap(config: config)
 
         let app = try await Application(env, configReader: config)
         do {
