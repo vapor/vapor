@@ -15,7 +15,7 @@ struct ApplicationTests {
         try await withApp { app in
             app.environment.arguments = ["serve"]
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            try await app.startup()
+            try await app.startup(from: testConfigReader)
             guard let running = app.running else {
                 Issue.record("app started without setting 'running'")
                 return
@@ -52,7 +52,7 @@ struct ApplicationTests {
         }
 
         try await withApp { app in
-            let app = try await Application(.testing)
+            let app = try await Application(.testing, configReader: testConfigReader)
 
             let foo = Foo()
             app.lifecycle.use(foo)
@@ -175,7 +175,7 @@ struct ApplicationTests {
                 group.addTask {
                     app.environment.arguments = ["serve"]
                     await #expect(throws: Never.self) {
-                        try await app.startup()
+                        try await app.startup(from: testConfigReader)
                     }
                 }
 
