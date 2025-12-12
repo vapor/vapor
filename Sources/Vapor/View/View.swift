@@ -1,4 +1,5 @@
 import NIOCore
+import HTTPTypes
 
 public struct View: ResponseEncodable, Sendable {
     public var data: ByteBuffer
@@ -8,11 +9,7 @@ public struct View: ResponseEncodable, Sendable {
     }
 
     public func encodeResponse(for request: Request) async throws -> Response {
-        let response = Response()
-        response.responseBox.withLockedValue { box in
-            box.headers.contentType = .html
-            box.body = .init(buffer: self.data)
-        }
+        let response = Response(headers: .init(dictionaryLiteral: (.contentType, HTTPMediaType.html.serialize())), body: .init(buffer: self.data))
         return response
     }
 }

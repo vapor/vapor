@@ -19,7 +19,7 @@ extension Application {
     }
 }
 
-public protocol VaporTestingRunner {
+public protocol VaporTestingRunner: Sendable {
     var tester: any TestingApplicationTester { get }
 }
 

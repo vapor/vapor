@@ -10,6 +10,9 @@ import Foundation
 import HTTPTypes
 import NIOHTTP1
 import NIOHTTPTypesHTTP1
+import RoutingKit
+import NIOFoundationCompat
+import Logging
 
 @Suite("Request Tests")
 struct RequestTests {

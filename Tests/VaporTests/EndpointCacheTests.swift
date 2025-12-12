@@ -2,21 +2,22 @@ import VaporTesting
 import Testing
 import Vapor
 import NIOCore
+import RoutingKit
 
 @Suite("Endpoint Cache Tests")
 struct EndpointCacheTests {
     actor CurrentActor {
         var current = 0
-        
+
         func increment() {
             self.current += 1
         }
-        
+
         func getCurrent() -> Int {
             self.current
         }
     }
-    
+
     @Test("Test cache is filled when there is no cache entry yet")
     func endpointCacheNoCache() async throws {
         let currentActor = CurrentActor()

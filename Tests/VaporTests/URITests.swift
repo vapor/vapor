@@ -2,6 +2,7 @@ import Vapor
 import NIOCore
 import Algorithms
 import Testing
+import Foundation
 
 @Suite("URI Test")
 struct URITests {
@@ -49,7 +50,7 @@ struct URITests {
     @Test("Test Mutation")
     func testMutation() {
         var uri = URI(string: "https://user:pass@vapor.codes:1234/foo?bar=baz#qux")
-    
+
         // Mutate query
         uri.query = "bar=baz&test=1"
         #expect(uri.string == "https://user:pass@vapor.codes:1234/foo?bar=baz&test=1#qux")
@@ -121,7 +122,7 @@ struct URITests {
     func testOverlongURIParsing() {
         let zeros = String(repeating: "0", count: 65_512)
         let untrustedInput = "[https://vapor.codes.somewhere-else.test:](https://vapor.codes.somewhere-else.test/\(zeros)443)[\(zeros)](https://vapor.codes.somewhere-else.test/\(zeros)443)[443](https://vapor.codes.somewhere-else.test/\(zeros)443)"
-    
+
         let readableInAssertionOutput = untrustedInput
             .replacingOccurrences(of: zeros, with: "00...00")
             .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!

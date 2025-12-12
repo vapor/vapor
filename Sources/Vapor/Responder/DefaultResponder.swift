@@ -91,7 +91,7 @@ package struct DefaultResponder: Responder {
     private func getRoute(for request: Request) -> CachedRoute? {
         let pathComponents = request.url.path
             .split(separator: "/")
-            .map(String.init)
+            .map { String($0).removingPercentEncoding ?? String($0) }  
         
         // If it's a HEAD request and a HEAD route exists, return that route...
         if request.method == .head, let route = self.router.route(

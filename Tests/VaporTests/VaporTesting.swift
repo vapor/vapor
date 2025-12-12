@@ -1,6 +1,8 @@
 import Vapor
 import VaporTesting
 import Testing
+import HTTPTypes
+import RoutingKit
 
 /// Tests to make sure Vapor's swift-testing integration works.
 @Suite("Vapor Testing Tests")
@@ -59,19 +61,19 @@ struct VaporTestingTests {
 
     @Test
     func withAppConfiguration() async throws {
-        try await withApp { app in         
+        try await withApp { app in
             try await app.testing().test(.get, "hello") { res in
                 #expect(res.status == .notFound)
             }
         }
-        
+
         func configure(_ app: Application) async throws {
             app.get("hello") { req async -> String in
                 "Hello, world!"
             }
         }
 
-        try await withApp(configure: configure) { app in         
+        try await withApp(configure: configure) { app in
             try await app.testing().test(.get, "hello") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Hello, world!")

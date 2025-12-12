@@ -4,6 +4,7 @@ import HTTPTypes
 import Testing
 import VaporTesting
 import Foundation
+import RoutingKit
 
 @Suite("Query Tests")
 struct QueryTests {
@@ -38,11 +39,11 @@ struct QueryTests {
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = ""
-            
+
             // Think of property wrappers, or MongoKitten's ObjectId
             struct StringWrapper: Decodable {
                 let string: String
-                
+
                 init(from decoder: any Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     string = try container.decode(String.self)
@@ -335,7 +336,7 @@ struct QueryTests {
         struct Query: Decodable {
             let closedRange: ClosedRange<Double>
         }
-        
+
         try await withApp { app in
             let request = Request(application: app)
             request.headers.contentType = .json

@@ -2,6 +2,7 @@ import Configuration
 import Foundation
 import NIOConcurrencyHelpers
 import NIOPosix
+import NIOCore
 
 extension Application {
     struct AddressConfiguration: Sendable {
@@ -65,7 +66,7 @@ extension Application {
             try await self.server.start()
         default: throw AddressConfigurationError.incompatibleFlags
         }
-        
+
         var box = self.box.withLockedValue { $0 }
         box.server = self.server
 
@@ -81,7 +82,7 @@ extension Application {
             /// https://github.com/swift-server/swift-service-lifecycle/blob/main/Sources/UnixSignals/UnixSignalsSequence.swift#L77-L82
             signal(code, SIG_IGN)
             #endif
-            
+
             let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
             source.setEventHandler {
                 print() // clear ^C

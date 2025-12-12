@@ -1,5 +1,6 @@
 import Configuration
 import Vapor
+import NIOCore
 
 /// Perform a test while handling lifecycle of the application.
 /// Feel free to create a custom function like this, tailored to your project.

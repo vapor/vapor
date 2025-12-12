@@ -8,6 +8,8 @@ import Testing
 import VaporTesting
 import Foundation
 import AsyncHTTPClient
+import HTTPTypes
+import RoutingKit
 
 @Suite("Client Tests")
 struct ClientTests {
@@ -178,7 +180,7 @@ final class CustomClient: Client, Sendable {
 }
 
 final class TestLogHandler: LogHandler {
-    
+
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get { self.metadata[key] }
         set { self.metadata[key] = newValue }
@@ -192,7 +194,7 @@ final class TestLogHandler: LogHandler {
             self._metadata.withLockedValue { $0 = newValue }
         }
     }
-    
+
     var logLevel: Logger.Level {
         get {
             _logLevel
@@ -201,7 +203,7 @@ final class TestLogHandler: LogHandler {
             // We don't use this anywhere
         }
     }
-    
+
     var messages: [Logger.Message] {
         get {
             self._messages.withLockedValue { $0 }
@@ -210,7 +212,7 @@ final class TestLogHandler: LogHandler {
             self._messages.withLockedValue { $0 = newValue }
         }
     }
-    
+
     let _logLevel: Logger.Level
     let _metadata: NIOLockedValueBox<Logger.Metadata>
     let _messages: NIOLockedValueBox<[Logger.Message]>
@@ -254,7 +256,7 @@ final class TestLogHandler: LogHandler {
 
 struct SomeJSON: Content {
     let vapor: SomeNestedJSON
-    
+
     init() {
         vapor = SomeNestedJSON(name: "The Vapor Project", age: 7, repos: [
             VaporRepoJSON(name: "WebsocketKit", url: "https://github.com/vapor/websocket-kit"),

@@ -3,6 +3,7 @@ import Testing
 import Vapor
 import NIOCore
 import HTTPTypes
+import RoutingKit
 
 @Suite("Session Tests")
 struct SessionTests {

@@ -80,6 +80,7 @@ extension RequestBody {
         }
 
         @inlinable
+        @concurrent
         public mutating func next() async throws -> ByteBuffer? {
             switch self._backing {
             case .byteBuffer(let buffer):
@@ -340,6 +341,7 @@ package struct NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
         }
 
         @inlinable
+        @concurrent
         public mutating func next() async throws -> ByteBuffer? {
             if self.done { return nil }
             // if we are still expecting parts and the iterator finishes.

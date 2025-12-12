@@ -1,4 +1,5 @@
 import NIOConcurrencyHelpers
+import HTTPTypes
 
 extension Request {
     /// Helper for accessing authenticated objects.
@@ -11,7 +12,7 @@ extension Request {
     /// Request helper for storing and fetching authenticated objects.
     public struct Authentication {
         let request: Request
-        
+
         init(request: Request) {
             self.request = request
         }

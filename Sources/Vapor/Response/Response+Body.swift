@@ -281,6 +281,7 @@ private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWrit
 }
 
 extension Response.Body {
+    @concurrent
     func write(_ writer: inout any ResponseBodyWriter) async throws {
         if let buffer {
             try await writer.write(buffer)

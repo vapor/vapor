@@ -7,6 +7,8 @@ import Vapor
 import Testing
 import VaporTesting
 import Foundation
+import RoutingKit
+import _NIOFileSystemFoundationCompat
 
 @Suite("File Tests", .disabled("Disabled until response streaming is working"))
 struct FileTests {

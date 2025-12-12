@@ -3,6 +3,7 @@ import Foundation
 import MultipartKit
 #endif
 import NIOConcurrencyHelpers
+import HTTPTypes
 
 /// Configures which ``Encoder``s and ``Decoder``s to use when interacting with data in HTTP messages.
 ///
@@ -19,39 +20,39 @@ import NIOConcurrencyHelpers
 ///
 /// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
 /// See the ``Content`` protocol for more information.
-public struct ContentConfiguration: Sendable {    
+public struct ContentConfiguration: Sendable {
     /// Creates a ``ContentConfiguration`` containing all of Vapor's default coders.
     public static func `default`() -> ContentConfiguration {
         var config = ContentConfiguration()
-        
+
         // json
         config.use(encoder: JSONEncoder.custom(dates: .iso8601), for: .json)
         config.use(decoder: JSONDecoder.custom(dates: .iso8601), for: .json)
-        
+
         // json api
         config.use(encoder: JSONEncoder.custom(dates: .iso8601), for: .jsonAPI)
         config.use(decoder: JSONDecoder.custom(dates: .iso8601), for: .jsonAPI)
-        
+
         // data
         config.use(encoder: PlaintextEncoder(), for: .plainText)
         config.use(decoder: PlaintextDecoder(), for: .plainText)
         config.use(encoder: PlaintextEncoder(.html), for: .html)
-        
+
         // form-urlencoded
         config.use(encoder: URLEncodedFormEncoder(), for: .urlEncodedForm)
         config.use(decoder: URLEncodedFormDecoder(), for: .urlEncodedForm)
         config.use(urlEncoder: URLEncodedFormEncoder())
         config.use(urlDecoder: URLEncodedFormDecoder())
-        
+
         #if Multipart
         // form-data
         config.use(encoder: FormDataEncoder(), for: .formData)
         config.use(decoder: FormDataDecoder(), for: .formData)
         #endif
-        
+
         return config
     }
-    
+
     /// Configured ``ContentEncoder``s.
     private var encoders: [HTTPMediaType: any ContentEncoder]
 
@@ -63,13 +64,13 @@ public struct ContentConfiguration: Sendable {
     private var urlDecoder: (any URLQueryDecoder)?
 
     // MARK: Init
-    
+
     /// Create a new, empty ``ContentConfiguration``.
     public init() {
         self.encoders = [:]
         self.decoders = [:]
     }
-    
+
     /// Adds a ``ContentEncoder`` for the specified ``HTTPMediaType``.
     ///
     ///     contentConfig.use(encoder: JSONEncoder(), for: .json)
@@ -80,7 +81,7 @@ public struct ContentConfiguration: Sendable {
     public mutating func use(encoder: any ContentEncoder, for mediaType: HTTPMediaType) {
         self.encoders[mediaType] = encoder
     }
-    
+
     /// Adds a ``ContentDecoder`` for the specified ``HTTPMediaType``.
     ///
     ///     contentConfig.use(decoder: JSONDecoder(), for: .json)
@@ -91,7 +92,7 @@ public struct ContentConfiguration: Sendable {
     public mutating func use(decoder: any ContentDecoder, for mediaType: HTTPMediaType) {
         self.decoders[mediaType] = decoder
     }
-    
+
     public mutating func use(urlEncoder: any URLQueryEncoder) {
         self.urlEncoder = urlEncoder
     }
@@ -99,9 +100,9 @@ public struct ContentConfiguration: Sendable {
     public mutating func use(urlDecoder: any URLQueryDecoder) {
         self.urlDecoder = urlDecoder
     }
-    
+
     // MARK: Resolve
-    
+
     /// Returns an ``ContentEncoder`` for the specified ``HTTPMediaType`` or throws an error.
     ///
     ///     let coder = try contentConfiguration.requireEncoder(for: .json)
@@ -110,10 +111,10 @@ public struct ContentConfiguration: Sendable {
         guard let encoder = self.encoders[mediaType] else {
             throw Abort(.unsupportedMediaType, reason: "Support for writing media type '\(mediaType)' has not been configured.")
         }
-        
+
         return encoder
     }
-    
+
     /// Returns a ``ContentDecoder`` for the specified ``HTTPMediaType`` or throws an error.
     ///
     ///     let coder = try contentConfiguration.requireDecoder(for: .json)
@@ -122,10 +123,10 @@ public struct ContentConfiguration: Sendable {
         guard let decoder = self.decoders[mediaType] else {
             throw Abort(.unsupportedMediaType, reason: "Support for reading media type '\(mediaType)' has not been configured.")
         }
-        
+
         return decoder
     }
-    
+
     /// Returns a ``URLQueryEncoder`` or throws an error.
     ///
     ///     let coder = try coders.requireURLEncoder()
@@ -135,7 +136,7 @@ public struct ContentConfiguration: Sendable {
         }
         return encoder
     }
-    
+
     /// Returns a ``URLQueryDecoder`` or throws an error.
     ///
     ///     let coder = try coders.requireURLDecoder()

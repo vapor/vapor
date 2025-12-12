@@ -1,3 +1,5 @@
+import Foundation
+
 extension Validator where T == String {
     /// Validates whether a `String` is a valid email address.
     public static var email: Validator<T> {
@@ -14,7 +16,7 @@ extension Validator where T == String {
             return ValidatorResults.Email(isValidEmail: true)
         }
     }
-    
+
     public static var internationalEmail: Validator<T> {
         .init {
             guard
@@ -43,11 +45,11 @@ extension ValidatorResults.Email: ValidatorResult {
     public var isFailure: Bool {
         !self.isValidEmail
     }
-    
+
     public var successDescription: String? {
         "is a valid email address"
     }
-    
+
     public var failureDescription: String? {
         "is not a valid email address"
     }

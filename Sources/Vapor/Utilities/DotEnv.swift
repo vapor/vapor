@@ -11,6 +11,7 @@ import Logging
 import NIOCore
 import NIOPosix
 import _NIOFileSystem
+import Foundation
 
 /// Reads dotenv (`.env`) files and loads them into the current process.
 ///
@@ -66,7 +67,7 @@ public struct DotEnvFile: Sendable {
             setenv(line.key, line.value, overwrite ? 1 : 0)
         }
     }
-    
+
     /// Reads a dotenv file from the supplied path.
     ///
     ///     let file = try await DotEnvFile.read(path: ".env")
@@ -87,7 +88,7 @@ public struct DotEnvFile: Sendable {
             return DotEnvFile(lines: parser.parse())
         }
     }
-    
+
     /// Reads a dotenv file from the supplied path and loads it into the process.
     ///
     ///     try await DotEnvFile.load(path: ".env")
@@ -106,7 +107,7 @@ public struct DotEnvFile: Sendable {
         let file = try await self.read(path: path)
         file.load(overwrite: overwrite)
     }
-    
+
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let path: String
@@ -127,7 +128,7 @@ public struct DotEnvFile: Sendable {
             logger.debug("Could not load \(path) file: \(error)")
         }
     }
-    
+
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let environment: Environment

@@ -4,6 +4,8 @@ import Vapor
 import VaporTesting
 import Testing
 import Foundation
+import HTTPTypes
+import RoutingKit
 
 @Suite("Authentication Tests")
 struct AuthenticationTests {
