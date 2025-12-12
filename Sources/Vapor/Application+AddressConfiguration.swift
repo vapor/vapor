@@ -1,11 +1,10 @@
 import Configuration
-@preconcurrency import Dispatch
 import Foundation
 import NIOConcurrencyHelpers
 import NIOPosix
 
 extension Application {
-    struct AddressConfig: Sendable {
+    struct AddressConfiguration: Sendable {
         /// The hostname the server will run on.
         var hostname: String?
 
@@ -35,7 +34,7 @@ extension Application {
     }
 
     /// Errors that may be thrown when serving a server
-    public enum AddressConfigError: Swift.Error {
+    public enum AddressConfigurationError: Swift.Error {
         /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
         case incompatibleFlags
     }
@@ -47,8 +46,8 @@ extension Application {
         var server: (any Server)?
     }
 
-    func _startup(addressConfig: AddressConfig) async throws {
-        switch (addressConfig.hostname, addressConfig.port, addressConfig.bind, addressConfig.socketPath) {
+    func _startup(addressConfiguration: AddressConfiguration) async throws {
+        switch (addressConfiguration.hostname, addressConfiguration.port, addressConfiguration.bind, addressConfiguration.socketPath) {
         case (.none, .none, .none, .none): // use defaults
             try await self.server.start()
 
@@ -64,7 +63,7 @@ extension Application {
         case (let hostname, let port, .none, .none): // hostname / port
             self.serverConfiguration.address = .hostname(hostname!, port: port!)
             try await self.server.start()
-        default: throw AddressConfigError.incompatibleFlags
+        default: throw AddressConfigurationError.incompatibleFlags
         }
         
         var box = self.box.withLockedValue { $0 }
@@ -105,8 +104,4 @@ extension Application {
         box.signalSources = []
         self.box.withLockedValue { $0 = box }
     }
-    
-    //deinit {
-    //    assert(self.box.withLockedValue({ $0.didShutdown }), "ServeCommand did not shutdown before deinit")
-    //}
 }

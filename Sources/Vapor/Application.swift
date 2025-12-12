@@ -303,7 +303,7 @@ public final class Application: Sendable, Service {
     public func startup(from config: ConfigReader) async throws {
         try await self.boot()
 
-        try await self._startup(addressConfig: AddressConfig(from: config))
+        try await self._startup(addressConfiguration: AddressConfiguration(from: config))
     }
     
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
