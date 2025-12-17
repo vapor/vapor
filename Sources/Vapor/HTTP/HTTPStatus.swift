@@ -12,12 +12,8 @@ extension HTTPStatus: ResponseEncodable {
     }
 }
 
-#if compiler(>=6.1)
 extension HTTPStatus: @retroactive Decodable {}
 extension HTTPStatus: @retroactive Encodable {}
-#else
-extension HTTPStatus: Codable {}
-#endif
 
 extension HTTPStatus {
     public init(from decoder: Decoder) throws {

@@ -1,8 +1,4 @@
-#if !canImport(Darwin) && compiler(<6.0)
-@preconcurrency import struct Foundation.URLComponents
-#else
 import struct Foundation.URLComponents
-#endif
 
 // MARK: - URI
 

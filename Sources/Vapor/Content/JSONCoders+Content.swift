@@ -1,10 +1,11 @@
 import Foundation
 import NIOCore
+import NIOFoundationCompat
 import NIOHTTP1
 
-#if swift(<6.0)
-extension Foundation.JSONEncoder: @unchecked Swift.Sendable {}
-extension Foundation.JSONDecoder: @unchecked Swift.Sendable {}
+#if canImport(Darwin)
+extension JSONEncoder: @retroactive @unchecked Sendable {} // JSONEncoder Sendable conformance is not available before macOS 13.0/iOS 16.0/watchOS 9.0/tvOS 16.0
+extension JSONDecoder: @retroactive @unchecked Sendable {} // JSONDecoder Sendable conformance is not available before macOS 13.0/iOS 16.0/watchOS 9.0/tvOS 16.0
 #endif
 
 extension JSONEncoder: ContentEncoder {
@@ -18,16 +19,17 @@ extension JSONEncoder: ContentEncoder {
         where E: Encodable
     {
         headers.contentType = .json
-        
+
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
-            try body.writeBytes(JSONEncoder.custom(
+            let encoder = JSONEncoder.custom(
                 dates: self.dateEncodingStrategy,
                 data: self.dataEncodingStrategy,
                 keys: self.keyEncodingStrategy,
                 format: self.outputFormatting,
-                floats: self.nonConformingFloatEncodingStrategy,
-                userInfo: self.userInfo.merging(userInfo) { $1 }
-            ).encode(encodable))
+                floats: self.nonConformingFloatEncodingStrategy
+            ) // don't use userInfo parameter of `JSONEncoder.custom()` until Swift 6.2 is required
+            encoder.userInfo = self.userInfo.merging(userInfo) { $1 }
+            try body.writeBytes(encoder.encode(encodable))
         } else {
             try body.writeBytes(self.encode(encodable))
         }

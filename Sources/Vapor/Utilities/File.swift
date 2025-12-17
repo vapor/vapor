@@ -1,5 +1,6 @@
 import Foundation
 import NIOCore
+import NIOFoundationCompat
 
 /// Represents a single file.
 public struct File: Codable, Equatable, Sendable {
