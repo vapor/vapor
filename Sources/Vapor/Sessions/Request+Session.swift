@@ -1,3 +1,5 @@
+import NIOConcurrencyHelpers
+
 extension Request {
     /// Returns the current `Session` or creates one.
     ///
@@ -26,15 +28,15 @@ extension Request {
             }
         }
     }
-    
+
     public var hasSession: Bool {
-        return self._sessionCache.session.withLockedValue { $0 != nil }
+        self._sessionCache.session.withLockedValue { $0 != nil }
     }
 
     private struct SessionCacheKey: StorageKey {
         typealias Value = SessionCache
     }
-    
+
     internal var _sessionCache: SessionCache {
         if let existing = self.storage[SessionCacheKey.self] {
             return existing

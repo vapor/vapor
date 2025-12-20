@@ -1,5 +1,6 @@
 import ConsoleKit
 import RoutingKit
+import HTTPTypes
 
 /// Displays all routes registered to the `Application`'s `Router` in an ASCII-formatted table.
 ///
@@ -24,7 +25,7 @@ public final class RoutesCommand: AsyncCommand {
     }
 
     init() { }
-    
+
     public func run(using context: ConsoleKitCommands.CommandContext, signature: Signature) async throws {
         let routes = context.application.routes
         let includeDescription = !routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
@@ -76,7 +77,7 @@ extension Console {
                 }
             }
         }
-        
+
         func hr() {
             var text: ConsoleText = ""
             for columnWidth in columnWidths {
@@ -90,7 +91,7 @@ extension Console {
             text += "+"
             self.output(text)
         }
-        
+
         for row in rows {
             hr()
             var text: ConsoleText = ""
@@ -105,7 +106,7 @@ extension Console {
             text += "|"
             self.output(text)
         }
-        
+
         hr()
     }
 }

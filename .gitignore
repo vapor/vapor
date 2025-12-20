@@ -10,6 +10,7 @@ Tests/LinuxMain.swift
 .vscode
 .bash_history
 .cache/
+.lldb
 
 # API Docs Generation
 generate-package-api-docs.swift

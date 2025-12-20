@@ -2,7 +2,7 @@
 /// Middleware will be used in the order they are added.
 public struct Middlewares: Sendable {
     /// The configured middleware.
-    private var storage: [Middleware]
+    private var storage: [any Middleware]
 
   
     public enum Position {
@@ -22,7 +22,7 @@ public struct Middlewares: Sendable {
     /// - warning: Ensure the `Middleware` is thread-safe when using this method.
     ///            Otherwise, use the type-based method and register the `Middleware`
     ///            using factory method to `Services`.
-    public mutating func use(_ middleware: Middleware, at position: Position = .end) {
+    public mutating func use(_ middleware: any Middleware, at position: Position = .end) {
       switch position {
       case .end:
         self.storage.append(middleware)
@@ -32,7 +32,7 @@ public struct Middlewares: Sendable {
     }
 
     /// Resolves the configured middleware for a given container
-    public func resolve() -> [Middleware] {
+    public func resolve() -> [any Middleware] {
         return self.storage
     }
 }

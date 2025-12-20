@@ -1,4 +1,4 @@
-import NIOHTTP1
+import HTTPTypes
 
 public struct ValidationsResult: Sendable {
     public let results: [ValidationResult]
@@ -31,7 +31,7 @@ extension ValidationsError: CustomStringConvertible {
 }
 
 extension ValidationsError: AbortError {
-    public var status: HTTPResponseStatus {
+    public var status: HTTPResponse.Status {
         .badRequest
     }
 

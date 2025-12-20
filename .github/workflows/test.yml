@@ -4,38 +4,36 @@ concurrency:
   cancel-in-progress: true
 on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
-  push: { branches: [ main ] }
+  push: { branches: [main, vapor5] }
 
 jobs:
-  test-providers:
-    if: ${{ !(github.event.pull_request.draft || false) }}
-    strategy:
-      fail-fast: false
-      matrix:
-        provider:
-          - vapor/jwt
-          - vapor/fluent
-          - vapor/leaf
-          - vapor/queues
-          - vapor/apns
-    runs-on: ubuntu-latest
-    container: swift:6.0
-    steps:
-      - name: Check out Vapor
-        uses: actions/checkout@v6
-        with:
-          path: vapor
-      - name: Check out provider
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ matrix.provider }}
-          path: provider
-      - name: Use local Vapor
-        run: swift package --package-path ./provider edit vapor --path ./vapor
-      - name: Run tests
-        env:
-            SWIFT_DETERMINISTIC_HASHING: 1
-        run: swift test --package-path ./provider
+  # test-providers:
+  #   if: ${{ !(github.event.pull_request.draft || false) }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       provider:
+  #         - vapor/jwt
+  #         - vapor/fluent
+  #         - vapor/leaf
+  #         - vapor/queues
+  #         - vapor/apns
+  #   runs-on: ubuntu-latest
+  #   container: swift:6.2-bookworm
+  #   steps:
+  #     - name: Check out Vapor
+  #       uses: actions/checkout@v6
+  #       with:
+  #         path: vapor
+  #     - name: Check out provider
+  #       uses: actions/checkout@v6
+  #       with:
+  #         repository: ${{ matrix.provider }}
+  #         path: provider
+  #     - name: Use local Vapor
+  #       run: swift package --package-path ./provider edit vapor --path ./vapor
+  #     - name: Run tests
+  #       run: swift test --package-path ./provider
 
   unit-tests:
     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
@@ -43,17 +41,18 @@ jobs:
       with_release_mode_testing: true
       with_tsan: false
       with_musl: true
+      with_android: false
       extra_musl_flags: --target Vapor
-      ios_xcodebuild_action: ''
+      ios_xcodebuild_action: ""
       ios_scheme_name: Vapor
     secrets: inherit
 
-  test-parallel:
-    if: ${{ !(github.event.pull_request.draft || false) }}
+  package-traits:
     runs-on: ubuntu-latest
-    container: swift:6.0
+    container: swift:6.2-bookworm
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v6
-      - name: Run tests
-        run: swift test --parallel
+      - name: Run tests with traits disabled
+        # Since we disable all traits here, we also disable HTTPClient, which is used by a lot of tests to send real requests. So just run a subset of tests that don't require it, since we're really just making sure it works.
+        run: swift test --disable-default-traits --filter "AuthenticationTests"

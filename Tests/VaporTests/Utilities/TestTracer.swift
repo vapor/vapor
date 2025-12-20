@@ -1,9 +1,10 @@
 import Tracing
+import HTTPTypes
 
 final class TestTracer: Tracer {
     typealias Span = TestSpan
     
-    static let extractKey = "to-extract"
+    static let extractKey = HTTPField.Name("to-extract")!
     var spans: [TestSpan] = []
     
     func startSpan(
@@ -28,7 +29,7 @@ final class TestTracer: Tracer {
     }
     
     func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContextModule.ServiceContext, using extractor: Extract) where Carrier == Extract.Carrier, Extract : Instrumentation.Extractor {
-        context.extracted = extractor.extract(key: Self.extractKey, from: carrier)
+        context.extracted = extractor.extract(key: Self.extractKey.canonicalName, from: carrier)
         return
     }
     

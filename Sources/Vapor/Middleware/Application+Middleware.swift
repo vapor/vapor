@@ -1,3 +1,5 @@
+import Logging
+
 extension Application {
     public var middleware: Middlewares {
         get {

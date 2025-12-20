@@ -1,25 +1,25 @@
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 
-extension HTTPHeaders {
-    /// Get and set `HTTPCookies` for an HTTP request
+extension HTTPFields {
+    /// Get and set ``HTTPCookies`` for an HTTP request.
+    ///
     /// This accesses the `"Cookie"` header.
     public var cookie: HTTPCookies? {
         get {
-            self.parseDirectives(name: .cookie).first.map {
-                HTTPCookies(directives: $0)
-            }
+            HTTPCookies(directives: self.parseFlattenDirectives(name: .cookie))
         }
         set {
             if let cookieHeader = newValue?.cookieHeader {
-                self.replaceOrAdd(name: .cookie, value: cookieHeader)
+                self[.cookie] = cookieHeader
             } else {
-                self.remove(name: .cookie)
+                self[.cookie] = nil
             }
         }
     }
     
-    /// Get and set `HTTPCookies` for an HTTP response
+    /// Get and set ``HTTPCookies`` for an HTTP response.
+    ///
     /// This accesses the `"Set-Cookie"` header.
     public var setCookie: HTTPCookies? {
         get {
@@ -36,10 +36,10 @@ extension HTTPHeaders {
             return cookies
         }
         set {
-            self.remove(name: .setCookie)
+            self[.setCookie] = nil
             if let cookies = newValue {
                 for cookieHeader in cookies.setCookieHeaders {
-                    self.add(name: .setCookie, value: cookieHeader)
+                    self.append(.init(name: .setCookie, value: cookieHeader))
                 }
             }
         }
@@ -50,7 +50,7 @@ struct HTTPSetCookie {
     var name: String
     var value: HTTPCookies.Value
     
-    init?(directives: [HTTPHeaders.Directive]) {
+    init?(directives: [HTTPFields.Directive]) {
         guard let name = directives.first, let value = name.parameter else {
             return nil
         }
@@ -113,7 +113,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     public struct Value: ExpressibleByStringLiteral, Sendable {
         // MARK: Static
         
-        /// An expired `HTTPCookieValue`.
+        /// An expired ``HTTPCookies/Value``.
         public static let expired: Value = .init(string: "", expires: Date(timeIntervalSince1970: 0))
         
         // MARK: Properties
@@ -182,7 +182,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
             self.sameSite = sameSite
         }
         
-        /// See `ExpressibleByStringLiteral`.
+        // See `ExpressibleByStringLiteral.init(stringLiteral:)`.
         public init(stringLiteral value: String) {
             self.init(string: value)
         }
@@ -236,12 +236,12 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     /// Internal storage.
     private var cookies: [String: Value]
     
-    /// Creates an empty `HTTPCookies`
+    /// Creates an empty ``HTTPCookies``.
     public init() {
         self.cookies = [:]
     }
     
-    init(directives: [HTTPHeaders.Directive]) {
+    init(directives: [HTTPFields.Directive]) {
         self.cookies = directives.reduce(into: [:], { (cookies, directive) in
             if let value = directive.parameter {
                 cookies[.init(directive.value)] = .init(string: .init(value))
@@ -249,7 +249,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         })
     }
     
-    /// See `ExpressibleByDictionaryLiteral`.
+    // See `ExpressibleByDictionaryLiteral.init(dictionaryLiteral:)`.
     public init(dictionaryLiteral elements: (String, Value)...) {
         var cookies: [String: Value] = [:]
         for (name, value) in elements {
@@ -260,7 +260,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     
     // MARK: Serialize
     
-    /// Serializes the `Cookies` for a `Request`
+    /// Serializes the ``HTTPCookies`` for a ``Request``.
     var cookieHeader: String? {
         guard !self.cookies.isEmpty else {
             return nil
@@ -285,7 +285,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         set { self.cookies = newValue }
     }
     
-    /// Access `HTTPCookies` by name
+    /// Access ``HTTPCookies`` by name
     public subscript(name: String) -> Value? {
         get { return self.cookies[name] }
         set { self.cookies[name] = newValue }

@@ -47,12 +47,12 @@ extension SessionData: Equatable {
 // MARK: Codable
 
 extension SessionData: Codable {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self.storage = try container.decode([String: String].self)
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.storage)
     }

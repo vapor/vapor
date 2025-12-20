@@ -1,12 +1,14 @@
+#if WebSockets
 import NIOCore
 import WebSocketKit
-import NIOHTTP1
+import HTTPTypes
+import NIOPosix
 
 extension Request {
-     @preconcurrency public func webSocket(
+      public func webSocket(
          maxFrameSize: WebSocketMaxFrameSize = .`default`,
-         shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
-             $0.eventLoop.makeSucceededFuture([:])
+         shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPFields?>) = { _ in
+             MultiThreadedEventLoopGroup.singleton.any().makeSucceededFuture([:])
          },
          onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
      ) -> Response {
@@ -19,3 +21,4 @@ extension Request {
          return res
      }
  }
+#endif
