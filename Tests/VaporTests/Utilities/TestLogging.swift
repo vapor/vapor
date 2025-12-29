@@ -5,7 +5,7 @@ import Logging
 import Vapor
 
 let isLoggingConfigured: Bool = {
-    LoggingSystem.bootstrap(config: ConfigReader(provider: InMemoryProvider(values: ["log.level": "debug"])))
+    ConsoleLogger.bootstrap(config: ConfigReader(provider: InMemoryProvider(values: ["log.level": "debug"])))
     return true
 }()
 
