@@ -21,10 +21,6 @@ extension Application {
             }
         }
 
-        struct CommandKey: StorageKey {
-            typealias Value = ServeCommand
-        }
-
         final class Storage: Sendable {
             struct ServerFactory {
                 let factory: (@Sendable (Application) -> any Server)?
@@ -49,20 +45,6 @@ extension Application {
 
         public func use(_ makeServer: @Sendable @escaping (Application) -> (any Server)) {
             self.storage.makeServer.withLockedValue { $0 = .init(factory: makeServer) }
-        }
-        
-        public var command: ServeCommand {
-            get async {
-                if let existing = self.application.storage.get(CommandKey.self) {
-                    return existing
-                } else {
-                    let new = ServeCommand()
-                    await self.application.storage.setWithAsyncShutdown(CommandKey.self, to: new) {
-                        await $0.asyncShutdown()
-                    }
-                    return new
-                }
-            }
         }
 
         let application: Application
