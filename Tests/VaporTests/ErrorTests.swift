@@ -3,6 +3,8 @@ import Logging
 import Testing
 import VaporTesting
 import Foundation
+import HTTPTypes
+import RoutingKit
 
 @Suite("Error Tests")
 struct ErrorTests {
@@ -69,7 +71,7 @@ struct ErrorTests {
         let description = minimum.debugDescription
         let expectation = """
         MinimumError.alpha: Not enabled
-        
+
         """
         #expect(description == expectation)
     }

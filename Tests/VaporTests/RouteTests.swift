@@ -3,6 +3,8 @@ import Testing
 import VaporTesting
 import Vapor
 import HTTPTypes
+import RoutingKit
+import Foundation
 
 @Suite("Route Tests")
 struct RouteTests {
@@ -367,7 +369,7 @@ struct RouteTests {
         }
 
         try await withApp { app in
-            try app.register(collection: Foo())
+            try await app.register(collection: Foo())
 
             try await app.test(.get, "foo") { res in
                 #expect(res.body.string == "bar")
@@ -508,6 +510,28 @@ struct RouteTests {
                     #expect(res.status == .ok)
                     #expect(res.body.string == method.rawValue)
                 }
+            }
+        }
+    }
+
+    @Test("Unicode Routing", .bug("https://github.com/vapor/vapor/issues/3309"))
+    func unicodeRouting() async throws {
+        try await withApp { app in
+            app.get("Good👍") { req in
+                return "👍"
+            }
+            app.get("ようこそ世界へ") { req in
+                return "おめでとう"
+            }
+
+            try await app.test(method: .running) { testApp in
+                let emoticon = try await testApp.sendRequest(.get, "/Good👍")
+                #expect(emoticon.body.string == "👍")
+                #expect(emoticon.status == .ok)
+
+                let japanese = try await testApp.sendRequest(.get, "/ようこそ世界へ")
+                #expect(japanese.body.string == "おめでとう")
+                #expect(japanese.status == .ok)
             }
         }
     }

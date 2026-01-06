@@ -4,6 +4,7 @@ import Vapor
 import Testing
 import VaporTesting
 import Foundation
+import RoutingKit
 
 @Suite("Content Tests")
 struct ContentTests {

@@ -57,10 +57,10 @@ let package = Package(
 
         // Swift metrics API
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
-        
+
         // Swift tracing API
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.1.0"),
-        
+
         // Swift service context
         .package(url: "https://github.com/apple/swift-service-context.git", from: "1.0.0"),
 
@@ -115,7 +115,6 @@ let package = Package(
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "Collections", package: "swift-collections"),
             ],
-            swiftSettings: swiftSettings
         ),
 
         // Vapor
@@ -205,8 +204,11 @@ let package = Package(
 var swiftSettings: [SwiftSetting] { [
     .enableUpcomingFeature("ExistentialAny"),
     //.enableUpcomingFeature("InternalImportsByDefault"),
-    // .enableUpcomingFeature("MemberImportVisibility"),
+    .enableUpcomingFeature("MemberImportVisibility"),
     .enableUpcomingFeature("InferIsolatedConformances"),
-    //.enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
     .enableUpcomingFeature("ImmutableWeakCaptures"),
+    .enableExperimentalFeature("SuppressedAssociatedTypes"),
+    .enableExperimentalFeature("LifetimeDependence"),
+    .enableUpcomingFeature("LifetimeDependence"),
 ] }

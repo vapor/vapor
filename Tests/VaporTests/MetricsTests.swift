@@ -3,6 +3,8 @@ import Metrics
 @testable import CoreMetrics
 import VaporTesting
 import Testing
+import RoutingKit
+import HTTPTypes
 
 @Suite("Metric Tests")
 struct MetricsTests {
@@ -154,7 +156,7 @@ struct MetricsTests {
 struct MetricsTaskLocalTrait: TestTrait, SuiteTrait, TestScoping {
     fileprivate var implementation: @Sendable (_ body: @Sendable () async throws -> Void) async throws -> Void
 
-    func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable () async throws -> Void) async throws {
+    func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable @concurrent () async throws -> Void) async throws {
         try await implementation {
             try await function()
         }

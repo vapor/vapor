@@ -18,7 +18,7 @@ public final class Application: Sendable, Service {
             self._environment.withLockedValue { $0 = newValue }
         }
     }
-    
+
     public var storage: Storage {
         get {
             self._storage.withLockedValue { $0 }
@@ -40,18 +40,18 @@ public final class Application: Sendable, Service {
     public var didShutdown: Bool {
         self._didShutdown.withLockedValue { $0 }
     }
-    
+
     public struct Lifecycle: Sendable {
         var handlers: [any LifecycleHandler]
         init() {
             self.handlers = []
         }
-        
+
         public mutating func use(_ handler: any LifecycleHandler) {
             self.handlers.append(handler)
         }
     }
-    
+
     public var lifecycle: Lifecycle {
         get {
             self._lifecycle.withLockedValue { $0 }
@@ -60,7 +60,7 @@ public final class Application: Sendable, Service {
             self._lifecycle.withLockedValue { $0 = newValue }
         }
     }
-    
+
     internal let isBooted: NIOLockedValueBox<Bool>
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
@@ -90,7 +90,7 @@ public final class Application: Sendable, Service {
     public let cache: any Cache
     public let client: any Client
 
-    public struct ServiceConfiguration {
+    public struct ServiceConfiguration: Sendable {
         let contentConfiguration: ContentConfiguration
         let viewRenderer: ServiceOptionType<any ViewRenderer>
         let passwordHasher: ServiceOptionType<any PasswordHasher>
@@ -205,7 +205,7 @@ public final class Application: Sendable, Service {
         await self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
-    
+
     // internal flag here is just to stop the compiler from complaining about duplicates
     package init(_ environment: Environment = .development, configuration: ServerConfiguration, services: ServiceConfiguration, internal: Bool) {
         self._environment = .init(environment)
@@ -274,7 +274,7 @@ public final class Application: Sendable, Service {
         self.servers.use(.httpNew)
         self.asyncCommands.use(RoutesCommand(), as: "routes")
     }
-    
+
     /// Starts the ``Application`` asynchronous using the ``startup()`` method, then waits for any running tasks
     /// to complete. If your application is started without arguments, the default argument is used.
     ///
@@ -289,7 +289,7 @@ public final class Application: Sendable, Service {
             throw error
         }
     }
-    
+
     /// When called, this will asynchronously execute the startup command provided through an argument. If no startup
     /// command is provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
     ///
@@ -309,7 +309,7 @@ public final class Application: Sendable, Service {
         context.application = self
         try await self.console.run(combinedCommands, with: context)
     }
-    
+
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
     public func boot() async throws {
         /// Skip the boot process if already booted
@@ -328,7 +328,7 @@ public final class Application: Sendable, Service {
             try await handler.didBoot(self)
         }
     }
-    
+
     public func shutdown() async throws {
         assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")

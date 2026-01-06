@@ -4,6 +4,8 @@ import HTTPTypes
 import NIOCore
 import NIOConcurrencyHelpers
 import NIOPosix
+import NIOHTTP1
+import Logging
 
 extension Application.Servers.Provider {
     public static var httpNew: Self {

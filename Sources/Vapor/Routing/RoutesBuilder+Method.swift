@@ -1,6 +1,7 @@
 import RoutingKit
 import HTTPTypes
 import NIOPosix
+import NIOCore
 
 /// Determines how an incoming HTTP request's body is collected.
 public enum HTTPBodyStreamStrategy: Sendable {

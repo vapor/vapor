@@ -1,12 +1,14 @@
 import Foundation
+import HTTPTypes
+import NIOCore
 
 public struct Validations: Sendable {
     var storage: [Validation]
-    
+
     public init() {
         self.storage = []
     }
-    
+
     public mutating func add<T>(
         _ key: BasicCodingKey,
         as type: T.Type = T.self,
@@ -16,7 +18,7 @@ public struct Validations: Sendable {
     ) {
         self.storage.append(.init(key: key, required: required, validator: validator, customFailureDescription: customFailureDescription))
     }
-    
+
     public mutating func add(
         _ key: BasicCodingKey,
         result: any ValidatorResult,
@@ -35,7 +37,7 @@ public struct Validations: Sendable {
         nested(&validations)
         self.storage.append(.init(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription))
     }
-    
+
     public mutating func add(
         each key: BasicCodingKey,
         required: Bool = true,
@@ -44,7 +46,7 @@ public struct Validations: Sendable {
     ) {
         self.storage.append(.init(nested: key, required: required, unkeyed: handler, customFailureDescription: customFailureDescription))
     }
-    
+
     public func validate(request: Request) throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
             throw Abort(.unprocessableContent, reason: "Missing \"Content-Type\" header")
@@ -55,20 +57,20 @@ public struct Validations: Sendable {
         let contentDecoder = try request.application.contentConfiguration.requireDecoder(for: contentType)
         return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
-    
+
     public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
         let urlDecoder = try contentConfiguration.requireURLDecoder()
         return try urlDecoder.decode(ValidationsExecutor.self, from: query, userInfo: [.pendingValidations: self]).results
     }
-    
+
     public func validate(json: String, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
         return try contentConfiguration.requireDecoder(for: .json)
             .decode(ValidationsExecutor.self, from: .init(string: json), headers: [:], userInfo: [.pendingValidations: self]).results
     }
-    
+
     public func validate(_ decoder: any Decoder) throws -> ValidationsResult {
         let container = try decoder.container(keyedBy: BasicCodingKey.self)
-        
+
         return try .init(results: self.storage.map {
             try .init(
                 key: $0.key,
@@ -99,14 +101,14 @@ fileprivate extension CodingUserInfoKey {
 
 fileprivate struct ValidationsExecutor: Decodable {
     let results: ValidationsResult
-    
+
     init(from decoder: any Decoder) throws {
         guard let pendingValidations = decoder.userInfo[.pendingValidations] as? Validations else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Validation executor couldn't find any validations to run (broken Decoder?)"))
         }
         try self.init(from: decoder, explicitValidations: pendingValidations)
     }
-    
+
     init(from decoder: any Decoder, explicitValidations: Validations) throws {
         self.results = try explicitValidations.validate(decoder)
     }

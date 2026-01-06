@@ -4,6 +4,8 @@ import NIOCore
 import HTTPTypes
 import NIOConcurrencyHelpers
 import _NIOFileSystem
+import RoutingKit
+import Logging
 
 struct Creds: Content {
     var email: String
@@ -40,7 +42,7 @@ public func routes(_ app: Application) throws {
 //            // manually return pre-completed future
 //            // this should balloon in memory
 //            // return req.eventLoop.makeSucceededFuture(())
-//            
+//
 //            // return real future that indicates bytes were handled
 //            // this should use very little memory
 //            return promise.futureResult
@@ -56,12 +58,12 @@ public func routes(_ app: Application) throws {
     app.post("test", "head") { req -> String in
         return "OK!"
     }
-    
+
     app.post("login") { req -> String in
         let creds = try await req.content.decode(Creds.self)
         return "\(creds)"
     }
-    
+
     app.on(.post, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
         return req.body.data?.readableBytes.description  ?? "none"
     }
@@ -154,7 +156,7 @@ public func routes(_ app: Application) throws {
         let data = try await response.content.decode(HTTPBinResponse.self)
         return data.slideshow.title
     }
-    
+
     let users = app.grouped("users")
     users.get { req in
         return "users"
@@ -162,7 +164,7 @@ public func routes(_ app: Application) throws {
     users.get(":userID") { req in
         return req.parameters.get("userID") ?? "no id"
     }
-    
+
     app.directory.viewsDirectory = "/Users/tanner/Desktop"
     app.get("view") { req in
         try await req.view.render("hello.txt", ["name": "world"])
@@ -212,31 +214,31 @@ public func routes(_ app: Application) throws {
         }
         return String(buffer: body)
     }
-    
+
     asyncRoutes.get("content") { req in
         Creds(email: "name", password: "password")
     }
-    
+
     asyncRoutes.get("content2") { req async throws -> Creds in
         return Creds(email: "name", password: "password")
     }
-    
+
     asyncRoutes.get("contentArray") { req async throws -> [Creds] in
         let cred1 = Creds(email: "name", password: "password")
         return [cred1]
     }
-    
+
     @Sendable
     func opaqueRouteTester(_ req: Request) async throws -> some ResponseEncodable {
         "Hello World"
     }
     asyncRoutes.get("opaque", use: opaqueRouteTester)
-    
+
     let basicAuthRoutes = asyncRoutes.grouped(Test.authenticator(), Test.guardMiddleware())
     basicAuthRoutes.get("auth") { req async throws -> String in
         return try req.auth.require(Test.self).name
     }
-    
+
     struct Test: Authenticatable {
         static func authenticator() -> any Authenticator {
             TestAuthenticator()
@@ -287,7 +289,7 @@ struct TestError: AbortError, DebuggableError {
 
 struct TestMiddleware: Middleware {
     let number: Int
-    
+
     func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         request.logger.debug("In async middleware - \(number)")
         let response = try await next.respond(to: request)

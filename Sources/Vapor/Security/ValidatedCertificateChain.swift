@@ -1,3 +1,5 @@
+#if TLS
+
 import X509
 import NIOSSL
 import SwiftASN1
@@ -21,3 +23,5 @@ extension NIOSSL.ValidatedCertificateChain {
         return .init(uncheckedCertificateChain: try self.map { try $0.toX509Certificate() })
     }
 }
+
+#endif
