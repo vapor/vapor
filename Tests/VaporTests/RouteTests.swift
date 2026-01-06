@@ -495,7 +495,7 @@ struct RouteTests {
         }
     }
 
-    @Test("Catch all HTTP methods", .bug("https://github.com/vapor/vapor/issues/1887#event-20997694543"))
+    @Test("Catch all HTTP methods", .bug("https://github.com/vapor/vapor/issues/1887"))
     func testCatchAllHTTPMethods() async throws {
         try await withApp { app in
             app.routes.all("universal") { req -> String in
