@@ -109,6 +109,30 @@ extension RoutesBuilder {
         self.on(.delete, path, use: closure)
     }
 
+    /// Adds the closure to the given path for all HTTP methods
+    /// besides custom ones, so GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS.
+    @discardableResult
+    public func all(
+        _ path: PathComponent...,
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> [Route] {
+        [HTTPRequest.Method.get, .post, .put, .patch, .delete, .head, .options].map {
+            self.on($0, path, use: closure)
+        }
+    }
+
+    /// Adds the closure to the given path for all HTTP methods
+    /// besides custom ones, so GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS.
+    @discardableResult
+    public func all(
+        _ path: [PathComponent],
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> [Route] {
+        [HTTPRequest.Method.get, .post, .put, .patch, .delete, .head, .options].map {
+            self.on($0, path, use: closure)
+        }
+    }
+
     @discardableResult
     public func on(
         _ method: HTTPRequest.Method,
