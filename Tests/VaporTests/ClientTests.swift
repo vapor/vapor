@@ -13,6 +13,7 @@ import RoutingKit
 
 @Suite("Client Tests")
 struct ClientTests {
+    #if HTTPClient
     @Test("Test Client beforeSend()")
     func testClientBeforeSend() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
@@ -57,6 +58,7 @@ struct ClientTests {
         }
     }
 
+
     @Test("Test Boilerplate Client")
     func testBoilerplateClient() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
@@ -83,19 +85,6 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Custom Client")
-    func testCustomClient() async throws {
-        try await withRemoteApp { remoteApp, remoteAppPort in
-            let customClient = CustomClient()
-            try await withApp(services: .init(client: .provided(customClient))) { app in
-                _ = try await app.client.get("https://vapor.codes")
-
-                #expect(customClient.requests.count == 1)
-                #expect(customClient.requests.first?.url.host == "vapor.codes")
-            }
-        }
-    }
-
     @Test("Test Client Content", .disabled("Broken in AHC"), .bug("https://github.com/swift-server/async-http-client/issues/854"))
     func testClientLogging() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
@@ -105,6 +94,34 @@ struct ClientTests {
 
                 let metadata = logs.getMetadata()
                 #expect(metadata["ahc-request-id"] != nil)
+            }
+        }
+    }
+
+    @Test("Test URL Client Request with Invalid URL Does Not Crash", .bug("https://github.com/vapor/vapor/issues/2716"))
+    func testGH2716() async throws {
+        try await withApp { app in
+            app.get("client") { req in
+                let response = try await req.application.client.get("htp://localhost/status/2 1")
+                return response.description
+            }
+
+            try await app.testing(method: .running).test(.get, "/client") { res in
+                #expect(res.status.code == 500)
+            }
+        }
+    }
+    #endif
+
+    @Test("Test Custom Client")
+    func testCustomClient() async throws {
+        try await withRemoteApp { remoteApp, remoteAppPort in
+            let customClient = CustomClient()
+            try await withApp(services: .init(client: .provided(customClient))) { app in
+                _ = try await app.client.get("https://vapor.codes")
+
+                #expect(customClient.requests.count == 1)
+                #expect(customClient.requests.first?.url.host == "vapor.codes")
             }
         }
     }

@@ -440,20 +440,6 @@ struct RouteTests {
     }
     #endif
 
-    @Test("Test URL Client Request with Invalid URL Does Not Crash", .bug("https://github.com/vapor/vapor/issues/2716"))
-    func testGH2716() async throws {
-        try await withApp { app in
-            app.get("client") { req in
-                let response = try await req.application.client.get("htp://localhost/status/2 1")
-                return response.description
-            }
-
-            try await app.testing(method: .running).test(.get, "/client") { res in
-                #expect(res.status.code == 500)
-            }
-        }
-    }
-
     @Test("Test Double Slash Route Access", .bug("https://github.com/vapor/vapor/issues/3137"), .bug("https://github.com/vapor/vapor/issues/3142"))
     func testDoubleSlashRouteAccess() async throws {
         try await withApp { app in

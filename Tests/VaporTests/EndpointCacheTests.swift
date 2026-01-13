@@ -1,3 +1,4 @@
+#if HTTPClient
 import VaporTesting
 import Testing
 import Vapor
@@ -128,3 +129,4 @@ struct EndpointCacheTests {
         }
     }
 }
+#endif
