@@ -364,7 +364,7 @@ public final class Request: CustomStringConvertible, Sendable {
         self.application = application
         
         self.remoteAddress = remoteAddress
-        self._storage = .init(.init())
+        self._storage = .init(.init(logger: logger))
         self.bodyStorage = .init(bodyStorage)
         self.newBodyStorage = .init(nil)
     }
