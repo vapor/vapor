@@ -13,6 +13,7 @@ import NIOHTTPTypesHTTP1
 import RoutingKit
 import NIOFoundationCompat
 import Logging
+import InMemoryLogging
 
 @Suite("Request Tests")
 struct RequestTests {
@@ -348,6 +349,60 @@ struct RequestTests {
             try await app.testing(method: .running).test(.get, "remote") { res in
                 #expect(res.body.string.contains("IP"))
             }
+        }
+    }
+
+    @Test("Test Storage Uses Request Logger")
+    func testStorageUsesRequestLogger() async throws {
+        try await withApp { app in
+            // Use an in-memory log handler to inspect logged messages
+            // See: https://github.com/apple/swift-log/pull/390
+            let logHandler = InMemoryLogHandler()
+            let logger = Logger(
+                label: "custom.request.logger",
+                factory: { _ in logHandler }
+            )
+            
+            // Create a request with the custom logger
+            let request = Request(application: app, logger: logger)
+            
+            // Define a storage key with a shutdown handler that throws
+            struct TestStorageKey: StorageKey {
+                typealias Value = String
+            }
+            
+            struct TestError: Error {}
+            
+            // Store a value with an async shutdown handler that throws
+            await request.storage.setWithAsyncShutdown(
+                TestStorageKey.self,
+                to: "test-value",
+                onShutdown: { _ in
+                    throw TestError()
+                }
+            )
+            
+            // Shutdown the storage - this should trigger the shutdown handler and log the error
+            await request.storage.shutdown()
+            
+            // Verify that a warning was logged
+            guard !logHandler.entries.isEmpty else {
+                Issue.record("Expected at least one log entry from request logger, but got none")
+                return
+            }
+            
+            // Get the first log entry safely
+            let firstEntry = logHandler.entries[0]
+            // Verify the log entry has the request-id metadata
+            guard let loggedRequestId = firstEntry.metadata["request-id"] else {
+                Issue.record("Storage log entry should have request-id metadata from Request's logger")
+                return
+            }
+            
+            // Verify it matches the request's logger metadata
+            let expectedRequestId = request.logger[metadataKey: "request-id"]
+            #expect(loggedRequestId == expectedRequestId,
+                   "Storage logger should inherit request-id metadata from Request's logger")
         }
     }
 
