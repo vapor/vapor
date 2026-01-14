@@ -141,16 +141,16 @@ private struct NotFoundResponder: Responder {
     }
 }
 
-struct RouteNotFound: Error {}
+public struct RouteNotFound: Error {}
 
-extension RouteNotFound: AbortError {    
-    var status: HTTPResponseStatus {
+extension RouteNotFound: AbortError {
+    public var status: HTTPResponseStatus {
         .notFound
     }
 }
 
 extension RouteNotFound: DebuggableError {
-    var logLevel: Logger.Level { 
+    public var logLevel: Logger.Level {
         .debug
     }
 }
