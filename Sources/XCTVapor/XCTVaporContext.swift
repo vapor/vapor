@@ -1,11 +1,18 @@
-#if compiler(>=6.0) && canImport(Testing)
 import Testing
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+@preconcurrency import Glibc
+#elseif canImport(Android)
+@preconcurrency import Android
+#elseif canImport(Musl)
+@preconcurrency import Musl
+#elseif canImport(WinSDK)
+@preconcurrency import WinSDK
 #endif
 
 public enum XCTVaporContext {
-#if compiler(>=6.0) && canImport(Testing)
     @TaskLocal public static var emitWarningIfCurrentTestInfoIsAvailable: Bool?
-#endif
 
     /// Throws an error if the test is being run in a swift-testing context.
     /// This is not fool-proof. Running tests in detached Tasks will bypass this detection.
@@ -14,7 +21,6 @@ public enum XCTVaporContext {
         file: StaticString,
         line: UInt
     ) {
-#if compiler(>=6.0) && canImport(Testing)
         let shouldWarn = XCTVaporContext.emitWarningIfCurrentTestInfoIsAvailable ?? true
         var isInSwiftTesting: Bool { Test.current != nil }
         if shouldWarn, isInSwiftTesting {
@@ -29,6 +35,5 @@ public enum XCTVaporContext {
             """)
             fflush(stdout)
         }
-#endif
     }
 }

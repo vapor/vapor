@@ -1,20 +1,21 @@
 #if !canImport(Darwin)
-#if compiler(>=6.0)
 import Dispatch
-#else
-@preconcurrency import Dispatch
-#endif
 #endif
 import Foundation
 import Vapor
+import VaporTestUtils
 import XCTest
+import XCTVapor
 import AsyncHTTPClient
 import NIOCore
+import NIOFoundationCompat
 import NIOPosix
 import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOSSL
 import Atomics
+import X509
+import SwiftASN1
 
 final class ServerTests: XCTestCase, @unchecked Sendable {
     var app: Application!
@@ -47,9 +48,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         try await app.asyncShutdown()
     }
     
-    // `httpUnixDomainSocket` is currently broken in 6.0
-    #if compiler(<6.0)
-    func testSocketPathOverride() throws {
+    func testSocketPathOverride() async throws {
         let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
         
         let env = Environment(
@@ -57,19 +56,26 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
             arguments: ["vapor", "serve", "--unix-socket", socketPath]
         )
         
-        let app = Application(env)
-        defer { app.shutdown() }
-        
-        app.get("foo") { _ in "bar" }
-        try app.start()
-        
-        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }.wait()
-        XCTAssertEqual(res.body?.string, "bar")
-        
-        // no server should be bound to the port despite one being set on the configuration.
-        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }.wait())
+        let app = try await Application.make(env)
+
+        do {
+            app.get("foo") { _ in "bar" }
+            try await app.startup()
+
+            let res = try await app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }
+            XCTAssertEqual(res.body?.string, "bar")
+
+            // no server should be bound to the port despite one being set on the configuration.
+            do {
+                _ = try await app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }
+                XCTFail("Should have thrown error")
+            } catch {}
+
+            try await app.asyncShutdown()
+        } catch {
+            try await app.asyncShutdown()
+        }
     }
-    #endif
     
     func testIncompatibleStartupOptions() async throws {
         func checkForError(_ app: Application) async throws {
@@ -1228,7 +1234,7 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         
         let cert = try NIOSSLCertificate.fromPEMFile(clientCertPath.path).first!
         let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
-                
+
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
         
@@ -1273,7 +1279,63 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         let a = try app.http.client.shared.execute(request: request).wait()
         XCTAssertEqual(a.body, ByteBuffer(string: "world"))
     }
-    
+
+    func testCanOverrideCertValidationWithMetadata() async throws {
+        guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
+              let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
+            XCTFail("Cannot load expired cert and associated key")
+            return
+        }
+
+        let certs = try NIOSSLCertificate.fromPEMFile(clientCertPath.path)
+        let certSources = certs.map { NIOSSLCertificateSource.certificate($0) }
+        let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
+
+        var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: certSources, privateKey: .privateKey(key))
+        serverConfig.certificateVerification = .noHostnameVerification
+
+        app.http.server.configuration.tlsConfiguration = serverConfig
+        app.http.server.configuration.customCertificateVerifyCallbackWithMetadata = { @Sendable peerCerts, successPromise in
+            // This lies and accepts the above cert, which has actually expired.
+            XCTAssertEqual(peerCerts, certs)
+            successPromise.succeed(
+                .certificateVerified(
+                    VerificationMetadata(ValidatedCertificateChain(peerCerts))
+                )
+            )
+        }
+
+        // We need to disable verification on the client, because the cert we're using has expired, and we want to
+        // _send_ a client cert.
+        var clientConfig = TLSConfiguration.makeClientConfiguration()
+        clientConfig.certificateVerification = .none
+        clientConfig.certificateChain = certSources
+        clientConfig.privateKey = .privateKey(key)
+        app.http.client.configuration.tlsConfiguration = clientConfig
+
+        app.environment.arguments = ["serve"]
+
+        app.get("hello") { req in
+            let certChain: X509.ValidatedCertificateChain = try XCTUnwrap(req.peerCertificateChain)
+            XCTAssertEqual(certChain.count, 1)
+            XCTAssertEqual(certChain.leaf, try X509.Certificate(derEncoded: try certs.first!.toDERBytes()))
+            return "world"
+        }
+
+        try await app.server.start(address: BindAddress.hostname("127.0.0.1", port: 0))
+
+        let localAddress = try XCTUnwrap(app.http.server.shared.localAddress)
+        guard let ip = localAddress.ipAddress, let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        let a = try await app.client.get("https://\(ip):\(port)/hello")
+        XCTAssertEqual(a.body, ByteBuffer(string: "world"))
+
+        await app.server.shutdown()
+    }
+
     func testCanChangeConfigurationDynamically() throws {
         guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
               let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {

@@ -1,6 +1,7 @@
 @preconcurrency import Dispatch
 import Foundation
 import NIOCore
+import NIOFoundationCompat
 import NIOConcurrencyHelpers
 
 extension Response {

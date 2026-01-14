@@ -1,5 +1,7 @@
 import XCTest
+import XCTVapor
 import Vapor
+import VaporTestUtils
 import NIOCore
 
 class ValidationTests: XCTestCase {

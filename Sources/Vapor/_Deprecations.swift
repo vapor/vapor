@@ -1,4 +1,3 @@
-
 // MARK: - Sessions
 
 extension SessionData {
