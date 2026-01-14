@@ -1,46 +1,29 @@
-@preconcurrency import Dispatch
 import Foundation
-import ConsoleKit
 import NIOConcurrencyHelpers
 import NIOPosix
 import NIOCore
 
-/// Boots the application's server. Listens for `SIGINT` and `SIGTERM` for graceful shutdown.
-///
-///     $ swift run Run serve
-///     Server starting on http://localhost:8080
-///
-public final class ServeCommand: AsyncCommand, Sendable {
-    public struct Signature: CommandSignature, Sendable {
-        @Option(name: "hostname", short: "H", help: "Set the hostname the server will run on.")
+extension Application {
+    struct AddressConfiguration: Sendable {
+        /// The hostname the server will run on.
         var hostname: String?
 
-        @Option(name: "port", short: "p", help: "Set the port the server will run on.")
+        /// The port the server will run on.
         var port: Int?
 
-        @Option(name: "bind", short: "b", help: "Convenience for setting hostname and port together.")
+        /// Convenience for setting hostname and port together.
         var bind: String?
 
-        @Option(name: "unix-socket", short: nil, help: "Set the path for the unix domain socket file the server will bind to.")
+        /// The path for the unix domain socket file the server will bind to.
         var socketPath: String?
-
-        public init() { }
     }
 
     /// Errors that may be thrown when serving a server
-    public enum Error: Swift.Error {
+    public enum AddressConfigurationError: Swift.Error {
         /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
         case incompatibleFlags
     }
-
-    // See `AsyncCommand`.
-    public let signature = Signature()
-
-    // See `AsyncCommand`.
-    public var help: String {
-        return "Begins serving the app over HTTP."
-    }
-
+    
     struct SendableBox: Sendable {
         var didShutdown: Bool
         var running: Application.Running?
@@ -48,44 +31,33 @@ public final class ServeCommand: AsyncCommand, Sendable {
         var server: (any Server)?
     }
 
-    private let box: NIOLockedValueBox<SendableBox>
-
-    /// Create a new `ServeCommand`.
-    init() {
-        let box = SendableBox(didShutdown: false, signalSources: [])
-        self.box = .init(box)
-    }
-
-    // See `AsyncCommand`.
-    public func run(using context: CommandContext, signature: Signature) async throws {
-        switch (signature.hostname, signature.port, signature.bind, signature.socketPath) {
+    func _startup(addressConfiguration: AddressConfiguration) async throws {
+        switch (addressConfiguration.hostname, addressConfiguration.port, addressConfiguration.bind, addressConfiguration.socketPath) {
         case (.none, .none, .none, .none): // use defaults
-            try await context.application.server.start()
+            try await self.server.start()
 
         case (.none, .none, .none, .some(let socketPath)): // unix socket
-            context.application.serverConfiguration.address = .unixDomainSocket(path: socketPath)
-            try await context.application.server.start()
-
+            self.serverConfiguration.address = .unixDomainSocket(path: socketPath)
+            try await self.server.start()
         case (.none, .none, .some(let address), .none): // bind ("hostname:port")
             let hostname = address.split(separator: ":").first.flatMap(String.init)
             let port = address.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-            context.application.serverConfiguration.address = .hostname(hostname!, port: port!)
-            try await context.application.server.start()
+            self.serverConfiguration.address = .hostname(hostname!, port: port!)
+            try await self.server.start()
 
         case (let hostname, let port, .none, .none): // hostname / port
-            context.application.serverConfiguration.address = .hostname(hostname!, port: port!)
-            try await context.application.server.start()
-
-        default: throw Error.incompatibleFlags
+            self.serverConfiguration.address = .hostname(hostname!, port: port!)
+            try await self.server.start()
+        default: throw AddressConfigurationError.incompatibleFlags
         }
 
         var box = self.box.withLockedValue { $0 }
-        box.server = context.application.server
+        box.server = self.server
 
         // allow the server to be stopped or waited for
         let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: Void.self)
-        context.application.running = .start(using: promise)
-        box.running = context.application.running
+        self.running = .start(using: promise)
+        box.running = self.running
 
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
@@ -107,8 +79,8 @@ public final class ServeCommand: AsyncCommand, Sendable {
         makeSignalSource(SIGINT)
         self.box.withLockedValue { $0 = box }
     }
-
-    func asyncShutdown() async {
+    
+    func _shutdown() async {
         var box = self.box.withLockedValue { $0 }
         box.didShutdown = true
         box.running?.stop()
@@ -116,9 +88,5 @@ public final class ServeCommand: AsyncCommand, Sendable {
         box.signalSources.forEach { $0.cancel() } // clear refs
         box.signalSources = []
         self.box.withLockedValue { $0 = box }
-    }
-
-    deinit {
-        assert(self.box.withLockedValue({ $0.didShutdown }), "ServeCommand did not shutdown before deinit")
     }
 }
