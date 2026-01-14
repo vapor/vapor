@@ -17,7 +17,7 @@ extension SessionAuthenticator {
         }
 
         let future: EventLoopFuture<Void>
-        if let aID = request.session.authenticated(User.self) {
+        if request.hasSession, let aID = request.session.authenticated(User.self) {
             // try to find user with id from session
             future = self.authenticate(sessionID: aID, for: request)
         } else {
