@@ -4,6 +4,7 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 import ServiceLifecycle
+import UnixSignals
 #if HTTPClient
 import AsyncHTTPClient
 #endif
@@ -61,6 +62,24 @@ public final class Application: Sendable, Service {
         }
     }
 
+    public var services: [any Service] {
+        get {
+            self._services.withLockedValue { $0 }
+        }
+        set {
+            self._services.withLockedValue { $0 = newValue }
+        }
+    }
+
+    internal var serviceGroup: ServiceGroup? {
+        get {
+            self._serviceGroup.withLockedValue { $0 }
+        }
+        set {
+            self._serviceGroup.withLockedValue { $0 = newValue }
+        }
+    }
+
     internal let isBooted: NIOLockedValueBox<Bool>
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
@@ -89,6 +108,8 @@ public final class Application: Sendable, Service {
     public let passwordHasher: any PasswordHasher
     public let cache: any Cache
     public let client: any Client
+    private let _services: NIOLockedValueBox<[any Service]>
+    private let _serviceGroup: NIOLockedValueBox<ServiceGroup?>
 
     public struct ServiceConfiguration: Sendable {
         let contentConfiguration: ContentConfiguration
@@ -199,15 +220,22 @@ public final class Application: Sendable, Service {
     public convenience init(
         _ environment: Environment = .development,
         configuration: ServerConfiguration = .init(address: .hostname("127.0.0.1", port: 8080), onServerRunning: { _ in }),
-        services: ServiceConfiguration = .init()
+        services: ServiceConfiguration = .init(),
+        extraServices: [any Service] = []
     ) async throws {
-        self.init(environment, configuration: configuration, services: services, internal: true)
+        self.init(environment, configuration: configuration, services: services, extraServices: extraServices, internal: true)
         await self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
 
     // internal flag here is just to stop the compiler from complaining about duplicates
-    package init(_ environment: Environment = .development, configuration: ServerConfiguration, services: ServiceConfiguration, internal: Bool) {
+    package init(
+        _ environment: Environment = .development,
+        configuration: ServerConfiguration,
+        services: ServiceConfiguration,
+        extraServices: [any Service],
+        internal: Bool
+    ) {
         self._environment = .init(environment)
 
         let logger: Logger
@@ -265,6 +293,9 @@ public final class Application: Sendable, Service {
             self.client = client
         }
 
+        self._services = .init(extraServices)
+        self._serviceGroup = .init(nil)
+
         self.responder = services.responder
         self.routes = Routes()
         self.core.initialize()
@@ -283,7 +314,22 @@ public final class Application: Sendable, Service {
     public func run() async throws {
         do {
             try await self.startup()
-            try await self.running?.onStop.get()
+
+             try await withThrowingTaskGroup(of: Void.self) { group in
+                 if let serviceGroup = self.serviceGroup {
+                     group.addTask {
+                         try await serviceGroup.run()
+                     }
+                 }
+
+                 group.addTask {
+                     try await self.running?.onStop.get()
+                 }
+
+                 // Wait for either the server or services to complete
+                 try await group.next()
+                 group.cancelAll()
+             }
         } catch {
             self.logger.report(error: error)
             throw error
@@ -327,11 +373,24 @@ public final class Application: Sendable, Service {
         for handler in self.lifecycle.handlers {
             try await handler.didBoot(self)
         }
+
+        if !services.isEmpty {
+            self.serviceGroup = ServiceGroup(
+                services: services,
+                gracefulShutdownSignals: [.sigterm, .sigint],
+                logger: logger
+            )
+        }
     }
 
     public func shutdown() async throws {
         assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
+
+        if let serviceGroup {
+            self.logger.trace("Shutting down external services")
+            await serviceGroup.triggerGracefulShutdown()
+        }
 
         self.logger.trace("Shutting down providers")
         for handler in self.lifecycle.handlers.reversed()  {
@@ -345,6 +404,10 @@ public final class Application: Sendable, Service {
 
         self._didShutdown.withLockedValue { $0 = true }
         self.logger.trace("Application shutdown complete")
+    }
+
+    public func add(service: any Service) {
+        self.services.append(service)
     }
 
     deinit {

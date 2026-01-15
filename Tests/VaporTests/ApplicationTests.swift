@@ -7,6 +7,9 @@ import Testing
 import VaporTesting
 import HTTPTypes
 import RoutingKit
+import ServiceLifecycle
+import Synchronization
+import Logging
 
 @Suite("Application Tests")
 struct ApplicationTests {
@@ -227,5 +230,32 @@ struct ApplicationTests {
                 #expect(returnedConfig.port == 3000)
             }
         }
+    }
+
+    @Test("Run ServiceLifecycle services alongside Application")
+    func runServiceLifecycleServicesAlongsideApplication() async throws {
+        struct TestService: Service {
+            static var isRunning: Bool {
+                get { self._isRunning.withLock { $0 } }
+                set { self._isRunning.withLock { $0 = newValue } }
+            }
+            static let _isRunning = Mutex(false)
+            func run() async throws {
+                Self.isRunning = true
+                try? await gracefulShutdown()
+                Self.isRunning = false
+            }
+        }
+
+        var logger = Logger(label: "test")
+        logger.logLevel = .trace
+
+        #expect(TestService.isRunning == false)
+        try await withApp(services: .init(logger: .provided(logger))) { app in
+            app.add(service: TestService())
+            try await app.run()
+            #expect(TestService.isRunning == true)
+        }
+        #expect(TestService.isRunning == false)
     }
 }
