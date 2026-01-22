@@ -28,7 +28,6 @@ extension Application {
     struct SendableBox: Sendable {
         var didShutdown: Bool
         var running: Application.Running?
-        var signalSources: [any DispatchSourceSignal]
         var server: (any Server)?
     }
 
@@ -60,24 +59,6 @@ extension Application {
         self.running = .start(using: promise)
         box.running = self.running
 
-        // setup signal sources for shutdown
-        let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
-        func makeSignalSource(_ code: Int32) {
-            #if canImport(Darwin)
-            /// https://github.com/swift-server/swift-service-lifecycle/blob/main/Sources/UnixSignals/UnixSignalsSequence.swift#L77-L82
-            signal(code, SIG_IGN)
-            #endif
-
-            let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
-            source.setEventHandler {
-                print() // clear ^C
-                promise.succeed(())
-            }
-            source.resume()
-            box.signalSources.append(source)
-        }
-        makeSignalSource(SIGTERM)
-        makeSignalSource(SIGINT)
         self.box.withLockedValue { $0 = box }
     }
     
@@ -86,8 +67,6 @@ extension Application {
         box.didShutdown = true
         box.running?.stop()
         try? await box.server?.shutdown()
-        box.signalSources.forEach { $0.cancel() } // clear refs
-        box.signalSources = []
         self.box.withLockedValue { $0 = box }
     }
 }

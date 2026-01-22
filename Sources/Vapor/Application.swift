@@ -288,7 +288,7 @@ public final class Application: Sendable, Service {
     }
 
     /// Used by the `_startup(addressConfiguration:)` method
-    let box: NIOLockedValueBox<SendableBox> = .init(.init(didShutdown: false, signalSources: []))
+    let box: NIOLockedValueBox<SendableBox> = .init(.init(didShutdown: false))
     
     /// When called, this will asynchronously execute the startup command provided through an argument. If no startup
     /// command is provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
