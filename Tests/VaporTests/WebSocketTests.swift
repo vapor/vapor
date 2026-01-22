@@ -18,7 +18,7 @@ struct WebSocketTests {
             app.webSocket("echo") { req, ws in
                 ws.onText { ws.send($1) }
             }
-            try await app.startup()
+            try await app.startup(from: testConfigReader)
 
             let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
             let promise = MultiThreadedEventLoopGroup.singleton.next().makePromise(of: String.self)
@@ -47,7 +47,7 @@ struct WebSocketTests {
                 ws.close(promise: nil)
             }
 
-            try await app.startup()
+            try await app.startup(from: testConfigReader)
 
             let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
             await #expect(performing: {
@@ -77,7 +77,7 @@ struct WebSocketTests {
             }
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
-            try await app.startup()
+            try await app.startup(from: testConfigReader)
 
             let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
             let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: String.self)
@@ -108,7 +108,7 @@ struct WebSocketTests {
                 }
             }
 
-            try await app.startup()
+            try await app.startup(from: testConfigReader)
 
             let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
             let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: String.self)

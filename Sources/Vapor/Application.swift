@@ -1,3 +1,4 @@
+import Configuration
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -78,6 +79,8 @@ public final class Application: Sendable, Service {
             self._serverConfiguration.withLockedValue { $0 = newValue }
         }
     }
+
+    private let configReader: ConfigReader
 
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
@@ -198,14 +201,15 @@ public final class Application: Sendable, Service {
     public convenience init(
         _ environment: Environment = .development,
         configuration: ServerConfiguration = .init(address: .hostname("127.0.0.1", port: 8080), onServerRunning: { _ in }),
+        configReader: ConfigReader,
         services: ServiceConfiguration = .init()
     ) async throws {
-        self.init(environment, configuration: configuration, services: services, internal: true)
+        self.init(environment, configuration: configuration, configReader: configReader, services: services, internal: true)
         await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
 
     // internal flag here is just to stop the compiler from complaining about duplicates
-    package init(_ environment: Environment = .development, configuration: ServerConfiguration, services: ServiceConfiguration, internal: Bool) {
+    package init(_ environment: Environment = .development, configuration: ServerConfiguration, configReader: ConfigReader, services: ServiceConfiguration, internal: Bool) {
         self._environment = .init(environment)
 
         let logger: Logger
@@ -225,6 +229,7 @@ public final class Application: Sendable, Service {
         self.directoryConfiguration = .detect()
         self.sharedNewAddress = .init(nil)
         self._serverConfiguration = .init(configuration)
+        self.configReader = configReader
 
         // Service Setup
         switch services.viewRenderer {
@@ -279,7 +284,7 @@ public final class Application: Sendable, Service {
     /// (manually) shut down before returning.
     public func run() async throws {
         do {
-            try await self.startup()
+            try await self.startup(from: self.configReader)
             try await self.running?.onStop.get()
         } catch {
             self.logger.report(error: error)
@@ -290,17 +295,15 @@ public final class Application: Sendable, Service {
     /// Used by the `_startup(addressConfiguration:)` method
     let box: NIOLockedValueBox<SendableBox> = .init(.init(didShutdown: false))
     
-    /// When called, this will asynchronously execute the startup command provided through an argument. If no startup
-    /// command is provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
+    /// When called, this will start running Vapor's webserver.
     ///
     /// If you start Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
     /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
     /// use ``execute()`` instead.
-    public func startup() async throws {
+    public func startup(from config: ConfigReader) async throws {
         try await self.boot()
 
-        #warning("Create AddressConfiguration from ConfigReader")
-        try await self._startup(addressConfiguration: AddressConfiguration())
+        try await self._startup(addressConfiguration: AddressConfiguration(from: config))
     }
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``

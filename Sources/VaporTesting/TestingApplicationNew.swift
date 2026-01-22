@@ -4,7 +4,7 @@ import NIOCore
 import Testing
 
 extension Application {
-    public func test(method: Method = .inMemory, testBlock: (any VaporTestingRunner) async throws -> Void) async throws {
+    public func test(method: Method = .inMemory, testBlock: @Sendable (any VaporTestingRunner) async throws -> Void) async throws {
         switch method {
         case .inMemory:
             fatalError()

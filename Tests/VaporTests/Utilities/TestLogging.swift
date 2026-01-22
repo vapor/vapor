@@ -4,7 +4,7 @@ import Logging
 import Vapor
 
 let isLoggingConfigured: Bool = {
-    ConsoleLogger.bootstrap()
+    ConsoleLogger.bootstrap(config: testConfigReader)
     return true
 }()
 

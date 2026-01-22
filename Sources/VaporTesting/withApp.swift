@@ -1,3 +1,4 @@
+import Configuration
 import Vapor
 import NIOCore
 
@@ -23,11 +24,12 @@ import NIOCore
 @discardableResult
 public func withApp<T>(
     address: BindAddress? = nil,
+    configReader: ConfigReader = ConfigReader(provider: EnvironmentVariablesProvider()),
     services: Application.ServiceConfiguration = .init(),
     configure: ((Application) async throws -> Void)? = nil,
     _ test: (Application) async throws -> T
 ) async throws -> T {
-    let app = try await Application(.testing, services: services)
+    let app = try await Application(.testing, configReader: configReader, services: services)
     if let address {
         app.serverConfiguration.address = address
     }
@@ -63,7 +65,7 @@ public func withApp<T>(
 ///    }
 /// }
 /// ```
-public func withRunningApp<T>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
+public func withRunningApp<T>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: @Sendable (Int) async throws -> T) async throws -> T {
     return try await withThrowingTaskGroup(of: Void.self) { group in
         app.serverConfiguration.address = .hostname(hostname, port: portToUse)
         let portPromise = Promise<Int>()

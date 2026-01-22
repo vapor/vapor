@@ -7,7 +7,7 @@ struct ApplicationCreationTests {
 
     @Test("Create Default Logger")
     func defaultLogger() async throws {
-        let app = try await Application(.testing)
+        let app = try await Application(.testing, configReader: testConfigReader)
         #expect(app.logger.label == "codes.vapor.application")
         try await app.shutdown()
     }
@@ -15,7 +15,7 @@ struct ApplicationCreationTests {
     @Test("Create Custom Logger")
     func customLogger() async throws {
         let logger = Logger(label: "custom")
-        let app = try await Application(.testing, services: .init(logger: .provided(logger)))
+        let app = try await Application(.testing, configReader: testConfigReader, services: .init(logger: .provided(logger)))
         #expect(app.logger.label == "custom")
         try await app.shutdown()
     }

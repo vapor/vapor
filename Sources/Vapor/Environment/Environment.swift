@@ -21,9 +21,8 @@ public struct Environment: Sendable, Equatable {
     /// - Parameters:
     ///   - config: `ConfigReader` to parse `vapor.env` flag from.
     /// - Returns: The detected environment, or default env.
-    public static func detect() throws -> Environment {
-        #warning("Implement reading from ConfigReader")
-        return .development
+    public static func detect(from config: ConfigReader) throws -> Environment {
+        config.string(forKey: "vapor.env", as: Environment.self, default: .development)
     }
     
     /// Performs stripping of user defaults overrides where and when appropriate.
@@ -122,5 +121,20 @@ public struct Environment: Sendable, Equatable {
     public init(name: String, arguments: [String] = ProcessInfo.processInfo.arguments) {
         self.name = name
         self.arguments = arguments
+    }
+}
+
+extension Environment: ExpressibleByConfigString {
+    public init?(configString: String) {
+        switch configString {
+        case "prod", "production": self = .production
+        case "dev", "development": self = .development
+        case "test", "testing": self = .testing
+        default: self = .init(name: configString)
+        }
+    }
+
+    public var description: String {
+        self.name
     }
 }
