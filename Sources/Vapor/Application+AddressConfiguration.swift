@@ -19,6 +19,7 @@ extension Application {
     }
 
     /// Errors that may be thrown when serving a server
+    @nonexhaustive
     public enum AddressConfigurationError: Swift.Error {
         /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
         case incompatibleFlags
