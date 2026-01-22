@@ -13,7 +13,7 @@ struct ApplicationTests {
     @Test("Test stopping the application", .disabled())
     func testApplicationStop() async throws {
         try await withApp { app in
-            app.environment.arguments = ["serve"]
+            //app.environment.arguments = ["serve"]
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.startup(from: testConfigReader)
             guard let running = app.running else {
@@ -173,7 +173,7 @@ struct ApplicationTests {
 
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
-                    app.environment.arguments = ["serve"]
+                    //app.environment.arguments = ["serve"]
                     await #expect(throws: Never.self) {
                         try await app.startup(from: testConfigReader)
                     }
@@ -215,7 +215,7 @@ struct ApplicationTests {
                 return config
             }
 
-            app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
+            //app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
             try await withRunningApp(app: app) { port in
                 #expect(app.serverConfiguration.hostname == "0.0.0.0")
                 #expect(app.serverConfiguration.port == 3000)

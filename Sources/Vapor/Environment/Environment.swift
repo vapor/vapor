@@ -1,3 +1,4 @@
+import Configuration
 import Foundation
 
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have
@@ -25,39 +26,6 @@ public struct Environment: Sendable, Equatable {
         config.string(forKey: "vapor.env", as: Environment.self, default: .development)
     }
     
-    /// Performs stripping of user defaults overrides where and when appropriate.
-    private static func sanitize(arguments: [String] = ProcessInfo.processInfo.arguments) -> [String] {
-        precondition(arguments.count >= 1, "At least one argument (the executable path) is required")
-        var arguments = arguments
-        let executablePath = [arguments.removeFirst()]
-        let executable = executablePath.joined(separator: " ")
-        #if Xcode
-        // Strip all leading arguments matching the pattern for assignment to the `NSArgumentsDomain`
-        // of `UserDefaults`. Matching this pattern means being prefixed by `-NS` or `-Apple` and being
-        // followed by a value argument. Since this is mainly just to get around Xcode's habit of
-        // passing a bunch of these when no other arguments are specified in a test scheme, we ignore
-        // any that don't match the Apple patterns and assume the app knows what it's doing.
-        while (arguments.first?.prefix(6) == "-Apple" || arguments.first?.prefix(3) == "-NS"),
-              arguments.count > 1 {
-            arguments.removeFirst(2)
-        }
-        #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-        // When tests are invoked directly through SwiftPM using `--filter`, SwiftPM will pass `-XCTest <filter>` to the
-        // runner binary, and also the test bundle path unconditionally. These must be stripped for Vapor to be satisfied
-        // with the validity of the arguments. We detect this case reliably the hard way, by looking for the `xctest`
-        // runner executable and a leading argument with the `.xctest` bundle suffix.
-        if executable.hasSuffix("/usr/bin/xctest") {
-            if arguments.first?.lowercased() == "-xctest" && arguments.count > 1 {
-                arguments.removeFirst(2)
-            }
-            if arguments.first?.hasSuffix(".xctest") ?? false {
-                arguments.removeFirst()
-            }
-        }
-        #endif
-        return executablePath + arguments
-    }
-    
     // MARK: - Presets
 
     /// An environment for deploying your application to consumers.
@@ -67,11 +35,7 @@ public struct Environment: Sendable, Equatable {
     public static var development: Environment { .init(name: "development") }
 
     /// An environment for testing your application.
-    ///
-    /// Performs an explicit sanitization step because this preset is often used directly in unit tests, without the
-    /// benefit of the logic usually invoked through either form of `detect()`. This means that when `--env test` is
-    /// explicitly specified, the sanitize logic is run twice, but this should be harmless.
-    public static var testing: Environment { .init(name: "testing", arguments: sanitize()) }
+    public static var testing: Environment { .init(name: "testing") }
 
     /// Creates a custom environment.
     public static func custom(name: String) -> Environment { .init(name: name) }
@@ -111,16 +75,12 @@ public struct Environment: Sendable, Equatable {
     ///   allow scenarios, such as testing production environment behaviors while retaining
     ///   availability of debug information.
     public var isRelease: Bool { !_isDebugAssertConfiguration() }
-
-    /// The command-line arguments for this ``Environment``.
-    public var arguments: [String]
     
     // MARK: - Init
 
     /// Create a new ``Environment``.
-    public init(name: String, arguments: [String] = ProcessInfo.processInfo.arguments) {
+    public init(name: String) {
         self.name = name
-        self.arguments = arguments
     }
 }
 
