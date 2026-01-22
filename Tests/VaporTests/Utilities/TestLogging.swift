@@ -1,10 +1,10 @@
+import ConsoleLogger
 import Foundation
 import Logging
 import Vapor
 
 let isLoggingConfigured: Bool = {
-    var env = Environment.testing
-    try! LoggingSystem.bootstrap(from: &env)
+    ConsoleLogger.bootstrap()
     return true
 }()
 
