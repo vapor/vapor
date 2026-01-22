@@ -65,7 +65,7 @@ public func withApp<T>(
 ///    }
 /// }
 /// ```
-public func withRunningApp<T>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: @Sendable (Int) async throws -> T) async throws -> T {
+public func withRunningApp<T>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
     return try await withThrowingTaskGroup(of: Void.self) { group in
         app.serverConfiguration.address = .hostname(hostname, port: portToUse)
         let portPromise = Promise<Int>()
