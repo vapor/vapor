@@ -62,8 +62,8 @@ extension Application {
             self.serverConfiguration.address = .hostname(hostname!, port: port!)
             try await self.server.start()
 
-        case (let hostname, let port, .none, .none): // hostname / port
-            self.serverConfiguration.address = .hostname(hostname!, port: port!)
+        case (.some(let hostname), .some(let port), .none, .none): // hostname / port
+            self.serverConfiguration.address = .hostname(hostname, port: port)
             try await self.server.start()
         default: throw AddressConfigurationError.incompatibleFlags
         }
