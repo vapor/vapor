@@ -80,7 +80,11 @@ public final class Application: Sendable, Service {
         }
     }
 
-    private let configReader: ConfigReader
+    /// Configuration reader used to read configuration values.
+    ///
+    /// You can configure this `ConfigReader` when initializing your ``Application``
+    /// to read configuration values from different sources, such as files, environment variables or command line arguments.
+    public let configReader: ConfigReader
 
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
