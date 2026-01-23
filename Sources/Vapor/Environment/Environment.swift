@@ -19,9 +19,11 @@ public struct Environment: Sendable, Equatable {
     
     /// Detects the environment from `ConfigReader`. Parses the `vapor.env` flag.
     ///
-    /// - Parameters:
-    ///   - config: `ConfigReader` to parse `vapor.env` flag from.
+    /// - Parameter config: `ConfigReader` to parse `vapor.env` flag from.
     /// - Returns: The detected environment, or default env.
+    ///
+    /// ## Configuration keys:
+    /// - `vapor.env`: (string, optional, default: `.development`): The name of the environment to use.
     public static func detect(from config: ConfigReader) throws -> Environment {
         config.string(forKey: "vapor.env", as: Environment.self, default: .development)
     }
