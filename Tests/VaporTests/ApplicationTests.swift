@@ -118,8 +118,9 @@ struct ApplicationTests {
             }
 
             try await withRunningApp(app: app) { port in
-                let res = try await VaporHTTPClient(from: app).get("http://localhost:\(port)/hello")
-                #expect(res.body?.string == "Hello, world!")
+                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let body = try await response.body.collect(upTo: 13)
+                #expect(body.string == "Hello, world!")
             }
         }
     }
@@ -142,8 +143,9 @@ struct ApplicationTests {
                 #expect(port > 0)
                 #expect(port != 8080)
 
-                let response = try await VaporHTTPClient(from: app).get("http://localhost:\(port)/hello")
-                #expect("Hello, world!" == response.body?.string)
+                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let body = try await response.body.collect(upTo: 13)
+                #expect(body.string == "Hello, world!")
             }
         }
     }
@@ -192,8 +194,11 @@ struct ApplicationTests {
                 let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
                 #expect(waitedPort == port)
                 #expect(port > 0)
-                let response = try await VaporHTTPClient(from: app).get("http://localhost:\(port)/hello")
-                let returnedConfig = try await response.content.decode(AddressConfig.self)
+                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let body = try await response.body.collect(upTo: 64)
+                let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
+                    .decode(AddressConfig.self, from: body, headers: [:])
+
                 #expect(returnedConfig.hostname == "0.0.0.0")
                 #expect(returnedConfig.port == port)
 
@@ -221,8 +226,10 @@ struct ApplicationTests {
                 #expect(app.serverConfiguration.port == 3000)
                 #expect(port == 3000)
 
-                let response = try await VaporHTTPClient(from: app).get("http://localhost:\(port)/hello")
-                let returnedConfig = try await response.content.decode(AddressConfig.self)
+                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let body = try await response.body.collect(upTo: 64)
+                let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
+                    .decode(AddressConfig.self, from: body, headers: [:])
                 #expect(returnedConfig.hostname == "0.0.0.0")
                 #expect(returnedConfig.port == 3000)
             }
