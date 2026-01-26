@@ -1,4 +1,3 @@
-import ConsoleKit
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -202,7 +201,6 @@ public final class Application: Sendable, Service {
         services: ServiceConfiguration = .init()
     ) async throws {
         self.init(environment, configuration: configuration, services: services, internal: true)
-        await self.asyncCommands.use(self.servers.command, as: "serve", isDefault: true)
         await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
 
@@ -272,7 +270,6 @@ public final class Application: Sendable, Service {
         self.sessions.use(.memory)
         self.servers.initialize()
         self.servers.use(.httpNew)
-        self.asyncCommands.use(RoutesCommand(), as: "routes")
     }
 
     /// Starts the ``Application`` asynchronous using the ``startup()`` method, then waits for any running tasks
@@ -290,6 +287,9 @@ public final class Application: Sendable, Service {
         }
     }
 
+    /// Used by the `_startup(addressConfiguration:)` method
+    let box: NIOLockedValueBox<SendableBox> = .init(.init(didShutdown: false))
+    
     /// When called, this will asynchronously execute the startup command provided through an argument. If no startup
     /// command is provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
     ///
@@ -299,15 +299,8 @@ public final class Application: Sendable, Service {
     public func startup() async throws {
         try await self.boot()
 
-        let combinedCommands = AsyncCommands(
-            commands: self.asyncCommands.commands.merging(self.commands.commands) { $1 },
-            defaultCommand: self.asyncCommands.defaultCommand ?? self.commands.defaultCommand,
-            enableAutocomplete: self.asyncCommands.enableAutocomplete || self.commands.enableAutocomplete
-        ).group()
-
-        var context = CommandContext(console: self.console, input: self.environment.commandInput)
-        context.application = self
-        try await self.console.run(combinedCommands, with: context)
+        #warning("Create AddressConfiguration from ConfigReader")
+        try await self._startup(addressConfiguration: AddressConfiguration())
     }
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
@@ -342,6 +335,8 @@ public final class Application: Sendable, Service {
         self.logger.trace("Clearing Application storage")
         await self.storage.shutdown()
         self.storage.clear()
+
+        await self._shutdown()
 
         self._didShutdown.withLockedValue { $0 = true }
         self.logger.trace("Application shutdown complete")

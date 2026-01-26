@@ -235,4 +235,32 @@ struct ApplicationTests {
             }
         }
     }
+
+    @Test("Routes ASCII Table")
+    func routesASCIITable() async throws {
+        try await withApp { app in
+            app.get("hello") { req in
+                "Hello, world!"
+            }
+            app.post("submit") { req in
+                "Submitted!"
+            }
+            app.get("items", ":id") { req in
+                "Item \(req.parameters.get("id") ?? "")"
+            }
+
+            let table = app.routesASCIITable()
+            let expected = """
+            +------+------------+
+            | GET  | /hello     |
+            +------+------------+
+            | POST | /submit    |
+            +------+------------+
+            | GET  | /items/:id |
+            +------+------------+
+
+            """
+            #expect(table == expected)
+        }
+    }
 }

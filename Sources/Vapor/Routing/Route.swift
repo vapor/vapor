@@ -1,6 +1,5 @@
 import RoutingKit
 import NIOConcurrencyHelpers
-import ConsoleKit
 import HTTPTypes
 
 public final class Route: CustomStringConvertible, Sendable {
@@ -55,10 +54,10 @@ public final class Route: CustomStringConvertible, Sendable {
         var responder: any Responder
         var requestType: Any.Type
         var responseType: Any.Type
-        var userInfo: [AnySendableHashable: any Sendable]
+        var userInfo: [String: any Sendable]
     }
     
-    public var userInfo: [AnySendableHashable: any Sendable] {
+    public var userInfo: [String: any Sendable] {
         get {
             self.sendableBox.withLockedValue { $0.userInfo }
         }
