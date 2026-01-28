@@ -35,7 +35,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/console-kit.git", exact: "5.0.0-alpha.4"),
 
         // API package for reading configuration.
-        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: [.defaults, "CommandLineArguments"]),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),

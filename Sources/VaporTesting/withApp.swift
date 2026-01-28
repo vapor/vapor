@@ -24,7 +24,7 @@ import NIOCore
 @discardableResult
 public func withApp<T>(
     address: BindAddress? = nil,
-    configReader: ConfigReader = ConfigReader(provider: EnvironmentVariablesProvider()),
+    configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
     services: Application.ServiceConfiguration = .init(),
     configure: ((Application) async throws -> Void)? = nil,
     _ test: (Application) async throws -> T

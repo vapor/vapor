@@ -7,8 +7,7 @@ import Logging
 struct Entrypoint {
     static func main() async throws {
         let config = ConfigReader(providers: [
-                // The `CommandLineArgumentsProvider` requires the `CommandLineArgumentsSupport` package trait
-                // CommandLineArgumentsProvider(),
+                CommandLineArgumentsProvider(),
                 EnvironmentVariablesProvider(),
             ]
         )
