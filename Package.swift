@@ -90,6 +90,7 @@ let package = Package(
 
         // Collection algorithms
         .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
+        
         // X509 certificate types for the Swift ecosystem
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.14.0"),
 
