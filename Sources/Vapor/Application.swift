@@ -203,12 +203,13 @@ public final class Application: Sendable, Service {
     // MARK: - Initialization
 
     public convenience init(
-        _ environment: Environment = .development,
+        _ environment: Environment? = nil,
         configuration: ServerConfiguration = .init(address: .hostname("127.0.0.1", port: 8080), onServerRunning: { _ in }),
-        configReader: ConfigReader,
+        configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
         services: ServiceConfiguration = .init()
     ) async throws {
-        self.init(environment, configuration: configuration, configReader: configReader, services: services, internal: true)
+        let env = try environment ?? Environment.detect(from: configReader)
+        self.init(env, configuration: configuration, configReader: configReader, services: services, internal: true)
         await DotEnvFile.load(for: self.environment, logger: self.logger)
     }
 

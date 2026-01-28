@@ -11,10 +11,9 @@ struct Entrypoint {
                 EnvironmentVariablesProvider(),
             ]
         )
-        let env = try Environment.detect(from: config)
         ConsoleLogger.bootstrap(config: config)
 
-        let app = try await Application(env, configReader: config)
+        let app = try await Application(configReader: config)
         do {
             try configure(app)
             try await app.run()
