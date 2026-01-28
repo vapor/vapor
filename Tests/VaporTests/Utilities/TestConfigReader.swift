@@ -1,10 +1,3 @@
 import Configuration
 
-let testConfigReader: ConfigReader = {
-    ConfigReader(
-        providers: [
-            EnvironmentVariablesProvider(),
-            InMemoryProvider(values: ["log.level": "debug"]),
-        ]
-    )
-}()
+let testConfigReader = ConfigReader(provider: InMemoryProvider(values: [:]))
