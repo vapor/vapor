@@ -1,3 +1,4 @@
+import Configuration
 import Foundation
 import NIOConcurrencyHelpers
 import NIOPosix
@@ -16,6 +17,22 @@ extension Application {
 
         /// The path for the unix domain socket file the server will bind to.
         var socketPath: String?
+
+        /// Initialize the address config from a Swift Configuration `ConfigReader`.
+        ///
+        /// - Parameter config: The `ConfigReader` to read from.
+        ///
+        /// ## Configuration keys:
+        /// - `hostname`: (string, optional): The hostname the server will run on.
+        /// - `port`: (int, optional): The port the server will run on.
+        /// - `bind`: (string, optional): The hostname and port together in the format `"hostname:port"`.
+        /// - `unix-socket`: (string, optional): The path for the unix domain socket file the server will bind to.
+        init(from config: ConfigReader) {
+            self.hostname = config.string(forKey: "hostname")
+            self.port = config.int(forKey: "port")
+            self.bind = config.string(forKey: "bind")
+            self.socketPath = config.string(forKey: "unix-socket")
+        }
     }
 
     /// Errors that may be thrown when serving a server
@@ -45,8 +62,8 @@ extension Application {
             self.serverConfiguration.address = .hostname(hostname!, port: port!)
             try await self.server.start()
 
-        case (let hostname, let port, .none, .none): // hostname / port
-            self.serverConfiguration.address = .hostname(hostname!, port: port!)
+        case (.some(let hostname), .some(let port), .none, .none): // hostname / port
+            self.serverConfiguration.address = .hostname(hostname, port: port)
             try await self.server.start()
         default: throw AddressConfigurationError.incompatibleFlags
         }

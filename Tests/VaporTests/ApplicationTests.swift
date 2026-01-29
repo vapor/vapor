@@ -12,8 +12,8 @@ import RoutingKit
 struct ApplicationTests {
     @Test("Test stopping the application", .disabled())
     func testApplicationStop() async throws {
-        try await withApp { app in
-            app.environment.arguments = ["serve"]
+        try await withApp(configReader: testConfigReader) { app in
+            //app.environment.arguments = ["serve"]
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.startup()
             guard let running = app.running else {
@@ -52,7 +52,7 @@ struct ApplicationTests {
         }
 
         try await withApp { app in
-            let app = try await Application(.testing)
+            let app = try await Application(.testing, configReader: testConfigReader)
 
             let foo = Foo()
             app.lifecycle.use(foo)
@@ -152,7 +152,7 @@ struct ApplicationTests {
 
     @Test("Test configuration address details reflected after being set")
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
-        try await withApp { app in
+        try await withApp(configReader: testConfigReader) { app in
             app.serverConfiguration.address = .hostname("0.0.0.0", port: 0)
             let portPromise = Promise<Int>()
             app.serverConfiguration.onServerRunning = { channel in
@@ -175,7 +175,7 @@ struct ApplicationTests {
 
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
-                    app.environment.arguments = ["serve"]
+                    //app.environment.arguments = ["serve"]
                     await #expect(throws: Never.self) {
                         try await app.startup()
                     }
@@ -220,7 +220,7 @@ struct ApplicationTests {
                 return config
             }
 
-            app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
+            //app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
             try await withRunningApp(app: app) { port in
                 #expect(app.serverConfiguration.hostname == "0.0.0.0")
                 #expect(app.serverConfiguration.port == 3000)
