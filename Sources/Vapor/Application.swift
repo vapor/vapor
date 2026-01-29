@@ -289,7 +289,7 @@ public final class Application: Sendable, Service {
     /// (manually) shut down before returning.
     public func run() async throws {
         do {
-            try await self.startup(from: self.configReader)
+            try await self.startup()
             try await self.running?.onStop.get()
         } catch {
             self.logger.report(error: error)
@@ -305,10 +305,10 @@ public final class Application: Sendable, Service {
     /// If you start Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
     /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
     /// use ``execute()`` instead.
-    public func startup(from config: ConfigReader) async throws {
+    public func startup() async throws {
         try await self.boot()
 
-        try await self._startup(addressConfiguration: AddressConfiguration(from: config))
+        try await self._startup(addressConfiguration: AddressConfiguration(from: self.configReader))
     }
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``

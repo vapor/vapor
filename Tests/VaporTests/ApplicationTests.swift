@@ -12,10 +12,10 @@ import RoutingKit
 struct ApplicationTests {
     @Test("Test stopping the application", .disabled())
     func testApplicationStop() async throws {
-        try await withApp { app in
+        try await withApp(configReader: testConfigReader) { app in
             //app.environment.arguments = ["serve"]
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            try await app.startup(from: testConfigReader)
+            try await app.startup()
             guard let running = app.running else {
                 Issue.record("app started without setting 'running'")
                 return
@@ -152,7 +152,7 @@ struct ApplicationTests {
 
     @Test("Test configuration address details reflected after being set")
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
-        try await withApp { app in
+        try await withApp(configReader: testConfigReader) { app in
             app.serverConfiguration.address = .hostname("0.0.0.0", port: 0)
             let portPromise = Promise<Int>()
             app.serverConfiguration.onServerRunning = { channel in
@@ -177,7 +177,7 @@ struct ApplicationTests {
                 group.addTask {
                     //app.environment.arguments = ["serve"]
                     await #expect(throws: Never.self) {
-                        try await app.startup(from: testConfigReader)
+                        try await app.startup()
                     }
                 }
 
