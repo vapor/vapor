@@ -189,6 +189,7 @@ let package = Package(
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "InMemoryLogging", package: "swift-log"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),
