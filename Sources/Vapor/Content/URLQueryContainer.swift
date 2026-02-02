@@ -79,6 +79,71 @@ extension URLQueryContainer {
         try self.get(D.self, path: path.map(\.codingKey))
     }
 
+    // MARK: - Contains / Has helpers
+
+    /// Check if a query parameter exists at the supplied keypath.
+    ///
+    /// This method is useful when you only need to know if a parameter is present,
+    /// regardless of its value. For example, checking if a flag parameter like `?debug`
+    /// or `?verbose` exists.
+    ///
+    ///     // URL: /search?q=vapor&debug
+    ///     if req.query.contains("debug") {
+    ///         // debug parameter exists (even without a value)
+    ///     }
+    ///
+    ///     // URL: /users?filter[active]=true
+    ///     if req.query.contains("filter", "active") {
+    ///         // nested parameter exists
+    ///     }
+    ///
+    /// - Parameter path: The keypath to check for existence.
+    /// - Returns: `true` if the parameter exists, `false` otherwise.
+    public func contains(_ path: CodingKeyRepresentable...) -> Bool {
+        contains(path)
+    }
+
+    /// Check if a query parameter exists at the supplied keypath.
+    ///
+    ///     if req.query.contains(["user", "id"]) {
+    ///         // user.id parameter exists
+    ///     }
+    ///
+    /// - Parameter path: The keypath to check for existence.
+    /// - Returns: `true` if the parameter exists, `false` otherwise.
+    public func contains(_ path: [CodingKeyRepresentable]) -> Bool {
+        // Try to get a String at the path. If it succeeds (even with empty string),
+        // the key exists. If it throws, the key doesn't exist.
+        (try? self.get(String.self, at: path)) != nil
+    }
+
+    /// Alias for ``contains(_:)-5v92z``.
+    ///
+    /// This method is useful when you only need to know if a parameter is present,
+    /// regardless of its value.
+    ///
+    ///     if req.query.has("token") {
+    ///         // token parameter exists
+    ///     }
+    ///
+    /// - Parameter path: The keypath to check for existence.
+    /// - Returns: `true` if the parameter exists, `false` otherwise.
+    public func has(_ path: CodingKeyRepresentable...) -> Bool {
+        contains(path)
+    }
+
+    /// Alias for ``contains(_:)-70ncx``.
+    ///
+    ///     if req.query.has(["user", "id"]) {
+    ///         // user.id parameter exists
+    ///     }
+    ///
+    /// - Parameter path: The keypath to check for existence.
+    /// - Returns: `true` if the parameter exists, `false` otherwise.
+    public func has(_ path: [CodingKeyRepresentable]) -> Bool {
+        contains(path)
+    }
+
     // MARK: Private
 
     /// Execute a "get at coding key path" operation.
