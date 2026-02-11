@@ -2,7 +2,7 @@ import AsyncHTTPClient
 import Vapor
 
 extension Application {
-    public enum Method {
+    public enum Method: Sendable {
         case inMemory
         // TODO: Default to Port 0 in the next major release
         public static var running: Method {
