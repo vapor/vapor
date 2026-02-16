@@ -684,6 +684,43 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
     }
+
+    /// https://github.com/vapor/vapor/issues/3414
+    func testGH3414() async throws {
+        /// Return an empty response with no Content-Type header.
+        app.get("empty") { _ in
+            Response(status: .ok)
+        }
+
+        try app.server.start()
+
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        /// Empty responses should not be compressed, regardless of configuration.
+        for configuration: HTTPServer.Configuration.ResponseCompressionConfiguration in [
+            .disabled,
+            .enabled,
+            .enabledForCompressibleTypes,
+            .forceDisabled,
+        ] {
+            app.http.server.configuration.responseCompression = configuration
+
+            let response = try await app.client.get("http://localhost:\(port)/empty") { request in
+                request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip, deflate")
+            }
+
+            XCTAssertNil(
+                response.headers.first(name: .contentEncoding),
+                "Empty response should not be compressed with configuration: \(configuration)"
+            )
+            XCTAssertEqual(response.body?.readableBytes ?? 0, 0, "Response body should be empty")
+        }
+    }
 }
 
 

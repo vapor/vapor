@@ -787,27 +787,33 @@ extension HTTPServer.Configuration.ResponseCompressionConfiguration {
                 }
             }
             
+            /// Get the content type directives from the response headers.
+            let contentTypeDirectives = responseHeaders.headers.parseDirectives(name: .contentType)
+
+            /// If there is no content type, do not compress the response.
+            guard !contentTypeDirectives.isEmpty else { return .doNotCompress }
+
             switch storage {
             case .enabled(_, let disallowedTypes, _):
                 /// If there were no explicit overrides, fallback to checking the content type against the disallowed set. If any type succeeds the check, disable compression:
-                let shouldDisable = responseHeaders.headers.parseDirectives(name: .contentType).contains { contentTypeDirectives in
+                let shouldDisable = contentTypeDirectives.contains { contentTypeDirectives in
                     guard let mediaType = HTTPMediaType(directives: contentTypeDirectives)
                     else { return false }
-                    
+
                     return disallowedTypes.contains(mediaType)
                 }
-                
+
                 /// Return `.doNotCompress` if compression should be disabled, or `.compressIfPossible` to allow it.
                 return shouldDisable ? .doNotCompress : .compressIfPossible
             case .disabled(_, let allowedTypes, _):
                 /// If there were no explicit overrides, fallback to checking the content type against the allowed set. If all types succeed the check, enable compression:
-                let shouldEnable = responseHeaders.headers.parseDirectives(name: .contentType).allSatisfy { contentTypeDirectives in
+                let shouldEnable = contentTypeDirectives.allSatisfy { contentTypeDirectives in
                     guard let mediaType = HTTPMediaType(directives: contentTypeDirectives)
                     else { return false }
-                    
+
                     return allowedTypes.contains(mediaType)
                 }
-                
+
                 /// Return `.compressIfPossible` if compression should be enabled, or `.doNotCompress` to disallow it.
                 return shouldEnable ? .compressIfPossible : .doNotCompress
             }

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh issue list:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(swift build:*)",
+      "Bash(git checkout:*)"
+    ]
+  }
+}
