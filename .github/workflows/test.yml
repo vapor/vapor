@@ -5,6 +5,8 @@ concurrency:
 on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
   push: { branches: [ main ] }
+permissions:
+  contents: read
 
 jobs:
   test-providers:
@@ -19,7 +21,7 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:6.0
+    container: swift:6.2
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v6
@@ -33,8 +35,6 @@ jobs:
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests
-        env:
-            SWIFT_DETERMINISTIC_HASHING: 1
         run: swift test --package-path ./provider
 
   unit-tests:
@@ -51,7 +51,7 @@ jobs:
   test-parallel:
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
-    container: swift:6.0
+    container: swift:6.2
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v6
