@@ -5,11 +5,11 @@ concurrency:
 on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
   push: { branches: [ main ] }
-permissions:
-  contents: read
 
 jobs:
   test-providers:
+    permissions:
+      contents: read
     if: ${{ !(github.event.pull_request.draft || false) }}
     strategy:
       fail-fast: false
@@ -38,6 +38,8 @@ jobs:
         run: swift test --package-path ./provider
 
   unit-tests:
+    permissions:
+      contents: read
     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
     with:
       with_release_mode_testing: true
@@ -48,7 +50,16 @@ jobs:
       ios_scheme_name: Vapor
     secrets: inherit
 
+  submit-dependencies:
+    permissions:
+      contents: write
+    if: ${{ github.event_name == 'push' }}
+    uses: vapor/ci/.github/workflows/submit-deps.yml@main
+    secrets: inherit
+
   test-parallel:
+    permissions:
+      contents: read
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
     container: swift:6.2
