@@ -338,8 +338,11 @@ public struct FileIO: Sendable {
             return hash.digestHex
         } else {
             return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
-                let buffer = try await handle.readToEnd(maximumSizeAllowed: .bytes(.max))
-                let digest = SHA256.hash(data: buffer.readableBytesView)
+                var hasher = SHA256()
+                for try await chunk in handle.readChunks(in: ..., chunkLength: .mebibytes(2)) {
+                    hasher.update(data: chunk.readableBytesView)
+                }
+                let digest = hasher.finalize()
 
                 // update hash in dictionary
                 request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
