@@ -1,12 +1,15 @@
 name: Generate Sponsors README
 on: workflow_dispatch
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get token
         id: get-token
@@ -26,7 +29,7 @@ jobs:
           organization: true
 
       - name: Commit and create PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.get-token.outputs.token }}
           commit-message: "[skip ci] Update README with new sponsor"

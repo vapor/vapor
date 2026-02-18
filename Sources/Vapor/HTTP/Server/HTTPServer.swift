@@ -113,9 +113,19 @@ public final class HTTPServer: Server, Sendable {
 
         /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
         /// This is the same as `NIOSSLCustomVerificationCallback` but just marked as `Sendable`
+        /// - Warning: Mutually exclusive with `customCertificateVerifyCallbackWithMetadata`.
         @preconcurrency
         public var customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)?
-        
+
+        /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
+        /// This is the same as `NIOSSLCustomVerificationCallbackWithMetadata` but just marked as `Sendable`.
+        ///
+        /// In contrast to `customCertificateVerifyCallback`, this callback allows returning the validate certificate
+        /// chain, which can then be accessed on the request via `Request.peerCertificateChain`.
+        /// - Warning: Mutually exclusive with `customCertificateVerifyCallback`.
+        @preconcurrency
+        public var customCertificateVerifyCallbackWithMetadata: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResultWithMetadata>) -> Void)?
+
         /// The number of incoming TCP connections to accept per "tick" (i.e. each time through the server's event loop).
         ///
         /// Most users will never need to change this value; its primary use case is to work around benchmarking
@@ -162,6 +172,43 @@ public final class HTTPServer: Server, Sendable {
         }
 
         public init(
+            hostname: String = Self.defaultHostname,
+            port: Int = Self.defaultPort,
+            backlog: Int = 256,
+            reuseAddress: Bool = true,
+            tcpNoDelay: Bool = true,
+            responseCompression: ResponseCompressionConfiguration = .disabled,
+            requestDecompression: RequestDecompressionConfiguration = .enabled,
+            supportPipelining: Bool = true,
+            supportVersions: Set<HTTPVersionMajor>? = nil,
+            tlsConfiguration: TLSConfiguration? = nil,
+            serverName: String? = nil,
+            reportMetrics: Bool = true,
+            logger: Logger? = nil,
+            shutdownTimeout: TimeAmount = .seconds(10),
+            customCertificateVerifyCallbackWithMetadata: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResultWithMetadata>) -> Void)?,
+            connectionsPerServerTick: UInt = 256
+        ) {
+            self.init(
+                address: .hostname(hostname, port: port),
+                backlog: backlog,
+                reuseAddress: reuseAddress,
+                tcpNoDelay: tcpNoDelay,
+                responseCompression: responseCompression,
+                requestDecompression: requestDecompression,
+                supportPipelining: supportPipelining,
+                supportVersions: supportVersions,
+                tlsConfiguration: tlsConfiguration,
+                serverName: serverName,
+                reportMetrics: reportMetrics,
+                logger: logger,
+                shutdownTimeout: shutdownTimeout,
+                customCertificateVerifyCallbackWithMetadata: customCertificateVerifyCallbackWithMetadata,
+                connectionsPerServerTick: connectionsPerServerTick
+            )
+        }
+
+        public init(
             address: BindAddress,
             backlog: Int = 256,
             reuseAddress: Bool = true,
@@ -196,10 +243,50 @@ public final class HTTPServer: Server, Sendable {
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
             self.customCertificateVerifyCallback = customCertificateVerifyCallback
+            self.customCertificateVerifyCallbackWithMetadata = nil
+            self.connectionsPerServerTick = connectionsPerServerTick
+        }
+
+        public init(
+            address: BindAddress,
+            backlog: Int = 256,
+            reuseAddress: Bool = true,
+            tcpNoDelay: Bool = true,
+            responseCompression: ResponseCompressionConfiguration = .disabled,
+            requestDecompression: RequestDecompressionConfiguration = .enabled,
+            supportPipelining: Bool = true,
+            supportVersions: Set<HTTPVersionMajor>? = nil,
+            tlsConfiguration: TLSConfiguration? = nil,
+            serverName: String? = nil,
+            reportMetrics: Bool = true,
+            logger: Logger? = nil,
+            shutdownTimeout: TimeAmount = .seconds(10),
+            customCertificateVerifyCallbackWithMetadata: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResultWithMetadata>) -> Void)?,
+            connectionsPerServerTick: UInt = 256
+        ) {
+            self.address = address
+            self.backlog = backlog
+            self.reuseAddress = reuseAddress
+            self.tcpNoDelay = tcpNoDelay
+            self.responseCompression = responseCompression
+            self.requestDecompression = requestDecompression
+            self.supportPipelining = supportPipelining
+            if let supportVersions = supportVersions {
+                self.supportVersions = supportVersions
+            } else {
+                self.supportVersions = tlsConfiguration == nil ? [.one] : [.one, .two]
+            }
+            self.tlsConfiguration = tlsConfiguration
+            self.serverName = serverName
+            self.reportMetrics = reportMetrics
+            self.logger = logger ?? Logger(label: "codes.vapor.http-server")
+            self.shutdownTimeout = shutdownTimeout
+            self.customCertificateVerifyCallback = nil
+            self.customCertificateVerifyCallbackWithMetadata = customCertificateVerifyCallbackWithMetadata
             self.connectionsPerServerTick = connectionsPerServerTick
         }
     }
-    
+
     public var onShutdown: EventLoopFuture<Void> {
         guard let connection = self.connection.withLockedValue({ $0 }) else {
             fatalError("Server has not started yet")
@@ -447,7 +534,11 @@ private final class HTTPServerConnection: Sendable {
                     let tlsHandler: NIOSSLServerHandler
                     do {
                         sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-                        tlsHandler = NIOSSLServerHandler(context: sslContext, customVerifyCallback: configuration.customCertificateVerifyCallback)
+                        tlsHandler = NIOSSLServerHandler(
+                            context: sslContext,
+                            customVerifyCallback: configuration.customCertificateVerifyCallback,
+                            customVerifyCallbackWithMetadata: configuration.customCertificateVerifyCallbackWithMetadata
+                        )
                     } catch {
                         configuration.logger.error("Could not configure TLS: \(error)")
                         return channel.close(mode: .all)
@@ -662,9 +753,13 @@ extension ChannelPipeline {
 
 // MARK: Helper function for constructing NIOSSLServerHandler.
 extension NIOSSLServerHandler {
-    convenience init(context: NIOSSLContext, customVerifyCallback: NIOSSLCustomVerificationCallback?) {
+    convenience init(context: NIOSSLContext, customVerifyCallback: NIOSSLCustomVerificationCallback?,
+                     customVerifyCallbackWithMetadata: NIOSSLCustomVerificationCallbackWithMetadata?) {
+        precondition(customVerifyCallback == nil || customVerifyCallbackWithMetadata == nil, "Only one of customVerifyCallback and customVerifyCallbackWithMetadata can be used at a time.")
         if let callback = customVerifyCallback {
             self.init(context: context, customVerificationCallback: callback)
+        } else if let callbackWithMetadata = customVerifyCallbackWithMetadata {
+            self.init(context: context, customVerificationCallbackWithMetadata: callbackWithMetadata)
         } else {
             self.init(context: context)
         }

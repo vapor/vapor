@@ -8,6 +8,8 @@ on:
 
 jobs:
   test-providers:
+    permissions:
+      contents: read
     if: ${{ !(github.event.pull_request.draft || false) }}
     strategy:
       fail-fast: false
@@ -19,25 +21,25 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:6.0
+    container: swift:6.2
     steps:
       - name: Check out Vapor
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: vapor
       - name: Check out provider
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ matrix.provider }}
           path: provider
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests
-        env:
-            SWIFT_DETERMINISTIC_HASHING: 1
         run: swift test --package-path ./provider
 
   unit-tests:
+    permissions:
+      contents: read
     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
     with:
       with_release_mode_testing: true
@@ -48,12 +50,21 @@ jobs:
       ios_scheme_name: Vapor
     secrets: inherit
 
+  submit-dependencies:
+    permissions:
+      contents: write
+    if: ${{ github.event_name == 'push' }}
+    uses: vapor/ci/.github/workflows/submit-deps.yml@main
+    secrets: inherit
+
   test-parallel:
+    permissions:
+      contents: read
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
-    container: swift:6.0
+    container: swift:6.2
     steps:
       - name: Check out Vapor
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Run tests
         run: swift test --parallel

@@ -21,11 +21,11 @@ extension HTTPHeaders {
     ///
     /// You can access all `MediaType`s in this collection to check membership.
     ///
-    ///     httpReq.accept.mediaTypes.contains(.html)
+    ///     httpReq.headers.accept.mediaTypes.contains(.html)
     ///
     /// Or you can compare preferences for two `MediaType`s.
     ///
-    ///     let pref = httpReq.accept.comparePreference(for: .json, to: .html)
+    ///     let pref = httpReq.headers.accept.comparePreference(for: .json, to: .html)
     ///
     public var accept: [HTTPMediaTypePreference] {
         self.parseDirectives(name: .accept).compactMap {
@@ -34,12 +34,8 @@ extension HTTPHeaders {
     }
 }
 
-#if compiler(>=6.1)
 extension HTTPHeaders: @retroactive Decodable {}
 extension HTTPHeaders: @retroactive Encodable {}
-#else
-extension HTTPHeaders: Codable {}
-#endif
 
 extension HTTPHeaders {
     private enum CodingKeys: String, CodingKey { case name, value }

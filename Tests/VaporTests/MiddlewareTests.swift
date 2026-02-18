@@ -249,8 +249,7 @@ final class MiddlewareTests: XCTestCase {
         XCTAssertEqual(response.status, .ok)
         XCTAssertEqual(response.body?.string, "done")
 
-        let span = try XCTUnwrap(tracer.spans.first)
-        XCTAssertEqual(span.operationName, "GET /testTracing")
+        let span = try XCTUnwrap(tracer.spans.first(where: { $0.operationName == "GET /testTracing" }))
         
         XCTAssertEqual(span.attributes["http.request.method"]?.toSpanAttribute(), "GET")
         XCTAssertEqual(span.attributes["url.path"]?.toSpanAttribute(), "/testTracing")

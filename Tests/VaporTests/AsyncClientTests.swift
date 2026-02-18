@@ -1,9 +1,9 @@
 import Vapor
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOFoundationCompat
 import Logging
 import NIOEmbedded
-#if compiler(>=6.0) && canImport(Testing)
 import Testing
 import VaporTesting
 
@@ -93,7 +93,7 @@ struct AsyncClientTests {
         }
     }
 
-    @Test("Test Client Tiemout")
+    @Test("Test Client Timeout")
     func testClientTimeout() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
@@ -219,7 +219,6 @@ struct AsyncClientTests {
         return result
     }
 }
-#endif
 
 final class CustomClient: Client, Sendable {
     let eventLoop: any EventLoop

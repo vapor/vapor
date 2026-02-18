@@ -3,6 +3,7 @@
 #endif
 import Foundation
 import Vapor
+import VaporTestUtils
 import XCTest
 import AsyncHTTPClient
 import NIOCore
