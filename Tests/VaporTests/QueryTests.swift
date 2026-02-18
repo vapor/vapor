@@ -312,6 +312,15 @@ final class QueryTests: XCTestCase {
         XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
     }
     
+    func testContains() throws {
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        request.url = .init(path: "/foo?page=1&empty=&flag")
+
+        XCTAssertTrue(request.query.contains("page"))
+        XCTAssertTrue(request.query.contains("empty"))
+        XCTAssertFalse(request.query.contains("missing"))
+    }
+
     func testNotCrashingWhenUnkeyedContainerIsAtEnd() {
         struct Query: Decodable {
             let closedRange: ClosedRange<Double>
