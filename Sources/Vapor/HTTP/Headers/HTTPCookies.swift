@@ -88,6 +88,8 @@ struct HTTPSetCookie {
                     return nil
                 }
                 self.value.sameSite = HTTPCookies.SameSitePolicy(rawValue: .init(parameter))
+            case "partitioned":
+              self.value.isPartitioned = true
             default:
                 return nil
             }
@@ -143,6 +145,14 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         ///
         /// This restriction mitigates attacks such as cross-site request forgery (XSRF).
         public var sameSite: SameSitePolicy?
+      
+        /// The cookie can only be read within the context of the top-level site it was set on.
+        /// Note: Partitioned cookies must be set with Secure (`isSecure=true`)
+        public var isPartitioned: Bool {
+            willSet {
+                assert(self.isSecure, "Partitioned cookies must be set with isSecure=true")
+            }
+        }
         
         // MARK: Init
         
@@ -159,6 +169,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         ///     - isSecure: Limits the cookie to secure connections. If `sameSite` is `none`, this flag will be overridden with `true`. Defaults to `false`.
         ///     - isHTTPOnly: Does not expose the cookie over non-HTTP channels. Defaults to `false`.
         ///     - sameSite: See `HTTPSameSitePolicy`. Defaults to `lax`.
+        ///     - isPartitioned: The cookie can only be read within the context of the top-level site it was set on. Defaults to `false`. Note: Partitioned cookies must be set with Secure (`isSecure=true`)
         public init(
             string: String,
             expires: Date? = nil,
@@ -167,7 +178,8 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
             path: String? = "/",
             isSecure: Bool = false,
             isHTTPOnly: Bool = false,
-            sameSite: SameSitePolicy? = .lax
+            sameSite: SameSitePolicy? = .lax,
+            isPartitioned: Bool = false
         ) {
             self.string = string
             self.expires = expires
@@ -180,6 +192,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
             self.isSecure = isSecure || forceSecure
             self.isHTTPOnly = isHTTPOnly
             self.sameSite = sameSite
+            self.isPartitioned = isPartitioned
         }
         
         /// See `ExpressibleByStringLiteral`.
@@ -227,6 +240,10 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
                 case .none:
                     serialized += "=None"
                 }
+            }
+          
+            if self.isPartitioned {
+                serialized += "; Partitioned"
             }
             
             return serialized
