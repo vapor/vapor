@@ -312,6 +312,54 @@ final class QueryTests: XCTestCase {
         XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
     }
     
+    func testContainsKey() throws {
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "/path?foo=a&bar=b"),
+            on: app.eventLoopGroup.next()
+        )
+
+        XCTAssertTrue(req.query.contains("foo"))
+        XCTAssertTrue(req.query.contains("bar"))
+        XCTAssertFalse(req.query.contains("baz"))
+    }
+
+    func testContainsValuelessKey() throws {
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "/path?flag"),
+            on: app.eventLoopGroup.next()
+        )
+
+        XCTAssertTrue(req.query.contains("flag"))
+        XCTAssertFalse(req.query.contains("other"))
+    }
+
+    func testContainsNoQuery() throws {
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "/path"),
+            on: app.eventLoopGroup.next()
+        )
+
+        XCTAssertFalse(req.query.contains("foo"))
+    }
+
+    func testContainsNestedKey() throws {
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "/path?user[name]=Vapor"),
+            on: app.eventLoopGroup.next()
+        )
+
+        XCTAssertTrue(req.query.contains("user", "name"))
+        XCTAssertFalse(req.query.contains("user", "age"))
+    }
+
     func testNotCrashingWhenUnkeyedContainerIsAtEnd() {
         struct Query: Decodable {
             let closedRange: ClosedRange<Double>

@@ -79,7 +79,31 @@ extension URLQueryContainer {
         try self.get(D.self, path: path.map(\.codingKey))
     }
 
+    // MARK: - Contains helpers
+
+    /// Check whether a value exists at the supplied keypath in the container.
+    ///
+    ///     if req.query.contains("foo") { ... }
+    public func contains(_ path: CodingKeyRepresentable...) -> Bool {
+        self.contains(path)
+    }
+
+    /// Check whether a value exists at the supplied keypath in the container.
+    ///
+    ///     if req.query.contains(["user", "name"]) { ... }
+    public func contains(_ path: [CodingKeyRepresentable]) -> Bool {
+        self.hasKey(at: path.map(\.codingKey))
+    }
+
     // MARK: Private
+
+    /// Execute a "has key at coding key path" operation.
+    private func hasKey(at path: [CodingKey]) -> Bool {
+        (try? self.decode(ContainerHasKeyExecutor.self, using: ForwardingURLQueryDecoder(
+            base: self.configuredDecoder(),
+            info: ContainerHasKeyExecutor.userInfo(for: path)
+        )).result) ?? false
+    }
 
     /// Execute a "get at coding key path" operation.
     private func get<D: Decodable>(_: D.Type = D.self, path: [CodingKey]) throws -> D {

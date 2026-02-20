@@ -29,6 +29,39 @@ internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
     }
 }
 
+/// Checks whether a key exists at a key path without decoding a value.
+internal struct ContainerHasKeyExecutor: Decodable {
+    let result: Bool
+
+    static func userInfo(for keyPath: [CodingKey]) -> [CodingUserInfoKey: Sendable] {
+        [.containerGetKeypath: keyPath]
+    }
+
+    init(from decoder: Decoder) throws {
+        guard let keypath = decoder.userInfo[.containerGetKeypath] as? [CodingKey] else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Container getter couldn't find keypath to fetch (broken Decoder?)"))
+        }
+
+        let lastDecoder = try keypath.dropLast().reduce(decoder) {
+            if let index = $1.intValue {
+                return try $0.unkeyedContainer(startingAt: index)._unsafe_inplace_superDecoder()
+            } else {
+                return try $0.container(keyedBy: BasicCodingKey.self).superDecoder(forKey: .key($1.stringValue))
+            }
+        }
+        if let key = keypath.last?.stringValue {
+            self.result = try lastDecoder.container(keyedBy: BasicCodingKey.self).contains(.key(key))
+        } else if let index = keypath.last?.intValue {
+            // For unkeyed containers, check if the index is reachable
+            let container = try lastDecoder.unkeyedContainer()
+            self.result = index < (container.count ?? 0)
+        } else {
+            // No key path means "root" - it always exists
+            self.result = true
+        }
+    }
+}
+
 fileprivate extension CodingUserInfoKey {
     static var containerGetKeypath: Self { .init(rawValue: "codes.vapor.containers.keypathget")! }
 }
