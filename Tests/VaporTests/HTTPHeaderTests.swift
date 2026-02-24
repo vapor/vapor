@@ -233,6 +233,18 @@ final class HTTPHeaderTests: XCTestCase {
         XCTAssertEqual(headers.cookie?["!#$%&'*+-.^_`~"]?.string, "symbols")
     }
 
+    // https://github.com/vpor/vapor/issues/3435
+    func testMultipleCookieHeaders() throws {
+        let headers = HTTPHeaders([
+            ("cookie", "a=1"),
+            ("cookie", "b=2"),
+            ("cookie", "c=3"),
+        ])
+        XCTAssertEqual(headers.cookie?["a"]?.string, "1")
+        XCTAssertEqual(headers.cookie?["b"]?.string, "2")
+        XCTAssertEqual(headers.cookie?["c"]?.string, "3")
+    }
+
     // https://github.com/vapor/vapor/issues/2316
     func testCookie_complexParsing() throws {
         let headers = HTTPHeaders([
