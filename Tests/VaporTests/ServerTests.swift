@@ -560,6 +560,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         app.http.client.configuration.decompression = .enabled(limit: .none)
         
         app.get("compressed") { _ in compressiblePayload }
+      
+        app.get("emptyResponse") { _ in Response(status: .ok) }
         
         try await app.server.start(address: nil)
         
@@ -584,6 +586,13 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(unsupportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(unsupportedCompressedResponse.body?.string, compressiblePayload)
         
+        let unsupportedEmptyResponse = try await app.client.get("http://localhost:\(port)/emptyResponse") { request in
+            request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip, deflate, br, zstd")
+        }
+        XCTAssertEqual(unsupportedEmptyResponse.headers.first(name: .contentEncoding), nil)
+        XCTAssertEqual(unsupportedEmptyResponse.headers.first(name: .contentLength), "0")
+        XCTAssertEqual(unsupportedEmptyResponse.body?.string, nil)
+        
         app.http.server.configuration.responseCompression = .enabled
         
         let supportedUncompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
@@ -599,6 +608,13 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(supportedCompressedResponse.headers.first(name: .contentEncoding), "gzip")
         XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
+        
+        let supportedEmptyResponse = try await app.client.get("http://localhost:\(port)/emptyResponse") { request in
+          request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip, deflate, br, zstd")
+        }
+        XCTAssertEqual(supportedEmptyResponse.headers.first(name: .contentEncoding), nil)
+        XCTAssertEqual(supportedEmptyResponse.headers.first(name: .contentLength), "0")
+        XCTAssertEqual(supportedEmptyResponse.body?.string, nil)
         
         await app.server.shutdown()
     }
@@ -643,6 +659,8 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         
         app.get("compressed") { _ in compressiblePayload }
         
+        app.get("emptyResponse") { _ in Response(status: .ok) }
+        
         try await app.server.start(address: nil)
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
@@ -666,6 +684,13 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(unsupportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(unsupportedCompressedResponse.body?.string, compressiblePayload)
         
+        let unsupportedEmptyResponse = try await app.client.get("https://localhost:\(port)/emptyResponse") { request in
+            request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip, deflate, br, zstd")
+        }
+        XCTAssertEqual(unsupportedEmptyResponse.headers.first(name: .contentEncoding), nil)
+        XCTAssertEqual(unsupportedEmptyResponse.headers.first(name: .contentLength), "0")
+        XCTAssertEqual(unsupportedEmptyResponse.body?.string, nil)
+        
         app.http.server.configuration.responseCompression = .enabled
         
         let supportedUncompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
@@ -681,6 +706,13 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(supportedCompressedResponse.headers.first(name: .contentEncoding), "gzip")
         XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
         XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
+        
+        let supportedEmptyResponse = try await app.client.get("https://localhost:\(port)/emptyResponse") { request in
+            request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip, deflate, br, zstd")
+        }
+        XCTAssertEqual(supportedEmptyResponse.headers.first(name: .contentEncoding), nil)
+        XCTAssertEqual(supportedEmptyResponse.headers.first(name: .contentLength), "0")
+        XCTAssertEqual(supportedEmptyResponse.body?.string, nil)
         
         await app.server.shutdown()
     }
