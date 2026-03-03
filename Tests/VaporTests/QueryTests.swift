@@ -312,6 +312,35 @@ final class QueryTests: XCTestCase {
         XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
     }
     
+    func testHas() throws {
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "/"),
+            on: app.eventLoopGroup.next()
+        )
+
+        // Key with value
+        req.url = .init(path: "/foo?bar=baz&page=1")
+        XCTAssertTrue(req.query.has("bar"))
+        XCTAssertTrue(req.query.has("page"))
+        XCTAssertFalse(req.query.has("missing"))
+
+        // No query string
+        req.url = .init(path: "/foo")
+        XCTAssertFalse(req.query.has("bar"))
+
+        // Nested key path
+        req.url = .init(path: "/foo?user[name]=Vapor")
+        XCTAssertTrue(req.query.has("user", "name"))
+        XCTAssertFalse(req.query.has("user", "age"))
+
+        // Array key path overload
+        req.url = .init(path: "/foo?a=1")
+        XCTAssertTrue(req.query.has(["a"]))
+        XCTAssertFalse(req.query.has(["b"]))
+    }
+
     func testNotCrashingWhenUnkeyedContainerIsAtEnd() {
         struct Query: Decodable {
             let closedRange: ClosedRange<Double>

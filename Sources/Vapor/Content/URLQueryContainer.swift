@@ -79,6 +79,26 @@ extension URLQueryContainer {
         try self.get(D.self, path: path.map(\.codingKey))
     }
 
+    // MARK: - Existence check
+
+    /// Check whether a value exists at the given key path in the query string.
+    ///
+    ///     if req.query.has("page") {
+    ///         let page = try req.query.get(Int.self, at: "page")
+    ///     }
+    public func has(_ path: CodingKeyRepresentable...) -> Bool {
+        self.has(path)
+    }
+
+    /// Check whether a value exists at the given key path in the query string.
+    ///
+    ///     if req.query.has(["user", "name"]) {
+    ///         let name = try req.query.get(String.self, at: ["user", "name"])
+    ///     }
+    public func has(_ path: [CodingKeyRepresentable]) -> Bool {
+        self[String.self, at: path] != nil
+    }
+
     // MARK: Private
 
     /// Execute a "get at coding key path" operation.
