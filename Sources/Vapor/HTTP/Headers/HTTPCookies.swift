@@ -6,9 +6,7 @@ extension HTTPHeaders {
     /// This accesses the `"Cookie"` header.
     public var cookie: HTTPCookies? {
         get {
-            self.parseDirectives(name: .cookie).first.map {
-                HTTPCookies(directives: $0)
-            }
+            HTTPCookies(directives: self.parseDirectives(name: .cookie).flatMap { $0 })
         }
         set {
             if let cookieHeader = newValue?.cookieHeader {

@@ -1,5 +1,8 @@
 name: Generate Sponsors README
 on: workflow_dispatch
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   deploy:
