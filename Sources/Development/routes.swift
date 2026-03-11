@@ -12,6 +12,17 @@ struct Creds: Content {
 }
 
 public func routes(_ app: Application) throws {
+    // Macro routes — auto-registered via the enclosing function's `app` parameter
+    @GET("api", "macros", "top-level")
+    func topLevelGet(req: Request) async throws -> String {
+        return "top-level GET route"
+    }
+
+    @POST("api", "macros", "top-level", Int.self)
+    func topLevelPost(req: Request, id: Int) async throws -> String {
+        return "top-level POST route with id: \(id)"
+    }
+
     app.on(.get, "ping") { req -> StaticString in
         return "123" as StaticString
     }

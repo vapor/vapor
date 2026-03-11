@@ -7,37 +7,37 @@ public macro Controller() = #externalMacro(
     type: "ControllerMacro",
 )
 
-@attached(peer, names: arbitrary)
+@attached(peer, names: prefixed(_route_))
 public macro GET(_ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPGetMacro"
 )
 
-@attached(peer, names: arbitrary)
+@attached(peer, names: prefixed(_route_))
 public macro POST(_ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPPostMacro"
 )
 
-@attached(peer, names: arbitrary)
+@attached(peer, names: prefixed(_route_))
 public macro PUT(_ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPPutMacro"
 )
 
-@attached(peer, names: arbitrary)
+@attached(peer, names: prefixed(_route_))
 public macro DELETE(_ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPDeleteMacro"
 )
 
-@attached(peer, names: arbitrary)
+@attached(peer, names: prefixed(_route_))
 public macro PATCH(_ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPPatchMacro"
 )
 
-@attached(peer, names: arbitrary)
+@attached(peer, names: prefixed(_route_))
 public macro HTTP(_ method: HTTPRequest.Method, _ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "HTTPMethodMacro"
