@@ -42,3 +42,9 @@ public macro HTTP(on routeBuilder: (any RoutesBuilder)? = nil, _ method: HTTPReq
     module: "VaporMacrosPlugin",
     type: "HTTPMethodMacro"
 )
+
+@attached(peer)
+public macro AuthMiddleware(_ authenticationType: Any.Type, _ middleware: Any...) = #externalMacro(
+    module: "VaporMacrosPlugin",
+    type: "AuthMiddlewareMacro"
+)

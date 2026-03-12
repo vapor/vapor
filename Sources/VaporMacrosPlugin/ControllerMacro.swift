@@ -14,7 +14,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
 
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingExtensionsOf type: some TypeSyntaxProtocol, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax] {
         // Find all functions with route macros
-        let functions = try declaration.memberBlock.members.compactMap { member -> (FunctionDeclSyntax, String, [String])? in
+        let functions = try declaration.memberBlock.members.compactMap { member -> (FunctionDeclSyntax, String, [String], [String])? in
             guard let funcDecl = member.decl.as(FunctionDeclSyntax.self) else {
                 return nil
             }
@@ -69,7 +69,15 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     }
                 }
 
-                return (funcDecl, httpMethod, pathComponents)
+                // Check for @AuthMiddleware
+                let middlewareExprs: [String] = {
+                    guard let authInfo = HTTPMethodMacroUtilities.parseAuthMiddleware(from: funcDecl) else {
+                        return []
+                    }
+                    return authInfo.middlewares
+                }()
+
+                return (funcDecl, httpMethod, pathComponents, middlewareExprs)
             }
 
             return nil
@@ -78,7 +86,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
         // Generate the RouteCollection boot function
         var registrationBody = ""
 
-        for (functionDeclaration, method, pathComponents) in functions {
+        for (functionDeclaration, method, pathComponents, middlewares) in functions {
             let path = pathComponents.joined(separator: "\", \"")
             let methodLower = method.lowercased()
 
@@ -89,12 +97,23 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
             } else {
                 "(\"\(path)\")"
             }
-            registrationBody += """
-            routes.\(methodLower)\(pathRegistration) { req async throws -> Response in
-                try await self.\(functionName)(req: req)
+
+            if middlewares.isEmpty {
+                registrationBody += """
+                routes.\(methodLower)\(pathRegistration) { req async throws -> Response in
+                    try await self.\(functionName)(req: req)
+                }
+
+                """
+            } else {
+                let middlewareList = middlewares.joined(separator: ", ")
+                registrationBody += """
+                routes.grouped(\(middlewareList)).\(methodLower)\(pathRegistration) { req async throws -> Response in
+                    try await self.\(functionName)(req: req)
+                }
+
+                """
             }
-            
-            """
         }
 
         let registrationFunc: DeclSyntax = """
