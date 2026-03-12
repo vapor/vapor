@@ -42,3 +42,9 @@ public macro HTTP(_ method: HTTPRequest.Method, _ pathComponents: Any...) = #ext
     module: "VaporMacrosPlugin",
     type: "HTTPMethodMacro"
 )
+
+@attached(peer)
+public macro AuthMiddleware(_ authenticationType: Any.Type, _ middleware: Any...) = #externalMacro(
+    module: "VaporMacrosPlugin",
+    type: "AuthMiddlewareMacro"
+)
