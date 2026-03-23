@@ -254,53 +254,35 @@ struct MiddlewareTests {
         }
     }
     
+    @Test("Test Metrics Middleware")
     func testMetricsMiddleware() async throws {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
-        
-        app.grouped(
-            MetricsMiddleware()
-        ).get("testMetrics") { req -> String in
-            return "done"
-        }
-
-        try await app.server.start(address: .hostname("127.0.0.1", port: 0))
-
-        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
-        let response = try await app.client.get("http://localhost:\(port)/testMetrics")
-
-        XCTAssertEqual(response.status, .ok)
-        XCTAssertEqual(response.body?.string, "done")
-        
-        let httpServerActiveRequests = try metrics.expectMeter(
-            "http.server.active_requests",
-            [
-                ("http.request.method", "GET"),
-                ("url.scheme", "undefined"),
-            ]
-        )
-        XCTAssertEqual(httpServerActiveRequests.lastValue, 0.0)
-        
-        let httpServerRequestBodySize =  try metrics.expectRecorder(
-            "http.server.request.body.size",
-            [
-                ("http.request.method", "GET"),
-                ("url.scheme", "undefined"),
-                ("error.type", "undefined"),
-                ("http.response.status_code", "200"),
-                ("http.route", "/testMetrics"),
-                ("network.protocol.name", "http"),
-                ("network.protocol.version", "1.1"),
-            ]
-        )
-        XCTAssertEqual(httpServerRequestBodySize.lastValue, 0.0)
-        
-        XCTAssertNoThrow(
-            try metrics.expectTimer(
-                "http.server.request.duration",
+        try await withApp { app in
+            app.grouped(
+                MetricsMiddleware()
+            ).get("testMetrics") { req -> String in
+                return "done"
+            }
+            let response = try await app.testing().sendRequest(.get, "/testMetrics")
+            
+            #expect(response.status == .ok)
+            #expect(response.body.string == "done")
+            
+            let httpServerActiveRequests = try metrics.expectMeter(
+                "http.server.active_requests",
                 [
                     ("http.request.method", "GET"),
-                    ("url.scheme", "undefined"),
+                    ("url.scheme", "http"),
+                ]
+            )
+            #expect(httpServerActiveRequests.lastValue == 0.0)
+            
+            let httpServerRequestBodySize =  try metrics.expectRecorder(
+                "http.server.request.body.size",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
                     ("error.type", "undefined"),
                     ("http.response.status_code", "200"),
                     ("http.route", "/testMetrics"),
@@ -308,23 +290,37 @@ struct MiddlewareTests {
                     ("network.protocol.version", "1.1"),
                 ]
             )
-        )
-        
-        let httpServerResponseBodySize =  try metrics.expectRecorder(
-            "http.server.response.body.size",
-            [
-                ("http.request.method", "GET"),
-                ("url.scheme", "undefined"),
-                ("error.type", "undefined"),
-                ("http.response.status_code", "200"),
-                ("http.route", "/testMetrics"),
-                ("network.protocol.name", "http"),
-                ("network.protocol.version", "1.1"),
-            ]
-        )
-        XCTAssertEqual(httpServerResponseBodySize.lastValue, 4.0)
-
-        await app.server.shutdown()
+            #expect(httpServerRequestBodySize.lastValue == 0.0)
+            
+            #expect(throws: Never.self) {
+                try metrics.expectTimer(
+                    "http.server.request.duration",
+                    [
+                        ("http.request.method", "GET"),
+                        ("url.scheme", "http"),
+                        ("error.type", "undefined"),
+                        ("http.response.status_code", "200"),
+                        ("http.route", "/testMetrics"),
+                        ("network.protocol.name", "http"),
+                        ("network.protocol.version", "1.1"),
+                    ]
+                )
+            }
+            
+            let httpServerResponseBodySize =  try metrics.expectRecorder(
+                "http.server.response.body.size",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                    ("error.type", "undefined"),
+                    ("http.response.status_code", "200"),
+                    ("http.route", "/testMetrics"),
+                    ("network.protocol.name", "http"),
+                    ("network.protocol.version", "1.1"),
+                ]
+            )
+            #expect(httpServerResponseBodySize.lastValue == 4.0)
+        }
     }
     
 
