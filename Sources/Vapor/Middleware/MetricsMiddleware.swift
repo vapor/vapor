@@ -53,6 +53,9 @@ public final class MetricsMiddleware: Middleware {
         } catch {
             responseOrError = .error(error)
             errorType = "\(type(of: error))"
+            if let error = error as? any AbortError {
+                httpResponseStatusCode = error.status.code.description
+            }
         }
         
         // http.server.request.body.size

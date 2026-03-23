@@ -259,9 +259,8 @@ struct MiddlewareTests {
         let metrics = TestMetrics()
         MetricsSystem.bootstrapInternal(metrics)
         try await withApp { app in
-            app.grouped(
-                MetricsMiddleware()
-            ).get("testMetrics") { req -> String in
+            app.middleware.use(MetricsMiddleware())
+            app.get("testMetrics") { req -> String in
                 return "done"
             }
             let response = try await app.testing().sendRequest(.get, "/testMetrics")
@@ -320,9 +319,25 @@ struct MiddlewareTests {
                 ]
             )
             #expect(httpServerResponseBodySize.lastValue == 4.0)
+            
+            // Test 404 Rewrites Path for Metrics to Avoid DOS Attack
+            let notFoundResponse = try await app.testing().sendRequest(.get, "/not/found")
+            #expect(notFoundResponse.status == .notFound)
+            let httpServerRequestDuration = try metrics.expectTimer(
+                "http.server.request.duration",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                    ("error.type", "RouteNotFound"),
+                    ("http.response.status_code", "404"),
+                    ("http.route", "vapor_route_undefined"),
+                    ("network.protocol.name", "http"),
+                    ("network.protocol.version", "1.1"),
+                ]
+            )
+            #expect(httpServerRequestDuration.values.count == 1)
         }
     }
-    
 
     @Test("Test Tracing Middleware", .withTracer(InMemoryTracer()))
     func testTracingMiddleware() async throws {
