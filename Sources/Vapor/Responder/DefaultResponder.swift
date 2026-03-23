@@ -1,7 +1,6 @@
 import Foundation
 import HTTPTypes
 import Logging
-import Metrics
 import NIOCore
 import RoutingKit
 
@@ -12,7 +11,6 @@ package struct DefaultResponder: Responder {
     /// of those after `init()`.
     private let router: TrieRouter<CachedRoute>
     private let notFoundResponder: any Responder
-    private let reportMetrics: Bool
 
     private struct CachedRoute {
         let route: Route
@@ -20,7 +18,7 @@ package struct DefaultResponder: Responder {
     }
 
     /// Creates a new ``DefaultResponder``.
-    package init(routes: Routes, middleware: [any Middleware] = [], reportMetrics: Bool = true) {
+    package init(routes: Routes, middleware: [any Middleware] = []) {
         let config = TrieRouter<CachedRoute>.Configuration(
             isCaseInsensitive: routes.caseInsensitive
         )
@@ -45,45 +43,15 @@ package struct DefaultResponder: Responder {
         }
         self.router = routerBuilder.build()
         self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
-        self.reportMetrics = reportMetrics
     }
 
     // See `Responder.respond(to:)`
     package func respond(to request: Request) async throws -> Response {
-        // per https://github.com/swiftlang/swift-testing/blob/swift-6.1-RELEASE/Sources/Testing/Events/TimeValue.swift#L113
-        let epochDuration = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
-        let startTime = UInt64(epochDuration.components.seconds * 1_000_000_000 + (epochDuration.components.attoseconds / 1_000_000_000))
-
-        let response: Response
-        do {
-            if let cachedRoute = self.getRoute(for: request) {
-                request.route = cachedRoute.route
-                response = try await cachedRoute.responder.respond(to: request)
-            } else {
-                response = try await self.notFoundResponder.respond(to: request)
-            }
-            let status = response.status
-            if self.reportMetrics {
-                let now = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
-                let nowNanos = UInt64(now.components.seconds * 1_000_000_000 + (now.components.attoseconds / 1_000_000_000))
-                self.updateMetrics(
-                    for: request,
-                    elapsedTime: nowNanos - startTime,
-                    statusCode: status.code
-                )
-            }
-            return response
-        } catch {
-            let now = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
-            let nowNanos = UInt64(now.components.seconds * 1_000_000_000 + (now.components.attoseconds / 1_000_000_000))
-            if self.reportMetrics {
-                self.updateMetrics(
-                    for: request,
-                    elapsedTime: nowNanos - startTime,
-                    statusCode: 500
-                )
-            }
-            throw error
+        if let cachedRoute = self.getRoute(for: request) {
+            request.route = cachedRoute.route
+            return try await cachedRoute.responder.respond(to: request)
+        } else {
+            return try await self.notFoundResponder.respond(to: request)
         }
     }
 
@@ -108,43 +76,6 @@ package struct DefaultResponder: Responder {
             path: [method.rawValue] + pathComponents,
             parameters: &request.parameters
         )
-    }
-
-    /// Records the requests metrics.
-    private func updateMetrics(
-        for request: Request,
-        elapsedTime: UInt64,
-        statusCode: Int
-    ) {
-        let pathForMetrics: String
-        let methodForMetrics: String
-        if let route = request.route {
-            // We don't use route.description here to avoid duplicating the method in the path
-            pathForMetrics = "/\(route.path.map { "\($0)" }.joined(separator: "/"))"
-            methodForMetrics = request.method.rawValue
-        } else {
-            // If the route is undefined (i.e. a 404 and not something like /users/:userID
-            // We rewrite the path and the method to undefined to avoid DOSing the
-            // application and any downstream metrics systems. Otherwise an attacker
-            // could spam the service with unlimited requests and exhaust the system
-            // with unlimited timers/counters
-            pathForMetrics = "vapor_route_undefined"
-            methodForMetrics = "undefined"
-        }
-        let dimensions = [
-            ("method", methodForMetrics),
-            ("path", pathForMetrics),
-            ("status", statusCode.description),
-        ]
-        Counter(label: "http_requests_total", dimensions: dimensions).increment()
-        if statusCode >= 500 {
-            Counter(label: "http_request_errors_total", dimensions: dimensions).increment()
-        }
-        Timer(
-            label: "http_request_duration_seconds",
-            dimensions: dimensions,
-            preferredDisplayUnit: .seconds
-        ).recordNanoseconds(elapsedTime)
     }
 }
 
