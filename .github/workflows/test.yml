@@ -57,7 +57,6 @@ jobs:
     permissions:
       contents: read
     if: ${{ !(github.event.pull_request.draft || false) }}
-    runs-on: ubuntu-latest
     container: swift:6.2
     steps:
       - name: Check out Vapor
