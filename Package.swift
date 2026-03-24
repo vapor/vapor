@@ -177,6 +177,7 @@ let package = Package(
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "MetricsTestKit", package: "swift-metrics"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -189,6 +190,7 @@ let package = Package(
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "MetricsTestKit", package: "swift-metrics"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),
