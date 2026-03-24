@@ -42,14 +42,20 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         // 2. Build Vapor request
         let peerCerts = try? await NIOHTTPServer.connectionContext.peerCertificateChain
 
+        // HTTPRequest.path includes the query string (e.g. "/foo?bar=baz")
+        let rawPath = request.path ?? "/"
+        let pathAndQuery = rawPath.split(separator: "?", maxSplits: 1)
+        let path = String(pathAndQuery[0])
+        let query: String? = pathAndQuery.count > 1 ? String(pathAndQuery[1]) : nil
+
         let vaporRequest = Request(
             application: self.application,
             method: request.method,
             url: URI(
                 scheme: request.scheme,
                 host: request.authority,
-                path: request.path ?? "/",
-                query: nil
+                path: path,
+                query: query
             ),
             version: .init(major: 1, minor: 1),
             headersNoUpdate: request.headerFields,
