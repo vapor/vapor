@@ -165,7 +165,7 @@ let package = Package(
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
-                .product(name: "HTTPServer", package: "swift-http-server"),
+                .product(name: "NIOHTTPServer", package: "swift-http-server"),
             ],
             swiftSettings: swiftSettings
         ),
