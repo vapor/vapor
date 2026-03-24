@@ -145,7 +145,7 @@ struct ClientTests {
                 $0[$1.name.canonicalName] = $1.value
             }
 
-            guard let json:[String:Any] = try await JSONSerialization.jsonObject(with: req.newBody.data!) as? [String:Any] else {
+            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
                 throw Abort(.badRequest)
             }
 
