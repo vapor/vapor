@@ -5,10 +5,10 @@ import CompilerPluginSupport
 let package = Package(
     name: "vapor",
     platforms: [
-        .macOS(.v15),
-        .iOS(.v18),
-        .tvOS(.v18),
-        .watchOS(.v11),
+        .macOS("26.2"),
+        .iOS("26.2"),
+        .tvOS("26.2"),
+        .watchOS("26.2"),
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
