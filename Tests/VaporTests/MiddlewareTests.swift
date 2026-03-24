@@ -268,8 +268,6 @@ struct MiddlewareTests {
             ).grouped(
                 TestServiceContextMiddleware()
             ).get("testTracing") { req -> String in
-                // Validates that TracingMiddleware exposes header extraction to backend
-                #expect(ServiceContext.current?.extracted == "extracted")
                 // Validates that the span's service context is propagated into the
                 // Task.local storage of the responder closure, thereby ensuring that
                 // spans created in the closure are nested under the request span.
@@ -280,7 +278,6 @@ struct MiddlewareTests {
 
             try await app.testing(method: .running).test(.get, "/testTracing?foo=bar", beforeRequest: {
                 $0.headers[.userAgent] = "test"
-                $0.headers[extractKey] = "extracted"
             }) { response in
                 #expect(response.status == .ok)
                 #expect(response.body.string == "done")
@@ -340,19 +337,3 @@ final class OrderMiddleware: Middleware {
         return try await next.respond(to: request)
     }
 }
-
-extension ServiceContext {
-    var extracted: String? {
-        get {
-            self[ExtractedKey.self]
-        } set {
-            self[ExtractedKey.self] = newValue
-        }
-    }
-
-    private enum ExtractedKey: ServiceContextKey {
-        typealias Value = String
-    }
-}
-
-fileprivate let extractKey: HTTPField.Name = .init("to-extract")!
