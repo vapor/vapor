@@ -32,7 +32,7 @@ package struct DefaultResponder: Responder {
                 route: route,
                 responder: middleware.makeResponder(chainingTo: route.responder)
             )
-            
+
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
@@ -40,7 +40,7 @@ package struct DefaultResponder: Responder {
                 default: true
                 }
             }
-            
+
             routerBuilder.register(cached, at: [.constant(route.method.rawValue)] + path)
         }
         self.router = routerBuilder.build()
@@ -86,13 +86,13 @@ package struct DefaultResponder: Responder {
             throw error
         }
     }
-    
+
     /// Gets a `Route` from the underlying `TrieRouter`.
     private func getRoute(for request: Request) -> CachedRoute? {
         let pathComponents = request.url.path
             .split(separator: "/")
-            .map { String($0).removingPercentEncoding ?? String($0) }  
-        
+            .map { String($0).removingPercentEncoding ?? String($0) }
+
         // If it's a HEAD request and a HEAD route exists, return that route...
         if request.method == .head, let route = self.router.route(
             path: [HTTPRequest.Method.head.rawValue] + pathComponents,
@@ -154,16 +154,16 @@ private struct NotFoundResponder: Responder {
     }
 }
 
-struct RouteNotFound: Error {}
+public struct RouteNotFound: Error {}
 
-extension RouteNotFound: AbortError {    
-    var status: HTTPResponse.Status {
+extension RouteNotFound: AbortError {
+    public var status: HTTPResponse.Status {
         .notFound
     }
 }
 
 extension RouteNotFound: DebuggableError {
-    var logLevel: Logger.Level { 
+    public var logLevel: Logger.Level {
         .debug
     }
 }

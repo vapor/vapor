@@ -291,6 +291,46 @@ struct AuthenticationTests {
         }
     }
 
+    /// A regression test ensuring that if no auth cookie is provided, the `AsyncSessionAuthenticator`
+    /// does not end up creating an empty session and sending back `set-cookie`.
+    /// This is a valid use case when session-based auth is not required.
+    /// In the other test above (testSessionAuthentication), the `set-cookie` header is correctly omitted
+    /// because the guard middleware throws an error, which skips the `addCookies` method in
+    /// the `SessionsMiddleware`.
+    @Test("Test Session Authentication Does Not Create Session When No Cookie Provided", .bug("https://github.com/vapor/vapor/pull/3372"))
+    func testSessionNotCreatedWhenNoCookieProvided() async throws {
+        struct Test: Authenticatable, SessionAuthenticatable {
+            var sessionID: String
+        }
+
+        struct TestSessionAuthenticator: SessionAuthenticator {
+            typealias User = Test
+
+            func authenticate(sessionID: String, for request: Request) async throws {
+                request.auth.login(Test(sessionID: sessionID))
+            }
+        }
+
+        struct UserInfo: Content {
+            var name: String
+        }
+
+        try await withApp { app in
+            app.routes.grouped([
+                app.sessions.middleware,
+                TestSessionAuthenticator()
+            ]).get("test") { req -> UserInfo in
+                UserInfo(name: req.auth.get(Test.self)?.sessionID ?? "none")
+            }
+
+            try await app.testing().test(.get, "/test") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == #"{"name":"none"}"#)
+                #expect(res.headers[.setCookie] == nil)
+            }
+        }
+    }
+
     @Test("Test Middleware Config with Existential")
     func middlewareConfigExistential() async {
         struct Test: Authenticatable {
