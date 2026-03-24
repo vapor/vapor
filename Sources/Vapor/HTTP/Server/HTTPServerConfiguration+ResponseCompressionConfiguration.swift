@@ -1,5 +1,3 @@
-import HTTPServerNew
-
 extension ServerConfiguration {
     /// Supported HTTP response compression options.
     public struct ResponseCompressionConfiguration: Sendable {
