@@ -1,6 +1,7 @@
 import Configuration
 import Vapor
 import NIOCore
+import NIOConcurrencyHelpers
 @testable import CoreMetrics
 @testable import Instrumentation
 
@@ -72,21 +73,29 @@ public func withApp<T>(
 public func withRunningApp<T>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
     return try await withThrowingTaskGroup(of: Void.self) { group in
         app.serverConfiguration.address = .hostname(hostname, port: portToUse)
-        let portPromise = Promise<Int>()
-        app.serverConfiguration.onServerRunning = { channel in
-            guard let port = channel.localAddress?.port else {
-                portPromise.fail(TestErrors.portNotSet)
-                return
-            }
-            portPromise.complete(port)
-        }
         group.addTask {
-            #warning("We need to handle this throwing and bubble the error up rather than hanging")
             try await app.server.start()
         }
 
+        // Give the server a moment to bind and populate the address
+        // The adapter's start() populates sharedNewAddress before returning
+        // but since it's in a task group, we need to poll for it
+        var port: Int?
+        for _ in 0..<100 {
+            if let address = app.sharedNewAddress.withLockedValue({ $0 }), let p = address.port {
+                port = p
+                break
+            }
+            try await Task.sleep(for: .milliseconds(50))
+        }
+
+        guard let port else {
+            try await app.server.shutdown()
+            throw TestErrors.portNotSet
+        }
+
         do {
-            let result = try await block(try await portPromise.wait())
+            let result = try await block(port)
             try await app.server.shutdown()
             return result
         } catch {
