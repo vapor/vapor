@@ -372,7 +372,7 @@ public final class Request: CustomStringConvertible, Sendable {
         for await var chunk in stream {
             collected.writeBuffer(&chunk)
             guard collected.readableBytes <= maxSize else {
-                throw Abort(.payloadTooLarge)
+                throw Abort(.contentTooLarge)
             }
         }
         return collected

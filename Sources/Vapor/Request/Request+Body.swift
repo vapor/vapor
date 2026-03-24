@@ -1,6 +1,7 @@
 import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers
+import HTTPTypes
 
 extension Request {
     public struct NewBody: Sendable {
@@ -14,7 +15,7 @@ extension Request {
                 for await var chunk in stream {
                     collected.writeBuffer(&chunk)
                     guard collected.readableBytes <= maxBodySize else {
-                        throw Abort(.payloadTooLarge)
+                        throw Abort(.contentTooLarge)
                     }
                 }
                 return collected
