@@ -284,9 +284,9 @@ struct HTTPHeaderTests {
     @Test("Test Multiple Cookie Headers", .bug("https://github.com/vapor/vapor/issues/3435"))
     func testMultipleCookieHeaders() throws {
         var headers = HTTPFields()
-        headers[.cookie] = "a=1"
-        headers[.cookie] = "b=2"
-        headers[.cookie] = "c=3"
+        headers.append(HTTPField(name: .cookie, value: "a=1"))
+        headers.append(HTTPField(name: .cookie, value: "b=2"))
+        headers.append(HTTPField(name: .cookie, value: "c=3"))
         #expect(headers.cookie?["a"]?.string == "1")
         #expect(headers.cookie?["b"]?.string == "2")
         #expect(headers.cookie?["c"]?.string == "3")
