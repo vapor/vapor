@@ -16,7 +16,7 @@ extension SessionAuthenticator {
             return try await next.respond(to: request)
         }
 
-        if let aID = request.session.authenticated(User.self) {
+        if request.hasSession, let aID = request.session.authenticated(User.self) {
             // try to find user with id from session
             try await self.authenticate(sessionID: aID, for: request)
         }
