@@ -1,5 +1,4 @@
 import NIOHTTPCompression
-import HTTPServerNew
 
 extension ServerConfiguration {
     /// Supported HTTP decompression options.

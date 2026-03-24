@@ -1,5 +1,3 @@
-import HTTPServerNew
-
 public protocol Server: Sendable {    
     /// Start the server with its default configuration, listening over a regular TCP socket.
     /// - Throws: An error if the server could not be started.
