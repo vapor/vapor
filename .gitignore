@@ -11,8 +11,10 @@ Tests/LinuxMain.swift
 .bash_history
 .cache/
 .lldb
+.claude/
 
 # API Docs Generation
 generate-package-api-docs.swift
 public/
 theme-settings.json
+
