@@ -1,19 +1,3 @@
-// ===----------------------------------------------------------------------===##
-//
-//  This source file is part of the Vapor open source project
-//
-//  Copyright (c) 2017-2021 Vapor project authors
-//  Licensed under MIT
-//
-//  See LICENSE for license information
-//
-//  SPDX-License-Identifier: MIT
-//
-// ===----------------------------------------------------------------------===##
-// This was adapted from Swift Metrics's TestMetrics.swift code.
-// The license for the original work is reproduced below. See NOTICES.txt for
-// more.
-
 import Metrics
 import Foundation
 import NIOConcurrencyHelpers
