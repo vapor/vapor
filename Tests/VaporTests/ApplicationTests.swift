@@ -165,7 +165,7 @@ struct ApplicationTests {
                 return config
             }
 
-            // start() returns after the server is listening and sharedNewAddress is populated
+            // start() now only returns once the server is listening and we should have a SocketAddress we're bound to
             try await app.server.start()
 
             #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
