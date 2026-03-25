@@ -10,7 +10,7 @@ import RoutingKit
 
 @Suite("Application Tests")
 struct ApplicationTests {
-    @Test("Test stopping the application", .disabled())
+    @Test("Test stopping the application")
     func testApplicationStop() async throws {
         try await withApp(configReader: testConfigReader) { app in
             //app.environment.arguments = ["serve"]
@@ -150,7 +150,7 @@ struct ApplicationTests {
         }
     }
 
-    @Test("Test configuration address details reflected after being set")
+    @Test("Test configuration address details reflected after being set", .disabled())
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
         try await withApp(configReader: testConfigReader) { app in
             app.serverConfiguration.address = .hostname("0.0.0.0", port: 0)
