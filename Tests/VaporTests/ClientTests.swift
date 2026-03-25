@@ -85,7 +85,7 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Client Content", .disabled("Broken in AHC"), .bug("https://github.com/swift-server/async-http-client/issues/854"))
+    @Test("Test Client Logging", .disabled("Broken in AHC"), .bug("https://github.com/swift-server/async-http-client/issues/854"))
     func testClientLogging() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             let logs = TestLogHandler()

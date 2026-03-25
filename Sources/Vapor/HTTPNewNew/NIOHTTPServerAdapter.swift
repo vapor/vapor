@@ -61,7 +61,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         // Wait for the listening address to become available and store it
         let address = try await nioServer.listeningAddress
         self.application.sharedNewAddress.withLockedValue {
-            $0 = try? NIOCore.SocketAddress(ipAddress: address.host, port: address.port)
+            $0 = try? NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
         }
         self.application.logger.notice("Server started on \(address.host):\(address.port)")
     }

@@ -150,18 +150,10 @@ struct ApplicationTests {
         }
     }
 
-    @Test("Test configuration address details reflected after being set", .disabled())
+    @Test("Test configuration address details reflected after being set")
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
         try await withApp(configReader: testConfigReader) { app in
             app.serverConfiguration.address = .hostname("0.0.0.0", port: 0)
-            let portPromise = Promise<Int>()
-            app.serverConfiguration.onServerRunning = { channel in
-                guard let port = channel.localAddress?.port else {
-                    portPromise.fail(TestErrors.portNotSet)
-                    return
-                }
-                portPromise.complete(port)
-            }
 
             struct AddressConfig: Content {
                 let hostname: String?
@@ -173,37 +165,30 @@ struct ApplicationTests {
                 return config
             }
 
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask {
-                    //app.environment.arguments = ["serve"]
-                    await #expect(throws: Never.self) {
-                        try await app.startup()
-                    }
-                }
+            // start() returns after the server is listening and sharedNewAddress is populated
+            try await app.server.start()
 
-                let waitedPort = try await portPromise.wait()
-                #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
-                #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
-                if case let .hostname(_, port) = app.serverConfiguration.address {
-                    #expect(0 == port)
-                } else {
-                    Issue.record("Bind address not right")
-                    return
-                }
-
-                let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
-                #expect(waitedPort == port)
-                #expect(port > 0)
-                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
-                let body = try await response.body.collect(upTo: 64)
-                let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
-                    .decode(AddressConfig.self, from: body, headers: [:])
-
-                #expect(returnedConfig.hostname == "0.0.0.0")
-                #expect(returnedConfig.port == port)
-
+            #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
+            #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
+            if case let .hostname(_, port) = app.serverConfiguration.address {
+                #expect(0 == port)
+            } else {
+                Issue.record("Bind address not right")
                 try await app.server.shutdown()
+                return
             }
+
+            let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+            #expect(port > 0)
+            let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+            let body = try await response.body.collect(upTo: 64)
+            let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
+                .decode(AddressConfig.self, from: body, headers: [:])
+
+            #expect(returnedConfig.hostname == "0.0.0.0")
+            #expect(returnedConfig.port == port)
+
+            try await app.server.shutdown()
         }
     }
 
