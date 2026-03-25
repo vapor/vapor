@@ -1,13 +1,6 @@
-import NIOCore
-import NIOPosix
 import NIOConcurrencyHelpers
 
 extension Application {
-    public var running: Running? {
-        get { self.core.storage.running.current.withLockedValue { $0 } }
-        set { self.core.storage.running.current.withLockedValue { $0 = newValue } }
-    }
-
     public var directory: DirectoryConfiguration {
         get { self.core.storage.directory.withLockedValue { $0 } }
         set { self.core.storage.directory.withLockedValue { $0 = newValue } }
@@ -19,11 +12,9 @@ extension Application {
 
     public struct Core: Sendable {
         final class Storage: Sendable {
-            let running: Application.Running.Storage
             let directory: NIOLockedValueBox<DirectoryConfiguration>
 
             init() {
-                self.running = .init()
                 self.directory = .init(.detect())
             }
         }

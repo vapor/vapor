@@ -2,6 +2,7 @@ import Configuration
 import Vapor
 import NIOCore
 import NIOConcurrencyHelpers
+import ServiceLifecycle
 @testable import CoreMetrics
 @testable import Instrumentation
 
@@ -70,37 +71,29 @@ public func withApp<T>(
 ///    }
 /// }
 /// ```
-public func withRunningApp<T>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
-    return try await withThrowingTaskGroup(of: Void.self) { group in
-        app.serverConfiguration.address = .hostname(hostname, port: portToUse)
+public func withRunningApp<T: Sendable>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
+    app.serverConfiguration.address = .hostname(hostname, port: portToUse)
+    try await app.boot()
+
+    return try await withThrowingTaskGroup(of: T?.self) { group in
+        // Run the server in a child task
         group.addTask {
-            try await app.server.start()
+            try await app.server.run()
+            return nil
         }
 
-        // Give the server a moment to bind and populate the address
-        // The adapter's start() populates sharedNewAddress before returning
-        // but since it's in a task group, we need to poll for it
-        var port: Int?
-        for _ in 0..<100 {
-            if let address = app.sharedNewAddress.withLockedValue({ $0 }), let p = address.port {
-                port = p
-                break
-            }
-            try await Task.sleep(for: .milliseconds(50))
-        }
-
-        guard let port else {
-            try await app.server.shutdown()
+        // Wait for the server to bind and report its address
+        let address = try await app.server.listeningAddress
+        guard let port = address.port else {
+            group.cancelAll()
             throw TestErrors.portNotSet
         }
 
-        do {
-            let result = try await block(port)
-            try await app.server.shutdown()
-            return result
-        } catch {
-            try? await app.server.shutdown()
-            throw error
-        }
-    }
+        // Run the test block
+        let result = try await block(port)
+
+        // Cancel the server task (triggers graceful shutdown)
+        group.cancelAll()
+        return result
+    }!
 }

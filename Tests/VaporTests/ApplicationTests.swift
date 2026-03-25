@@ -3,6 +3,7 @@ import AsyncHTTPClient
 import NIOCore
 import NIOEmbedded
 import NIOConcurrencyHelpers
+import ServiceLifecycle
 import Testing
 import VaporTesting
 import HTTPTypes
@@ -13,15 +14,16 @@ struct ApplicationTests {
     @Test("Test stopping the application")
     func testApplicationStop() async throws {
         try await withApp(configReader: testConfigReader) { app in
-            //app.environment.arguments = ["serve"]
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            try await app.startup()
-            guard let running = app.running else {
-                Issue.record("app started without setting 'running'")
-                return
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await app.server.run()
+                }
+                // Wait for server to bind
+                _ = try await app.server.listeningAddress
+                // Cancel to trigger shutdown
+                group.cancelAll()
             }
-            running.stop()
-            try await running.onStop.get()
         }
     }
 
@@ -165,30 +167,34 @@ struct ApplicationTests {
                 return config
             }
 
-            // start() now only returns once the server is listening and we should have a SocketAddress we're bound to
-            try await app.server.start()
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await app.server.run()
+                }
 
-            #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
-            #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
-            if case let .hostname(_, port) = app.serverConfiguration.address {
-                #expect(0 == port)
-            } else {
-                Issue.record("Bind address not right")
-                try await app.server.shutdown()
-                return
+                let address = try await app.server.listeningAddress
+                #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
+                #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
+                if case let .hostname(_, port) = app.serverConfiguration.address {
+                    #expect(0 == port)
+                } else {
+                    Issue.record("Bind address not right")
+                    group.cancelAll()
+                    return
+                }
+
+                let port = try #require(address.port)
+                #expect(port > 0)
+                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let body = try await response.body.collect(upTo: 64)
+                let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
+                    .decode(AddressConfig.self, from: body, headers: [:])
+
+                #expect(returnedConfig.hostname == "0.0.0.0")
+                #expect(returnedConfig.port == port)
+
+                group.cancelAll()
             }
-
-            let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
-            #expect(port > 0)
-            let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
-            let body = try await response.body.collect(upTo: 64)
-            let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
-                .decode(AddressConfig.self, from: body, headers: [:])
-
-            #expect(returnedConfig.hostname == "0.0.0.0")
-            #expect(returnedConfig.port == port)
-
-            try await app.server.shutdown()
         }
     }
 

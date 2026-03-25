@@ -3,24 +3,21 @@ import NIOCore
 import NIOConcurrencyHelpers
 import Logging
 
-/// Adapts `NIOHTTPServer` to Vapor's `Server` protocol.
+/// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
 ///
-/// `NIOHTTPServer.serve()` is a blocking structured-concurrency call.
-/// This adapter launches it in an unstructured `Task` from `start()` and
-/// cancels that task from `shutdown()` as a workaround until Vapor's
-/// server lifecycle is refactored to use structured concurrency.
+/// `run()` blocks for the server's lifetime. Graceful shutdown propagates from the
+/// parent task (via `ServiceGroup` or task cancellation) through to
+/// `NIOHTTPServer.serve()`'s built-in `withGracefulShutdownHandler`.
 final class NIOHTTPServerAdapter: Server, Sendable {
     let application: Application
-    private let serveTask: NIOLockedValueBox<Task<Void, any Error>?>
-    private let server: NIOLockedValueBox<NIOHTTPServer?>
+    private let addressContinuation: NIOLockedValueBox<CheckedContinuation<SocketAddress, any Error>?>
 
     init(application: Application) {
         self.application = application
-        self.serveTask = .init(nil)
-        self.server = .init(nil)
+        self.addressContinuation = .init(nil)
     }
 
-    func start() async throws {
+    func run() async throws {
         let (hostname, port) = self.resolveBindAddress()
 
         let configuration = try NIOHTTPServerConfiguration(
@@ -33,7 +30,6 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             logger: self.application.logger,
             configuration: configuration
         )
-        self.server.withLockedValue { $0 = nioServer }
 
         let responder: any Responder
         switch self.application.responder {
@@ -52,28 +48,41 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             responder: responder
         )
 
-        // Launch serve() in an unstructured task so start() can return
-        let task = Task {
-            try await nioServer.serve(handler: handler)
-        }
-        self.serveTask.withLockedValue { $0 = task }
+        // Run serve() in a child task so we can await listeningAddress
+        // before serve() completes. The task group stays alive until serve() returns.
+        try await withThrowingDiscardingTaskGroup { group in
+            group.addTask {
+                try await nioServer.serve(handler: handler)
+            }
 
-        // Wait for the listening address to become available and store it
-        let address = try await nioServer.listeningAddress
-        self.application.sharedNewAddress.withLockedValue {
-            $0 = try? NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
+            // Wait for the server to bind, then publish the address
+            let address = try await nioServer.listeningAddress
+            let nioAddress = try NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
+            self.application.sharedNewAddress.withLockedValue { $0 = nioAddress }
+
+            // Fulfill any waiting listeningAddress callers
+            self.addressContinuation.withLockedValue { continuation in
+                continuation?.resume(returning: nioAddress)
+                continuation = nil
+            }
+
+            self.application.logger.notice("Server started on \(address.host):\(address.port)")
+            // The task group blocks here until serve() finishes
+            // (triggered by graceful shutdown or task cancellation)
         }
-        self.application.logger.notice("Server started on \(address.host):\(address.port)")
     }
 
-    func shutdown() async throws {
-        if let task = self.serveTask.withLockedValue({ $0 }) {
-            task.cancel()
-            // Wait for the serve task to finish
-            try? await task.value
-            self.serveTask.withLockedValue { $0 = nil }
+    var listeningAddress: SocketAddress {
+        get async throws {
+            // If the address is already available, return it immediately
+            if let address = self.application.sharedNewAddress.withLockedValue({ $0 }) {
+                return address
+            }
+            // Otherwise wait for it via continuation
+            return try await withCheckedThrowingContinuation { continuation in
+                self.addressContinuation.withLockedValue { $0 = continuation }
+            }
         }
-        self.server.withLockedValue { $0 = nil }
     }
 
     private func resolveBindAddress() -> (String, Int) {

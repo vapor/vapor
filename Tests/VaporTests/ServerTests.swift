@@ -1350,18 +1350,26 @@ extension Application {
 final class CustomServer: Server, Sendable {
     let didStart: NIOLockedValueBox<Bool>
     let didShutdown: NIOLockedValueBox<Bool>
-    
+
     init() {
         self.didStart = .init(false)
         self.didShutdown = .init(false)
     }
-    
-    func start() async throws {
+
+    func run() async throws {
         self.didStart.withLockedValue { $0 = true }
+        // Block until cancelled
+        try await withTaskCancellationHandler {
+            try await Task.sleep(for: .seconds(3600))
+        } onCancel: {
+            self.didShutdown.withLockedValue { $0 = true }
+        }
     }
-    
-    func shutdown() async throws {
-        self.didShutdown.withLockedValue { $0 = true }
+
+    var listeningAddress: SocketAddress {
+        get async throws {
+            try SocketAddress.makeAddressResolvingHost("127.0.0.1", port: 0)
+        }
     }
 }
 
