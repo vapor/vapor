@@ -254,10 +254,8 @@ struct MiddlewareTests {
         }
     }
     
-    @Test("Test Metrics Middleware")
+    @Test("Test Metrics Middleware", .withMetrics(TestMetrics()))
     func testMetricsMiddleware() async throws {
-        let metrics = TestMetrics()
-        MetricsSystem.bootstrapInternal(metrics)
         try await withApp { app in
             app.middleware.use(MetricsMiddleware())
             app.get("testMetrics") { req -> String in
