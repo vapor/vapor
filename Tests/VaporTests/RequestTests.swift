@@ -34,11 +34,16 @@ struct RequestTests {
                 $0.redirect(to: "foo", redirectType: .permanentPost)
             }
 
-            try await withRunningApp(app: app) { port throws in
-                #expect(try await httpClient.get("http://localhost:\(port)/redirect_normal").status == .seeOther)
-                #expect(try await httpClient.get("http://localhost:\(port)/redirect_permanent").status == .movedPermanently)
-                #expect(try await httpClient.post("http://localhost:\(port)/redirect_temporary").status == .temporaryRedirect)
-                #expect(try await httpClient.post("http://localhost:\(port)/redirect_permanentPost").status == .permanentRedirect)
+            do {
+                try await withRunningApp(app: app) { port throws in
+                    #expect(try await httpClient.get("http://localhost:\(port)/redirect_normal").status == .seeOther)
+                    #expect(try await httpClient.get("http://localhost:\(port)/redirect_permanent").status == .movedPermanently)
+                    #expect(try await httpClient.post("http://localhost:\(port)/redirect_temporary").status == .temporaryRedirect)
+                    #expect(try await httpClient.post("http://localhost:\(port)/redirect_permanentPost").status == .permanentRedirect)
+                }
+            } catch {
+                try await httpClient.shutdown()
+                throw error
             }
 
             try await httpClient.shutdown()
