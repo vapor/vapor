@@ -365,7 +365,7 @@ struct HTTPMethodMacroTests {
                     return try await result.encodeResponse(for: req)
                 }
 
-                app.on(.get, "api", "macros", "users", use: _route_getUsers)
+                let _register_getUsers: Void = app.on(.get, "api", "macros", "users", use: _route_getUsers)
             }
             """,
             macroSpecs: testMacros,
@@ -396,7 +396,7 @@ struct HTTPMethodMacroTests {
                     return try await result.encodeResponse(for: req)
                 }
 
-                app.on(.get, "api", "users", ":int0", use: _route_getUser)
+                let _register_getUser: Void = app.on(.get, "api", "users", ":int0", use: _route_getUser)
             }
             """,
             macroSpecs: testMacros,
@@ -426,7 +426,7 @@ struct HTTPMethodMacroTests {
                     return try await result.encodeResponse(for: req)
                 }
 
-                routes.on(.get, "api", "users", use: _route_getUsers)
+                let _register_getUsers: Void = routes.on(.get, "api", "users", use: _route_getUsers)
             }
             """,
             macroSpecs: testMacros,
@@ -497,7 +497,7 @@ struct HTTPMethodMacroTests {
                 return try await result.encodeResponse(for: req)
             }
 
-            app.on(.get, "api", "macros", "users", use: _route_getUsers)
+            let _register_getUsers: Void = app.on(.get, "api", "macros", "users", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -524,7 +524,7 @@ struct HTTPMethodMacroTests {
                 return try await result.encodeResponse(for: req)
             }
 
-            routes.on(.get, "api", "macros", "users", ":int0", use: _route_getUsers)
+            let _register_getUsers: Void = routes.on(.get, "api", "macros", "users", ":int0", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -551,7 +551,7 @@ struct HTTPMethodMacroTests {
                 return try await result.encodeResponse(for: req)
             }
 
-            app.on(.options, "api", "macros", "users", ":int0", use: _route_getUsers)
+            let _register_getUsers: Void = app.on(.options, "api", "macros", "users", ":int0", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance

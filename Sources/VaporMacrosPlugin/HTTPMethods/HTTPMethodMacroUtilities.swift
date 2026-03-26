@@ -154,7 +154,7 @@ enum HTTPMethodMacroUtilities {
                 ", \"\(path)\""
             }
             let routeRegistration: DeclSyntax = """
-            \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration), use: _route_\(raw: functionName))
+            let _register_\(raw: functionName): Void = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration), use: _route_\(raw: functionName))
             """
             return [wrapperFunc, routeRegistration]
         }
