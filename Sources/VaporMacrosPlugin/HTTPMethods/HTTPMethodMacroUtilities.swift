@@ -45,14 +45,12 @@ enum HTTPMethodMacroUtilities {
         // Parse path components and parameter types
         var parameterTypes: [String] = []
         var routeRegistrationVariable: String? = nil
-        var hasExplicitOn = false
 
         var skippedHTTPMethod = false
         if let arguments {
             for (_, argument) in arguments.enumerated() {
                 if argument.label?.text == "on" {
                     routeRegistrationVariable = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
-                    hasExplicitOn = true
                     continue
                 }
                 // Skip the first non-on: argument for custom HTTP methods (that's the HTTP method itself)
