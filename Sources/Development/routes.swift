@@ -17,6 +17,8 @@ public func routes(_ app: Application) throws {
         return "123" as StaticString
     }
 
+    let break = anotherThing
+
     #warning("Fix")
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
 //    app.on(.post, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
