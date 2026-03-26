@@ -49,8 +49,8 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         )
 
         // Run serve() in a child task so we can await listeningAddress
-        // before serve() completes. The task group stays alive until serve() returns.
-        try await withThrowingDiscardingTaskGroup { group in
+        // before serve() completes.
+        try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
                 try await nioServer.serve(handler: handler)
             }
@@ -58,29 +58,43 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             // Wait for the server to bind, then publish the address
             let address = try await nioServer.listeningAddress
             let nioAddress = try NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
-            self.application.sharedNewAddress.withLockedValue { $0 = nioAddress }
 
-            // Fulfill any waiting listeningAddress callers
+            // Atomically set the address and resume any waiting continuation
+            self.application.sharedNewAddress.withLockedValue { $0 = nioAddress }
             self.addressContinuation.withLockedValue { continuation in
                 continuation?.resume(returning: nioAddress)
                 continuation = nil
             }
 
             self.application.logger.notice("Server started on \(address.host):\(address.port)")
-            // The task group blocks here until serve() finishes
-            // (triggered by graceful shutdown or task cancellation)
+
+            // Wait for serve() to complete (blocks until shutdown/cancellation)
+            try await group.next()
         }
     }
 
     var listeningAddress: SocketAddress {
         get async throws {
-            // If the address is already available, return it immediately
-            if let address = self.application.sharedNewAddress.withLockedValue({ $0 }) {
-                return address
+            // Check atomically: if address is already set, return it;
+            // otherwise register a continuation to be fulfilled by run()
+            let needsWait: Bool = self.application.sharedNewAddress.withLockedValue { address in
+                address != nil ? false : true
             }
-            // Otherwise wait for it via continuation
+            if !needsWait {
+                return self.application.sharedNewAddress.withLockedValue { $0! }
+            }
             return try await withCheckedThrowingContinuation { continuation in
-                self.addressContinuation.withLockedValue { $0 = continuation }
+                // Double-check under lock: address may have been set between our check and here
+                let alreadySet: SocketAddress? = self.addressContinuation.withLockedValue { cont in
+                    if let address = self.application.sharedNewAddress.withLockedValue({ $0 }) {
+                        return address
+                    }
+                    cont = continuation
+                    return nil
+                }
+                if let address = alreadySet {
+                    continuation.resume(returning: address)
+                }
             }
         }
     }

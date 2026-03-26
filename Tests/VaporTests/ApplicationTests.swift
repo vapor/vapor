@@ -13,18 +13,21 @@ import RoutingKit
 struct ApplicationTests {
     @Test("Test stopping the application")
     func testApplicationStop() async throws {
-        try await withApp(configReader: testConfigReader) { app in
-            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask {
-                    try await app.server.run()
-                }
-                // Wait for server to bind
-                _ = try await app.server.listeningAddress
-                // Cancel to trigger shutdown
-                group.cancelAll()
+        let app = try await Application(.testing, configReader: testConfigReader)
+        app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+        try await app.boot()
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await app.server.run()
             }
+            // Poll for address (run() publishes it before blocking on serve)
+            while app.sharedNewAddress.withLockedValue({ $0 }) == nil {
+                try await Task.sleep(for: .milliseconds(10))
+            }
+            // Cancel to trigger shutdown
+            group.cancelAll()
         }
+        try await app.shutdown()
     }
 
     @Test("Test application lifecycle")
