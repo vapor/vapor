@@ -1,5 +1,8 @@
 import HTTPTypes
 import Vapor
+import Metrics
+@testable import CoreMetrics
+import MetricsTestKit
 import NIOCore
 import Tracing
 import Testing
@@ -248,6 +251,89 @@ struct MiddlewareTests {
     func testFileMiddlewareFromBundleInvalidPublicDirectory() {
         #expect(throws: FileMiddleware.BundleSetupError.publicDirectoryIsNotAFolder) {
             try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")
+        }
+    }
+    
+    @Test("Test Metrics Middleware", .withMetrics(TestMetrics()))
+    func testMetricsMiddleware() async throws {
+        try await withApp { app in
+            app.middleware.use(MetricsMiddleware())
+            app.get("testMetrics") { req -> String in
+                return "done"
+            }
+            let response = try await app.testing().sendRequest(.get, "/testMetrics")
+            
+            #expect(response.status == .ok)
+            #expect(response.body.string == "done")
+            
+            let httpServerActiveRequests = try metrics.expectMeter(
+                "http.server.active_requests",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                ]
+            )
+            #expect(httpServerActiveRequests.lastValue == 0.0)
+            
+            let httpServerRequestBodySize =  try metrics.expectRecorder(
+                "http.server.request.body.size",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                    ("error.type", "undefined"),
+                    ("http.response.status_code", "200"),
+                    ("http.route", "/testMetrics"),
+                    ("network.protocol.name", "http"),
+                    ("network.protocol.version", "1.1"),
+                ]
+            )
+            #expect(httpServerRequestBodySize.lastValue == 0.0)
+            
+            #expect(throws: Never.self) {
+                try metrics.expectTimer(
+                    "http.server.request.duration",
+                    [
+                        ("http.request.method", "GET"),
+                        ("url.scheme", "http"),
+                        ("error.type", "undefined"),
+                        ("http.response.status_code", "200"),
+                        ("http.route", "/testMetrics"),
+                        ("network.protocol.name", "http"),
+                        ("network.protocol.version", "1.1"),
+                    ]
+                )
+            }
+            
+            let httpServerResponseBodySize =  try metrics.expectRecorder(
+                "http.server.response.body.size",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                    ("error.type", "undefined"),
+                    ("http.response.status_code", "200"),
+                    ("http.route", "/testMetrics"),
+                    ("network.protocol.name", "http"),
+                    ("network.protocol.version", "1.1"),
+                ]
+            )
+            #expect(httpServerResponseBodySize.lastValue == 4.0)
+            
+            // Test 404 Rewrites Path for Metrics to Avoid DOS Attack
+            let notFoundResponse = try await app.testing().sendRequest(.get, "/not/found")
+            #expect(notFoundResponse.status == .notFound)
+            let httpServerRequestDuration = try metrics.expectTimer(
+                "http.server.request.duration",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                    ("error.type", "RouteNotFound"),
+                    ("http.response.status_code", "404"),
+                    ("http.route", "vapor_route_undefined"),
+                    ("network.protocol.name", "http"),
+                    ("network.protocol.version", "1.1"),
+                ]
+            )
+            #expect(httpServerRequestDuration.values.count == 1)
         }
     }
 
