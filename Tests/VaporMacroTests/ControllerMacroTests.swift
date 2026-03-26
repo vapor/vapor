@@ -1,7 +1,7 @@
-import SwiftSyntaxMacrosGenericTestSupport
 import Testing
 
 #if canImport(VaporMacrosPlugin)
+import SwiftSyntaxMacrosGenericTestSupport
 
 @Suite("Controller Macro Tests")
 struct ControllerMacroTests {

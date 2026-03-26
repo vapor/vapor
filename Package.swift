@@ -236,9 +236,9 @@ let package = Package(
         .testTarget(
             name: "VaporMacroTests",
             dependencies: [
-                .target(name: "VaporMacrosPlugin", condition: .when(traits: ["MacroRouting"])),
-                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
-                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
+                "VaporMacrosPlugin",
+                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
             ],
             swiftSettings: swiftSettings
         ),
