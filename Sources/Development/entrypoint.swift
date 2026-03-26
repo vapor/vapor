@@ -15,7 +15,7 @@ struct Entrypoint {
 
         let app = try await Application(configReader: config)
         do {
-            try await configure(app)
+            try configure(app)
             try await app.run()
             try await app.shutdown()
         } catch {
