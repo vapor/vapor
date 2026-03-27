@@ -5,7 +5,7 @@ import NIOSSL
 #endif
 import Logging
 
-public func configure(_ app: Application) throws {
+public func configure(_ app: Application) async throws {
     app.logger.logLevel = Environment.process.LOG_LEVEL ?? .debug
 
     #warning("Fix")
@@ -21,7 +21,7 @@ public func configure(_ app: Application) throws {
     #endif
 
     // routes
-    try routes(app)
+    try await routes(app)
 }
 
 actor MemoryCache {

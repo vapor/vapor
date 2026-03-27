@@ -360,12 +360,10 @@ struct HTTPMethodMacroTests {
                     return "Users"
                 }
 
-                @Sendable func _route_getUsers(req: Request) async throws -> Response {
+                let _register_getUsers = app.on(.get, "api", "macros", "users") { req -> Response in
                     let result: some ResponseEncodable = try await getUsers(req: req)
                     return try await result.encodeResponse(for: req)
                 }
-
-                let _register_getUsers: Void = app.on(.get, "api", "macros", "users", use: _route_getUsers)
             }
             """,
             macroSpecs: testMacros,
@@ -390,13 +388,11 @@ struct HTTPMethodMacroTests {
                     return "user"
                 }
 
-                @Sendable func _route_getUser(req: Request) async throws -> Response {
+                let _register_getUser = app.on(.get, "api", "users", ":int0") { req -> Response in
                     let int0 = try req.parameters.require("int0", as: Int.self)
                     let result: some ResponseEncodable = try await getUser(req: req, id: int0)
                     return try await result.encodeResponse(for: req)
                 }
-
-                let _register_getUser: Void = app.on(.get, "api", "users", ":int0", use: _route_getUser)
             }
             """,
             macroSpecs: testMacros,
@@ -421,12 +417,10 @@ struct HTTPMethodMacroTests {
                     return "Users"
                 }
 
-                @Sendable func _route_getUsers(req: Request) async throws -> Response {
+                let _register_getUsers = routes.on(.get, "api", "users") { req -> Response in
                     let result: some ResponseEncodable = try await getUsers(req: req)
                     return try await result.encodeResponse(for: req)
                 }
-
-                let _register_getUsers: Void = routes.on(.get, "api", "users", use: _route_getUsers)
             }
             """,
             macroSpecs: testMacros,
@@ -491,13 +485,11 @@ struct HTTPMethodMacroTests {
             func getUsers(req: Request) async throws -> String {
                 return "Users"
             }
-            
-            @Sendable func _route_getUsers(req: Request) async throws -> Response {
+
+            let _register_getUsers = app.on(.get, "api", "macros", "users") { req -> Response in
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
-
-            let _register_getUsers: Void = app.on(.get, "api", "macros", "users", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -517,14 +509,12 @@ struct HTTPMethodMacroTests {
             func getUsers(req: Request, userID: Int) async throws -> String {
                 return "Users"
             }
-            
-            @Sendable func _route_getUsers(req: Request) async throws -> Response {
+
+            let _register_getUsers = routes.on(.get, "api", "macros", "users", ":int0") { req -> Response in
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let result: some ResponseEncodable = try await getUsers(req: req, userID: int0)
                 return try await result.encodeResponse(for: req)
             }
-
-            let _register_getUsers: Void = routes.on(.get, "api", "macros", "users", ":int0", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -544,14 +534,12 @@ struct HTTPMethodMacroTests {
             func getUsers(req: Request, userID: Int) async throws -> String {
                 return "Users"
             }
-            
-            @Sendable func _route_getUsers(req: Request) async throws -> Response {
+
+            let _register_getUsers = app.on(.options, "api", "macros", "users", ":int0") { req -> Response in
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let result: some ResponseEncodable = try await getUsers(req: req, userID: int0)
                 return try await result.encodeResponse(for: req)
             }
-
-            let _register_getUsers: Void = app.on(.options, "api", "macros", "users", ":int0", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance

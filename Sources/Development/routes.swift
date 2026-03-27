@@ -13,7 +13,7 @@ struct Creds: Content {
     var password: String
 }
 
-public func routes(_ app: Application) throws {
+public func routes(_ app: Application) async throws {
     app.on(.get, "ping") { req -> StaticString in
         return "123" as StaticString
     }
@@ -264,22 +264,13 @@ public func routes(_ app: Application) throws {
         }
     }
 
-    try app.register(collection: UserController())
+    try await app.register(collection: UserController())
 
-    // @GET(on: app, "macros", Int.self)
-    // @Sendable
-    // func macroRoute(req: Request, id: Int) async throws -> String {
-    //     return "macro route with id: \(id)"
-    // }
-
-//    @Sendable
-//    func _route_macroRoute(req: Request) async throws -> Response {
-//        let int0 = try req.parameters.require("int0", as: Int.self)
-//        let result: some ResponseEncodable = try await macroRoute(req: req, id: int0)
-//        return try await result.encodeResponse(for: req)
-//    }
-//
-//    app.on(.get, "macros", ":int0", use: _route_macroRoute)
+    @GET(on: app, "macros", Int.self)
+    @Sendable
+    func macroRoute(req: Request, id: Int) async throws -> String {
+        return "macro route with id: \(id)"
+    }
 }
 
 struct TestError: AbortError, DebuggableError {
