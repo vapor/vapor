@@ -11,8 +11,7 @@ import HTTPTypes
 
 let markerHeader = HTTPField.Name(HTTPField.Name.xVaporResponseCompression.description)!
 
-#warning("Bring Back")
-@Suite("Conditional Compression Tests", .disabled())
+@Suite("Conditional Compression Tests", )
 struct ConditionalCompressionTests {
     @Suite("Response Compression Parsing Tests")
     struct ConditionalResponseCompressionParsingTests {
@@ -53,8 +52,8 @@ struct ConditionalCompressionTests {
             #expect(headers == [markerHeader : "disable"])
             headers.responseCompression = .unset
             #expect(headers == [:])
-            headers[markerHeader] = "enable"
-            headers[markerHeader] = "disable"
+            headers.append(HTTPField(name: markerHeader, value: "enable"))
+            headers.append(HTTPField(name: markerHeader, value: "disable"))
             #expect(headers == [markerHeader : "enable", markerHeader : "disable"])
             headers.responseCompression = .disable
             #expect(headers == [markerHeader : "disable"])
@@ -115,6 +114,7 @@ struct ConditionalCompressionTests {
         }
     }
 
+#warning("Bring Back")
 //    @Suite("Response Compression Server Tests")
 //    struct ConditionalResponseCompressionServerTests {
 //        func expectCompressed(

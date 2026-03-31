@@ -39,7 +39,7 @@ extension Application.HTTP {
                 let responder: any Responder
                 switch self.application.responder {
                 case .default:
-                    responder = DefaultResponder(routes: self.application.routes, middleware: self.application.middleware.resolve(), reportMetrics: self.application.serverConfiguration.reportMetrics)
+                    responder = DefaultResponder(routes: self.application.routes, middleware: self.application.middleware.resolve())
                 case .provided(let provided):
                     responder = provided
                 }

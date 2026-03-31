@@ -207,6 +207,9 @@ let package = Package(
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "MetricsTestKit", package: "swift-metrics"),
+                .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
+                .product(name: "Instrumentation", package: "swift-distributed-tracing"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -219,6 +222,8 @@ let package = Package(
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "MetricsTestKit", package: "swift-metrics"),
+                .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),

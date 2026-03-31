@@ -102,7 +102,7 @@ extension Application {
             case .provided(let provided):
                 responder = provided
             case .default:
-                responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve(), reportMetrics: app.serverConfiguration.reportMetrics)
+                responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve())
             }
             let res = try await responder.respond(to: request)
             return try await TestingHTTPResponse(

@@ -135,7 +135,6 @@ public final class Application: Sendable, Service {
         // Closure to run when the server is running - useful for grabbing
         // information such as the port
         public var onServerRunning: @Sendable (_ channel: any Channel) async -> ()
-        public var reportMetrics = true
 
         public init(address: BindAddress, onServerRunning: @Sendable @escaping (_ channel: any Channel) async -> ()) {
             self.address = address

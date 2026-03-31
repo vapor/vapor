@@ -281,7 +281,18 @@ struct HTTPHeaderTests {
         #expect(headers.cookie?["!#$%&'*+-.^_`~"]?.string == "symbols")
     }
 
-    @Test("Test Complex Cookie Parsing")
+    @Test("Test Multiple Cookie Headers", .bug("https://github.com/vapor/vapor/issues/3435"))
+    func testMultipleCookieHeaders() throws {
+        var headers = HTTPFields()
+        headers.append(HTTPField(name: .cookie, value: "a=1"))
+        headers.append(HTTPField(name: .cookie, value: "b=2"))
+        headers.append(HTTPField(name: .cookie, value: "c=3"))
+        #expect(headers.cookie?["a"]?.string == "1")
+        #expect(headers.cookie?["b"]?.string == "2")
+        #expect(headers.cookie?["c"]?.string == "3")
+    }
+
+    @Test("Test Complex Cookie Parsing", .bug("https://github.com/vapor/vapor/issues/2316"))
     func testCookie_complexParsing() throws {
         var headers = HTTPFields()
         headers[.cookie] = "oauth2_authentication_csrf=MTU4NzA1MTc0N3xEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJRGs1WkRKbU1HRTVNMlF3TmpRM1lUbGhOelptTnprMU5EYzRZMlk1WkRObXx6lRdSC3-hPvE1pxp4ylFlBruOyJtRo8OnzBrAriBr0w==; vapor-session=ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=; oauth2_consent_csrf=MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg=="
