@@ -9,12 +9,19 @@ public struct HTTPMethodMacro: PeerMacro {
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         // Get the first parameter for the macro
-        guard let arguments = node.arguments?.as(LabeledExprListSyntax.self),
-              let firstArg = arguments.first else {
+        guard let arguments = node.arguments?.as(LabeledExprListSyntax.self) else {
             throw MacroError.missingArguments("Method")
         }
 
-        let methodExpr = firstArg.expression
+        // Skip the `on:` argument if present to find the HTTP method argument
+        let methodArg = arguments.first { arg in
+            arg.label?.text != "on"
+        }
+        guard let methodArg else {
+            throw MacroError.missingArguments("Method")
+        }
+
+        let methodExpr = methodArg.expression
 
         // Check if it's a member access (like .get, .post)
         let httpMethod: HTTPRequest.Method

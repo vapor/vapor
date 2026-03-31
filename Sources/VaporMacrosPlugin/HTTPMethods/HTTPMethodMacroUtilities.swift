@@ -46,14 +46,16 @@ enum HTTPMethodMacroUtilities {
         var parameterTypes: [String] = []
         var routeRegistrationVariable: String? = nil
 
+        var skippedHTTPMethod = false
         if let arguments {
-            for (index, argument) in arguments.enumerated() {
+            for (_, argument) in arguments.enumerated() {
                 if argument.label?.text == "on" {
                     routeRegistrationVariable = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
                     continue
                 }
-                // If this is a custom HTTP method we need to ignore the first argument, as that's the custom HTTP method
-                if customHTTPMethod && index == 0 {
+                // Skip the first non-on: argument for custom HTTP methods (that's the HTTP method itself)
+                if customHTTPMethod && !skippedHTTPMethod {
+                    skippedHTTPMethod = true
                     continue
                 }
 
@@ -88,20 +90,53 @@ enum HTTPMethodMacroUtilities {
 
         let isAsyncFunction = funcDecl.signature.effectSpecifiers?.asyncSpecifier != nil
 
-        let wrapperFunc: DeclSyntax = """
-        @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
-            \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
-            return try await result.encodeResponse(for: req)
+        // If no explicit `on:` was provided, check lexical context for an enclosing function
+        // with an Application or RoutesBuilder parameter and auto-register
+        if routeRegistrationVariable == nil {
+            for lexicalSyntax in context.lexicalContext {
+                guard let enclosingFunc = lexicalSyntax.as(FunctionDeclSyntax.self) else {
+                    continue
+                }
+                for param in enclosingFunc.signature.parameterClause.parameters {
+                    let typeName = param.type.trimmedDescription
+                    if typeName.contains("Application") || typeName.contains("RoutesBuilder") {
+                        routeRegistrationVariable = param.secondName?.text ?? param.firstName.text
+                        break
+                    }
+                }
+                if routeRegistrationVariable != nil { break }
+            }
         }
-        """
+
+        // Check if we're inside a type declaration (Controller context) vs a function (standalone)
+        let isInsideType = context.lexicalContext.contains { lexical in
+            lexical.is(StructDeclSyntax.self) || lexical.is(ClassDeclSyntax.self) || lexical.is(EnumDeclSyntax.self)
+        }
+
+        if isInsideType {
+            // Inside a Controller: generate a separate wrapper function as a member
+            let wrapperFunc: DeclSyntax = """
+            @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
+                \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
+                return try await result.encodeResponse(for: req)
+            }
+            """
+            return [wrapperFunc]
+        }
 
         if let routeRegistrationVariable {
             var currentDynamicPathParameterIndex = 0
             var pathComponents: [String] = []
             if let arguments {
-                for (index, arg) in arguments.enumerated() {
-                    // Discard the first one (the place to register the routes) and if we're a custom HTTP method, discard the next one
-                    if index == 0 || customHTTPMethod && index == 1 {
+                var skippedHTTPMethodInPath = false
+                for (_, arg) in arguments.enumerated() {
+                    // Skip the `on:` argument
+                    if arg.label?.text == "on" {
+                        continue
+                    }
+                    // Skip the first non-on: argument for custom HTTP methods
+                    if customHTTPMethod && !skippedHTTPMethodInPath {
+                        skippedHTTPMethodInPath = true
                         continue
                     }
                     let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -125,12 +160,24 @@ enum HTTPMethodMacroUtilities {
             } else {
                 ", \"\(path)\""
             }
+            // Standalone context: inline the handler into the on() call as a single declaration
+            // to avoid peer declarations referencing each other (which Swift doesn't support)
             let routeRegistration: DeclSyntax = """
-            \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration), use: _route_\(raw: functionName))
+            let _register_\(raw: functionName) = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
+                \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
+                return try await result.encodeResponse(for: req)
+            }
             """
-            return [wrapperFunc, routeRegistration]
+            return [routeRegistration]
         }
 
+        // No route registration variable found - generate just the wrapper function
+        let wrapperFunc: DeclSyntax = """
+        @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
+            \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
+            return try await result.encodeResponse(for: req)
+        }
+        """
         return [wrapperFunc]
     }
 }

@@ -1,7 +1,7 @@
 import Testing
-import SwiftSyntaxMacrosGenericTestSupport
 
 #if canImport(VaporMacrosPlugin)
+import SwiftSyntaxMacrosGenericTestSupport
 
 @Suite("HTTP Method Macro Tests")
 struct HTTPMethodMacroTests {
@@ -343,6 +343,91 @@ struct HTTPMethodMacroTests {
         )
     }
 
+    @Test("Test GET macro auto-registers inside a function with Application parameter")
+    func testGetMacroAutoRegistersInsideFunction() {
+        assertMacroExpansion(
+            """
+            func routes(_ app: Application) throws {
+                @GET("api", "macros", "users")
+                func getUsers(req: Request) async throws -> String {
+                    return "Users"
+                }
+            }
+            """,
+            expandedSource: """
+            func routes(_ app: Application) throws {
+                func getUsers(req: Request) async throws -> String {
+                    return "Users"
+                }
+
+                let _register_getUsers = app.on(.get, "api", "macros", "users") { req -> Response in
+                    let result: some ResponseEncodable = try await getUsers(req: req)
+                    return try await result.encodeResponse(for: req)
+                }
+            }
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test GET macro auto-registers with dynamic params inside function")
+    func testGetMacroAutoRegistersWithDynamicParams() {
+        assertMacroExpansion(
+            """
+            func routes(_ app: Application) throws {
+                @GET("api", "users", Int.self)
+                func getUser(req: Request, id: Int) async throws -> String {
+                    return "user"
+                }
+            }
+            """,
+            expandedSource: """
+            func routes(_ app: Application) throws {
+                func getUser(req: Request, id: Int) async throws -> String {
+                    return "user"
+                }
+
+                let _register_getUser = app.on(.get, "api", "users", ":int0") { req -> Response in
+                    let int0 = try req.parameters.require("int0", as: Int.self)
+                    let result: some ResponseEncodable = try await getUser(req: req, id: int0)
+                    return try await result.encodeResponse(for: req)
+                }
+            }
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("Test GET macro auto-registers inside function with RoutesBuilder parameter")
+    func testGetMacroAutoRegistersWithRoutesBuilder() {
+        assertMacroExpansion(
+            """
+            func routes(_ routes: some RoutesBuilder) throws {
+                @GET("api", "users")
+                func getUsers(req: Request) async throws -> String {
+                    return "Users"
+                }
+            }
+            """,
+            expandedSource: """
+            func routes(_ routes: some RoutesBuilder) throws {
+                func getUsers(req: Request) async throws -> String {
+                    return "Users"
+                }
+
+                let _register_getUsers = routes.on(.get, "api", "users") { req -> Response in
+                    let result: some ResponseEncodable = try await getUsers(req: req)
+                    return try await result.encodeResponse(for: req)
+                }
+            }
+            """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
     @Test("Test macro fails when missing Request parameter")
     func testGetMacroFailsWhenMissingRequestParameter() {
         assertMacroExpansion(
@@ -400,13 +485,11 @@ struct HTTPMethodMacroTests {
             func getUsers(req: Request) async throws -> String {
                 return "Users"
             }
-            
-            @Sendable func _route_getUsers(req: Request) async throws -> Response {
+
+            let _register_getUsers = app.on(.get, "api", "macros", "users") { req -> Response in
                 let result: some ResponseEncodable = try await getUsers(req: req)
                 return try await result.encodeResponse(for: req)
             }
-
-            app.on(.get, "api", "macros", "users", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -426,14 +509,12 @@ struct HTTPMethodMacroTests {
             func getUsers(req: Request, userID: Int) async throws -> String {
                 return "Users"
             }
-            
-            @Sendable func _route_getUsers(req: Request) async throws -> Response {
+
+            let _register_getUsers = routes.on(.get, "api", "macros", "users", ":int0") { req -> Response in
                 let int0 = try req.parameters.require("int0", as: Int.self)
                 let result: some ResponseEncodable = try await getUsers(req: req, userID: int0)
                 return try await result.encodeResponse(for: req)
             }
-
-            routes.on(.get, "api", "macros", "users", ":int0", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
@@ -453,14 +534,12 @@ struct HTTPMethodMacroTests {
             func getUsers(req: Request, userID: Int) async throws -> String {
                 return "Users"
             }
-            
-            @Sendable func _route_getUsers(req: Request) async throws -> Response {
+
+            let _register_getUsers = app.on(.options, "api", "macros", "users", ":int0") { req -> Response in
                 let int0 = try req.parameters.require("int0", as: Int.self)
-                let result: some ResponseEncodable = try await getUsers(req: req)
+                let result: some ResponseEncodable = try await getUsers(req: req, userID: int0)
                 return try await result.encodeResponse(for: req)
             }
-
-            app.on(.options, "api", "macros", "users", ":int0", use: _route_getUsers)
             """,
             macroSpecs: testMacros,
             failureHandler: FailureHandler.instance
