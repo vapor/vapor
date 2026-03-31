@@ -264,6 +264,11 @@ public func routes(_ app: Application) async throws {
         }
     }
 
+    app.get("matching", "partial", ":{my-file}.json") { req in
+        let fileName = try req.parameters.require("my-file")
+        return "Hello, \(fileName)"
+    }
+
     #if MacroRouting
     try await app.register(collection: UserController())
 
