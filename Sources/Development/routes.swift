@@ -18,7 +18,7 @@ public func routes(_ app: Application) async throws {
         return "123" as StaticString
     }
 
-    app.get("hello", ":uuid") { req in
+    app.get("hello", "uuid", ":uuid") { req in
         let uuid = try req.parameters.require("uuid", as: UUID.self)
         return uuid.uuidString
     }
