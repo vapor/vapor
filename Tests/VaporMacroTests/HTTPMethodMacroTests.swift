@@ -1,3 +1,4 @@
+#if MacroRouting
 import Testing
 
 #if canImport(VaporMacrosPlugin)
@@ -547,4 +548,5 @@ struct HTTPMethodMacroTests {
     }
 }
 
+#endif
 #endif

@@ -170,10 +170,10 @@ let package = Package(
         .macro(
             name: "VaporMacrosPlugin",
             dependencies: [
-                .product(name: "SwiftSyntax", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
-                .product(name: "SwiftCompilerPlugin", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
-                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
             swiftSettings: swiftSettings
@@ -182,7 +182,7 @@ let package = Package(
         .target(
             name: "VaporMacros",
             dependencies: [
-                "VaporMacrosPlugin",
+                .target(name: "VaporMacrosPlugin", condition: .when(traits: ["MacroRouting"])),
                 "Vapor",
                 .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
@@ -241,9 +241,9 @@ let package = Package(
         .testTarget(
             name: "VaporMacroTests",
             dependencies: [
-                "VaporMacrosPlugin",
-                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
+                .target(name: "VaporMacrosPlugin", condition: .when(traits: ["MacroRouting"])),
+                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
+                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
             ],
             swiftSettings: swiftSettings
         ),

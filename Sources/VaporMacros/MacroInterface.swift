@@ -1,3 +1,4 @@
+#if MacroRouting
 import HTTPTypes
 import Vapor
 
@@ -42,3 +43,4 @@ public macro HTTP(on routeBuilder: (any RoutesBuilder)? = nil, _ method: HTTPReq
     module: "VaporMacrosPlugin",
     type: "HTTPMethodMacro"
 )
+#endif

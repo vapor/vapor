@@ -1,3 +1,4 @@
+#if MacroRouting
 import SwiftSyntaxMacrosGenericTestSupport
 import Testing
 
@@ -310,4 +311,5 @@ struct ControllerMacroTests {
     }
 }
 
+#endif
 #endif

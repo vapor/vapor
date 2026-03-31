@@ -1,3 +1,4 @@
+#if MacroRouting
 import Testing
 import SwiftSyntaxMacrosGenericTestSupport
 import SwiftSyntaxMacroExpansion
@@ -29,4 +30,5 @@ let testMacros: [String: MacroSpec] = [
     "Controller": MacroSpec(type: ControllerMacro.self),
 ]
 
+#endif
 #endif

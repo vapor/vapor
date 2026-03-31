@@ -264,6 +264,7 @@ public func routes(_ app: Application) async throws {
         }
     }
 
+    #if MacroRouting
     try await app.register(collection: UserController())
 
     @GET(on: app, "macros", Int.self)
@@ -271,6 +272,7 @@ public func routes(_ app: Application) async throws {
     func macroRoute(req: Request, id: Int) async throws -> String {
         return "macro route with id: \(id)"
     }
+    #endif
 }
 
 struct TestError: AbortError, DebuggableError {
@@ -322,6 +324,7 @@ struct TestController: RouteCollection {
     }
 }
 
+#if MacroRouting
 @Controller
 struct UserController {
     @GET("api", "macros", "users")
@@ -365,6 +368,7 @@ struct UserController {
 //
 //    }
 }
+#endif
 
 struct NotContentType {
     let something: String
