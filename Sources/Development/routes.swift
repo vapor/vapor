@@ -272,7 +272,7 @@ public func routes(_ app: Application) async throws {
     #if MacroRouting
     try await app.register(collection: UserController())
 
-    @GET(on: app, "macros", Int.self)
+    @GET(on: app, "macros", "types", Int.self)
     @Sendable
     func macroRoute(req: Request, id: Int) async throws -> String {
         return "macro route with id: \(id)"
@@ -360,6 +360,20 @@ struct UserController {
     @POST("api", "macros", "sync")
     func syncRoute(req: Request) throws -> String {
         "Sync"
+    }
+
+    @GET("macros", "manual", "int", ":id")
+    @Sendable
+    func macroDynamicPathParameter(req: Request) async throws -> String {
+        let id = try req.parameters.require("id")
+        return "macro route with id: \(id)"
+    }
+
+    @GET("macros", "manual", "partial", ":{my-file}.json")
+    @Sendable
+    func macroDynamicPartialPathParameter(req: Request) async throws -> String {
+        let file = try req.parameters.require("my-file")
+        return "macro route with file: \(file)"
     }
 
 //    These routes are expected not to compile and are here to demonstate/test that
