@@ -247,6 +247,16 @@ let package = Package(
             ],
             swiftSettings: swiftSettings
         ),
+        .testTarget(
+            name: "VaporMacroIntegrationTests",
+            dependencies: [
+                .target(name: "Vapor"),
+                .target(name: "VaporMacros"),
+                .target(name: "VaporTesting"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
+            ],
+            swiftSettings: swiftSettings
+        ),
     ]
 )
 
