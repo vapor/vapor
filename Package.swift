@@ -1,5 +1,6 @@
 // swift-tools-version:6.2
 import PackageDescription
+import CompilerPluginSupport
 
 let package = Package(
     name: "vapor",
@@ -12,6 +13,7 @@ let package = Package(
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
         .library(name: "VaporTesting", targets: ["VaporTesting"]),
+        .library(name: "VaporMacros", targets: ["VaporMacros"]),
     ],
     traits: [
         .trait(name: "WebSockets"),
@@ -19,12 +21,14 @@ let package = Package(
         .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
         .trait(name: "Multipart"),
+        .trait(name: "MacroRouting"),
         .default(enabledTraits: [
             "WebSockets",
             "TLS",
             "bcrypt",
             "HTTPClient",
             "Multipart",
+            "MacroRouting",
         ])
     ],
     dependencies: [
@@ -90,12 +94,15 @@ let package = Package(
 
         // Collection algorithms
         .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
-        
+
         // X509 certificate types for the Swift ecosystem
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.14.0"),
 
         // Work with certificate encoding schemes
-        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0")
+        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0"),
+
+        // Swift syntax parsing and generation
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
     ],
     targets: [
         // C helpers
@@ -160,11 +167,34 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
 
+        .macro(
+            name: "VaporMacrosPlugin",
+            dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
+            ],
+            swiftSettings: swiftSettings
+        ),
+
+        .target(
+            name: "VaporMacros",
+            dependencies: [
+                .target(name: "VaporMacrosPlugin", condition: .when(traits: ["MacroRouting"])),
+                "Vapor",
+                .product(name: "HTTPTypes", package: "swift-http-types"),
+            ],
+            swiftSettings: swiftSettings
+        ),
+
         // Development
         .executableTarget(
             name: "Development",
             dependencies: [
                 .target(name: "Vapor"),
+                "VaporMacros",
             ],
             resources: [.copy("Resources")],
             swiftSettings: swiftSettings
@@ -205,6 +235,25 @@ let package = Package(
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),
                 .copy("Utilities/long-test-file.txt"),
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "VaporMacroTests",
+            dependencies: [
+                .target(name: "VaporMacrosPlugin", condition: .when(traits: ["MacroRouting"])),
+                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
+                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "VaporMacroIntegrationTests",
+            dependencies: [
+                .target(name: "Vapor"),
+                .target(name: "VaporMacros"),
+                .target(name: "VaporTesting"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
             swiftSettings: swiftSettings
         ),
