@@ -6,7 +6,7 @@ import VaporMacros
 import HTTPTypes
 import RoutingKit
 
-@Suite("Standalone Macro Routing Integration Tests", .disabled(reason: "Looks like the language can't support this at the moment"))
+@Suite("Standalone Macro Routing Integration Tests")
 struct StandaloneMacroIntegrationTests {
 
     @Test("GET macro route returns correct response")
@@ -61,27 +61,19 @@ struct StandaloneMacroIntegrationTests {
 // MARK: - Standalone Routes
 
 func registerStandaloneRoutes(_ app: Application) {
-    @GET(on: app, "standalone", "hello")
-    @Sendable
-    func hello(req: Request) async throws -> String {
+    #GET(on: app, "standalone", "hello") { (req: Request) async throws -> String in
         return "hello from standalone"
     }
 
-    @GET(on: app, "standalone", "users", Int.self)
-    @Sendable
-    func getUser(req: Request, id: Int) async throws -> String {
+    #GET(on: app, "standalone", "users", Int.self) { (req: Request, id: Int) async throws -> String in
         return "standalone user with id: \(id)"
     }
 
-    @POST(on: app, "standalone", "create")
-    @Sendable
-    func create(req: Request) async throws -> String {
+    #POST(on: app, "standalone", "create") { (req: Request) async throws -> String in
         return "created"
     }
 
-    @DELETE(on: app, "standalone", "remove", Int.self)
-    @Sendable
-    func remove(req: Request, id: Int) async throws -> String {
+    #DELETE(on: app, "standalone", "remove", Int.self) { (req: Request, id: Int) async throws -> String in
         return "deleted \(id)"
     }
 }

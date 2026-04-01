@@ -43,4 +43,45 @@ public macro HTTP(on routeBuilder: (any RoutesBuilder)? = nil, _ method: HTTPReq
     module: "VaporMacrosPlugin",
     type: "HTTPMethodMacro"
 )
+
+// MARK: - Freestanding Route Macros
+// Use these inside function bodies for standalone route registration.
+// The @attached(peer) versions above don't work for local functions due to
+// a Swift compiler limitation where peer declarations are silently dropped.
+
+@freestanding(declaration, names: arbitrary)
+public macro GET(on routeBuilder: any RoutesBuilder, _ pathComponents: Any..., handler: Any) = #externalMacro(
+    module: "VaporMacrosPlugin",
+    type: "FreestandingGetMacro"
+)
+
+@freestanding(declaration, names: arbitrary)
+public macro POST(on routeBuilder: any RoutesBuilder, _ pathComponents: Any..., handler: Any) = #externalMacro(
+    module: "VaporMacrosPlugin",
+    type: "FreestandingPostMacro"
+)
+
+@freestanding(declaration, names: arbitrary)
+public macro PUT(on routeBuilder: any RoutesBuilder, _ pathComponents: Any..., handler: Any) = #externalMacro(
+    module: "VaporMacrosPlugin",
+    type: "FreestandingPutMacro"
+)
+
+@freestanding(declaration, names: arbitrary)
+public macro DELETE(on routeBuilder: any RoutesBuilder, _ pathComponents: Any..., handler: Any) = #externalMacro(
+    module: "VaporMacrosPlugin",
+    type: "FreestandingDeleteMacro"
+)
+
+@freestanding(declaration, names: arbitrary)
+public macro PATCH(on routeBuilder: any RoutesBuilder, _ pathComponents: Any..., handler: Any) = #externalMacro(
+    module: "VaporMacrosPlugin",
+    type: "FreestandingPatchMacro"
+)
+
+@freestanding(declaration, names: arbitrary)
+public macro HTTP(on routeBuilder: any RoutesBuilder, _ method: HTTPRequest.Method, _ pathComponents: Any..., handler: Any) = #externalMacro(
+    module: "VaporMacrosPlugin",
+    type: "FreestandingHTTPMethodMacro"
+)
 #endif
