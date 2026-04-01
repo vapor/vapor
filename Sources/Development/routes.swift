@@ -272,9 +272,7 @@ public func routes(_ app: Application) async throws {
     #if MacroRouting
     try await app.register(collection: UserController())
 
-    @GET(on: app, "macros", "types", Int.self)
-    @Sendable
-    func macroRoute(req: Request, id: Int) async throws -> String {
+    #GET(on: app, "macros", "types", Int.self) { (req: Request, id: Int) async throws -> String in
         return "macro route with id: \(id)"
     }
     #endif
