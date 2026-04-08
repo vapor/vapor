@@ -37,7 +37,6 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             responder = DefaultResponder(
                 routes: self.application.routes,
                 middleware: self.application.middleware.resolve(),
-                reportMetrics: self.application.serverConfiguration.reportMetrics
             )
         case .provided(let provided):
             responder = provided

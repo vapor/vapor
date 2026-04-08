@@ -133,7 +133,6 @@ public final class Application: Sendable, Service {
 
     public struct ServerConfiguration: Sendable {
         public var address: BindAddress
-        public var reportMetrics = true
 
         public init(address: BindAddress = .hostname()) {
             self.address = address
