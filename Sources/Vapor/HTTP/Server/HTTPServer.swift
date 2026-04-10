@@ -801,10 +801,11 @@ extension HTTPServer.Configuration.ResponseCompressionConfiguration {
                 return shouldDisable ? .doNotCompress : .compressIfPossible
             case .disabled(_, let allowedTypes, _):
                 /// If there were no explicit overrides, fallback to checking the content type against the allowed set. If all types succeed the check, enable compression:
-                let shouldEnable = responseHeaders.headers.parseDirectives(name: .contentType).allSatisfy { contentTypeDirectives in
+                let contentTypeDirectives = responseHeaders.headers.parseDirectives(name: .contentType)
+                let shouldEnable = !contentTypeDirectives.isEmpty && contentTypeDirectives.allSatisfy { contentTypeDirectives in
                     guard let mediaType = HTTPMediaType(directives: contentTypeDirectives)
                     else { return false }
-                    
+
                     return allowedTypes.contains(mediaType)
                 }
                 

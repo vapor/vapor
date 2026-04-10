@@ -319,6 +319,34 @@ final class ConditionalResponseCompressionServerTests: XCTestCase, @unchecked Se
         try await assertUncompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
     }
     
+    func testMissingContentType() async throws {
+        app.get("resource") { request in
+            Response(status: .ok, body: .init(string: compressiblePayload))
+        }
+
+        try app.server.start()
+
+        try await assertUncompressed(app.http.server.configuration.responseCompression) /// Default case
+        try await assertUncompressed(.forceDisabled)
+        try await assertUncompressed(.disabled)
+        try await assertUncompressed(.enabledForCompressibleTypes)
+        try await assertCompressed(.enabled)
+
+        try await assertUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: false))
+        try await assertUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: false))
+        try await assertUncompressed(.disabled(allowedTypes: .all, allowRequestOverrides: false))
+        try await assertUncompressed(.disabled(allowedTypes: .none, allowRequestOverrides: true))
+        try await assertUncompressed(.disabled(allowedTypes: .compressible, allowRequestOverrides: true))
+        try await assertUncompressed(.disabled(allowedTypes: .all, allowRequestOverrides: true))
+
+        try await assertCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: false))
+        try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false))
+        try await assertCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: false))
+        try await assertCompressed(.enabled(disallowedTypes: .none, allowRequestOverrides: true))
+        try await assertCompressed(.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true))
+        try await assertCompressed(.enabled(disallowedTypes: .all, allowRequestOverrides: true))
+    }
+
     func testEnabledByResponse() async throws {
         app.get("resource") { request in
             var headers = HTTPHeaders()
