@@ -9,11 +9,14 @@ public struct File: Codable, Equatable, Sendable {
     
     /// The file's data.
     public var data: ByteBuffer
-    
-    /// Associated `MediaType` for this file's extension, if it has one.
+
+    /// Associated `MediaType` for this file, preferring the explicitly set value, falling back to the file extension.
     public var contentType: HTTPMediaType? {
-        return self.extension.flatMap { HTTPMediaType.fileExtension($0.lowercased()) }
+        get { _contentType ?? self.extension.flatMap { HTTPMediaType.fileExtension($0.lowercased()) } }
+        set { _contentType = newValue }
     }
+
+    private var _contentType: HTTPMediaType?
     
     /// The file extension, if it has one.
     public var `extension`: String? {
@@ -57,9 +60,9 @@ public struct File: Codable, Equatable, Sendable {
     /// - parameters:
     ///     - data: The file's contents.
     ///     - filename: The name of the file, not including path.
-    public init(data: String, filename: String) {
+    public init(data: String, filename: String, contentType: HTTPMediaType? = nil) {
         let buffer = ByteBufferAllocator().buffer(string: data)
-        self.init(data: buffer, filename: filename)
+        self.init(data: buffer, filename: filename, contentType: contentType)
     }
     
     /// Creates a new `File`.
@@ -69,8 +72,9 @@ public struct File: Codable, Equatable, Sendable {
     /// - parameters:
     ///     - data: The file's contents.
     ///     - filename: The name of the file, not including path.
-    public init(data: ByteBuffer, filename: String) {
+    public init(data: ByteBuffer, filename: String, contentType: HTTPMediaType? = nil) {
         self.data = data
         self.filename = filename
+        self._contentType = contentType
     }
 }

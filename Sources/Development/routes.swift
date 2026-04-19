@@ -1,4 +1,4 @@
-import class Foundation.Bundle
+import Foundation
 import Vapor
 import NIOCore
 import HTTPTypes
@@ -6,15 +6,21 @@ import NIOConcurrencyHelpers
 import _NIOFileSystem
 import RoutingKit
 import Logging
+import VaporMacros
 
 struct Creds: Content {
     var email: String
     var password: String
 }
 
-public func routes(_ app: Application) throws {
+public func routes(_ app: Application) async throws {
     app.on(.get, "ping") { req -> StaticString in
         return "123" as StaticString
+    }
+
+    app.get("hello", "uuid", ":uuid") { req in
+        let uuid = try req.parameters.require("uuid", as: UUID.self)
+        return uuid.uuidString
     }
 
     #warning("Fix")
@@ -257,6 +263,19 @@ public func routes(_ app: Application) throws {
             }
         }
     }
+
+    app.get("matching", "partial", ":{my-file}.json") { req in
+        let fileName = try req.parameters.require("my-file")
+        return "Hello, \(fileName)"
+    }
+
+    #if MacroRouting
+    try await app.register(collection: UserController())
+
+    #GET(on: app, "macros", "types", Int.self) { (req: Request, id: Int) async throws -> String in
+        return "macro route with id: \(id)"
+    }
+    #endif
 }
 
 struct TestError: AbortError, DebuggableError {
@@ -306,4 +325,68 @@ struct TestController: RouteCollection {
     func testRoute(_ req: Request) async throws -> String {
         return "OK"
     }
+}
+
+#if MacroRouting
+@Controller
+struct UserController {
+    @GET("api", "macros", "users")
+    func getUsers(req: Request) async throws -> String {
+        return "users"
+    }
+
+    @HTTP(.patch, "api", "macros", "users", "custom")
+    func getCustomHTTPMethod(req: Request) async throws -> String {
+        return "custom HTTP method"
+    }
+
+    @GET("api", "macros", "users", Int.self)
+    func getUser(req: Request, id: Int) async throws -> String {
+        return "user with id: \(id)"
+    }
+
+    @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
+    func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
+        return "custom HTTP method"
+    }
+
+    @POST("api", "macros", "lots", UUID.self, Int.self, String.self, Int.self)
+    func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String, anotherNumber: Int) async throws -> String {
+        return "uuid: \(uuid), number: \(number), text: \(text), anotherNumber: \(anotherNumber)"
+    }
+
+    @POST("api", "macros", "sync")
+    func syncRoute(req: Request) throws -> String {
+        "Sync"
+    }
+
+    @GET("macros", "manual", "int", ":id")
+    @Sendable
+    func macroDynamicPathParameter(req: Request) async throws -> String {
+        let id = try req.parameters.require("id")
+        return "macro route with id: \(id)"
+    }
+
+    @GET("macros", "manual", "partial", ":{my-file}.json")
+    @Sendable
+    func macroDynamicPartialPathParameter(req: Request) async throws -> String {
+        let file = try req.parameters.require("my-file")
+        return "macro route with file: \(file)"
+    }
+
+//    These routes are expected not to compile and are here to demonstate/test that
+//    @GET("NotResponseCodable")
+//    func testNotARoute(req: Request) async throws -> NotContentType {
+//        NotContentType(something: "")
+//    }
+
+//    @GET("Void")
+//    func testVoidRoute(req: Request) throws {
+//
+//    }
+}
+#endif
+
+struct NotContentType {
+    let something: String
 }

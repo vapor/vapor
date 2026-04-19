@@ -1,5 +1,8 @@
 import HTTPTypes
 import Vapor
+import Metrics
+@testable import CoreMetrics
+import MetricsTestKit
 import NIOCore
 import Tracing
 import Testing
@@ -7,6 +10,7 @@ import VaporTesting
 import RegexBuilder
 import RoutingKit
 import NIOConcurrencyHelpers
+import InMemoryTracing
 
 @Suite("Middleware Tests")
 struct MiddlewareTests {
@@ -249,13 +253,93 @@ struct MiddlewareTests {
             try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")
         }
     }
+    
+    @Test("Test Metrics Middleware", .withMetrics(TestMetrics()))
+    func testMetricsMiddleware() async throws {
+        try await withApp { app in
+            app.middleware.use(MetricsMiddleware())
+            app.get("testMetrics") { req -> String in
+                return "done"
+            }
+            let response = try await app.testing().sendRequest(.get, "/testMetrics")
+            
+            #expect(response.status == .ok)
+            #expect(response.body.string == "done")
+            
+            let httpServerActiveRequests = try metrics.expectMeter(
+                "http.server.active_requests",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                ]
+            )
+            #expect(httpServerActiveRequests.lastValue == 0.0)
+            
+            let httpServerRequestBodySize =  try metrics.expectRecorder(
+                "http.server.request.body.size",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                    ("error.type", "undefined"),
+                    ("http.response.status_code", "200"),
+                    ("http.route", "/testMetrics"),
+                    ("network.protocol.name", "http"),
+                    ("network.protocol.version", "1.1"),
+                ]
+            )
+            #expect(httpServerRequestBodySize.lastValue == 0.0)
+            
+            #expect(throws: Never.self) {
+                try metrics.expectTimer(
+                    "http.server.request.duration",
+                    [
+                        ("http.request.method", "GET"),
+                        ("url.scheme", "http"),
+                        ("error.type", "undefined"),
+                        ("http.response.status_code", "200"),
+                        ("http.route", "/testMetrics"),
+                        ("network.protocol.name", "http"),
+                        ("network.protocol.version", "1.1"),
+                    ]
+                )
+            }
+            
+            let httpServerResponseBodySize =  try metrics.expectRecorder(
+                "http.server.response.body.size",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                    ("error.type", "undefined"),
+                    ("http.response.status_code", "200"),
+                    ("http.route", "/testMetrics"),
+                    ("network.protocol.name", "http"),
+                    ("network.protocol.version", "1.1"),
+                ]
+            )
+            #expect(httpServerResponseBodySize.lastValue == 4.0)
+            
+            // Test 404 Rewrites Path for Metrics to Avoid DOS Attack
+            let notFoundResponse = try await app.testing().sendRequest(.get, "/not/found")
+            #expect(notFoundResponse.status == .notFound)
+            let httpServerRequestDuration = try metrics.expectTimer(
+                "http.server.request.duration",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                    ("error.type", "RouteNotFound"),
+                    ("http.response.status_code", "404"),
+                    ("http.route", "vapor_route_undefined"),
+                    ("network.protocol.name", "http"),
+                    ("network.protocol.version", "1.1"),
+                ]
+            )
+            #expect(httpServerRequestDuration.values.count == 1)
+        }
+    }
 
-    @Test("Test Tracing Middleware")
+    @Test("Test Tracing Middleware", .withTracer(InMemoryTracer()))
     func testTracingMiddleware() async throws {
         try await withApp { app in
-            let tracer = TestTracer()
-            InstrumentationSystem.bootstrap(tracer)
-
             struct TestServiceContextMiddleware: Middleware {
                 func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
                     #expect(ServiceContext.current != nil)
@@ -270,8 +354,6 @@ struct MiddlewareTests {
             ).grouped(
                 TestServiceContextMiddleware()
             ).get("testTracing") { req -> String in
-                // Validates that TracingMiddleware exposes header extraction to backend
-                #expect(ServiceContext.current?.extracted == "extracted")
                 // Validates that the span's service context is propagated into the
                 // Task.local storage of the responder closure, thereby ensuring that
                 // spans created in the closure are nested under the request span.
@@ -282,12 +364,11 @@ struct MiddlewareTests {
 
             try await app.testing(method: .running).test(.get, "/testTracing?foo=bar", beforeRequest: {
                 $0.headers[.userAgent] = "test"
-                $0.headers[TestTracer.extractKey] = "extracted"
             }) { response in
                 #expect(response.status == .ok)
                 #expect(response.body.string == "done")
 
-                let span = try #require(tracer.spans.first)
+                let span = try #require(tracer.finishedSpans.first)
                 #expect(span.operationName == "GET /testTracing")
 
                 #expect(span.attributes["http.request.method"]?.toSpanAttribute() == "GET")
@@ -314,42 +395,6 @@ struct MiddlewareTests {
 
                 #expect(span.attributes["http.response.status_code"]?.toSpanAttribute() == 200)
             }
-
-//            try await app.server.start(address: .hostname("127.0.0.1", port: 0))
-//
-//            let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port, "Failed to get port")
-//            let response = try await app.client.get("http://localhost:\(port)/testTracing?foo=bar") { req in
-//                req.headers[.userAgent] = "test"
-//                req.headers[TestTracer.extractKey] = "extracted"
-//            }
-//
-//            #expect(response.status == .ok)
-//            #expect(response.body?.string == "done")
-//
-//            let span = try #require(tracer.spans.first)
-//            #expect(span.operationName == "GET /testTracing")
-//
-//            #expect(span.attributes["http.request.method"]?.toSpanAttribute() == "GET")
-//            #expect(span.attributes["url.path"]?.toSpanAttribute() == "/testTracing")
-//            #expect(span.attributes["url.scheme"]?.toSpanAttribute() == nil)
-//
-//            #expect(span.attributes["http.route"]?.toSpanAttribute() == "/testTracing")
-//            #expect(span.attributes["network.protocol.name"]?.toSpanAttribute() == "http")
-//            #expect(span.attributes["server.address"]?.toSpanAttribute() == "127.0.0.1")
-//            #expect(span.attributes["server.port"]?.toSpanAttribute() == port.toSpanAttribute())
-//            #expect(span.attributes["url.query"]?.toSpanAttribute() == "foo=bar")
-//
-//            #expect(span.attributes["client.address"]?.toSpanAttribute() == "127.0.0.1")
-//            #expect(span.attributes["network.peer.address"]?.toSpanAttribute() == "127.0.0.1")
-//            #expect(span.attributes["network.peer.port"]?.toSpanAttribute() != nil)
-//            #expect(span.attributes["network.protocol.version"]?.toSpanAttribute() == "1.1")
-//            #expect(span.attributes["user_agent.original"]?.toSpanAttribute() == "test")
-//
-//            #expect(span.attributes["custom"]?.toSpanAttribute() == "custom")
-//
-//            #expect(span.attributes["http.response.status_code"]?.toSpanAttribute() == 200)
-//
-//            try await app.server.shutdown()
         }
     }
 }

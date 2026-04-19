@@ -1,5 +1,8 @@
 name: Generate Sponsors README
 on: workflow_dispatch
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   deploy:
@@ -10,7 +13,7 @@ jobs:
 
       - name: Get token
         id: get-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.PENNY_APP_ID }}
           private-key: ${{ secrets.PENNY_APP_PRIVATE_KEY }}
@@ -26,7 +29,7 @@ jobs:
           organization: true
 
       - name: Commit and create PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.get-token.outputs.token }}
           commit-message: "[skip ci] Update README with new sponsor"

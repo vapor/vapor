@@ -8,6 +8,8 @@ on:
 
 jobs:
   # test-providers:
+  #   permissions:
+  #     contents: read
   #   if: ${{ !(github.event.pull_request.draft || false) }}
   #   strategy:
   #     fail-fast: false
@@ -19,7 +21,7 @@ jobs:
   #         - vapor/queues
   #         - vapor/apns
   #   runs-on: ubuntu-latest
-  #   container: swift:6.2-bookworm
+  #   container: swift:6.2
   #   steps:
   #     - name: Check out Vapor
   #       uses: actions/checkout@v6
@@ -36,6 +38,8 @@ jobs:
   #       run: swift test --package-path ./provider
 
   unit-tests:
+    permissions:
+      contents: read
     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
     with:
       with_release_mode_testing: true
@@ -49,10 +53,20 @@ jobs:
 
   package-traits:
     runs-on: ubuntu-latest
-    container: swift:6.2-bookworm
+    permissions:
+      contents: read
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    container: swift:6.2
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v6
       - name: Run tests with traits disabled
-        # Since we disable all traits here, we also disable HTTPClient, which is used by a lot of tests to send real requests. So just run a subset of tests that don't require it, since we're really just making sure it works.
         run: swift test --disable-default-traits
+
+  submit-dependencies:
+    permissions:
+      contents: write
+    if: ${{ github.event_name == 'push' }}
+    uses: vapor/ci/.github/workflows/submit-deps.yml@main
+    secrets: inherit
+

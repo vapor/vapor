@@ -1,6 +1,8 @@
 import Configuration
 import Vapor
 import NIOCore
+@testable import CoreMetrics
+@testable import Instrumentation
 
 /// Perform a test while handling lifecycle of the application.
 /// Feel free to create a custom function like this, tailored to your project.
@@ -29,6 +31,8 @@ public func withApp<T>(
     configure: ((Application) async throws -> Void)? = nil,
     _ test: (Application) async throws -> T
 ) async throws -> T {
+    MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
+    InstrumentationSystem.bootstrapInternal(TaskLocalTracingSystemWrapper())
     let app = try await Application(.testing, configReader: configReader, services: services)
     if let address {
         app.serverConfiguration.address = address
