@@ -2,6 +2,7 @@ import RoutingKit
 import HTTPTypes
 import NIOPosix
 import NIOCore
+import NIOConcurrencyHelpers
 
 /// Determines how an incoming HTTP request's body is collected.
 public enum HTTPBodyStreamStrategy: Sendable {
@@ -154,10 +155,20 @@ extension RoutesBuilder {
     ) -> Route {
         let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                _ = try await MultiThreadedEventLoopGroup.singleton.any().flatSubmit {
-                    request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
-                }.get()
-
+                let maxBodySize: Int = max?.value ?? request.application.routes.defaultMaxBodySize.value
+                if let newBody = request.newBodyStorage.withLockedValue({ $0 }) {
+                    do {
+                        let buffer = try await newBody.collect(upTo: maxBodySize)
+                        request.bodyStorage.withLockedValue { $0 = .collected(buffer) }
+                        request.newBodyStorage.withLockedValue { $0 = nil }
+                    } catch is NIOTooManyBytesError {
+                        throw Abort(.contentTooLarge)
+                    }
+                } else {
+                    _ = try await MultiThreadedEventLoopGroup.singleton.any().flatSubmit {
+                        request.body.collect(max: maxBodySize)
+                    }.get()
+                }
             }
             return try await closure(request).encodeResponse(for: request)
         }
