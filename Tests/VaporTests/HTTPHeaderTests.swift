@@ -111,6 +111,20 @@ struct HTTPHeaderTests {
         #expect(serializer.serialize() == "foo; bar=\"baz\", qux=\"quuz\"")
     }
 
+    @Test("Test WWW-Authenticate Header")
+    func testWWWAuthenticate() throws {
+        var headers = HTTPFields()
+        headers.wwwAuthenticate = .basic(realm: "Private \"Area\"")
+        #expect(headers[.wwwAuthenticate] == "Basic realm=\"Private \\\"Area\\\"\"")
+        #expect(headers.wwwAuthenticate?.value == "Basic realm=\"Private \\\"Area\\\"\"")
+
+        headers.wwwAuthenticate = "Bearer realm=\"API\""
+        #expect(headers[.wwwAuthenticate] == #"Bearer realm="API""#)
+
+        headers.wwwAuthenticate = nil
+        #expect(headers[.wwwAuthenticate] == nil)
+    }
+
     @Test("Test Forwarded Header Parsing")
     func testForwarded() throws {
         var headers = HTTPFields()
