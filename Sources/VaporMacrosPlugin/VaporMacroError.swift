@@ -4,6 +4,7 @@ enum MacroError: Error, CustomStringConvertible {
     case missingRequest
     case invalidNumberOfParameters(String, Int, Int)
     case invalidHTTPMethod(String)
+    case authParameterNotFound(String)
 
     var description: String {
         switch self {
@@ -17,6 +18,8 @@ enum MacroError: Error, CustomStringConvertible {
             "The @\(macroName) macro defines \(macro) arguments, but the function has \(function)"
         case .invalidHTTPMethod(let method):
             "\(method) is not a valid HTTP Method"
+        case .authParameterNotFound(let typeName):
+            "No function parameter of type \(typeName) found for @AuthMiddleware"
         }
     }
 }
