@@ -387,9 +387,10 @@ struct UserController {
             return authenticatedUser
         }
 
-        @GET("api", "macros", "users", "me", "name")
-        func getAuthenticatedUserToken(req: Request, authenticatedUser: User) async throws -> String {
-            return authenticatedUser.name
+        @GET("api", "macros", "users", "me", "token")
+        func getAuthenticatedUserToken(req: Request, authenticatedUser: User) async throws -> Token {
+            let token = try req.auth.require(Token.self)
+            return token
         }
     }
 
