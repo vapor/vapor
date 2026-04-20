@@ -20,8 +20,12 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
         }
         let prefix = HTTPMethodMacroUtilities.parsePathComponents(from: controllerArgs, startingIndex: 0)
 
+        // Type-level @Middleware applied to all routes. Goes outside the path group so middleware
+        // sees every request reaching the controller, not just path-matched ones.
+        let typeMiddlewares = HTTPMethodMacroUtilities.parseMiddleware(from: declaration)
+
         // Find all functions with route macros
-        let functions = try declaration.memberBlock.members.compactMap { member -> (FunctionDeclSyntax, String, [String], [String])? in
+        let functions = try declaration.memberBlock.members.compactMap { member -> (FunctionDeclSyntax, String, [String], [String], [String])? in
             guard let funcDecl = member.decl.as(FunctionDeclSyntax.self) else {
                 return nil
             }
@@ -59,15 +63,12 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     skipFirstUnlabeled: customHTTPMethod
                 )
 
-                // Check for @AuthMiddleware
-                let middlewareExprs: [String] = {
-                    guard let authInfo = HTTPMethodMacroUtilities.parseAuthMiddleware(from: funcDecl) else {
-                        return []
-                    }
-                    return authInfo.middlewares
-                }()
+                // Per-route @Middleware runs before @AuthMiddleware so rate-limiters and logging
+                // see unauthenticated traffic too.
+                let routeMiddlewares = HTTPMethodMacroUtilities.parseMiddleware(from: funcDecl)
+                let authMiddlewares = HTTPMethodMacroUtilities.parseAuthMiddleware(from: funcDecl)?.middlewares ?? []
 
-                return (funcDecl, httpMethod, route.routeRegistrationSegments, middlewareExprs)
+                return (funcDecl, httpMethod, route.routeRegistrationSegments, routeMiddlewares, authMiddlewares)
             }
 
             return nil
@@ -76,22 +77,27 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
         // Generate the RouteCollection boot function
         var registrationBody = ""
 
-        // Choose the builder expression each route hangs off of.
-        // When @Controller has a non-empty path prefix, introduce `let group = routes.grouped(...)`
-        // so nested groups (for middleware, later) can chain cleanly.
-        let baseBuilder: String
-        if prefix.routeRegistrationSegments.isEmpty {
-            baseBuilder = "routes"
-        } else {
+        // Build the base route builder: type-level middleware (if any) wraps `routes`, then the path prefix.
+        // Order: routes -> grouped(typeMW...) -> grouped(prefix...). Middleware runs before path matching.
+        var baseBuilder = "routes"
+        if !typeMiddlewares.isEmpty {
+            let typeMWList = typeMiddlewares.joined(separator: ", ")
+            registrationBody += """
+            let base = routes.grouped(\(typeMWList))
+
+            """
+            baseBuilder = "base"
+        }
+        if !prefix.routeRegistrationSegments.isEmpty {
             let prefixLiteral = prefix.routeRegistrationSegments.joined(separator: "\", \"")
             registrationBody += """
-            let group = routes.grouped("\(prefixLiteral)")
+            let group = \(baseBuilder).grouped("\(prefixLiteral)")
 
             """
             baseBuilder = "group"
         }
 
-        for (functionDeclaration, method, pathComponents, middlewares) in functions {
+        for (functionDeclaration, method, pathComponents, routeMiddlewares, authMiddlewares) in functions {
             let path = pathComponents.joined(separator: "\", \"")
             let methodLower = method.lowercased()
 
@@ -103,22 +109,21 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                 "(\"\(path)\")"
             }
 
-            if middlewares.isEmpty {
-                registrationBody += """
-                \(baseBuilder).\(methodLower)\(pathRegistration) { req async throws -> Response in
-                    try await self.\(functionName)(req: req)
-                }
-
-                """
-            } else {
-                let middlewareList = middlewares.joined(separator: ", ")
-                registrationBody += """
-                \(baseBuilder).grouped(\(middlewareList)).\(methodLower)\(pathRegistration) { req async throws -> Response in
-                    try await self.\(functionName)(req: req)
-                }
-
-                """
+            // Per-route middleware chain: route-level @Middleware first, then @AuthMiddleware middlewares.
+            var callChain = baseBuilder
+            if !routeMiddlewares.isEmpty {
+                callChain += ".grouped(\(routeMiddlewares.joined(separator: ", ")))"
             }
+            if !authMiddlewares.isEmpty {
+                callChain += ".grouped(\(authMiddlewares.joined(separator: ", ")))"
+            }
+
+            registrationBody += """
+            \(callChain).\(methodLower)\(pathRegistration) { req async throws -> Response in
+                try await self.\(functionName)(req: req)
+            }
+
+            """
         }
 
         let registrationFunc: DeclSyntax = """

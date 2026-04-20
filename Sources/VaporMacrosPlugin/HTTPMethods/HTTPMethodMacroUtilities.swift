@@ -292,6 +292,37 @@ enum HTTPMethodMacroUtilities {
         return [wrapperFunc]
     }
 
+    /// Parse all `@Middleware(...)` attributes on a function in source order, concatenating
+    /// their arguments. Stacking multiple `@Middleware` attributes is supported.
+    static func parseMiddleware(from funcDecl: FunctionDeclSyntax) -> [String] {
+        parseMiddlewareAttributes(from: funcDecl.attributes)
+    }
+
+    /// Parse all `@Middleware(...)` attributes on a type declaration (struct/class/actor), concatenating
+    /// their arguments. Stacking multiple `@Middleware` attributes is supported.
+    static func parseMiddleware(from declGroup: some DeclGroupSyntax) -> [String] {
+        parseMiddlewareAttributes(from: declGroup.attributes)
+    }
+
+    private static func parseMiddlewareAttributes(from attributes: AttributeListSyntax) -> [String] {
+        var result: [String] = []
+        for attribute in attributes {
+            guard case let .attribute(attr) = attribute,
+                  let identifier = attr.attributeName.as(IdentifierTypeSyntax.self),
+                  identifier.name.text == "Middleware",
+                  let args = attr.arguments?.as(LabeledExprListSyntax.self) else {
+                continue
+            }
+            for arg in args {
+                let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !exprStr.isEmpty {
+                    result.append(exprStr)
+                }
+            }
+        }
+        return result
+    }
+
     /// Parse @AuthMiddleware attribute from a function declaration
     static func parseAuthMiddleware(from funcDecl: FunctionDeclSyntax) -> (type: String, middlewares: [String])? {
         for attribute in funcDecl.attributes {

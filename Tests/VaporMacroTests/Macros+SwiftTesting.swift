@@ -29,6 +29,7 @@ let testMacros: [String: MacroSpec] = [
     "HTTP": MacroSpec(type: HTTPMethodMacro.self),
     "Controller": MacroSpec(type: ControllerMacro.self),
     "AuthMiddleware": MacroSpec(type: AuthMiddlewareMacro.self),
+    "Middleware": MacroSpec(type: MiddlewareMacro.self),
 ]
 
 #endif
