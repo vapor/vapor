@@ -1,5 +1,6 @@
-import NIOHTTP1
 import NIOCore
+import HTTPTypes
+import NIOConcurrencyHelpers
 
 /// Middleware that adds support for CORS settings in request responses.
 /// For configuration of this middleware please use the `CORSMiddleware.Configuration` object.
@@ -14,6 +15,7 @@ public final class CORSMiddleware: Middleware {
     /// - all: Uses wildcard to allow any origin.
     /// - any: A list of allowable origins.
     /// - custom: Uses custom string provided as an associated value.
+    /// - dynamic: Uses a closure to determine allow origin by ``Request``.
     public enum AllowOriginSetting: Sendable {
         /// Disallow any origin.
         case none
@@ -23,12 +25,15 @@ public final class CORSMiddleware: Middleware {
 
         /// Uses wildcard to allow any origin.
         case all
-        
+
         /// A list of allowable origins.
         case any([String])
 
         /// Uses custom string provided as an associated value.
         case custom(String)
+
+        /// Uses a closure to determine allow origin by ``Request``.
+        case dynamic(@Sendable (Request) -> String)
 
         /// Creates the header string depending on the case of self.
         ///
@@ -37,15 +42,17 @@ public final class CORSMiddleware: Middleware {
         public func header(forRequest req: Request) -> String {
             switch self {
             case .none: return ""
-            case .originBased: return req.headers[.origin].first ?? ""
+            case .originBased: return req.headers[values: .origin].first ?? ""
             case .all: return "*"
             case .any(let origins):
-                guard let origin = req.headers[.origin].first else {
+                guard let origin = req.headers[values: .origin].first else {
                     return ""
                 }
                 return origins.contains(origin) ? origin : ""
             case .custom(let string):
                 return string
+            case .dynamic(let closure):
+                return closure(req)
             }
         }
     }
@@ -61,7 +68,7 @@ public final class CORSMiddleware: Middleware {
         public static func `default`() -> Configuration {
             return .init(
                 allowedOrigin: .originBased,
-                allowedMethods: [.GET, .POST, .PUT, .OPTIONS, .DELETE, .PATCH],
+                allowedMethods: [.get, .post, .put, .options, .delete, .patch],
                 allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith]
             )
         }
@@ -96,15 +103,15 @@ public final class CORSMiddleware: Middleware {
         ///   - exposedHeaders: Headers exposed in the response of pre-flight request.
         public init(
             allowedOrigin: AllowOriginSetting,
-            allowedMethods: [HTTPMethod],
-            allowedHeaders: [HTTPHeaders.Name],
+            allowedMethods: [HTTPRequest.Method],
+            allowedHeaders: [HTTPField.Name],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,
-            exposedHeaders: [HTTPHeaders.Name]? = nil
+            exposedHeaders: [HTTPField.Name]? = nil
         ) {
             self.allowedOrigin = allowedOrigin
             self.allowedMethods = allowedMethods.map({ "\($0)" }).joined(separator: ", ")
-            self.allowedHeaders = allowedHeaders.map({ String(describing: $0) }).joined(separator: ", ")
+            self.allowedHeaders = allowedHeaders.map({ String(describing: $0.canonicalName) }).joined(separator: ", ")
             self.allowCredentials = allowCredentials
             self.cacheExpiration = cacheExpiration
             self.exposedHeaders = exposedHeaders?.map({ String(describing: $0) }).joined(separator: ", ")
@@ -113,7 +120,7 @@ public final class CORSMiddleware: Middleware {
 
     /// Configuration used for populating headers in response for CORS requests.
     public let configuration: Configuration
-    
+
     /// Creates a CORS middleware with the specified configuration.
     ///
     /// - parameters:
@@ -123,47 +130,43 @@ public final class CORSMiddleware: Middleware {
         self.configuration = configuration
     }
 
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         // Check if it's valid CORS request
-        guard request.headers[.origin].first != nil else {
-            return next.respond(to: request)
+        guard request.headers[.origin] != nil else {
+            return try await next.respond(to: request)
         }
-        
+
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
-        let response = request.isPreflight
-            ? request.eventLoop.makeSucceededFuture(.init())
-            : next.respond(to: request)
-        
-        return response.map { response in
-            // Modify response headers based on CORS settings
-            let originBasedAccessControlAllowHeader = self.configuration.allowedOrigin.header(forRequest: request)
-            response.responseBox.withLockedValue { box in
-                if !originBasedAccessControlAllowHeader.isEmpty {
-                    box.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: originBasedAccessControlAllowHeader)
-                }
+        let response = request.isPreflight ? Response() : try await next.respond(to: request)
 
-                box.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
-                box.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
-                
-                if let exposedHeaders = self.configuration.exposedHeaders {
-                    box.headers.replaceOrAdd(name: .accessControlExpose, value: exposedHeaders)
-                }
-                
-                if let cacheExpiration = self.configuration.cacheExpiration {
-                    box.headers.replaceOrAdd(name: .accessControlMaxAge, value: String(cacheExpiration))
-                }
-                
-                if self.configuration.allowCredentials {
-                    box.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
-                }
-
-                if case .originBased = self.configuration.allowedOrigin, !originBasedAccessControlAllowHeader.isEmpty {
-                    box.headers.add(name: .vary, value: "origin")
-                }
+        // Modify response headers based on CORS settings
+        let accessControlAllowOriginHeader = self.configuration.allowedOrigin.header(forRequest: request)
+        response.responseBox.withLockedValue { box in
+            if !accessControlAllowOriginHeader.isEmpty {
+                box.headers[.accessControlAllowOrigin] = accessControlAllowOriginHeader
             }
-            return response
+
+            box.headers[.accessControlAllowMethods] = self.configuration.allowedMethods
+            box.headers[.accessControlAllowHeaders] = self.configuration.allowedHeaders
+
+            if let exposedHeaders = self.configuration.exposedHeaders {
+                box.headers[.accessControlExposeHeaders] = exposedHeaders
+            }
+
+            if let cacheExpiration = self.configuration.cacheExpiration {
+                box.headers[.accessControlMaxAge] = String(cacheExpiration)
+            }
+
+            if self.configuration.allowCredentials {
+                box.headers[.accessControlAllowCredentials] = "true"
+            }
+
+            if self.configuration.allowedOrigin.variesByRequestOrigin, !accessControlAllowOriginHeader.isEmpty {
+                box.headers[.vary] = "origin"
+            }
         }
+        return response
     }
 }
 
@@ -172,7 +175,20 @@ public final class CORSMiddleware: Middleware {
 private extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
-        return self.method == .OPTIONS && self.headers[.accessControlRequestMethod].first != nil
+        return self.method == .options && self.headers[.accessControlRequestMethod] != nil
     }
+}
+
+private extension CORSMiddleware.AllowOriginSetting {
+  /// Returns `true` when the value of `Access-Control-Allow-Origin`
+  /// depends on the incoming `Origin` header.
+  var variesByRequestOrigin: Bool {
+    switch self {
+    case .originBased, .any, .dynamic:
+      return true
+    default:
+      return false
+    }
+  }
 }
 

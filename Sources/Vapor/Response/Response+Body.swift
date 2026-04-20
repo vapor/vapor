@@ -3,16 +3,17 @@ import Foundation
 import NIOCore
 import NIOFoundationCompat
 import NIOConcurrencyHelpers
+import HTTPServerNew
 
 extension Response {
     struct BodyStream: Sendable {
         let count: Int
-        let callback: @Sendable (BodyStreamWriter) -> ()
+        let callback: @Sendable (any BodyStreamWriter) -> ()
     }
     
     struct AsyncBodyStream {
         let count: Int
-        let callback: @Sendable (AsyncBodyStreamWriter) async throws -> ()
+        let callback: @Sendable (any AsyncBodyStreamWriter) async throws -> ()
     }
 
     /// Represents a `Response`'s body.
@@ -98,7 +99,7 @@ extension Response {
             }
         }
 
-        public func collect(on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer?> {
+        public func collect(on eventLoop: any EventLoop) -> EventLoopFuture<ByteBuffer?> {
             switch self.storage {
             case .stream(let stream):
                 let collector = ResponseBodyCollector(eventLoop: eventLoop, byteBufferAllocator: self.byteBufferAllocator)
@@ -117,7 +118,7 @@ extension Response {
             }
         }
         
-        /// See `CustomDebugStringConvertible`.
+        // See `CustomStringConvertible.description`.
         public var description: String {
             switch storage {
             case .none: return "<no body>"
@@ -170,14 +171,12 @@ extension Response {
             self.storage = .buffer(buffer)
         }
         
-        @preconcurrency
-        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(stream: @Sendable @escaping (any BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .stream(.init(count: count, callback: stream))
         }
 
-        @preconcurrency
-        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(stream: @Sendable @escaping (any BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
         
@@ -187,7 +186,7 @@ extension Response {
         ///   - asyncStream: The closure that will generate the results. **MUST** call `.end` or `.error` when terminating the stream
         ///   - count: The amount of bytes that will be written. The `asyncStream` **MUST** produce exactly `count` bytes.
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(asyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(asyncStream: @escaping @Sendable (any AsyncBodyStreamWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .asyncStream(.init(count: count, callback: asyncStream))
         }
@@ -197,7 +196,7 @@ extension Response {
         /// - Parameters:
         ///   - asyncStream: The closure that will generate the results. **MUST** call `.end` or `.error` when terminating the stream
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(asyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(asyncStream: @escaping @Sendable (any AsyncBodyStreamWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.init(asyncStream: asyncStream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
         
@@ -207,7 +206,7 @@ extension Response {
         ///   - asyncStream: The closure that will generate the results, which **MUST NOT** call `.end` or `.error` when terminating the stream.
         ///   - count: The amount of bytes that will be written. The `asyncStream` **MUST** produce exactly `count` bytes.
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(managedAsyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(managedAsyncStream: @escaping @Sendable (any AsyncBodyStreamWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .asyncStream(.init(count: count) { writer in
                 do {
@@ -225,7 +224,7 @@ extension Response {
         ///   - asyncStream: The closure that will generate the results, which **MUST NOT** call `.end` or `.error` when terminating the stream.
         ///   - count: The amount of bytes that will be written
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(managedAsyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(managedAsyncStream: @escaping @Sendable (any AsyncBodyStreamWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.init(managedAsyncStream: managedAsyncStream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
         
@@ -248,10 +247,10 @@ extension Response {
 // Any changes to this type need to be carefully considered
 private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWriter, @unchecked Sendable {
     var buffer: ByteBuffer
-    let eventLoop: EventLoop
+    let eventLoop: any EventLoop
     let promise: EventLoopPromise<ByteBuffer>
 
-    init(eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
+    init(eventLoop: any EventLoop, byteBufferAllocator: ByteBufferAllocator) {
         self.buffer = byteBufferAllocator.buffer(capacity: 0)
         self.eventLoop = eventLoop
         self.promise = eventLoop.makePromise(of: ByteBuffer.self)
@@ -278,5 +277,15 @@ private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWrit
         
         self.eventLoop.execute { self.write(result, promise: promise) }
         try await promise.futureResult.get()
+    }
+}
+
+extension Response.Body {
+    @concurrent
+    func write(_ writer: inout any ResponseBodyWriter) async throws {
+        if let buffer {
+            try await writer.write(buffer)
+        }
+        try await writer.finish(nil)
     }
 }

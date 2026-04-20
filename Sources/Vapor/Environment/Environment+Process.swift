@@ -19,7 +19,7 @@ extension Environment {
         ///     Environment.process.DATABASE_PORT // 3306
         public subscript<T>(dynamicMember member: String) -> T? where T: LosslessStringConvertible {
             get {
-                return self._info.environment[member].flatMap { T($0) }
+                self._info.environment[member].flatMap { T($0) }
             }
 
             nonmutating set (value) {
@@ -37,7 +37,7 @@ extension Environment {
         ///     Environment.process.DATABASE_USER // "root"
         public subscript(dynamicMember member: String) -> String? {
             get {
-                return self._info.environment[member]
+                self._info.environment[member]
             }
 
             nonmutating set (value) {

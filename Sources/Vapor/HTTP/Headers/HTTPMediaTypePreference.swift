@@ -1,5 +1,5 @@
 import Foundation
-import NIOHTTP1
+import HTTPTypes
 
 /// Represents a `MediaType` and its associated preference, `q`.
 public struct HTTPMediaTypePreference {
@@ -9,7 +9,7 @@ public struct HTTPMediaTypePreference {
     /// Its associated preference.
     public var q: Double?
 
-    init?(directives: [HTTPHeaders.Directive]) {
+    init?(directives: [HTTPFields.Directive]) {
         guard let mediaType = HTTPMediaType(directives: directives) else {
             return nil
         }

@@ -1,106 +1,119 @@
 import NIOPosix
 @testable import Vapor
-import XCTest
+import Testing
+import Foundation
 
-final class URLEncodedFormTests: XCTestCase {
+@Suite("URL Encoded Form Tests")
+struct URLEncodedFormTests {
     // MARK: Codable
 
+    @Test("Test Decode")
     func testDecode() throws {
         let data = """
         name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
         """
 
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
-        XCTAssertEqual(user.name, "Tanner")
-        XCTAssertEqual(user.age, 23)
-        XCTAssertEqual(user.pets.count, 2)
-        XCTAssertEqual(user.pets.first, "Zizek")
-        XCTAssertEqual(user.pets.last, "Foo")
-        XCTAssertEqual(user.dict["a"], 1)
-        XCTAssertEqual(user.dict["b"], 2)
-        XCTAssertEqual(user.foos[0], .baz)
-        XCTAssertEqual(user.nums[0], 3.14)
+        #expect(user.name == "Tanner")
+        #expect(user.age == 23)
+        #expect(user.pets.count == 2)
+        #expect(user.pets.first == "Zizek")
+        #expect(user.pets.last == "Foo")
+        #expect(user.dict["a"] == 1)
+        #expect(user.dict["b"] == 2)
+        #expect(user.foos[0] == .baz)
+        #expect(user.nums[0] == 3.14)
     }
 
+    @Test("Test Decode Comma Separated Array")
     func testDecodeCommaSeparatedArray() throws {
         let data = """
         name=Tanner&age=23&pets=Zizek,Foo%2C&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
         """
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
-        XCTAssertEqual(user.name, "Tanner")
-        XCTAssertEqual(user.age, 23)
-        XCTAssertEqual(user.pets.count, 2)
-        XCTAssertEqual(user.pets.first, "Zizek")
-        XCTAssertEqual(user.pets.last, "Foo,")
-        XCTAssertEqual(user.dict["a"], 1)
-        XCTAssertEqual(user.dict["b"], 2)
-        XCTAssertEqual(user.foos[0], .baz)
-        XCTAssertEqual(user.nums[0], 3.14)
+        #expect(user.name == "Tanner")
+        #expect(user.age == 23)
+        #expect(user.pets.count == 2)
+        #expect(user.pets.first == "Zizek")
+        #expect(user.pets.last == "Foo,")
+        #expect(user.dict["a"] == 1)
+        #expect(user.dict["b"] == 2)
+        #expect(user.foos[0] == .baz)
+        #expect(user.nums[0] == 3.14)
     }
 
+    @Test("Test Decode Without Array Brackets")
     func testDecodeWithoutArrayBrackets() throws {
         let data = """
         name=Tanner&age=23&pets=Zizek&pets=Foo&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
         """
 
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
-        XCTAssertEqual(user.name, "Tanner")
-        XCTAssertEqual(user.age, 23)
-        XCTAssertEqual(user.pets.count, 2)
-        XCTAssertEqual(user.pets.first, "Zizek")
-        XCTAssertEqual(user.pets.last, "Foo")
-        XCTAssertEqual(user.dict["a"], 1)
-        XCTAssertEqual(user.dict["b"], 2)
-        XCTAssertEqual(user.foos[0], .baz)
-        XCTAssertEqual(user.nums[0], 3.14)
+        #expect(user.name == "Tanner")
+        #expect(user.age == 23)
+        #expect(user.pets.count == 2)
+        #expect(user.pets.first == "Zizek")
+        #expect(user.pets.last == "Foo")
+        #expect(user.dict["a"] == 1)
+        #expect(user.dict["b"] == 2)
+        #expect(user.foos[0] == .baz)
+        #expect(user.nums[0] == 3.14)
     }
 
+    @Test("Test Decode Arrays To Single Value Fails")
     func testDecodeArraysToSingleValueFails() throws {
         let data = """
         name[]=Tanner&age[]=23&pets[]=Zizek&pets[]=Foo&dict[a][]=1&dict[b][]=2&foos[]=baz&nums[]=3.14
         """
-        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(User.self, from: data))
+        #expect(throws: DecodingError.self) {
+            try URLEncodedFormDecoder().decode(User.self, from: data)
+        }
     }
 
+    @Test("Test Decode String With Commas")
     func testDecodeStringWithCommas() throws {
         let data = """
         name=Vapor, Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
         """
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
-        XCTAssertEqual(user.name, "Vapor, Tanner")
-        XCTAssertEqual(user.age, 23)
-        XCTAssertEqual(user.pets.count, 2)
-        XCTAssertEqual(user.pets.first, "Zizek")
-        XCTAssertEqual(user.pets.last, "Foo")
-        XCTAssertEqual(user.dict["a"], 1)
-        XCTAssertEqual(user.dict["b"], 2)
-        XCTAssertEqual(user.foos[0], .baz)
-        XCTAssertEqual(user.nums[0], 3.14)
+        #expect(user.name == "Vapor, Tanner")
+        #expect(user.age == 23)
+        #expect(user.pets.count == 2)
+        #expect(user.pets.first == "Zizek")
+        #expect(user.pets.last == "Foo")
+        #expect(user.dict["a"] == 1)
+        #expect(user.dict["b"] == 2)
+        #expect(user.foos[0] == .baz)
+        #expect(user.nums[0] == 3.14)
     }
 
+    @Test("Test Decode Without Flags As Bool Fails When Bool Is Required")
     func testDecodeWithoutFlagsAsBoolFailsWhenBoolIsRequired() throws {
         let decoder = URLEncodedFormDecoder(configuration: .init(boolFlags: false))
         let dataWithoutBool = """
         name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
         """
-        try XCTAssertThrowsError(decoder.decode(User.self, from: dataWithoutBool))
+        #expect(throws: DecodingError.self) {
+            try decoder.decode(User.self, from: dataWithoutBool)
+        }
 
         let dataWithBool = """
         name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14&isCool=false
         """
         let user = try decoder.decode(User.self, from: dataWithBool)
-        XCTAssertEqual(user.name, "Tanner")
-        XCTAssertEqual(user.age, 23)
-        XCTAssertEqual(user.pets.count, 2)
-        XCTAssertEqual(user.pets.first, "Zizek")
-        XCTAssertEqual(user.pets.last, "Foo")
-        XCTAssertEqual(user.dict["a"], 1)
-        XCTAssertEqual(user.dict["b"], 2)
-        XCTAssertEqual(user.foos[0], .baz)
-        XCTAssertEqual(user.nums[0], 3.14)
-        XCTAssertEqual(user.isCool, false)
+        #expect(user.name == "Tanner")
+        #expect(user.age == 23)
+        #expect(user.pets.count == 2)
+        #expect(user.pets.first == "Zizek")
+        #expect(user.pets.last == "Foo")
+        #expect(user.dict["a"] == 1)
+        #expect(user.dict["b"] == 2)
+        #expect(user.foos[0] == .baz)
+        #expect(user.nums[0] == 3.14)
+        #expect(user.isCool == false)
     }
 
+    @Test("Test Decode Indexed Array")
     func testDecodeIndexedArray() throws {
         struct Test: Decodable {
             let array: [String]
@@ -110,12 +123,13 @@ final class URLEncodedFormTests: XCTestCase {
         array[0]=a&array[1]=&array[2]=b&array[3]=
         """
         let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
-        XCTAssertEqual(test.array[0], "a")
-        XCTAssertEqual(test.array[1], "")
-        XCTAssertEqual(test.array[2], "b")
-        XCTAssertEqual(test.array[3], "")
+        #expect(test.array[0] == "a")
+        #expect(test.array[1] == "")
+        #expect(test.array[2] == "b")
+        #expect(test.array[3] == "")
     }
 
+    @Test("Test Decode Unindexed Array")
     func testDecodeUnindexedArray() throws {
         struct Test: Decodable {
             let array: [String]
@@ -125,12 +139,13 @@ final class URLEncodedFormTests: XCTestCase {
         array[]=a&array[]=&array[]=b&array[]=
         """
         let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
-        XCTAssertEqual(test.array[0], "a")
-        XCTAssertEqual(test.array[1], "")
-        XCTAssertEqual(test.array[2], "b")
-        XCTAssertEqual(test.array[3], "")
+        #expect(test.array[0] == "a")
+        #expect(test.array[1] == "")
+        #expect(test.array[2] == "b")
+        #expect(test.array[3] == "")
     }
 
+    @Test("Test Decode Indexed Array (dictionary)")
     func testDecodeIndexedArray_dictionary() throws {
         struct Test: Decodable {
             let array: [Int: String]
@@ -140,24 +155,26 @@ final class URLEncodedFormTests: XCTestCase {
         array[0]=a&array[1]=b
         """
         let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
-        XCTAssertEqual(test.array[0], "a")
-        XCTAssertEqual(test.array[1], "b")
+        #expect(test.array[0] == "a")
+        #expect(test.array[1] == "b")
     }
 
+    @Test("Test Encode")
     func testEncode() throws {
         let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let result = try URLEncodedFormEncoder().encode(user)
-        XCTAssert(result.contains("pets[]=Zizek"))
-        XCTAssert(result.contains("pets[]=Foo"))
-        XCTAssert(result.contains("age=23"))
-        XCTAssert(result.contains("name=Tanner"))
-        XCTAssert(result.contains("dict[a]=1"))
-        XCTAssert(result.contains("dict[b]=2"))
-        XCTAssert(result.contains("foos[]=baz"))
-        XCTAssert(result.contains("nums[]=3.14"))
-        XCTAssert(result.contains("isCool=true"))
+        #expect(result.contains("pets[]=Zizek"))
+        #expect(result.contains("pets[]=Foo"))
+        #expect(result.contains("age=23"))
+        #expect(result.contains("name=Tanner"))
+        #expect(result.contains("dict[a]=1"))
+        #expect(result.contains("dict[b]=2"))
+        #expect(result.contains("foos[]=baz"))
+        #expect(result.contains("nums[]=3.14"))
+        #expect(result.contains("isCool=true"))
     }
 
+    @Test("Test Date Array Coding")
     func testDateArrayCoding() throws {
         let toEncode = DateArrayCoding(
             dates: [
@@ -171,37 +188,39 @@ final class URLEncodedFormTests: XCTestCase {
         )
 
         let decodedDefaultFromUnixTimestamp = try URLEncodedFormDecoder().decode(DateArrayCoding.self, from: "dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0")
-        XCTAssertEqual(decodedDefaultFromUnixTimestamp, toEncode)
+        #expect(decodedDefaultFromUnixTimestamp == toEncode)
 
         let resultForDefault = try URLEncodedFormEncoder().encode(toEncode)
-        XCTAssertEqual("dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0", resultForDefault)
+        #expect(resultForDefault == "dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0")
 
         let decodedDefault = try URLEncodedFormDecoder().decode(DateArrayCoding.self, from: resultForDefault)
-        XCTAssertEqual(decodedDefault, toEncode)
+        #expect(decodedDefault == toEncode)
 
         let resultForTimeIntervalSince1970 = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .secondsSince1970)
         ).encode(toEncode)
-        XCTAssertEqual("dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0", resultForDefault)
+        #expect(resultForDefault == "dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0")
 
         let decodedTimeIntervalSince1970 = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .secondsSince1970)
         ).decode(DateArrayCoding.self, from: resultForTimeIntervalSince1970)
-        XCTAssertEqual(decodedTimeIntervalSince1970, toEncode)
+        #expect(decodedTimeIntervalSince1970 == toEncode)
 
         let resultForInternetDateTime = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .iso8601)
         ).encode(toEncode)
-        XCTAssertEqual("dates[]=1970-01-01T00%3A00%3A00Z&dates[]=1970-01-01T02%3A46%3A40Z&dates[]=1970-01-01T05%3A33%3A20Z&dates[]=1970-01-01T08%3A20%3A00Z&dates[]=1970-01-01T11%3A06%3A40Z&dates[]=1970-01-01T13%3A53%3A20Z", resultForInternetDateTime)
+        #expect(resultForInternetDateTime == "dates[]=1970-01-01T00%3A00%3A00Z&dates[]=1970-01-01T02%3A46%3A40Z&dates[]=1970-01-01T05%3A33%3A20Z&dates[]=1970-01-01T08%3A20%3A00Z&dates[]=1970-01-01T11%3A06%3A40Z&dates[]=1970-01-01T13%3A53%3A20Z")
 
         let decodedInternetDateTime = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(DateArrayCoding.self, from: resultForInternetDateTime)
-        XCTAssertEqual(decodedInternetDateTime, toEncode)
+        #expect(decodedInternetDateTime == toEncode)
 
-        XCTAssertThrowsError(try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategy: .iso8601)
-        ).decode(DateArrayCoding.self, from: "dates=bad-date"))
+        #expect(throws: DecodingError.self) {
+            try URLEncodedFormDecoder(
+                configuration: .init(dateDecodingStrategy: .iso8601)
+            ).decode(DateArrayCoding.self, from: "dates=bad-date")
+        }
 
         final class DateFormatterFactory: Sendable {
             var currentValue: DateFormatter {
@@ -223,7 +242,7 @@ final class URLEncodedFormTests: XCTestCase {
                 try container.encode(factory.currentValue.string(from: date))
             })
         ).encode(toEncode)
-        XCTAssertEqual("dates[]=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2002%3A46%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2005%3A33%3A20%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2008%3A20%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2011%3A06%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2013%3A53%3A20%20Timezone%3A%20Z", resultCustom)
+        #expect("dates[]=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2002%3A46%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2005%3A33%3A20%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2008%3A20%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2011%3A06%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2013%3A53%3A20%20Timezone%3A%20Z" == resultCustom)
 
         let decodedCustom = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .custom { decoder -> Date in
@@ -235,44 +254,47 @@ final class URLEncodedFormTests: XCTestCase {
                 return date
             })
         ).decode(DateArrayCoding.self, from: resultCustom)
-        XCTAssertEqual(decodedCustom, toEncode)
+        #expect(decodedCustom == toEncode)
     }
 
+    @Test("Test Date Coding")
     func testDateCoding() throws {
         let toEncode = DateCoding(date: Date(timeIntervalSince1970: 0))
 
         let decodedDefaultFromUnixTimestamp = try URLEncodedFormDecoder().decode(DateCoding.self, from: "date=0")
-        XCTAssertEqual(decodedDefaultFromUnixTimestamp, toEncode)
+        #expect(decodedDefaultFromUnixTimestamp == toEncode)
 
         let resultForDefault = try URLEncodedFormEncoder().encode(toEncode)
-        XCTAssertEqual("date=0.0", resultForDefault)
+        #expect(resultForDefault == "date=0.0")
 
         let decodedDefault = try URLEncodedFormDecoder().decode(DateCoding.self, from: resultForDefault)
-        XCTAssertEqual(decodedDefault, toEncode)
+        #expect(decodedDefault == toEncode)
 
         let resultForTimeIntervalSince1970 = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .secondsSince1970)
         ).encode(toEncode)
-        XCTAssertEqual("date=0.0", resultForTimeIntervalSince1970)
+        #expect(resultForTimeIntervalSince1970 == "date=0.0")
 
         let decodedTimeIntervalSince1970 = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .secondsSince1970)
         ).decode(DateCoding.self, from: resultForTimeIntervalSince1970)
-        XCTAssertEqual(decodedTimeIntervalSince1970, toEncode)
+        #expect(decodedTimeIntervalSince1970 == toEncode)
 
         let resultForInternetDateTime = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .iso8601)
         ).encode(toEncode)
-        XCTAssertEqual("date=1970-01-01T00%3A00%3A00Z", resultForInternetDateTime)
+        #expect(resultForInternetDateTime == "date=1970-01-01T00%3A00%3A00Z")
 
         let decodedInternetDateTime = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(DateCoding.self, from: resultForInternetDateTime)
-        XCTAssertEqual(decodedInternetDateTime, toEncode)
+        #expect(decodedInternetDateTime == toEncode)
 
-        XCTAssertThrowsError(try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategy: .iso8601)
-        ).decode(DateCoding.self, from: "date=bad-date"))
+        #expect(throws: DecodingError.self) {
+            try URLEncodedFormDecoder(
+                configuration: .init(dateDecodingStrategy: .iso8601)
+            ).decode(DateCoding.self, from: "date=bad-date")
+        }
 
         final class DateFormatterFactory: Sendable {
             var currentValue: DateFormatter {
@@ -294,7 +316,7 @@ final class URLEncodedFormTests: XCTestCase {
                 try container.encode(factory.currentValue.string(from: date))
             })
         ).encode(toEncode)
-        XCTAssertEqual("date=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z", resultCustom)
+        #expect("date=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z" == resultCustom)
 
         let decodedCustom = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .custom { decoder -> Date in
@@ -306,9 +328,10 @@ final class URLEncodedFormTests: XCTestCase {
                 return date
             })
         ).decode(DateCoding.self, from: resultCustom)
-        XCTAssertEqual(decodedCustom, toEncode)
+        #expect(decodedCustom == toEncode)
     }
 
+    @Test("Test Optional Date Encoding and Decoding", .bug("https://github.com/vapor/vapor/issues/2518"))
     func testOptionalDateEncodingAndDecoding_GH2518() throws {
         let optionalDate: Date? = Date(timeIntervalSince1970: 0)
         let dateString = "1970-01-01T00%3A00%3A00Z"
@@ -316,75 +339,79 @@ final class URLEncodedFormTests: XCTestCase {
         let resultForDecodedOptionalDate = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(Date?.self, from: dateString)
-        XCTAssertEqual(optionalDate, resultForDecodedOptionalDate)
+        #expect(optionalDate == resultForDecodedOptionalDate)
 
         let resultForEncodedOptionalDate = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .iso8601)
         ).encode(optionalDate)
-        XCTAssertEqual(dateString, resultForEncodedOptionalDate)
+        #expect(dateString == resultForEncodedOptionalDate)
     }
 
+    @Test("Test Encoded Array Values")
     func testEncodedArrayValues() throws {
         let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let result = try URLEncodedFormEncoder(
             configuration: .init(arrayEncoding: .values)
         ).encode(user)
-        XCTAssert(result.contains("pets=Zizek"))
-        XCTAssert(result.contains("pets=Foo"))
-        XCTAssert(result.contains("age=23"))
-        XCTAssert(result.contains("name=Tanner"))
-        XCTAssert(result.contains("dict[a]=1"))
-        XCTAssert(result.contains("dict[b]=2"))
-        XCTAssert(result.contains("foos=baz"))
-        XCTAssert(result.contains("nums=3.14"))
-        XCTAssert(result.contains("isCool=true"))
+        #expect(result.contains("pets=Zizek"))
+        #expect(result.contains("pets=Foo"))
+        #expect(result.contains("age=23"))
+        #expect(result.contains("name=Tanner"))
+        #expect(result.contains("dict[a]=1"))
+        #expect(result.contains("dict[b]=2"))
+        #expect(result.contains("foos=baz"))
+        #expect(result.contains("nums=3.14"))
+        #expect(result.contains("isCool=true"))
     }
 
+    @Test("Test Encoded Array Separator")
     func testEncodeArraySeparator() throws {
         let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let result = try URLEncodedFormEncoder(
             configuration: .init(arrayEncoding: .separator(","))
         ).encode(user)
-        XCTAssert(result.contains("pets=Zizek,Foo"))
-        XCTAssert(result.contains("age=23"))
-        XCTAssert(result.contains("name=Tanner"))
-        XCTAssert(result.contains("dict[a]=1"))
-        XCTAssert(result.contains("dict[b]=2"))
-        XCTAssert(result.contains("foos=baz"))
-        XCTAssert(result.contains("nums=3.14"))
-        XCTAssert(result.contains("isCool=true"))
+        #expect(result.contains("pets=Zizek,Foo"))
+        #expect(result.contains("age=23"))
+        #expect(result.contains("name=Tanner"))
+        #expect(result.contains("dict[a]=1"))
+        #expect(result.contains("dict[b]=2"))
+        #expect(result.contains("foos=baz"))
+        #expect(result.contains("nums=3.14"))
+        #expect(result.contains("isCool=true"))
     }
 
+    @Test("Test Multi Object Array Encode")
     func testMultiObjectArrayEncode() throws {
         let tanner = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let ravneet = User(name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
         let usersToEncode = Users(users: [tanner, ravneet])
         let result = try URLEncodedFormEncoder().encode(usersToEncode)
-        XCTAssert(result.contains("users[0][pets][]=Zizek"))
-        XCTAssert(result.contains("users[0][pets][]=Foo"))
-        XCTAssert(result.contains("users[0][age]=23"))
-        XCTAssert(result.contains("users[0][name]=Tanner"))
-        XCTAssert(result.contains("users[0][dict][a]=1"))
-        XCTAssert(result.contains("users[0][dict][b]=2"))
-        XCTAssert(result.contains("users[0][foos][]=baz"))
-        XCTAssert(result.contains("users[0][nums][]=3.14"))
-        XCTAssert(result.contains("users[0][isCool]=true"))
+        #expect(result.contains("users[0][pets][]=Zizek"))
+        #expect(result.contains("users[0][pets][]=Foo"))
+        #expect(result.contains("users[0][age]=23"))
+        #expect(result.contains("users[0][name]=Tanner"))
+        #expect(result.contains("users[0][dict][a]=1"))
+        #expect(result.contains("users[0][dict][b]=2"))
+        #expect(result.contains("users[0][foos][]=baz"))
+        #expect(result.contains("users[0][nums][]=3.14"))
+        #expect(result.contains("users[0][isCool]=true"))
 
-        XCTAssert(result.contains("users[1][pets][]=Piku"))
-        XCTAssert(result.contains("users[1][age]=33"))
-        XCTAssert(result.contains("users[1][name]=Ravneet"))
-        XCTAssert(result.contains("users[1][dict][a]=-3"))
-        XCTAssert(result.contains("users[1][dict][b]=99"))
-        XCTAssert(result.contains("users[1][foos][]=baz"))
-        XCTAssert(result.contains("users[1][foos][]=bar"))
-        XCTAssert(result.contains("users[1][nums][]=3.14"))
-        XCTAssert(result.contains("users[1][nums][]=144"))
-        XCTAssert(result.contains("users[1][isCool]=true"))
+        #expect(result.contains("users[1][pets][]=Piku"))
+        #expect(result.contains("users[1][age]=33"))
+        #expect(result.contains("users[1][name]=Ravneet"))
+        #expect(result.contains("users[1][dict][a]=-3"))
+        #expect(result.contains("users[1][dict][b]=99"))
+        #expect(result.contains("users[1][foos][]=baz"))
+        #expect(result.contains("users[1][foos][]=bar"))
+        #expect(result.contains("users[1][nums][]=3.14"))
+        #expect(result.contains("users[1][nums][]=144"))
+        #expect(result.contains("users[1][isCool]=true"))
 
         let decodedUsers = try URLEncodedFormDecoder().decode(Users.self, from: result)
-        XCTAssertEqual(decodedUsers, usersToEncode)
+        #expect(decodedUsers == usersToEncode)
     }
 
+    @Test("Test Multi Object Values Array Encoding")
     func testMultiObjectValuesArrayEncoding() throws {
         let tanner = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let ravneet = User(name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
@@ -392,49 +419,44 @@ final class URLEncodedFormTests: XCTestCase {
         let result = try URLEncodedFormEncoder(
             configuration: .init(arrayEncoding: .values)
         ).encode(usersToEncode)
-        XCTAssert(result.contains("users[0][pets]=Zizek"))
-        XCTAssert(result.contains("users[0][pets]=Foo"))
-        XCTAssert(result.contains("users[0][age]=23"))
-        XCTAssert(result.contains("users[0][name]=Tanner"))
-        XCTAssert(result.contains("users[0][dict][a]=1"))
-        XCTAssert(result.contains("users[0][dict][b]=2"))
-        XCTAssert(result.contains("users[0][foos]=baz"))
-        XCTAssert(result.contains("users[0][nums]=3.14"))
-        XCTAssert(result.contains("users[0][isCool]=true"))
 
-        XCTAssert(result.contains("users[1][pets]=Piku"))
-        XCTAssert(result.contains("users[1][age]=33"))
-        XCTAssert(result.contains("users[1][name]=Ravneet"))
-        XCTAssert(result.contains("users[1][dict][a]=-3"))
-        XCTAssert(result.contains("users[1][dict][b]=99"))
-        XCTAssert(result.contains("users[1][foos]=baz"))
-        XCTAssert(result.contains("users[1][foos]=bar"))
-        XCTAssert(result.contains("users[1][nums]=3.14"))
-        XCTAssert(result.contains("users[1][nums]=144"))
-        XCTAssert(result.contains("users[1][isCool]=true"))
+        #expect(result.contains("users[0][pets]=Zizek"))
+        #expect(result.contains("users[0][pets]=Foo"))
+        #expect(result.contains("users[0][age]=23"))
+        #expect(result.contains("users[0][name]=Tanner"))
+        #expect(result.contains("users[0][dict][a]=1"))
+        #expect(result.contains("users[0][dict][b]=2"))
+        #expect(result.contains("users[0][foos]=baz"))
+        #expect(result.contains("users[0][nums]=3.14"))
+        #expect(result.contains("users[0][isCool]=true"))
+
+        #expect(result.contains("users[1][pets]=Piku"))
+        #expect(result.contains("users[1][age]=33"))
+        #expect(result.contains("users[1][name]=Ravneet"))
+        #expect(result.contains("users[1][dict][a]=-3"))
+        #expect(result.contains("users[1][dict][b]=99"))
+        #expect(result.contains("users[1][foos]=baz"))
+        #expect(result.contains("users[1][foos]=bar"))
+        #expect(result.contains("users[1][nums]=3.14"))
+        #expect(result.contains("users[1][nums]=144"))
+        #expect(result.contains("users[1][isCool]=true"))
 
         let decodedUsers = try URLEncodedFormDecoder().decode(Users.self, from: result)
-        XCTAssertEqual(decodedUsers, usersToEncode)
+        #expect(decodedUsers == usersToEncode)
     }
 
-    func testInheritanceCoding() throws {
-        let toEncode = ChildClass()
-        toEncode.baseField = "Base Value"
-        toEncode.childField = "Child Field"
-        let result = try URLEncodedFormEncoder().encode(toEncode)
-        let decoded = try URLEncodedFormDecoder().decode(ChildClass.self, from: result)
-        XCTAssertEqual(decoded, toEncode)
-    }
-
+    @Test("Test Arrays of Arrays of Objects")
     func testArraysOfArraysOfObjects() throws {
         let toEncode = [[User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)]]
         let result = try URLEncodedFormEncoder().encode(toEncode)
         let kvs = result.split(separator: "&")
-        XCTAssert(kvs.contains("0[0][name]=Tanner"))
+        #expect(kvs.contains("0[0][name]=Tanner"))
+
         let decoded = try URLEncodedFormDecoder().decode([[User]].self, from: result)
-        XCTAssertEqual(decoded, toEncode)
+        #expect(decoded == toEncode)
     }
 
+    @Test("Test Multi Object Array Encode With Array Separator")
     func testMultiObjectArrayEncodeWithArraySeparator() throws {
         let tanner = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let ravneet = User(name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
@@ -442,51 +464,53 @@ final class URLEncodedFormTests: XCTestCase {
         let result = try URLEncodedFormEncoder(
             configuration: .init(arrayEncoding: .separator(","))
         ).encode(usersToEncode)
-        XCTAssert(result.contains("users[0][pets]=Zizek,Foo"))
-        XCTAssert(result.contains("users[0][age]=23"))
-        XCTAssert(result.contains("users[0][name]=Tanner"))
-        XCTAssert(result.contains("users[0][dict][a]=1"))
-        XCTAssert(result.contains("users[0][dict][b]=2"))
-        XCTAssert(result.contains("users[0][foos]=baz"))
-        XCTAssert(result.contains("users[0][nums]=3.14"))
-        XCTAssert(result.contains("users[0][isCool]=true"))
 
-        XCTAssert(result.contains("users[1][pets]=Piku"))
-        XCTAssert(result.contains("users[1][age]=33"))
-        XCTAssert(result.contains("users[1][name]=Ravneet"))
-        XCTAssert(result.contains("users[1][dict][a]=-3"))
-        XCTAssert(result.contains("users[1][dict][b]=99"))
-        XCTAssert(result.contains("users[1][foos]=baz,bar"))
-        XCTAssert(result.contains("users[1][nums]=3.14,144"))
-        XCTAssert(result.contains("users[1][isCool]=true"))
+        #expect(result.contains("users[0][pets]=Zizek,Foo"))
+        #expect(result.contains("users[0][age]=23"))
+        #expect(result.contains("users[0][name]=Tanner"))
+        #expect(result.contains("users[0][dict][a]=1"))
+        #expect(result.contains("users[0][dict][b]=2"))
+        #expect(result.contains("users[0][foos]=baz"))
+        #expect(result.contains("users[0][nums]=3.14"))
+        #expect(result.contains("users[0][isCool]=true"))
+
+        #expect(result.contains("users[1][pets]=Piku"))
+        #expect(result.contains("users[1][age]=33"))
+        #expect(result.contains("users[1][name]=Ravneet"))
+        #expect(result.contains("users[1][dict][a]=-3"))
+        #expect(result.contains("users[1][dict][b]=99"))
+        #expect(result.contains("users[1][foos]=baz,bar"))
+        #expect(result.contains("users[1][nums]=3.14,144"))
+        #expect(result.contains("users[1][isCool]=true"))
 
         let decodedUsers = try URLEncodedFormDecoder().decode(Users.self, from: result)
-        XCTAssertEqual(decodedUsers, usersToEncode)
+        #expect(decodedUsers == usersToEncode)
     }
 
+    @Test("Test Codable")
     func testCodable() throws {
         let a = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [], nums: [], isCool: true)
         let body = try URLEncodedFormEncoder().encode(a)
-        let b = try! URLEncodedFormDecoder().decode(User.self, from: body)
-        XCTAssertEqual(a, b)
+        let b = try URLEncodedFormDecoder().decode(User.self, from: body)
+        #expect(a == b)
     }
 
+    @Test("Test Decode Int Array")
     func testDecodeIntArray() throws {
-        let data = """
-        array[]=1&array[]=2&array[]=3
-        """
-
+        let data = "array[]=1&array[]=2&array[]=3"
         let content = try URLEncodedFormDecoder().decode([String: [Int]].self, from: data)
-        XCTAssertEqual(content["array"], [1, 2, 3])
+        #expect(content["array"] == [1, 2, 3])
     }
 
+    @Test("Test Sparse Array")
     func testSparseArray() throws {
-        let data = """
-        array[0]=0&array[1]=1&array[3]=3
-        """
-        XCTAssertThrowsError(try URLEncodedFormDecoder().decode([String: [Int]].self, from: data))
+        let data = "array[0]=0&array[1]=1&array[3]=3"
+        #expect(throws: DecodingError.self) {
+            try URLEncodedFormDecoder().decode([String: [Int]].self, from: data)
+        }
     }
 
+    @Test("Test Raw Enum")
     func testRawEnum() throws {
         enum PetType: String, Codable {
             case cat, dog
@@ -496,92 +520,104 @@ final class URLEncodedFormTests: XCTestCase {
             var type: PetType
         }
         let ziz = try URLEncodedFormDecoder().decode(Pet.self, from: "name=Ziz&type=cat")
-        XCTAssertEqual(ziz.name, "Ziz")
-        XCTAssertEqual(ziz.type, .cat)
+        #expect(ziz.name == "Ziz")
+        #expect(ziz.type == .cat)
+
         let string = try URLEncodedFormEncoder().encode(ziz)
-        XCTAssertEqual(string.contains("name=Ziz"), true)
-        XCTAssertEqual(string.contains("type=cat"), true)
+        #expect(string.contains("name=Ziz"))
+        #expect(string.contains("type=cat"))
     }
 
+    @Test("Test Flag Decoding As Bool")
     func testFlagDecodingAsBool() throws {
         struct Foo: Codable {
             var flag: Bool
         }
         let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag")
-        XCTAssertEqual(foo.flag, true)
+        #expect(foo.flag == true)
     }
     
+    @Test("Test Flag Decoding As Optional Bool")
     func testFlagDecodingAsOptionalBool() throws {
         struct Foo: Codable {
             var flag: Bool?
         }
+
         let foo1 = try URLEncodedFormDecoder().decode(Foo.self, from: "flag")
-        XCTAssertEqual(foo1.flag, true)
+        #expect(foo1.flag == true)
         let foo2 = try URLEncodedFormDecoder().decode(Foo.self, from: "somethingelse")
-        XCTAssertEqual(foo2.flag, nil)
+        #expect(foo2.flag == nil)
         let foo3 = try URLEncodedFormDecoder().decode(Foo.self, from: "")
-        XCTAssertEqual(foo3.flag, nil)
+        #expect(foo3.flag == nil)
         let foo4 = try URLEncodedFormDecoder().decode(Foo.self, from: "flag=true")
-        XCTAssertEqual(foo4.flag, true)
+        #expect(foo4.flag == true)
         let foo5 = try URLEncodedFormDecoder().decode(Foo.self, from: "flag=false")
-        XCTAssertEqual(foo5.flag, false)
+        #expect(foo5.flag == false)
     }
 
+    @Test("Test Flag 'on' Decoding As Bool")
     func testFlagIsOnDecodingAsBool() throws {
         struct Foo: Codable {
             var flag: Bool
         }
         let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag=on")
-        XCTAssertEqual(foo.flag, true)
+        #expect(foo.flag == true)
     }
 
-    /// https://github.com/vapor/url-encoded-form/issues/3
+    @Test("Test Converting '1' to true", .bug("https://github.com/vapor/url-encoded-form/issues/3"))
     func testGH3() throws {
         struct Foo: Codable {
             var flag: Bool
         }
         let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag=1")
-        XCTAssertEqual(foo.flag, true)
+        #expect(foo.flag == true)
     }
 
     // MARK: Parser
 
+    @Test("Test Basic Parsing")
     func testBasic() throws {
         let data = "hello=world&foo=bar"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["hello": "world", "foo": "bar"])
+        #expect(form == ["hello": "world", "foo": "bar"])
     }
 
+    @Test("Test Basic Parsing With Ampersand")
     func testBasicWithAmpersand() throws {
         let data = "hello=world&foo=bar%26bar"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["hello": "world", "foo": "bar&bar"])
+        #expect(form == ["hello": "world", "foo": "bar&bar"])
     }
 
+    @Test("Test Dictionary Parsing")
     func testDictionary() throws {
         let data = "greeting[en]=hello&greeting[es]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greeting": ["es": "hola", "en": "hello"]])
+        #expect(form == ["greeting": ["es": "hola", "en": "hello"]])
     }
 
+    @Test("Test Array Parsing")
     func testArray() throws {
         let data = "greetings[]=hello&greetings[]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["": ["hello", "hola"]]])
+        #expect(form == ["greetings": ["": ["hello", "hola"]]])
     }
 
+    @Test("Test Array Parsing Without Brackets")
     func testArrayWithoutBrackets() throws {
         let data = "greetings=hello&greetings=hola"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["hello", "hola"]])
+        #expect(form == ["greetings": ["hello", "hola"]])
     }
 
+    @Test("Test Sub Array Parsing")
     func testSubArray() throws {
         let data = "greetings[sub][]=hello&greetings[sub][]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["sub": ["": ["hello", "hola"]]]])
+        #expect(form == ["greetings": ["sub": ["": ["hello", "hola"]]]])
     }
 
+    @Test("Test Sub Array Parsing Case 2")
     func testSubArray2() throws {
         let data = "greetings[sub]=hello&greetings[sub][]=hola"
         let form = try URLEncodedFormParser().parse(data)
@@ -590,9 +626,10 @@ final class URLEncodedFormTests: XCTestCase {
                     "": "hola",
                 ]),
         ]]
-        XCTAssertEqual(form, expected)
+        #expect(form == expected)
     }
 
+    @Test("Test Sub Array Parsing Case 3")
     func testSubArray3() throws {
         let data = "greetings[sub][]=hello&greetings[sub]=hola"
         let form = try URLEncodedFormParser().parse(data)
@@ -601,9 +638,10 @@ final class URLEncodedFormTests: XCTestCase {
                     "": "hello",
                 ]),
         ]]
-        XCTAssertEqual(form, expected)
+        #expect(form == expected)
     }
 
+    @Test("Test Sub Array Parsing Case 4")
     func testSubArray4() throws {
         let data = "greetings[sub][]=hello&greetings[sub]=hola&greetings[sub]=bonjour"
         let form = try URLEncodedFormParser().parse(data)
@@ -612,78 +650,93 @@ final class URLEncodedFormTests: XCTestCase {
                     "": "hello",
                 ]),
         ]]
-        XCTAssertEqual(form, expected)
+        #expect(form == expected)
     }
 
+    @Test("Test Brackets in the Middle")
     func testBracketsInTheMiddle() throws {
         let data = "greetings[sub][][a]=hello&greetings[sub][][a]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["sub": ["": ["a": ["hello", "hola"]]]]])
+        #expect(form == ["greetings": ["sub": ["": ["a": ["hello", "hola"]]]]])
     }
 
+    @Test("Test Sub Array Without Brackets")
     func testSubArrayWithoutBrackets() throws {
         let data = "greetings[sub]=hello&greetings[sub]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["sub": ["hello", "hola"]]])
+        #expect(form == ["greetings": ["sub": ["hello", "hola"]]])
     }
 
+    @Test("Test Flags in URL Encoding")
     func testFlags() throws {
         let data = "hello=&foo"
         let form = try URLEncodedFormParser().parse(data)
         let expected = URLEncodedFormData(values: ["foo"], children: [
             "hello": URLEncodedFormData(""),
         ])
-        XCTAssertEqual(form, expected)
+        #expect(form == expected)
     }
 
+    @Test("Test Percent Decoding")
     func testPercentDecoding() throws {
         let data = "aaa%5B%5D=%2Bbbb%20+ccc&d[]=1&d[]=2"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["aaa": ["": "+bbb  ccc"], "d": ["": ["1", "2"]]])
+        #expect(form == ["aaa": ["": "+bbb  ccc"], "d": ["": ["1", "2"]]])
     }
 
+    @Test("Test Nested Parsing")
     func testNestedParsing() throws {
         // a[][b]=c&a[][b]=c
         // [a:[[b:c],[b:c]]
         let data = "a[b][c][d][hello]=world"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["a": ["b": ["c": ["d": ["hello": "world"]]]]])
+        #expect(form == ["a": ["b": ["c": ["d": ["hello": "world"]]]]])
     }
 
     // MARK: Serializer
 
+    @Test("Test Percent Encoding")
     func testPercentEncoding() throws {
         let form: URLEncodedFormData = ["aaa]": "+bbb  ccc"]
         let data = try URLEncodedFormSerializer().serialize(form)
-        XCTAssertEqual(data, "aaa%5D=%2Bbbb%20%20ccc")
+        #expect(data == "aaa%5D=%2Bbbb%20%20ccc")
     }
 
+    @Test("Test Percent Encoding With Ampersand")
     func testPercentEncodingWithAmpersand() throws {
         let form: URLEncodedFormData = ["aaa": "b%26&b"]
         let data = try URLEncodedFormSerializer().serialize(form)
-        XCTAssertEqual(data, "aaa=b%2526%26b")
+        #expect(data == "aaa=b%2526%26b")
     }
 
+    @Test("Test Nested Encoding")
     func testNested() throws {
         let form: URLEncodedFormData = ["a": ["b": ["c": ["d": ["hello": "world"]]]]]
         let data = try URLEncodedFormSerializer().serialize(form)
-        XCTAssertEqual(data, "a[b][c][d][hello]=world")
+        #expect(data == "a[b][c][d][hello]=world")
     }
 
+    @Test("Test Percent Encoding Special Characters")
     func testPercentEncodingSpecial() throws {
         let data = try URLEncodedFormSerializer().serialize([
             "test": "&;!$'(),/:=?@~",
         ])
-        XCTAssertEqual(data, "test=%26%3B%21%24%27%28%29%2C%2F%3A%3D%3F%40%7E")
+        #expect(data == "test=%26%3B%21%24%27%28%29%2C%2F%3A%3D%3F%40%7E")
     }
 
+    @Test("Test Heavily Nested Array Parsing")
     func testHeavilyNestedArray() throws {
         var body = "x"
         body += String(repeating: "[]", count: 80000)
         body += "=y"
+
         struct Foo: Content {}
-        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Foo.self, from: body))
-        XCTAssert(true, "We should not have crashed")
+
+        #expect(throws: URLEncodedFormError.reachedNestingLimit) {
+            try URLEncodedFormDecoder().decode(Foo.self, from: body)
+        }
+
+        #expect(true, "We should not have crashed")
     }
 }
 
@@ -695,20 +748,6 @@ private struct User: Codable, Equatable {
     var foos: [Foo]
     var nums: [Decimal]
     var isCool: Bool
-}
-
-class BaseClass: Codable, Equatable {
-    var baseField: String?
-    static func == (lhs: BaseClass, rhs: BaseClass) -> Bool {
-        return lhs.baseField == rhs.baseField
-    }
-}
-
-class ChildClass: BaseClass {
-    var childField: String?
-    static func == (lhs: ChildClass, rhs: ChildClass) -> Bool {
-        return lhs.baseField == rhs.baseField && lhs.childField == rhs.childField
-    }
 }
 
 private struct Users: Codable, Equatable {

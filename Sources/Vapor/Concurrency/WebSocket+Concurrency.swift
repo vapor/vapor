@@ -1,22 +1,25 @@
+#if WebSockets
+import NIOPosix
 import NIOCore
-import NIOHTTP1
+import HTTPTypes
 import WebSocketKit
 import RoutingKit
 import Foundation
+import NIOPosix
+import NIOHTTPTypesHTTP1
 
 extension Request {
 
     /// Upgrades an existing request to a websocket connection
-    @preconcurrency
     public func webSocket(
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPFields?) = { _ in [:] },
         onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Response {
         webSocket(
             maxFrameSize: maxFrameSize,
             shouldUpgrade: { request in
-                let promise = request.eventLoop.makePromise(of: HTTPHeaders?.self)
+                let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: HTTPFields?.self)
                 promise.completeWithTask {
                     try await shouldUpgrade(request)
                 }
@@ -39,16 +42,15 @@ extension RoutesBuilder {
     ///   - path: Path components separated by commas.
     ///   - maxFrameSize: The maximum allowed frame size. See `NIOWebSocketServerUpgrader`.
     ///   - shouldUpgrade: Closure to apply before upgrade to web socket happens.
-    ///       Returns additional `HTTPHeaders` for response, `nil` to deny upgrading.
+    ///       Returns additional `HTTPFields` for response, `nil` to deny upgrading.
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
-    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: PathComponent...,
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPFields?) = { _ in [:] },
         onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Route {
         return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
@@ -59,31 +61,29 @@ extension RoutesBuilder {
     ///   - path: Array of path components.
     ///   - maxFrameSize: The maximum allowed frame size. See `NIOWebSocketServerUpgrader`.
     ///   - shouldUpgrade: Closure to apply before upgrade to web socket happens.
-    ///       Returns additional `HTTPHeaders` for response, `nil` to deny upgrading.
+    ///       Returns additional `HTTPFields` for response, `nil` to deny upgrading.
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
-    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: [PathComponent],
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPFields?) = { _ in [:] },
         onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Route {
-        return self.on(.GET, path) { request -> Response in
+        return self.on(.get, path) { request -> Response in
             return request.webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
         }
     }
 }
 
 extension WebSocket {
-    @preconcurrency
     public static func connect(
         to url: String,
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         configuration: WebSocketClient.Configuration = .init(),
-        on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
+        on eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
         onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws {
         guard let url = URL(string: url) else {
@@ -98,12 +98,11 @@ extension WebSocket {
         )
     }
 
-    @preconcurrency
     public static func connect(
         to url: URL,
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         configuration: WebSocketClient.Configuration = .init(),
-        on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
+        on eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
         onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws  {
         let scheme = url.scheme ?? "ws"
@@ -119,15 +118,14 @@ extension WebSocket {
         )
     }
 
-    @preconcurrency
     public static func connect(
         scheme: String = "ws",
         host: String,
         port: Int = 80,
         path: String = "/",
-        headers: HTTPHeaders = [:],
+        headers: HTTPFields = [:],
         configuration: WebSocketClient.Configuration = .init(),
-        on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
+        on eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
         onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws  {
         return try await WebSocketClient(
@@ -138,8 +136,9 @@ extension WebSocket {
             host: host,
             port: port,
             path: path,
-            headers: headers,
+            headers: .init(headers),
             onUpgrade: onUpgrade
         ).get()
     }
 }
+#endif

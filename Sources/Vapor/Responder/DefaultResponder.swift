@@ -1,150 +1,94 @@
 import Foundation
-import Metrics
-@preconcurrency import RoutingKit
-import NIOCore
-import NIOHTTP1
+import HTTPTypes
 import Logging
+import NIOCore
+import RoutingKit
 
-/// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-internal struct DefaultResponder: Responder {
+/// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.
+package struct DefaultResponder: Responder {
+    /// It's safe to mark this `nonisolated(unsafe)` because there are only two mutating operations
+    /// on a `TrieRouter` (calling `.register(_at:)` or changing its `options`), and we never do either
+    /// of those after `init()`.
     private let router: TrieRouter<CachedRoute>
-    private let notFoundResponder: Responder
-    private let reportMetrics: Bool
+    private let notFoundResponder: any Responder
 
     private struct CachedRoute {
         let route: Route
-        let responder: Responder
+        let responder: any Responder
     }
 
-    /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [Middleware] = [], reportMetrics: Bool = true) {
-        let options = routes.caseInsensitive ?
-            Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
-        let router = TrieRouter(CachedRoute.self, options: options)
-        
+    /// Creates a new ``DefaultResponder``.
+    package init(routes: Routes, middleware: [any Middleware] = []) {
+        let config = TrieRouter<CachedRoute>.Configuration(
+            isCaseInsensitive: routes.caseInsensitive
+        )
+        var routerBuilder = TrieRouterBuilder(CachedRoute.self, config: config)
+
         for route in routes.all {
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
                 route: route,
                 responder: middleware.makeResponder(chainingTo: route.responder)
             )
-            
+
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
-                case .constant(let string):
-                    return string != ""
-                default:
-                    return true
+                case .constant(let string): string != ""
+                default: true
                 }
             }
-            
-            router.register(cached, at: [.constant(route.method.rawValue)] + path)
+
+            routerBuilder.register(cached, at: [.constant(route.method.rawValue)] + path)
         }
-        self.router = router
+        self.router = routerBuilder.build()
         self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
-        self.reportMetrics = reportMetrics
     }
 
-    /// See `Responder`
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
-        let startTime = DispatchTime.now().uptimeNanoseconds
-        let response: EventLoopFuture<Response>
+    // See `Responder.respond(to:)`
+    package func respond(to request: Request) async throws -> Response {
         if let cachedRoute = self.getRoute(for: request) {
             request.route = cachedRoute.route
-            response = cachedRoute.responder.respond(to: request)
+            return try await cachedRoute.responder.respond(to: request)
         } else {
-            response = self.notFoundResponder.respond(to: request)
-        }
-        return response.always { result in
-            let status: HTTPStatus
-            switch result {
-            case .success(let response):
-                status = response.status
-            case .failure:
-                status = .internalServerError
-            }
-            if self.reportMetrics {
-                self.updateMetrics(
-                    for: request,
-                    startTime: startTime,
-                    statusCode: status.code
-                )
-            }
+            return try await self.notFoundResponder.respond(to: request)
         }
     }
-    
+
     /// Gets a `Route` from the underlying `TrieRouter`.
     private func getRoute(for request: Request) -> CachedRoute? {
         let pathComponents = request.url.path
             .split(separator: "/")
-            .map(String.init)
-        
+            .map { String($0).removingPercentEncoding ?? String($0) }
+
         // If it's a HEAD request and a HEAD route exists, return that route...
-        if request.method == .HEAD, let route = self.router.route(
-            path: [HTTPMethod.HEAD.rawValue] + pathComponents,
+        if request.method == .head, let route = self.router.route(
+            path: [HTTPRequest.Method.head.rawValue] + pathComponents,
             parameters: &request.parameters
         ) {
             return route
         }
 
         // ...otherwise forward HEAD requests to GET route
-        let method = (request.method == .HEAD) ? .GET : request.method
-        
+        let method = (request.method == .head) ? .get : request.method
+
         return self.router.route(
             path: [method.rawValue] + pathComponents,
             parameters: &request.parameters
         )
     }
-
-    /// Records the requests metrics.
-    private func updateMetrics(
-        for request: Request,
-        startTime: UInt64,
-        statusCode: UInt
-    ) {
-        let pathForMetrics: String
-        let methodForMetrics: String
-        if let route = request.route {
-            // We don't use route.description here to avoid duplicating the method in the path
-            pathForMetrics = "/\(route.path.map { "\($0)" }.joined(separator: "/"))"
-            methodForMetrics = request.method.rawValue
-        } else {
-            // If the route is undefined (i.e. a 404 and not something like /users/:userID
-            // We rewrite the path and the method to undefined to avoid DOSing the
-            // application and any downstream metrics systems. Otherwise an attacker
-            // could spam the service with unlimited requests and exhaust the system
-            // with unlimited timers/counters
-            pathForMetrics = "vapor_route_undefined"
-            methodForMetrics = "undefined"
-        }
-        let dimensions = [
-            ("method", methodForMetrics),
-            ("path", pathForMetrics),
-            ("status", statusCode.description),
-        ]
-        Counter(label: "http_requests_total", dimensions: dimensions).increment()
-        if statusCode >= 500 {
-            Counter(label: "http_request_errors_total", dimensions: dimensions).increment()
-        }
-        Timer(
-            label: "http_request_duration_seconds",
-            dimensions: dimensions,
-            preferredDisplayUnit: .seconds
-        ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-    }
 }
 
 private struct NotFoundResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeFailedFuture(RouteNotFound())
+    func respond(to request: Request) async throws -> Response {
+        throw RouteNotFound()
     }
 }
 
 public struct RouteNotFound: Error {}
 
 extension RouteNotFound: AbortError {
-    public var status: HTTPResponseStatus {
+    public var status: HTTPResponse.Status {
         .notFound
     }
 }

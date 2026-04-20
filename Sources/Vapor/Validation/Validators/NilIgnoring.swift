@@ -34,7 +34,7 @@ extension ValidatorResults {
     /// `ValidatorResult` of a validator that ignores nil values.
     public struct NilIgnoring {
         /// Result of a validation or nil if the input is nil.
-        public let result: ValidatorResult?
+        public let result: (any ValidatorResult)?
     }
 }
 

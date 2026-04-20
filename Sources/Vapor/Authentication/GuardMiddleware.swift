@@ -1,4 +1,5 @@
 import NIOCore
+import HTTPTypes
 
 extension Authenticatable {
     /// This middleware ensures that an `Authenticatable` type `A` has been authenticated
@@ -18,8 +19,8 @@ extension Authenticatable {
     /// - parameters:
     ///     - throwing: `Error` to throw if the type is not authed.
     public static func guardMiddleware(
-        throwing error: Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
-    ) -> Middleware {
+        throwing error: any Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
+    ) -> any Middleware {
         return GuardAuthenticationMiddleware<Self>(throwing: error)
     }
 }
@@ -30,21 +31,21 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
     where A: Authenticatable
 {
     /// Error to throw when guard fails.
-    private let error: Error
+    private let error: any Error
 
     /// Creates a new `GuardAuthenticationMiddleware`.
     ///
     /// - parameters:
     ///     - type: `Authenticatable` type to ensure is authed.
     ///     - error: `Error` to throw if the type is not authed.
-    internal init(_ type: A.Type = A.self, throwing error: Error) {
+    internal init(_ type: A.Type = A.self, throwing error: any Error) {
         self.error = error
     }
 
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         guard request.auth.has(A.self) else {
-            return request.eventLoop.makeFailedFuture(self.error)
+            throw self.error
         }
-        return next.respond(to: request)
+        return try await next.respond(to: request)
     }
 }

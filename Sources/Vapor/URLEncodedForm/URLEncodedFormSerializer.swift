@@ -10,7 +10,7 @@ struct URLEncodedFormSerializer: Sendable {
         self.splitKeyValueOn = splitKeyValueOn
     }
 
-    func serialize(_ data: URLEncodedFormData, codingPath: [CodingKey] = []) throws -> String {
+    func serialize(_ data: URLEncodedFormData, codingPath: [any CodingKey] = []) throws -> String {
         var entries: [String] = []
         let key = try codingPath.toURLEncodedKey()
         for value in data.values {
@@ -21,7 +21,7 @@ struct URLEncodedFormSerializer: Sendable {
             }
         }
         for (key, child) in data.children {
-            try entries.append(serialize(child, codingPath: codingPath + [_CodingKey(stringValue: key) as CodingKey]))
+            try entries.append(serialize(child, codingPath: codingPath + [_CodingKey(stringValue: key) as any CodingKey]))
         }
         return entries.joined(separator: String(splitVariablesOn))
     }
@@ -42,7 +42,7 @@ struct URLEncodedFormSerializer: Sendable {
     }
 }
 
-extension Array where Element == CodingKey {
+extension Array where Element == any CodingKey {
     func toURLEncodedKey() throws -> String {
         if count < 1 {
             return ""
@@ -57,7 +57,7 @@ extension Array where Element == CodingKey {
 
 extension String {
     /// Prepares a `String` for inclusion in form-urlencoded data.
-    func urlEncoded(codingPath: [CodingKey] = []) throws -> String {
+    func urlEncoded(codingPath: [any CodingKey] = []) throws -> String {
         guard let result = self.addingPercentEncoding(
             withAllowedCharacters: Characters.allowedCharacters
         ) else {

@@ -1,28 +1,12 @@
-import NIOHTTP1
+import HTTPTypes
 import NIOCore
 
-/// Less verbose typealias for `HTTPResponseStatus`.
-public typealias HTTPStatus = HTTPResponseStatus
+/// Less verbose typealias for `HTTPResponse.Status`.
+public typealias HTTPStatus = HTTPResponse.Status
 
 extension HTTPStatus: ResponseEncodable {
-    /// See `ResponseEncodable`.
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let response = Response(status: self)
-        return request.eventLoop.makeSucceededFuture(response)
-    }
-}
-
-extension HTTPStatus: @retroactive Decodable {}
-extension HTTPStatus: @retroactive Encodable {}
-
-extension HTTPStatus {
-    public init(from decoder: Decoder) throws {
-        let code = try decoder.singleValueContainer().decode(Int.self)
-        self = .init(statusCode: code)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(self.code)
+    // See `ResponseEncodable.encodeResponse(for:)`.
+    public func encodeResponse(for request: Request) async throws -> Response {
+        Response(status: self)
     }
 }

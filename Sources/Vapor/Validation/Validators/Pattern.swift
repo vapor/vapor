@@ -1,3 +1,5 @@
+import Foundation
+
 extension Validator where T == String {
     /// Validates whether a `String` matches a RegularExpression pattern
     public static func pattern(_ pattern: String) -> Validator<T> {
@@ -26,11 +28,11 @@ extension ValidatorResults.Pattern: ValidatorResult {
         /// The input is valid for the pattern
         !self.isValidPattern
     }
-    
+
     public var successDescription: String? {
         "is a valid pattern"
     }
-    
+
     public var failureDescription: String? {
         "is not a valid pattern \(self.pattern)"
     }
