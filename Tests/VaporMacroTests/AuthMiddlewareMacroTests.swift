@@ -1,3 +1,4 @@
+#if MacroRouting
 import Testing
 import SwiftSyntaxMacrosGenericTestSupport
 
@@ -350,4 +351,5 @@ struct AuthMiddlewareMacroTests {
     }
 }
 
+#endif
 #endif
