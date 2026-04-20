@@ -5,6 +5,92 @@ import Foundation
 import HTTPTypes
 
 enum HTTPMethodMacroUtilities {
+    /// Rendered path segments + dynamic parameter types parsed from a macro attribute's arguments.
+    struct ParsedPathComponents {
+        /// Each element is either a literal path segment ("users") or a dynamic placeholder (":int0").
+        var routeRegistrationSegments: [String]
+        /// Names of dynamic parameter types in declaration order (e.g. ["Int", "String"]).
+        var parameterTypes: [String]
+        /// Next index available for continuing the naming scheme across multiple argument lists.
+        var nextIndex: Int
+    }
+
+    /// Parse a macro attribute's argument list into path registration segments and dynamic parameter types.
+    /// - Parameters:
+    ///   - arguments: The attribute's labeled expression list (e.g. `@GET`'s args).
+    ///   - startingIndex: Index to use for the first dynamic param encountered; allows continuous indexing
+    ///                    when combining a controller prefix with per-route params.
+    ///   - skipFirstUnlabeled: Skip the first non-`on:` argument (used for `@HTTP(.patch, ...)` where the
+    ///                         first argument is the HTTP method, not a path component).
+    static func parsePathComponents(
+        from arguments: LabeledExprListSyntax?,
+        startingIndex: Int = 0,
+        skipFirstUnlabeled: Bool = false
+    ) -> ParsedPathComponents {
+        var segments: [String] = []
+        var types: [String] = []
+        var currentIndex = startingIndex
+        var skippedFirstUnlabeled = false
+
+        guard let arguments else {
+            return ParsedPathComponents(routeRegistrationSegments: [], parameterTypes: [], nextIndex: startingIndex)
+        }
+
+        for argument in arguments {
+            if argument.label?.text == "on" {
+                continue
+            }
+            if skipFirstUnlabeled && !skippedFirstUnlabeled {
+                skippedFirstUnlabeled = true
+                continue
+            }
+
+            let exprStr = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+            if exprStr.hasSuffix(".self") {
+                let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
+                segments.append(":\(typeName.lowercased())\(currentIndex)")
+                types.append(typeName)
+                currentIndex += 1
+            } else {
+                let cleaned = exprStr.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+                segments.append(cleaned)
+            }
+        }
+
+        return ParsedPathComponents(routeRegistrationSegments: segments, parameterTypes: types, nextIndex: currentIndex)
+    }
+
+    /// If the macro is expanded inside a `@Controller`-annotated type declaration, return its attribute arguments.
+    /// Returns nil when not inside a controller or when the enclosing type is not `@Controller`-annotated.
+    static func enclosingControllerArguments(in context: some MacroExpansionContext) -> LabeledExprListSyntax? {
+        for lexical in context.lexicalContext {
+            let attributes: AttributeListSyntax? = {
+                if let structDecl = lexical.as(StructDeclSyntax.self) { return structDecl.attributes }
+                if let classDecl = lexical.as(ClassDeclSyntax.self) { return classDecl.attributes }
+                if let actorDecl = lexical.as(ActorDeclSyntax.self) { return actorDecl.attributes }
+                return nil
+            }()
+
+            guard let attributes else { continue }
+
+            for attribute in attributes {
+                guard case let .attribute(attr) = attribute,
+                      let identifier = attr.attributeName.as(IdentifierTypeSyntax.self),
+                      identifier.name.text == "Controller" else {
+                    continue
+                }
+                switch attr.arguments {
+                case .argumentList(let args):
+                    return args
+                default:
+                    // @Controller with no arguments.
+                    return LabeledExprListSyntax([])
+                }
+            }
+        }
+        return nil
+    }
+
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
@@ -77,34 +163,32 @@ enum HTTPMethodMacroUtilities {
             }
         }
 
-        // Parse path components and parameter types
-        var parameterTypes: [String] = []
+        // Detect enclosing @Controller so we can account for prefix-declared dynamic params.
+        // Prefix params come first in the handler's parameter list by convention.
+        let enclosingPrefix = enclosingControllerArguments(in: context).map {
+            parsePathComponents(from: $0, startingIndex: 0, skipFirstUnlabeled: false)
+        } ?? ParsedPathComponents(routeRegistrationSegments: [], parameterTypes: [], nextIndex: 0)
+
+        // Parse this macro's own path components, indexed continuously after the prefix's dynamic params.
+        let routeComponents = parsePathComponents(
+            from: arguments,
+            startingIndex: enclosingPrefix.nextIndex,
+            skipFirstUnlabeled: customHTTPMethod
+        )
+
+        let allParameterTypes = enclosingPrefix.parameterTypes + routeComponents.parameterTypes
+
+        // Detect `on:` label for standalone/freestanding usage (not used when inside a controller).
         var routeRegistrationVariable: String? = nil
-
-        var skippedHTTPMethod = false
         if let arguments {
-            for (_, argument) in arguments.enumerated() {
-                if argument.label?.text == "on" {
-                    routeRegistrationVariable = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
-                    continue
-                }
-                // Skip the first non-on: argument for custom HTTP methods (that's the HTTP method itself)
-                if customHTTPMethod && !skippedHTTPMethod {
-                    skippedHTTPMethod = true
-                    continue
-                }
-
-                let exprStr = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
-
-                if exprStr.hasSuffix(".self") {
-                    let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
-                    parameterTypes.append(typeName)
-                }
+            for argument in arguments where argument.label?.text == "on" {
+                routeRegistrationVariable = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                break
             }
         }
 
-        guard pathParams.count == parameterTypes.count else {
-            throw MacroError.invalidNumberOfParameters(macroName, parameterTypes.count, pathParams.count)
+        guard pathParams.count == allParameterTypes.count else {
+            throw MacroError.invalidNumberOfParameters(macroName, allParameterTypes.count, pathParams.count)
         }
 
         let functionName = funcDecl.name.text
@@ -113,6 +197,7 @@ enum HTTPMethodMacroUtilities {
         var parameterExtraction = ""
         var callParameters = "req: req"
         var pathParamIndex = 0
+        let dynamicIndexBase = 0  // index used in :typeN naming starts at 0 regardless of prefix vs route
 
         for (param, isAuth, isOptionalAuth) in allParamsWithAuth {
             let functionParameterName = param.firstName.text
@@ -131,10 +216,11 @@ enum HTTPMethodMacroUtilities {
                 }
                 callParameters += ", \(functionParameterName): \(varName)"
             } else {
-                let paramType = parameterTypes[pathParamIndex]
-                let parameterName = "\(paramType.lowercased())\(pathParamIndex)"
+                let paramType = allParameterTypes[pathParamIndex]
+                let globalIndex = dynamicIndexBase + pathParamIndex
+                let parameterName = "\(paramType.lowercased())\(globalIndex)"
                 parameterExtraction += """
-                let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(pathParamIndex)", as: \(paramType).self)
+                let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(globalIndex)", as: \(paramType).self)
 
                 """
                 callParameters += ", \(functionParameterName): \(parameterName)"
@@ -179,36 +265,7 @@ enum HTTPMethodMacroUtilities {
         }
 
         if let routeRegistrationVariable {
-            var currentDynamicPathParameterIndex = 0
-            var pathComponents: [String] = []
-            if let arguments {
-                var skippedHTTPMethodInPath = false
-                for (_, arg) in arguments.enumerated() {
-                    // Skip the `on:` argument
-                    if arg.label?.text == "on" {
-                        continue
-                    }
-                    // Skip the first non-on: argument for custom HTTP methods
-                    if customHTTPMethod && !skippedHTTPMethodInPath {
-                        skippedHTTPMethodInPath = true
-                        continue
-                    }
-                    let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
-
-                    // Check if it's a type (contains .self)
-                    if exprStr.hasSuffix(".self") {
-                        let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
-                        pathComponents.append(":\(typeName.lowercased())\(currentDynamicPathParameterIndex)")
-                        currentDynamicPathParameterIndex += 1
-                    } else {
-                        // It's a string literal
-                        let cleaned = exprStr.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-                        pathComponents.append(cleaned)
-                    }
-                }
-            }
-
-            let path = pathComponents.joined(separator: "\", \"")
+            let path = routeComponents.routeRegistrationSegments.joined(separator: "\", \"")
             let pathRegistration = if path == "" {
                 ""
             } else {

@@ -13,6 +13,13 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
     }
 
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingExtensionsOf type: some TypeSyntaxProtocol, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax] {
+        // Parse the @Controller(...) path prefix. Supports string literals and `Type.self` for dynamic params.
+        let controllerArgs: LabeledExprListSyntax? = switch node.arguments {
+        case .argumentList(let args): args
+        default: nil
+        }
+        let prefix = HTTPMethodMacroUtilities.parsePathComponents(from: controllerArgs, startingIndex: 0)
+
         // Find all functions with route macros
         let functions = try declaration.memberBlock.members.compactMap { member -> (FunctionDeclSyntax, String, [String], [String])? in
             guard let funcDecl = member.decl.as(FunctionDeclSyntax.self) else {
@@ -45,29 +52,12 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     customHTTPMethod = false
                 }
 
-                // Parse path components
-                var pathComponents: [String] = []
-                var currentDynamicPathParameterIndex = 0
-                if let arguments {
-                    for (index, arg) in arguments.enumerated() {
-                        // If we're a custom HTTP method, discard the first one
-                        if customHTTPMethod && index == 0 {
-                            continue
-                        }
-                        let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
-
-                        // Check if it's a type (contains .self)
-                        if exprStr.hasSuffix(".self") {
-                            let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
-                            pathComponents.append(":\(typeName.lowercased())\(currentDynamicPathParameterIndex)")
-                            currentDynamicPathParameterIndex += 1
-                        } else {
-                            // It's a string literal
-                            let cleaned = exprStr.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-                            pathComponents.append(cleaned)
-                        }
-                    }
-                }
+                // Parse the route-local path components, indexed continuously after the prefix.
+                let route = HTTPMethodMacroUtilities.parsePathComponents(
+                    from: arguments,
+                    startingIndex: prefix.nextIndex,
+                    skipFirstUnlabeled: customHTTPMethod
+                )
 
                 // Check for @AuthMiddleware
                 let middlewareExprs: [String] = {
@@ -77,7 +67,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     return authInfo.middlewares
                 }()
 
-                return (funcDecl, httpMethod, pathComponents, middlewareExprs)
+                return (funcDecl, httpMethod, route.routeRegistrationSegments, middlewareExprs)
             }
 
             return nil
@@ -85,6 +75,21 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
 
         // Generate the RouteCollection boot function
         var registrationBody = ""
+
+        // Choose the builder expression each route hangs off of.
+        // When @Controller has a non-empty path prefix, introduce `let group = routes.grouped(...)`
+        // so nested groups (for middleware, later) can chain cleanly.
+        let baseBuilder: String
+        if prefix.routeRegistrationSegments.isEmpty {
+            baseBuilder = "routes"
+        } else {
+            let prefixLiteral = prefix.routeRegistrationSegments.joined(separator: "\", \"")
+            registrationBody += """
+            let group = routes.grouped("\(prefixLiteral)")
+
+            """
+            baseBuilder = "group"
+        }
 
         for (functionDeclaration, method, pathComponents, middlewares) in functions {
             let path = pathComponents.joined(separator: "\", \"")
@@ -100,7 +105,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
 
             if middlewares.isEmpty {
                 registrationBody += """
-                routes.\(methodLower)\(pathRegistration) { req async throws -> Response in
+                \(baseBuilder).\(methodLower)\(pathRegistration) { req async throws -> Response in
                     try await self.\(functionName)(req: req)
                 }
 
@@ -108,7 +113,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
             } else {
                 let middlewareList = middlewares.joined(separator: ", ")
                 registrationBody += """
-                routes.grouped(\(middlewareList)).\(methodLower)\(pathRegistration) { req async throws -> Response in
+                \(baseBuilder).grouped(\(middlewareList)).\(methodLower)\(pathRegistration) { req async throws -> Response in
                     try await self.\(functionName)(req: req)
                 }
 
