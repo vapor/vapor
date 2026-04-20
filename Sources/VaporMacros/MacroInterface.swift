@@ -3,7 +3,7 @@ import HTTPTypes
 import Vapor
 
 @attached(extension, conformances: RouteCollection, names: named(boot(routes:)))
-public macro Controller() = #externalMacro(
+public macro Controller(_ pathComponents: Any...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "ControllerMacro",
 )

@@ -79,6 +79,77 @@ struct ControllerMacroIntegrationTests {
             }
         }
     }
+
+    // MARK: - Path Prefix (#3397)
+
+    @Test("Controller with string path prefix routes correctly")
+    func controllerStringPathPrefix() async throws {
+        try await withApp { app in
+            try await app.register(collection: PrefixedController())
+
+            try await app.testing().test(.get, "/api/prefixed/items") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "items")
+            }
+
+            try await app.testing().test(.post, "/api/prefixed/items") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "created")
+            }
+        }
+    }
+
+    @Test("Controller with dynamic path prefix extracts prefix param")
+    func controllerDynamicPathPrefix() async throws {
+        try await withApp { app in
+            try await app.register(collection: PrefixedTenantController())
+
+            try await app.testing().test(.get, "/tenants/42/posts") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "posts for tenant 42")
+            }
+        }
+    }
+
+    @Test("Controller with dynamic prefix + dynamic route param extracts both")
+    func controllerDynamicPrefixAndRouteParam() async throws {
+        try await withApp { app in
+            try await app.register(collection: PrefixedTenantController())
+
+            try await app.testing().test(.get, "/tenants/7/posts/welcome") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "post welcome for tenant 7")
+            }
+        }
+    }
+}
+
+// MARK: - Prefix test controllers
+
+@Controller("api", "prefixed")
+struct PrefixedController {
+    @GET("items")
+    func list(req: Request) async throws -> String {
+        return "items"
+    }
+
+    @POST("items")
+    func create(req: Request) async throws -> String {
+        return "created"
+    }
+}
+
+@Controller("tenants", Int.self)
+struct PrefixedTenantController {
+    @GET("posts")
+    func listPosts(req: Request, tenantID: Int) async throws -> String {
+        return "posts for tenant \(tenantID)"
+    }
+
+    @GET("posts", String.self)
+    func getPost(req: Request, tenantID: Int, slug: String) async throws -> String {
+        return "post \(slug) for tenant \(tenantID)"
+    }
 }
 
 // MARK: - Test Controller

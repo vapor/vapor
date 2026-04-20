@@ -271,6 +271,8 @@ public func routes(_ app: Application) async throws {
 
     #if MacroRouting
     try await app.register(collection: UserController())
+    try await app.register(collection: PrefixedArticlesController())
+    try await app.register(collection: TenantsController())
 
     #GET(on: app, "macros", "types", Int.self) { (req: Request, id: Int) async throws -> String in
         return "macro route with id: \(id)"
@@ -411,3 +413,41 @@ struct UserAuthMiddleware: Middleware {
         return try await next.respond(to: request)
      }
 }
+
+#if MacroRouting
+// Demonstrates @Controller with a static string path prefix. Every route here
+// sits under /api/articles without repeating the prefix on each @GET/@POST.
+@Controller("api", "articles")
+struct PrefixedArticlesController {
+    @GET()
+    func list(req: Request) async throws -> String {
+        return "articles"
+    }
+
+    @GET(String.self)
+    func read(req: Request, slug: String) async throws -> String {
+        return "article: \(slug)"
+    }
+
+    @POST()
+    func create(req: Request) async throws -> String {
+        return "created"
+    }
+}
+
+// Demonstrates @Controller with a dynamic path-prefix parameter. The tenantID
+// is extracted once and made available to every handler in the controller,
+// including handlers that also declare their own dynamic path params.
+@Controller("tenants", Int.self)
+struct TenantsController {
+    @GET("posts")
+    func listPosts(req: Request, tenantID: Int) async throws -> String {
+        return "posts for tenant \(tenantID)"
+    }
+
+    @GET("posts", String.self)
+    func getPost(req: Request, tenantID: Int, slug: String) async throws -> String {
+        return "post \(slug) for tenant \(tenantID)"
+    }
+}
+#endif
