@@ -18,6 +18,11 @@ enum HTTPMethodMacroUtilities {
             throw MacroError.notAFunction(macroName)
         }
 
+        // Skip expansion for the freestanding #AuthMiddleware call
+        if isInsideFreestandingAuthMiddleware(context: context) {
+            return []
+        }
+
         let arguments: LabeledExprListSyntax? = switch node.arguments {
         case .argumentList(let arguments): arguments
         default: nil
@@ -259,5 +264,19 @@ enum HTTPMethodMacroUtilities {
             }
         }
         return nil
+    }
+
+    static func isInsideFreestandingAuthMiddleware(context: some MacroExpansionContext) -> Bool {
+        for lexical in context.lexicalContext {
+            if let macroCall = lexical.as(MacroExpansionDeclSyntax.self),
+               macroCall.macroName.text == "AuthMiddleware" {
+                return true
+            }
+            if let macroCall = lexical.as(MacroExpansionExprSyntax.self),
+               macroCall.macroName.text == "AuthMiddleware" {
+                return true
+            }
+        }
+        return false
     }
 }
