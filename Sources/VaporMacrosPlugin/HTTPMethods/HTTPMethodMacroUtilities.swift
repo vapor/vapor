@@ -18,8 +18,10 @@ enum HTTPMethodMacroUtilities {
             throw MacroError.notAFunction(macroName)
         }
 
-        // Skip expansion for the freestanding #AuthMiddleware call
-        if isInsideFreestandingAuthMiddleware(context: context) {
+        // Skip expansion for the freestanding #AuthMiddleware call - only before
+        // it has rewritten the function to carry the @AuthMiddleware attribute
+        if parseAuthMiddleware(from: funcDecl) == nil,
+           isInsideFreestandingAuthMiddleware(context: context) {
             return []
         }
 

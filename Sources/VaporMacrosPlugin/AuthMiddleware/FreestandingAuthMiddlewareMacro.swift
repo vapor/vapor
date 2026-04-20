@@ -34,7 +34,6 @@ public struct FreestandingAuthMiddlewareMacro: DeclarationMacro {
         }
 
         let authAttributeArguments = ([authTypeExpr] + middlewareExprs).joined(separator: ", ")
-        let authAttributeSource = "@AuthMiddleware(\(authAttributeArguments))"
 
         var results: [DeclSyntax] = []
         for statement in closureStatements {
@@ -42,17 +41,9 @@ public struct FreestandingAuthMiddlewareMacro: DeclarationMacro {
                 continue
             }
 
-            var newAttributes = AttributeListSyntax()
-            let authAttribute = AttributeSyntax(
-                stringLiteral: authAttributeSource
-            )
-            newAttributes.append(.attribute(authAttribute.with(\.trailingTrivia, .newline)))
-            for attr in funcDecl.attributes {
-                newAttributes.append(attr)
-            }
-
-            let decorated = funcDecl.with(\.attributes, newAttributes)
-            results.append(DeclSyntax(decorated))
+            let funcSource = funcDecl.trimmedDescription
+            let decoratedSource = "@AuthMiddleware(\(authAttributeArguments))\n\(funcSource)"
+            results.append(DeclSyntax(stringLiteral: decoratedSource))
         }
 
         return results

@@ -16,9 +16,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
         // Flatten direct members with function decls, plus any inner functions
         // wrapped in a `#AuthMiddleware(...)` freestanding call
         var candidateFunctions: [FunctionDeclSyntax] = []
-        var debugSeen: [String] = []
         for member in declaration.memberBlock.members {
-            debugSeen.append(member.decl.kind.syntaxNodeType == MacroExpansionDeclSyntax.self ? "macroexp" : (member.decl.is(FunctionDeclSyntax.self) ? "func" : String(describing: member.decl.kind)))
             if let funcDecl = member.decl.as(FunctionDeclSyntax.self) {
                 candidateFunctions.append(funcDecl)
             } else if let macroCall = member.decl.as(MacroExpansionDeclSyntax.self),
