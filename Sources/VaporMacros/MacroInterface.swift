@@ -86,7 +86,7 @@ public macro HTTP(on routeBuilder: any RoutesBuilder, _ method: HTTPRequest.Meth
 )
 
 @attached(peer)
-public macro AuthMiddleware(_ authenticationType: (any Authenticatable).Type, _ middleware: any Middleware...) = #externalMacro(
+public macro AuthMiddleware<T: Authenticatable>(_ authenticationType: T.Type, _ middleware: any Middleware...) = #externalMacro(
     module: "VaporMacrosPlugin",
     type: "AuthMiddlewareMacro"
 )

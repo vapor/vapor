@@ -374,6 +374,13 @@ struct UserController {
         return "macro route with file: \(file)"
     }
 
+    @POST("api", "macros", "users", Int.self, "promote")
+    @AuthMiddleware(User.self, UserAuthMiddleware())
+    func promoteUser(req: Request, authenticatedUser: User, id: Int) async throws -> User {
+        // Must have: Request, User, then Int (in that order)
+        return authenticatedUser
+    }
+
 //    These routes are expected not to compile and are here to demonstate/test that
 //    @GET("NotResponseCodable")
 //    func testNotARoute(req: Request) async throws -> NotContentType {
@@ -389,4 +396,18 @@ struct UserController {
 
 struct NotContentType {
     let something: String
+}
+
+struct User: Authenticatable, Content {
+    let id: Int
+    let name: String
+}
+
+struct UserAuthMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        if let authHeader = request.headers[.authorization], authHeader == "Bearer token" {
+            request.auth.login(User(id: 1, name: "Vapor"))
+        }
+        return try await next.respond(to: request)
+     }
 }
