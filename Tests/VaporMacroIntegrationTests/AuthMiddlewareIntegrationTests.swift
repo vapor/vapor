@@ -80,6 +80,46 @@ struct AuthMiddlewareIntegrationTests {
         }
     }
 
+    @Test("Freestanding #AuthMiddleware group applies middleware to each route")
+    func groupedRoutesApplyMiddleware() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
+
+            try await app.testing().test(
+                .get,
+                "/api/auth/group/name",
+                headers: [.authorization: "Bearer test-token"]
+            ) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }
+
+            try await app.testing().test(
+                .get,
+                "/api/auth/group/id",
+                headers: [.authorization: "Bearer test-token"]
+            ) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "1")
+            }
+        }
+    }
+
+    @Test("Freestanding #AuthMiddleware group returns 401 without credentials")
+    func groupedRoutesRequireAuth() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
+
+            try await app.testing().test(.get, "/api/auth/group/name") { res in
+                #expect(res.status == .unauthorized)
+            }
+
+            try await app.testing().test(.get, "/api/auth/group/id") { res in
+                #expect(res.status == .unauthorized)
+            }
+        }
+    }
+
     @Test("Additional middleware in @AuthMiddleware runs before handler")
     func additionalMiddlewareRuns() async throws {
         try await withApp { app in

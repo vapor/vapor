@@ -381,16 +381,15 @@ struct UserController {
         return authenticatedUser
     }
 
-    @AuthMiddleware(User.self, TokenAuthMiddleware()) {
+    #AuthMiddleware(User.self, UserAuthMiddleware()) {
         @GET("api", "macros", "users", "me")
         func getAuthenticatedUser(req: Request, authenticatedUser: User) async throws -> User {
             return authenticatedUser
         }
 
-        @GET("api", "macros", "users", "me", "token")
-        func getAuthenticatedUserToken(req: Request, authenticatedUser: User) async throws -> Token {
-            let token = try req.auth.require(Token.self)
-            return try req.auth.require(Token.self)
+        @GET("api", "macros", "users", "me", "name")
+        func getAuthenticatedUserToken(req: Request, authenticatedUser: User) async throws -> String {
+            return authenticatedUser.name
         }
     }
 

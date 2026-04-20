@@ -13,11 +13,34 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
     }
 
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingExtensionsOf type: some TypeSyntaxProtocol, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax] {
-        // Find all functions with route macros
-        let functions = try declaration.memberBlock.members.compactMap { member -> (FunctionDeclSyntax, String, [String], [String])? in
-            guard let funcDecl = member.decl.as(FunctionDeclSyntax.self) else {
-                return nil
+        // Flatten direct members with function decls, plus any inner functions
+        // wrapped in a `#AuthMiddleware(...)` freestanding call
+        var candidateFunctions: [FunctionDeclSyntax] = []
+        var debugSeen: [String] = []
+        for member in declaration.memberBlock.members {
+            debugSeen.append(member.decl.kind.syntaxNodeType == MacroExpansionDeclSyntax.self ? "macroexp" : (member.decl.is(FunctionDeclSyntax.self) ? "func" : String(describing: member.decl.kind)))
+            if let funcDecl = member.decl.as(FunctionDeclSyntax.self) {
+                candidateFunctions.append(funcDecl)
+            } else if let macroCall = member.decl.as(MacroExpansionDeclSyntax.self),
+                      macroCall.macroName.text == "AuthMiddleware",
+                      let trailing = macroCall.trailingClosure {
+                let args = macroCall.arguments
+                let authAttrArgs = args.map {
+                    $0.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                }.joined(separator: ", ")
+                let authAttr = AttributeSyntax(stringLiteral: "@AuthMiddleware(\(authAttrArgs))")
+                for stmt in trailing.statements {
+                    guard let innerFunc = stmt.item.as(FunctionDeclSyntax.self) else { continue }
+                    var newAttrs = AttributeListSyntax()
+                    newAttrs.append(.attribute(authAttr))
+                    for a in innerFunc.attributes { newAttrs.append(a) }
+                    candidateFunctions.append(innerFunc.with(\.attributes, newAttrs))
+                }
             }
+        }
+
+        // Find all functions with route macros
+        let functions = try candidateFunctions.compactMap { funcDecl -> (FunctionDeclSyntax, String, [String], [String])? in
 
             // Look for HTTP method attributes
             for attribute in funcDecl.attributes {
