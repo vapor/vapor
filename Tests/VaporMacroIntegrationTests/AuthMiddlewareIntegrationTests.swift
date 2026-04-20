@@ -160,5 +160,17 @@ struct AuthTestController {
     func admin(req: Request, user: AuthTestUser) async throws -> String {
         return user.name
     }
+
+    #AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware()) {
+        @GET("api", "auth", "group", "name")
+        func groupedName(req: Request, user: AuthTestUser) async throws -> String {
+            return user.name
+        }
+
+        @GET("api", "auth", "group", "id")
+        func groupedId(req: Request, user: AuthTestUser) async throws -> String {
+            return "\(user.id)"
+        }
+    }
 }
 #endif

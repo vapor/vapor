@@ -381,6 +381,19 @@ struct UserController {
         return authenticatedUser
     }
 
+    @AuthMiddleware(User.self, TokenAuthMiddleware()) {
+        @GET("api", "macros", "users", "me")
+        func getAuthenticatedUser(req: Request, authenticatedUser: User) async throws -> User {
+            return authenticatedUser
+        }
+
+        @GET("api", "macros", "users", "me", "token")
+        func getAuthenticatedUserToken(req: Request, authenticatedUser: User) async throws -> Token {
+            let token = try req.auth.require(Token.self)
+            return try req.auth.require(Token.self)
+        }
+    }
+
 //    These routes are expected not to compile and are here to demonstate/test that
 //    @GET("NotResponseCodable")
 //    func testNotARoute(req: Request) async throws -> NotContentType {
@@ -410,4 +423,23 @@ struct UserAuthMiddleware: Middleware {
         }
         return try await next.respond(to: request)
      }
+}
+
+struct TokenAuthMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        if let authHeader = request.headers[.authorization], authHeader.starts(with: "Bearer ") {
+            let tokenValue = String(authHeader.dropFirst("Bearer ".count))
+            // In a real application, you'd look up the token in a database or other storage
+            if tokenValue == "valid-token" {
+                request.auth.login(Token(value: tokenValue, userID: 1))
+                request.auth.login(User(id: 1, name: "Vapor"))
+            }
+        }
+        return try await next.respond(to: request)
+     }
+}
+
+struct Token: Authenticatable, Content {
+    let value: String
+    let userID: Int
 }
