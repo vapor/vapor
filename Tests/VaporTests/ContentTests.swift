@@ -358,6 +358,39 @@ struct ContentTests {
             }
         }
     }
+    
+    @Test("Multipart File prefers header contentType", .bug("https://github.com/vapor/vapor/issues/2571"))
+    func testMultipartFileContentTypeUsesHeader() async throws {
+        // A file named "your-face.jpg" but with Content-Type: image/webp
+        // The decoded File.contentType should be image/webp, not image/jpeg
+        let data = """
+        --123\r
+        Content-Disposition: form-data; name="upload"; filename="your-face.jpg"\r
+        Content-Type: image/webp\r
+        \r
+        1234\r
+        --123--\r\n
+        """
+
+        struct Payload: Content {
+            let upload: File
+        }
+
+        try await withApp { app in
+            app.routes.get("multipart") { req -> String in
+                let payload = try await req.content.decode(Payload.self)
+                #expect(payload.upload.filename == "your-face.jpg")
+                #expect(payload.upload.contentType == .webp)
+                return "ok"
+            }
+
+            try await app.testing().test(.get, "/multipart", headers: [
+                .contentType: "multipart/form-data; boundary=123"
+            ], body: .init(string: data)) { res in
+                #expect(res.status == .ok)
+            }
+        }
+    }
     #endif
 
     @Test("Test URLEncoded Form Decode")
