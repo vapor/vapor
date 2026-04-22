@@ -137,15 +137,29 @@ internal struct DefaultResponder: Responder {
 
 private struct NotFoundResponder: Responder {
     func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeFailedFuture(RouteNotFound())
+        request.eventLoop.makeFailedFuture(RouteNotFound(requestURL: request.url.string))
     }
 }
 
-public struct RouteNotFound: Error {}
+public struct RouteNotFound: Error {
+    /// The URL of the request that could not be routed, when available.
+    public let requestURL: String?
+
+    public init(requestURL: String? = nil) {
+        self.requestURL = requestURL
+    }
+}
 
 extension RouteNotFound: AbortError {
     public var status: HTTPResponseStatus {
         .notFound
+    }
+
+    public var reason: String {
+        guard let url = self.requestURL else {
+            return "Not Found"
+        }
+        return "No route found for \"\(url)\""
     }
 }
 
