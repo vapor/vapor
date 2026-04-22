@@ -165,6 +165,14 @@ struct ValidationTests {
         #expect(urlError?.description == "name contains '!' (allowed: A-Z, a-z, 0-9)")
     }
 
+    @Test("Test In Validator Accepts Finite Collections")
+    func testInValidatorAcceptsFiniteCollections() {
+        expect(2, passes: .in([1, 2, 3]))
+        expect(4, fails: .in([1, 2, 3]), "is not 1, 2, or 3")
+        expect(2, passes: .in(1...3))
+        expect(4, fails: .in(1...3), "is not 1, 2, or 3")
+    }
+
     @Test("Test Validate International Email")
     func testValidateInternationalEmail() throws {
         struct Email: Validatable, Codable {
