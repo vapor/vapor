@@ -82,16 +82,48 @@ struct AuthenticationTests {
             let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
             try await app.testing().test(.get, "/test") { res async in
                 #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Vapor""#)
             }
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
+                #expect(res.headers[.wwwAuthenticate] == nil)
             }
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
+            }
+        }
+    }
+
+    @Test("Test Basic Authenticator WWW Authenticate Header")
+    func basicAuthenticatorWWWAuthenticateHeader() async throws {
+        struct TestAuthenticator: BasicAuthenticator {
+            let realm = #"Private "Area""#
+
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws { }
+        }
+
+        try await withApp { app in
+            app.routes.grouped(TestAuthenticator()).get("test") { _ in
+                Response(status: .unauthorized)
+            }
+            app.routes.grouped(TestAuthenticator()).get("existing") { _ -> Response in
+                let response = Response(status: .unauthorized)
+                response.headers[.wwwAuthenticate] = #"Basic realm="Existing""#
+                return response
+            }
+
+            try await app.testing().test(.get, "/test") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == "Basic realm=\"Private \\\"Area\\\"\"")
+            }
+
+            try await app.testing().test(.get, "/existing") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Existing""#)
             }
         }
     }
