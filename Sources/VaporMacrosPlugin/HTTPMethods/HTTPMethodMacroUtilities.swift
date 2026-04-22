@@ -42,6 +42,41 @@ enum HTTPMethodMacroUtilities {
             }
         }
 
+        // Detect @AuthMiddleware attribute on the function
+        let authInfo = parseAuthMiddleware(from: funcDecl)
+
+        // Separate auth params from path params
+        var pathParams: [FunctionParameterSyntax] = []
+        var allParamsWithAuth: [(param: FunctionParameterSyntax, isAuth: Bool, isOptionalAuth: Bool)] = []
+
+        for param in funcParameters {
+            if let authInfo {
+                let paramType = param.type.trimmedDescription
+                // Match both `User` and `User?` / `Optional<User>` against the auth type
+                let strippedType = paramType.hasSuffix("?")
+                    ? String(paramType.dropLast())
+                    : paramType.hasPrefix("Optional<") && paramType.hasSuffix(">")
+                        ? String(paramType.dropFirst("Optional<".count).dropLast())
+                        : paramType
+                if strippedType == authInfo.type {
+                    let isOptional = paramType != strippedType
+                    allParamsWithAuth.append((param: param, isAuth: true, isOptionalAuth: isOptional))
+                } else {
+                    allParamsWithAuth.append((param: param, isAuth: false, isOptionalAuth: false))
+                    pathParams.append(param)
+                }
+            } else {
+                allParamsWithAuth.append((param: param, isAuth: false, isOptionalAuth: false))
+                pathParams.append(param)
+            }
+        }
+
+        if let authInfo {
+            guard allParamsWithAuth.contains(where: { $0.isAuth }) else {
+                throw MacroError.authParameterNotFound(authInfo.type)
+            }
+        }
+
         // Parse path components and parameter types
         var parameterTypes: [String] = []
         var routeRegistrationVariable: String? = nil
@@ -68,24 +103,43 @@ enum HTTPMethodMacroUtilities {
             }
         }
 
-        guard funcParameters.count == parameterTypes.count else {
-            throw MacroError.invalidNumberOfParameters(macroName, parameterTypes.count, funcParameters.count)
+        guard pathParams.count == parameterTypes.count else {
+            throw MacroError.invalidNumberOfParameters(macroName, parameterTypes.count, pathParams.count)
         }
 
         let functionName = funcDecl.name.text
 
-        // Generate wrapper that extracts path parameters
+        // Generate wrapper that extracts path parameters and auth
         var parameterExtraction = ""
         var callParameters = "req: req"
+        var pathParamIndex = 0
 
-        for (index, paramType) in parameterTypes.enumerated() {
-            let functionParameterName = funcParameters[index].firstName.text
-            let parameterName = "\(paramType.lowercased())\(index)"
-            parameterExtraction += """
-            let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(index)", as: \(paramType).self)
-            
-            """
-            callParameters += ", \(functionParameterName): \(parameterName)"
+        for (param, isAuth, isOptionalAuth) in allParamsWithAuth {
+            let functionParameterName = param.firstName.text
+            if isAuth, let authInfo {
+                let varName = param.secondName?.text ?? param.firstName.text
+                if isOptionalAuth {
+                    parameterExtraction += """
+                    let \(varName) = req.auth.get(\(authInfo.type).self)
+
+                    """
+                } else {
+                    parameterExtraction += """
+                    let \(varName) = try req.auth.require(\(authInfo.type).self)
+
+                    """
+                }
+                callParameters += ", \(functionParameterName): \(varName)"
+            } else {
+                let paramType = parameterTypes[pathParamIndex]
+                let parameterName = "\(paramType.lowercased())\(pathParamIndex)"
+                parameterExtraction += """
+                let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(pathParamIndex)", as: \(paramType).self)
+
+                """
+                callParameters += ", \(functionParameterName): \(parameterName)"
+                pathParamIndex += 1
+            }
         }
 
         let isAsyncFunction = funcDecl.signature.effectSpecifiers?.asyncSpecifier != nil
@@ -179,5 +233,31 @@ enum HTTPMethodMacroUtilities {
         }
         """
         return [wrapperFunc]
+    }
+
+    /// Parse @AuthMiddleware attribute from a function declaration
+    static func parseAuthMiddleware(from funcDecl: FunctionDeclSyntax) -> (type: String, middlewares: [String])? {
+        for attribute in funcDecl.attributes {
+            guard case let .attribute(attr) = attribute,
+                  let identifier = attr.attributeName.as(IdentifierTypeSyntax.self),
+                  identifier.name.text == "AuthMiddleware",
+                  let args = attr.arguments?.as(LabeledExprListSyntax.self) else {
+                continue
+            }
+            var authType: String? = nil
+            var middlewares: [String] = []
+            for (i, arg) in args.enumerated() {
+                let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                if i == 0 {
+                    authType = exprStr.replacingOccurrences(of: ".self", with: "")
+                } else {
+                    middlewares.append(exprStr)
+                }
+            }
+            if let authType {
+                return (type: authType, middlewares: middlewares)
+            }
+        }
+        return nil
     }
 }
