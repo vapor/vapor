@@ -9,11 +9,12 @@ extension Logger {
     public func report(
         error: Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure() -> String? = nil,
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        let source: ErrorSource?
+        let errorSource: ErrorSource?
         let reason: String
         let level: Logger.Level
         switch error {
@@ -23,15 +24,15 @@ extension Logger {
             } else {
                 reason = debuggable.debuggableHelp(format: .short)
             }
-            source = debuggable.source
+            errorSource = debuggable.source
             level = debuggable.logLevel
         case let abort as AbortError:
             reason = abort.reason
-            source = nil
+            errorSource = nil
             level = .warning
         default:
             reason = String(reflecting: error)
-            source = nil
+            errorSource = nil
             level = .warning
         }
 
@@ -39,9 +40,10 @@ extension Logger {
             level: level,
             .init(stringLiteral: reason),
             metadata: metadata(),
-            file: source?.file ?? file,
-            function: source?.function ?? function,
-            line: numericCast(source?.line ?? line)
+            source: source(),
+            file: errorSource?.file ?? file,
+            function: errorSource?.function ?? function,
+            line: numericCast(errorSource?.line ?? line)
         )
     }
 }
