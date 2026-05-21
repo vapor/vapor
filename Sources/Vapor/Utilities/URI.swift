@@ -109,7 +109,11 @@ public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Ha
             // systematic misuse of both the URI type and concept"), we must collapse any non-zero number of
             // leading `/` characters into a single character (thus breaking the ability to parse what is otherwise a
             // valid URI format according to spec) to avoid weird routing misbehaviors.
-            components = URL(string: "/\(path.drop(while: { $0 == "/" }))").flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
+            let path = "/\(path.drop(while: { $0 == "/" }))"
+            components = URL(string: path).flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
+            if let rawQuery = path.rawQueryForPathURI {
+                components?.percentEncodedQuery = rawQuery.withQueryPercentEncodingPreservingEscapes
+            }
         } else {
             // N.B.: We perform percent encoding manually and unconditionally on each non-nil component because the
             // behavior of URLComponents is completely different on Linux than on macOS for inputs which are already
@@ -309,6 +313,58 @@ extension StringProtocol {
     fileprivate var withAllowedUrlDelimitersEncoded: String {
         self.replacingOccurrences(of: "[", with: "%5B", options: .literal)
             .replacingOccurrences(of: "]", with: "%5D", options: .literal)
+    }
+
+    fileprivate var rawQueryForPathURI: Self.SubSequence? {
+        guard let queryStart = self.firstIndex(of: "?") else {
+            return nil
+        }
+        let queryContentStart = self.index(after: queryStart)
+        let queryEnd = self[queryContentStart...].firstIndex(of: "#") ?? self.endIndex
+        return self[queryContentStart..<queryEnd]
+    }
+
+    fileprivate var withQueryPercentEncodingPreservingEscapes: String {
+        var encoded = ""
+        var index = self.startIndex
+
+        while index < self.endIndex {
+            if self[index] == "%",
+               let firstHexIndex = self.index(index, offsetBy: 1, limitedBy: self.endIndex),
+               firstHexIndex < self.endIndex,
+               let secondHexIndex = self.index(index, offsetBy: 2, limitedBy: self.endIndex),
+               secondHexIndex < self.endIndex,
+               self[firstHexIndex].isURLPercentEncodingHexDigit,
+               self[secondHexIndex].isURLPercentEncodingHexDigit
+            {
+                encoded.append(self[index])
+                encoded.append(self[firstHexIndex])
+                encoded.append(self[secondHexIndex])
+                index = self.index(after: secondHexIndex)
+            } else {
+                let nextIndex = self.index(after: index)
+                let character = String(self[index..<nextIndex])
+                encoded += character.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? character
+                index = nextIndex
+            }
+        }
+
+        return encoded.withAllowedUrlDelimitersEncoded
+    }
+}
+
+extension Character {
+    fileprivate var isURLPercentEncodingHexDigit: Bool {
+        guard self.unicodeScalars.count == 1, let scalar = self.unicodeScalars.first else {
+            return false
+        }
+
+        switch scalar.value {
+        case 48...57, 65...70, 97...102:
+            return true
+        default:
+            return false
+        }
     }
 }
 
