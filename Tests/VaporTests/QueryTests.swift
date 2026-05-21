@@ -178,6 +178,18 @@ final class QueryTests: XCTestCase {
         }
     }
 
+    func testGH3348() throws {
+        app.get("hello") { req -> HTTPStatus in
+            let query = try req.query.decode([String: String].self)
+            XCTAssertEqual(query["yolo"], #"<\"#)
+            return .ok
+        }
+
+        try app.testable().test(.GET, #"/hello?yolo=%3C\"#) { res in
+            XCTAssertEqual(res.status, .ok)
+        }
+    }
+
     func testCustomEncode() throws {
         app.get("custom-encode") { req -> Response in
             let res = Response(status: .ok)
