@@ -339,7 +339,7 @@ struct UserController {
 
     @GET("api", "macros", "users")
     func getUsersWithClient(req: Request) async throws -> String {
-//        let response = try await client.get("somewhere.com")
+        _ = try await client.get("somewhere.com")
         return "users"
     }
 
@@ -348,7 +348,7 @@ struct UserController {
     #Middleware(RouteLoggingMiddleware()) {
         @GET("api", "macros", "users")
         func getUsers(req: Request) async throws -> String {
-//            let response = try await client.get("somewhere.com")
+            let response = try await client.get("somewhere.com")
             return "users"
         }
 
