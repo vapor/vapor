@@ -1,8 +1,10 @@
 #if MacroRouting
 import Testing
 import SwiftSyntaxMacrosGenericTestSupport
+import SwiftSyntaxMacroExpansion
 
 #if canImport(VaporMacrosPlugin)
+import VaporMacrosPlugin
 
 @Suite("AuthMiddleware Macro Tests")
 struct AuthMiddlewareMacroTests {
@@ -346,6 +348,46 @@ struct AuthMiddlewareMacroTests {
             }
             """,
             macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    // The test harness can only register one MacroSpec per name, so the
+    // emitted @AuthMiddleware attribute gets stripped by the expansion
+    // harness. We assert that each inner function is lifted out verbatim
+    // - the integration tests cover that the attribute is actually wired up
+    @Test("Test #AuthMiddleware grouping form lifts each inner function")
+    func testFreestandingAuthMiddlewareGroup() {
+        let freestandingTestMacros: [String: MacroSpec] = [
+            "AuthMiddleware": MacroSpec(type: FreestandingAuthMiddlewareMacro.self),
+        ]
+        assertMacroExpansion(
+            """
+            #AuthMiddleware(User.self, TokenAuthMiddleware()) {
+                @GET("api", "users", "me")
+                func me(req: Request, user: User) async throws -> String {
+                    return user.name
+                }
+
+                @GET("api", "users", "me", "token")
+                func token(req: Request, user: User) async throws -> String {
+                    return "token"
+                }
+            }
+            """,
+            expandedSource: """
+
+                @GET("api", "users", "me")
+                func me(req: Request, user: User) async throws -> String {
+                    return user.name
+                }
+
+                @GET("api", "users", "me", "token")
+                func token(req: Request, user: User) async throws -> String {
+                    return "token"
+                }
+            """,
+            macroSpecs: freestandingTestMacros,
             failureHandler: FailureHandler.instance
         )
     }

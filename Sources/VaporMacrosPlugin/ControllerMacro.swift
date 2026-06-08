@@ -13,11 +13,11 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
     }
 
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingExtensionsOf type: some TypeSyntaxProtocol, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax] {
+        let topLevelItems: [Syntax] = declaration.memberBlock.members.map { Syntax($0.decl) }
+        let candidateFunctions = collectRouteCandidates(items: topLevelItems, outerMiddlewares: [])
+
         // Find all functions with route macros
-        let functions = try declaration.memberBlock.members.compactMap { member -> (FunctionDeclSyntax, String, [String], [String])? in
-            guard let funcDecl = member.decl.as(FunctionDeclSyntax.self) else {
-                return nil
-            }
+        let functions = try candidateFunctions.compactMap { (funcDecl, outerMiddlewares) -> (FunctionDeclSyntax, String, [String], [String])? in
 
             // Look for HTTP method attributes
             for attribute in funcDecl.attributes {
@@ -69,15 +69,12 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     }
                 }
 
-                // Check for @AuthMiddleware
-                let middlewareExprs: [String] = {
-                    guard let authInfo = HTTPMethodMacroUtilities.parseAuthMiddleware(from: funcDecl) else {
-                        return []
-                    }
-                    return authInfo.middlewares
-                }()
+                var combinedMiddlewares = outerMiddlewares
+                if let authInfo = HTTPMethodMacroUtilities.parseAuthMiddleware(from: funcDecl) {
+                    combinedMiddlewares.append(contentsOf: authInfo.middlewares)
+                }
 
-                return (funcDecl, httpMethod, pathComponents, middlewareExprs)
+                return (funcDecl, httpMethod, pathComponents, combinedMiddlewares)
             }
 
             return nil
@@ -133,5 +130,63 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
         }
 
         return [extensionDecl]
+    }
+
+    /// Recursively walks struct members / closure statements, collecting function
+    /// declarations together with any middlewares inherited from enclosing
+    /// `#Middleware(...)` or `#AuthMiddleware(...)` groupings
+    private static func collectRouteCandidates(
+        items: [Syntax],
+        outerMiddlewares: [String]
+    ) -> [(FunctionDeclSyntax, [String])] {
+        var results: [(FunctionDeclSyntax, [String])] = []
+
+        for item in items {
+            if let funcDecl = item.as(FunctionDeclSyntax.self) {
+                results.append((funcDecl, outerMiddlewares))
+                continue
+            }
+
+            guard let macroCall = GroupingMacroHelpers.macroCall(item),
+                  let trailing = macroCall.trailingClosure
+            else {
+                continue
+            }
+
+            let innerItems = trailing.statements.map { Syntax($0.item) }
+
+            switch macroCall.macroName {
+            case "Middleware":
+                let middlewareList = macroCall.arguments.map {
+                    $0.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+                results.append(contentsOf: collectRouteCandidates(
+                    items: innerItems,
+                    outerMiddlewares: outerMiddlewares + middlewareList
+                ))
+
+            case "AuthMiddleware":
+                let authAttrArgs = macroCall.arguments.map {
+                    $0.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                }.joined(separator: ", ")
+                let authAttr = AttributeSyntax(stringLiteral: "@AuthMiddleware(\(authAttrArgs))")
+
+                let innerCandidates = collectRouteCandidates(
+                    items: innerItems,
+                    outerMiddlewares: outerMiddlewares
+                )
+                for (innerFunc, inheritedMiddlewares) in innerCandidates {
+                    var newAttrs = AttributeListSyntax()
+                    newAttrs.append(.attribute(authAttr))
+                    for a in innerFunc.attributes { newAttrs.append(a) }
+                    results.append((innerFunc.with(\.attributes, newAttrs), inheritedMiddlewares))
+                }
+
+            default:
+                continue
+            }
+        }
+
+        return results
     }
 }

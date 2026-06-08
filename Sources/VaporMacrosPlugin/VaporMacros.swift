@@ -18,5 +18,7 @@ struct VaporMacrosPlugin: CompilerPlugin {
         FreestandingPatchMacro.self,
         FreestandingHTTPMethodMacro.self,
         AuthMiddlewareMacro.self,
+        FreestandingAuthMiddlewareMacro.self,
+        FreestandingMiddlewareMacro.self,
     ]
 }
