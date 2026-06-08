@@ -100,4 +100,13 @@ public macro AuthMiddleware<T: Authenticatable>(
     module: "VaporMacrosPlugin",
     type: "FreestandingAuthMiddlewareMacro"
 )
+
+@freestanding(declaration, names: arbitrary)
+public macro Middleware(
+    _ middleware: any Sendable...,
+    body: () -> Void
+) = #externalMacro(
+    module: "VaporMacrosPlugin",
+    type: "FreestandingMiddlewareMacro"
+)
 #endif

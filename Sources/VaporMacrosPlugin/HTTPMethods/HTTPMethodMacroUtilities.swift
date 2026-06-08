@@ -18,10 +18,9 @@ enum HTTPMethodMacroUtilities {
             throw MacroError.notAFunction(macroName)
         }
 
-        // Skip expansion for the freestanding #AuthMiddleware call - only before
-        // it has rewritten the function to carry the @AuthMiddleware attribute
-        if parseAuthMiddleware(from: funcDecl) == nil,
-           isInsideFreestandingAuthMiddleware(context: context) {
+        // Skip expansion inside a freestanding grouping macro (#AuthMiddleware / #Middleware / #Group)
+        // - the grouping macro lifts the function to type-member scope where this peer macro will expand again
+        if isInsideGroupingMacro(context: context) {
             return []
         }
 
@@ -276,6 +275,27 @@ enum HTTPMethodMacroUtilities {
             }
             if let macroCall = lexical.as(MacroExpansionExprSyntax.self),
                macroCall.macroName.text == "AuthMiddleware" {
+                return true
+            }
+        }
+        return false
+    }
+
+    static func isInsideGroupingMacro(context: some MacroExpansionContext) -> Bool {
+        let groupingNames: Set<String> = ["AuthMiddleware", "Middleware", "Group"]
+        for lexical in context.lexicalContext {
+            if lexical.is(StructDeclSyntax.self)
+                || lexical.is(ClassDeclSyntax.self)
+                || lexical.is(EnumDeclSyntax.self)
+                || lexical.is(ExtensionDeclSyntax.self) {
+                return false
+            }
+            if let macroCall = lexical.as(MacroExpansionDeclSyntax.self),
+               groupingNames.contains(macroCall.macroName.text) {
+                return true
+            }
+            if let macroCall = lexical.as(MacroExpansionExprSyntax.self),
+               groupingNames.contains(macroCall.macroName.text) {
                 return true
             }
         }

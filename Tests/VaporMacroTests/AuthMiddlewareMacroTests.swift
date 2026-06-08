@@ -377,11 +377,12 @@ struct AuthMiddlewareMacroTests {
             """,
             expandedSource: """
 
-            @GET("api", "users", "me")
+                @GET("api", "users", "me")
                 func me(req: Request, user: User) async throws -> String {
                     return user.name
                 }
-            @GET("api", "users", "me", "token")
+
+                @GET("api", "users", "me", "token")
                 func token(req: Request, user: User) async throws -> String {
                     return "token"
                 }
