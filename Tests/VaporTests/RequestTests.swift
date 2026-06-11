@@ -218,7 +218,7 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Custom Host Address")
+    @Test("Test Custom Host Address", .disabled("Blocked on swift-http-server exposing the client remote/peer address; NIOHTTPServer.ConnectionContext has no remote-address API yet, so VaporHTTPServerHandler builds Request with remoteAddress: nil"))
     func testCustomHostAddress() async throws {
         try await withApp { app in
             app.get("vapor", "is", "fun") {
@@ -288,7 +288,7 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Request Peer Address Remote Address")
+    @Test("Test Request Peer Address Remote Address", .disabled("Blocked on swift-http-server exposing the client remote/peer address; NIOHTTPServer.ConnectionContext has no remote-address API yet, so VaporHTTPServerHandler builds Request with remoteAddress: nil"))
     func testRequestPeerAddressRemoteAddress() async throws {
         try await withApp { app in
             app.get("remote") { req -> String in
@@ -343,7 +343,7 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Request Remote Address")
+    @Test("Test Request Remote Address", .disabled("Blocked on swift-http-server exposing the client remote/peer address; NIOHTTPServer.ConnectionContext has no remote-address API yet, so VaporHTTPServerHandler builds Request with remoteAddress: nil"))
     func testRequestRemoteAddress() async throws {
         try await withApp { app in
             app.get("remote") {
