@@ -1,6 +1,7 @@
 import Vapor
 import AsyncHTTPClient
 import NIOCore
+import NIOHTTP1
 import NIOEmbedded
 import NIOConcurrencyHelpers
 import ServiceLifecycle
@@ -28,6 +29,65 @@ struct ApplicationTests {
             group.cancelAll()
         }
         try await app.shutdown()
+    }
+
+    @Test("Test graceful shutdown drains in-flight requests", .timeLimit(.minutes(1)))
+    func testGracefulShutdownDrainsInFlightRequests() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+
+            // Gates to coordinate the in-flight request with the shutdown sequence.
+            // Finishing a stream unblocks whoever is awaiting it.
+            let (handlerStarted, handlerStartedContinuation) = AsyncStream.makeStream(of: Void.self)
+            let (releaseHandler, releaseHandlerContinuation) = AsyncStream.makeStream(of: Void.self)
+
+            app.get("slow") { _ -> String in
+                // Signal that the request is now being handled, then block until released.
+                handlerStartedContinuation.finish()
+                for await _ in releaseHandler {}
+                return "drained"
+            }
+
+            try await app.boot()
+
+            // Run the server in a real ServiceGroup so we can trigger graceful shutdown explicitly,
+            // exercising the path swift-http-server added in PR #55 (graceful-shutdown-aware serve()).
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: app.logger
+                )
+            )
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await serviceGroup.run()
+                }
+
+                // Wait for the server to bind and learn its port.
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                // Issue a request that will still be in flight when shutdown begins.
+                group.addTask {
+                    let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/slow")
+                    let body = try await response.body.collect(upTo: 1024)
+                    #expect(response.status == .ok)
+                    #expect(body.string == "drained")
+                }
+
+                // Once the handler is executing, begin graceful shutdown...
+                for await _ in handlerStarted {}
+                await serviceGroup.triggerGracefulShutdown()
+
+                // ...then let the in-flight request complete. Graceful shutdown must wait for it
+                // to drain rather than dropping the connection.
+                releaseHandlerContinuation.finish()
+
+                // Both the in-flight request and the ServiceGroup must finish cleanly.
+                try await group.waitForAll()
+            }
+        }
     }
 
     @Test("Test application lifecycle")
