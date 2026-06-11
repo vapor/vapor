@@ -69,10 +69,10 @@ struct ClientTests {
                     do {
                         let response = try await req.application.client.get("http://localhost:\(remoteAppPort)/status/201")
                         #expect(response.status.code == 201)
-                        req.application.running?.stop()
+                        // Server shutdown handled by task cancellation
                         return "bar"
                     } catch {
-                        req.application.running?.stop()
+                        // Server shutdown handled by task cancellation
                         throw error
                     }
                 }
@@ -85,7 +85,7 @@ struct ClientTests {
         }
     }
 
-    @Test("Test Client Content", .disabled("Broken in AHC"), .bug("https://github.com/swift-server/async-http-client/issues/854"))
+    @Test("Test Client Logging", .disabled("Broken in AHC"), .bug("https://github.com/swift-server/async-http-client/issues/854"))
     func testClientLogging() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             let logs = TestLogHandler()
@@ -127,7 +127,7 @@ struct ClientTests {
     }
 
     // MARK: - Helpers
-    func withRemoteApp<T>(_ block: @Sendable (Application, Int) async throws -> T) async throws -> T {
+    func withRemoteApp<T: Sendable>(_ block: @Sendable (Application, Int) async throws -> T) async throws -> T {
         let remoteApp = try await Application(.testing, configReader: testConfigReader)
         remoteApp.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
@@ -145,7 +145,7 @@ struct ClientTests {
                 $0[$1.name.canonicalName] = $1.value
             }
 
-            guard let json:[String:Any] = try await JSONSerialization.jsonObject(with: req.newBody.data!) as? [String:Any] else {
+            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
                 throw Abort(.badRequest)
             }
 

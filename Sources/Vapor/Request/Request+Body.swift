@@ -1,16 +1,24 @@
 import NIOCore
-import HTTPServerNew
 import NIOPosix
 import NIOConcurrencyHelpers
+import HTTPTypes
 
 extension Request {
     public struct NewBody: Sendable {
-        let underlying: RequestBody
+        let underlying: AsyncStream<ByteBuffer>?
         let maxBodySize: Int
 
         public var data: ByteBuffer? {
             get async throws {
-                try await self.underlying.collect(upTo: maxBodySize)
+                guard let stream = underlying else { return nil }
+                var collected = ByteBuffer()
+                for await var chunk in stream {
+                    collected.writeBuffer(&chunk)
+                    guard collected.readableBytes <= maxBodySize else {
+                        throw Abort(.contentTooLarge)
+                    }
+                }
+                return collected
             }
         }
     }

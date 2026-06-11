@@ -1,6 +1,4 @@
-import HTTPServerNew
-
-extension ServerConfiguration {
+extension Application.ServerConfiguration {
     /// Supported HTTP response compression options.
     public struct ResponseCompressionConfiguration: Sendable {
         /// The default initial byte buffer capacity to use for the compressor if none is specified.

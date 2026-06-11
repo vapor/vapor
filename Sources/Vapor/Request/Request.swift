@@ -5,7 +5,6 @@ import Logging
 import RoutingKit
 import NIOConcurrencyHelpers
 import HTTPTypes
-import HTTPServerNew
 import NIOPosix
 import ServiceContextModule
 import X509
@@ -125,8 +124,8 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
-            if let newBody = self.request.newBodyStorage.withLockedValue({ $0 }) {
-                let buffer = try await newBody.collect(upTo: request.application.routes.defaultMaxBodySize.value)
+            if let stream = self.request.streamBodyStorage.withLockedValue({ $0 }) {
+                let buffer = try await self.request.collectStream(stream, maxSize: request.application.routes.defaultMaxBodySize.value)
                 return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
             }
             guard let body = self.request.body.data else {
@@ -173,9 +172,8 @@ public final class Request: CustomStringConvertible, Sendable {
         Body(self)
     }
 
-    #warning("Implement body size, dont' force unwrap")
     public var newBody: NewBody {
-        NewBody(underlying: self.newBodyStorage.withLockedValue({ $0! }), maxBodySize: 16*1024)
+        NewBody(underlying: self.streamBodyStorage.withLockedValue({ $0 }), maxBodySize: 16*1024)
     }
 
     internal enum BodyStorage: Sendable {
@@ -238,7 +236,7 @@ public final class Request: CustomStringConvertible, Sendable {
     private let _storage: NIOLockedValueBox<Storage>
     private let _logger: NIOLockedValueBox<Logger>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
-    internal let newBodyStorage: NIOLockedValueBox<HTTPServerNew.RequestBody?>
+    internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
 
     #warning("Sort out all these initialisers")
     public convenience init(
@@ -366,6 +364,17 @@ public final class Request: CustomStringConvertible, Sendable {
         self.remoteAddress = remoteAddress
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
-        self.newBodyStorage = .init(nil)
+        self.streamBodyStorage = .init(nil)
+    }
+
+    internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
+        var collected = self.byteBufferAllocator.buffer(capacity: 0)
+        for await var chunk in stream {
+            collected.writeBuffer(&chunk)
+            guard collected.readableBytes <= maxSize else {
+                throw Abort(.contentTooLarge)
+            }
+        }
+        return collected
     }
 }

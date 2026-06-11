@@ -3,7 +3,7 @@ import Foundation
 import NIOCore
 import NIOFoundationCompat
 import NIOConcurrencyHelpers
-import HTTPServerNew
+import HTTPTypes
 
 extension Response {
     struct BodyStream: Sendable {

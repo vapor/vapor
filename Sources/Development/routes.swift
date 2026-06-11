@@ -98,13 +98,8 @@ public func routes(_ app: Application) async throws {
         return "Done"
     }
 
-    app.get("shutdown") { req -> HTTPStatus in
-        guard let running = req.application.running else {
-            throw Abort(.internalServerError)
-        }
-        running.stop()
-        return .ok
-    }
+    // TODO: Implement shutdown route using structured concurrency
+    // With ServiceGroup, shutdown is triggered via SIGTERM/SIGINT signals
 
     let cache = MemoryCache()
     app.get("cache", "get", ":key") { req -> String in

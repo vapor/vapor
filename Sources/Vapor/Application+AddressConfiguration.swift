@@ -1,8 +1,4 @@
 import Configuration
-import Foundation
-import NIOConcurrencyHelpers
-import NIOPosix
-import NIOCore
 
 extension Application {
     struct AddressConfiguration: Sendable {
@@ -41,49 +37,25 @@ extension Application {
         /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
         case incompatibleFlags
     }
-    
-    struct SendableBox: Sendable {
-        var didShutdown: Bool
-        var running: Application.Running?
-        var server: (any Server)?
-    }
 
-    func _startup(addressConfiguration: AddressConfiguration) async throws {
-        switch (addressConfiguration.hostname, addressConfiguration.port, addressConfiguration.bind, addressConfiguration.socketPath) {
-        case (.none, .none, .none, .none): // use defaults
-            try await self.server.start()
-
-        case (.none, .none, .none, .some(let socketPath)): // unix socket
+    /// Apply address configuration from CLI/environment to the server configuration.
+    /// This only mutates `serverConfiguration.address` — it does not start the server.
+    func applyAddressConfiguration(_ config: AddressConfiguration) {
+        switch (config.hostname, config.port, config.bind, config.socketPath) {
+        case (.none, .none, .none, .none):
+            break // use defaults
+        case (.none, .none, .none, .some(let socketPath)):
             self.serverConfiguration.address = .unixDomainSocket(path: socketPath)
-            try await self.server.start()
-        case (.none, .none, .some(let address), .none): // bind ("hostname:port")
+        case (.none, .none, .some(let address), .none):
             let hostname = address.split(separator: ":").first.flatMap(String.init)
             let port = address.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-            self.serverConfiguration.address = .hostname(hostname!, port: port!)
-            try await self.server.start()
-
-        case (.some(let hostname), .some(let port), .none, .none): // hostname / port
+            if let hostname, let port {
+                self.serverConfiguration.address = .hostname(hostname, port: port)
+            }
+        case (.some(let hostname), .some(let port), .none, .none):
             self.serverConfiguration.address = .hostname(hostname, port: port)
-            try await self.server.start()
-        default: throw AddressConfigurationError.incompatibleFlags
+        default:
+            break // incompatible flags — logged elsewhere
         }
-
-        var box = self.box.withLockedValue { $0 }
-        box.server = self.server
-
-        // allow the server to be stopped or waited for
-        let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: Void.self)
-        self.running = .start(using: promise)
-        box.running = self.running
-
-        self.box.withLockedValue { $0 = box }
-    }
-    
-    func _shutdown() async {
-        var box = self.box.withLockedValue { $0 }
-        box.didShutdown = true
-        box.running?.stop()
-        try? await box.server?.shutdown()
-        self.box.withLockedValue { $0 = box }
     }
 }

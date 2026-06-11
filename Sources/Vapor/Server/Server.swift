@@ -1,12 +1,15 @@
-import HTTPServerNew
+import ServiceLifecycle
+import NIOCore
 
-public protocol Server: Sendable {    
-    /// Start the server with its default configuration, listening over a regular TCP socket.
-    /// - Throws: An error if the server could not be started.
-    func start() async throws
-    
-    /// Shut the server down.
-    func shutdown() async throws
+/// A server that can handle HTTP requests.
+///
+/// Conforms to `Service` from swift-service-lifecycle. Implementations
+/// provide a `run()` method that blocks for the server's lifetime and
+/// responds to graceful shutdown via task cancellation.
+public protocol Server: Service, Sendable {
+    /// The address the server is listening on.
+    /// Awaits until the server has successfully bound.
+    var listeningAddress: SocketAddress { get async throws }
 }
 
 public enum BindAddress: Equatable, Sendable {

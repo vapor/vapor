@@ -5,10 +5,10 @@ import CompilerPluginSupport
 let package = Package(
     name: "vapor",
     platforms: [
-        .macOS(.v15),
-        .iOS(.v18),
-        .tvOS(.v18),
-        .watchOS(.v11),
+        .macOS("26.2"),
+        .iOS("26.2"),
+        .tvOS("26.2"),
+        .watchOS("26.2"),
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -103,6 +103,9 @@ let package = Package(
 
         // Swift syntax parsing and generation
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
+        
+        // HTTP Server for low level request and response handling
+        .package(url: "https://github.com/swift-server/swift-http-server", branch: "main")
     ],
     targets: [
         // C helpers
@@ -159,10 +162,10 @@ let package = Package(
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "_NIOFileSystemFoundationCompat", package: "swift-nio"),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
-                .target(name: "HTTPServerNew"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
+                .product(name: "NIOHTTPServer", package: "swift-http-server"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -267,7 +270,8 @@ var swiftSettings: [SwiftSetting] { [
     .enableUpcomingFeature("InferIsolatedConformances"),
     .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
     .enableUpcomingFeature("ImmutableWeakCaptures"),
-    .enableExperimentalFeature("SuppressedAssociatedTypes"),
+    .enableExperimentalFeature("SuppressedAssociatedTypesWithDefaults"),
     .enableExperimentalFeature("LifetimeDependence"),
+    .enableExperimentalFeature("Lifetimes"),
     .enableUpcomingFeature("LifetimeDependence"),
 ] }

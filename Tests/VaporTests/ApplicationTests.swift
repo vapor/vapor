@@ -1,8 +1,10 @@
 import Vapor
 import AsyncHTTPClient
 import NIOCore
+import NIOHTTP1
 import NIOEmbedded
 import NIOConcurrencyHelpers
+import ServiceLifecycle
 import Testing
 import VaporTesting
 import HTTPTypes
@@ -10,18 +12,81 @@ import RoutingKit
 
 @Suite("Application Tests")
 struct ApplicationTests {
-    @Test("Test stopping the application", .disabled())
+    @Test("Test stopping the application")
     func testApplicationStop() async throws {
-        try await withApp(configReader: testConfigReader) { app in
-            //app.environment.arguments = ["serve"]
-            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            try await app.startup()
-            guard let running = app.running else {
-                Issue.record("app started without setting 'running'")
-                return
+        let app = try await Application(.testing, configReader: testConfigReader)
+        app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+        try await app.boot()
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await app.server.run()
             }
-            running.stop()
-            try await running.onStop.get()
+            // Poll for address (run() publishes it before blocking on serve)
+            while app.sharedNewAddress.withLockedValue({ $0 }) == nil {
+                try await Task.sleep(for: .milliseconds(10))
+            }
+            // Cancel to trigger shutdown
+            group.cancelAll()
+        }
+        try await app.shutdown()
+    }
+
+    @Test("Test graceful shutdown drains in-flight requests", .timeLimit(.minutes(1)))
+    func testGracefulShutdownDrainsInFlightRequests() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+
+            // Gates to coordinate the in-flight request with the shutdown sequence.
+            // Finishing a stream unblocks whoever is awaiting it.
+            let (handlerStarted, handlerStartedContinuation) = AsyncStream.makeStream(of: Void.self)
+            let (releaseHandler, releaseHandlerContinuation) = AsyncStream.makeStream(of: Void.self)
+
+            app.get("slow") { _ -> String in
+                // Signal that the request is now being handled, then block until released.
+                handlerStartedContinuation.finish()
+                for await _ in releaseHandler {}
+                return "drained"
+            }
+
+            try await app.boot()
+
+            // Run the server in a real ServiceGroup so we can trigger graceful shutdown explicitly,
+            // exercising the path swift-http-server added in PR #55 (graceful-shutdown-aware serve()).
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: app.logger
+                )
+            )
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await serviceGroup.run()
+                }
+
+                // Wait for the server to bind and learn its port.
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                // Issue a request that will still be in flight when shutdown begins.
+                group.addTask {
+                    let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/slow")
+                    let body = try await response.body.collect(upTo: 1024)
+                    #expect(response.status == .ok)
+                    #expect(body.string == "drained")
+                }
+
+                // Once the handler is executing, begin graceful shutdown...
+                for await _ in handlerStarted {}
+                await serviceGroup.triggerGracefulShutdown()
+
+                // ...then let the in-flight request complete. Graceful shutdown must wait for it
+                // to drain rather than dropping the connection.
+                releaseHandlerContinuation.finish()
+
+                // Both the in-flight request and the ServiceGroup must finish cleanly.
+                try await group.waitForAll()
+            }
         }
     }
 
@@ -154,14 +219,6 @@ struct ApplicationTests {
     func testConfigurationAddressDetailsReflectedAfterBeingSet() async throws {
         try await withApp(configReader: testConfigReader) { app in
             app.serverConfiguration.address = .hostname("0.0.0.0", port: 0)
-            let portPromise = Promise<Int>()
-            app.serverConfiguration.onServerRunning = { channel in
-                guard let port = channel.localAddress?.port else {
-                    portPromise.fail(TestErrors.portNotSet)
-                    return
-                }
-                portPromise.complete(port)
-            }
 
             struct AddressConfig: Content {
                 let hostname: String?
@@ -175,24 +232,21 @@ struct ApplicationTests {
 
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
-                    //app.environment.arguments = ["serve"]
-                    await #expect(throws: Never.self) {
-                        try await app.startup()
-                    }
+                    try await app.server.run()
                 }
 
-                let waitedPort = try await portPromise.wait()
+                let address = try await app.server.listeningAddress
                 #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
                 #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
                 if case let .hostname(_, port) = app.serverConfiguration.address {
                     #expect(0 == port)
                 } else {
                     Issue.record("Bind address not right")
+                    group.cancelAll()
                     return
                 }
 
-                let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
-                #expect(waitedPort == port)
+                let port = try #require(address.port)
                 #expect(port > 0)
                 let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
@@ -202,7 +256,7 @@ struct ApplicationTests {
                 #expect(returnedConfig.hostname == "0.0.0.0")
                 #expect(returnedConfig.port == port)
 
-                try await app.server.shutdown()
+                group.cancelAll()
             }
         }
     }

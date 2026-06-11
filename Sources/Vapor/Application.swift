@@ -4,6 +4,7 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 import ServiceLifecycle
+import UnixSignals
 #if HTTPClient
 import AsyncHTTPClient
 #endif
@@ -68,6 +69,7 @@ public final class Application: Sendable, Service {
     private let _logger: NIOLockedValueBox<Logger>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
+    private let _services: NIOLockedValueBox<[any Service]>
     public let routes: Routes
     // TODO: inline this when application is a struct
     private let _serverConfiguration: NIOLockedValueBox<ServerConfiguration>
@@ -132,13 +134,8 @@ public final class Application: Sendable, Service {
     public struct ServerConfiguration: Sendable {
         public var address: BindAddress
 
-        // Closure to run when the server is running - useful for grabbing
-        // information such as the port
-        public var onServerRunning: @Sendable (_ channel: any Channel) async -> ()
-
-        public init(address: BindAddress, onServerRunning: @Sendable @escaping (_ channel: any Channel) async -> ()) {
+        public init(address: BindAddress = .hostname()) {
             self.address = address
-            self.onServerRunning = onServerRunning
         }
 
         /// Host name the server will bind to.
@@ -203,7 +200,7 @@ public final class Application: Sendable, Service {
 
     public convenience init(
         _ environment: Environment? = nil,
-        configuration: ServerConfiguration = .init(address: .hostname("127.0.0.1", port: 8080), onServerRunning: { _ in }),
+        configuration: ServerConfiguration = .init(),
         configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
         services: ServiceConfiguration = .init()
     ) async throws {
@@ -232,6 +229,7 @@ public final class Application: Sendable, Service {
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
         self.sharedNewAddress = .init(nil)
+        self._services = .init([])
         self._serverConfiguration = .init(configuration)
         self.configReader = configReader
 
@@ -281,33 +279,87 @@ public final class Application: Sendable, Service {
         self.servers.use(.httpNew)
     }
 
-    /// Starts the ``Application`` asynchronous using the ``startup()`` method, then waits for any running tasks
-    /// to complete. If your application is started without arguments, the default argument is used.
+    /// Register an additional `Service` to run alongside the HTTP server.
     ///
-    /// Under normal circumstances, ``execute()`` runs until a shutdown is triggered, then wait for the web server to
-    /// (manually) shut down before returning.
+    /// Services are started when `run()` or `start()` is called and shut down
+    /// when the application receives a shutdown signal.
+    public func addService(_ service: any Service) {
+        self._services.withLockedValue { $0.append(service) }
+    }
+
+    /// Runs the application as a `Service` (no signal handling).
+    ///
+    /// Use this when embedding the application in your own `ServiceGroup`:
+    /// ```swift
+    /// let serviceGroup = ServiceGroup(
+    ///     configuration: .init(
+    ///         services: [.init(service: app)],
+    ///         gracefulShutdownSignals: [.sigterm, .sigint],
+    ///         logger: logger
+    ///     )
+    /// )
+    /// try await serviceGroup.run()
+    /// ```
+    ///
+    /// Blocks until all services (including the HTTP server) have stopped.
+    /// Graceful shutdown is triggered by the parent task or `ServiceGroup`.
     public func run() async throws {
+        try await self.boot()
+        self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
+
         do {
-            try await self.startup()
-            try await self.running?.onStop.get()
+            try await withThrowingDiscardingTaskGroup { group in
+                group.addTask { [server = self.server] in
+                    try await server.run()
+                }
+                for service in self._services.withLockedValue({ $0 }) {
+                    group.addTask { try await service.run() }
+                }
+            }
         } catch {
             self.logger.report(error: error)
             throw error
         }
+        try await self.shutdown()
     }
 
-    /// Used by the `_startup(addressConfiguration:)` method
-    let box: NIOLockedValueBox<SendableBox> = .init(.init(didShutdown: false))
-    
-    /// When called, this will start running Vapor's webserver.
+    /// Starts the application as a standalone process with signal handling.
     ///
-    /// If you start Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
-    /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
-    /// use ``execute()`` instead.
-    public func startup() async throws {
+    /// Registers SIGTERM and SIGINT handlers via `ServiceGroup` and blocks until
+    /// a shutdown signal is received. This is the primary entry point for most apps:
+    /// ```swift
+    /// let app = try await Application()
+    /// try routes(app)
+    /// try await app.start()
+    /// ```
+    public func start() async throws {
         try await self.boot()
+        self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
 
-        try await self._startup(addressConfiguration: AddressConfiguration(from: self.configReader))
+        var services: [ServiceGroupConfiguration.ServiceConfiguration] = []
+        services.append(.init(
+            service: self.server,
+            successTerminationBehavior: .gracefullyShutdownGroup
+        ))
+        for service in self._services.withLockedValue({ $0 }) {
+            services.append(.init(service: service))
+        }
+
+        let serviceGroup = ServiceGroup(
+            configuration: .init(
+                services: services,
+                gracefulShutdownSignals: [.sigterm, .sigint],
+                logger: self.logger
+            )
+        )
+
+        do {
+            try await serviceGroup.run()
+        } catch {
+            self.logger.report(error: error)
+            throw error
+        }
+        try await self.shutdown()
     }
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
@@ -330,7 +382,7 @@ public final class Application: Sendable, Service {
     }
 
     public func shutdown() async throws {
-        assert(!self.didShutdown, "Application has already shut down")
+        guard !self.didShutdown else { return }
         self.logger.debug("Application shutting down")
 
         self.logger.trace("Shutting down providers")
@@ -342,8 +394,6 @@ public final class Application: Sendable, Service {
         self.logger.trace("Clearing Application storage")
         await self.storage.shutdown()
         self.storage.clear()
-
-        await self._shutdown()
 
         self._didShutdown.withLockedValue { $0 = true }
         self.logger.trace("Application shutdown complete")
