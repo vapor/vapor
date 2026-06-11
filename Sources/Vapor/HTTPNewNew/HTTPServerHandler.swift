@@ -1,4 +1,5 @@
 import NIOHTTPServer
+import BasicContainers
 import HTTPTypes
 import HTTPAPIs
 import NIOCore
@@ -22,16 +23,18 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
     ) async throws {
         // 1. Eagerly collect the full request body
         let collectedBody = try await requestBodyAndTrailers.consumeAndConclude { reader in
-            var reader: HTTPRequestConcludingAsyncReader.RequestBodyAsyncReader? = reader
+            var reader = reader
             var collected = ByteBuffer()
-            var shouldContinue = true
-            while shouldContinue {
-                try await reader!.read(maximumCount: nil) { span in
-                    if span.isEmpty {
-                        shouldContinue = false
-                    } else {
-                        collected.writeBytes(span.withUnsafeBufferPointer { Array($0) })
+            while true {
+                let reachedEnd = try await reader.read { buffer in
+                    if buffer.isEmpty {
+                        return true
                     }
+                    collected.writeBytes(buffer.span.bytes)
+                    return false
+                }
+                if reachedEnd {
+                    break
                 }
             }
             return collected
@@ -72,18 +75,9 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         let responseWriter = try await responseSender.send(httpResponse)
         try await responseWriter.produceAndConclude { writer in
             var writer = writer
-            if let buffer = vaporResponse.body.buffer {
-                let bytes = Array(buffer.readableBytesView)
-                var offset = 0
-                while offset < bytes.count {
-                    try await writer.write { (outputSpan: inout OutputSpan<UInt8>) in
-                        let remaining = bytes.count - offset
-                        let chunkSize = min(remaining, outputSpan.capacity)
-                        for i in 0..<chunkSize {
-                            outputSpan.append(bytes[offset + i])
-                        }
-                        offset += chunkSize
-                    }
+            if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
+                try await writer.write { out in
+                    out.append(copying: buffer.readableBytesView)
                 }
             }
             // TODO: Handle streaming response bodies

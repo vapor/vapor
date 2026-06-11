@@ -3,6 +3,12 @@ import NIOCore
 import NIOConcurrencyHelpers
 import Logging
 
+/// Errors thrown by ``NIOHTTPServerAdapter``.
+enum NIOHTTPServerAdapterError: Error {
+    /// The underlying server reported that it was listening but exposed no addresses.
+    case noListeningAddress
+}
+
 /// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
 ///
 /// `run()` blocks for the server's lifetime. Graceful shutdown propagates from the
@@ -55,7 +61,10 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             }
 
             // Wait for the server to bind, then publish the address
-            let address = try await nioServer.listeningAddress
+            let addresses = try await nioServer.listeningAddresses
+            guard let address = addresses.first else {
+                throw NIOHTTPServerAdapterError.noListeningAddress
+            }
             let nioAddress = try NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
 
             // Atomically set the address and resume any waiting continuation
