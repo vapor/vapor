@@ -5,7 +5,7 @@ extension Authenticatable {
     ///
     /// - parameters:
     ///    - path: The path to redirect to if the request is not authenticated
-    public static func redirectMiddleware(path: String) -> Middleware {
+    public static func redirectMiddleware(path: String) -> any Middleware {
         self.redirectMiddleware(makePath: { _ in path })
     }
     
@@ -13,7 +13,7 @@ extension Authenticatable {
     ///
     /// - parameters:
     ///    - makePath: The closure that returns the redirect path based on the given `Request` object
-    @preconcurrency public static func redirectMiddleware(makePath: @Sendable @escaping (Request) -> String) -> Middleware {
+    public static func redirectMiddleware(makePath: @Sendable @escaping (Request) -> String) -> any Middleware {
         RedirectMiddleware<Self>(Self.self, makePath: makePath)
     }
 }
@@ -24,16 +24,15 @@ private final class RedirectMiddleware<A>: Middleware
 {
     let makePath: @Sendable (Request) -> String
     
-    @preconcurrency init(_ authenticatableType: A.Type = A.self, makePath: @Sendable @escaping (Request) -> String) {
+    init(_ authenticatableType: A.Type = A.self, makePath: @Sendable @escaping (Request) -> String) {
         self.makePath = makePath
     }
 
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         if request.auth.has(A.self) {
-            return next.respond(to: request)
+            return try await next.respond(to: request)
         }
 
-        let redirect = request.redirect(to: self.makePath(request))
-        return request.eventLoop.makeSucceededFuture(redirect)
+        return request.redirect(to: self.makePath(request))
     }
 }

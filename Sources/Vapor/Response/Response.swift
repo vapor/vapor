@@ -2,12 +2,13 @@ import NIOCore
 import NIOHTTP1
 import NIOFoundationCompat
 import NIOConcurrencyHelpers
+import HTTPTypes
 
 /// An HTTP response from a server back to the client.
 ///
 ///     let res = Response(status: .ok)
 ///
-/// See `HTTPClient` and `HTTPServer`.
+/// See `HTTPClient` and `HTTPServerOld`.
 public final class Response: CustomStringConvertible, Sendable {
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
@@ -23,7 +24,7 @@ public final class Response: CustomStringConvertible, Sendable {
     }
     
     /// The HTTP response status.
-    public var status: HTTPResponseStatus {
+    public var status: HTTPResponse.Status {
         get {
             self.responseBox.withLockedValue { $0.status }
         }
@@ -35,7 +36,7 @@ public final class Response: CustomStringConvertible, Sendable {
     /// The header fields for this HTTP response.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPHeaders {
+    public var headers: HTTPFields {
         get {
             self.responseBox.withLockedValue { $0.headers }
         }
@@ -63,7 +64,7 @@ public final class Response: CustomStringConvertible, Sendable {
 
     /// Optional Upgrade behavior to apply to this response.
     /// currently, websocket upgrades are the only defined case.
-    public var upgrader: Upgrader? {
+    public var upgrader: (any Upgrader)? {
         get {
             self.responseBox.withLockedValue { $0.upgrader }
         }
@@ -96,7 +97,7 @@ public final class Response: CustomStringConvertible, Sendable {
         }
     }
     
-    /// See `CustomStringConvertible`
+    // See `CustomStringConvertible.description`.
     public var description: String {
         var desc: [String] = []
         self.responseBox.withLockedValue { box in
@@ -112,11 +113,15 @@ public final class Response: CustomStringConvertible, Sendable {
     private struct _ContentContainer: ContentContainer {
         let response: Response
 
+        var contentConfiguration: ContentConfiguration {
+            self.response.contentConfiguration
+        }
+
         var contentType: HTTPMediaType? {
             return self.response.headers.contentType
         }
 
-        func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+        func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             try self.response.responseBox.withLockedValue { box in
                 var body = box.body.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(encodable, to: &body, headers: &box.headers)
@@ -124,16 +129,16 @@ public final class Response: CustomStringConvertible, Sendable {
             }
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
             try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
-                    throw Abort(.unprocessableEntity)
+                    throw Abort(.unprocessableContent)
                 }
                 return try decoder.decode(D.self, from: body, headers: box.headers)
             }
         }
 
-        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+        func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
             try self.response.responseBox.withLockedValue { box in
@@ -143,10 +148,10 @@ public final class Response: CustomStringConvertible, Sendable {
             }
         }
 
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             var decoded = try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
-                    throw Abort(.unprocessableEntity)
+                    throw Abort(.unprocessableContent)
                 }
                 return try decoder.decode(C.self, from: body, headers: box.headers)
             }
@@ -155,7 +160,7 @@ public final class Response: CustomStringConvertible, Sendable {
         }
     }
 
-    public var content: ContentContainer {
+    public var content: any ContentContainer {
         get {
             return _ContentContainer(response: self)
         }
@@ -166,14 +171,14 @@ public final class Response: CustomStringConvertible, Sendable {
     
     struct ResponseBox: Sendable {
         var version: HTTPVersion
-        var status: HTTPResponseStatus
-        var headers: HTTPHeaders
+        var status: HTTPResponse.Status
+        var headers: HTTPFields
         var body: Body {
             didSet {
                 self.headers.updateContentLength(body.count)
             }
         }
-        var upgrader: Upgrader?
+        var upgrader: (any Upgrader)?
         // If `true`, don't serialize the body.
         var forHeadRequest: Bool
 
@@ -181,7 +186,8 @@ public final class Response: CustomStringConvertible, Sendable {
     
     let responseBox: NIOLockedValueBox<ResponseBox>
     private let _storage: NIOLockedValueBox<Storage>
-    
+    private let contentConfiguration: ContentConfiguration
+
     // MARK: Init
     
     /// Creates a new `Response`.
@@ -189,55 +195,58 @@ public final class Response: CustomStringConvertible, Sendable {
     ///     let res = Response(status: .ok)
     ///
     /// - parameters:
-    ///     - status: `HTTPResponseStatus` to use. This defaults to `HTTPResponseStatus.ok`
+    ///     - status: `HTTPResponse.Status` to use. This defaults to `HTTPResponse.Status.ok`
     ///     - version: `HTTPVersion` of this response, should usually be (and defaults to) 1.1.
-    ///     - headers: `HTTPHeaders` to include with this response.
+    ///     - headers: `HTTPFields` to include with this response.
     ///                Defaults to empty headers.
     ///                The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically.
     ///     - body: `Body` for this response, defaults to an empty body.
     ///             See `Response.Body` for more information.
     public convenience init(
-        status: HTTPResponseStatus = .ok,
+        status: HTTPResponse.Status = .ok,
         version: HTTPVersion = .init(major: 1, minor: 1),
-        headers: HTTPHeaders = .init(),
-        body: Body = .empty
+        headers: HTTPFields = .init(),
+        body: Body = .empty,
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         self.init(
             status: status,
             version: version,
             headersNoUpdate: headers,
-            body: body
+            body: body,
+            contentConfiguration: contentConfiguration
         )
         self.headers.updateContentLength(body.count)
     }
-    
-    
+
     /// Internal init that creates a new `Response` without sanitizing headers.
     public init(
-        status: HTTPResponseStatus,
+        status: HTTPResponse.Status,
         version: HTTPVersion,
-        headersNoUpdate headers: HTTPHeaders,
-        body: Body
+        headersNoUpdate headers: HTTPFields,
+        body: Body,
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         self._storage = .init(.init())
         self.responseBox = .init(.init(version: version, status: status, headers: headers, body: body, forHeadRequest: false))
+        self.contentConfiguration = contentConfiguration
     }
 }
 
 
-extension HTTPHeaders {
+extension HTTPFields {
     mutating func updateContentLength(_ contentLength: Int) {
         let count = contentLength.description
         switch contentLength {
         case -1:
-            self.remove(name: .contentLength)
-            if "chunked" != self.first(name: .transferEncoding) {
-                self.add(name: .transferEncoding, value: "chunked")
+            self[.contentLength] = nil
+            if "chunked" != self[.transferEncoding] {
+                self[.transferEncoding] = "chunked"
             }
         default:
-            self.remove(name: .transferEncoding)
-            if count != self.first(name: .contentLength) {
-                self.replaceOrAdd(name: .contentLength, value: count)
+            self[.transferEncoding] = nil
+            if count != self[.contentLength] {
+                self[.contentLength] = count
             }
         }
     }

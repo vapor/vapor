@@ -1,11 +1,14 @@
+import Vapor
 import VaporTesting
 import Testing
+import HTTPTypes
+import RoutingKit
 
 /// Tests to make sure Vapor's swift-testing integration works.
-@Suite
+@Suite("Vapor Testing Tests")
 struct VaporTestingTests {
     /// A test to trigger multiple Vapor+swift-testing integration functions to make sure they work at all.
-    @Test
+    @Test("Test Vapor Testing functions")
     func contentContainerDecode() async throws {
         struct FooContent: Content, Equatable {
             var message: String = "hi"
@@ -13,26 +16,26 @@ struct VaporTestingTests {
         struct FooDecodable: Decodable, Equatable {
             var message: String = "hi"
         }
-        
+
         try await withApp { app in
             app.routes.post("decode") { req async throws -> String in
-                #expect(try req.content.decode(FooContent.self) == FooContent())
-                #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
+                #expect(try await req.content.decode(FooContent.self) == FooContent())
+                #expect(try await req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
-            
-            try await app.testing().test(.POST, "/decode") { req in
+
+            try await app.testing().test(.post, "/decode") { req in
                 try req.content.encode(FooContent())
             } afterResponse: { res in
                 #expect(res.status == .ok)
-                expectContains(res.body.string, "decoded!")
+                #expect(res.body.string.contains("decoded!"))
             }
-            
+
             app.routes.post("decode-bad-header") { req async throws -> String in
                 #expect(req.headers.contentType == .audio)
-                #expect(
+                await #expect(
                     performing: {
-                        try req.content.decode(FooContent.self)
+                        try await req.content.decode(FooContent.self)
                     }, throws: { error in
                         guard let abort = error as? Abort,
                               abort.status == .unsupportedMediaType else {
@@ -42,36 +45,36 @@ struct VaporTestingTests {
                         return true
                     }
                 )
-                #expect(try req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
+                #expect(try await req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
-            
-            try await app.testing().test(.POST, "/decode-bad-header") { req in
+
+            try await app.testing().test(.post, "/decode-bad-header") { req in
                 try req.content.encode(FooContent())
                 req.headers.contentType = .audio
             } afterResponse: { res in
                 #expect(res.status == .ok)
-                expectContains(res.body.string, "decoded!")
+                #expect(res.body.string.contains("decoded!"))
             }
         }
     }
 
     @Test
     func withAppConfiguration() async throws {
-        try await withApp { app in         
-            try await app.testing().test(.GET, "hello") { res in
+        try await withApp { app in
+            try await app.testing().test(.get, "hello") { res in
                 #expect(res.status == .notFound)
             }
         }
-        
+
         func configure(_ app: Application) async throws {
             app.get("hello") { req async -> String in
                 "Hello, world!"
             }
         }
 
-        try await withApp(configure: configure) { app in         
-            try await app.testing().test(.GET, "hello") { res in
+        try await withApp(configure: configure) { app in
+            try await app.testing().test(.get, "hello") { res in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Hello, world!")
             }

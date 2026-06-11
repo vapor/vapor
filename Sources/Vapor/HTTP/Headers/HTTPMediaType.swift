@@ -1,4 +1,5 @@
-import NIOHTTP1
+import HTTPTypes
+import Foundation
 
 /// Represents an encoded data-format, used in HTTP, HTML, email, and elsewhere.
 ///
@@ -49,8 +50,8 @@ import NIOHTTP1
 ///     ; Must be in quoted-string,
 ///     ; to use within parameter values
 ///
-public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Sendable {
-    /// See `Equatable`.
+public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Sendable, Codable {
+    // See `Equatable.==(_:_:)`.
     public static func ==(lhs: HTTPMediaType, rhs: HTTPMediaType) -> Bool {
         guard lhs.type != "*" && rhs.type != "*" else {
             return true
@@ -62,39 +63,39 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
 
         return lhs.subType == "*" || rhs.subType == "*" || lhs.subType.caseInsensitiveCompare(rhs.subType) == .orderedSame
     }
-    
-    /// The `MediaType`'s discrete or composite type. Usually one of the following.
+
+    /// The ``HTTPMediaType``'s discrete or composite type. Usually one of the following.
     ///
     ///     "text" / "image" / "audio" / "video" / "application
     ///     "message" / "multipart"
     ///     ...
     ///
-    /// In the `MediaType` `"application/json; charset=utf8"`:
+    /// In the ``HTTPMediaType`` `"application/json; charset=utf8"`:
     ///
     /// - `type`: `"application"`
     /// - `subtype`: `"json"`
-    /// - `parameters`: `["charset": "utf8"]` 
+    /// - `parameters`: `["charset": "utf8"]`
     public var type: String
-    
-    /// The `MediaType`'s specific type. Usually a unique string.
+
+    /// The ``HTTPMediaType``'s specific type. Usually a unique string.
     ///
-    /// In the `MediaType` `"application/json; charset=utf8"`:
+    /// In the ``HTTPMediaType`` `"application/json; charset=utf8"`:
     ///
     /// - `type`: `"application"`
     /// - `subtype`: `"json"`
     /// - `parameters`: `["charset": "utf8"]`
     public var subType: String
-    
-    /// The `MediaType`'s metadata. Zero or more key/value pairs.
+
+    /// The ``HTTPMediaType``'s metadata. Zero or more key/value pairs.
     ///
-    /// In the `MediaType` `"application/json; charset=utf8"`:
+    /// In the ``HTTPMediaType`` `"application/json; charset=utf8"`:
     ///
     /// - `type`: `"application"`
     /// - `subtype`: `"json"`
     /// - `parameters`: `["charset": "utf8"]`
     public var parameters: [String: String]
-    
-    /// Converts this `MediaType` into its string representation.
+
+    /// Converts this ``HTTPMediaType`` into its string representation.
     ///
     /// For example, the following media type:
     ///
@@ -110,27 +111,27 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
         }
         return string
     }
-    
-    /// See `CustomStringConvertible`.
+
+    // See `CustomStringConvertible.description`.
     public var description: String {
-        return serialize()
+        self.serialize()
     }
-    
-    /// See `Hashable`.
+
+    // See `Hashable.hash(into:)`.
     public func hash(into hasher: inout Hasher) {
         self.type.hash(into: &hasher)
         self.subType.hash(into: &hasher)
     }
-    
-    /// Create a new `MediaType`.
+
+    /// Create a new ``HTTPMediaType``.
     public init(type: String, subType: String, parameters: [String: String] = [:]) {
         self.type = type
         self.subType = subType
         self.parameters = parameters
     }
-    
-    /// Parse a `MediaType` from directives.
-    init?(directives: [HTTPHeaders.Directive]) {
+
+    /// Parse a ``HTTPMediaType`` from directives.
+    init?(directives: [HTTPFields.Directive]) {
         guard let value = directives.first, value.parameter == nil else {
             /// not a valid header value
             return nil
@@ -154,16 +155,16 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
             self.parameters[.init(directive.value)] = .init(parameter)
         }
     }
-    
-    /// Creates a `MediaType` from a file extension, if possible.
+
+    /// Creates a ``HTTPMediaType`` from a file extension, if possible.
     ///
     ///     guard let mediaType = MediaType.fileExtension("txt") else { ... }
     ///
     /// - parameters:
     ///     - ext: File extension (ie., "txt", "json", "html").
-    /// - returns: Newly created `MediaType`, `nil` if none was found.
+    /// - returns: Newly created ``HTTPMediaType``, `nil` if none was found.
     public static func fileExtension(_ ext: String) -> HTTPMediaType? {
-        return fileExtensionMediaTypeMapping[ext]
+        fileExtensionMediaTypeMapping[ext]
     }
 }
 
@@ -172,7 +173,7 @@ public struct HTTPMediaTypeSet: Sendable {
     let mediaTypeLookup: [String : [String : Set<HTTPMediaType>]]
     let allowsAny: Bool
     let allowsNone: Bool
-    
+
     public init(mediaTypes: some Sequence<HTTPMediaType>) {
         var mediaTypeLookup: [String : [String : Set<HTTPMediaType>]] = [:]
         for mediaType in mediaTypes {
@@ -182,36 +183,37 @@ public struct HTTPMediaTypeSet: Sendable {
         self.allowsAny = mediaTypeLookup["*"] != nil
         self.allowsNone = mediaTypeLookup.isEmpty
     }
-    
+
     /// Check to see if a media type is contained within the set.
     public func contains(_ mediaType: HTTPMediaType) -> Bool {
         /// If we allow any type or no types, stop here. These are uncommon cases, so we cache the results ahead of time to avoid the extra dictionary checks.
         if allowsAny { return true }
         if allowsNone { return false }
-        
+
         /// Make sure we have an entry for the specific type:
         guard let mediaSubTypeLookup = mediaTypeLookup[mediaType.type]
         else { return false }
-        
+
         /// If we allow any of the subtypes, stop here.
         if mediaSubTypeLookup["*"] != nil { return true }
-        
+
         /// Make sure we have an entry for the specific sub type:
         guard let mediaTypes = mediaSubTypeLookup[mediaType.subType]
         else { return false }
-        
+
         /// Check and return true if either the type as is (with potential parameters), or the parameter-less type is in the set:
         return mediaTypes.contains(mediaType) || mediaTypes.contains(HTTPMediaType(type: mediaType.type, subType: mediaType.subType))
     }
-    
+
     /// The super set of all ``HTTPMediaType``s.
     public static let all = HTTPMediaTypeSet(mediaTypes: [.any])
-    
+
     /// The empty set of ``HTTPMediaType``s.
     public static let none = HTTPMediaTypeSet(mediaTypes: [])
 }
 
 extension HTTPMediaTypeSet: ExpressibleByArrayLiteral {
+    // See `ExpressibleByArrayLiteral.init(arrayLiteral:)`.
     public init(arrayLiteral elements: HTTPMediaType...) {
         self = HTTPMediaTypeSet(mediaTypes: elements)
     }
@@ -883,7 +885,7 @@ extension HTTPMediaTypeSet {
         HTTPMediaType.formData,
         HTTPMediaType(type: "text", subType: "*"),
     ]
-    
+
     /// A list of known incompressible MIME types.
     ///
     /// If you know a type would almost never benefit from on-the-wire compression, please add it to this list!

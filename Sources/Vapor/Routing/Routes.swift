@@ -36,7 +36,7 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
     }
 
     public var description: String {
-        return self.all.description
+        self.all.description
     }
     
     struct SendableBox: Sendable {

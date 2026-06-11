@@ -1,112 +1,43 @@
-import XCTVapor
-import XCTest
+import VaporTesting
+import Testing
 import Vapor
 import NIOCore
 
-final class PasswordTests: XCTestCase {
-    var app: Application!
-
-    override func setUp() async throws {
-        app = try await Application.make(.testing)
-    }
-
-    override func tearDown() async throws {
-        try await app.asyncShutdown()
-    }
-
-    func testSyncBCryptService() throws {
-        let hash = try app.password.hash("vapor")
-        XCTAssertTrue(try BCryptDigest().verify("vapor", created: hash))
-        
-        let result = try app.password.verify("vapor", created: hash)
-        XCTAssertTrue(result)
-    }
-    
-    func testSyncPlaintextService() throws {
-        app.passwords.use(.plaintext)
-        
-        let hash = try app.password.hash("vapor")
-        XCTAssertEqual(hash, "vapor")
-        
-        let result = try app.password.verify("vapor", created: hash)
-        XCTAssertTrue(result)
-    }
-    
-    func testAsyncBCryptRequestPassword() throws {
-        try assertAsyncRequestPasswordVerifies(.bcrypt, on: app)
-    }
-    
-    func testAsyncPlaintextRequestPassword() throws {
-        try assertAsyncRequestPasswordVerifies(.plaintext, on: app)
-    }
-    
-    func testAsyncBCryptApplicationPassword() throws {
-        try assertAsyncApplicationPasswordVerifies(.bcrypt, on: app)
-    }
-    
-    func testAsyncPlaintextApplicationPassword() throws {
-        try assertAsyncApplicationPasswordVerifies(.plaintext, on: app)
-    }
-    
-    func testAsyncUsesProvider() throws {
-        app.passwords.use(.plaintext)
-        let hash = try app.password.async(
-            on: app.threadPool,
-            hopTo: app.eventLoopGroup.next()
-        ).hash("vapor").wait()
-        XCTAssertEqual(hash, "vapor")
-    }
-
-    func testAsyncApplicationDefault() throws {
-        app.passwords.use(.plaintext)
-        let hash = try app.password.async.hash("vapor").wait()
-        XCTAssertEqual(hash, "vapor")
-    }
-    
-    private func assertAsyncApplicationPasswordVerifies(
-        _ provider: Application.Passwords.Provider,
-        on app: Application,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) throws {
-        app.passwords.use(provider)
-        
-        let asyncHash = try app.password
-            .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
-            .hash("vapor")
-            .wait()
-        
-        let asyncVerify = try app.password
-            .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
-            .verify("vapor", created: asyncHash)
-            .wait()
-        
-        XCTAssertTrue(asyncVerify, file: file, line: line)
-    }
-    
-    private func assertAsyncRequestPasswordVerifies(
-        _ provider: Application.Passwords.Provider,
-        on app: Application,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) throws {
-        app.passwords.use(provider)
-        
-        app.get("test") { req -> EventLoopFuture<String> in
-            return req.password
-                .async
-                .hash("vapor")
-                .flatMap { digest -> EventLoopFuture<Bool> in
-                    return req.password
-                        .async
-                        .verify("vapor", created: digest)
-                   
-            }
-            .map { $0 ? "true" : "false" }
+@Suite("Password Tests")
+struct PasswordTests {
+    #if bcrypt
+    @Test("Test BCrypt application password")
+    func testBCryptApplicationPassword() async throws {
+        try await withApp(services: .init(passwordHasher: .provided(BcryptHasher(cost: 4)))) { app in
+            let hash = try await app.passwordHasher.hash("vapor")
+            #expect(hash != "vapor") // BCrypt should not return the plaintext password
+            let verify = try await app.passwordHasher.verify("vapor", created: hash)
+            #expect(verify == true)
         }
-        
-        try app.test(.GET, "test", afterResponse: { res in
-            XCTAssertEqual(res.body.string, "true", file: file, line: line)
-        })
+    }
+    #endif
+
+    @Test("Test plaintext application password")
+    func testPlaintextApplicationPassword() async throws {
+        try await withApp(services: .init(passwordHasher: .provided(PlaintextHasher()))) { app in
+            let hash = try await app.passwordHasher.hash("vapor")
+            #expect(hash == "vapor") // Should be the same as plaintext
+            let verify = try await app.passwordHasher.verify("vapor", created: hash)
+            #expect(verify == true)
+        }
+    }
+
+    @Test("Test application default password")
+    func testUsesProvider() async throws {
+        try await withApp { app in
+            let hash = try await app.passwordHasher.hash("vapor")
+            #if bcrypt
+            #expect(hash != "vapor") // Defaults to BCrypt so should not match
+            #else
+            #expect(hash == "vapor") // Defaults to Plaintext so should match
+            #endif
+            let verify = try await app.passwordHasher.verify("vapor", created: hash)
+            #expect(verify == true)
+        }
     }
 }

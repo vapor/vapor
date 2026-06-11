@@ -7,7 +7,7 @@ public prefix func ! <T>(validator: Validator<T>) -> Validator<T> {
 
 extension ValidatorResults {
     public struct Not {
-        public let result: ValidatorResult
+        public let result: any ValidatorResult
     }
 }
 

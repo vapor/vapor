@@ -4,51 +4,76 @@ concurrency:
   cancel-in-progress: true
 on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
-  push: { branches: [ main ] }
+  push: { branches: [main, vapor5] }
 
 jobs:
-  test-providers:
+  # test-providers:
+  #   permissions:
+  #     contents: read
+  #   if: ${{ !(github.event.pull_request.draft || false) }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       provider:
+  #         - vapor/jwt
+  #         - vapor/fluent
+  #         - vapor/leaf
+  #         - vapor/queues
+  #         - vapor/apns
+  #   runs-on: ubuntu-latest
+  #   container: swift:6.2
+  #   steps:
+  #     - name: Check out Vapor
+  #       uses: actions/checkout@v6
+  #       with:
+  #         path: vapor
+  #     - name: Check out provider
+  #       uses: actions/checkout@v6
+  #       with:
+  #         repository: ${{ matrix.provider }}
+  #         path: provider
+  #     - name: Use local Vapor
+  #       run: swift package --package-path ./provider edit vapor --path ./vapor
+  #     - name: Run tests
+  #       run: swift test --package-path ./provider
+
+  # unit-tests:
+  #   permissions:
+  #     contents: read
+  #   uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
+  #   with:
+  #     with_release_mode_testing: true
+  #     with_tsan: false
+  #     with_musl: true
+  #     with_android: false
+  #     extra_musl_flags: --target Vapor
+  #     ios_xcodebuild_action: ""
+  #     ios_scheme_name: Vapor
+  #   secrets: inherit
+
+  unit-tests:
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     if: ${{ !(github.event.pull_request.draft || false) }}
-    strategy:
-      fail-fast: false
-      matrix:
-        provider:
-          - vapor/jwt
-          - vapor/fluent
-          - vapor/leaf
-          - vapor/queues
-          - vapor/apns
-    runs-on: ubuntu-latest
-    container: swift:6.2
+    container: swiftlang/swift:nightly-main-bookworm
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v6
-        with:
-          path: vapor
-      - name: Check out provider
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ matrix.provider }}
-          path: provider
-      - name: Use local Vapor
-        run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests
-        run: swift test --package-path ./provider
+        run: swift test
 
-  unit-tests:
+  package-traits:
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-    uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
-    with:
-      with_release_mode_testing: true
-      with_tsan: false
-      with_musl: true
-      extra_musl_flags: --target Vapor
-      ios_xcodebuild_action: ''
-      ios_scheme_name: Vapor
-    secrets: inherit
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    container: swiftlang/swift:nightly-main-bookworm
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v6
+      - name: Run tests with traits disabled
+        run: swift test --disable-default-traits
 
   submit-dependencies:
     permissions:
@@ -57,14 +82,3 @@ jobs:
     uses: vapor/ci/.github/workflows/submit-deps.yml@main
     secrets: inherit
 
-  test-parallel:
-    permissions:
-      contents: read
-    if: ${{ !(github.event.pull_request.draft || false) }}
-    runs-on: ubuntu-latest
-    container: swift:6.2
-    steps:
-      - name: Check out Vapor
-        uses: actions/checkout@v6
-      - name: Run tests
-        run: swift test --parallel
