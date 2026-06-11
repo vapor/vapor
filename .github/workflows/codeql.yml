@@ -1,9 +1,9 @@
 name: CodeQL
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "vapor-5" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "vapor-5" ]
   schedule:
     - cron: '0 0 * * 1'
 
@@ -24,6 +24,11 @@ jobs:
           build-mode: autobuild
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     steps:
+    - name: Select an Xcode which provides Swift 6.2.4
+      if: ${{ matrix.language == 'swift' }}
+      uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+      with:
+        xcode-version: '26.3'
     - name: Checkout repository
       uses: actions/checkout@v6
     - name: Initialize CodeQL
