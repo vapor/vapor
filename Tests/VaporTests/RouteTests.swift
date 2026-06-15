@@ -4,7 +4,11 @@ import VaporTesting
 import Vapor
 import HTTPTypes
 import RoutingKit
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @Suite("Route Tests")
 struct RouteTests {

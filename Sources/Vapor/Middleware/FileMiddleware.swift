@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOCore
 import _NIOFileSystem
 import HTTPTypes
@@ -15,13 +19,13 @@ public final class FileMiddleware: Middleware {
     private let cachePolicy: CachePolicy
 
     public struct BundleSetupError: Equatable, Error {
-        
+
         /// The description of this error.
         let description: String
-        
+
         /// Cannot generate Bundle Resource URL
         public static let bundleResourceURLIsNil: Self = .init(description: "Cannot generate Bundle Resource URL: Bundle Resource URL is nil")
-        
+
         /// Cannot find any actual folder for the given Public Directory
         public static let publicDirectoryIsNotAFolder: Self = .init(description: "Cannot find any actual folder for the given Public Directory")
     }
@@ -57,7 +61,7 @@ public final class FileMiddleware: Middleware {
         self.advancedETagComparison = advancedETagComparison
         self.cachePolicy = cachePolicy
     }
-    
+
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {
@@ -74,7 +78,7 @@ public final class FileMiddleware: Middleware {
 
         // create absolute path
         var absPath = self.publicDirectory + path
-        
+
         if let fileInfo = try await FileSystem.shared.info(forFileAt: .init(absPath)) {
             // path exists, check for directory or file
             if fileInfo.type == .directory {
@@ -87,7 +91,7 @@ public final class FileMiddleware: Middleware {
                         } else {
                             absPath = absPath + defaultFile
                         }
-                        
+
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
                             return try await request
@@ -111,7 +115,7 @@ public final class FileMiddleware: Middleware {
                     .cachePolicy(cachePolicy)
             }
         }
-        
+
         return try await next.respond(to: request)
     }
 
@@ -126,6 +130,7 @@ public final class FileMiddleware: Middleware {
     ///
     /// - important: Make sure the public directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
     /// - returns: A fully qualified FileMiddleware if the given `publicDirectory` can be served, throws a `BundleSetupError` otherwise
+    #if !canImport(FoundationEssentials)
     public convenience init(
         bundle: Bundle,
         publicDirectory: String = "Public",
@@ -140,7 +145,7 @@ public final class FileMiddleware: Middleware {
         guard (try? publicDirectoryURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
             throw BundleSetupError.publicDirectoryIsNotAFolder
         }
-        
+
         self.init(
             publicDirectory: publicDirectoryURL.path,
             defaultFile: defaultFile,
@@ -148,21 +153,22 @@ public final class FileMiddleware: Middleware {
             cachePolicy: cachePolicy
         )
     }
-    
+    #endif
+
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory
     public struct DirectoryAction: Sendable {
         let kind: Kind
-        
+
         /// Indicates that the request should be passed through the middleware
         public static var none: DirectoryAction {
             return Self(kind: .none)
         }
-        
+
         /// Indicates that a redirect to the same url with a trailing slash should be returned.
         public static var redirect: DirectoryAction {
             return Self(kind: .redirect)
         }
-        
+
         enum Kind {
             case none
             case redirect
@@ -200,24 +206,24 @@ extension FileMiddleware {
     public struct CachePolicy: Sendable {
         var cacheControlHeader: HTTPFields.CacheControl?
         var ageHeader: Int?
-        
+
         /// The browser's default caching policy should be used.
         ///
         /// In practice, this means the resource will be cached, but its completely out of your control as to when the browser will refresh it.
         public static let browserDefault = CachePolicy()
-        
+
         /// The browser will always ask before requesting the full file.
         ///
         /// This can be used if the files served change very often, or in development so any change to a file is immediately reflected.
         public static let noCache = CachePolicy(cacheControlHeader: .init(noCache: true))
-        
+
         /// The browser will cache the file for the specified duration.
         ///
         /// A typical cache duration may be 5 minutes, for instance: `.cacheUpToDuration(.minutes(5))`
         public static func cacheUpToDuration(_ duration: TimeAmount) -> CachePolicy {
             CachePolicy(cacheControlHeader: .init(maxAge: Int(duration.nanoseconds/1_000_000_000)), ageHeader: 0)
         }
-        
+
         /// A custom cache control policy that should be used for all files.
         /// - Parameters:
         ///   - cacheControlHeader: The `Cache-Control` header to use. If none is specified, any previous cache control header will be cleared.

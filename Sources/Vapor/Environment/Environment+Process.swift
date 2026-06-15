@@ -1,18 +1,31 @@
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Android)
+import Android
+#else
+import Darwin
+#endif
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
-extension Environment {    
+extension Environment {
     /// The process information of an environment. Wraps `ProcessInto.processInfo`.
     @dynamicMemberLookup public struct Process {
         /// The process information of the environment.
         private let _info: ProcessInfo
-        
+
         /// Creates a new `Process` wrapper for process information.
         ///
         /// - parameter info: The process info that the wrapper accesses. Defaults to `ProcessInto.processInfo`.
         internal init(info: ProcessInfo = .processInfo) {
             self._info = info
         }
-        
+
         /// Gets a variable's value from the process' environment, and converts it to generic type `T`.
         ///
         ///     Environment.process.DATABASE_PORT = 3306
@@ -30,7 +43,7 @@ extension Environment {
                 }
             }
         }
-        
+
         /// Gets a variable's value from the process' environment as a `String`.
         ///
         ///     Environment.process.DATABASE_USER = "root"

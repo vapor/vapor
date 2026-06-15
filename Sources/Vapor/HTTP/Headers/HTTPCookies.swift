@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
 
 extension HTTPFields {
@@ -73,7 +77,7 @@ struct HTTPSetCookie {
                 guard let parameter = directive.parameter else {
                     return nil
                 }
-                self.value.expires = Date(rfc1123: .init(parameter))
+                self.value.expires = try? Date.RFC1123ParseStrategy().parse(.init(parameter))
             case "httponly":
                 self.value.isHTTPOnly = true
             case "secure":
@@ -194,7 +198,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
             var serialized = "\(name)=\(self.string)"
 
             if let expires = self.expires {
-                serialized += "; Expires=\(expires.rfc1123)"
+                serialized += "; Expires\(expires.formatted(.rfc1123))"
             }
 
             if let maxAge = self.maxAge {

@@ -1,4 +1,17 @@
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Android)
+import Android
+#else
+import Darwin
+#endif
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 #if canImport(Darwin) && compiler(>=6.1)
 import Crypto
 #else
@@ -13,7 +26,7 @@ public enum OTPDigits: Int, Sendable {
     case seven = 7
     /// Eight digits OTP.
     case eight = 8
-    
+
     /// Returns 10^digit.
     fileprivate var pow: UInt32 {
         switch self {
@@ -70,7 +83,7 @@ internal extension OTP {
 
         return String(repeatElement("0", count: self.digits.rawValue - number.count)) + number
     }
-    
+
     /// Generates a range of OTP's.
     /// - Note: This function will automatically wrap the counter by using integer overflow.
     /// - Parameters:
@@ -83,10 +96,10 @@ internal extension OTP {
         range: Int
     ) -> [String] {
         precondition(range > 0, "Cannot generate range of OTP's for range \(range). Range must be greater than 0")
-        
+
         return (-range ... range).map { self.generate(h, counter: UInt64(Int64(counter) &+ Int64($0))) }
     }
-    
+
     /// Generate the HOTP based on the counter.
     /// - Parameter counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
@@ -99,7 +112,7 @@ internal extension OTP {
         case .sha512: self.generate(SHA512(), counter: counter)
         }
     }
-    
+
     /// Generates several TOTP's for a range.
     /// - Note: This function will automatically wrap the counter by using integer overflow. This might provide some odd behaviour when near the start time or near the max time.
     /// - Parameters:
@@ -130,7 +143,7 @@ public struct HOTP: OTP, Sendable {
     let key: SymmetricKey
     let digits: OTPDigits
     let digest: OTPDigest
-    
+
     /// Initialize the HOTP object.
     /// - Parameters:
     ///   - key: The key.
@@ -145,7 +158,7 @@ public struct HOTP: OTP, Sendable {
         self.digits = digits
         self.digest = digest
     }
-    
+
     /// Generate the HOTP based on the counter.
     /// - Parameter counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
@@ -154,7 +167,7 @@ public struct HOTP: OTP, Sendable {
     ) -> String {
         self._generate(counter: counter)
     }
-    
+
     /// Generates several HOTP's for a range.
     /// - Note: This function will automatically wrap the counter by using integer overflow.
     /// - Parameters:
@@ -168,7 +181,7 @@ public struct HOTP: OTP, Sendable {
     ) -> [String] {
         self._generate(counter: counter, range: range)
     }
-    
+
     /// Compute the HOTP for the key and the counter.
     /// - Parameters:
     ///   - key: The key.
@@ -200,7 +213,7 @@ public struct TOTP: OTP, Sendable {
     let digest: OTPDigest
     /// The time interval to generate the TOTP on.
     let interval: Int
-    
+
     /// Initialize the TOTP object.
     /// - Parameters:
     ///   - key: The key.
@@ -219,7 +232,7 @@ public struct TOTP: OTP, Sendable {
         self.digest = digest
         self.interval = interval
     }
-    
+
     /// Generate the TOTP based on a time.
     /// - Parameter time: The time to generate the TOTP for.
     /// - Returns: The generated TOTP as `String`.
@@ -229,7 +242,7 @@ public struct TOTP: OTP, Sendable {
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
         return self._generate(counter: UInt64(counter))
     }
-    
+
     /// Generates several TOTP's for a range.
     /// - Note: This function will automatically create the previous and next TOTP's for a range based on the interval. For example, if the interval is `30` and the range is `2`, the result will be calculated for `[-1min, -30sec, 0, 30sec, 1min]`.
     /// - Note: This function will automatically wrap the counter by using integer overflow. This might provide some odd behaviour when near the start time or near the max time.
@@ -245,7 +258,7 @@ public struct TOTP: OTP, Sendable {
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
         return self._generate(counter: UInt64(counter), range: range)
     }
-    
+
     /// Compute the TOTP for the key, time interval and time.
     /// - Parameters:
     ///   - key: The key.

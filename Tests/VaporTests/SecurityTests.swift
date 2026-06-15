@@ -1,7 +1,11 @@
 import Vapor
 import Testing
 import Crypto
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @Suite("OTP Tests")
 struct OTPTests {

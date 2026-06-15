@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 // MARK: - URI
 
@@ -29,19 +33,19 @@ import Foundation
 /// [`URLComponents`]: https://developer.apple.com/documentation/foundation/urlcomponents
 public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, ExpressibleByStringInterpolation {
     private var components: URLComponents?
-    
+
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         let string = try container.decode(String.self)
-        
+
         self.init(string: string)
     }
-    
+
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.string)
     }
-    
+
     /// Create a ``URI`` by parsing a given string according to the semantics of [RFC 3986].
     ///
     /// [RFC 3986]: https://datatracker.ietf.org/doc/html/rfc3986
@@ -72,11 +76,11 @@ public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, Express
     public init(scheme: String?, host: String? = nil, port: Int? = nil, path: String, query: String? = nil, fragment: String? = nil) {
         self.init(scheme: scheme, userinfo: nil, host: host, port: port, path: path, query: query, fragment: fragment)
     }
-    
+
     public init(scheme: Scheme = .init(), host: String? = nil, port: Int? = nil, path: String, query: String? = nil, fragment: String? = nil) {
         self.init(scheme: scheme, userinfo: nil, host: host, port: port, path: path, query: query, fragment: fragment)
     }
-    
+
     /// Construct a ``URI`` from various subcomponents.
     ///
     /// Percent encoding is added to each component (if necessary) automatically. There is currently no
@@ -134,7 +138,7 @@ public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, Express
         get { self.components?.scheme }
         set { self.components?.scheme = newValue }
     }
-    
+
     public var userinfo: String? {
         get { self.components?.percentEncodedUser.map { "\($0)\(self.components?.percentEncodedPassword.map { ":\($0)" } ?? "")" } }
         set {
@@ -197,24 +201,24 @@ extension URI {
     public struct Scheme: CustomStringConvertible, ExpressibleByStringLiteral, Hashable, Codable, Sendable {
         /// The string representation of the scheme.
         public let value: String?
-        
+
         /// Designated initializer.
         ///
         /// - Parameter value: The string representation for the desired scheme.
         public init(_ value: String? = nil) { self.value = value }
 
         // MARK: - "Well-known" schemes
-        
+
         /// HyperText Transfer Protocol (HTTP)
         ///
         /// > Registration: [RFC 9110 § 4.2.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-4.2.1)
         public static let http: Self = "http"
-        
+
         /// Secure HyperText Transfer Protocol (HTTPS)
         ///
         /// > Registration: [RFC 9110 § 4.2.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-4.2.2)
         public static let https: Self = "https"
-        
+
         /// HyperText Transfer Protocol (HTTP) over Unix Domain Sockets.
         ///
         /// The socket path must be given as the URI's "host" component, appropriately percent-encoded. The
@@ -224,10 +228,10 @@ extension URI {
         /// ```swift
         /// socketPath.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
         /// ```
-        /// 
+        ///
         /// > Registration: None (non-standard)
         public static let httpUnixDomainSocket: Self = "http+unix"
-        
+
         /// Secure HyperText Transfer Protocol (HTTPS) over Unix Domain Sockets.
         ///
         /// The socket path must be given as the URI's "host" component, appropriately percent-encoded. The
@@ -249,7 +253,7 @@ extension URI {
         ///
         /// > Registration: None (non-standard)
         public static let httpsUnixDomainSocket: Self = "https+unix"
-        
+
         // MARK: End of "well-known" schemes -
 
         // See `ExpressibleByStringInterpolation.init(stringLiteral:)`.

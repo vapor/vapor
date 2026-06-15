@@ -1,11 +1,15 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
 
 /// Represents a `MediaType` and its associated preference, `q`.
 public struct HTTPMediaTypePreference {
     /// The `MediaType` in question.
     public var mediaType: HTTPMediaType
-    
+
     /// Its associated preference.
     public var q: Double?
 
@@ -28,7 +32,7 @@ extension Array where Element == HTTPMediaTypePreference {
     public var mediaTypes: [HTTPMediaType] {
         return map { $0.mediaType }
     }
-    
+
     /// Returns `ComparisonResult` comparing the supplied `MediaType`s against these preferences.
     ///
     ///     let pref = httpReq.accept.comparePreference(for: .json, to: .html)

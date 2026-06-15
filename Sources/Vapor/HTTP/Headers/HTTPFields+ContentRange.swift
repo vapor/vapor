@@ -1,5 +1,10 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
+import Algorithms
 
 extension HTTPFields {
 
@@ -8,7 +13,7 @@ extension HTTPFields {
     public enum RangeUnit: Sendable, Equatable {
         case bytes
         case custom(value: String)
-        
+
         public func serialize() -> String {
             switch self {
             case .bytes:
@@ -18,7 +23,7 @@ extension HTTPFields {
             }
         }
     }
-    
+
     /// Represents the HTTP `Range` request header.
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
     public struct Range: Sendable, Equatable {
@@ -29,7 +34,7 @@ extension HTTPFields {
             self.unit = unit
             self.ranges = ranges
         }
-        
+
         init?(directives: [HTTPFields.Directive]) {
             let rangeCandidates: [HTTPFields.Range.Value] = directives.enumerated().compactMap {
                 if $0.0 == 0, let parameter = $0.1.parameter {
@@ -41,17 +46,17 @@ extension HTTPFields {
                 return nil
             }
             self.ranges = rangeCandidates
-            let lowerCasedUnit = directives[0].value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let lowerCasedUnit = directives[0].value.trimming(while: \.isWhitespace).lowercased()
             self.unit = lowerCasedUnit == "bytes"
                 ? RangeUnit.bytes
                 : RangeUnit.custom(value: lowerCasedUnit)
         }
-        
+
         public func serialize() -> String {
             return "\(unit.serialize())=\(ranges.map { $0.serialize() }.joined(separator: ", "))"
         }
     }
-    
+
     /// Represents the HTTP `Content-Range` response header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
@@ -65,7 +70,7 @@ extension HTTPFields {
                 return nil
             }
             let (unitStr, rangeStr) = (splitResult[0], splitResult[1])
-            let lowerCasedUnit = unitStr.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let lowerCasedUnit = unitStr.trimming(while: \.isWhitespace).lowercased()
             guard let contentRange = HTTPFields.ContentRange.Value.from(responseStr: rangeStr) else {
                 return nil
             }
@@ -74,25 +79,25 @@ extension HTTPFields {
                 : RangeUnit.custom(value: lowerCasedUnit)
             self.range = contentRange
         }
-        
+
         public init(unit: RangeUnit, range: HTTPFields.ContentRange.Value) {
             self.unit = unit
             self.range = range
         }
-        
+
         init?(directives: [Directive]) {
             guard directives.count == 1 else {
                 return nil
             }
             self.init(directive: directives[0])
         }
-        
+
         public func serialize() -> String {
             return "\(unit.serialize()) \(range.serialize())"
         }
-        
+
     }
-    
+
     /// Convenience for accessing the Content-Range response header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
@@ -110,7 +115,7 @@ extension HTTPFields {
             self[.contentRange] = newValue.serialize()
         }
     }
-    
+
     /// Convenience for accessing the `Range` request header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
@@ -141,7 +146,7 @@ extension HTTPFields.Range {
         case tail(value: Int)
         ///Two integers with single dash in between, e.g. `20-25`
         case within(start: Int, end: Int)
-        
+
         ///Parses a string representing a requested range in one of the following formats:
         ///
         ///- `<range-start>-<range-end>`
@@ -153,10 +158,10 @@ extension HTTPFields.Range {
         /// - returns: A `HTTPFields.Range.Value` if the `requestStr` is valid, `nil` otherwise.
         public static func from<T>(requestStr: T) -> HTTPFields.Range.Value? where T: StringProtocol {
             let ranges = requestStr.split(separator: "-", omittingEmptySubsequences: false)
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .map { $0.trimming(while: \.isWhitespace) }
             let count = ranges.count
             guard count <= 2 else { return nil }
-    
+
             switch (count > 0 ? Int(ranges[0]) : nil, count > 1 ? Int(ranges[1]) : nil) {
             case (nil, nil):
                 return nil
@@ -168,7 +173,7 @@ extension HTTPFields.Range {
                 return .within(start: start, end: end)
             }
         }
-        
+
         ///Serializes `HTTPFields.Range.Value` to a string for use within the HTTP `Range` header.
         public func serialize() -> String {
             switch self {
@@ -191,7 +196,7 @@ extension HTTPFields.ContentRange {
         case within(start: Int, end: Int)
         case withinWithLimit(start: Int, end: Int, limit: Int)
         case any(size: Int)
-        
+
         ///Parses a string representing a response range in one of the following formats:
         ///
         ///- `<range-start>-<range-end>/<size>`
@@ -203,7 +208,7 @@ extension HTTPFields.ContentRange {
         /// - returns: A `HTTPFields.ContentRange.Value` if the `responseStr` is valid, `nil` otherwise.
         public static func from<T>(responseStr: T) -> HTTPFields.ContentRange.Value? where T : StringProtocol {
             let ranges = responseStr.split(separator: "-", omittingEmptySubsequences: false)
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .map { $0.trimming(while: \.isWhitespace) }
 
             switch ranges.count {
             case 1:
@@ -232,7 +237,7 @@ extension HTTPFields.ContentRange {
             default: return nil
             }
         }
-        
+
         ///Serializes `HTTPFields.Range.Value` to a string for use within the HTTP `Content-Range` header.
         public func serialize() -> String {
             switch self {
@@ -266,7 +271,7 @@ extension HTTPFields.Range.Value {
             guard start >= 0, end >= 0, start <= end, start <= limit, end <= limit else {
                 throw Abort(.badRequest)
             }
-            
+
             return .withinWithLimit(start: start, end: end, limit: limit)
         }
     }

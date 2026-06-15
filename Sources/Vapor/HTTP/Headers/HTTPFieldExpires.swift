@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
 
 extension HTTPFields {
@@ -6,29 +10,10 @@ extension HTTPFields {
         /// The date represented by the header.
         public let expires: Date
 
-        internal static func parse(_ dateString: String) -> Expires? {
-            // https://tools.ietf.org/html/rfc7231#section-7.1.1.1
-            let fmt = DateFormatter()
-            fmt.locale = Locale(identifier: "en_US_POSIX")
-            fmt.timeZone = TimeZone(secondsFromGMT: 0)
-            fmt.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
-
-            if let date = fmt.date(from: dateString) {
+        static func parse(_ dateString: String) -> Expires? {
+            if let date = try? Date(dateString, strategy: .rfc1123) {
                 return .init(expires: date)
             }
-
-            // Obsolete RFC 850 format
-            fmt.dateFormat = "EEEE, dd-MMM-yy HH:mm:ss zzz"
-            if let date = fmt.date(from: dateString) {
-                return .init(expires: date)
-            }
-
-            // Obsolete ANSI C asctime() format
-            fmt.dateFormat = "EEE MMM d HH:mm:s yyyy"
-            if let date = fmt.date(from: dateString) {
-                return .init(expires: date)
-            }
-
             return nil
         }
 
@@ -38,12 +23,7 @@ extension HTTPFields {
 
         /// Generates the header string for this instance.
         public func serialize() -> String {
-            let fmt = DateFormatter()
-            fmt.locale = Locale(identifier: "en_US_POSIX")
-            fmt.timeZone = TimeZone(secondsFromGMT: 0)
-            fmt.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
-
-            return fmt.string(from: expires)
+            expires.formatted(.rfc1123)
         }
     }
 

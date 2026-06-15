@@ -1,12 +1,15 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension Validator where T == String {
     /// Validates whether a `String` is a valid email address.
     public static var email: Validator<T> {
         .init {
             guard
-                let range = $0.range(of: regex, options: [.regularExpression]),
-                range.lowerBound == $0.startIndex && range.upperBound == $0.endIndex,
+                let _ = try? Regex(regex).wholeMatch(in: $0),
                 // The numbers beneath here are as defined by https://emailregex.com/email-validation-summary/
                 $0.count <= 320, // total length
                 $0.split(separator: "@")[0].count <= 64 // length before `@`
@@ -20,8 +23,7 @@ extension Validator where T == String {
     public static var internationalEmail: Validator<T> {
         .init {
             guard
-                let range = $0.range(of: regexInternationalEmail, options: [.regularExpression]),
-                range.lowerBound == $0.startIndex && range.upperBound == $0.endIndex,
+                let _ = try? Regex(regexInternationalEmail).wholeMatch(in: $0),
                 // The numbers beneath here are as defined by https://emailregex.com/email-validation-summary/
                 $0.count <= 320, // total length
                 $0.split(separator: "@")[0].count <= 64 // length before `@`

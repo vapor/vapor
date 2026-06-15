@@ -1,6 +1,10 @@
 @testable import Vapor
 import Testing
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @Suite("Environment Secret Tests")
 struct EnvironmentSecretTests {

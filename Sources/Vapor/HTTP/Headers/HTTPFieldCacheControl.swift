@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
 
 // Comments on these properties are copied from the mozilla doc URL shown below.
@@ -107,16 +111,13 @@ extension HTTPFields {
         }
 
         public static func parse(_ value: String) -> CacheControl? {
-            var set = CharacterSet.whitespacesAndNewlines
-            set.insert(",")
-
             var foundSomething = false
 
             var cache = CacheControl()
 
             value
-                .replacingOccurrences(of: " ", with: "")
-                .replacingOccurrences(of: "\t", with: "")
+                .replacing(" ", with: "")
+                .replacing("\t", with: "")
                 .lowercased()
                 .split(separator: ",")
                 .forEach {
@@ -173,7 +174,7 @@ extension HTTPFields {
                     options.append("max-stale")
                 }
             }
-            
+
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
 

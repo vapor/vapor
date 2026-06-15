@@ -1,4 +1,10 @@
+import Algorithms
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Represents a number of bytes:
 ///
@@ -45,7 +51,7 @@ extension ByteCount: ExpressibleByStringLiteral {
             "tb": 40
         ]
 
-        let cleanValue = value.lowercased().trimmingCharacters(in: .whitespaces).replacingOccurrences(of: " ", with: "")
+        let cleanValue = value.lowercased().trimming(while: { $0 == " " || $0 == "\t"} ).replacing(" ", with: "")
         for suffix in validSuffixes {
             guard cleanValue.hasSuffix(suffix.key) else { continue }
             guard let stringIntValue = cleanValue.components(separatedBy: suffix.key).first else {

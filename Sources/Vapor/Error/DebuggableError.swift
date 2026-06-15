@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Logging
 
 /// `Debuggable` provides an interface that allows a type
@@ -53,7 +57,7 @@ public protocol DebuggableError: LocalizedError, CustomDebugStringConvertible, C
     /// Provide a custom implementation to a list of pertinent issues.
     var gitHubIssues: [String] { get }
 
-    /// Which log level this error should report as. 
+    /// Which log level this error should report as.
     /// Defaults to `.warning`.
     var logLevel: Logger.Level { get }
 }
@@ -98,7 +102,7 @@ extension DebuggableError {
     public var source: ErrorSource? {
         nil
     }
-    
+
     public var logLevel: Logger.Level {
         .warning
     }

@@ -6,7 +6,11 @@ import Logging
 import NIOEmbedded
 import Testing
 import VaporTesting
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import AsyncHTTPClient
 import HTTPTypes
 import RoutingKit

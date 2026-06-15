@@ -3,7 +3,11 @@ import NIOCore
 import HTTPTypes
 import Testing
 import VaporTesting
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import RoutingKit
 
 @Suite("Query Tests")

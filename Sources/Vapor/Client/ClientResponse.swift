@@ -1,6 +1,10 @@
 import NIOCore
 import HTTPTypes
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public struct ClientResponse: Sendable {
     public var status: HTTPStatus
