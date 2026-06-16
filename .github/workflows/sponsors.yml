@@ -15,7 +15,7 @@ jobs:
         id: get-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.PENNY_APP_ID }}
+          client-id: ${{ vars.PENNY_APP_CLIENT_ID }}
           private-key: ${{ secrets.PENNY_APP_PRIVATE_KEY }}
 
       - name: Generate Sponsors
