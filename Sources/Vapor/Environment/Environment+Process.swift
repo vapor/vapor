@@ -1,11 +1,17 @@
-#if canImport(Glibc)
-import Glibc
+#if canImport(Darwin)
+import Darwin
+#elseif os(Windows)
+import CRT
+#elseif canImport(Glibc)
+@preconcurrency import Glibc
+#elseif canImport(Android)
+@preconcurrency import Android
 #elseif canImport(Musl)
 import Musl
-#elseif canImport(Android)
-import Android
+#elseif canImport(WASILibc)
+import WASILibc
 #else
-import Darwin
+#error("Unsupported runtime")
 #endif
 #if canImport(FoundationEssentials)
 import FoundationEssentials

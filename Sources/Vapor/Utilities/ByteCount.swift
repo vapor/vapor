@@ -54,7 +54,7 @@ extension ByteCount: ExpressibleByStringLiteral {
         let cleanValue = value.lowercased().trimming(while: { $0 == " " || $0 == "\t"} ).replacing(" ", with: "")
         for suffix in validSuffixes {
             guard cleanValue.hasSuffix(suffix.key) else { continue }
-            guard let stringIntValue = cleanValue.components(separatedBy: suffix.key).first else {
+            guard let stringIntValue = cleanValue.split(separator: suffix.key).first else {
                 fatalError("Invalid string format")
             }
 
