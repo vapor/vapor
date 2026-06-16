@@ -111,26 +111,6 @@ let package = Package(
         // C helpers
         .target(name: "CVaporBcrypt"),
 
-        .target(
-            name: "HTTPServerNew",
-            dependencies: [
-                .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
-                .product(name: "NIOCore", package: "swift-nio"),
-                .product(
-                    name: "NIOTransportServices",
-                    package: "swift-nio-transport-services",
-                    condition: .when(platforms: [.macOS, .iOS, .tvOS, .visionOS])
-                ),
-                .product(name: "NIOExtras", package: "swift-nio-extras"),
-                .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "Logging", package: "swift-log"),
-                .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
-                .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
-                .product(name: "HTTPTypes", package: "swift-http-types"),
-                .product(name: "Collections", package: "swift-collections"),
-            ],
-        ),
-
         // Vapor
         .target(
             name: "Vapor",
