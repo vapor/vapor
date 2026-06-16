@@ -21,7 +21,8 @@ jobs:
       - name: Generate Sponsors
         uses: JamesIves/github-sponsors-readme-action@v1
         with:
-          token: ${{ steps.get-token.outputs.token }}
+          # We have to use a PAT here as app tokens don't have access to the info
+          token: ${{ secrets.SPONSORS_PAT }}
           file: "README.md"
           minimum: 500
           maximum: 9900
