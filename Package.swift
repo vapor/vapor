@@ -29,7 +29,7 @@ let package = Package(
             "HTTPClient",
             "Multipart",
             "MacroRouting",
-        ])
+        ]),
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
@@ -103,9 +103,9 @@ let package = Package(
 
         // Swift syntax parsing and generation
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
-        
+
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server", branch: "main")
+        .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "b1c4f775dfbdc74800c0f29fda79c8984a5e9073"),
     ],
     targets: [
         // C helpers
