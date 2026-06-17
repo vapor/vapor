@@ -1083,7 +1083,31 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         let a = try app.http.client.shared.execute(request: request).wait()
         XCTAssertEqual(a.headers.connection, .keepAlive)
     }
-    
+
+    func testIdleTimeoutClosesIdleConnections() throws {
+        // With a 1s idle timeout, an inbound connection that sends nothing
+        // should be closed by the server within roughly 1s.
+        app.http.server.configuration.idleTimeout = .seconds(1)
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+
+        app.environment.arguments = ["serve"]
+        try app.start() 
+
+        guard let localAddress = app.http.server.shared.localAddress else {
+            XCTFail("couldn't get local address")
+            return
+        }
+
+        let client = try ClientBootstrap(group: app.eventLoopGroup)
+            .connect(to: localAddress)
+            .wait()
+
+        let closed = XCTestExpectation(description: "server closed the idle connection")
+        client.closeFuture.whenComplete { _ in closed.fulfill() }
+        wait(for: [closed], timeout: 3.0)
+    }
+
     func testRequestBodyStreamGetsFinalisedEvenIfClientDisappears() {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
