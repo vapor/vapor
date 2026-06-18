@@ -586,20 +586,21 @@ private final class HTTPServerConnection: Sendable {
                     guard !configuration.supportVersions.contains(.two) else {
                         fatalError("Plaintext HTTP/2 (h2c) not yet supported.")
                     }
-                    return channel.eventLoop.makeCompletedFuture {
-                        if let idleTimeout = configuration.idleTimeout {
+                    if let idleTimeout = configuration.idleTimeout {
+                        do {
                             try channel.pipeline.syncOperations.addHandlers([
                                 IdleStateHandler(allTimeout: idleTimeout),
                                 CloseOnIdleHandler(logger: configuration.logger),
                             ])
+                        } catch {
+                            return channel.eventLoop.makeFailedFuture(error)
                         }
-                    }.flatMap { _ in
-                        channel.pipeline.addVaporHTTP1Handlers(
-                            application: application,
-                            responder: responder,
-                            configuration: configuration
-                        )
                     }
+                    return channel.pipeline.addVaporHTTP1Handlers(
+                        application: application,
+                        responder: responder,
+                        configuration: configuration
+                    )
                 }
             }
             
