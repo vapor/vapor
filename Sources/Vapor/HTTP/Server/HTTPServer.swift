@@ -135,6 +135,9 @@ public final class HTTPServer: Server, Sendable {
         public var connectionsPerServerTick: UInt
 
         /// When set, inbound connections that have been idle for this duration will be closed. Default: `nil` (disabled).
+        ///
+        /// Behind a connection-pooling load balancer or reverse proxy, set this longer than the upstream's
+        /// idle-pool timeout to avoid the upstream reusing a connection the server has already closed.
         public var idleTimeout: TimeAmount?
 
         public init(
