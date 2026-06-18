@@ -1108,6 +1108,56 @@ final class ServerTests: XCTestCase, @unchecked Sendable {
         wait(for: [closed], timeout: 3.0)
     }
 
+    func testIdleTimeoutResetsOnActivity() throws {
+        app.http.server.configuration.idleTimeout = .seconds(3)
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+
+        app.environment.arguments = ["serve"]
+        try app.start()
+
+        guard let localAddress = app.http.server.shared.localAddress else {
+            XCTFail("couldn't get local address")
+            return
+        }
+
+        let client = try ClientBootstrap(group: app.eventLoopGroup)
+            .connect(to: localAddress)
+            .wait()
+
+        // Three time-windowed observers of the same event (the channel closing).
+        let stableDuringInitialIdle = XCTestExpectation(description: "channel must not close during initial 2s idle")
+        stableDuringInitialIdle.isInverted = true
+        let stablePastOriginalDeadline = XCTestExpectation(description: "activity should have reset the timer past the original deadline")
+        stablePastOriginalDeadline.isInverted = true
+        let closedAfterResetWindow = XCTestExpectation(description: "server closes after the reset window elapses")
+
+        client.closeFuture.whenComplete { _ in
+            stableDuringInitialIdle.fulfill()
+            stablePastOriginalDeadline.fulfill()
+            closedAfterResetWindow.fulfill()
+        }
+
+        // Idle for 2s, still inside the original 3s window.
+        wait(for: [stableDuringInitialIdle], timeout: 2.0)
+
+        // Send a keep-alive request. Server-side activity in both directions
+        // resets the IdleStateHandler.
+        try client.writeAndFlush(ByteBuffer(string:
+            "GET / HTTP/1.1\r\nHost: foo\r\nConnection: keep-alive\r\n\r\n"
+        )).wait()
+
+        // Wait 2s. The original deadline (≈ t=3s) elapses inside this window;
+        // surviving past it proves the activity reset the timer.
+        wait(for: [stablePastOriginalDeadline], timeout: 2.0)
+        XCTAssertTrue(client.isActive, "activity at t=2s should have reset the idle timer")
+
+        // Connection should be deemed idle and close out after some time.
+        // Intentionally waiting a bit more generously to avoid races and flakiness.
+        wait(for: [closedAfterResetWindow], timeout: 1.5)
+        XCTAssertFalse(client.isActive, "server should have closed the connection after the reset window elapsed")
+    }
+
     func testRequestBodyStreamGetsFinalisedEvenIfClientDisappears() {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
