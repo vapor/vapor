@@ -451,7 +451,49 @@ final class HTTPHeaderTests: XCTestCase {
         XCTAssertEqual(cacheControl.serialize(), "immutable")
 
     }
-    
+
+    /// Test parse and serialize of `Retry-After` header with `delay-seconds`
+    func testRetryAfterHeaderSeconds() throws {
+        var headers = HTTPHeaders()
+        headers.retryAfter = .seconds(120)
+        guard case .seconds(let seconds) = headers.retryAfter else {
+            XCTFail("HTTPHeaders.RetryAfter parsing failed")
+            return
+        }
+        XCTAssertEqual(seconds, 120)
+        XCTAssertEqual(headers.first(name: .retryAfter), "120")
+    }
+
+    /// Test parse and serialize of `Retry-After` header with an HTTP-date
+    func testRetryAfterHeaderDate() throws {
+        var headers = HTTPHeaders()
+        headers.retryAfter = .date(Date(timeIntervalSince1970: 18*3600))
+        guard case .date(let date) = headers.retryAfter else {
+            XCTFail("HTTPHeaders.RetryAfter parsing failed")
+            return
+        }
+        XCTAssertEqual(date.timeIntervalSince1970, 18*3600)
+        XCTAssertEqual(headers.first(name: .retryAfter), "Thu, 01 Jan 1970 18:00:00 GMT")
+    }
+
+    /// Test that a negative or otherwise invalid `Retry-After` value parses as nil
+    func testRetryAfterHeaderInvalid() throws {
+        var headers = HTTPHeaders()
+        headers.replaceOrAdd(name: .retryAfter, value: "-5")
+        XCTAssertNil(headers.retryAfter)
+        headers.replaceOrAdd(name: .retryAfter, value: "not-a-date")
+        XCTAssertNil(headers.retryAfter)
+    }
+
+    /// Test that setting `Retry-After` to nil removes the header
+    func testRetryAfterHeaderRemoval() throws {
+        var headers = HTTPHeaders()
+        headers.retryAfter = .seconds(5)
+        XCTAssertNotNil(headers.first(name: .retryAfter))
+        headers.retryAfter = nil
+        XCTAssertNil(headers.first(name: .retryAfter))
+    }
+
     /// Test that multiple same-named headers round-trip through Codable
     func testCodableMultipleHeadersRountrip() throws {
         let encoder = JSONEncoder()
