@@ -24,11 +24,11 @@ jobs:
   #   container: swift:6.2
   #   steps:
   #     - name: Check out Vapor
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v7
   #       with:
   #         path: vapor
   #     - name: Check out provider
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v7
   #       with:
   #         repository: ${{ matrix.provider }}
   #         path: provider
@@ -59,7 +59,7 @@ jobs:
     container: swiftlang/swift:nightly-main-bookworm
     steps:
       - name: Check out Vapor
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Run tests
         run: swift test
 
@@ -71,7 +71,7 @@ jobs:
     container: swiftlang/swift:nightly-main-bookworm
     steps:
       - name: Check out Vapor
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Run tests with traits disabled
         run: swift test --disable-default-traits
 
