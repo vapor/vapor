@@ -156,8 +156,7 @@ public final class HTTPServer: Server, Sendable {
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
-            connectionsPerServerTick: UInt = 256,
-            idleTimeout: TimeAmount? = nil
+            connectionsPerServerTick: UInt = 256
         ) {
             self.init(
                 address: .hostname(hostname, port: port),
@@ -174,8 +173,7 @@ public final class HTTPServer: Server, Sendable {
                 logger: logger,
                 shutdownTimeout: shutdownTimeout,
                 customCertificateVerifyCallback: customCertificateVerifyCallback,
-                connectionsPerServerTick: connectionsPerServerTick,
-                idleTimeout: idleTimeout
+                connectionsPerServerTick: connectionsPerServerTick
             )
         }
 
@@ -195,8 +193,7 @@ public final class HTTPServer: Server, Sendable {
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallbackWithMetadata: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResultWithMetadata>) -> Void)?,
-            connectionsPerServerTick: UInt = 256,
-            idleTimeout: TimeAmount? = nil
+            connectionsPerServerTick: UInt = 256
         ) {
             self.init(
                 address: .hostname(hostname, port: port),
@@ -213,8 +210,7 @@ public final class HTTPServer: Server, Sendable {
                 logger: logger,
                 shutdownTimeout: shutdownTimeout,
                 customCertificateVerifyCallbackWithMetadata: customCertificateVerifyCallbackWithMetadata,
-                connectionsPerServerTick: connectionsPerServerTick,
-                idleTimeout: idleTimeout
+                connectionsPerServerTick: connectionsPerServerTick
             )
         }
 
@@ -233,8 +229,7 @@ public final class HTTPServer: Server, Sendable {
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
-            connectionsPerServerTick: UInt = 256,
-            idleTimeout: TimeAmount? = nil
+            connectionsPerServerTick: UInt = 256
         ) {
             self.address = address
             self.backlog = backlog
@@ -256,7 +251,7 @@ public final class HTTPServer: Server, Sendable {
             self.customCertificateVerifyCallback = customCertificateVerifyCallback
             self.customCertificateVerifyCallbackWithMetadata = nil
             self.connectionsPerServerTick = connectionsPerServerTick
-            self.idleTimeout = idleTimeout
+            self.idleTimeout = nil
         }
 
         public init(
@@ -274,8 +269,7 @@ public final class HTTPServer: Server, Sendable {
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallbackWithMetadata: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResultWithMetadata>) -> Void)?,
-            connectionsPerServerTick: UInt = 256,
-            idleTimeout: TimeAmount? = nil
+            connectionsPerServerTick: UInt = 256
         ) {
             self.address = address
             self.backlog = backlog
@@ -296,6 +290,47 @@ public final class HTTPServer: Server, Sendable {
             self.shutdownTimeout = shutdownTimeout
             self.customCertificateVerifyCallback = nil
             self.customCertificateVerifyCallbackWithMetadata = customCertificateVerifyCallbackWithMetadata
+            self.connectionsPerServerTick = connectionsPerServerTick
+            self.idleTimeout = nil
+        }
+
+        public init(
+            address: BindAddress,
+            backlog: Int = 256,
+            reuseAddress: Bool = true,
+            tcpNoDelay: Bool = true,
+            responseCompression: ResponseCompressionConfiguration = .disabled,
+            requestDecompression: RequestDecompressionConfiguration = .enabled,
+            supportPipelining: Bool = true,
+            supportVersions: Set<HTTPVersionMajor>? = nil,
+            tlsConfiguration: TLSConfiguration? = nil,
+            serverName: String? = nil,
+            reportMetrics: Bool = true,
+            logger: Logger? = nil,
+            shutdownTimeout: TimeAmount = .seconds(10),
+            customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
+            connectionsPerServerTick: UInt = 256,
+            idleTimeout: TimeAmount?
+        ) {
+            self.address = address
+            self.backlog = backlog
+            self.reuseAddress = reuseAddress
+            self.tcpNoDelay = tcpNoDelay
+            self.responseCompression = responseCompression
+            self.requestDecompression = requestDecompression
+            self.supportPipelining = supportPipelining
+            if let supportVersions = supportVersions {
+                self.supportVersions = supportVersions
+            } else {
+                self.supportVersions = tlsConfiguration == nil ? [.one] : [.one, .two]
+            }
+            self.tlsConfiguration = tlsConfiguration
+            self.serverName = serverName
+            self.reportMetrics = reportMetrics
+            self.logger = logger ?? Logger(label: "codes.vapor.http-server")
+            self.shutdownTimeout = shutdownTimeout
+            self.customCertificateVerifyCallback = customCertificateVerifyCallback
+            self.customCertificateVerifyCallbackWithMetadata = nil
             self.connectionsPerServerTick = connectionsPerServerTick
             self.idleTimeout = idleTimeout
         }
