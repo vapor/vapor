@@ -134,6 +134,12 @@ public final class HTTPServer: Server, Sendable {
         /// for additional information.
         public var connectionsPerServerTick: UInt
 
+        /// When set, inbound connections that have been idle for this duration will be closed. Default: `nil` (disabled).
+        ///
+        /// Behind a connection-pooling load balancer or reverse proxy, set this longer than the upstream's
+        /// idle-pool timeout to avoid the upstream reusing a connection the server has already closed.
+        public var idleTimeout: TimeAmount?
+
         public init(
             hostname: String = Self.defaultHostname,
             port: Int = Self.defaultPort,
@@ -150,7 +156,8 @@ public final class HTTPServer: Server, Sendable {
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
-            connectionsPerServerTick: UInt = 256
+            connectionsPerServerTick: UInt = 256,
+            idleTimeout: TimeAmount? = nil
         ) {
             self.init(
                 address: .hostname(hostname, port: port),
@@ -167,7 +174,8 @@ public final class HTTPServer: Server, Sendable {
                 logger: logger,
                 shutdownTimeout: shutdownTimeout,
                 customCertificateVerifyCallback: customCertificateVerifyCallback,
-                connectionsPerServerTick: connectionsPerServerTick
+                connectionsPerServerTick: connectionsPerServerTick,
+                idleTimeout: idleTimeout
             )
         }
 
@@ -187,7 +195,8 @@ public final class HTTPServer: Server, Sendable {
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallbackWithMetadata: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResultWithMetadata>) -> Void)?,
-            connectionsPerServerTick: UInt = 256
+            connectionsPerServerTick: UInt = 256,
+            idleTimeout: TimeAmount? = nil
         ) {
             self.init(
                 address: .hostname(hostname, port: port),
@@ -204,7 +213,8 @@ public final class HTTPServer: Server, Sendable {
                 logger: logger,
                 shutdownTimeout: shutdownTimeout,
                 customCertificateVerifyCallbackWithMetadata: customCertificateVerifyCallbackWithMetadata,
-                connectionsPerServerTick: connectionsPerServerTick
+                connectionsPerServerTick: connectionsPerServerTick,
+                idleTimeout: idleTimeout
             )
         }
 
@@ -223,7 +233,8 @@ public final class HTTPServer: Server, Sendable {
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)? = nil,
-            connectionsPerServerTick: UInt = 256
+            connectionsPerServerTick: UInt = 256,
+            idleTimeout: TimeAmount? = nil
         ) {
             self.address = address
             self.backlog = backlog
@@ -245,6 +256,7 @@ public final class HTTPServer: Server, Sendable {
             self.customCertificateVerifyCallback = customCertificateVerifyCallback
             self.customCertificateVerifyCallbackWithMetadata = nil
             self.connectionsPerServerTick = connectionsPerServerTick
+            self.idleTimeout = idleTimeout
         }
 
         public init(
@@ -262,7 +274,8 @@ public final class HTTPServer: Server, Sendable {
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10),
             customCertificateVerifyCallbackWithMetadata: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResultWithMetadata>) -> Void)?,
-            connectionsPerServerTick: UInt = 256
+            connectionsPerServerTick: UInt = 256,
+            idleTimeout: TimeAmount? = nil
         ) {
             self.address = address
             self.backlog = backlog
@@ -284,6 +297,7 @@ public final class HTTPServer: Server, Sendable {
             self.customCertificateVerifyCallback = nil
             self.customCertificateVerifyCallbackWithMetadata = customCertificateVerifyCallbackWithMetadata
             self.connectionsPerServerTick = connectionsPerServerTick
+            self.idleTimeout = idleTimeout
         }
     }
 
@@ -545,6 +559,12 @@ private final class HTTPServerConnection: Sendable {
                     }
                     return channel.eventLoop.makeCompletedFuture {
                         try channel.pipeline.syncOperations.addHandlers(tlsHandler)
+                        if let idleTimeout = configuration.idleTimeout {
+                            try channel.pipeline.syncOperations.addHandlers([
+                                IdleStateHandler(allTimeout: idleTimeout),
+                                CloseOnIdleHandler(logger: configuration.logger),
+                            ])
+                        }
                     }.flatMap { _ in
                         channel.configureHTTP2SecureUpgrade(h2ChannelConfigurator: { channel in
                             channel.configureHTTP2Pipeline(
@@ -568,6 +588,16 @@ private final class HTTPServerConnection: Sendable {
                 } else {
                     guard !configuration.supportVersions.contains(.two) else {
                         fatalError("Plaintext HTTP/2 (h2c) not yet supported.")
+                    }
+                    if let idleTimeout = configuration.idleTimeout {
+                        do {
+                            try channel.pipeline.syncOperations.addHandlers([
+                                IdleStateHandler(allTimeout: idleTimeout),
+                                CloseOnIdleHandler(logger: configuration.logger),
+                            ])
+                        } catch {
+                            return channel.eventLoop.makeFailedFuture(error)
+                        }
                     }
                     return channel.pipeline.addVaporHTTP1Handlers(
                         application: application,
