@@ -1,4 +1,5 @@
 import NIOCore
+import HTTPTypes
 
 /// Capable of being authenticated.
 public protocol Authenticatable: Sendable { }
@@ -27,10 +28,38 @@ extension RequestAuthenticator {
 
 /// Helper for creating authentication middleware using the Basic authorization header.
 public protocol BasicAuthenticator: RequestAuthenticator {
+    /// Realm to advertise in the `WWW-Authenticate` challenge.
+    var realm: String { get }
+
     func authenticate(basic: BasicAuthorization, for request: Request) async throws
 }
 
 extension BasicAuthenticator {
+    public var realm: String {
+        "Vapor"
+    }
+
+    private var authenticateHeaderValue: HTTPFields.WWWAuthenticate {
+        .basic(realm: self.realm)
+    }
+
+    public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        do {
+            try await self.authenticate(request: request)
+            let response = try await next.respond(to: request)
+            if response.status == .unauthorized, response.headers[.wwwAuthenticate] == nil {
+                response.headers.wwwAuthenticate = self.authenticateHeaderValue
+            }
+            return response
+        } catch let error as any AbortError where error.status == .unauthorized {
+            var headers = error.headers
+            if headers[.wwwAuthenticate] == nil {
+                headers.wwwAuthenticate = self.authenticateHeaderValue
+            }
+            throw Abort(.unauthorized, headers: headers, reason: error.reason)
+        }
+    }
+
     public func authenticate(request: Request) async throws {
         guard let basicAuthorization = request.headers.basicAuthorization else {
             return
