@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Configuration options for sessions.
 public struct SessionsConfiguration: Sendable {

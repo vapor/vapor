@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOCore
 import HTTPTypes
 import NIOFoundationCompat
@@ -7,7 +11,7 @@ extension JSONEncoder: ContentEncoder {
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
-    
+
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         headers.contentType = .json
 
@@ -41,12 +45,12 @@ extension JSONDecoder: ContentDecoder {
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
-    
+
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
         where D: Decodable
     {
         let data = body.getData(at: body.readerIndex, length: body.readableBytes) ?? Data()
-        
+
         if !userInfo.isEmpty {
             let actualDecoder = JSONDecoder() // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
             actualDecoder.dateDecodingStrategy = self.dateDecodingStrategy

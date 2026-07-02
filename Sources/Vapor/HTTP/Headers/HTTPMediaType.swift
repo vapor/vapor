@@ -1,5 +1,10 @@
+import Algorithms
 import HTTPTypes
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Represents an encoded data-format, used in HTTP, HTML, email, and elsewhere.
 ///
@@ -57,11 +62,13 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
             return true
         }
 
-        guard lhs.type.caseInsensitiveCompare(rhs.type) == .orderedSame else {
+        guard lhs.type.isCaseInsensitiveEqualASCII(to: rhs.type) else {
             return false
         }
 
-        return lhs.subType == "*" || rhs.subType == "*" || lhs.subType.caseInsensitiveCompare(rhs.subType) == .orderedSame
+        return lhs.subType == "*"
+            || rhs.subType == "*"
+            || lhs.subType.isCaseInsensitiveEqualASCII(to: rhs.subType)
     }
 
     /// The ``HTTPMediaType``'s discrete or composite type. Usually one of the following.
@@ -144,8 +151,8 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
             return nil
         }
 
-        self.type = String(typeParts[0]).trimmingCharacters(in: .whitespaces)
-        self.subType = String(typeParts[1]).trimmingCharacters(in: .whitespaces)
+        self.type = String(typeParts[0].trimming(while: \.isWhitespace))
+        self.subType = String(typeParts[1].trimming(while: \.isWhitespace))
 
         self.parameters = [:]
         for directive in directives[1...] {

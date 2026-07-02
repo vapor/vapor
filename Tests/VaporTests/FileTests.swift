@@ -6,7 +6,11 @@ import Crypto
 import Vapor
 import Testing
 import VaporTesting
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import RoutingKit
 import _NIOFileSystemFoundationCompat
 

@@ -6,7 +6,11 @@ import Atomics
 import NIOConcurrencyHelpers
 import Testing
 import VaporTesting
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
 import NIOHTTP1
 import NIOHTTPTypesHTTP1

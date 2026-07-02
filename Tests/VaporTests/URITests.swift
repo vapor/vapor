@@ -2,7 +2,11 @@ import Vapor
 import NIOCore
 import Algorithms
 import Testing
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @Suite("URI Test")
 struct URITests {

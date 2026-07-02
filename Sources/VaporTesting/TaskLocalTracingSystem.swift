@@ -1,12 +1,16 @@
 import Tracing
 import InMemoryTracing
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOConcurrencyHelpers
 import Testing
 
 public final class TaskLocalTracingSystemWrapper: Tracer {
     public init() {}
-    
+
     public func forceFlush() {
         tracer.forceFlush()
     }

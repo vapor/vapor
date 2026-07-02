@@ -2,7 +2,11 @@
 import NIOCore
 import AsyncHTTPClient
 import Logging
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOHTTPTypesHTTP1
 import HTTPTypes
 import NIOHTTP1

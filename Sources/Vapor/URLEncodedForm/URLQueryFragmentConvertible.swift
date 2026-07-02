@@ -1,10 +1,14 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Capable of converting to / from `URLQueryFragment`.
 protocol URLQueryFragmentConvertible {
     /// Converts `URLQueryFragment` to self.
     init?(urlQueryFragmentValue value: URLQueryFragment)
-    
+
     /// Converts self to `URLQueryFragment`.
     var urlQueryFragmentValue: URLQueryFragment { get }
 }
@@ -16,7 +20,7 @@ extension String: URLQueryFragmentConvertible {
         }
         self = result
     }
-    
+
     var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(self)
     }
@@ -31,7 +35,7 @@ extension FixedWidthInteger {
         }
         self = fwi
     }
-    
+
     /// `URLEncodedFormDataConvertible` conformance.
     var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(self.description)
@@ -59,7 +63,7 @@ extension BinaryFloatingPoint {
         }
         self = Self.init(double)
     }
-    
+
     /// `URLEncodedFormDataConvertible` conformance.
     var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(Double(self).description)
@@ -82,7 +86,7 @@ extension Bool: URLQueryFragmentConvertible {
         default: return nil
         }
     }
-    
+
     /// `URLEncodedFormDataConvertible` conformance.
     var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(self.description)
@@ -98,7 +102,7 @@ extension Decimal: URLQueryFragmentConvertible {
         }
         self = decimal
     }
-    
+
     /// `URLEncodedFormDataConvertible` conformance.
     var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(self.description)
@@ -112,7 +116,7 @@ extension Date: URLQueryFragmentConvertible {
         }
         self = Date(timeIntervalSince1970: double)
     }
-    
+
     var urlQueryFragmentValue: URLQueryFragment {
         return timeIntervalSince1970.urlQueryFragmentValue
     }

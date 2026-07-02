@@ -1,8 +1,13 @@
 import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftSyntaxBuilder
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
+import Algorithms
 
 enum HTTPMethodMacroUtilities {
     public static func expansion(
@@ -85,7 +90,7 @@ enum HTTPMethodMacroUtilities {
         if let arguments {
             for (_, argument) in arguments.enumerated() {
                 if argument.label?.text == "on" {
-                    routeRegistrationVariable = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                    routeRegistrationVariable = String(argument.expression.description.trimming(while: \.isWhitespace))
                     continue
                 }
                 // Skip the first non-on: argument for custom HTTP methods (that's the HTTP method itself)
@@ -94,11 +99,11 @@ enum HTTPMethodMacroUtilities {
                     continue
                 }
 
-                let exprStr = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                let exprStr = argument.expression.description.trimming(while: \.isWhitespace)
 
                 if exprStr.hasSuffix(".self") {
-                    let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
-                    parameterTypes.append(typeName)
+                    let typeName = exprStr.replacing(".self", with: "")
+                    parameterTypes.append(String(typeName))
                 }
             }
         }
@@ -193,17 +198,17 @@ enum HTTPMethodMacroUtilities {
                         skippedHTTPMethodInPath = true
                         continue
                     }
-                    let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let exprStr = arg.expression.description.trimming(while: \.isWhitespace)
 
                     // Check if it's a type (contains .self)
                     if exprStr.hasSuffix(".self") {
-                        let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
+                        let typeName = exprStr.replacing(".self", with: "")
                         pathComponents.append(":\(typeName.lowercased())\(currentDynamicPathParameterIndex)")
                         currentDynamicPathParameterIndex += 1
                     } else {
                         // It's a string literal
-                        let cleaned = exprStr.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-                        pathComponents.append(cleaned)
+                        let cleaned = exprStr.trimming(while: { $0 == "\"" })
+                        pathComponents.append(String(cleaned))
                     }
                 }
             }
@@ -247,9 +252,9 @@ enum HTTPMethodMacroUtilities {
             var authType: String? = nil
             var middlewares: [String] = []
             for (i, arg) in args.enumerated() {
-                let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                let exprStr = String(arg.expression.description.trimming(while: \.isWhitespace))
                 if i == 0 {
-                    authType = exprStr.replacingOccurrences(of: ".self", with: "")
+                    authType = exprStr.replacing(".self", with: "")
                 } else {
                     middlewares.append(exprStr)
                 }

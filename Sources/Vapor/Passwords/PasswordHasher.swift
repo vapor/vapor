@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public protocol PasswordHasher: Sendable {
     func hash<Password>(_ password: Password) async throws -> [UInt8]

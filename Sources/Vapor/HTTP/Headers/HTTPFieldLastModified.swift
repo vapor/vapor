@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
 
 extension HTTPFields {
@@ -9,25 +13,14 @@ extension HTTPFields {
         public var value: Date
 
         internal static func parse(_ dateString: String) -> LastModified? {
-            let fmt = DateFormatter()
-            fmt.locale = Locale(identifier: "en_US_POSIX")
-            fmt.timeZone = TimeZone(secondsFromGMT: 0)
-            fmt.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
-
-            guard let date = fmt.date(from: dateString) else {
-                return nil
+            if let date = try? Date(dateString, strategy: .rfc1123) {
+                return .init(value: date)
             }
-
-            return .init(value: date)
+            return nil
         }
 
         public func serialize() -> String {
-            let fmt = DateFormatter()
-            fmt.locale = Locale(identifier: "en_US_POSIX")
-            fmt.timeZone = TimeZone(secondsFromGMT: 0)
-            fmt.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
-
-            return fmt.string(from: self.value)
+            value.formatted(.rfc1123)
         }
     }
 
@@ -49,4 +42,3 @@ extension HTTPFields.LastModified {
         self.init(value: date)
     }
 }
-

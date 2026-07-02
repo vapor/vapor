@@ -71,7 +71,7 @@ let package = Package(
         // Swift service context
         .package(url: "https://github.com/apple/swift-service-context.git", from: "1.0.0"),
 
-        // Swift collection algorithms
+        // Common algorithms
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
 
         // WebSocket client library built on SwiftNIO
@@ -92,7 +92,7 @@ let package = Package(
         // Swift Types for HTTP Requests
         .package(url: "https://github.com/apple/swift-http-types", from: "1.0.0"),
 
-        // Collection algorithms
+        // Common data structures
         .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
 
         // X509 certificate types for the Swift ecosystem
@@ -158,6 +158,7 @@ let package = Package(
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "Algorithms", package: "swift-algorithms")
             ],
             swiftSettings: swiftSettings
         ),

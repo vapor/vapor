@@ -1,7 +1,11 @@
 import NIOPosix
 @testable import Vapor
 import Testing
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @Suite("URL Encoded Form Tests")
 struct URLEncodedFormTests {
@@ -536,7 +540,7 @@ struct URLEncodedFormTests {
         let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag")
         #expect(foo.flag == true)
     }
-    
+
     @Test("Test Flag Decoding As Optional Bool")
     func testFlagDecodingAsOptionalBool() throws {
         struct Foo: Codable {

@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
 
 // Comments on these properties are copied from the mozilla doc URL shown below.
@@ -107,51 +111,48 @@ extension HTTPFields {
         }
 
         public static func parse(_ value: String) -> CacheControl? {
-            var set = CharacterSet.whitespacesAndNewlines
-            set.insert(",")
-
             var foundSomething = false
 
             var cache = CacheControl()
 
-            value
-                .replacingOccurrences(of: " ", with: "")
-                .replacingOccurrences(of: "\t", with: "")
+            return value
+                .replacing(" ", with: "")
+                .replacing("\t", with: "")
                 .lowercased()
                 .split(separator: ",")
-                .forEach {
-                    let str = String($0)
+                .reduce(false, {
+                    let str = String($1)
 
                     if let keyPath = Self.exactMatch[str] {
                         cache[keyPath: keyPath] = true
-                        foundSomething = true
+                        return true
                         return
                     }
 
                     if value == "max-stale" {
                         cache.maxStale = .init()
-                        foundSomething = true
+                        return true
                         return
                     }
 
-                    let parts = str.components(separatedBy: "=")
+                    let parts = str.split(separator: "=")
                     guard parts.count == 2, let seconds = Int(parts[1]), seconds >= 0 else {
-                        return
+                        return $0
                     }
 
                     if parts[0] == "max-stale" {
                         cache.maxStale = .init(seconds: seconds)
-                        foundSomething = true
+                        return true
                         return
                     }
 
                     guard let keyPath = Self.prefix[parts[0]] else {
-                        return
+                        return $0
                     }
 
                     cache[keyPath: keyPath] = seconds
-                    foundSomething = true
-            }
+                    return true
+            } ? cache : nil
 
             return foundSomething ? cache : nil
         }
@@ -173,7 +174,7 @@ extension HTTPFields {
                     options.append("max-stale")
                 }
             }
-            
+
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
 
