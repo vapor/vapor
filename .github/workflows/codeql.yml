@@ -30,7 +30,7 @@ jobs:
       with:
         xcode-version: '26.3'
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
       with:
