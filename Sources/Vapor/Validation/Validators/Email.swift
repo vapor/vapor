@@ -33,6 +33,18 @@ extension Validator where T == String {
             return ValidatorResults.Email(isValidEmail: true)
         }
     }
+
+    private static var emailRegex: Regex<Substring> {
+        #/(?:[a-zA-Z0-9!#$%\&'*+/=?\^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%\&'*+/=?\^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/#
+    }
+
+    // Local part: Unicode letters/marks/digits plus the permitted ASCII specials, with no leading or consecutive dots.
+    // Domain: Unicode letters/marks/digits, hyphens and dots, ending in one or more
+    // dotted labels of 2–63 letters. Expressed with Unicode property classes (`\p{L}` etc.) because the
+    // equivalent explicit scalar-block ranges cannot be parsed by Swift's grapheme-aware `Regex`.
+    private static var internationalEmailRegex: Regex<Substring> {
+        #/^(?!\.)(?!.*\.{2})[\p{L}\p{M}\p{Nd}.!#$%&'*+\-/=?^_`{|}~]+@(?!\.)[\p{L}\p{M}\p{Nd}.\-]+(?:\.[\p{L}\p{M}]{2,63})+$/#
+    }
 }
 
 extension ValidatorResults {
@@ -56,11 +68,3 @@ extension ValidatorResults.Email: ValidatorResult {
         "is not a valid email address"
     }
 }
-
-nonisolated(unsafe) private let emailRegex = #/(?:[a-zA-Z0-9!#$%\&'*+/=?\^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%\&'*+/=?\^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/#
-
-// Local part: Unicode letters/marks/digits plus the permitted ASCII specials, with no leading or consecutive dots.
-// Domain: Unicode letters/marks/digits, hyphens and dots, ending in one or more
-// dotted labels of 2–63 letters. Expressed with Unicode property classes (`\p{L}` etc.) because the
-// equivalent explicit scalar-block ranges cannot be parsed by Swift's grapheme-aware `Regex`.
-nonisolated(unsafe) private let internationalEmailRegex = #/^(?!\.)(?!.*\.{2})[\p{L}\p{M}\p{Nd}.!#$%&'*+\-/=?^_`{|}~]+@(?!\.)[\p{L}\p{M}\p{Nd}.\-]+(?:\.[\p{L}\p{M}]{2,63})+$/#

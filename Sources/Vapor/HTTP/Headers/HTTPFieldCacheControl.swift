@@ -111,8 +111,6 @@ extension HTTPFields {
         }
 
         public static func parse(_ value: String) -> CacheControl? {
-            var foundSomething = false
-
             var cache = CacheControl()
 
             return value
@@ -126,13 +124,11 @@ extension HTTPFields {
                     if let keyPath = Self.exactMatch[str] {
                         cache[keyPath: keyPath] = true
                         return true
-                        return
                     }
 
                     if value == "max-stale" {
                         cache.maxStale = .init()
                         return true
-                        return
                     }
 
                     let parts = str.split(separator: "=")
@@ -143,18 +139,15 @@ extension HTTPFields {
                     if parts[0] == "max-stale" {
                         cache.maxStale = .init(seconds: seconds)
                         return true
-                        return
                     }
 
-                    guard let keyPath = Self.prefix[parts[0]] else {
+                    guard let keyPath = Self.prefix[String(parts[0])] else {
                         return $0
                     }
 
                     cache[keyPath: keyPath] = seconds
                     return true
-            } ? cache : nil
-
-            return foundSomething ? cache : nil
+            }) ? cache : nil
         }
 
         /// Generates the header string for this instance.

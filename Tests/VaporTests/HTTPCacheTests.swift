@@ -60,20 +60,10 @@ class HTTPCacheTests {
         #expect(response.headers.expirationDate(requestSentAt: Date()) == nil)
     }
 
-    private func dateFromFormat(format: String, dateStr: String) -> Date {
-        let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "en_US_POSIX")
-        fmt.timeZone = TimeZone(secondsFromGMT: 0)
-        fmt.dateFormat = format
-
-        return fmt.date(from: dateStr)!
-    }
-
     @Test("Test Preferred Format")
     func testPreferredFormat() {
         let expires = "Sun, 06 Nov 1994 08:49:37 GMT"
-        let format = "EEE, dd MMM yyyy HH:mm:ss zzz"
-        let required = dateFromFormat(format: format, dateStr: expires)
+        let required = Date(timeIntervalSince1970: 784_111_777)
         var headers = HTTPFields()
         headers[.expires] = expires
         let response = ClientResponse(status: .ok, headers: headers)
@@ -84,8 +74,7 @@ class HTTPCacheTests {
     @Test("Test Obselete Format One")
     func testObsoleteFormatOne() {
         let expires = "Sunday, 06-Nov-94 08:49:37 GMT"
-        let format = "EEEE, dd-MMM-yy HH:mm:ss zzz"
-        let required = dateFromFormat(format: format, dateStr: expires)
+        let required = Date(timeIntervalSince1970: 784_111_777)
         var headers = HTTPFields()
         headers[.expires] = expires
         let response = ClientResponse(status: .ok, headers: headers)
@@ -96,8 +85,7 @@ class HTTPCacheTests {
     @Test("Test Obselete Format Two")
     func testObsoleteFormatTwo() {
         let expires = "Sun Nov  6 08:49:37 1994"
-        let format = "EEE MMM d HH:mm:s yyyy"
-        let required = dateFromFormat(format: format, dateStr: expires)
+        let required = Date(timeIntervalSince1970: 784_111_777)
         var headers = HTTPFields()
         headers[.expires] = expires
         let response = ClientResponse(status: .ok, headers: headers)

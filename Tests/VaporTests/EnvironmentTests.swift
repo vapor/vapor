@@ -1,5 +1,20 @@
 @testable import Vapor
 import Testing
+#if canImport(Darwin)
+import Darwin
+#elseif os(Windows)
+import CRT
+#elseif canImport(Glibc)
+@preconcurrency import Glibc
+#elseif canImport(Android)
+@preconcurrency import Android
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(WASILibc)
+import WASILibc
+#else
+#error("Unsupported runtime")
+#endif
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else

@@ -272,7 +272,9 @@ struct QueryTests {
         #expect(a.page.offset == 0)
         #expect(a.page.limit == 50)
         #expect(a.filter.ids == ["auth0", "abc123"])
-        let b = try URLEncodedFormDecoder().decode(Test.self, from: query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+        // Manually URL encoded
+        let encoded = "page%5Boffset%5D=0&page%5Blimit%5D=50&filter%5Bids%5D=auth0,abc123"
+        let b = try URLEncodedFormDecoder().decode(Test.self, from: encoded)
         #expect(a == b)
     }
 
