@@ -11,7 +11,7 @@ extension Date {
             calendar.timeZone = .gmt
             return calendar
         }
- 
+
         static let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
         static let monthNames = [
             "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -33,7 +33,7 @@ extension Date.RFC1123FormatStyle: FormatStyle {
         else {
             return ""
         }
- 
+
         var out = ""
         out.reserveCapacity(29)              // "Sun, 06 Nov 1994 08:49:37 GMT" is always 29 chars
         out += Self.dayNames[weekday - 1]    // Calendar weekday: 1 = Sunday ... 7 = Saturday
@@ -69,7 +69,7 @@ extension Date {
         enum ParseError: Error, Sendable {
             case invalidFormat(String)
         }
- 
+
         static let monthsByName: [String: Int] = [
             "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
             "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
@@ -79,7 +79,7 @@ extension Date {
 
 extension Date.RFC1123ParseStrategy: ParseStrategy {
     /// Parses the three date formats an HTTP recipient must accept
-    /// [RFC 9110 5.6.7](https://datatracker.ietf.org/doc/html/rfc9110#name-date-time-formats): 
+    /// [RFC 9110 5.6.7](https://datatracker.ietf.org/doc/html/rfc9110#name-date-time-formats):
     /// the preferred RFC 1123 `IMF-fixdate`, the obsolete RFC 850 form, and the ANSI C `asctime()` form.
     func parse(_ value: String) throws -> Date {
         // Collapse whitespace runs: asctime pads single-digit days with two spaces.
@@ -99,9 +99,9 @@ extension Date.RFC1123ParseStrategy: ParseStrategy {
             guard parts.count == 3 else { throw ParseError.invalidFormat(value) }
             let (h, m, s) = try Self.time(t[2], value)
             var year = try Self.int(parts[2], value)
-            if year < 100 { 
-                year += (year < 70 ? 2000 : 1900) 
-            } 
+            if year < 100 {
+                year += (year < 70 ? 2000 : 1900)
+            }
             return try Self.date(
                 year: year,
                 month: try Self.month(parts[1], value),
@@ -126,12 +126,12 @@ extension Date.RFC1123ParseStrategy: ParseStrategy {
         guard let v = Int(s) else { throw ParseError.invalidFormat(original) }
         return v
     }
- 
+
     private static func month(_ s: String, _ original: String) throws -> Int {
         guard let v = monthsByName[s] else { throw ParseError.invalidFormat(original) }
         return v
     }
- 
+
     private static func time(_ s: String, _ original: String) throws -> (Int, Int, Int) {
         let p = s.split(separator: ":").map(String.init)
         guard p.count == 3, let h = Int(p[0]), let m = Int(p[1]), let sec = Int(p[2]) else {
@@ -139,14 +139,14 @@ extension Date.RFC1123ParseStrategy: ParseStrategy {
         }
         return (h, m, sec)
     }
- 
+
     private static func date(
         year: Int, month: Int, day: Int,
         hour: Int, minute: Int, second: Int,
         original: String
     ) throws -> Date {
         var c = DateComponents()
-        c.year = year 
+        c.year = year
         c.month = month
         c.day = day
         c.hour = hour
@@ -162,7 +162,7 @@ extension Date.RFC1123ParseStrategy: ParseStrategy {
 extension Date.RFC1123FormatStyle: ParseableFormatStyle {
     var parseStrategy: Date.RFC1123ParseStrategy { .init() }
 }
- 
+
 extension ParseStrategy where Self == Date.RFC1123ParseStrategy {
     static var rfc1123: Self { .init() }
 }
