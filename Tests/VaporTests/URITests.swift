@@ -2,11 +2,9 @@ import Vapor
 import NIOCore
 import Algorithms
 import Testing
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
+// Uses Foundation's `addingPercentEncoding(withAllowedCharacters:)` / `CharacterSet.url*Allowed`
+// as the reference encoder, so import full Foundation rather than FoundationEssentials.
 import Foundation
-#endif
 
 @Suite("URI Test")
 struct URITests {

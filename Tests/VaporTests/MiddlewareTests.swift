@@ -11,6 +11,7 @@ import RegexBuilder
 import RoutingKit
 import NIOConcurrencyHelpers
 import InMemoryTracing
+import Foundation
 
 @Suite("Middleware Tests")
 struct MiddlewareTests {
@@ -158,6 +159,7 @@ struct MiddlewareTests {
         }
     }
 
+    #if !canImport(FoundationEssentials)
     @Test("Test File Middleware From Bundle")
     func testFileMiddlewareFromBundle() async throws {
         try await withApp { app in
@@ -253,6 +255,7 @@ struct MiddlewareTests {
             try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")
         }
     }
+    #endif
     
     @Test("Test Metrics Middleware", .withMetrics(TestMetrics()))
     func testMetricsMiddleware() async throws {

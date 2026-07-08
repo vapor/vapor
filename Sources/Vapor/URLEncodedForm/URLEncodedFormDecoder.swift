@@ -499,7 +499,7 @@ private extension URLEncodedFormDecoder.Configuration {
             let container = try decoder.singleValueContainer()
 
             let dateString = try container.decode(String.self)
-            guard let date = try? Date(dateString, strategy: .rfc1123) else {
+            guard let date = try? Date(dateString, strategy: .iso8601) else {
                 throw DecodingError.dataCorrupted(.init(codingPath: newCodingPath, debugDescription: "Unable to decode ISO-8601 date."))
             }
             return date

@@ -48,7 +48,7 @@ extension ValidationCharacterSet {
 ///     .characterSet(.alphanumerics + .whitespaces)
 ///
 public func + (lhs: ValidationCharacterSet, rhs: ValidationCharacterSet) -> ValidationCharacterSet {
-    lhs.union(rhs)
+    rhs.union(lhs)
 }
 
 // Classification uses `Unicode.Scalar.Properties` / general categories, which
@@ -58,7 +58,7 @@ extension ValidationCharacterSet {
     public static let ascii = Self(description: "ASCII") { $0.isASCII }
 
     /// Unicode letters, marks, and numbers.
-    public static let alphanumerics = Self(description: "letters and digits") {
+    public static let alphanumerics = Self(description: "A-Z, a-z, 0-9") {
         switch $0.properties.generalCategory {
         case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter,
              .nonspacingMark, .spacingMark, .enclosingMark,
@@ -70,7 +70,7 @@ extension ValidationCharacterSet {
     }
 
     /// Strict ASCII a-z / A-Z / 0-9.
-    public static let asciiAlphanumerics = Self(description: "a-z, A-Z, 0-9") {
+    public static let asciiAlphanumerics = Self(description: "A-Z, a-z, 0-9") {
         switch $0.value {
         case 0x30...0x39, 0x41...0x5A, 0x61...0x7A: true
         default: false
@@ -83,7 +83,7 @@ extension ValidationCharacterSet {
     }
 
     /// Lowercase + uppercase letters.
-    public static let letters = Self(description: "a-z, A-Z") {
+    public static let letters = Self(description: "A-Z, a-z") {
         $0.properties.generalCategory == .lowercaseLetter || $0.properties.generalCategory == .uppercaseLetter
     }
 

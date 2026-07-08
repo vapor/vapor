@@ -1,11 +1,7 @@
 import NIOPosix
 @testable import Vapor
 import Testing
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
 
 @Suite("URL Encoded Form Tests")
 struct URLEncodedFormTests {

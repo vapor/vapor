@@ -198,7 +198,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
             var serialized = "\(name)=\(self.string)"
 
             if let expires = self.expires {
-                serialized += "; Expires\(expires.formatted(.rfc1123))"
+                serialized += "; Expires=\(expires.formatted(.rfc1123))"
             }
 
             if let maxAge = self.maxAge {
