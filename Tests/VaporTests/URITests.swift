@@ -136,15 +136,15 @@ struct URITests {
         #expect(uri.port == nil)
         #expect(uri.query == nil)
         #expect(uri.fragment == nil)
-        if #available(macOS 14, iOS 17, watchOS 10, tvOS 17, *) {
+        #if canImport(Darwin)
             // TODO: It is not clear why the "encode the first colon as %3A but none of the others" behavior appears, and why only on Darwin
             #expect(
                 uri.path.replacing(zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1) ==
                 readableInAssertionOutput.replacing("%3A", with: ":", maxReplacements: 1)
             )
-        } else {
+        #else
             #expect(uri.path == "/")
-        }
+        #endif
     }
 
     @Test("Test URL Parsing Vectors")
