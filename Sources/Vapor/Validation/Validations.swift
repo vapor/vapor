@@ -19,6 +19,40 @@ public struct Validations: Sendable {
         self.storage.append(.init(key: key, required: required, validator: validator, customFailureDescription: customFailureDescription))
     }
 
+    /// Adds a validation that runs against the complete decoded content.
+    ///
+    /// Use this overload when a validation depends on more than one property. The supplied type is decoded from the
+    /// same content passed to ``validate(request:)``, ``validate(query:contentConfiguration:)``, or
+    /// ``validate(json:contentConfiguration:)`` before the validator runs. It can be the complete content type or a
+    /// decodable projection containing only the properties needed by the validation.
+    ///
+    ///     validations.add(
+    ///         "location",
+    ///         validating: Item.self,
+    ///         is: .custom("contains a location description or photo URL") { item in
+    ///             item.locationDescription != nil || item.locationPhotoURL != nil
+    ///         }
+    ///     )
+    ///
+    /// - Parameters:
+    ///   - key: A key used to identify this validation in results and error messages.
+    ///   - type: The type to decode and validate.
+    ///   - validator: The validator to run against the decoded content.
+    ///   - customFailureDescription: An optional description to use when the validation fails.
+    public mutating func add<T>(
+        _ key: BasicCodingKey,
+        validating type: T.Type,
+        is validator: Validator<T>,
+        customFailureDescription: String? = nil
+    ) {
+        self.storage.append(.init(
+            key: key,
+            validating: type,
+            validator: validator,
+            customFailureDescription: customFailureDescription
+        ))
+    }
+
     public mutating func add(
         _ key: BasicCodingKey,
         result: any ValidatorResult,
