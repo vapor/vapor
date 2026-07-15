@@ -145,14 +145,9 @@ extension Date.RFC1123ParseStrategy: ParseStrategy {
         hour: Int, minute: Int, second: Int,
         original: String
     ) throws -> Date {
-        var c = DateComponents()
-        c.year = year
-        c.month = month
-        c.day = day
-        c.hour = hour
-        c.minute = minute
-        c.second = second
-        guard let date = Date.RFC1123FormatStyle.calendar.date(from: c) else {
+        let dateComponents = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute, second: second)
+
+        guard let date = Date.RFC1123FormatStyle.calendar.date(from: dateComponents) else {
             throw ParseError.invalidFormat(original)
         }
         return date
