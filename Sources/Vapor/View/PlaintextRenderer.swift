@@ -34,7 +34,7 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
         self.logger = logger
     }
 
-    /// Returns the rendeder for the given request, with the logger set from the ``Request``.
+    /// Returns the renderer for the given request, with the logger set from the ``Request``.
     ///
     /// - Parameter request: The ``Request`` to scope the renderer to.
     /// - Returns: A new ``PlaintextRenderer`` configured with the request's logger.
