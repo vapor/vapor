@@ -47,8 +47,8 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     /// If `name` is an absolute path (begins with `/`), it is used as-is; otherwise it is resolved
     /// against the renderer's views directory. The `context` is ignored, as no templating is applied.
     /// 
-    /// Important: the name of the template is not sanitized, so you should ensure that you trust any
-    /// input passed to it, or sanitize it to prevent directory traversal attacks
+    /// > Warning: the name of the template is not sanitized, so you should ensure that you trust any
+    /// > input passed to it, or sanitize it to prevent directory traversal attacks
     ///
     /// - Parameters:
     ///   - name: The name of the view to render, either an absolute path or a path relative to the
