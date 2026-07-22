@@ -9,7 +9,10 @@ import _NIOFileSystem
 /// its raw contents as a ``View``. The `context` passed to ``render(_:_:)`` is ignored as no
 /// template substitution is performed.
 /// 
-/// This renderer is mainly used for testing. See Leaf for a real template engine
+/// This renderer is mainly used for testing. Its use in production is
+/// discouraged. Consider using [Leaf] if you need a real templating engine.
+///
+/// [Leaf]: https://docs.vapor.codes/leaf/getting-started/
 public struct PlaintextRenderer: ViewRenderer, Sendable {
     /// The directory containing the view files, always terminated with a trailing slash.
     private let viewsDirectory: String
