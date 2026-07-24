@@ -4,23 +4,23 @@ extension Validator where T: Equatable & CustomStringConvertible {
         .in(array)
     }
 
-    /// Validates whether an item is contained in the supplied sequence.
-    public static func `in`<S>(_ sequence: S) -> Validator<T>
-        where S: Sequence & Sendable, S.Element == T
+    /// Validates whether an item is contained in the supplied collection.
+    public static func `in`<C>(_ collection: C) -> Validator<T>
+        where C: Collection & Sendable, C.Element == T
     {
         .init {
-            ValidatorResults.In(item: $0, items: .init(sequence))
+            ValidatorResults.In(item: $0, items: .init(collection))
         }
     }
 }
 
 extension ValidatorResults {
-    /// `ValidatorResult` of a validator that validates whether an item is contained in the supplied sequence.
+    /// `ValidatorResult` of a validator that validates whether an item is contained in the supplied collection.
     public struct In<T> where T: Equatable & CustomStringConvertible & Sendable {
         /// Description of the item.
         public let item: T
         
-        /// Descriptions of the elements of the supplied sequence.
+        /// Descriptions of the elements of the supplied collection.
         public let items: [T]
     }
 
