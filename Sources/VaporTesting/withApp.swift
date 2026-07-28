@@ -37,7 +37,7 @@ public func withApp<T>(
 ) async throws -> T {
     MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
     InstrumentationSystem.bootstrapInternal(TaskLocalTracingSystemWrapper())
-    return try await withLogger(logger ?? Logger.current) { _ in
+    return try await withLogger(logger) { _ in
         let app = try await Application(.testing, configReader: configReader, services: services)
         if let address {
             app.serverConfiguration.address = address
