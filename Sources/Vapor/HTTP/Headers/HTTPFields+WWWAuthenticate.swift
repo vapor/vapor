@@ -1,4 +1,3 @@
-import Foundation
 import HTTPTypes
 
 extension HTTPFields {
@@ -18,9 +17,19 @@ extension HTTPFields {
             self.init(value: value)
         }
 
-        /// Creates a Basic authentication challenge.
+        /// Creates a Basic authentication challenge, advertising the UTF-8 charset that
+        /// ``BasicAuthorization`` decodes with.
+        /// - See Also:
+        /// [RFC 7617](https://www.rfc-editor.org/rfc/rfc7617#section-2.1)
         public static func basic(realm: String) -> WWWAuthenticate {
-            .init(value: "Basic realm=\"\(realm.escapingHTTPQuotedString())\"")
+            .init(value: "Basic realm=\"\(realm.escapingHTTPQuotedString())\", charset=\"UTF-8\"")
+        }
+
+        /// Creates a Bearer authentication challenge.
+        /// - See Also:
+        /// [RFC 6750](https://www.rfc-editor.org/rfc/rfc6750#section-3)
+        public static func bearer(realm: String) -> WWWAuthenticate {
+            .init(value: "Bearer realm=\"\(realm.escapingHTTPQuotedString())\"")
         }
     }
 
@@ -39,8 +48,14 @@ extension HTTPFields {
 
 private extension String {
     func escapingHTTPQuotedString() -> String {
-        self
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
+        var escaped = ""
+        escaped.reserveCapacity(self.count)
+        for character in self {
+            if character == "\\" || character == "\"" {
+                escaped.append("\\")
+            }
+            escaped.append(character)
+        }
+        return escaped
     }
 }
