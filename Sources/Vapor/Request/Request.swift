@@ -230,7 +230,6 @@ public final class Request: CustomStringConvertible, Sendable {
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
 
-    #warning("Sort out all these initialisers")
     public convenience init(
         application: Application,
         method: HTTPRequest.Method = .get,
@@ -239,34 +238,9 @@ public final class Request: CustomStringConvertible, Sendable {
         headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        peerCertificateChain: ValidatedCertificateChain? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-    ) {
-        self.init(
-            application: application,
-            method: method,
-            url: url,
-            version: version,
-            headersNoUpdate: headers,
-            collectedBody: collectedBody,
-            remoteAddress: remoteAddress,
-            peerCertificateChain: nil,
-            byteBufferAllocator: byteBufferAllocator
-        )
-        if let body = collectedBody {
-            self.headers.updateContentLength(body.readableBytes)
-        }
-    }
-
-    public convenience init(
-        application: Application,
-        method: HTTPRequest.Method = .get,
-        url: URI = "/",
-        version: HTTPVersion = .init(major: 1, minor: 1),
-        headers: HTTPFields = .init(),
-        collectedBody: ByteBuffer? = nil,
-        remoteAddress: SocketAddress? = nil,
-        peerCertificateChain: ValidatedCertificateChain?,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        requestID: String = UUID().uuidString
     ) {
         self.init(
             application: application,
@@ -277,35 +251,12 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: peerCertificateChain,
-            byteBufferAllocator: byteBufferAllocator
+            byteBufferAllocator: byteBufferAllocator,
+            requestID: requestID
         )
         if let body = collectedBody {
             self.headers.updateContentLength(body.readableBytes)
         }
-    }
-
-    @_disfavoredOverload
-    public convenience init(
-        application: Application,
-        method: HTTPRequest.Method,
-        url: URI,
-        version: HTTPVersion = .init(major: 1, minor: 1),
-        headersNoUpdate headers: HTTPFields = .init(),
-        collectedBody: ByteBuffer? = nil,
-        remoteAddress: SocketAddress? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
-    ) {
-        self.init(
-            application: application,
-            method: method,
-            url: url,
-            version: version,
-            headersNoUpdate: headers,
-            collectedBody: collectedBody,
-            remoteAddress: remoteAddress,
-            peerCertificateChain: nil,
-            byteBufferAllocator: byteBufferAllocator
-        )
     }
 
     public init(
@@ -316,7 +267,7 @@ public final class Request: CustomStringConvertible, Sendable {
         headersNoUpdate headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
-        peerCertificateChain: ValidatedCertificateChain?,
+        peerCertificateChain: ValidatedCertificateChain? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         requestID: String = UUID().uuidString
     ) {
