@@ -78,7 +78,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
 
         // MultipartKit, Multipart encoding and decoding
-        .package(url: "https://github.com/vapor/multipart-kit.git", from: "5.0.0-alpha.5"),
+        .package(url: "https://github.com/vapor/multipart-kit.git", from: "5.0.0-beta.1"),
 
         // Low-level atomic operations
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),

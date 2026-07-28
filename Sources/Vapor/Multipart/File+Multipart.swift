@@ -4,16 +4,18 @@ import HTTPTypes
 import NIOCore
 
 extension File: MultipartPartConvertible {
-    public var multipart: MultipartPart<ByteBufferView>? {
+    public typealias Body = ByteBufferView
+
+    public var multipart: MultipartPart<ByteBufferView> {
         var part = MultipartPart(headerFields: [:], body: self.data.readableBytesView)
         part.contentType = self.contentType?.serialize()
         part.filename = self.filename
         return part
     }
     
-    public init?(multipart: MultipartPart<some MultipartPartBodyElement>) {
+    public init(multipart: MultipartPart<some MultipartPartBodyElement>) throws {
         guard let filename = multipart.filename else {
-            return nil
+            throw Abort(.badRequest, reason: "Missing filename")
         }
         let contentType = multipart.headerFields.contentType
         self.init(data: ByteBuffer(bytes: multipart.body), filename: filename, contentType: contentType)
