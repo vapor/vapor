@@ -12,15 +12,18 @@ struct Entrypoint {
             ]
         )
         ConsoleLogger.bootstrap(config: config)
-
-        let app = try await Application(configReader: config)
-        do {
-            try await configure(app)
-            try await app.run()
-            try await app.shutdown()
-        } catch {
-            try? await app.shutdown()
-            throw error
+        var logger = Logger(label: "codes.vapor.app")
+        logger.logLevel = .debug
+        return try await withLogger(logger) { _ in
+            let app = try await Application(configReader: config)
+            do {
+                try await configure(app)
+                try await app.run()
+                try await app.shutdown()
+            } catch {
+                try? await app.shutdown()
+                throw error
+            }
         }
     }
 }
