@@ -6,6 +6,11 @@ import NIOCore
 import NIOHTTP1
 import NIOConcurrencyHelpers
 import Logging
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Bridges NIOHTTPServer's request handler protocol into Vapor's responder chain.
 struct VaporHTTPServerHandler: HTTPServerRequestHandler {
@@ -51,13 +56,8 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         // branch, which preserves percent encoding rather than double-encoding.
         let rawPath = request.path ?? "/"
 
-//        let requestId = headers[.xRequestId] ?? UUID().uuidString
-#warning("Todo")
-//        var logger = logger
-//        logger[metadataKey: "request-id"] = .string(requestId)
-//        self._logger = .init(logger
-        #error("Add request ID")
-        try await withLogger(mergingMetadata: ["request-id": ""]) { _ in
+        let requestID = request.headerFields[.xRequestId] ?? UUID().uuidString
+        try await withLogger(mergingMetadata: ["request-id": "\(requestID)"]) { _ in
             let vaporRequest = Request(
                 application: self.application,
                 method: request.method,
@@ -67,7 +67,8 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 collectedBody: bodyBuffer.readableBytes > 0 ? bodyBuffer : nil,
                 remoteAddress: nil,
                 peerCertificateChain: peerCerts,
-                byteBufferAllocator: self.application.byteBufferAllocator
+                byteBufferAllocator: self.application.byteBufferAllocator,
+                requestID: requestID
             )
 
             // 3. Run responder chain
