@@ -11,15 +11,6 @@ import AsyncHTTPClient
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable, Service {
-    public var environment: Environment {
-        get {
-            self._environment.withLockedValue { $0 }
-        }
-        set {
-            self._environment.withLockedValue { $0 = newValue }
-        }
-    }
-
     public var storage: Storage {
         get {
             self._storage.withLockedValue { $0 }
@@ -54,7 +45,7 @@ public final class Application: Sendable, Service {
     }
 
     internal let isBooted: NIOLockedValueBox<Bool>
-    private let _environment: NIOLockedValueBox<Environment>
+    public let environment: Environment
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
@@ -198,8 +189,7 @@ public final class Application: Sendable, Service {
 
     // internal flag here is just to stop the compiler from complaining about duplicates
     package init(_ environment: Environment = .development, configuration: ServerConfiguration, configReader: ConfigReader, services: ServiceConfiguration, internal: Bool) {
-        self._environment = .init(environment)
-
+        self.environment = environment
         self._didShutdown = .init(false)
         self._storage = .init(.init())
         self._lifecycle = .init(.init())
