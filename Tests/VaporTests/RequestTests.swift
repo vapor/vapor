@@ -245,12 +245,18 @@ struct RequestTests {
     @Test("Test Request ID in Logger Metadata")
     func testRequestIdInLoggerMetadata() async throws {
         try await withApp { app in
-            let request = Request(application: app)
-            guard case .string(let string) = request.logger[metadataKey: "request-id"] else {
-                Issue.record("Did not find request-id key in logger metadata.")
-                return
+            app.get("remote") { req -> String in
+                guard case .string(let string) = Logger.current[metadataKey: "request-id"] else {
+                    Issue.record("Did not find request-id key in logger metadata.")
+                    throw Abort(.notFound)
+                }
+                #expect(string == req.id)
+                return req.id
             }
-            #expect(string == request.id)
+
+            try await app.testing(method: .running).test(.get, "remote") { res in
+                #expect(res.status == .ok)
+            }
         }
     }
 
@@ -328,7 +334,7 @@ struct RequestTests {
     func testRequestIdForwarding() async throws {
         try await withApp { app in
             app.get("remote") {
-                if case .string(let string) = $0.logger[metadataKey: "request-id"], string == $0.id {
+                if case .string(let string) = Logger.current[metadataKey: "request-id"], string == $0.id {
                     return string
                 } else {
                     throw Abort(.notFound)

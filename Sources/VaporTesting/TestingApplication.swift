@@ -66,7 +66,7 @@ extension Application {
                     contentConfiguration: self.app.contentConfiguration
                 )
             } catch {
-                app.logger.info("Caught error in test", metadata: ["error": "\(String(describing: error))"])
+                Logger.current.info("Caught error in test", metadata: ["error": "\(String(describing: error))"])
                 throw error
             }
         }
@@ -94,8 +94,7 @@ extension Application {
                 url: request.url,
                 headers: headers,
                 collectedBody: request.body.readableBytes == 0 ? nil : request.body,
-                remoteAddress: nil,
-                logger: app.logger
+                remoteAddress: nil
             )
             let responder: any Responder
             switch self.app.responder {

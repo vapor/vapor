@@ -129,7 +129,7 @@ public final class Request: CustomStringConvertible, Sendable {
                 return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
             }
             guard let body = self.request.body.data else {
-                self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
+                Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
@@ -145,7 +145,7 @@ public final class Request: CustomStringConvertible, Sendable {
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             guard let body = self.request.body.data else {
-                self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
+                Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
             var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
@@ -159,13 +159,6 @@ public final class Request: CustomStringConvertible, Sendable {
     public var content: any ContentContainer {
         get { _ContentContainer(request: self) }
         set { } // ignore since Request is a reference type
-    }
-    
-    /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
-    /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
-    public var logger: Logger {
-        get { self._logger.withLockedValue { $0 } }
-        set { self._logger.withLockedValue { $0 = newValue } }
     }
     
     public var body: Body {
@@ -234,7 +227,6 @@ public final class Request: CustomStringConvertible, Sendable {
     
     let requestBox: NIOLockedValueBox<RequestBox>
     private let _storage: NIOLockedValueBox<Storage>
-    private let _logger: NIOLockedValueBox<Logger>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
 
@@ -247,7 +239,6 @@ public final class Request: CustomStringConvertible, Sendable {
         headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
-        logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
     ) {
         self.init(
@@ -259,7 +250,6 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: nil,
-            logger: logger,
             byteBufferAllocator: byteBufferAllocator
         )
         if let body = collectedBody {
@@ -276,7 +266,6 @@ public final class Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain?,
-        logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         self.init(
@@ -288,7 +277,6 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: peerCertificateChain,
-            logger: logger,
             byteBufferAllocator: byteBufferAllocator
         )
         if let body = collectedBody {
@@ -305,7 +293,6 @@ public final class Request: CustomStringConvertible, Sendable {
         headersNoUpdate headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
-        logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         self.init(
@@ -317,7 +304,6 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: nil,
-            logger: logger,
             byteBufferAllocator: byteBufferAllocator
         )
     }
@@ -331,20 +317,15 @@ public final class Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain?,
-        logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        requestID: String = UUID().uuidString
     ) {
-        let requestId = headers[.xRequestId] ?? UUID().uuidString
         let bodyStorage: BodyStorage
         if let body = collectedBody {
             bodyStorage = .collected(body)
         } else {
             bodyStorage = .none
         }
-        
-        var logger = logger
-        logger[metadataKey: "request-id"] = .string(requestId)
-        self._logger = .init(logger)
 
         let storageBox = RequestBox(
             method: method,
@@ -358,7 +339,7 @@ public final class Request: CustomStringConvertible, Sendable {
             byteBufferAllocator: byteBufferAllocator
         )
         self.requestBox = .init(storageBox)
-        self.id = requestId
+        self.id = requestID
         self.application = application
         
         self.remoteAddress = remoteAddress

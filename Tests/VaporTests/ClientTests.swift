@@ -10,6 +10,7 @@ import Foundation
 import AsyncHTTPClient
 import HTTPTypes
 import RoutingKit
+import InMemoryLogging
 
 @Suite("Client Tests")
 struct ClientTests {
@@ -88,12 +89,14 @@ struct ClientTests {
     @Test("Test Client Logging", .disabled("Broken in AHC"), .bug("https://github.com/swift-server/async-http-client/issues/854"))
     func testClientLogging() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
-            let logs = TestLogHandler()
-            try await withApp(services: .init(logger: .provided(logs.logger))) { app in
+            let logHandler = InMemoryLogHandler()
+            let logger = Logger(label: "codes.vapor.test", factory: { _ in
+                logHandler
+            })
+            try await withApp(logger: logger) { app in
                 _ = try await app.client.get("http://localhost:\(remoteAppPort)/status/201")
 
-                let metadata = logs.getMetadata()
-                #expect(metadata["ahc-request-id"] != nil)
+                #expect(logHandler.metadata["ahc-request-id"] != nil)
             }
         }
     }
@@ -193,81 +196,6 @@ final class CustomClient: Client, Sendable {
     func send(_ request: ClientRequest) async throws -> ClientResponse {
         self._requests.withLockedValue { $0.append(request) }
         return ClientResponse()
-    }
-}
-
-final class TestLogHandler: LogHandler {
-
-    subscript(metadataKey key: String) -> Logger.Metadata.Value? {
-        get { self.metadata[key] }
-        set { self.metadata[key] = newValue }
-    }
-
-    var metadata: Logger.Metadata {
-        get {
-            self._metadata.withLockedValue { $0 }
-        }
-        set {
-            self._metadata.withLockedValue { $0 = newValue }
-        }
-    }
-
-    var logLevel: Logger.Level {
-        get {
-            _logLevel
-        }
-        set {
-            // We don't use this anywhere
-        }
-    }
-
-    var messages: [Logger.Message] {
-        get {
-            self._messages.withLockedValue { $0 }
-        }
-        set {
-            self._messages.withLockedValue { $0 = newValue }
-        }
-    }
-
-    let _logLevel: Logger.Level
-    let _metadata: NIOLockedValueBox<Logger.Metadata>
-    let _messages: NIOLockedValueBox<[Logger.Message]>
-
-    var logger: Logger {
-        .init(label: "test") { label in
-            self
-        }
-    }
-
-    init() {
-        self._metadata = .init([:])
-        self._logLevel = .trace
-        self._messages = .init([])
-    }
-
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
-        self._messages.withLockedValue { $0.append(message) }
-    }
-
-    func read() -> [String] {
-        self._messages.withLockedValue {
-            let copy = $0
-            $0 = []
-            return copy.map(\.description)
-        }
-    }
-
-    func getMetadata() -> Logger.Metadata {
-        self._metadata.withLockedValue { $0 }
     }
 }
 
