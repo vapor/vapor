@@ -57,9 +57,6 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         let rawPath = request.path ?? "/"
 
         let requestID = request.headerFields[.xRequestId] ?? UUID().uuidString
-        // The sender is noncopyable and `send(_:)` consumes it, which a closure capture can't do
-        // directly. Box it in an `Optional` so the closure can `take()` it, leaving the capture
-        // in a valid (nil) state.
         var responseSender: HTTPResponseSender<HTTPResponseConcludingAsyncWriter>? = consume responseSender
         try await withLogger(mergingMetadata: ["request-id": "\(requestID)"]) { _ in
             let vaporRequest = Request(
@@ -83,8 +80,10 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
             )
 
             // 4. Send response head and write body
-            // `withLogger` runs the operation exactly once, so the sender is always still here.
-            let responseWriter = try await responseSender.take()!.send(httpResponse)
+            guard let responseWriter = try await responseSender.take()?.send(httpResponse) else {
+                Logger.current.critical("Invalid server state - no response sender")
+                throw Abort(.internalServerError)
+            }
             try await responseWriter.produceAndConclude { writer in
                 var writer = writer
                 if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
