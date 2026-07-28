@@ -51,37 +51,44 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         // branch, which preserves percent encoding rather than double-encoding.
         let rawPath = request.path ?? "/"
 
-        let vaporRequest = Request(
-            application: self.application,
-            method: request.method,
-            url: URI(path: rawPath),
-            version: .init(major: 1, minor: 1),
-            headersNoUpdate: request.headerFields,
-            collectedBody: bodyBuffer.readableBytes > 0 ? bodyBuffer : nil,
-            remoteAddress: nil,
-            peerCertificateChain: peerCerts,
-            logger: self.application.logger,
-            byteBufferAllocator: self.application.byteBufferAllocator
-        )
+//        let requestId = headers[.xRequestId] ?? UUID().uuidString
+#warning("Todo")
+//        var logger = logger
+//        logger[metadataKey: "request-id"] = .string(requestId)
+//        self._logger = .init(logger
+        #error("Add request ID")
+        try await withLogger(mergingMetadata: ["request-id": ""]) { _ in
+            let vaporRequest = Request(
+                application: self.application,
+                method: request.method,
+                url: URI(path: rawPath),
+                version: .init(major: 1, minor: 1),
+                headersNoUpdate: request.headerFields,
+                collectedBody: bodyBuffer.readableBytes > 0 ? bodyBuffer : nil,
+                remoteAddress: nil,
+                peerCertificateChain: peerCerts,
+                byteBufferAllocator: self.application.byteBufferAllocator
+            )
 
-        // 3. Run responder chain
-        let vaporResponse = try await responder.respond(to: vaporRequest)
-        let httpResponse = HTTPResponse(
-            status: vaporResponse.status,
-            headerFields: vaporResponse.headers
-        )
+            // 3. Run responder chain
+            let vaporResponse = try await responder.respond(to: vaporRequest)
+            let httpResponse = HTTPResponse(
+                status: vaporResponse.status,
+                headerFields: vaporResponse.headers
+            )
 
-        // 4. Send response head and write body
-        let responseWriter = try await responseSender.send(httpResponse)
-        try await responseWriter.produceAndConclude { writer in
-            var writer = writer
-            if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
-                try await writer.write { out in
-                    out.append(copying: buffer.readableBytesView)
+            // 4. Send response head and write body
+            let responseWriter = try await responseSender.send(httpResponse)
+            try await responseWriter.produceAndConclude { writer in
+                var writer = writer
+                if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
+                    try await writer.write { out in
+                        out.append(copying: buffer.readableBytesView)
+                    }
                 }
+                // TODO: Handle streaming response bodies
+                return ((), nil)
             }
-            // TODO: Handle streaming response bodies
-            return ((), nil)
         }
     }
 }

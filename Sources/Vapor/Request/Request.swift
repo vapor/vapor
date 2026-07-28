@@ -227,7 +227,6 @@ public final class Request: CustomStringConvertible, Sendable {
     
     let requestBox: NIOLockedValueBox<RequestBox>
     private let _storage: NIOLockedValueBox<Storage>
-    private let _logger: NIOLockedValueBox<Logger>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
 
@@ -319,19 +318,14 @@ public final class Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain?,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        requestID: String = UUID().uuidString
     ) {
-        let requestId = headers[.xRequestId] ?? UUID().uuidString
         let bodyStorage: BodyStorage
         if let body = collectedBody {
             bodyStorage = .collected(body)
         } else {
             bodyStorage = .none
         }
-
-        #warning("Todo")
-//        var logger = logger
-//        logger[metadataKey: "request-id"] = .string(requestId)
-//        self._logger = .init(logger)
 
         let storageBox = RequestBox(
             method: method,
@@ -345,7 +339,7 @@ public final class Request: CustomStringConvertible, Sendable {
             byteBufferAllocator: byteBufferAllocator
         )
         self.requestBox = .init(storageBox)
-        self.id = requestId
+        self.id = requestID
         self.application = application
         
         self.remoteAddress = remoteAddress

@@ -57,7 +57,6 @@ public final class Application: Sendable, Service {
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
-    private let _logger: NIOLockedValueBox<Logger>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
     private let _services: NIOLockedValueBox<[any Service]>
