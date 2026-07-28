@@ -42,13 +42,13 @@ public final class ErrorMiddleware: Middleware {
             }
 
             // Report the error
-            req.logger.report(error: error,
-                              metadata: ["method" : "\(req.method.rawValue)",
-                                         "url" : "\(req.url.string)",
-                                         "userAgent" : .array(req.headers[values: .userAgent].map { "\($0)" })],
-                              file: source.file,
-                              function: source.function,
-                              line: source.line)
+            Logger.current.report(error: error,
+                                  metadata: ["method" : "\(req.method.rawValue)",
+                                             "url" : "\(req.url.string)",
+                                             "userAgent" : .array(req.headers[values: .userAgent].map { "\($0)" })],
+                                  file: source.file,
+                                  function: source.function,
+                                  line: source.line)
 
             // attempt to serialize the error to json
             let body: Response.Body

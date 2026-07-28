@@ -29,15 +29,6 @@ public final class Application: Sendable, Service {
         }
     }
 
-    public var logger: Logger {
-        get {
-            self._logger.withLockedValue { $0 }
-        }
-        set {
-            self._logger.withLockedValue { $0 = newValue }
-        }
-    }
-
     public var didShutdown: Bool {
         self._didShutdown.withLockedValue { $0 }
     }
@@ -105,7 +96,6 @@ public final class Application: Sendable, Service {
         let cache: ServiceOptionType<any Cache>
         let responder: ServiceOptionType<any Responder>
         let client: ServiceOptionType<any Client>
-        let logger: ServiceOptionType<Logger>
 
         public init(
             contentConfiguration: ContentConfiguration = .default(),
@@ -114,7 +104,6 @@ public final class Application: Sendable, Service {
             cache: ServiceOptionType<any Cache> = .default,
             responder: ServiceOptionType<any Responder> = .default,
             client: ServiceOptionType<any Client> = .default,
-            logger: ServiceOptionType<Logger> = .default
         ) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
@@ -122,7 +111,6 @@ public final class Application: Sendable, Service {
             self.cache = cache
             self.responder = responder
             self.client = client
-            self.logger = logger
         }
     }
 
@@ -206,24 +194,15 @@ public final class Application: Sendable, Service {
     ) async throws {
         let env = try environment ?? Environment.detect(from: configReader)
         self.init(env, configuration: configuration, configReader: configReader, services: services, internal: true)
-        await DotEnvFile.load(for: self.environment, logger: self.logger)
+        await DotEnvFile.load(for: self.environment)
     }
 
     // internal flag here is just to stop the compiler from complaining about duplicates
     package init(_ environment: Environment = .development, configuration: ServerConfiguration, configReader: ConfigReader, services: ServiceConfiguration, internal: Bool) {
         self._environment = .init(environment)
 
-        let logger: Logger
-        switch services.logger {
-        case .default:
-            logger = Logger(label: "codes.vapor.application")
-        case .provided(let customLogger):
-            logger = customLogger
-        }
-
         self._didShutdown = .init(false)
-        self._logger = .init(logger)
-        self._storage = .init(.init(logger: logger))
+        self._storage = .init(.init())
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
@@ -236,7 +215,7 @@ public final class Application: Sendable, Service {
         // Service Setup
         switch services.viewRenderer {
             case .default:
-                self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory, logger: logger)
+                self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory)
             case .provided(let renderer):
                 self.viewRenderer = renderer
         }
@@ -262,7 +241,7 @@ public final class Application: Sendable, Service {
         switch services.client {
         case .default:
             #if HTTPClient
-            self.client = VaporHTTPClient(http: HTTPClient.shared, logger: logger, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+            self.client = VaporHTTPClient(http: HTTPClient.shared, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
             #else
             self.client = BlackholeClient(byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
             #endif
@@ -294,8 +273,7 @@ public final class Application: Sendable, Service {
     /// let serviceGroup = ServiceGroup(
     ///     configuration: .init(
     ///         services: [.init(service: app)],
-    ///         gracefulShutdownSignals: [.sigterm, .sigint],
-    ///         logger: logger
+    ///         gracefulShutdownSignals: [.sigterm, .sigint]
     ///     )
     /// )
     /// try await serviceGroup.run()
@@ -317,7 +295,7 @@ public final class Application: Sendable, Service {
                 }
             }
         } catch {
-            self.logger.report(error: error)
+            Logger.current.report(error: error)
             throw error
         }
         try await self.shutdown()
@@ -349,14 +327,14 @@ public final class Application: Sendable, Service {
             configuration: .init(
                 services: services,
                 gracefulShutdownSignals: [.sigterm, .sigint],
-                logger: self.logger
+                logger: Logger.current
             )
         )
 
         do {
             try await serviceGroup.run()
         } catch {
-            self.logger.report(error: error)
+            Logger.current.report(error: error)
             throw error
         }
         try await self.shutdown()
@@ -383,24 +361,24 @@ public final class Application: Sendable, Service {
 
     public func shutdown() async throws {
         guard !self.didShutdown else { return }
-        self.logger.debug("Application shutting down")
+        Logger.current.debug("Application shutting down")
 
-        self.logger.trace("Shutting down providers")
+        Logger.current.trace("Shutting down providers")
         for handler in self.lifecycle.handlers.reversed()  {
             await handler.shutdown(self)
         }
         self.lifecycle.handlers = []
 
-        self.logger.trace("Clearing Application storage")
+        Logger.current.trace("Clearing Application storage")
         await self.storage.shutdown()
         self.storage.clear()
 
         self._didShutdown.withLockedValue { $0 = true }
-        self.logger.trace("Application shutdown complete")
+        Logger.current.trace("Application shutdown complete")
     }
 
     deinit {
-        self.logger.trace("Application deinitialized, goodbye!")
+        Logger.current.trace("Application deinitialized, goodbye!")
         assert(self.didShutdown, "Application.shutdown() was not called before Application deinitialized.")
     }
 }

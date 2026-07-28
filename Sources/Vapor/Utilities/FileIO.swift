@@ -199,7 +199,7 @@ public struct FileIO: Sendable {
             }
         } else if request.headers[.range] != nil {
             // Range header was supplied but could not be parsed i.e. it was invalid
-            request.logger.debug("Range header was provided in request but was invalid")
+            Logger.current.debug("Range header was provided in request but was invalid")
             throw Abort(.badRequest)
         } else {
             contentRange = nil
@@ -242,7 +242,7 @@ public struct FileIO: Sendable {
                 do {
                     let range = try firstRange.asResponseContentRange(limit: Int(fileInfo.size))
                     response.headers.contentRange = HTTPFields.ContentRange(unit: contentRange.unit, range: range)
-                    (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: Int(fileInfo.size), logger: request.logger)
+                    (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: Int(fileInfo.size))
                 } catch {
                     throw Abort(.badRequest)
                 }

@@ -129,7 +129,7 @@ public final class Request: CustomStringConvertible, Sendable {
                 return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
             }
             guard let body = self.request.body.data else {
-                self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
+                Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
@@ -145,7 +145,7 @@ public final class Request: CustomStringConvertible, Sendable {
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             guard let body = self.request.body.data else {
-                self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
+                Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
             var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
