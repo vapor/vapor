@@ -6,8 +6,6 @@ import NIOSSL
 import Logging
 
 public func configure(_ app: Application) async throws {
-    app.logger.logLevel = Environment.process.LOG_LEVEL ?? .debug
-
     #warning("Fix")
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
     #if TLS
