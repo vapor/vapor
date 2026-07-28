@@ -17,10 +17,8 @@ extension FormDataDecoder: ContentDecoder {
             throw Abort(.unsupportedMediaType)
         }
 
-        var body = body
-        let buffer = body.readBytes(length: body.readableBytes) ?? []
-
-        guard Array("--\(boundary)\r\n--\(boundary)--\r".utf8) != buffer else {
+        let buffer = body.readableBytesView
+        guard !buffer.elementsEqual("--\(boundary)\r\n--\(boundary)--\r".utf8) else {
             throw Abort(.unprocessableContent, identifier: "emptyMultipartFormData")
         }
 
