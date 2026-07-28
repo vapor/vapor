@@ -30,7 +30,7 @@ import Logging
 public func withApp<T>(
     address: BindAddress? = nil,
     configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
-    logger: Logger? = nil,
+    logger: Logger = Logger.current,
     services: Application.ServiceConfiguration = .init(),
     configure: ((Application) async throws -> Void)? = nil,
     _ test: (Application) async throws -> T
