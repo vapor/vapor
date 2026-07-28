@@ -15,7 +15,7 @@ extension File: MultipartPartConvertible {
     
     public init(multipart: MultipartPart<some MultipartPartBodyElement>) throws {
         guard let filename = multipart.filename else {
-            throw Abort(.badRequest)
+            throw Abort(.badRequest, reason: "Missing filename")
         }
         let contentType = multipart.headerFields.contentType
         self.init(data: ByteBuffer(bytes: multipart.body), filename: filename, contentType: contentType)
