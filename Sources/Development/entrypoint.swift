@@ -11,7 +11,7 @@ struct Entrypoint {
                 EnvironmentVariablesProvider(),
             ]
         )
-        ConsoleLogger.bootstrap(level: config.string(forKey: "log.level", as: Logger.Level.self, default: .debug))
+        ConsoleLogger.bootstrap(config: config)
 
         let app = try await Application(configReader: config)
         do {
