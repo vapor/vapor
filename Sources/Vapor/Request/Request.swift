@@ -161,13 +161,6 @@ public final class Request: CustomStringConvertible, Sendable {
         set { } // ignore since Request is a reference type
     }
     
-    /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
-    /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
-    public var logger: Logger {
-        get { self._logger.withLockedValue { $0 } }
-        set { self._logger.withLockedValue { $0 = newValue } }
-    }
-    
     public var body: Body {
         Body(self)
     }
@@ -247,7 +240,6 @@ public final class Request: CustomStringConvertible, Sendable {
         headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
-        logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
     ) {
         self.init(
@@ -259,7 +251,6 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: nil,
-            logger: logger,
             byteBufferAllocator: byteBufferAllocator
         )
         if let body = collectedBody {
@@ -276,7 +267,6 @@ public final class Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain?,
-        logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         self.init(
@@ -288,7 +278,6 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: peerCertificateChain,
-            logger: logger,
             byteBufferAllocator: byteBufferAllocator
         )
         if let body = collectedBody {
@@ -305,7 +294,6 @@ public final class Request: CustomStringConvertible, Sendable {
         headersNoUpdate headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
-        logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         self.init(
@@ -317,7 +305,6 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: nil,
-            logger: logger,
             byteBufferAllocator: byteBufferAllocator
         )
     }
@@ -331,7 +318,6 @@ public final class Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain?,
-        logger: Logger = .init(label: "codes.vapor.request"),
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
     ) {
         let requestId = headers[.xRequestId] ?? UUID().uuidString
@@ -341,10 +327,11 @@ public final class Request: CustomStringConvertible, Sendable {
         } else {
             bodyStorage = .none
         }
-        
-        var logger = logger
-        logger[metadataKey: "request-id"] = .string(requestId)
-        self._logger = .init(logger)
+
+        #warning("Todo")
+//        var logger = logger
+//        logger[metadataKey: "request-id"] = .string(requestId)
+//        self._logger = .init(logger)
 
         let storageBox = RequestBox(
             method: method,

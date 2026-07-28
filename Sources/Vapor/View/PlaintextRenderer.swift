@@ -17,21 +17,15 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     /// The directory containing the view files, always terminated with a trailing slash.
     private let viewsDirectory: String
 
-    /// The logger used when rendering views.
-    private let logger: Logger
-
     /// Creates a new ``PlaintextRenderer``.
     ///
     /// - Parameters:
     ///   - viewsDirectory: The directory in which view files are located. Relative view names passed
     ///     to ``render(_:_:)`` are resolved against this directory. A trailing slash is added if absent.
-    ///   - logger: The logger used when rendering views.
     public init(
-        viewsDirectory: String,
-        logger: Logger
+        viewsDirectory: String
     ) {
         self.viewsDirectory = viewsDirectory.finished(with: "/")
-        self.logger = logger
     }
 
     /// Returns the renderer for the given request, with the logger set from the ``Request``.
@@ -40,8 +34,7 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     /// - Returns: A new ``PlaintextRenderer`` configured with the request's logger.
     public func `for`(_ request: Request) -> any ViewRenderer {
         PlaintextRenderer(
-            viewsDirectory: self.viewsDirectory,
-            logger: request.logger
+            viewsDirectory: self.viewsDirectory
         )
     }
 
@@ -60,7 +53,7 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     /// - Returns: A ``View`` containing the raw file contents.
     /// - Throws: An error if the file cannot be read, or if its size exceeds 32 megabytes.
     public func render<E>(_ name: String, _ context: E) async throws -> View where E : Encodable {
-        self.logger.trace("Rendering plaintext view \(name) with \(context)")
+        Logger.current.trace("Rendering plaintext view \(name) with \(context)")
         let path = name.hasPrefix("/")
             ? name
             : self.viewsDirectory + name
