@@ -5,6 +5,7 @@ import NIOConcurrencyHelpers
 import ServiceLifecycle
 @testable import CoreMetrics
 @testable import Instrumentation
+import Logging
 
 /// Perform a test while handling lifecycle of the application.
 /// Feel free to create a custom function like this, tailored to your project.
@@ -29,26 +30,29 @@ import ServiceLifecycle
 public func withApp<T>(
     address: BindAddress? = nil,
     configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
+    logger: Logger? = nil,
     services: Application.ServiceConfiguration = .init(),
     configure: ((Application) async throws -> Void)? = nil,
     _ test: (Application) async throws -> T
 ) async throws -> T {
     MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
     InstrumentationSystem.bootstrapInternal(TaskLocalTracingSystemWrapper())
-    let app = try await Application(.testing, configReader: configReader, services: services)
-    if let address {
-        app.serverConfiguration.address = address
+    return try await withLogger(logger ?? Logger.current) { _ in
+        let app = try await Application(.testing, configReader: configReader, services: services)
+        if let address {
+            app.serverConfiguration.address = address
+        }
+        let result: T
+        do {
+            try await configure?(app)
+            result = try await test(app)
+        } catch {
+            try? await app.shutdown()
+            throw error
+        }
+        try await app.shutdown()
+        return result
     }
-    let result: T
-    do {
-        try await configure?(app)
-        result = try await test(app)
-    } catch {
-        try? await app.shutdown()
-        throw error
-    }
-    try await app.shutdown()
-    return result
 }
 
 /// Run code with a live running app. This will start the server, retrieve the allocated port and run the block of code.

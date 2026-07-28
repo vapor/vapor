@@ -10,6 +10,7 @@ import Foundation
 import AsyncHTTPClient
 import HTTPTypes
 import RoutingKit
+import InMemoryLogging
 
 @Suite("Client Tests")
 struct ClientTests {
@@ -88,12 +89,14 @@ struct ClientTests {
     @Test("Test Client Logging", .disabled("Broken in AHC"), .bug("https://github.com/swift-server/async-http-client/issues/854"))
     func testClientLogging() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
-            let logs = TestLogHandler()
-            try await withApp(services: .init(logger: .provided(logs.logger))) { app in
+            let logHandler = InMemoryLogHandler()
+            let logger = Logger(label: "codes.vapor.test", factory: { _ in
+                logHandler
+            })
+            try await withApp(logger: logger) { app in
                 _ = try await app.client.get("http://localhost:\(remoteAppPort)/status/201")
 
-                let metadata = logs.getMetadata()
-                #expect(metadata["ahc-request-id"] != nil)
+                #expect(logHandler.metadata["ahc-request-id"] != nil)
             }
         }
     }

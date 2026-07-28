@@ -190,6 +190,7 @@ let package = Package(
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
                 .product(name: "Instrumentation", package: "swift-distributed-tracing"),
+                .product(name: "InMemoryLogging", package: "swift-log"),
             ],
             swiftSettings: swiftSettings
         ),
