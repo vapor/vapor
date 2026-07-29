@@ -75,14 +75,12 @@ public final class Application: Sendable, Service {
     public let byteBufferAllocator: ByteBufferAllocator = .init()
     public let viewRenderer: any ViewRenderer
     public let directoryConfiguration: DirectoryConfiguration
-    public let passwordHasher: any PasswordHasher
     public let cache: any Cache
     public let client: any Client
 
     public struct ServiceConfiguration: Sendable {
         let contentConfiguration: ContentConfiguration
         let viewRenderer: ServiceOptionType<any ViewRenderer>
-        let passwordHasher: ServiceOptionType<any PasswordHasher>
         let cache: ServiceOptionType<any Cache>
         let responder: ServiceOptionType<any Responder>
         let client: ServiceOptionType<any Client>
@@ -90,14 +88,12 @@ public final class Application: Sendable, Service {
         public init(
             contentConfiguration: ContentConfiguration = .default(),
             viewRenderer: ServiceOptionType<any ViewRenderer> = .default,
-            passwordHasher: ServiceOptionType<any PasswordHasher> = .default,
             cache: ServiceOptionType<any Cache> = .default,
             responder: ServiceOptionType<any Responder> = .default,
             client: ServiceOptionType<any Client> = .default,
         ) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
-            self.passwordHasher = passwordHasher
             self.cache = cache
             self.responder = responder
             self.client = client
@@ -142,17 +138,6 @@ public final class Application: Sendable, Service {
                 self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory)
             case .provided(let renderer):
                 self.viewRenderer = renderer
-        }
-
-        switch services.passwordHasher {
-            case .default:
-            #if bcrypt
-                self.passwordHasher = BcryptHasher()
-            #else
-                self.passwordHasher = PlaintextHasher()
-            #endif
-            case .provided(let hasher):
-                self.passwordHasher = hasher
         }
 
         switch services.cache {

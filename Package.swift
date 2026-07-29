@@ -105,15 +105,11 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "b1c4f775dfbdc74800c0f29fda79c8984a5e9073"),
     ],
     targets: [
-        // C helpers
-        .target(name: "CVaporBcrypt"),
-
         // Vapor
         .target(
             name: "Vapor",
             dependencies: [
                 .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["HTTPClient"])),
-                .target(name: "CVaporBcrypt", condition: .when(traits: ["bcrypt"])),
                 .product(name: "ConsoleLogger", package: "console-kit"),
                 .product(name: "Configuration", package: "swift-configuration"),
                 .product(name: "Logging", package: "swift-log"),
