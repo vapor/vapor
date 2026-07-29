@@ -82,3 +82,72 @@ jobs:
     uses: vapor/ci/.github/workflows/submit-deps.yml@main
     secrets: inherit
 
+  foundation-linking:
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    runs-on: ubuntu-latest
+    container: swift:noble
+    timeout-minutes: 30
+    steps:
+      - name: Install linux dependencies
+        run: apt-get update -yq && apt-get install -yq jq
+      - name: Check out code
+        uses: actions/checkout@v7
+      # Adapted from https://github.com/awslabs/swift-aws-lambda-runtime/blob/main/.github/workflows/scripts/check-link-foundation.sh
+      - name: Check for Foundation or ICU dependencies
+        run: |
+          log() { printf -- "** %s\n" "$*" >&2; }
+          error() { printf -- "** ERROR: %s\n" "$*" >&2; }
+          fatal() { error "$@"; exit 1; }
+
+          LIBS_TO_CHECK="libFoundation.so libFoundationInternationalization.so lib_FoundationICU.so"
+
+          package_dir="$(pwd)"
+          description="$(swift package --package-path "${package_dir}" describe --type json)"
+          package_name="$(echo "${description}" | jq -r .name)"
+          products="$(echo "${description}" | jq -r '.products[] | select(.type | has("library")) | .name')"
+          if [ -z "${products}" ]; then
+            fatal "Package '${package_name}' has no library products to check."
+          fi
+
+          # Generate an empty executable package depending on every library product.
+          shim_dir="$(mktemp -d)"
+          product_deps="$(echo "${products}" | while IFS= read -r product; do
+            printf '.product(name: "%s", package: "%s"), ' "${product}" "${package_name}"
+          done)"
+          cat > "${shim_dir}/Package.swift" <<EOF
+          // swift-tools-version:6.3
+          import PackageDescription
+          let package = Package(
+              name: "foundation-linking-check",
+              dependencies: [.package(name: "${package_name}", path: "${package_dir}")],
+              targets: [.executableTarget(name: "foundation-linking-check", dependencies: [${product_deps}])]
+          )
+          EOF
+          mkdir -p "${shim_dir}/Sources/foundation-linking-check"
+          touch "${shim_dir}/Sources/foundation-linking-check/main.swift"
+
+          log "Building check executable against product(s): $(echo ${products} | tr '\n' ' ')"
+          swift build --package-path "${shim_dir}" -c release || fatal "Failed to build the check executable."
+
+          binary="$(swift build --package-path "${shim_dir}" -c release --show-bin-path)/foundation-linking-check"
+          if [ ! -f "${binary}" ]; then
+            fatal "${binary} does not exist."
+          fi
+
+          log "Checking for Foundation or ICU dependencies in ${binary}."
+          libraries="$(ldd "${binary}" | awk '{ print $1 }')"
+          found=0
+          for lib in ${LIBS_TO_CHECK}; do
+            if echo "${libraries}" | grep -q "${lib}"; then
+              error "❌ ${lib} found."
+              found=1
+            else
+              log "${lib} not found."
+            fi
+          done
+
+          if [ "${found}" -ne 0 ]; then
+            fatal "At least one Foundation lib was found."
+          fi
+          log "No Foundation lib found, congrats!"
+
