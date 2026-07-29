@@ -85,7 +85,7 @@ jobs:
   foundation-linking:
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
-    container: swift:noble
+    container: swiftlang/swift:nightly-6.4.x-bookworm
     timeout-minutes: 30
     steps:
       - name: Install linux dependencies
@@ -115,7 +115,7 @@ jobs:
             printf '.product(name: "%s", package: "%s"), ' "${product}" "${package_name}"
           done)"
           cat > "${shim_dir}/Package.swift" <<EOF
-          // swift-tools-version:6.3
+          // swift-tools-version:6.4
           import PackageDescription
           let package = Package(
               name: "foundation-linking-check",
