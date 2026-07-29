@@ -83,9 +83,8 @@ jobs:
     secrets: inherit
 
   foundation-linking:
-    if: ${{ !(github.event.pull_request.draft || false) }}
-    uses: vapor/ci/.github/workflows/run-unit-tests.yml@check-foundation
+    uses: vapor/ci/.github/workflows/check-foundation-linking.yml@check-foundation
+    permissions:
+      contents: read
     with:
-      with_foundation_check: true
-      foundation_check_image: swiftlang/swift:nightly-main-noble
-
+      swift_image: swiftlang/swift:nightly-main-noble
