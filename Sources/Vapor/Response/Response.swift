@@ -220,7 +220,7 @@ public final class Response: CustomStringConvertible, Sendable {
     }
 
     /// Internal init that creates a new `Response` without sanitizing headers.
-    public init(
+    package init(
         status: HTTPResponse.Status,
         version: HTTPVersion,
         headersNoUpdate headers: HTTPFields,
