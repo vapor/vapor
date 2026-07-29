@@ -23,19 +23,19 @@ extension Request {
 ///
 /// It can read files, both in their entirety and chunked.
 ///
-///
-///     req.fileio.readFile(at: "/path/to/file.txt") { chunk in
-///         print(chunk) // part of file
+///     try await req.fileio.readFile(at: "/path/to/file.txt") { chunks in
+///         for try await chunk in chunks {
+///             print(chunk) // part of file
+///         }
 ///     }
 ///
-///     req.fileio.collectFile(at: "/path/to/file.txt").map { file in
-///         print(file) // entire file
-///     }
+///     let file = try await req.fileio.collectFile(at: "/path/to/file.txt")
+///     print(file) // entire file
 ///
 /// It can also create streaming HTTP responses.
 ///
 ///     app.get("file-stream") { req -> Response in
-///         return req.fileio.streamFile(at: "/path/to/file.txt", for: req)
+///         return try await req.fileio.streamFile(at: "/path/to/file.txt")
 ///     }
 ///
 /// Streaming file responses respect `E-Tag` headers present in the request.
@@ -91,7 +91,7 @@ public struct FileIO: Sendable {
 
     /// Reads the contents of a file at the supplied path.
     ///
-    ///     let data = try await req.fileio.collectFile(file: "/path/to/file.txt")
+    ///     let data = try await req.fileio.collectFile(at: "/path/to/file.txt")
     ///     print(data) // file data
     ///
     /// - parameters:
@@ -106,18 +106,21 @@ public struct FileIO: Sendable {
 
     /// Reads the contents of a file at the supplied path in chunks.
     ///
-    ///    for try await chunk in try await req.fileio.readFile(at: "/path/to/file.txt") {
-    ///        print("chunk: \(data)")
-    ///    }
+    ///     try await req.fileio.readFile(at: "/path/to/file.txt") { chunks in
+    ///         for try await chunk in chunks {
+    ///             print("chunk: \(chunk)")
+    ///         }
+    ///     }
     ///
-    /// > Warning: It's the caller's responsibility to close the file handle provided in ``FileChunks`` when finished.
+    /// > Warning: The file is only open for the duration of `processChunks`, so the chunks must be
+    /// > consumed inside the closure rather than escaping it.
     ///
     /// - parameters:
     ///     - path: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
     ///     - offset: The offset to start reading from.
     ///     - byteCount: The number of bytes to read from the file. If `nil`, the file will be read to the end.
-    /// - returns: `FileChunks` containing the file data chunks.
+    ///     - processChunks: Closure receiving the ``FileChunks`` to read the file data from.
     public func readFile(
         at path: String,
         chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
@@ -168,7 +171,7 @@ public struct FileIO: Sendable {
     /// automatically if an appropriate `MediaType` can be found for the file's suffix.
     ///
     ///     app.get("file-stream") { req in
-    ///         return req.fileio.streamFile(at: "/path/to/file.txt")
+    ///         return try await req.fileio.streamFile(at: "/path/to/file.txt")
     ///     }
     ///
     /// - parameters:
