@@ -166,7 +166,6 @@ public func routes(_ app: Application) async throws {
         return req.parameters.get("userID") ?? "no id"
     }
 
-    app.directory.viewsDirectory = "/Users/tanner/Desktop"
     app.get("view") { req in
         try await req.view.render("hello.txt", ["name": "world"])
     }

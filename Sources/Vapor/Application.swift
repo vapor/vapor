@@ -240,7 +240,6 @@ public final class Application: Sendable, Service {
 
         self.responder = services.responder
         self.routes = Routes()
-        self.core.initialize()
         self.sessions.initialize()
         self.sessions.use(.memory)
         self.servers.initialize()
