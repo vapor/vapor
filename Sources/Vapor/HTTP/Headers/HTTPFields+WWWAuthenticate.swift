@@ -13,6 +13,7 @@ extension HTTPFields {
             self.value = value
         }
 
+        /// Creates a `WWW-Authenticate` header from a string literal.
         public init(stringLiteral value: String) {
             self.init(value: value)
         }
