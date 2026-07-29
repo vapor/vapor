@@ -85,6 +85,8 @@ jobs:
   foundation-linking:
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container: swiftlang/swift:nightly-6.4.x-bookworm
     timeout-minutes: 30
     steps:
