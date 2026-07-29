@@ -389,16 +389,16 @@ struct RouteTests {
             #expect(app.routes.defaultMaxBodySize == 1)
 
             app.on(.post, "default") { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
             app.on(.post, "1kb", body: .collect(maxSize: "1kb")) { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
             app.on(.post, "1mb", body: .collect(maxSize: "1mb")) { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
             app.on(.post, "1gb", body: .collect(maxSize: "1gb")) { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
 
             var buffer = ByteBufferAllocator().buffer(capacity: 0)

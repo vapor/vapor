@@ -755,7 +755,7 @@ struct ValidationTests {
             }
             app.middleware.use(ValidationErrorMiddleware())
 
-            app.post("users") { req -> HTTPStatus in
+            app.post("users") { req -> HTTPResponse.Status in
                 try User.validate(content: req)
                 return .ok
             }
