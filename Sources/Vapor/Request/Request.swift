@@ -259,7 +259,7 @@ public final class Request: CustomStringConvertible, Sendable {
         }
     }
 
-    public init(
+    package init(
         application: Application,
         method: HTTPRequest.Method,
         url: URI,
