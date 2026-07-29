@@ -60,7 +60,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.24.0"),
 
         // Swift logging API
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.8.0"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.14.0"),
 
         // Swift metrics API
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
@@ -78,16 +78,13 @@ let package = Package(
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
 
         // MultipartKit, Multipart encoding and decoding
-        .package(url: "https://github.com/vapor/multipart-kit.git", from: "5.0.0-alpha.5"),
+        .package(url: "https://github.com/vapor/multipart-kit.git", from: "5.0.0-beta.1"),
 
         // Low-level atomic operations
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
 
         // Service Lifecycle Management
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.6.3"),
-
-        // Network IO on Apple platforms
-        .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
 
         // Swift Types for HTTP Requests
         .package(url: "https://github.com/apple/swift-http-types", from: "1.0.0"),
@@ -194,6 +191,7 @@ let package = Package(
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
                 .product(name: "Instrumentation", package: "swift-distributed-tracing"),
+                .product(name: "InMemoryLogging", package: "swift-log"),
             ],
             swiftSettings: swiftSettings
         ),

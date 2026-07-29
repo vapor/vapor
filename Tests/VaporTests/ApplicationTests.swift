@@ -9,6 +9,7 @@ import Testing
 import VaporTesting
 import HTTPTypes
 import RoutingKit
+import Logging
 
 @Suite("Application Tests")
 struct ApplicationTests {
@@ -55,7 +56,7 @@ struct ApplicationTests {
             let serviceGroup = ServiceGroup(
                 configuration: .init(
                     services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                    logger: app.logger
+                    logger: Logger.current
                 )
             )
 

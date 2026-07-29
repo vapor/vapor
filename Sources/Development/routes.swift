@@ -307,9 +307,9 @@ struct TestMiddleware: Middleware {
     let number: Int
 
     func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
-        request.logger.debug("In async middleware - \(number)")
+        Logger.current.debug("In async middleware - \(number)")
         let response = try await next.respond(to: request)
-        request.logger.debug("In async middleware way out - \(number)")
+        Logger.current.debug("In async middleware way out - \(number)")
         return response
     }
 }

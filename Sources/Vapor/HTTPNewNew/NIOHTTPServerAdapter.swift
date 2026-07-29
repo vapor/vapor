@@ -33,7 +33,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         )
 
         let nioServer = NIOHTTPServer(
-            logger: self.application.logger,
+            logger: Logger.current,
             configuration: configuration
         )
 
@@ -74,7 +74,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 continuation = nil
             }
 
-            self.application.logger.notice("Server started on \(address.host):\(address.port)")
+            Logger.current.notice("Server started on \(address.host):\(address.port)")
 
             // Wait for serve() to complete (blocks until shutdown/cancellation)
             try await group.next()
@@ -112,7 +112,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         case .hostname(let hostname, let port):
             return (hostname, port)
         case .unixDomainSocket:
-            self.application.logger.warning("Unix domain sockets are not supported by NIOHTTPServer. Falling back to default address.")
+            Logger.current.warning("Unix domain sockets are not supported by NIOHTTPServer. Falling back to default address.")
             return ("127.0.0.1", 8080)
         }
     }

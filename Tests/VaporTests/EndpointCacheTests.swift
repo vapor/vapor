@@ -37,15 +37,13 @@ struct EndpointCacheTests {
                 let cache = EndpointCache<Test>(uri: "http://localhost:\(port)/number")
                 do {
                     let test = try await cache.get(
-                        using: app.client,
-                        logger: app.logger
+                        using: app.client
                     )
                     #expect(test.number == 0)
                 }
                 do {
                     let test = try await cache.get(
-                        using: app.client,
-                        logger: app.logger
+                        using: app.client
                     )
                     #expect(test.number == 1)
                 }
@@ -74,15 +72,13 @@ struct EndpointCacheTests {
                 let cache = EndpointCache<Test>(uri: "http://localhost:\(port)/number")
                 do {
                     let test = try await cache.get(
-                        using: app.client,
-                        logger: app.logger
+                        using: app.client
                     )
                     #expect(test.number == 0)
                 }
                 do {
                     let test = try await cache.get(
-                        using: app.client,
-                        logger: app.logger
+                        using: app.client
                     )
                     #expect(test.number == 0)
                 }
@@ -90,8 +86,7 @@ struct EndpointCacheTests {
                 try await Task.sleep(for: .seconds(1))
                 do {
                     let test = try await cache.get(
-                        using: app.client,
-                        logger: app.logger
+                        using: app.client
                     )
                     #expect(test.number == 1)
                 }
@@ -119,8 +114,8 @@ struct EndpointCacheTests {
 
             try await withRunningApp(app: app) { port in
                 let cache = EndpointCache<Test>(uri: "http://localhost:\(port)/number")
-                async let request1 = cache.get(using: app.client, logger: app.logger)
-                async let request2 = cache.get(using: app.client, logger: app.logger)
+                async let request1 = cache.get(using: app.client)
+                async let request2 = cache.get(using: app.client)
                 try await Task.sleep(for: .milliseconds(100))
                 #expect(try await request1 == request2)
                 let current = await currentActor.current

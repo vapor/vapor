@@ -38,16 +38,14 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     /// Downloads the resource.
     /// - Parameters:
     ///   - request: The `Request` which is initiating the download.
-    ///   - logger: An optional logger
-    public func get(on request: Request, logger: Logger? = nil) async throws -> T {
-        try await self.download(using: request.application.client, logger: logger ?? request.logger)
+    public func get(on request: Request) async throws -> T {
+        try await self.download(using: request.application.client)
     }
 
     /// Downloads the resource.
     /// - Parameters:
     ///   - client: The `Client` which will perform the download.
-    ///   - logger: An optional logger
-    public func get(using client: any Client, logger: Logger? = nil) async throws -> T {
+    public func get(using client: any Client) async throws -> T {
         if let cached = self.cached.cachedData, let cacheUntil = self.cached.cacheDate, Date() <= cacheUntil {
             // If no-cache was set on the header, you *always* have to validate with the server.
             // must-revalidate does not require checking with the server until after it expires.
@@ -62,10 +60,10 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
             return try await request.value
         }
 
-        logger?.debug("Requesting data from \(self.uri)")
+        Logger.current.debug("Requesting data from \(self.uri)")
 
         let newRequest = Task {
-            try await self.download(using: client, logger: logger)
+            try await self.download(using: client)
         }
         self.request = newRequest
         let result = try await newRequest.value
@@ -74,7 +72,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
         return result
     }
 
-    private func download(using client: any Client, logger: Logger?) async throws -> T {
+    private func download(using client: any Client) async throws -> T {
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
         var headers: HTTPFields = [:]
 
@@ -107,17 +105,17 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
 
             switch response.status {
             case .notModified:
-                logger?.debug("Cached data is still valid.")
+                Logger.current.trace("EndpointCache - cached data is still valid")
                 guard let cached = self.cached.0 else {
                     // This shouldn't actually be possible, but just in case.
                     self.clearCache()
-                    return try await self.download(using: client, logger: logger)
+                    return try await self.download(using: client)
                 }
 
                 return cached
 
             case .ok:
-                logger?.debug("New data received")
+                Logger.current.trace("EndpointCache - new data received")
 
                 let data: T
 

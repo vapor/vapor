@@ -115,41 +115,35 @@ public struct DotEnvFile: Sendable {
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let path: String
-    ///     let logger: Logger
-    ///     try DotEnvFile.load(path: path, logger: logger)
+    ///     try DotEnvFile.load(path: path)
     ///     print(Environment.process.FOO) // BAR
     ///
     /// - parameters:
     ///     - path: Absolute or relative path of the dotenv file.
-    ///     - logger: Optionally provide an existing logger.
     public static func load(
-        path: String,
-        logger: Logger = Logger(label: "dot-env-loggger")
+        path: String
     ) async {
         do {
             try await load(path: path, overwrite: false)
         } catch {
-            logger.debug("Could not load \(path) file: \(error)")
+            Logger.current.debug("Could not load \(path) file: \(error)")
         }
     }
 
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let environment: Environment
-    ///     let logger: Logger
-    ///     try await DotEnvFile.load(for: .development, logger: logger)
+    ///     try await DotEnvFile.load(for: .development)
     ///     print(Environment.process.FOO) // BAR
     ///
     /// - parameters:
     ///     - environment: current environment, selects which .env file to use.
-    ///     - logger: Optionally provide an existing logger.
     public static func load(
-        for environment: Environment = .development,
-        logger: Logger = Logger(label: "dot-env-loggger")
+        for environment: Environment = .development
     ) async {
         // Load specific .env first since values are not overridden.
-        await DotEnvFile.load(path: ".env.\(environment.name)", logger: logger)
-        await DotEnvFile.load(path: ".env", logger: logger)
+        await DotEnvFile.load(path: ".env.\(environment.name)")
+        await DotEnvFile.load(path: ".env")
     }
 }
 
