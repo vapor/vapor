@@ -1,3 +1,4 @@
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 import Vapor
@@ -41,11 +42,13 @@ struct AuthenticationTests {
 
             try await app.testing().test(.get, "/test") { res async in
                 #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Vapor""#)
             }
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer test"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
+                #expect(res.headers[.wwwAuthenticate] == nil)
             }
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "bearer test"]) { res async in
@@ -86,16 +89,278 @@ struct AuthenticationTests {
             let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
             try await app.testing().test(.get, "/test") { res async in
                 #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Vapor", charset="UTF-8""#)
             }
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
+                #expect(res.headers[.wwwAuthenticate] == nil)
             }
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
+            }
+        }
+    }
+
+    @Test("Test Basic Authenticator WWW Authenticate Header")
+    func basicAuthenticatorWWWAuthenticateHeader() async throws {
+        struct TestAuthenticator: BasicAuthenticator {
+            let realm = #"Private "Area""#
+
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws { }
+        }
+
+        try await withApp { app in
+            app.routes.grouped(TestAuthenticator()).get("test") { _ in
+                Response(status: .unauthorized)
+            }
+            app.routes.grouped(TestAuthenticator()).get("existing") { _ -> Response in
+                let response = Response(status: .unauthorized)
+                response.headers[.wwwAuthenticate] = #"Basic realm="Existing""#
+                return response
+            }
+
+            try await app.testing().test(.get, "/test") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Private \"Area\"", charset="UTF-8""#)
+            }
+
+            try await app.testing().test(.get, "/existing") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Existing""#)
+            }
+        }
+    }
+
+    @Test("Test Bearer Authenticator WWW Authenticate Header")
+    func bearerAuthenticatorWWWAuthenticateHeader() async throws {
+        struct DefaultRealmAuthenticator: BearerAuthenticator {
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws { }
+        }
+
+        struct CustomRealmAuthenticator: BearerAuthenticator {
+            let realm = #"API "v2""#
+
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws { }
+        }
+
+        try await withApp { app in
+            app.routes.grouped(DefaultRealmAuthenticator()).get("default") { _ in
+                Response(status: .unauthorized)
+            }
+            app.routes.grouped(CustomRealmAuthenticator()).get("custom") { _ in
+                Response(status: .unauthorized)
+            }
+            app.routes.grouped(CustomRealmAuthenticator()).get("existing") { _ -> Response in
+                let response = Response(status: .unauthorized)
+                response.headers[.wwwAuthenticate] = #"Bearer realm="Existing""#
+                return response
+            }
+            app.routes.grouped(CustomRealmAuthenticator()).get("ok") { _ in
+                Response(status: .ok)
+            }
+
+            try await app.testing().test(.get, "/default") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Vapor""#)
+            }
+
+            try await app.testing().test(.get, "/custom") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="API \"v2\"""#)
+            }
+
+            // A challenge the responder chain set itself must not be replaced.
+            try await app.testing().test(.get, "/existing") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Existing""#)
+            }
+
+            // Only unauthorized responses get a challenge.
+            try await app.testing().test(.get, "/ok") { res async in
+                #expect(res.status == .ok)
+                #expect(res.headers[.wwwAuthenticate] == nil)
+            }
+        }
+    }
+
+    @Test("Test Throwing Authenticator WWW Authenticate Header")
+    func throwingAuthenticatorWWWAuthenticateHeader() async throws {
+        struct NotAnAbortError: Error { }
+
+        struct TestAuthenticator: BearerAuthenticator {
+            let realm = "API"
+
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
+                switch bearer.token {
+                case "revoked":
+                    throw Abort(.unauthorized, reason: "Token has been revoked.")
+                case "expired":
+                    var headers = HTTPFields()
+                    headers.wwwAuthenticate = #"Bearer realm="API", error="invalid_token""#
+                    throw Abort(.unauthorized, headers: headers, reason: "Token has expired.")
+                case "forbidden":
+                    throw Abort(.forbidden, reason: "Insufficient scope.")
+                default:
+                    throw NotAnAbortError()
+                }
+            }
+        }
+
+        try await withApp { app in
+            app.routes.grouped(TestAuthenticator()).get("test") { _ in
+                Response(status: .ok)
+            }
+
+            // An unauthorized error picks up the challenge but keeps its own reason.
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer revoked"]) { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="API""#)
+                #expect(res.body.string.contains("Token has been revoked."))
+            }
+
+            // An error carrying its own challenge keeps it verbatim.
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer expired"]) { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="API", error="invalid_token""#)
+                #expect(res.body.string.contains("Token has expired."))
+            }
+
+            // Errors with any other status are left alone.
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer forbidden"]) { res async in
+                #expect(res.status == .forbidden)
+                #expect(res.headers[.wwwAuthenticate] == nil)
+                #expect(res.body.string.contains("Insufficient scope."))
+            }
+
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer nonsense"]) { res async in
+                #expect(res.status == .internalServerError)
+                #expect(res.headers[.wwwAuthenticate] == nil)
+            }
+        }
+    }
+
+    @Test("Test Authenticator Preserves Thrown Error Details")
+    func authenticatorPreservesThrownErrorDetails() async throws {
+        struct TestError: AbortError, DebuggableError {
+            var status: HTTPResponse.Status { .unauthorized }
+            var reason: String { "The credentials have expired." }
+            var identifier: String { "credentialsExpired" }
+            var source: ErrorSource?
+        }
+
+        struct TestAuthenticator: BasicAuthenticator {
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
+                throw TestError(source: .capture())
+            }
+        }
+
+        struct CapturedError: Sendable {
+            var reason: String?
+            var challenge: String?
+            var identifier: String?
+            var source: ErrorSource?
+        }
+
+        struct ErrorCapturingMiddleware: Middleware {
+            let captured: NIOLockedValueBox<CapturedError?>
+
+            func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+                do {
+                    return try await next.respond(to: request)
+                } catch {
+                    self.captured.withLockedValue {
+                        $0 = CapturedError(
+                            reason: (error as? any AbortError)?.reason,
+                            challenge: (error as? any AbortError)?.headers[.wwwAuthenticate],
+                            identifier: (error as? any DebuggableError)?.identifier,
+                            source: (error as? any DebuggableError)?.source
+                        )
+                    }
+                    throw error
+                }
+            }
+        }
+
+        let captured = NIOLockedValueBox<CapturedError?>(nil)
+
+        try await withApp { app in
+            app.routes.grouped([
+                ErrorCapturingMiddleware(captured: captured), TestAuthenticator()
+            ]).get("test") { _ in
+                Response(status: .ok)
+            }
+
+            let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Vapor", charset="UTF-8""#)
+                #expect(res.body.string.contains("The credentials have expired."))
+            }
+
+            let error = try #require(captured.withLockedValue { $0 })
+            #expect(error.reason == "The credentials have expired.")
+            #expect(error.challenge == #"Basic realm="Vapor", charset="UTF-8""#)
+            // The details of the error that actually rejected the request survive the challenge being added.
+            #expect(error.identifier == "credentialsExpired")
+            #expect(error.source?.file == #fileID)
+        }
+    }
+
+    @Test("Test Chained Authenticators WWW Authenticate Header")
+    func chainedAuthenticatorsWWWAuthenticateHeader() async throws {
+        struct Test: Authenticatable { }
+
+        struct BasicTestAuthenticator: BasicAuthenticator {
+            let realm = "Basic Realm"
+
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws { }
+        }
+
+        struct BearerTestAuthenticator: BearerAuthenticator {
+            let realm = "Bearer Realm"
+
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws { }
+        }
+
+        try await withApp { app in
+            // Middleware is applied outermost first, so the *last* authenticator in a chain is the
+            // innermost one and stamps its challenge before any of the others see the error. The
+            // rethrown error then carries a challenge, so the outer authenticators leave it alone.
+            app.routes.grouped([
+                BasicTestAuthenticator(), BearerTestAuthenticator(), Test.guardMiddleware()
+            ]).get("bearer-innermost") { _ -> String in "" }
+
+            app.routes.grouped([
+                BearerTestAuthenticator(), BasicTestAuthenticator(), Test.guardMiddleware()
+            ]).get("basic-innermost") { _ -> String in "" }
+
+            // The same ordering applies to a returned response, not just to a thrown error.
+            app.routes.grouped([
+                BasicTestAuthenticator(), BearerTestAuthenticator()
+            ]).get("returned") { _ in
+                Response(status: .unauthorized)
+            }
+
+            try await app.testing().test(.get, "/bearer-innermost") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Bearer Realm""#)
+                // Only one scheme is advertised, even though the route accepts both.
+                #expect(res.headers[values: .wwwAuthenticate].count == 1)
+            }
+
+            try await app.testing().test(.get, "/basic-innermost") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Basic Realm", charset="UTF-8""#)
+                #expect(res.headers[values: .wwwAuthenticate].count == 1)
+            }
+
+            try await app.testing().test(.get, "/returned") { res async in
+                #expect(res.status == .unauthorized)
+                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Bearer Realm""#)
             }
         }
     }

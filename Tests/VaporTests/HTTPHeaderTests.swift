@@ -115,6 +115,47 @@ struct HTTPHeaderTests {
         #expect(serializer.serialize() == "foo; bar=\"baz\", qux=\"quuz\"")
     }
 
+    @Test("Test WWW-Authenticate Header")
+    func testWWWAuthenticate() throws {
+        var headers = HTTPFields()
+        headers.wwwAuthenticate = .basic(realm: #"Private "Area""#)
+        #expect(headers[.wwwAuthenticate] == #"Basic realm="Private \"Area\"", charset="UTF-8""#)
+        #expect(headers.wwwAuthenticate?.value == #"Basic realm="Private \"Area\"", charset="UTF-8""#)
+
+        // `charset` is only defined for the Basic scheme, so Bearer challenges don't carry it.
+        headers.wwwAuthenticate = .bearer(realm: "API")
+        #expect(headers[.wwwAuthenticate] == #"Bearer realm="API""#)
+
+        headers.wwwAuthenticate = #"Bearer realm="API", error="invalid_token""#
+        #expect(headers[.wwwAuthenticate] == #"Bearer realm="API", error="invalid_token""#)
+
+        headers.wwwAuthenticate = nil
+        #expect(headers[.wwwAuthenticate] == nil)
+    }
+
+    @Test("Test WWW-Authenticate Header Realm Escaping")
+    func testWWWAuthenticateRealmEscaping() throws {
+        var headers = HTTPFields()
+
+        // An empty realm is still a valid quoted-string.
+        headers.wwwAuthenticate = .basic(realm: "")
+        #expect(headers[.wwwAuthenticate] == #"Basic realm="", charset="UTF-8""#)
+
+        headers.wwwAuthenticate = .bearer(realm: "")
+        #expect(headers[.wwwAuthenticate] == #"Bearer realm="""#)
+
+        // Backslashes are escaped in their own right, not just used to escape quotes.
+        headers.wwwAuthenticate = .basic(realm: #"C:\Private"#)
+        #expect(headers[.wwwAuthenticate] == #"Basic realm="C:\\Private", charset="UTF-8""#)
+
+        headers.wwwAuthenticate = .basic(realm: #"back\slash and "quote""#)
+        #expect(headers[.wwwAuthenticate] == #"Basic realm="back\\slash and \"quote\"", charset="UTF-8""#)
+
+        // A realm that already looks escaped gets escaped again rather than passed through.
+        headers.wwwAuthenticate = .bearer(realm: #"\"escaped\""#)
+        #expect(headers[.wwwAuthenticate] == #"Bearer realm="\\\"escaped\\\"""#)
+    }
+
     @Test("Test Forwarded Header Parsing")
     func testForwarded() throws {
         var headers = HTTPFields()
