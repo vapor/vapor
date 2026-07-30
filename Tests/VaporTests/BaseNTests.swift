@@ -2,7 +2,11 @@ import Algorithms
 import Vapor
 import NIOCore
 import Testing
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @Suite("Base N Tests")
 struct BaseNTests {

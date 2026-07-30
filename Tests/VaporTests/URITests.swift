@@ -2,6 +2,8 @@ import Vapor
 import NIOCore
 import Algorithms
 import Testing
+// Uses Foundation's `addingPercentEncoding(withAllowedCharacters:)` / `CharacterSet.url*Allowed`
+// as the reference encoder, so import full Foundation rather than FoundationEssentials.
 import Foundation
 
 @Suite("URI Test")
@@ -124,7 +126,7 @@ struct URITests {
         let untrustedInput = "[https://vapor.codes.somewhere-else.test:](https://vapor.codes.somewhere-else.test/\(zeros)443)[\(zeros)](https://vapor.codes.somewhere-else.test/\(zeros)443)[443](https://vapor.codes.somewhere-else.test/\(zeros)443)"
 
         let readableInAssertionOutput = untrustedInput
-            .replacingOccurrences(of: zeros, with: "00...00")
+            .replacing(zeros, with: "00...00")
             .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
         let uri = URI(string: untrustedInput)
 
@@ -134,15 +136,15 @@ struct URITests {
         #expect(uri.port == nil)
         #expect(uri.query == nil)
         #expect(uri.fragment == nil)
-        if #available(macOS 14, iOS 17, watchOS 10, tvOS 17, *) {
+        #if canImport(Darwin)
             // TODO: It is not clear why the "encode the first colon as %3A but none of the others" behavior appears, and why only on Darwin
             #expect(
-                uri.path.replacingOccurrences(of: zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1) ==
+                uri.path.replacing(zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1) ==
                 readableInAssertionOutput.replacing("%3A", with: ":", maxReplacements: 1)
             )
-        } else {
+        #else
             #expect(uri.path == "/")
-        }
+        #endif
     }
 
     @Test("Test URL Parsing Vectors")

@@ -1,5 +1,3 @@
-import struct Foundation.CharacterSet
-
 struct URLEncodedFormSerializer: Sendable {
     let splitVariablesOn: Character
     let splitKeyValueOn: Character
@@ -58,24 +56,22 @@ extension Array where Element == any CodingKey {
 extension String {
     /// Prepares a `String` for inclusion in form-urlencoded data.
     func urlEncoded(codingPath: [any CodingKey] = []) throws -> String {
-        guard let result = self.addingPercentEncoding(
-            withAllowedCharacters: Characters.allowedCharacters
-        ) else {
-            throw EncodingError.invalidValue(self, EncodingError.Context(
-                codingPath: codingPath,
-                debugDescription: "Unable to add percent encoding to \(self)"
-            ))
+        var encoded = ""
+        encoded.reserveCapacity(self.utf8.count)
+        for byte in self.utf8 {
+            switch byte {
+            // application/x-www-form-urlencoded allowed set: ALPHA / DIGIT / * - . _
+            // https://url.spec.whatwg.org/#application-x-www-form-urlencoded-percent-encode-set
+            case 0x30...0x39, 0x41...0x5A, 0x61...0x7A, 0x2A, 0x2D, 0x2E, 0x5F:
+                encoded.unicodeScalars.append(Unicode.Scalar(byte))
+            default:
+                encoded.append("%")
+                encoded.append(Self.hexUppercase[Int(byte >> 4)])
+                encoded.append(Self.hexUppercase[Int(byte & 0x0F)])
+            }
         }
-        return result
+        return encoded
     }
-}
 
-/// Characters allowed in form-urlencoded data.
-private enum Characters {
-    // https://url.spec.whatwg.org/#application-x-www-form-urlencoded-percent-encode-set
-    static let allowedCharacters: CharacterSet = {
-        var allowed = CharacterSet.alphanumerics
-        allowed.insert(charactersIn: "*-._")
-        return allowed
-    }()
+    private static let hexUppercase: [Character] = Array("0123456789ABCDEF")
 }

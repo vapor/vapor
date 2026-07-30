@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOCore
 import NIOHTTP1
 import Logging
@@ -21,19 +25,19 @@ public final class Request: CustomStringConvertible, Sendable {
         get { self.requestBox.withLockedValue { $0.method } }
         set { self.requestBox.withLockedValue { $0.method = newValue } }
     }
-    
+
     /// The URL used on this request.
     public var url: URI {
         get { self.requestBox.withLockedValue { $0.url } }
         set { self.requestBox.withLockedValue { $0.url = newValue } }
     }
-    
+
     /// The version for this HTTP request.
     public var version: HTTPVersion {
         get { self.requestBox.withLockedValue { $0.version } }
         set { self.requestBox.withLockedValue { $0.version = newValue } }
     }
-    
+
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
@@ -41,15 +45,15 @@ public final class Request: CustomStringConvertible, Sendable {
         get { self.requestBox.withLockedValue { $0.headers } }
         set { self.requestBox.withLockedValue { $0.headers = newValue } }
     }
-    
+
     /// A unique ID for the request.
     ///
     /// The request identifier is set to value of the `X-Request-Id` header when present, or to a
     /// uniquely generated value otherwise.
     public let id: String
-    
+
     // MARK: Metadata
-    
+
     /// Route object we found for this request.
     /// This holds metadata that can be used for (for example) Metrics.
     ///
@@ -100,7 +104,7 @@ public final class Request: CustomStringConvertible, Sendable {
             try encoder.encode(encodable, to: &self.request.url)
         }
     }
-    
+
     public var query: any URLQueryContainer {
         get { _URLQueryContainer(request: self, contentConfiguration: self.application.contentConfiguration) }
         set { } // ignore since Request is a reference type
@@ -160,7 +164,7 @@ public final class Request: CustomStringConvertible, Sendable {
         get { _ContentContainer(request: self) }
         set { } // ignore since Request is a reference type
     }
-    
+
     public var body: Body {
         Body(self)
     }
@@ -174,14 +178,14 @@ public final class Request: CustomStringConvertible, Sendable {
         case collected(ByteBuffer)
         case stream(BodyStream)
     }
-        
+
     /// Get and set `HTTPCookies` for this `Request`
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
         get { self.headers.cookie ?? .init() }
         set { self.headers.cookie = newValue }
     }
-    
+
     // See `CustomStringConvertible.description`
     public var description: String {
         var desc: [String] = []
@@ -194,7 +198,7 @@ public final class Request: CustomStringConvertible, Sendable {
     /// The address from which this HTTP request was received by SwiftNIO.
     /// This address may not represent the original address of the peer, especially if Vapor receives its requests through a reverse-proxy such as nginx.
     public let remoteAddress: SocketAddress?
-    
+
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters {
@@ -212,7 +216,7 @@ public final class Request: CustomStringConvertible, Sendable {
         get { self.requestBox.withLockedValue { $0.byteBufferAllocator } }
         set { self.requestBox.withLockedValue { $0.byteBufferAllocator = newValue } }
     }
-    
+
     struct RequestBox: Sendable {
         var method: HTTPRequest.Method
         var url: URI
@@ -224,7 +228,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var peerCertificateChain: ValidatedCertificateChain?
         var byteBufferAllocator: ByteBufferAllocator
     }
-    
+
     let requestBox: NIOLockedValueBox<RequestBox>
     private let _storage: NIOLockedValueBox<Storage>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
@@ -292,7 +296,7 @@ public final class Request: CustomStringConvertible, Sendable {
         self.requestBox = .init(storageBox)
         self.id = requestID
         self.application = application
-        
+
         self.remoteAddress = remoteAddress
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)

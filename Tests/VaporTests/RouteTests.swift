@@ -4,7 +4,11 @@ import VaporTesting
 import Vapor
 import HTTPTypes
 import RoutingKit
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @Suite("Route Tests")
 struct RouteTests {
@@ -219,7 +223,7 @@ struct RouteTests {
 
             try await app.testing().test(.post, "/users") { res in
                 #expect(res.status == .unprocessableContent)
-                #expect(res.body.string.replacingOccurrences(of: "\\", with: "").contains("Missing \"Content-Type\" header"))
+                #expect(res.body.string.replacing("\\", with: "").contains("Missing \"Content-Type\" header"))
             }
 
             try await app.testing().test(.post, "/users", headers: [.contentType: "application/json"]) { res in

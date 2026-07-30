@@ -1,7 +1,12 @@
 import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftSyntaxBuilder
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
+import Algorithms
 
 public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro {
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingAttributesFor member: some DeclSyntaxProtocol, in context: some MacroExpansionContext) throws -> [AttributeSyntax] {
@@ -38,7 +43,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     guard let argument = arguments?.first else {
                         throw MacroError.missingArguments("Controller")
                     }
-                    httpMethod = argument.expression.description.replacingOccurrences(of: ".", with: "")
+                    httpMethod = argument.expression.description.replacing(".", with: "")
                     customHTTPMethod = true
                 } else {
                     httpMethod = identifier.name.text
@@ -54,17 +59,17 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                         if customHTTPMethod && index == 0 {
                             continue
                         }
-                        let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let exprStr = arg.expression.description.trimming(while: \.isWhitespace)
 
                         // Check if it's a type (contains .self)
                         if exprStr.hasSuffix(".self") {
-                            let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
+                            let typeName = exprStr.replacing(".self", with: "")
                             pathComponents.append(":\(typeName.lowercased())\(currentDynamicPathParameterIndex)")
                             currentDynamicPathParameterIndex += 1
                         } else {
                             // It's a string literal
-                            let cleaned = exprStr.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-                            pathComponents.append(cleaned)
+                            let cleaned = exprStr.trimming(while: { $0 == "\"" })
+                            pathComponents.append(String(cleaned))
                         }
                     }
                 }

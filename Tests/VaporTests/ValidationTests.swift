@@ -1,7 +1,11 @@
 import Vapor
 import NIOCore
 import Testing
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import VaporTesting
 import HTTPTypes
 import RoutingKit
