@@ -74,10 +74,9 @@ public func routes(_ app: Application) async throws {
         return req.body.data?.readableBytes.description  ?? "none"
     }
 
-    app.get("json") { req -> [String: String] in
+    app.get("json", routeDescription: "Returns Some Test JSON") { req -> [String: String] in
         return ["foo": "bar"]
-    }//.description("returns some test json")
-    #warning("Add back description")
+    }
 
     #warning("TODO")
 //    app.webSocket("ws") { req, ws in
