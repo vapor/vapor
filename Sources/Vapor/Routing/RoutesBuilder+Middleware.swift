@@ -77,6 +77,7 @@ private final class MiddlewareGroup: RoutesBuilder {
     
     // See `RoutesBuilder.add(_:)`.
     func add(_ route: Route) {
+        var route = route
         route.responder = self.middleware.makeResponder(chainingTo: route.responder)
         self.root.add(route)
     }
