@@ -389,16 +389,16 @@ struct RouteTests {
             #expect(app.routes.defaultMaxBodySize == 1)
 
             app.on(.post, "default") { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
             app.on(.post, "1kb", body: .collect(maxSize: "1kb")) { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
             app.on(.post, "1mb", body: .collect(maxSize: "1mb")) { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
             app.on(.post, "1gb", body: .collect(maxSize: "1gb")) { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
 
             var buffer = ByteBufferAllocator().buffer(capacity: 0)
@@ -424,23 +424,23 @@ struct RouteTests {
     #if WebSockets
     @Test("Test Websocket Upgrade", .disabled())
     func testWebsocketUpgrade() async throws {
-        try await withApp { app in
-            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
-            let testMarkerHeaderValue = "addedInShouldUpgrade"
-
-            app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
-                [testMarkerHeaderKey: testMarkerHeaderValue]
-            }, onUpgrade: { _, _ in })
-
-            try await app.testing(method: .running).test(.get, "customshouldupgrade", beforeRequest: { req async in
-                req.headers[.secWebSocketVersion] = "13"
-                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
-                req.headers[.connection] = "Upgrade"
-                req.headers[.upgrade] = "websocket"
-            }) { res in
-                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
-            }
-        }
+//        try await withApp { app in
+//            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
+//            let testMarkerHeaderValue = "addedInShouldUpgrade"
+//
+//            app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
+//                [testMarkerHeaderKey: testMarkerHeaderValue]
+//            }, onUpgrade: { _, _ in })
+//
+//            try await app.testing(method: .running).test(.get, "customshouldupgrade", beforeRequest: { req async in
+//                req.headers[.secWebSocketVersion] = "13"
+//                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
+//                req.headers[.connection] = "Upgrade"
+//                req.headers[.upgrade] = "websocket"
+//            }) { res in
+//                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
+//            }
+//        }
     }
     #endif
 

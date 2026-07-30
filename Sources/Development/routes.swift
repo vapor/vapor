@@ -129,7 +129,7 @@ public func routes(_ app: Application) async throws {
 
     let sessions = app.grouped("sessions")
         .grouped(app.sessions.middleware)
-    sessions.get("set", ":value") { req -> HTTPStatus in
+    sessions.get("set", ":value") { req -> HTTPResponse.Status in
         req.session.data["name"] = req.parameters.get("value")
         return .ok
     }
@@ -166,7 +166,6 @@ public func routes(_ app: Application) async throws {
         return req.parameters.get("userID") ?? "no id"
     }
 
-    app.directory.viewsDirectory = "/Users/tanner/Desktop"
     app.get("view") { req in
         try await req.view.render("hello.txt", ["name": "world"])
     }
@@ -182,13 +181,13 @@ public func routes(_ app: Application) async throws {
         return secret
     }
 
-    app.on(.post, "max-256", body: .collect(maxSize: 256)) { req -> HTTPStatus in
+    app.on(.post, "max-256", body: .collect(maxSize: 256)) { req -> HTTPResponse.Status in
         print("in route")
         return .ok
     }
 
     #if !canImport(FoundationEssentials)
-    app.on(.post, "upload", body: .stream) { req -> HTTPStatus in
+    app.on(.post, "upload", body: .stream) { req -> HTTPResponse.Status in
         return try await FileSystem.shared.withFileHandle(
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
             options: .newFile(replaceExisting: true)) { handle in

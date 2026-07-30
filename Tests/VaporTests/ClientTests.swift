@@ -142,9 +142,9 @@ struct ClientTests {
             SomeJSON()
         }
 
-        remoteApp.get("status", ":status") { req -> HTTPStatus in
+        remoteApp.get("status", ":status") { req in
             let status = try req.parameters.require("status", as: Int.self)
-            return HTTPStatus(code: status)
+            return HTTPResponse.Status(code: status)
         }
 
         remoteApp.post("anything") { req -> AnythingResponse in

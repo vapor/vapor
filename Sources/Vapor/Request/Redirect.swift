@@ -55,7 +55,7 @@ public struct Redirect {
         return Self(kind: .permanentPost)
     }
 
-    /// Associated `HTTPStatus` for this redirect type.
+    /// Associated `HTTPResponse.Status` for this redirect type.
     public var status: HTTPResponse.Status {
         switch self.kind {
         case .permanent: return .movedPermanently

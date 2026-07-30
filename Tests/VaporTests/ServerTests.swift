@@ -641,7 +641,7 @@ struct ServerTests {
 //        try await withApp { app in
 //            let payload = [UInt8].random(count: 1 << 20)
 //
-//            app.on(.post, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPStatus in
+//            app.on(.post, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPResponse.Status in
 //                guard let data = req.body.data else {
 //                    throw Abort(.internalServerError)
 //                }
@@ -665,7 +665,7 @@ struct ServerTests {
 //                for try await _ in req.body {
 //                    // Ignore
 //                }
-//                return HTTPStatus.ok
+//                return HTTPResponse.Status.ok
 //            }
 //
 //            try await app.testing(method: .running).test(.post, "drain", beforeRequest: { req in

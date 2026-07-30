@@ -141,7 +141,7 @@ struct QueryTests {
         }
 
         try await withApp { app throws in
-            app.get("urlencodedform") { req -> HTTPStatus in
+            app.get("urlencodedform") { req -> HTTPResponse.Status in
                 let foo = try req.query.decode(User.self)
                 #expect(foo.name == "Vapor")
                 #expect(foo.age == 3)
@@ -173,7 +173,7 @@ struct QueryTests {
         }
 
         try await withApp { app throws in
-            app.get("urlencodedform") { req -> HTTPStatus in
+            app.get("urlencodedform") { req -> HTTPResponse.Status in
                 let foo = try req.query.decode(User.self)
                 #expect(foo.name == "Vapor")
                 #expect(foo.age == 3)
