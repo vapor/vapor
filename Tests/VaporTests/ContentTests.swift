@@ -3,7 +3,11 @@ import HTTPTypes
 import Vapor
 import Testing
 import VaporTesting
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import RoutingKit
 
 @Suite("Content Tests")
@@ -358,7 +362,7 @@ struct ContentTests {
             }
         }
     }
-    
+
     @Test("Multipart File prefers header contentType", .bug("https://github.com/vapor/vapor/issues/2571"))
     func testMultipartFileContentTypeUsesHeader() async throws {
         // A file named "your-face.jpg" but with Content-Type: image/webp

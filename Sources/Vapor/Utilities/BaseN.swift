@@ -5,7 +5,11 @@ import Algorithms
 /// These APIs are `internal` rather than `public` on purpose - partially because using them correctly is non-trivial,
 /// partially because the APIs that build on them are also non-`public` for their own reasons.
 
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Data
+#else
 import struct Foundation.Data
+#endif
 
 public struct BaseNEncoding: Sendable {
     /// For a given base and count, calculate the number of values needed to encode the given count of bytes.

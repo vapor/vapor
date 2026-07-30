@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOCore
 import HTTPTypes
 
@@ -6,7 +10,7 @@ import HTTPTypes
 public struct PlaintextEncoder: ContentEncoder {
     /// The specific plaintext `HTTPMediaType` to use.
     private let contentType: HTTPMediaType
-    
+
     /// Creates a new `PlaintextEncoder`.
     ///
     /// - parameters:
@@ -14,7 +18,7 @@ public struct PlaintextEncoder: ContentEncoder {
     public init(_ contentType: HTTPMediaType = .plainText) {
         self.contentType = contentType
     }
-    
+
     // See `ContentEncoder.encode(_:to:headers:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
@@ -51,7 +55,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func singleValueContainer() -> any SingleValueEncodingContainer { self }
 
     func encodeNil() throws { self.plaintext = nil }
-    
+
     // N.B.: Implementing the individual "primitive" coding methods on a container rather than forwarding through
     // each type's Codable implementation yields substantial speedups.
     func encode(_ value: Bool) throws { self.plaintext = value.description }
@@ -68,7 +72,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func encode(_ value: UInt32) throws { self.plaintext = value.description }
     func encode(_ value: UInt64) throws { self.plaintext = value.description }
     func encode(_ value: Float) throws { self.plaintext = value.description }
-    
+
     func encode(_ value: some Encodable) throws {
         if let data = value as? Data {
             // special case for data

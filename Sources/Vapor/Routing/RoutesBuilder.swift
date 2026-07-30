@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public protocol RoutesBuilder {
     func add(_ route: Route)
@@ -8,7 +12,7 @@ public protocol RoutesBuilder {
 // That way we don't need this and we can restrict the macros to take `String` or `Int.self`, `String.self`, `UUID.self` etc instead of `Any`
 // This would also help Fluent add conformances
 #warning("Find a better way")
-extension Foundation.UUID: @retroactive Swift.LosslessStringConvertible {
+extension UUID: @retroactive Swift.LosslessStringConvertible {
     public init?(_ description: String) {
         self.init(uuidString: description)
     }

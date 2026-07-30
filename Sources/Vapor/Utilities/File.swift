@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOCore
 import NIOFoundationCompat
 
@@ -6,7 +10,7 @@ import NIOFoundationCompat
 public struct File: Codable, Equatable, Sendable {
     /// Name of the file, including extension.
     public var filename: String
-    
+
     /// The file's data.
     public var data: ByteBuffer
 
@@ -17,7 +21,7 @@ public struct File: Codable, Equatable, Sendable {
     }
 
     private var _contentType: HTTPMediaType?
-    
+
     /// The file extension, if it has one.
     public var `extension`: String? {
         let parts = self.filename.split(separator: ".")
@@ -27,11 +31,11 @@ public struct File: Codable, Equatable, Sendable {
             return nil
         }
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case data, filename, contentType
     }
-    
+
     /// `Decodable` conformance.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -41,7 +45,7 @@ public struct File: Codable, Equatable, Sendable {
         let filename = try container.decode(String.self, forKey: .filename)
         self.init(data: buffer, filename: filename)
     }
-    
+
     /// `Encodable` conformance.
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
@@ -52,7 +56,7 @@ public struct File: Codable, Equatable, Sendable {
             try container.encode(contentType.serialize(), forKey: .contentType)
         }
     }
-    
+
     /// Creates a new `File`.
     ///
     ///     let file = File(data: "hello", filename: "foo.txt")
@@ -64,7 +68,7 @@ public struct File: Codable, Equatable, Sendable {
         let buffer = ByteBufferAllocator().buffer(string: data)
         self.init(data: buffer, filename: filename, contentType: contentType)
     }
-    
+
     /// Creates a new `File`.
     ///
     ///     let file = File(data: "hello", filename: "foo.txt")

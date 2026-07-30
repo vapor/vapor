@@ -187,6 +187,7 @@ public func routes(_ app: Application) async throws {
         return .ok
     }
 
+    #if !canImport(FoundationEssentials)
     app.on(.post, "upload", body: .stream) { req -> HTTPStatus in
         return try await FileSystem.shared.withFileHandle(
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
@@ -198,6 +199,7 @@ public func routes(_ app: Application) async throws {
                 return .ok
             }
     }
+    #endif
 
     let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in

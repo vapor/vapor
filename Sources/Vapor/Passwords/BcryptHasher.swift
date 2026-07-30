@@ -1,5 +1,9 @@
 #if bcrypt
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOPosix
 
 public struct BcryptHasher: PasswordHasher {

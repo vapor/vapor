@@ -1,8 +1,12 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public struct PlaintextHasher: PasswordHasher {
     public init() {}
-    
+
     public func hash<Password>(_ password: Password) async throws -> [UInt8]
         where Password: DataProtocol
     {

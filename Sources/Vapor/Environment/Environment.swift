@@ -1,5 +1,9 @@
 import Configuration
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have
 /// an `Environment` that can be used to dynamically register and configure services.
@@ -16,7 +20,7 @@ import Foundation
 ///
 public struct Environment: Sendable, Equatable {
     // MARK: - Detection
-    
+
     /// Detects the environment from `ConfigReader`. Parses the `vapor.env` flag.
     ///
     /// - Parameter config: `ConfigReader` to parse `vapor.env` flag from.
@@ -27,7 +31,7 @@ public struct Environment: Sendable, Equatable {
     public static func detect(from config: ConfigReader) throws -> Environment {
         config.string(forKey: "vapor.env", as: Environment.self, default: .development)
     }
-    
+
     // MARK: - Presets
 
     /// An environment for deploying your application to consumers.
@@ -53,7 +57,7 @@ public struct Environment: Sendable, Equatable {
     public static var process: Process {
         return Process()
     }
-    
+
     // MARK: - Equatable
 
     // See `Equatable.==(_:_:)`.
@@ -77,7 +81,7 @@ public struct Environment: Sendable, Equatable {
     ///   allow scenarios, such as testing production environment behaviors while retaining
     ///   availability of debug information.
     public var isRelease: Bool { !_isDebugAssertConfiguration() }
-    
+
     // MARK: - Init
 
     /// Create a new ``Environment``.

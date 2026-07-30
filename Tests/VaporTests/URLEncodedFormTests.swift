@@ -536,7 +536,7 @@ struct URLEncodedFormTests {
         let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag")
         #expect(foo.flag == true)
     }
-    
+
     @Test("Test Flag Decoding As Optional Bool")
     func testFlagDecodingAsOptionalBool() throws {
         struct Foo: Codable {
