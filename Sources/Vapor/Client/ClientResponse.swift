@@ -7,13 +7,13 @@ import Foundation
 #endif
 
 public struct ClientResponse: Sendable {
-    public var status: HTTPStatus
+    public var status: HTTPResponse.Status
     public var headers: HTTPFields
     public var body: ByteBuffer?
     private let byteBufferAllocator: ByteBufferAllocator
     private let contentConfiguration: ContentConfiguration
 
-    public init(status: HTTPStatus = .ok, headers: HTTPFields = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), contentConfiguration: ContentConfiguration = .default()) {
+    public init(status: HTTPResponse.Status = .ok, headers: HTTPFields = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), contentConfiguration: ContentConfiguration = .default()) {
         self.status = status
         self.headers = headers
         self.body = body

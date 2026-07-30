@@ -64,14 +64,14 @@ public final class Response: CustomStringConvertible, Sendable {
 
     /// Optional Upgrade behavior to apply to this response.
     /// currently, websocket upgrades are the only defined case.
-    public var upgrader: (any Upgrader)? {
-        get {
-            self.responseBox.withLockedValue { $0.upgrader }
-        }
-        set {
-            self.responseBox.withLockedValue { $0.upgrader = newValue }
-        }
-    }
+//    public var upgrader: (any Upgrader)? {
+//        get {
+//            self.responseBox.withLockedValue { $0.upgrader }
+//        }
+//        set {
+//            self.responseBox.withLockedValue { $0.upgrader = newValue }
+//        }
+//    }
 
     public var storage: Storage {
         get {
@@ -178,7 +178,6 @@ public final class Response: CustomStringConvertible, Sendable {
                 self.headers.updateContentLength(body.count)
             }
         }
-        var upgrader: (any Upgrader)?
         // If `true`, don't serialize the body.
         var forHeadRequest: Bool
 

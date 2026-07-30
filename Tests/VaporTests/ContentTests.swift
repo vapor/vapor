@@ -406,7 +406,7 @@ struct ContentTests {
         }
 
         try await withApp { app in
-            app.get("urlencodedform") { req -> HTTPStatus in
+            app.get("urlencodedform") { req -> HTTPResponse.Status in
                 let foo = try await req.content.decode(User.self)
                 #expect(foo.name == "Vapor")
                 #expect(foo.age == 3)

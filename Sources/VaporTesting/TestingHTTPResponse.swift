@@ -3,12 +3,12 @@ import Vapor
 import HTTPTypes
 
 public struct TestingHTTPResponse: Sendable {
-    public var status: HTTPStatus
+    public var status: HTTPResponse.Status
     public var headers: HTTPFields
     public var body: ByteBuffer
     private let contentConfiguration: ContentConfiguration
 
-    package init(status: HTTPStatus, headers: HTTPFields, body: ByteBuffer, contentConfiguration: ContentConfiguration) {
+    package init(status: HTTPResponse.Status, headers: HTTPFields, body: ByteBuffer, contentConfiguration: ContentConfiguration) {
         self.status = status
         self.headers = headers
         self.body = body
