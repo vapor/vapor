@@ -8,6 +8,7 @@ public struct Route: CustomStringConvertible, Sendable {
     public var responder: any Responder
     public var requestType: Any.Type
     public var responseType: Any.Type
+    public var routeDescription: String?
 
     public var description: String {
         let path = path.map { "\($0)" }.joined(separator: "/")
@@ -19,12 +20,14 @@ public struct Route: CustomStringConvertible, Sendable {
         path: [PathComponent],
         responder: any Responder,
         requestType: Any.Type,
-        responseType: Any.Type
+        responseType: Any.Type,
+        routeDescription: String? = nil
     ) {
         self.method = method
         self.path = path
         self.responder = responder
         self.requestType = requestType
         self.responseType = responseType
+        self.routeDescription = routeDescription
     }
 }
