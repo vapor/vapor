@@ -29,11 +29,13 @@ extension Request.Authentication {
         self.storage.withLock { $0.remove(A.self) }
     }
 
-    /// Returns an instance of the supplied type. Throws if no
-    /// instance of that type has been authenticated or if there
-    /// was a problem.
+    /// Look up an instance of the supplied type, treating it as an error if there is no such instance.
+    ///
+    /// - Parameter type: The authenticatable type to look up.
+    /// - Returns: An instance of the requested type, if one exists.
+    /// - Throws: `Abort(.unauthorized)` if no instance of the requested type is available.
     @discardableResult
-    public func require<A: Authenticatable>(_ type: A.Type = A.self) throws -> A {
+    public func require<A: Authenticatable>(_ type: A.Type = A.self) throws(Abort) -> A {
         guard let a = self.get(A.self) else {
             throw Abort(.unauthorized)
         }
