@@ -206,6 +206,9 @@ public final class Request: CustomStringConvertible, Sendable {
         set { self.requestBox.withLockedValue { $0.parameters = newValue } }
     }
 
+    /// Authentication storage for the request
+    public let auth: Authentication
+
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage {
         get { self._storage.withLockedValue { $0 } }
@@ -230,12 +233,6 @@ public final class Request: CustomStringConvertible, Sendable {
     }
 
     let requestBox: NIOLockedValueBox<RequestBox>
-
-    /// Backing storage for ``auth``.
-    ///
-    /// Stored directly on the request rather than in ``storage`` so that authentication costs a
-    /// single uncontended lock acquisition instead of a round trip through the `Storage` dictionary.
-    let authenticationCell = AuthenticationCell()
 
     private let _storage: NIOLockedValueBox<Storage>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
@@ -308,6 +305,7 @@ public final class Request: CustomStringConvertible, Sendable {
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
         self.streamBodyStorage = .init(nil)
+        self.auth = Authentication()
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {

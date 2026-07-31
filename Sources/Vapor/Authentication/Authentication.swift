@@ -2,36 +2,36 @@ import HTTPTypes
 import Synchronization
 
 extension Request {
-    /// Helper for accessing authenticated objects.
+    /// Stores and fetches the instances authenticated for a request.
     ///
+    /// Owned by the ``Request`` and shared for its whole lifetime, so an instance logged in by an
+    /// inner middleware stays visible to an outer middleware as the response unwinds — that is how
+    /// ``SessionAuthenticator`` persists a user authenticated further down the chain. Reading has no
+    /// side effects.
+    /// 
     /// See ``RequestAuthenticator`` for more information.
-    public var auth: Authentication {
-        .init(cell: self.authenticationCell)
-    }
-
-    /// Request helper for storing and fetching authenticated objects.
-    ///
-    /// This is a lightweight view onto storage owned by the ``Request``, so an instance logged in by
-    /// an inner middleware is visible to outer middleware as the response unwinds, and reading has
-    /// no side effects.
-    public struct Authentication: Sendable {
-        let cell: AuthenticationCell
-
-        init(cell: AuthenticationCell) {
-            self.cell = cell
-        }
+    public final class Authentication: Sendable {
+        let storage = Mutex<AuthenticationStorage>(.init())
     }
 }
 
 extension Request.Authentication {
+    /// Authenticates the supplied instance for this request.
+    ///
+    /// Instances are keyed by their static type, so authenticating more than one type at a time is
+    /// supported — a bearer token authenticator can log in both the token and the user it belongs to.
     public func login<A: Authenticatable>(_ instance: A) {
-        self.cell.storage.withLock { $0.insert(instance) }
+        self.storage.withLock { $0.insert(instance) }
     }
 
+    /// Unauthenticates an authenticatable type.
     public func logout<A: Authenticatable>(_ type: A.Type = A.self) {
-        self.cell.storage.withLock { $0.remove(A.self) }
+        self.storage.withLock { $0.remove(A.self) }
     }
 
+    /// Returns an instance of the supplied type. Throws if no
+    /// instance of that type has been authenticated or if there
+    /// was a problem.
     @discardableResult
     public func require<A: Authenticatable>(_ type: A.Type = A.self) throws -> A {
         guard let a = self.get(A.self) else {
@@ -40,27 +40,21 @@ extension Request.Authentication {
         return a
     }
 
+    /// Returns the authenticated instance of the supplied type.
+    ///
+    /// > Note: `nil` if no type has been authenticated.
     public func get<A: Authenticatable>(_ type: A.Type = A.self) -> A? {
-        self.cell.storage.withLock { $0.value(A.self) }
+        self.storage.withLock { $0.value(A.self) }
     }
 
+    /// Returns `true` if the type has been authenticated.
     public func has<A: Authenticatable>(_ type: A.Type = A.self) -> Bool {
-        self.cell.storage.withLock { $0.contains(A.self) }
+        self.storage.withLock { $0.contains(A.self) }
     }
 }
 
-/// Reference-typed backing store for ``Request/auth``.
-///
-/// Held by the ``Request`` rather than kept in a task local, because a login performed by an inner
-/// middleware has to remain visible to an outer middleware after `next.respond(to:)` returns — that
-/// is how ``SessionAuthenticator`` persists a user authenticated further down the chain. A task
-/// local, being restored when its scope exits, cannot carry a value outwards.
-final class AuthenticationCell: Sendable {
-    let storage = Mutex<AuthenticationStorage>(.init())
-}
-
-/// This storage uses an array instead of a dictionary as it was more performant for a small number of entries
-/// like we normally have
+/// The actual storage for the request's authentication. Uses an array instead of a dictionary as
+/// this was more performant with a small number of entries
 struct AuthenticationStorage: Sendable {
     private var entries: [(key: ObjectIdentifier, value: any Authenticatable)] = []
 
