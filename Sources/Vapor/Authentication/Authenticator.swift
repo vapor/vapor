@@ -104,6 +104,70 @@ extension BearerAuthenticator {
     }
 }
 
+// MARK: Closure-based authenticators
+
+extension Authenticatable {
+    /// Creates an authenticator for the Basic authorization header from a closure.
+    ///
+    /// Returning a value from the closure authenticates it for the request; returning `nil` leaves
+    /// the request unauthenticated.
+    ///
+    /// ```swift
+    /// app.grouped(User.basicAuthenticator { basic, request in
+    ///     try await User.find(username: basic.username, password: basic.password, on: request.db)
+    /// })
+    /// ```
+    ///
+    /// Conform to ``BasicAuthenticator`` directly if you need to authenticate more than one type.
+    public static func basicAuthenticator(
+        realm: String = "Vapor",
+        _ authenticate: @Sendable @escaping (BasicAuthorization, Request) async throws -> Self?
+    ) -> any Authenticator {
+        ClosureBasicAuthenticator(realm: realm, closure: authenticate)
+    }
+
+    /// Creates an authenticator for the Bearer authorization header from a closure.
+    ///
+    /// Returning a value from the closure authenticates it for the request; returning `nil` leaves
+    /// the request unauthenticated.
+    ///
+    /// ```swift
+    /// app.grouped(User.bearerAuthenticator { bearer, request in
+    ///     try await User.find(token: bearer.token, on: request.db)
+    /// })
+    /// ```
+    ///
+    /// Conform to ``BearerAuthenticator`` directly if you need to authenticate more than one type.
+    public static func bearerAuthenticator(
+        realm: String = "Vapor",
+        _ authenticate: @Sendable @escaping (BearerAuthorization, Request) async throws -> Self?
+    ) -> any Authenticator {
+        ClosureBearerAuthenticator(realm: realm, closure: authenticate)
+    }
+}
+
+private struct ClosureBasicAuthenticator<User: Authenticatable>: BasicAuthenticator {
+    let realm: String
+    let closure: @Sendable (BasicAuthorization, Request) async throws -> User?
+
+    func authenticate(basic: BasicAuthorization, for request: Request) async throws {
+        if let user = try await self.closure(basic, request) {
+            request.auth.login(user)
+        }
+    }
+}
+
+private struct ClosureBearerAuthenticator<User: Authenticatable>: BearerAuthenticator {
+    let realm: String
+    let closure: @Sendable (BearerAuthorization, Request) async throws -> User?
+
+    func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
+        if let user = try await self.closure(bearer, request) {
+            request.auth.login(user)
+        }
+    }
+}
+
 // MARK: Credentials
 
 /// Helper for creating authentication middleware using request body contents.
