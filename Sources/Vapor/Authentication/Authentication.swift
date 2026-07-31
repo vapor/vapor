@@ -4,7 +4,7 @@ import Synchronization
 extension Request {
     /// Helper for accessing authenticated objects.
     ///
-    /// See ``Authenticator`` for more information.
+    /// See ``RequestAuthenticator`` for more information.
     public var auth: Authentication {
         .init(cell: self.authenticationCell)
     }
@@ -24,22 +24,14 @@ extension Request {
 }
 
 extension Request.Authentication {
-    /// Authenticates the supplied instance for this request.
-    ///
-    /// Instances are keyed by their static type, so authenticating more than one type at a time is
-    /// supported — a bearer token authenticator can log in both the token and the user it belongs to.
     public func login<A: Authenticatable>(_ instance: A) {
         self.cell.storage.withLock { $0.insert(instance) }
     }
 
-    /// Unauthenticates an authenticatable type.
     public func logout<A: Authenticatable>(_ type: A.Type = A.self) {
         self.cell.storage.withLock { $0.remove(A.self) }
     }
 
-    /// Returns an instance of the supplied type. Throws if no
-    /// instance of that type has been authenticated or if there
-    /// was a problem.
     @discardableResult
     public func require<A: Authenticatable>(_ type: A.Type = A.self) throws -> A {
         guard let a = self.get(A.self) else {
@@ -48,14 +40,10 @@ extension Request.Authentication {
         return a
     }
 
-    /// Returns the authenticated instance of the supplied type.
-    ///
-    /// > Note: `nil` if no type has been authenticated.
     public func get<A: Authenticatable>(_ type: A.Type = A.self) -> A? {
         self.cell.storage.withLock { $0.value(A.self) }
     }
 
-    /// Returns `true` if the type has been authenticated.
     public func has<A: Authenticatable>(_ type: A.Type = A.self) -> Bool {
         self.cell.storage.withLock { $0.contains(A.self) }
     }
@@ -71,12 +59,8 @@ final class AuthenticationCell: Sendable {
     let storage = Mutex<AuthenticationStorage>(.init())
 }
 
-/// The set of instances authenticated for a request, keyed by their static type.
-///
-/// Backed by an array rather than a dictionary: a request authenticates one type, occasionally two
-/// (a user and its token), and at those sizes a linear scan of `ObjectIdentifier` comparisons beats
-/// hashing. An empty array is the shared empty singleton, so a request that never authenticates
-/// allocates nothing.
+/// This storage uses an array instead of a dictionary as it was more performant for a small number of entries
+/// like we normally have
 struct AuthenticationStorage: Sendable {
     private var entries: [(key: ObjectIdentifier, value: any Authenticatable)] = []
 
@@ -85,9 +69,7 @@ struct AuthenticationStorage: Sendable {
         return self.entries.first { $0.key == key }?.value as? A
     }
 
-    /// Whether an instance of the type is authenticated.
-    ///
-    /// Cheaper than `value(_:) != nil` because it doesn't need the dynamic cast.
+    /// Cheaper than `value(_:) != nil` because it doesn't need the dynamic cast
     func contains<A: Authenticatable>(_ type: A.Type) -> Bool {
         let key = ObjectIdentifier(A.self)
         return self.entries.contains { $0.key == key }

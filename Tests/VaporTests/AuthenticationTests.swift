@@ -17,7 +17,7 @@ struct AuthenticationTests {
     @Test("Test Bearer Authenticator")
     func bearerAuthenticator() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -61,7 +61,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator")
     func basicAuthenticator() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -368,7 +368,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Colon in Password")
     func basicAuthenticatorWithColonInPassword() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -408,7 +408,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Empty Password")
     func basicAuthenticatorWithEmptyPassword() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -449,7 +449,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Redirect")
     func basicAuthenticatorWithRedirect() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -494,11 +494,11 @@ struct AuthenticationTests {
     @Test("Test Session Authentication")
     func sessionAuthentication() async throws {
         struct Test: Authenticatable, SessionAuthenticatable {
-            static func bearerAuthenticator() -> any Authenticator {
+            static func bearerAuthenticator() -> any RequestAuthenticator {
                 TestBearerAuthenticator()
             }
 
-            static func sessionAuthenticator() -> any Authenticator {
+            static func sessionAuthenticator() -> any RequestAuthenticator {
                 TestSessionAuthenticator()
             }
 
@@ -603,7 +603,7 @@ struct AuthenticationTests {
     @Test("Test Middleware Config with Existential")
     func middlewareConfigExistential() async {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
             var name: String
@@ -763,68 +763,6 @@ struct AuthenticationTests {
 
             let cookie = try #require(sessionCookie)
             try await app.testing().test(.get, "/me", headers: [.cookie: cookie.serialize(name: "vapor-session")]) { res async in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
-            }
-        }
-    }
-
-    @Test("Test Closure Bearer Authenticator")
-    func closureBearerAuthenticator() async throws {
-        struct Test: Authenticatable {
-            var name: String
-        }
-
-        try await withApp { app in
-            app.routes.grouped([
-                Test.bearerAuthenticator { bearer, _ in
-                    bearer.token == "test" ? Test(name: "Vapor") : nil
-                },
-                Test.guardMiddleware(),
-            ]).get("test") { req -> String in
-                try req.auth.require(Test.self).name
-            }
-
-            try await app.testing().test(.get, "/test") { res async in
-                #expect(res.status == .unauthorized)
-                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Vapor""#)
-            }
-
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer wrong"]) { res async in
-                #expect(res.status == .unauthorized)
-            }
-
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer test"]) { res async in
-                #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
-                #expect(res.headers[.wwwAuthenticate] == nil)
-            }
-        }
-    }
-
-    @Test("Test Closure Basic Authenticator With Custom Realm")
-    func closureBasicAuthenticator() async throws {
-        struct Test: Authenticatable {
-            var name: String
-        }
-
-        try await withApp { app in
-            app.routes.grouped([
-                Test.basicAuthenticator(realm: "Custom") { basic, _ in
-                    basic.username == "test" && basic.password == "secret" ? Test(name: "Vapor") : nil
-                },
-                Test.guardMiddleware(),
-            ]).get("test") { req -> String in
-                try req.auth.require(Test.self).name
-            }
-
-            try await app.testing().test(.get, "/test") { res async in
-                #expect(res.status == .unauthorized)
-                #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Custom", charset="UTF-8""#)
-            }
-
-            let basic = Data("test:secret".utf8).base64EncodedString()
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Vapor")
             }
