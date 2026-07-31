@@ -629,18 +629,24 @@ struct AuthenticationTests {
             var value: String
         }
 
+        // Each iteration uses a fresh request and logs each type in exactly once, so a login lost to
+        // a race is observable. Repeated because the window is narrow — against the previous
+        // storage-backed cache this loses roughly one in ten pairs.
         try await withApp { app in
-            let request = Request(application: app)
+            var lost = 0
+            for _ in 0..<1_000 {
+                let request = Request(application: app)
 
-            await withTaskGroup(of: Void.self) { group in
-                for _ in 0..<100 {
+                await withTaskGroup(of: Void.self) { group in
                     group.addTask { request.auth.login(User(name: "Vapor")) }
                     group.addTask { request.auth.login(Token(value: "secret")) }
                 }
-            }
 
-            #expect(request.auth.get(User.self)?.name == "Vapor")
-            #expect(request.auth.get(Token.self)?.value == "secret")
+                if request.auth.get(User.self) == nil || request.auth.get(Token.self) == nil {
+                    lost += 1
+                }
+            }
+            #expect(lost == 0, "\(lost) of 1000 concurrent login pairs lost one of the two instances")
         }
     }
 

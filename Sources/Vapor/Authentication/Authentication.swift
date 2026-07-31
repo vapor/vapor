@@ -81,14 +81,16 @@ struct AuthenticationStorage: Sendable {
     private var entries: [(key: ObjectIdentifier, value: any Authenticatable)] = []
 
     func value<A: Authenticatable>(_ type: A.Type) -> A? {
-        self.entries.first { $0.key == ObjectIdentifier(A.self) }?.value as? A
+        let key = ObjectIdentifier(A.self)
+        return self.entries.first { $0.key == key }?.value as? A
     }
 
     /// Whether an instance of the type is authenticated.
     ///
     /// Cheaper than `value(_:) != nil` because it doesn't need the dynamic cast.
     func contains<A: Authenticatable>(_ type: A.Type) -> Bool {
-        self.entries.contains { $0.key == ObjectIdentifier(A.self) }
+        let key = ObjectIdentifier(A.self)
+        return self.entries.contains { $0.key == key }
     }
 
     mutating func insert<A: Authenticatable>(_ instance: A) {
