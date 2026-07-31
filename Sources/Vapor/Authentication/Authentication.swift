@@ -80,10 +80,6 @@ final class AuthenticationCell: Sendable {
 struct AuthenticationStorage: Sendable {
     private var entries: [(key: ObjectIdentifier, value: any Authenticatable)] = []
 
-    var isEmpty: Bool {
-        self.entries.isEmpty
-    }
-
     func value<A: Authenticatable>(_ type: A.Type) -> A? {
         self.entries.first { $0.key == ObjectIdentifier(A.self) }?.value as? A
     }
