@@ -1,3 +1,4 @@
+import HTTPTypes
 import Synchronization
 
 extension Request {
