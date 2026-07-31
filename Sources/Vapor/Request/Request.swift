@@ -230,6 +230,13 @@ public final class Request: CustomStringConvertible, Sendable {
     }
 
     let requestBox: NIOLockedValueBox<RequestBox>
+
+    /// Backing storage for ``auth``.
+    ///
+    /// Stored directly on the request rather than in ``storage`` so that authentication costs a
+    /// single uncontended lock acquisition instead of a round trip through the `Storage` dictionary.
+    let authenticationCell = AuthenticationCell()
+
     private let _storage: NIOLockedValueBox<Storage>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
