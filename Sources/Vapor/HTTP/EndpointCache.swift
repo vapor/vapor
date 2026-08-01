@@ -66,10 +66,11 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
             try await self.download(using: client)
         }
         self.request = newRequest
-        let result = try await newRequest.value
-        // Once the request finishes, clear the current request and return the data.
-        self.request = nil
-        return result
+        // Clear the current request whether it succeeds or fails. Otherwise, a
+        // failed task remains cached and all subsequent callers observe the same
+        // error without retrying the download.
+        defer { self.request = nil }
+        return try await newRequest.value
     }
 
     private func download(using client: any Client) async throws -> T {
