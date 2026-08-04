@@ -48,16 +48,13 @@ let package = Package(
         .package(url: "https://github.com/vapor/routing-kit.git", from: "5.0.0-beta"),
 
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.82.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.101.3"),
 
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.34.0"),
-
-        // HTTP/2 support for SwiftNIO
-        .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.28.0"),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2"),
 
         // Useful code around SwiftNIO.
-        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.24.0"),
+        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.34.3"),
 
         // Swift logging API
         .package(url: "https://github.com/apple/swift-log.git", from: "1.14.0"),
@@ -119,11 +116,9 @@ let package = Package(
                 .product(name: "NIO", package: "swift-nio"),
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOExtras", package: "swift-nio-extras"),
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
-                .product(name: "NIOHTTP2", package: "swift-nio-http2"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLS"])),
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
