@@ -83,7 +83,7 @@ jobs:
     secrets: inherit
 
   foundation-linking:
-    uses: vapor/ci/.github/workflows/check-foundation-linking.yml@check-foundation
+    uses: vapor/ci/.github/workflows/check-foundation-linking.yml@main
     permissions:
       contents: read
     with:
