@@ -31,9 +31,9 @@ extension Request.Authentication {
 
     /// Look up an instance of the supplied type, treating it as an error if there is no such instance.
     ///
-    /// - Parameter type: The authenticatable type to look up.
-    /// - Returns: An instance of the requested type, if one exists.
-    /// - Throws: `Abort(.unauthorized)` if no instance of the requested type is available.
+    /// - Parameter type: The authenticatable type to look up
+    /// - Returns: An instance of the requested type, if one exists
+    /// - Throws: `Abort(.unauthorized)` if no instance of the requested type is available
     @discardableResult
     public func require<A: Authenticatable>(_ type: A.Type = A.self) throws(Abort) -> A {
         guard let a = self.get(A.self) else {
@@ -42,14 +42,18 @@ extension Request.Authentication {
         return a
     }
 
-    /// Returns the authenticated instance of the supplied type.
+    /// Look up an instance of the supplied type, if one has been authenticated.
     ///
-    /// > Note: `nil` if no type has been authenticated.
+    /// - Parameter type: The authenticatable type to look up
+    /// - Returns: An instance of the requested type, if one exists, `nil` otherwise
     public func get<A: Authenticatable>(_ type: A.Type = A.self) -> A? {
         self.storage.withLock { $0.value(A.self) }
     }
 
-    /// Returns `true` if the type has been authenticated.
+    /// Look up whether or not an instance of the supplied type has been authenticated.
+    ///
+    /// - Parameter type: The authenticatable type to look up
+    /// - Returns: `true` if an instance of the given type is available, `false` otherwise
     public func has<A: Authenticatable>(_ type: A.Type = A.self) -> Bool {
         self.storage.withLock { $0.contains(A.self) }
     }

@@ -1,7 +1,7 @@
 import NIOCore
 import HTTPTypes
 
-/// Protocol for types to conform to that can be authenticated
+/// A protocol to which a type may conform to enable use of that type for authentication.
 public protocol Authenticatable: Sendable { }
 
 /// Helper for creating authentication middleware.
