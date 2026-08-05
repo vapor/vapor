@@ -86,12 +86,11 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
             }
             try await responseWriter.produceAndConclude { writer in
                 var writer = writer
-                if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
+                try await vaporResponse.body.writeChunks { buffer in
                     try await writer.write { out in
                         out.append(copying: buffer.readableBytesView)
                     }
                 }
-                // TODO: Handle streaming response bodies
                 return ((), nil)
             }
         }
