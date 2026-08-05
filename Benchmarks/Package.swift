@@ -22,6 +22,7 @@ let package = Package(
             name: "VaporBenchmarks",
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
+                .product(name: "VaporMacros", package: "vapor"),
                 .product(name: "Benchmark", package: "benchmark"),
             ],
             path: "VaporBenchmarks",
