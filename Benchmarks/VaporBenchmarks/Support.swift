@@ -16,9 +16,9 @@ nonisolated(unsafe) var app: Application!
 /// response encoding.
 nonisolated(unsafe) var responder: (any Responder)!
 
-func setUpApplication(_ configure: @Sendable (Application) throws -> Void) async throws {
+func setUpApplication(_ configure: @Sendable (Application) async throws -> Void) async throws {
     let application = try await Application(.testing)
-    try configure(application)
+    try await configure(application)
     app = application
     responder = BenchmarkResponder(
         routes: application.routes,
