@@ -84,7 +84,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.6.3"),
 
         // Swift Types for HTTP Requests
-        .package(url: "https://github.com/apple/swift-http-types", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-http-types", branch: "main"), // Temporary until 1.7.0 is tagged
 
         // Common data structures
         .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),

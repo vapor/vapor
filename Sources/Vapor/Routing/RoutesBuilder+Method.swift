@@ -119,26 +119,42 @@ extension RoutesBuilder {
         self.on(.delete, path, routeDescription: routeDescription, use: closure)
     }
 
+    @discardableResult
+    public func query(
+        _ path: PathComponent...,
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.query, path, use: closure)
+    }
+
+    @discardableResult
+    public func query(
+        _ path: [PathComponent],
+        use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
+    ) -> Route {
+        self.on(.query, path, use: closure)
+    }
+
     /// Adds the closure to the given path for all HTTP methods
-    /// besides custom ones, so GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS.
+    /// besides custom ones, so GET, POST, PUT, PATCH, DELETE, QUERY, HEAD, OPTIONS.
     @discardableResult
     public func all(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> [Route] {
-        [HTTPRequest.Method.get, .post, .put, .patch, .delete, .head, .options].map {
+        [HTTPRequest.Method.get, .post, .put, .patch, .delete, .query, .head, .options].map {
             self.on($0, path, use: closure)
         }
     }
 
     /// Adds the closure to the given path for all HTTP methods
-    /// besides custom ones, so GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS.
+    /// besides custom ones, so GET, POST, PUT, PATCH, DELETE, QUERY, HEAD, OPTIONS.
     @discardableResult
     public func all(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> [Route] {
-        [HTTPRequest.Method.get, .post, .put, .patch, .delete, .head, .options].map {
+        [HTTPRequest.Method.get, .post, .put, .patch, .delete, .query, .head, .options].map {
             self.on($0, path, use: closure)
         }
     }

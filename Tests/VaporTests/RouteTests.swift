@@ -494,7 +494,7 @@ struct RouteTests {
                 req.method.rawValue
             }
 
-            let methods: [HTTPRequest.Method] = [.get, .post, .put, .patch, .delete, .head, .options]
+            let methods: [HTTPRequest.Method] = [.get, .post, .put, .patch, .delete, .query, .head, .options]
             for method in methods {
                 try await app.testing().test(method, "/universal") { res in
                     #expect(res.status == .ok)
