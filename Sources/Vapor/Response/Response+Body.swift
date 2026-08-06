@@ -5,6 +5,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import NIOCore
+import NIOPosix
 import NIOFoundationCompat
 import NIOConcurrencyHelpers
 import HTTPTypes
@@ -291,5 +292,92 @@ extension Response.Body {
             try await writer.write(buffer)
         }
         try await writer.finish(nil)
+    }
+
+    /// Writes the body to the given sink one `ByteBuffer` chunk at a time.
+    ///
+    /// Buffered bodies (`.buffer`, `.data`, `.string`, …) are written as a single chunk.
+    /// Async streaming bodies (`.asyncStream`) are pulled chunk-by-chunk. The synchronous
+    /// `.stream` case is wired up in a follow-up step.
+    func writeChunks(_ sink: (ByteBuffer) async throws -> Void) async throws {
+        switch self.storage {
+        case .asyncStream(let stream):
+            // Bridge the `@Sendable` producer callback to the non-`Sendable` consumer (`sink`)
+            // through an `AsyncThrowingStream`: the callback yields chunks into the continuation,
+            // while this task pulls them and forwards them to `sink`.
+            let (chunks, continuation) = AsyncThrowingStream.makeStream(of: ByteBuffer.self)
+            let writer = AsyncThrowingStreamBodyWriter(continuation: continuation)
+            let callback = stream.callback
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    do {
+                        try await callback(writer)
+                    } catch {
+                        continuation.finish(throwing: error)
+                    }
+                }
+                for try await chunk in chunks {
+                    try await sink(chunk)
+                }
+                try await group.waitForAll()
+            }
+        case .stream(let stream):
+            // EventLoop/promise-based streaming. Kick off the synchronous producer,
+            // which drives writes through the adapter into an `AsyncThrowingStream` that we
+            // then pull and forward to `sink`.
+            let (chunks, continuation) = AsyncThrowingStream.makeStream(of: ByteBuffer.self)
+            let eventLoop = MultiThreadedEventLoopGroup.singleton.any()
+            let writer = EventLoopStreamBodyWriter(eventLoop: eventLoop, continuation: continuation)
+            stream.callback(writer)
+            for try await chunk in chunks {
+                try await sink(chunk)
+            }
+        default:
+            if let buffer = self.buffer, buffer.readableBytes > 0 {
+                try await sink(buffer)
+            }
+        }
+    }
+}
+
+/// Bridges Vapor's `@Sendable` `AsyncBodyStreamWriter` callback to a pull-based
+/// `AsyncThrowingStream`, so a non-`Sendable` consumer can drive a streaming body.
+private struct AsyncThrowingStreamBodyWriter: AsyncBodyStreamWriter {
+    let continuation: AsyncThrowingStream<ByteBuffer, any Error>.Continuation
+
+    func write(_ result: BodyStreamResult) async throws {
+        switch result {
+        case .buffer(let buffer):
+            self.continuation.yield(buffer)
+        case .end:
+            self.continuation.finish()
+        case .error(let error):
+            self.continuation.finish(throwing: error)
+        }
+    }
+}
+
+/// Bridges Vapor's EventLoop/promise-based `BodyStreamWriter` to a pull-based
+/// `AsyncThrowingStream`. Each write is forwarded into the stream and its promise is
+/// fulfilled immediately.
+private final class EventLoopStreamBodyWriter: BodyStreamWriter, Sendable {
+    let eventLoop: any EventLoop
+    let continuation: AsyncThrowingStream<ByteBuffer, any Error>.Continuation
+
+    init(eventLoop: any EventLoop, continuation: AsyncThrowingStream<ByteBuffer, any Error>.Continuation) {
+        self.eventLoop = eventLoop
+        self.continuation = continuation
+    }
+
+    func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+        switch result {
+        case .buffer(let buffer):
+            self.continuation.yield(buffer)
+        case .end:
+            self.continuation.finish()
+        case .error(let error):
+            self.continuation.finish(throwing: error)
+        }
+        promise?.succeed(())
     }
 }
