@@ -24,12 +24,26 @@ final class NIOHTTPServerAdapter: Server, Sendable {
     }
 
     func run() async throws {
+        let transportSecurity: NIOHTTPServerConfiguration.TransportSecurity
+        if let tls = self.application.serverConfiguration.tlsConfiguration {
+            let credentials: NIOHTTPServerConfiguration.TransportSecurity.TLSCredentials
+            switch tls.source {
+            case .inMemory(let chain, let key):
+                credentials = .inMemory(certificateChain: chain, privateKey: key)
+            case .pemFile(let certPath, let keyPath):
+                credentials = .pemFile(certificateChainPath: certPath, privateKeyPath: keyPath)
+            }
+            transportSecurity = .tls(credentials: credentials)
+        } else {
+            transportSecurity = .plaintext
+        }
+
         let (hostname, port) = self.resolveBindAddress()
 
         let configuration = try NIOHTTPServerConfiguration(
             bindTarget: .hostAndPort(host: hostname, port: port),
             supportedHTTPVersions: [.http1_1],
-            transportSecurity: .plaintext
+            transportSecurity: transportSecurity
         )
 
         let nioServer = NIOHTTPServer(
