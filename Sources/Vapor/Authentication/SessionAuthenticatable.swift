@@ -1,7 +1,7 @@
 import NIOCore
 
 /// Helper for creating authentication middleware in conjunction with `SessionsMiddleware`.
-public protocol SessionAuthenticator: Authenticator {
+public protocol SessionAuthenticator: RequestAuthenticator {
     associatedtype User: SessionAuthenticatable
 
     /// Authenticate a model with the supplied ID.
@@ -9,6 +9,15 @@ public protocol SessionAuthenticator: Authenticator {
 }
 
 extension SessionAuthenticator {
+    /// Looks up the session ID on the request and, if there is one, authenticates the model it
+    /// identifies.
+    public func authenticate(request: Request) async throws {
+        if request.hasSession, let aID = request.session.authenticated(User.self) {
+            // try to find user with id from session
+            try await self.authenticate(sessionID: aID, for: request)
+        }
+    }
+
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         // if the user has already been authenticated
         // by a previous middleware, continue
@@ -16,10 +25,7 @@ extension SessionAuthenticator {
             return try await next.respond(to: request)
         }
 
-        if request.hasSession, let aID = request.session.authenticated(User.self) {
-            // try to find user with id from session
-            try await self.authenticate(sessionID: aID, for: request)
-        }
+        try await self.authenticate(request: request)
 
         // respond to the request
         let response = try await next.respond(to: request)

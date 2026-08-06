@@ -242,7 +242,7 @@ public func routes(_ app: Application) async throws {
     }
 
     struct Test: Authenticatable {
-        static func authenticator() -> any Authenticator {
+        static func authenticator() -> any RequestAuthenticator {
             TestAuthenticator()
         }
 

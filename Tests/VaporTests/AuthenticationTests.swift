@@ -17,7 +17,7 @@ struct AuthenticationTests {
     @Test("Test Bearer Authenticator")
     func bearerAuthenticator() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -61,7 +61,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator")
     func basicAuthenticator() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -368,7 +368,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Colon in Password")
     func basicAuthenticatorWithColonInPassword() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -408,7 +408,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Empty Password")
     func basicAuthenticatorWithEmptyPassword() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -449,7 +449,7 @@ struct AuthenticationTests {
     @Test("Test Basic Authenticator with Redirect")
     func basicAuthenticatorWithRedirect() async throws {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
 
@@ -494,11 +494,11 @@ struct AuthenticationTests {
     @Test("Test Session Authentication")
     func sessionAuthentication() async throws {
         struct Test: Authenticatable, SessionAuthenticatable {
-            static func bearerAuthenticator() -> any Authenticator {
+            static func bearerAuthenticator() -> any RequestAuthenticator {
                 TestBearerAuthenticator()
             }
 
-            static func sessionAuthenticator() -> any Authenticator {
+            static func sessionAuthenticator() -> any RequestAuthenticator {
                 TestSessionAuthenticator()
             }
 
@@ -603,7 +603,7 @@ struct AuthenticationTests {
     @Test("Test Middleware Config with Existential")
     func middlewareConfigExistential() async {
         struct Test: Authenticatable {
-            static func authenticator() -> any Authenticator {
+            static func authenticator() -> any RequestAuthenticator {
                 TestAuthenticator()
             }
             var name: String
@@ -617,5 +617,155 @@ struct AuthenticationTests {
 
         var config = Middlewares()
         config.use(Test.authenticator())
+    }
+
+    @Test("Test Concurrent Logins Are Not Lost")
+    func concurrentLoginsAreNotLost() async throws {
+        struct User: Authenticatable {
+            var name: String
+        }
+
+        struct Token: Authenticatable {
+            var value: String
+        }
+
+        // Each iteration uses a fresh request and logs each type in exactly once, so a login lost to
+        // a race is observable. Repeated because the window is narrow — against the previous
+        // storage-backed cache this loses roughly one in ten pairs.
+        try await withApp { app in
+            var lost = 0
+            for _ in 0..<1_000 {
+                let request = Request(application: app)
+
+                await withTaskGroup(of: Void.self) { group in
+                    group.addTask { request.auth.login(User(name: "Vapor")) }
+                    group.addTask { request.auth.login(Token(value: "secret")) }
+                }
+
+                if request.auth.get(User.self) == nil || request.auth.get(Token.self) == nil {
+                    lost += 1
+                }
+            }
+            #expect(lost == 0, "\(lost) of 1000 concurrent login pairs lost one of the two instances")
+        }
+    }
+
+    @Test("Test Multiple Types Can Be Authenticated Simultaneously")
+    func multipleTypesAuthenticatedSimultaneously() async throws {
+        struct User: Authenticatable {
+            var name: String
+        }
+
+        struct Token: Authenticatable {
+            var value: String
+        }
+
+        try await withApp { app in
+            let request = Request(application: app)
+            request.auth.login(User(name: "Vapor"))
+            request.auth.login(Token(value: "secret"))
+
+            #expect(request.auth.get(User.self)?.name == "Vapor")
+            #expect(request.auth.get(Token.self)?.value == "secret")
+
+            // Logging one type out must leave the other untouched.
+            request.auth.logout(Token.self)
+            #expect(request.auth.has(User.self))
+            #expect(!request.auth.has(Token.self))
+            #expect(request.auth.get(User.self)?.name == "Vapor")
+        }
+    }
+
+    @Test("Test Logging In Again Replaces The Authenticated Instance")
+    func loginReplacesExistingInstance() async throws {
+        struct User: Authenticatable {
+            var name: String
+        }
+
+        try await withApp { app in
+            let request = Request(application: app)
+            request.auth.login(User(name: "Vapor"))
+            request.auth.login(User(name: "Vapor 2"))
+
+            #expect(request.auth.get(User.self)?.name == "Vapor 2")
+
+            // A single logout must be enough to clear it, i.e. the first login was replaced
+            // rather than shadowed.
+            request.auth.logout(User.self)
+            #expect(!request.auth.has(User.self))
+        }
+    }
+
+    @Test("Test Logout Clears The Authenticated Instance")
+    func logoutClearsAuthenticatedInstance() async throws {
+        struct User: Authenticatable {
+            var name: String
+        }
+
+        try await withApp { app in
+            let request = Request(application: app)
+
+            // Nothing authenticated to begin with.
+            #expect(!request.auth.has(User.self))
+            #expect(request.auth.get(User.self) == nil)
+            #expect(throws: Abort.self) { try request.auth.require(User.self) }
+
+            request.auth.login(User(name: "Vapor"))
+            #expect(request.auth.has(User.self))
+
+            request.auth.logout(User.self)
+            #expect(!request.auth.has(User.self))
+            #expect(request.auth.get(User.self) == nil)
+            #expect(throws: Abort.self) { try request.auth.require(User.self) }
+        }
+    }
+
+    @Test("Test Login From Route Handler Is Persisted To The Session")
+    func loginFromRouteHandlerIsPersistedToSession() async throws {
+        struct Test: Authenticatable, SessionAuthenticatable {
+            var sessionID: String
+        }
+
+        struct TestSessionAuthenticator: SessionAuthenticator {
+            typealias User = Test
+
+            func authenticate(sessionID: String, for request: Request) async throws {
+                request.auth.login(Test(sessionID: sessionID))
+            }
+        }
+
+        try await withApp { app in
+            let routes = app.routes.grouped([
+                app.sessions.middleware,
+                TestSessionAuthenticator(),
+            ])
+
+            // Logs in from the handler, i.e. innermost — the session authenticator sits outside it
+            // and only sees the login as the response unwinds.
+            routes.get("login") { req -> String in
+                req.auth.login(Test(sessionID: "Vapor"))
+                return "logged in"
+            }
+
+            routes.get("me") { req -> String in
+                req.auth.get(Test.self)?.sessionID ?? "none"
+            }
+
+            var sessionCookie: HTTPCookies.Value?
+            try await app.testing().test(.get, "/login") { res async in
+                #expect(res.status == .ok)
+                if let cookie = res.headers.setCookie?["vapor-session"] {
+                    sessionCookie = cookie
+                } else {
+                    Issue.record("No set cookie header")
+                }
+            }
+
+            let cookie = try #require(sessionCookie)
+            try await app.testing().test(.get, "/me", headers: [.cookie: cookie.serialize(name: "vapor-session")]) { res async in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "Vapor")
+            }
+        }
     }
 }
