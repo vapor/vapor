@@ -230,6 +230,7 @@ struct FileTests {
             headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .partialContent)
+                #expect(res.headers[.acceptRanges] == "bytes")
 
                 #expect(res.headers[.contentLength] == "1")
                 let range = res.headers[.contentRange]!.split(separator: "/").first!.split(separator: " ").last!
