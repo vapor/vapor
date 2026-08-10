@@ -8,7 +8,7 @@ extension ServerConfiguration {
             case pemFile(certificateChainPath: String, privateKeyPath: String)
         }
 
-        var source: Source
+        let source: Source
 
         /// TLS credentials loaded from in-memory X.509 certificates and a private key.
         public static func inMemory(certificateChain: [Certificate], privateKey: Certificate.PrivateKey) -> Self {
