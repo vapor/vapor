@@ -9,7 +9,11 @@ import NIOCore
 import RoutingKit
 
 /// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.
-package struct DefaultResponder: Responder {
+///
+/// Prefer ``Application/makeResponder()``, which returns this or a provided responder as
+/// configured. Build one directly only when you need a responder over a specific set of routes and
+/// middleware, independent of an ``Application``.
+public struct DefaultResponder: Responder {
     /// It's safe to mark this `nonisolated(unsafe)` because there are only two mutating operations
     /// on a `TrieRouter` (calling `.register(_at:)` or changing its `options`), and we never do either
     /// of those after `init()`.
@@ -22,7 +26,7 @@ package struct DefaultResponder: Responder {
     }
 
     /// Creates a new ``DefaultResponder``.
-    package init(routes: Routes, middleware: [any Middleware] = []) {
+    public init(routes: Routes, middleware: [any Middleware] = []) {
         let config = TrieRouter<CachedRoute>.Configuration(
             isCaseInsensitive: routes.caseInsensitive
         )
@@ -50,7 +54,7 @@ package struct DefaultResponder: Responder {
     }
 
     // See `Responder.respond(to:)`
-    package func respond(to request: Request) async throws -> Response {
+    public func respond(to request: Request) async throws -> Response {
         if let cachedRoute = self.getRoute(for: request) {
             request.route = cachedRoute.route
             return try await cachedRoute.responder.respond(to: request)
@@ -100,5 +104,24 @@ extension RouteNotFound: AbortError {
 extension RouteNotFound: DebuggableError {
     public var logLevel: Logger.Level {
         .debug
+    }
+}
+
+extension Application {
+    /// The ``Responder`` that handles requests for this application.
+    ///
+    /// This is the entry point Vapor's HTTP server uses once a request has been parsed off the
+    /// wire, so calling it exercises the same path a live request takes — routing, the middleware
+    /// stack, handler dispatch and response encoding — without needing a socket.
+    ///
+    /// Useful for driving an application in-process: test harnesses, serverless adapters and
+    /// benchmarks.
+    public func makeResponder() -> any Responder {
+        switch self.responder {
+        case .default:
+            DefaultResponder(routes: self.routes, middleware: self.middleware.resolve())
+        case .provided(let responder):
+            responder
+        }
     }
 }
