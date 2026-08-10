@@ -101,13 +101,9 @@ extension Application {
                 collectedBody: request.body.readableBytes == 0 ? nil : request.body,
                 remoteAddress: nil
             )
-            let responder: any Responder
-            switch self.app.responder {
-            case .provided(let provided):
-                responder = provided
-            case .default:
-                responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve())
-            }
+            // `makeResponder()` from this branch; `var res` + `collect()` because collecting a
+            // streaming body is mutating and yields `Data` (main, post-#3538).
+            let responder = app.makeResponder()
             var res = try await responder.respond(to: request)
             let body = if let collectBody = try await res.body.collect() {
                 ByteBuffer(bytes: collectBody)
