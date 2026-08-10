@@ -1,8 +1,15 @@
 public struct ServerConfiguration: Sendable {
     public var address: BindAddress
 
-    public init(address: BindAddress = .hostname()) {
+    /// The TLS configuration for the server, or `nil` to serve over plaintext HTTP.
+    public var tlsConfiguration: TLSConfiguration?
+
+    public init(
+        address: BindAddress = .hostname(),
+        tlsConfiguration: TLSConfiguration? = nil
+    ) {
         self.address = address
+        self.tlsConfiguration = tlsConfiguration
     }
 
     /// Host name the server will bind to.
@@ -49,11 +56,14 @@ public struct ServerConfiguration: Sendable {
         }
     }
 
+    /// Whether the server is configured to serve over TLS.
+    public var isTLSEnabled: Bool {
+        tlsConfiguration != nil
+    }
+
     /// A human-readable description of the configured address. Used in log messages when starting server.
     var addressDescription: String {
-        #warning("Bring back")
-//            let scheme = tlsConfiguration == nil ? "http" : "https"
-        let scheme = "https"
+        let scheme = isTLSEnabled ? "https" : "http"
         switch address {
         case .hostname(let hostname, let port):
             return "\(scheme)://\(hostname):\(port)"
