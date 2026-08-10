@@ -2,7 +2,6 @@ import Vapor
 import NIOConcurrencyHelpers
 import X509
 import Logging
-// Required by `MemberImportVisibility`: the `pemEncoded:` initialisers are declared in SwiftASN1.
 import SwiftASN1
 
 public func configure(_ app: Application) async throws {
