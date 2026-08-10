@@ -17,14 +17,12 @@ let package = Package(
     ],
     traits: [
         .trait(name: "WebSockets"),
-        .trait(name: "TLS"),
         .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
         .trait(name: "Multipart"),
         .trait(name: "MacroRouting"),
         .default(enabledTraits: [
             "WebSockets",
-            "TLS",
             "bcrypt",
             "HTTPClient",
             "Multipart",
@@ -49,9 +47,6 @@ let package = Package(
 
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.101.3"),
-
-        // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2"),
 
         // Useful code around SwiftNIO.
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.34.3"),
@@ -119,7 +114,6 @@ let package = Package(
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLS"])),
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
@@ -166,7 +160,9 @@ let package = Package(
             name: "Development",
             dependencies: [
                 .target(name: "Vapor"),
+                .product(name: "X509", package: "swift-certificates"),
                 "VaporMacros",
+                .product(name: "SwiftASN1", package: "swift-asn1"),
             ],
             resources: [.copy("Resources")],
             swiftSettings: swiftSettings
