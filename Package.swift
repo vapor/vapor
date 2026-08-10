@@ -48,6 +48,11 @@ let package = Package(
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.101.3"),
 
+        // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO.
+        // Test-only: `HTTPClient.Configuration.tlsConfiguration` is a `NIOSSL.TLSConfiguration`, so the
+        // server TLS tests need it to pin trust roots. Vapor itself does not depend on NIOSSL.
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2"),
+
         // Useful code around SwiftNIO.
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.34.3"),
 
@@ -162,7 +167,6 @@ let package = Package(
                 .target(name: "Vapor"),
                 .product(name: "X509", package: "swift-certificates"),
                 "VaporMacros",
-                .product(name: "SwiftASN1", package: "swift-asn1"),
             ],
             resources: [.copy("Resources")],
             swiftSettings: swiftSettings
@@ -186,6 +190,7 @@ let package = Package(
             name: "VaporTests",
             dependencies: [
                 .product(name: "NIOTestUtils", package: "swift-nio"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
@@ -203,6 +208,8 @@ let package = Package(
                 .copy("Utilities/my-secret-env-content"),
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),
+                .copy("Utilities/localhost.crt"),
+                .copy("Utilities/localhost.key"),
                 .copy("Utilities/long-test-file.txt"),
             ],
             swiftSettings: swiftSettings
