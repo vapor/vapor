@@ -2,15 +2,14 @@ import Vapor
 import NIOConcurrencyHelpers
 import X509
 import Logging
-import SwiftASN1
 
 public func configure(_ app: Application) async throws {
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
     if app.environment == .tls {
-       app.serverConfiguration.port = 8443
-       let privateKey = try Certificate.PrivateKey(derBytes: TLSData.sampleServerPrivateKeyPEM)
-       let certChain = [try Certificate(pemEncoded: TLSData.sampleServerCertificatePEM)]
-       app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
+        app.serverConfiguration.port = 8443
+        let privateKey = try Certificate.PrivateKey(pemEncoded: TLSData.sampleServerPrivateKeyPEM)
+        let certChain = [try Certificate(pemEncoded: TLSData.sampleServerCertificatePEM)]
+        app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
     }
 
     // routes
