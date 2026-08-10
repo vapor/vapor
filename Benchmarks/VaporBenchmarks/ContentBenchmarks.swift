@@ -4,7 +4,6 @@ import Vapor
 import Foundation
 import HTTPTypes
 
-/// Decoding request bodies and query strings — the other half of `Content`.
 func contentBenchmarks() {
     Benchmark("content/decode JSON body small") { benchmark in
         let call = RequestCall(
@@ -112,8 +111,6 @@ func contentBenchmarks() {
     } teardown: {
         try await tearDownApplication()
     }
-
-    // MARK: Coders in isolation, no routing
 
     Benchmark("content/JSONEncoder single item") { benchmark in
         let encoder = JSONEncoder()
