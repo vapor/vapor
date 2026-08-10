@@ -44,7 +44,7 @@ enum TLSData {
         -----END CERTIFICATE-----
         """
     }
-    static var sampleServerPrivateKeyPEM: [UInt8] { .init("""
+    static var sampleServerPrivateKeyPEM: String { """
         -----BEGIN PRIVATE KEY-----
         MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC2rwuxbh8k8BG2\nFBLVAxz3RCwoJWRsqadfqhNV7oUNaj4MexTASlwGGC40shHytRmqKwV3yxlucTR3
         0qyWFZoZtlDhjyW2bxbV2Xrn0M/Ad9burH1xCTVmyeivB1GZD8jUSUTkuSAYQ0Yi\nsVEyTk/j4aU9WaKETXf/f7/9CaDOBxFxOKDuyiG+HzOCLlSH03Ym+NmjB+4yjFX1
@@ -60,6 +60,6 @@ enum TLSData {
         0uBJy43I5AixrE+zMGW828RlUBelHHQhT9s/PSkCgYA6kQyV5FLBLrmnV5B8bdiU\ndEF7H/YHrRMvzH3bwfgaw7CxjUcreQ2LX84fkUFtZXzR2VS5bdZKGFDmSX0QVGPq
         zmVLrxbf0kgQjEEaSHsdIutYblHJg3bSjKoyOC20TB34sps7hpBRq6joJwjWH/rz\n6XoqNBpphe8vTBZn/FSkog==
         -----END PRIVATE KEY-----
-        """.utf8)
+        """
     }
 }
