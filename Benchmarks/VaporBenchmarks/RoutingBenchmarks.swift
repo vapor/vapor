@@ -4,7 +4,6 @@ import Foundation
 import RoutingKit
 
 func routingBenchmarks() {
-    // Baseline for everything else here: the cheapest possible route.
     Benchmark("routing/static shallow") { benchmark in
         let call = RequestCall(.get, "/hello")
         for _ in benchmark.scaledIterations {
@@ -18,7 +17,6 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    // Four segments rather than one, to expose per-segment trie descent cost.
     Benchmark("routing/static deep") { benchmark in
         let call = RequestCall(.get, "/api/v1/users/list")
         for _ in benchmark.scaledIterations {
@@ -80,7 +78,6 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    // A miss still walks the trie and then builds a 404 through ErrorMiddleware.
     Benchmark("routing/not found") { benchmark in
         let call = RequestCall(.get, "/does/not/exist")
         for _ in benchmark.scaledIterations {
@@ -94,7 +91,6 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    // Routing should be insensitive to how many routes are registered; this is the check.
     Benchmark("routing/hit among 200 routes") { benchmark in
         let call = RequestCall(.get, "/api/resource150/detail")
         for _ in benchmark.scaledIterations {
@@ -110,7 +106,6 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    // Method dispatch: same path registered for several verbs.
     Benchmark("routing/method dispatch") { benchmark in
         let call = RequestCall(.patch, "/items/1")
         for _ in benchmark.scaledIterations {
@@ -127,8 +122,6 @@ func routingBenchmarks() {
     } teardown: {
         try await tearDownApplication()
     }
-
-    // MARK: Parameter decoding in isolation
 
     Benchmark("routing/parameters require String") { benchmark in
         var parameters = Parameters()

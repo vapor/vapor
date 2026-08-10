@@ -3,7 +3,6 @@ import NIOCore
 import Vapor
 import HTTPTypes
 
-/// The primitives every request pays for, before any routing or handler work.
 func requestBenchmarks() {
     Benchmark("request/create") { benchmark in
         for _ in benchmark.scaledIterations {

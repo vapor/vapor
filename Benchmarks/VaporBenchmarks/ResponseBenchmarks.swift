@@ -3,8 +3,6 @@ import NIOCore
 import Vapor
 import HTTPTypes
 
-/// What it costs to return each of the common handler return types, end to end. The differences
-/// between these are the cost of `ResponseEncodable` for each type.
 func responseBenchmarks() {
     Benchmark("response/String") { benchmark in
         let call = RequestCall(.get, "/string")
@@ -74,7 +72,6 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    // Scaling the payload shows how much of the cost is JSONEncoder rather than the framework.
     Benchmark("response/Content array of 10") { benchmark in
         let call = RequestCall(.get, "/items")
         for _ in benchmark.scaledIterations {
@@ -129,8 +126,6 @@ func responseBenchmarks() {
     } teardown: {
         try await tearDownApplication()
     }
-
-    // MARK: Encoding in isolation, no routing
 
     Benchmark("response/encode Content directly") { benchmark in
         let request = Request(application: app)

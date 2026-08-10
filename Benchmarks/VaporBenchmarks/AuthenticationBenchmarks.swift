@@ -3,8 +3,6 @@ import Vapor
 import HTTPTypes
 
 func authenticationBenchmarks() {
-    // MARK: Cache primitives
-
     Benchmark("auth/login") { benchmark in
         let request = Request(application: app)
         let user = BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes")
@@ -18,7 +16,6 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    // Dominated by the `any Authenticatable` dynamic cast rather than the lookup itself.
     Benchmark("auth/get") { benchmark in
         let request = Request(application: app)
         request.auth.login(BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes"))
@@ -54,8 +51,6 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    // The path GuardMiddleware, RedirectMiddleware and SessionAuthenticator all take. No dynamic
-    // cast, so this is where the storage container's cost is actually visible.
     Benchmark("auth/has") { benchmark in
         let request = Request(application: app)
         request.auth.login(BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes"))
@@ -68,7 +63,6 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    // A token authenticator logging in both the token and the user it belongs to.
     Benchmark("auth/two types") { benchmark in
         let user = BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes")
         let token = BenchToken(value: "secret")
@@ -99,8 +93,6 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    // MARK: End to end through the authenticator middleware
-
     Benchmark("auth/basic authenticator authorized") { benchmark in
         let call = RequestCall(.get, "/protected", headers: [.authorization: "Basic dmFwb3I6c2VjcmV0"])
         for _ in benchmark.scaledIterations {
@@ -115,8 +107,6 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    // The rejection path: guard throws, and the authenticator stamps a WWW-Authenticate challenge
-    // onto the error on the way out.
     Benchmark("auth/basic authenticator unauthorized") { benchmark in
         let call = RequestCall(.get, "/protected")
         for _ in benchmark.scaledIterations {

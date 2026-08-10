@@ -4,8 +4,6 @@ import HTTPTypes
 import Vapor
 import VaporMacros
 
-/// The macro-generated routing path, paired with a hand-written equivalent for each case so the
-/// generated wrapper's overhead is readable as a difference rather than an absolute.
 func macroRoutingBenchmarks() {
     Benchmark("macro-routing/plain route") { benchmark in
         let call = RequestCall(.get, "/macro/plain")
@@ -74,8 +72,6 @@ func macroRoutingBenchmarks() {
         try await tearDownApplication()
     }
 
-    // `@AuthMiddleware` emits `try req.auth.require(...)` into the generated wrapper, so this is
-    // the macro path plus auth resolution.
     Benchmark("macro-routing/authenticated route") { benchmark in
         let call = RequestCall(.get, "/macro/me", headers: [.authorization: "Bearer token"])
         for _ in benchmark.scaledIterations {
@@ -89,7 +85,6 @@ func macroRoutingBenchmarks() {
         try await tearDownApplication()
     }
 
-    // The optional form emits `req.auth.get(...)` instead, and must not throw when absent.
     Benchmark("macro-routing/optional auth anonymous") { benchmark in
         let call = RequestCall(.get, "/macro/feed")
         for _ in benchmark.scaledIterations {

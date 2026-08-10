@@ -2,10 +2,6 @@ import Benchmark
 import Vapor
 import HTTPTypes
 
-/// The cost of the middleware chain itself, and of the middleware most applications actually run.
-///
-/// The 0/1/5 passthrough series is designed to be read as a series: the difference between them is
-/// the per-layer overhead of `HTTPMiddlewareResponder`, isolated from anything the middleware does.
 func middlewareBenchmarks() {
     Benchmark("middleware/none") { benchmark in
         let call = RequestCall(.get, "/hello")
@@ -47,7 +43,6 @@ func middlewareBenchmarks() {
         try await tearDownApplication()
     }
 
-    // A thrown Abort caught and rendered by ErrorMiddleware.
     Benchmark("middleware/error handling") { benchmark in
         let call = RequestCall(.get, "/boom")
         for _ in benchmark.scaledIterations {
@@ -93,13 +88,6 @@ func middlewareBenchmarks() {
         try await tearDownApplication()
     }
 
-    // MARK: The chain in isolation
-    //
-    // The end-to-end benchmarks above are dominated by request creation and response encoding, so a
-    // few passthrough layers round away against them. These drive a pre-built chain directly with a
-    // reused request, so the per-layer cost of `HTTPMiddlewareResponder` is readable as the
-    // difference between them.
-
     for count in [0, 1, 5, 20] {
         Benchmark("middleware/chain \(count) layers") { benchmark in
             let request = Request(application: app)
@@ -115,8 +103,6 @@ func middlewareBenchmarks() {
         }
     }
 
-    // MARK: Sessions
-
     Benchmark("middleware/sessions no cookie") { benchmark in
         let call = RequestCall(.get, "/hello")
         for _ in benchmark.scaledIterations {
@@ -130,7 +116,6 @@ func middlewareBenchmarks() {
         try await tearDownApplication()
     }
 
-    // Touching the session forces it to be created and a set-cookie to be issued.
     Benchmark("middleware/sessions write") { benchmark in
         let call = RequestCall(.get, "/hello")
         for _ in benchmark.scaledIterations {
