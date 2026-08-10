@@ -167,6 +167,7 @@ let package = Package(
                 .target(name: "Vapor"),
                 .product(name: "X509", package: "swift-certificates"),
                 "VaporMacros",
+                .product(name: "SwiftASN1", package: "swift-asn1"),
             ],
             resources: [.copy("Resources")],
             swiftSettings: swiftSettings
