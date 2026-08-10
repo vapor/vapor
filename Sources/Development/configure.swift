@@ -1,22 +1,17 @@
 import Vapor
 import NIOConcurrencyHelpers
-#if TLS
-import NIOSSL
-#endif
+import X509
 import Logging
+import SwiftASN1
 
 public func configure(_ app: Application) async throws {
-    #warning("Fix")
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-    #if TLS
     if app.environment == .tls {
-//        app.http.server.configuration.port = 8443
-//        try app.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
-//            certificateChain: NIOSSLCertificate.fromPEMBytes(TLSData.sampleServerCertificatePEM).map { .certificate($0) },
-//            privateKey: .privateKey(.init(bytes: TLSData.sampleServerPrivateKeyPEM, format: .pem))
-//        )
+       app.serverConfiguration.port = 8443
+       let privateKey = try Certificate.PrivateKey(derBytes: TLSData.sampleServerPrivateKeyPEM)
+       let certChain = [try Certificate(pemEncoded: TLSData.sampleServerCertificatePEM)]
+       app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
     }
-    #endif
 
     // routes
     try await routes(app)
@@ -34,7 +29,7 @@ extension Environment {
 }
 
 enum TLSData {
-    static var sampleServerCertificatePEM: [UInt8] { .init("""
+    static var sampleServerCertificatePEM: String { """
         -----BEGIN CERTIFICATE-----
         MIIDeTCCAmGgAwIBAgIUMJzqelT95d/JU2Yp4/XHuqhJTs4wDQYJKoZIhvcNAQEL\nBQAwTDELMAkGA1UEBhMCVVMxKTAnBgNVBAoMIFZhcG9yIERldmVsb3BtZW50IEV4
         YW1wbGUgU2VydmVyMRIwEAYDVQQDDAlsb2NhbGhvc3QwHhcNMjMwMzEwMTIyNjQw\nWhcNMjcwMzEwMTIyNjQwWjBMMQswCQYDVQQGEwJVUzEpMCcGA1UECgwgVmFwb3Ig
@@ -47,7 +42,7 @@ enum TLSData {
         L9jOe/0MbZ34Gurjj9LMlVDg3p8FTKJJ9qipPMVBPy+/8ABm4qu7vx0Kacuskgc8\nu8RErJ0sqir7ggBGqgRp+Z+DC5UcqlMUZZQPKSLpCqfdrOIcDrTK9u/PU9cGdALh
         C+4n5ZIHWu66eCvARnqbCTwcOwGMxkKX/4FpI54=
         -----END CERTIFICATE-----
-        """.utf8)
+        """
     }
     static var sampleServerPrivateKeyPEM: [UInt8] { .init("""
         -----BEGIN PRIVATE KEY-----
