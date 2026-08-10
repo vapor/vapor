@@ -54,9 +54,9 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             let credentials: NIOHTTPServerConfiguration.TransportSecurity.TLSCredentials
             switch tls.source {
             case .inMemory(let chain, let key):
-                credentials = .inMemory(certificateChain: chain, privateKey: key)
+                credentials = .x509(.certificates(chain: chain, privateKey: key))
             case .pemFile(let certPath, let keyPath):
-                credentials = .pemFile(certificateChainPath: certPath, privateKeyPath: keyPath)
+                credentials = .x509(.pemFile(certificateChainPath: certPath, privateKeyPath: keyPath))
             }
             transportSecurity = .tls(credentials: credentials)
         } else {

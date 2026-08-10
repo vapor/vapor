@@ -14,41 +14,37 @@ import Foundation
 
 /// Bridges NIOHTTPServer's request handler protocol into Vapor's responder chain.
 struct VaporHTTPServerHandler: HTTPServerRequestHandler {
-    typealias RequestReader = HTTPRequestConcludingAsyncReader
-    typealias ResponseWriter = HTTPResponseConcludingAsyncWriter
+    typealias RequestContext = NIOHTTPServer.RequestContext
+    typealias Reader = NIOHTTPServer.Reader
+    typealias ResponseSender = NIOHTTPServer.ResponseSender
 
     let application: Application
     let responder: any Responder
 
     func handle(
         request: HTTPRequest,
-        requestContext: HTTPRequestContext,
-        requestBodyAndTrailers: consuming sending HTTPRequestConcludingAsyncReader,
-        responseSender: consuming sending HTTPResponseSender<HTTPResponseConcludingAsyncWriter>
+        requestContext: consuming NIOHTTPServer.RequestContext,
+        reader: consuming sending NIOHTTPServer.Reader,
+        responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
         // 1. Eagerly collect the full request body
-        let collectedBody = try await requestBodyAndTrailers.consumeAndConclude { reader in
-            var reader = reader
-            var collected = ByteBuffer()
-            while true {
-                let reachedEnd = try await reader.read { buffer in
-                    if buffer.isEmpty {
-                        return true
-                    }
-                    collected.writeBytes(buffer.span.bytes)
-                    return false
+        var reader = reader
+        var bodyBuffer = ByteBuffer()
+        var reachedEndOfBody = false
+        while !reachedEndOfBody {
+            // A non-nil outer optional marks the final chunk; the inner value is the trailers.
+            try await reader.read { chunk, trailers in
+                if !chunk.isEmpty {
+                    bodyBuffer.writeBytes(chunk.span.bytes)
                 }
-                if reachedEnd {
-                    break
+                if trailers != nil {
+                    reachedEndOfBody = true
                 }
             }
-            return collected
         }
-        let bodyBuffer: ByteBuffer = collectedBody.0
-        // collectedBody.1 contains trailers if any
 
         // 2. Build Vapor request
-        let peerCerts = try? await NIOHTTPServer.connectionContext.peerCertificateChain
+        let peerCerts = try? await requestContext.peerCertificateChain
 
         // HTTPRequest.path is the raw request target, already percent-encoded,
         // and includes the query string (e.g. "/foo%20bar?baz=1").
@@ -57,7 +53,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         let rawPath = request.path ?? "/"
 
         let requestID = request.headerFields[.xRequestId] ?? UUID().uuidString
-        var responseSender: HTTPResponseSender<HTTPResponseConcludingAsyncWriter>? = consume responseSender
+        var responseSender = Optional(consume responseSender)
         try await withLogger(mergingMetadata: ["request-id": "\(requestID)"]) { _ in
             let vaporRequest = Request(
                 application: self.application,
@@ -79,21 +75,17 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 headerFields: vaporResponse.headers
             )
 
-            // 4. Send response head and write body
-            guard let responseWriter = try await responseSender.take()?.send(httpResponse) else {
+            // 4. Send the response head and body
+            guard let sender = responseSender.take() else {
                 Logger.current.critical("Invalid server state - no response sender")
                 throw Abort(.internalServerError)
             }
-            try await responseWriter.produceAndConclude { writer in
-                var writer = writer
-                if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
-                    try await writer.write { out in
-                        out.append(copying: buffer.readableBytesView)
-                    }
-                }
-                // TODO: Handle streaming response bodies
-                return ((), nil)
+            // TODO: Handle streaming response bodies
+            var responseBody = UniqueArray<UInt8>()
+            if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
+                responseBody.append(copying: buffer.readableBytesView)
             }
+            try await sender.sendAndFinish(httpResponse, buffer: &responseBody)
         }
     }
 }
