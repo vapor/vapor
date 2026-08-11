@@ -4,12 +4,17 @@ public struct ServerConfiguration: Sendable {
     /// The TLS configuration for the server, or `nil` to serve over plaintext HTTP.
     public var tlsConfiguration: TLSConfiguration?
 
+    /// The HTTP versions the server accepts. Defaults to HTTP/1.1 only; adding HTTP/2 requires a ``tlsConfiguration``.
+    public var httpVersions: Set<HTTPVersion>
+
     public init(
         address: BindAddress = .hostname(),
-        tlsConfiguration: TLSConfiguration? = nil
+        tlsConfiguration: TLSConfiguration? = nil,
+        httpVersions: Set<HTTPVersion> = [.http1_1]
     ) {
         self.address = address
         self.tlsConfiguration = tlsConfiguration
+        self.httpVersions = httpVersions
     }
 
     /// Host name the server will bind to.

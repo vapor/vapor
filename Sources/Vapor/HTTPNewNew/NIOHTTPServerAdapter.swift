@@ -7,6 +7,10 @@ import Logging
 enum NIOHTTPServerAdapterError: Error {
     /// The underlying server reported that it was listening but exposed no addresses.
     case noListeningAddress
+
+    /// HTTP/2 was requested without TLS. HTTP/2 is only negotiated over TLS (via ALPN),
+    /// so a ``ServerConfiguration/tlsConfiguration`` is required to serve it.
+    case http2RequiresTLS
 }
 
 /// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
@@ -63,11 +67,37 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             transportSecurity = .plaintext
         }
 
+        var supportedHTTPVersions = Set<NIOHTTPServerConfiguration.HTTPVersion>()
+        for httpVersion in self.application.serverConfiguration.httpVersions {
+            switch httpVersion.version {
+            case .http1_1:
+                supportedHTTPVersions.insert(.http1_1)
+            case .http2(let config):
+                supportedHTTPVersions.insert(.http2(
+                    config: .init(
+                        maxFrameSize: config.maxFrameSize,
+                        targetWindowSize: config.targetWindowSize,
+                        maxConcurrentStreams: config.maxConcurrentStreams,
+                        gracefulShutdown: .init(
+                            maximumGracefulShutdownDuration: config.gracefulShutdown.maximumGracefulShutdownDuration
+                        )
+                    )
+                ))
+            }
+        }
+
+        // HTTP/2 is negotiated via ALPN, which requires TLS. Over plaintext, only HTTP/1.1 is allowed.
+        if !self.application.serverConfiguration.isTLSEnabled {
+            guard self.application.serverConfiguration.httpVersions == [.http1_1] else {
+                throw NIOHTTPServerAdapterError.http2RequiresTLS
+            }
+        }
+
         let (hostname, port) = self.resolveBindAddress()
 
         let configuration = try NIOHTTPServerConfiguration(
             bindTarget: .hostAndPort(host: hostname, port: port),
-            supportedHTTPVersions: [.http1_1],
+            supportedHTTPVersions: supportedHTTPVersions,
             transportSecurity: transportSecurity
         )
 
