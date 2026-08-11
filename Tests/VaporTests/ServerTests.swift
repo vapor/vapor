@@ -7,7 +7,7 @@ import Foundation
 import Vapor
 import AsyncHTTPClient
 import NIOCore
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import NIOPosix
 import NIOConcurrencyHelpers
 import HTTPTypes
