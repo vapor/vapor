@@ -1,6 +1,7 @@
-import NIOCore
-import Vapor
-import HTTPTypes
+#warning("This should be internal")
+public import NIOCore
+public import Vapor
+public import HTTPTypes
 
 public struct TestingHTTPResponse: Sendable {
     public var status: HTTPResponse.Status

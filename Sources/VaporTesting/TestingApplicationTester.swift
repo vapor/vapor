@@ -1,7 +1,8 @@
-import NIOCore
-import Testing
-import Vapor
-import HTTPTypes
+#warning("This should be internal")
+public import NIOCore
+public import Testing
+public import Vapor
+public import HTTPTypes
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
