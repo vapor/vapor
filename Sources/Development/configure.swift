@@ -1,22 +1,17 @@
 import Vapor
 import NIOConcurrencyHelpers
-#if TLS
-import NIOSSL
-#endif
+import X509
 import Logging
+import SwiftASN1
 
 public func configure(_ app: Application) async throws {
-    #warning("Fix")
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-    #if TLS
     if app.environment == .tls {
-//        app.http.server.configuration.port = 8443
-//        try app.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
-//            certificateChain: NIOSSLCertificate.fromPEMBytes(TLSData.sampleServerCertificatePEM).map { .certificate($0) },
-//            privateKey: .privateKey(.init(bytes: TLSData.sampleServerPrivateKeyPEM, format: .pem))
-//        )
+        app.serverConfiguration.port = 8443
+        let privateKey = try Certificate.PrivateKey(pemEncoded: TLSData.sampleServerPrivateKeyPEM)
+        let certChain = [try Certificate(pemEncoded: TLSData.sampleServerCertificatePEM)]
+        app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
     }
-    #endif
 
     // routes
     try await routes(app)
@@ -34,7 +29,7 @@ extension Environment {
 }
 
 enum TLSData {
-    static var sampleServerCertificatePEM: [UInt8] { .init("""
+    static var sampleServerCertificatePEM: String { """
         -----BEGIN CERTIFICATE-----
         MIIDeTCCAmGgAwIBAgIUMJzqelT95d/JU2Yp4/XHuqhJTs4wDQYJKoZIhvcNAQEL\nBQAwTDELMAkGA1UEBhMCVVMxKTAnBgNVBAoMIFZhcG9yIERldmVsb3BtZW50IEV4
         YW1wbGUgU2VydmVyMRIwEAYDVQQDDAlsb2NhbGhvc3QwHhcNMjMwMzEwMTIyNjQw\nWhcNMjcwMzEwMTIyNjQwWjBMMQswCQYDVQQGEwJVUzEpMCcGA1UECgwgVmFwb3Ig
@@ -47,9 +42,9 @@ enum TLSData {
         L9jOe/0MbZ34Gurjj9LMlVDg3p8FTKJJ9qipPMVBPy+/8ABm4qu7vx0Kacuskgc8\nu8RErJ0sqir7ggBGqgRp+Z+DC5UcqlMUZZQPKSLpCqfdrOIcDrTK9u/PU9cGdALh
         C+4n5ZIHWu66eCvARnqbCTwcOwGMxkKX/4FpI54=
         -----END CERTIFICATE-----
-        """.utf8)
+        """
     }
-    static var sampleServerPrivateKeyPEM: [UInt8] { .init("""
+    static var sampleServerPrivateKeyPEM: String { """
         -----BEGIN PRIVATE KEY-----
         MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC2rwuxbh8k8BG2\nFBLVAxz3RCwoJWRsqadfqhNV7oUNaj4MexTASlwGGC40shHytRmqKwV3yxlucTR3
         0qyWFZoZtlDhjyW2bxbV2Xrn0M/Ad9burH1xCTVmyeivB1GZD8jUSUTkuSAYQ0Yi\nsVEyTk/j4aU9WaKETXf/f7/9CaDOBxFxOKDuyiG+HzOCLlSH03Ym+NmjB+4yjFX1
@@ -65,6 +60,6 @@ enum TLSData {
         0uBJy43I5AixrE+zMGW828RlUBelHHQhT9s/PSkCgYA6kQyV5FLBLrmnV5B8bdiU\ndEF7H/YHrRMvzH3bwfgaw7CxjUcreQ2LX84fkUFtZXzR2VS5bdZKGFDmSX0QVGPq
         zmVLrxbf0kgQjEEaSHsdIutYblHJg3bSjKoyOC20TB34sps7hpBRq6joJwjWH/rz\n6XoqNBpphe8vTBZn/FSkog==
         -----END PRIVATE KEY-----
-        """.utf8)
+        """
     }
 }
