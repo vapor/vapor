@@ -34,7 +34,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.24.0"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", exact: "5.0.0-alpha.4"),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "5.0.0-beta"),
 
         // API package for reading configuration.
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: ["CommandLineArguments"]),
