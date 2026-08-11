@@ -37,7 +37,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/console-kit.git", exact: "5.0.0-alpha.4"),
 
         // API package for reading configuration.
-        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: [.defaults, "CommandLineArguments"]),
+        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: ["CommandLineArguments"]),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
@@ -123,7 +123,8 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "RoutingKit", package: "routing-kit"),
-                .product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
+                // Disable until websockets are working
+                //.product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
                 .product(name: "MultipartKit", package: "multipart-kit", condition: .when(traits: ["Multipart"])),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
