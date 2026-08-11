@@ -238,6 +238,7 @@ let package = Package(
 )
 
 var swiftSettings: [SwiftSetting] { [
+    .strictMemorySafety(),
     .enableUpcomingFeature("ExistentialAny"),
 //    .enableUpcomingFeature("InternalImportsByDefault"),
     .enableUpcomingFeature("MemberImportVisibility"),
