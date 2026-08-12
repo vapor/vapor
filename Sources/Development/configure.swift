@@ -4,7 +4,7 @@ import X509
 import Logging
 import SwiftASN1
 
-public func configure(_ app: Application) async throws {
+func configure(_ app: Application) async throws {
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
     if app.environment == .tls {
         app.serverConfiguration.port = 8443

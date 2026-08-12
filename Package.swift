@@ -149,7 +149,7 @@ let package = Package(
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "Algorithms", package: "swift-algorithms")
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
 
         .target(
@@ -159,7 +159,7 @@ let package = Package(
                 "Vapor",
                 .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
 
         // Development
@@ -172,7 +172,7 @@ let package = Package(
                 .product(name: "SwiftASN1", package: "swift-asn1"),
             ],
             resources: [.copy("Resources")],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
 
         // Testing
@@ -187,7 +187,7 @@ let package = Package(
                 .product(name: "Instrumentation", package: "swift-distributed-tracing"),
                 .product(name: "InMemoryLogging", package: "swift-log"),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
         .testTarget(
             name: "VaporTests",
@@ -215,7 +215,7 @@ let package = Package(
                 .copy("Utilities/localhost.key"),
                 .copy("Utilities/long-test-file.txt"),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
         .testTarget(
             name: "VaporMacroTests",
@@ -224,7 +224,7 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
                 .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
         .testTarget(
             name: "VaporMacroIntegrationTests",
@@ -234,14 +234,15 @@ let package = Package(
                 .target(name: "VaporTesting"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
     ]
 )
 
 var swiftSettings: [SwiftSetting] { [
+    .strictMemorySafety(),
     .enableUpcomingFeature("ExistentialAny"),
-    //.enableUpcomingFeature("InternalImportsByDefault"),
+//    .enableUpcomingFeature("InternalImportsByDefault"),
     .enableUpcomingFeature("MemberImportVisibility"),
     .enableUpcomingFeature("InferIsolatedConformances"),
     .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
