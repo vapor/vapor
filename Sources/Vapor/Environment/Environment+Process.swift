@@ -43,9 +43,9 @@ extension Environment {
 
             nonmutating set (value) {
                 if let raw = value?.description {
-                    setenv(member, raw, 1)
+                    unsafe setenv(member, raw, 1)
                 } else {
-                    unsetenv(member)
+                    unsafe unsetenv(member)
                 }
             }
         }
@@ -61,9 +61,9 @@ extension Environment {
 
             nonmutating set (value) {
                 if let raw = value {
-                    setenv(member, raw, 1)
+                    unsafe setenv(member, raw, 1)
                 } else {
-                    unsetenv(member)
+                    unsafe unsetenv(member)
                 }
             }
         }
