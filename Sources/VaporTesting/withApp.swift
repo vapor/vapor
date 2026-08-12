@@ -1,11 +1,11 @@
-import Configuration
-import Vapor
+public import Configuration
+public import Vapor
 import NIOCore
 import NIOConcurrencyHelpers
 import ServiceLifecycle
 @testable import CoreMetrics
 @testable import Instrumentation
-import Logging
+public import Logging
 
 /// Perform a test while handling lifecycle of the application.
 /// Feel free to create a custom function like this, tailored to your project.

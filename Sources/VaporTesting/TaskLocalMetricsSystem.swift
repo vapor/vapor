@@ -1,12 +1,12 @@
-import Metrics
+public import Metrics
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
 import NIOConcurrencyHelpers
-import MetricsTestKit
-import Testing
+public import MetricsTestKit
+public import Testing
 
 public final class TaskLocalMetricsSystemWrapper: MetricsFactory {
     public init() {}

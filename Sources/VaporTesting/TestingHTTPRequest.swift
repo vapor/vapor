@@ -1,7 +1,8 @@
-import NIOCore
+#warning("This should be internal")
+public import NIOCore
 import NIOConcurrencyHelpers
-import Vapor
-import HTTPTypes
+public import Vapor
+public import HTTPTypes
 
 public struct TestingHTTPRequest: Sendable {
     public var method: HTTPRequest.Method

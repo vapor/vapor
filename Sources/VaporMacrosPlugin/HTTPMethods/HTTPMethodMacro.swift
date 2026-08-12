@@ -1,5 +1,5 @@
-import SwiftSyntaxMacros
-import SwiftSyntax
+public import SwiftSyntaxMacros
+public import SwiftSyntax
 import HTTPTypes
 
 public struct HTTPMethodMacro: PeerMacro {

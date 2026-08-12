@@ -1,12 +1,6 @@
-import Tracing
-import InMemoryTracing
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import NIOConcurrencyHelpers
-import Testing
+public import Tracing
+public import InMemoryTracing
+public import Testing
 
 public final class TaskLocalTracingSystemWrapper: Tracer {
     public init() {}
