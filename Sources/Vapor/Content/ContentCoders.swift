@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-public import FoundationEssentials
+import FoundationEssentials
 #else
-public import Foundation
+import Foundation
 #endif
 #warning("Make this internal")
 public import NIOCore
