@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 import NIOConcurrencyHelpers
 
 extension Request {

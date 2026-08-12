@@ -1,5 +1,6 @@
-import ServiceLifecycle
-import NIOCore
+public import ServiceLifecycle
+#warning("Make this internal")
+public import NIOCore
 
 /// A server that can handle HTTP requests.
 ///

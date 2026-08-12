@@ -3,8 +3,8 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import HTTPTypes
-import Logging
+public import HTTPTypes
+public import Logging
 import NIOCore
 import RoutingKit
 

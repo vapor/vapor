@@ -1,11 +1,12 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 import _NIOFileSystem
-import HTTPTypes
+public import HTTPTypes
 
 /// Serves static files from a public directory.
 ///

@@ -3,7 +3,8 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 import NIOFoundationEssentialsCompat
 
 /// Represents a single file.

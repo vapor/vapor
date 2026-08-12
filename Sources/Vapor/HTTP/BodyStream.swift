@@ -1,4 +1,5 @@
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 
 public enum BodyStreamResult: Sendable {
     /// A normal data chunk.

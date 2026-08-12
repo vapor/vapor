@@ -64,7 +64,6 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 collectedBody: bodyBuffer.readableBytes > 0 ? bodyBuffer : nil,
                 remoteAddress: nil,
                 peerCertificateChain: peerCerts,
-                byteBufferAllocator: self.application.byteBufferAllocator,
                 requestID: requestID
             )
 

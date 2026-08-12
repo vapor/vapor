@@ -3,8 +3,9 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOCore
-import _NIOFileSystem
+#warning("Make this internal")
+public import NIOCore
+public import _NIOFileSystem
 import HTTPTypes
 import Logging
 import Crypto
@@ -15,7 +16,6 @@ import NIOHTTP1
 extension Request {
     public var fileio: FileIO {
         return .init(
-            allocator: self.application.byteBufferAllocator,
             request: self
         )
     }
@@ -44,9 +44,6 @@ extension Request {
 ///
 /// Streaming file responses respect `E-Tag` headers present in the request.
 public struct FileIO: Sendable {
-    /// ByteBufferAllocator to use for generating buffers.
-    private let allocator: ByteBufferAllocator
-
     /// HTTP request context.
     let request: Request
 
@@ -55,8 +52,7 @@ public struct FileIO: Sendable {
     /// Creates a new ``FileIO``.
     ///
     /// Use ``Request/fileio`` to get one.
-    internal init(allocator: ByteBufferAllocator, request: Request) {
-        self.allocator = allocator
+    internal init(request: Request) {
         self.request = request
     }
 

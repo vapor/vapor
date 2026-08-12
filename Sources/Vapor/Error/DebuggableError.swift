@@ -1,9 +1,9 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-import Logging
+public import Logging
 
 /// `Debuggable` provides an interface that allows a type
 /// to be more easily debugged in the case of an error.

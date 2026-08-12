@@ -14,15 +14,11 @@ import WASILibc
 #error("Unsupported runtime")
 #endif
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-#if canImport(Darwin) && compiler(>=6.1)
-import Crypto
-#else
-@preconcurrency import Crypto
-#endif
+public import Crypto
 
 /// Supported OTP output sizes.
 public enum OTPDigits: Int, Sendable {

@@ -1,7 +1,8 @@
 #if Multipart
-import MultipartKit
-import HTTPTypes
-import NIOCore
+public import MultipartKit
+public import HTTPTypes
+#warning("Make this internal")
+public import NIOCore
 
 extension FormDataDecoder: ContentDecoder {
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D

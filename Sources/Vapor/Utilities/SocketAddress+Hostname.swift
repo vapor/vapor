@@ -1,4 +1,5 @@
-import enum NIO.SocketAddress
+#warning("Make this internal")
+public import enum NIO.SocketAddress
 
 extension SocketAddress {
     /// Returns the hostname for this `SocketAddress` if one exists.
