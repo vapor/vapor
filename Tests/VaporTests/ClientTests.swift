@@ -1,7 +1,7 @@
 import Vapor
 import NIOConcurrencyHelpers
 import NIOCore
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import Logging
 import NIOEmbedded
 import Testing
