@@ -4,7 +4,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import NIOCore
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 
 /// Represents a single file.
 public struct File: Codable, Equatable, Sendable {

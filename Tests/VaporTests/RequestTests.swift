@@ -15,7 +15,7 @@ import HTTPTypes
 import NIOHTTP1
 import NIOHTTPTypesHTTP1
 import RoutingKit
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import Logging
 
 @Suite("Request Tests")

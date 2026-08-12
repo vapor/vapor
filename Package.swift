@@ -34,10 +34,10 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.24.0"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", exact: "5.0.0-alpha.4"),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "5.0.0-beta"),
 
         // API package for reading configuration.
-        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: [.defaults, "CommandLineArguments"]),
+        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: ["CommandLineArguments"]),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
@@ -72,7 +72,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
 
         // WebSocket client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
+        // Disable until websockets are working
+//        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
 
         // MultipartKit, Multipart encoding and decoding
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "5.0.0-beta.1"),
@@ -116,14 +117,15 @@ let package = Package(
                 .product(name: "NIO", package: "swift-nio"),
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
                 .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "RoutingKit", package: "routing-kit"),
-                .product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
+                // Disable until websockets are working
+                //.product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
                 .product(name: "MultipartKit", package: "multipart-kit", condition: .when(traits: ["Multipart"])),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),

@@ -1,6 +1,7 @@
 #if WebSockets
 import RoutingKit
-import WebSocketKit
+// Disable until we need it
+//import WebSocketKit
 import NIOCore
 import HTTPTypes
 import NIOPosix

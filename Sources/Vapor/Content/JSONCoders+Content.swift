@@ -5,7 +5,7 @@ import Foundation
 #endif
 import NIOCore
 import HTTPTypes
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 
 extension JSONEncoder: ContentEncoder {
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {

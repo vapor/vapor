@@ -2,7 +2,8 @@
 import NIOPosix
 import NIOCore
 import HTTPTypes
-import WebSocketKit
+// Disable until we need it
+//import WebSocketKit
 import RoutingKit
 #if canImport(FoundationEssentials)
 import FoundationEssentials
