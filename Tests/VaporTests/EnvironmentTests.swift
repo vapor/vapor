@@ -47,9 +47,9 @@ struct EnvironmentSecretTests {
         let path = "/" + folder + "/Utilities/my-secret-env-content"
 
         let key = "MY_ENVIRONMENT_SECRET"
-        setenv(key, path, 1)
+        unsafe setenv(key, path, 1)
         defer {
-            unsetenv(key)
+            unsafe unsetenv(key)
         }
 
         let secretContent = try await Environment.secret(key: key)
