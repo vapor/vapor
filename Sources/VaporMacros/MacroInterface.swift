@@ -1,6 +1,6 @@
 #if MacroRouting
-import HTTPTypes
-import Vapor
+public import HTTPTypes
+public import Vapor
 
 @attached(extension, conformances: RouteCollection, names: named(boot(routes:)))
 public macro Controller() = #externalMacro(
