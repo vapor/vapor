@@ -1,10 +1,11 @@
 @preconcurrency import Dispatch
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOConcurrencyHelpers
 import HTTPTypes
