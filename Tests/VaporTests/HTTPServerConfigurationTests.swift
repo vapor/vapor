@@ -90,5 +90,22 @@ struct HTTPServerConfigurationTests {
                 }
             }
         }
+
+        @Test("An empty httpVersions set throws")
+        func testEmptyHTTPVersionsFails() async throws {
+            try await withApp { app in
+                app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+                app.serverConfiguration.httpVersions = []
+
+                do {
+                    try await app.server.run()
+                    Issue.record("Expected run() to throw for an empty httpVersions set.")
+                } catch NIOHTTPServerAdapterError.noHTTPVersionsSpecified {
+                    // Expected.
+                } catch {
+                    Issue.record("Expected noHTTPVersionsSpecified but got \(error).")
+                }
+            }
+        }
     }
 }

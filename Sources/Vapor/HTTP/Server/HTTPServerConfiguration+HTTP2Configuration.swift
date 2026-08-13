@@ -1,8 +1,10 @@
 extension ServerConfiguration {
     /// HTTP/2 specific configuration.
     ///
-    /// HTTP/2 is only negotiated over TLS (via ALPN). Adding an ``ServerConfiguration/HTTPVersion/http2(config:)``
-    /// version without also setting ``ServerConfiguration/tlsConfiguration`` will cause the server to fail to start.
+    /// HTTP/2 is only negotiated over TLS (via ALPN). If an ``ServerConfiguration/HTTPVersion/http2(config:)``
+    /// version is added to ``ServerConfiguration/httpVersions`` without also setting a
+    /// ``ServerConfiguration/tlsConfiguration``, the server throws an error when it starts (rather than
+    /// serving over plaintext), so callers can catch it and decide how to handle it.
     public struct HTTP2: Sendable, Hashable {
         /// The maximum frame size to be used in an HTTP/2 connection.
         public var maxFrameSize: Int
@@ -54,12 +56,16 @@ extension ServerConfiguration {
             self.gracefulShutdown = gracefulShutdown
         }
 
+        /// `2^14` (16 KiB) — the smallest, and default, `SETTINGS_MAX_FRAME_SIZE` defined by HTTP/2 (RFC 9113 §6.5.2).
         @inlinable
         static var defaultMaxFrameSize: Int { 1 << 14 }
 
+        /// `2^16 - 1` (65 535) — the default `SETTINGS_INITIAL_WINDOW_SIZE` (flow-control window) defined by
+        /// HTTP/2 (RFC 9113 §6.9.2).
         @inlinable
         static var defaultTargetWindowSize: Int { (1 << 16) - 1 }
 
+        /// `100` — the minimum concurrent streams RFC 9113 (§8.2.2) recommends endpoints allow; used as the default.
         @inlinable
         static var defaultMaxConcurrentStreams: Int { 100 }
 
@@ -110,8 +116,14 @@ extension ServerConfiguration {
             Self.init(version: .http2(config: config))
         }
 
-        /// Two values are equal if they represent the same protocol version, regardless of any differences in the
-        /// HTTP/2 configuration.
+        /// Equality is by protocol version only: two values are equal when they represent the same HTTP
+        /// version, ignoring any associated configuration.
+        ///
+        /// This is intentional, and the reason `==`/`hash` are written by hand instead of synthesised. It
+        /// makes a `Set<HTTPVersion>` behave as *the set of supported protocols*: it holds at most one entry
+        /// per version, so the same protocol can't be added twice with conflicting configuration. Synthesised
+        /// conformances would fold the associated config into identity and allow such duplicates. This mirrors
+        /// `NIOHTTPServerConfiguration.HTTPVersion`, which does the same.
         public static func == (lhs: Self, rhs: Self) -> Bool {
             switch (lhs.version, rhs.version) {
             case (.http1_1, .http1_1), (.http2, .http2):
@@ -122,7 +134,7 @@ extension ServerConfiguration {
             }
         }
 
-        /// Hashes by protocol version only, consistent with the `Equatable` conformance.
+        /// Hashes by protocol version only, consistent with the `Equatable` conformance above.
         public func hash(into hasher: inout Hasher) {
             switch self.version {
             case .http1_1:

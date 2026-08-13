@@ -8,9 +8,13 @@ enum NIOHTTPServerAdapterError: Error {
     /// The underlying server reported that it was listening but exposed no addresses.
     case noListeningAddress
 
-    /// HTTP/2 was requested without TLS. HTTP/2 is only negotiated over TLS (via ALPN),
-    /// so a ``ServerConfiguration/tlsConfiguration`` is required to serve it.
+    /// HTTP/2 was requested without TLS. HTTP/2 is negotiated over TLS via ALPN, so a
+    /// ``ServerConfiguration/tlsConfiguration`` is required to serve it. Cleartext HTTP/2 (h2c) is not
+    /// supported by the underlying server yet; if that changes this check will be gated behind an opt-in.
     case http2RequiresTLS
+
+    /// No HTTP versions were configured. ``ServerConfiguration/httpVersions`` must contain at least one version.
+    case noHTTPVersionsSpecified
 }
 
 /// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
@@ -84,6 +88,10 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                     )
                 ))
             }
+        }
+
+        if self.application.serverConfiguration.httpVersions.isEmpty {
+            throw NIOHTTPServerAdapterError.noHTTPVersionsSpecified
         }
 
         // HTTP/2 is negotiated via ALPN, which requires TLS. Over plaintext, only HTTP/1.1 is allowed.

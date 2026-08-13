@@ -233,6 +233,60 @@ struct ServerTLSTests {
             }
         }
     }
+
+    @Test("HTTP/1.1 client is served when the server also offers HTTP/2", .timeLimit(.minutes(1)))
+    func testHTTP1ClientAgainstHTTP2EnabledServer() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [credentials.certificate],
+                privateKey: credentials.privateKey
+            )
+            app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
+            app.get("hello") { _ in "world" }
+
+            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+                // Force the client to HTTP/1.1: enabling HTTP/2 on the server must not break H1 clients.
+                try await withTLSClient(trustingOnly: credentials.nioCertificate, httpVersion: .http1Only) { client in
+                    let response = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                        timeout: .seconds(10)
+                    )
+                    #expect(response.status == .ok)
+                    #expect(response.version == .http1_1)
+                    #expect(try await response.body.collect(upTo: 1024).string == "world")
+                }
+            }
+        }
+    }
+
+    @Test("Server serves over HTTP/2 when negotiated", .timeLimit(.minutes(1)))
+    func testServesOverHTTP2() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [credentials.certificate],
+                privateKey: credentials.privateKey
+            )
+            app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
+            app.get("hello") { _ in "world" }
+
+            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+                // The client defaults to `.automatic`, advertising both h2 and http/1.1 over ALPN.
+                // The server offers h2, so the negotiated response should come back over HTTP/2.
+                try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
+                    let response = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                        timeout: .seconds(10)
+                    )
+                    #expect(response.status == .ok)
+                    #expect(response.version == .http2)
+                    #expect(try await response.body.collect(upTo: 1024).string == "world")
+                }
+            }
+        }
+    }
+
 }
 
 // MARK: - Helpers
@@ -268,6 +322,7 @@ private struct TestCredentials {
 private func withTLSClient<T>(
     trustingOnly trustedCertificate: NIOSSLCertificate? = nil,
     verification: CertificateVerification = .fullVerification,
+    httpVersion: HTTPClient.Configuration.HTTPVersion = .automatic,
     _ body: (HTTPClient) async throws -> T
 ) async throws -> T {
     var tlsConfiguration = TLSConfiguration.makeClientConfiguration()
@@ -278,6 +333,7 @@ private func withTLSClient<T>(
 
     var clientConfiguration = HTTPClient.Configuration()
     clientConfiguration.tlsConfiguration = tlsConfiguration
+    clientConfiguration.httpVersion = httpVersion
 
     let client = HTTPClient(
         eventLoopGroup: MultiThreadedEventLoopGroup.singleton,
