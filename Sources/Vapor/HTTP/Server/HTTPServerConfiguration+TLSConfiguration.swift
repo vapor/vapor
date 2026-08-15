@@ -5,7 +5,7 @@ extension ServerConfiguration {
     public struct TLSConfiguration: Sendable {
         enum Source {
             case inMemory(certificateChain: [Certificate], privateKey: Certificate.PrivateKey)
-            case pemFile(certificateChainPath: String, privateKeyPath: String)
+            case pemFile(certificateChainPath: String, privateKeyPath: String, refreshInterval: Duration?)
         }
 
         let source: Source
@@ -16,8 +16,8 @@ extension ServerConfiguration {
         }
 
         /// TLS credentials loaded from PEM files on disk.
-        public static func pemFile(certificateChainPath: String, privateKeyPath: String) -> Self {
-            Self.init(source: .pemFile(certificateChainPath: certificateChainPath, privateKeyPath: privateKeyPath))
+        public static func pemFile(certificateChainPath: String, privateKeyPath: String, refreshInterval: Duration? = nil) -> Self {
+            Self.init(source: .pemFile(certificateChainPath: certificateChainPath, privateKeyPath: privateKeyPath, refreshInterval: refreshInterval))
         }
     }
 }

@@ -118,6 +118,7 @@ let package = Package(
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
+                .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
@@ -201,6 +202,7 @@ let package = Package(
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
+                .product(name: "ServiceLifecycleTestKit", package: "swift-service-lifecycle"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),

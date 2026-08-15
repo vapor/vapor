@@ -1,4 +1,5 @@
 import NIOHTTPServer
+import NIOCertificateReloading
 import NIOCore
 import NIOConcurrencyHelpers
 import Logging
@@ -7,6 +8,7 @@ import Logging
 enum NIOHTTPServerAdapterError: Error {
     /// The underlying server reported that it was listening but exposed no addresses.
     case noListeningAddress
+    case nonPositiveRefreshInterval
 }
 
 /// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
@@ -50,13 +52,30 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
     private func runServer() async throws {
         let transportSecurity: NIOHTTPServerConfiguration.TransportSecurity
+        var certificateReloader: TimedCertificateReloader?
         if let tls = self.application.serverConfiguration.tlsConfiguration {
             let credentials: NIOHTTPServerConfiguration.TransportSecurity.TLSCredentials
             switch tls.source {
             case .inMemory(let chain, let key):
                 credentials = .x509(.certificates(chain: chain, privateKey: key))
-            case .pemFile(let certPath, let keyPath):
-                credentials = .x509(.pemFile(certificateChainPath: certPath, privateKeyPath: keyPath))
+            case .pemFile(let certPath, let keyPath, let refreshInterval):
+                if let refreshInterval {
+                    // A zero or negative interval would make the reloader spin re-reading the files.
+                    guard refreshInterval > .zero else {
+                        throw NIOHTTPServerAdapterError.nonPositiveRefreshInterval
+                    }
+                    // Credentials are eagerly loaded here, so bad paths fail startup immediately.
+                    let reloader = try TimedCertificateReloader.makeReloaderValidatingSources(
+                        refreshInterval: refreshInterval,
+                        certificateSource: .init(location: .file(path: certPath), format: .pem),
+                        privateKeySource: .init(location: .file(path: keyPath), format: .pem),
+                        logger: Logger.current
+                    )
+                    certificateReloader = reloader
+                    credentials = .x509(.reloading(reloader))
+                } else {
+                    credentials = .x509(.pemFile(certificateChainPath: certPath, privateKeyPath: keyPath))
+                }
             }
             transportSecurity = .tls(credentials: credentials)
         } else {
@@ -94,9 +113,22 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
         // Run serve() in a child task so we can await listeningAddress
         // before serve() completes.
-        try await withThrowingTaskGroup(of: Void.self) { group in
+        enum ChildTask {
+            case serve
+            case reloader
+        }
+        try await withThrowingTaskGroup(of: ChildTask.self) { group in
             group.addTask {
                 try await nioServer.serve(handler: handler)
+                return .serve
+            }
+
+            // Reloader must run for server's lifetime.
+            if let certificateReloader {
+                group.addTask {
+                    try await certificateReloader.run()
+                    return .reloader
+                }
             }
 
             // Wait for the server to bind, then publish the address
@@ -115,8 +147,9 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
             Logger.current.notice("Server started on \(address.host):\(address.port)")
 
-            // Wait for serve() to complete (blocks until shutdown/cancellation)
-            try await group.next()
+            // Wait for serve() to finish. The reloader may finish earlier.
+            while let child = try await group.next(), child != .serve {}
+            group.cancelAll()
         }
     }
 
