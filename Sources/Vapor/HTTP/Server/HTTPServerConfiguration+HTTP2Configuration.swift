@@ -91,15 +91,6 @@ extension ServerConfiguration {
         enum Version: Sendable, Hashable {
             case http1_1
             case http2(config: HTTP2)
-
-            var http2Config: HTTP2? {
-                switch self {
-                case .http1_1:
-                    return nil
-                case .http2(let config):
-                    return config
-                }
-            }
         }
 
         var version: Version

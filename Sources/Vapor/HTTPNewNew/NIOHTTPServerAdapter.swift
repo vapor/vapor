@@ -90,15 +90,15 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             }
         }
 
-        if self.application.serverConfiguration.httpVersions.isEmpty {
+        guard !self.application.serverConfiguration.httpVersions.isEmpty else {
             throw NIOHTTPServerAdapterError.noHTTPVersionsSpecified
         }
 
         // HTTP/2 is negotiated via ALPN, which requires TLS. Over plaintext, only HTTP/1.1 is allowed.
-        if !self.application.serverConfiguration.isTLSEnabled {
-            guard self.application.serverConfiguration.httpVersions == [.http1_1] else {
-                throw NIOHTTPServerAdapterError.http2RequiresTLS
-            }
+        guard self.application.serverConfiguration.isTLSEnabled
+            || self.application.serverConfiguration.httpVersions == [.http1_1]
+        else {
+            throw NIOHTTPServerAdapterError.http2RequiresTLS
         }
 
         let (hostname, port) = self.resolveBindAddress()
