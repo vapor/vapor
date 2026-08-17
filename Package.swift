@@ -251,4 +251,5 @@ var swiftSettings: [SwiftSetting] { [
     .enableExperimentalFeature("LifetimeDependence"),
     .enableExperimentalFeature("Lifetimes"),
     .enableUpcomingFeature("LifetimeDependence"),
+    .enableUpcomingFeature("ImmutableWeakCaptures"),
 ] }
