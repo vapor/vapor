@@ -538,7 +538,9 @@ struct ValidationTests {
         expect(nil as String?, passes: .nil)
         expect("vapor" as String?, fails: .nil, "is not null")
         expect("vapor" as String?, passes: !.nil)
+        expect(nil as String?, fails: !.nil, "is null")
         expect(nil as Int?, passes: .nil)
+        expect(nil as Int?, fails: !.nil, "is null")
         expect(0 as Int?, fails: .nil, "is not null")
         expect([] as [String]?, fails: .nil, "is not null")
         // only the outer optional counts, so `.some(nil)` is not null
