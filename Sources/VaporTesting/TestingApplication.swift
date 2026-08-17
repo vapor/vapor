@@ -1,5 +1,5 @@
 import AsyncHTTPClient
-import Vapor
+public import Vapor
 import NIOPosix
 import NIOCore
 import NIOHTTPTypesHTTP1

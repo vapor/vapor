@@ -1,7 +1,8 @@
-import Vapor
-import HTTPTypes
-import NIOCore
-import Testing
+public import Vapor
+public import HTTPTypes
+#warning("This should be internal")
+public import NIOCore
+public import Testing
 
 extension Application {
     public func test(method: Method = .inMemory, testBlock: (any VaporTestingRunner) async throws -> Void) async throws {

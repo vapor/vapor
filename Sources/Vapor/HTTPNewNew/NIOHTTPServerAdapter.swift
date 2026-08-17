@@ -7,6 +7,14 @@ import Logging
 enum NIOHTTPServerAdapterError: Error {
     /// The underlying server reported that it was listening but exposed no addresses.
     case noListeningAddress
+
+    /// HTTP/2 was requested without TLS. HTTP/2 is negotiated over TLS via ALPN, so a
+    /// ``ServerConfiguration/tlsConfiguration`` is required to serve it. Cleartext HTTP/2 (h2c) is not
+    /// supported by the underlying server yet; if that changes this check will be gated behind an opt-in.
+    case http2RequiresTLS
+
+    /// No HTTP versions were configured. ``ServerConfiguration/httpVersions`` must contain at least one version.
+    case noHTTPVersionsSpecified
 }
 
 /// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
@@ -15,21 +23,90 @@ enum NIOHTTPServerAdapterError: Error {
 /// parent task (via `ServiceGroup` or task cancellation) through to
 /// `NIOHTTPServer.serve()`'s built-in `withGracefulShutdownHandler`.
 final class NIOHTTPServerAdapter: Server, Sendable {
+    /// Tracks anyone waiting on ``listeningAddress`` along with a startup failure, if one occurred.
+    ///
+    /// `startupError` is retained so that a waiter arriving *after* `run()` has already failed
+    /// throws instead of waiting on an address that will never be published.
+    private struct AddressWaiters {
+        var continuation: CheckedContinuation<SocketAddress, any Error>?
+        var startupError: (any Error)?
+    }
+
     let application: Application
-    private let addressContinuation: NIOLockedValueBox<CheckedContinuation<SocketAddress, any Error>?>
+    private let addressWaiters: NIOLockedValueBox<AddressWaiters>
 
     init(application: Application) {
         self.application = application
-        self.addressContinuation = .init(nil)
+        self.addressWaiters = .init(.init())
     }
 
     func run() async throws {
+        do {
+            try await self.runServer()
+        } catch {
+            // If we failed before publishing the listening address — bad TLS credentials, the port
+            // already being in use, a bind failure — anyone awaiting `listeningAddress` would wait
+            // forever, because only the success path below ever resumes them. Hand them the error.
+            self.addressWaiters.withLockedValue { waiters in
+                waiters.startupError = error
+                waiters.continuation?.resume(throwing: error)
+                waiters.continuation = nil
+            }
+            throw error
+        }
+    }
+
+    private func runServer() async throws {
+        let transportSecurity: NIOHTTPServerConfiguration.TransportSecurity
+        if let tls = self.application.serverConfiguration.tlsConfiguration {
+            let credentials: NIOHTTPServerConfiguration.TransportSecurity.TLSCredentials
+            switch tls.source {
+            case .inMemory(let chain, let key):
+                credentials = .x509(.certificates(chain: chain, privateKey: key))
+            case .pemFile(let certPath, let keyPath):
+                credentials = .x509(.pemFile(certificateChainPath: certPath, privateKeyPath: keyPath))
+            }
+            transportSecurity = .tls(credentials: credentials)
+        } else {
+            transportSecurity = .plaintext
+        }
+
+        var supportedHTTPVersions = Set<NIOHTTPServerConfiguration.HTTPVersion>()
+        for httpVersion in self.application.serverConfiguration.httpVersions {
+            switch httpVersion.version {
+            case .http1_1:
+                supportedHTTPVersions.insert(.http1_1)
+            case .http2(let config):
+                supportedHTTPVersions.insert(.http2(
+                    config: .init(
+                        maxFrameSize: config.maxFrameSize,
+                        targetWindowSize: config.targetWindowSize,
+                        maxConcurrentStreams: config.maxConcurrentStreams,
+                        gracefulShutdown: .init(
+                            maximumGracefulShutdownDuration: config.gracefulShutdown.maximumGracefulShutdownDuration
+                        )
+                    )
+                ))
+            }
+        }
+
+        guard !self.application.serverConfiguration.httpVersions.isEmpty else {
+            throw NIOHTTPServerAdapterError.noHTTPVersionsSpecified
+        }
+
+        // HTTP/2 is negotiated via ALPN, which requires TLS. Over plaintext, only HTTP/1.1 is allowed.
+        guard self.application.serverConfiguration.isTLSEnabled
+            || self.application.serverConfiguration.httpVersions == [.http1_1]
+        else {
+            throw NIOHTTPServerAdapterError.http2RequiresTLS
+        }
+
         let (hostname, port) = self.resolveBindAddress()
 
         let configuration = try NIOHTTPServerConfiguration(
             bindTarget: .hostAndPort(host: hostname, port: port),
-            supportedHTTPVersions: [.http1_1],
-            transportSecurity: .plaintext
+            supportedHTTPVersions: supportedHTTPVersions,
+            transportSecurity: transportSecurity
         )
 
         let nioServer = NIOHTTPServer(
@@ -69,9 +146,9 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
             // Atomically set the address and resume any waiting continuation
             self.application.sharedNewAddress.withLockedValue { $0 = nioAddress }
-            self.addressContinuation.withLockedValue { continuation in
-                continuation?.resume(returning: nioAddress)
-                continuation = nil
+            self.addressWaiters.withLockedValue { waiters in
+                waiters.continuation?.resume(returning: nioAddress)
+                waiters.continuation = nil
             }
 
             Logger.current.notice("Server started on \(address.host):\(address.port)")
@@ -91,17 +168,31 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             if !needsWait {
                 return self.application.sharedNewAddress.withLockedValue { $0! }
             }
+            enum Resolution {
+                case address(SocketAddress)
+                case failure(any Error)
+                case waiting
+            }
             return try await withCheckedThrowingContinuation { continuation in
-                // Double-check under lock: address may have been set between our check and here
-                let alreadySet: SocketAddress? = self.addressContinuation.withLockedValue { cont in
+                // Double-check under lock: the address may have been published, or startup may have
+                // failed outright, between our check above and here.
+                let resolution: Resolution = self.addressWaiters.withLockedValue { waiters in
                     if let address = self.application.sharedNewAddress.withLockedValue({ $0 }) {
-                        return address
+                        return .address(address)
                     }
-                    cont = continuation
-                    return nil
+                    if let error = waiters.startupError {
+                        return .failure(error)
+                    }
+                    waiters.continuation = continuation
+                    return .waiting
                 }
-                if let address = alreadySet {
+                switch resolution {
+                case .address(let address):
                     continuation.resume(returning: address)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                case .waiting:
+                    break
                 }
             }
         }

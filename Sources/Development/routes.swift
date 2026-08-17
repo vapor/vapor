@@ -13,7 +13,7 @@ struct Creds: Content {
     var password: String
 }
 
-public func routes(_ app: Application) async throws {
+func routes(_ app: Application) async throws {
     app.on(.get, "ping") { req -> StaticString in
         return "123" as StaticString
     }

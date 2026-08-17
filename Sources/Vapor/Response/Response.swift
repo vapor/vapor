@@ -1,6 +1,6 @@
 import NIOCore
 import NIOHTTP1
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import NIOConcurrencyHelpers
 import HTTPTypes
 

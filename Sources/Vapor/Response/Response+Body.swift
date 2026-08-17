@@ -5,8 +5,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import NIOCore
-import NIOPosix
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import NIOConcurrencyHelpers
 import HTTPTypes
 

@@ -17,14 +17,12 @@ let package = Package(
     ],
     traits: [
         .trait(name: "WebSockets"),
-        .trait(name: "TLS"),
         .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
         .trait(name: "Multipart"),
         .trait(name: "MacroRouting"),
         .default(enabledTraits: [
             "WebSockets",
-            "TLS",
             "bcrypt",
             "HTTPClient",
             "Multipart",
@@ -36,10 +34,10 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.24.0"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", exact: "5.0.0-alpha.4"),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "5.0.0-beta"),
 
         // API package for reading configuration.
-        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: [.defaults, "CommandLineArguments"]),
+        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: ["CommandLineArguments"]),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
@@ -50,7 +48,9 @@ let package = Package(
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.101.3"),
 
-        // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
+        // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO.
+        // Test-only: `HTTPClient.Configuration.tlsConfiguration` is a `NIOSSL.TLSConfiguration`, so the
+        // server TLS tests need it to pin trust roots. Vapor itself does not depend on NIOSSL.
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2"),
 
         // Useful code around SwiftNIO.
@@ -72,7 +72,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
 
         // WebSocket client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
+        // Disable until websockets are working
+//        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
 
         // MultipartKit, Multipart encoding and decoding
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "5.0.0-beta.1"),
@@ -99,7 +100,7 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "b1c4f775dfbdc74800c0f29fda79c8984a5e9073"),
+        .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "5c6314bb63cd369b400b1b4a8bee40975411e965"),
     ],
     targets: [
         // Vapor
@@ -116,15 +117,15 @@ let package = Package(
                 .product(name: "NIO", package: "swift-nio"),
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
                 .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLS"])),
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "RoutingKit", package: "routing-kit"),
-                .product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
+                // Disable until websockets are working
+                //.product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
                 .product(name: "MultipartKit", package: "multipart-kit", condition: .when(traits: ["Multipart"])),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
@@ -148,7 +149,7 @@ let package = Package(
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "Algorithms", package: "swift-algorithms")
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
 
         .target(
@@ -158,7 +159,7 @@ let package = Package(
                 "Vapor",
                 .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
 
         // Development
@@ -166,10 +167,12 @@ let package = Package(
             name: "Development",
             dependencies: [
                 .target(name: "Vapor"),
+                .product(name: "X509", package: "swift-certificates"),
                 "VaporMacros",
+                .product(name: "SwiftASN1", package: "swift-asn1"),
             ],
             resources: [.copy("Resources")],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
 
         // Testing
@@ -184,12 +187,13 @@ let package = Package(
                 .product(name: "Instrumentation", package: "swift-distributed-tracing"),
                 .product(name: "InMemoryLogging", package: "swift-log"),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
         .testTarget(
             name: "VaporTests",
             dependencies: [
                 .product(name: "NIOTestUtils", package: "swift-nio"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
@@ -207,9 +211,11 @@ let package = Package(
                 .copy("Utilities/my-secret-env-content"),
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),
+                .copy("Utilities/localhost.crt"),
+                .copy("Utilities/localhost.key"),
                 .copy("Utilities/long-test-file.txt"),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
         .testTarget(
             name: "VaporMacroTests",
@@ -218,7 +224,7 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
                 .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax", condition: .when(traits: ["MacroRouting"])),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
         .testTarget(
             name: "VaporMacroIntegrationTests",
@@ -228,14 +234,15 @@ let package = Package(
                 .target(name: "VaporTesting"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.enableUpcomingFeature("InternalImportsByDefault")]
         ),
     ]
 )
 
 var swiftSettings: [SwiftSetting] { [
+    .strictMemorySafety(),
     .enableUpcomingFeature("ExistentialAny"),
-    //.enableUpcomingFeature("InternalImportsByDefault"),
+//    .enableUpcomingFeature("InternalImportsByDefault"),
     .enableUpcomingFeature("MemberImportVisibility"),
     .enableUpcomingFeature("InferIsolatedConformances"),
     .enableUpcomingFeature("NonisolatedNonsendingByDefault"),

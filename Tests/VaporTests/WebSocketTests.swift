@@ -2,7 +2,8 @@
 import VaporTesting
 import Vapor
 import Testing
-import WebSocketKit
+// Disable until we need it
+//import WebSocketKit
 import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers

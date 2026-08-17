@@ -3,8 +3,8 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import Testing
-import Vapor
+public import Testing
+public import Vapor
 
 public func expectContent<D>(
     _ type: D.Type,
