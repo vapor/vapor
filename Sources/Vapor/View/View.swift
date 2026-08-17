@@ -1,4 +1,5 @@
-import NIOCore
+#warning("Make internal")
+public import NIOCore
 import HTTPTypes
 
 public struct View: ResponseEncodable, Sendable {

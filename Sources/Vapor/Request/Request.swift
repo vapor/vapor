@@ -1,17 +1,18 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 import NIOHTTP1
 import Logging
-import RoutingKit
+public import RoutingKit
 import NIOConcurrencyHelpers
-import HTTPTypes
+public import HTTPTypes
 import NIOPosix
 import ServiceContextModule
-import X509
+public import X509
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {

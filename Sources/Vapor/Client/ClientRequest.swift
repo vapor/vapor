@@ -1,10 +1,11 @@
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-import HTTPTypes
+public import HTTPTypes
 
 public struct ClientRequest: Sendable {
     public var method: HTTPRequest.Method
@@ -13,7 +14,6 @@ public struct ClientRequest: Sendable {
     public var body: ByteBuffer?
     public var timeout: TimeAmount
     public var maxResponseBodySize: Int
-    private let byteBufferAllocator: ByteBufferAllocator
     private let contentConfiguration: ContentConfiguration
 
     public init(
@@ -23,7 +23,6 @@ public struct ClientRequest: Sendable {
         body: ByteBuffer? = nil,
         timeout: TimeAmount? = nil,
         maxResponseBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         contentConfiguration: ContentConfiguration = .default()
     ) {
         self.method = method
@@ -31,7 +30,6 @@ public struct ClientRequest: Sendable {
         self.headers = headers
         self.body = body
         self.timeout = timeout ?? .seconds(30)
-        self.byteBufferAllocator = byteBufferAllocator
         self.contentConfiguration = contentConfiguration
         self.maxResponseBodySize = maxResponseBodySize
     }
@@ -61,7 +59,7 @@ extension ClientRequest {
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer?
         var headers: HTTPFields
-        let byteBufferAllocator: ByteBufferAllocator
+        let byteBufferAllocator = ByteBufferAllocator()
         let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
@@ -100,7 +98,7 @@ extension ClientRequest {
     }
 
     public var content: any ContentContainer {
-        get { _ContentContainer(body: self.body, headers: self.headers, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration) }
+        get { _ContentContainer(body: self.body, headers: self.headers, contentConfiguration: self.contentConfiguration) }
         set {
             let container = (newValue as! _ContentContainer)
             self.body = container.body

@@ -1,5 +1,5 @@
 import HTTPTypes
-import Tracing
+public import Tracing
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1

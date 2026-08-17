@@ -1,4 +1,4 @@
-import X509
+public import X509
 
 extension ServerConfiguration {
     /// Transport-level TLS configuration for the server.

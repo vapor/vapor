@@ -1,6 +1,5 @@
-import RoutingKit
-import NIOConcurrencyHelpers
-import HTTPTypes
+public import RoutingKit
+public import HTTPTypes
 
 public struct Route: CustomStringConvertible, Sendable {
     public var method: HTTPRequest.Method

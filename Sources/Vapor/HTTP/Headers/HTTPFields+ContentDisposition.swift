@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 
 extension HTTPFields {
     /// Convenience for accessing the Content-Disposition header.

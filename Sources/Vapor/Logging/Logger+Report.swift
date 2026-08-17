@@ -3,7 +3,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import Logging
+public import Logging
 
 extension Logger {
     /// Reports an `Error` to this `Logger`.
