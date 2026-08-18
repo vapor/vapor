@@ -240,7 +240,7 @@ public struct FileIO: Sendable {
         let byteCount: Int
         if let contentRange = contentRange {
             response.status = .partialContent
-            response.headers[.accept] = contentRange.unit.serialize()
+            response.headers[.acceptRanges] = contentRange.unit.serialize()
             if let firstRange = contentRange.ranges.first {
                 do {
                     let range = try firstRange.asResponseContentRange(limit: Int(fileInfo.size))
