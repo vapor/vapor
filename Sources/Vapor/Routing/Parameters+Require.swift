@@ -1,4 +1,4 @@
-import RoutingKit
+public import RoutingKit
 import HTTPTypes
 import Logging
 

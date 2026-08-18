@@ -3,7 +3,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import HTTPTypes
+public import HTTPTypes
 import Algorithms
 
 extension HTTPFields {

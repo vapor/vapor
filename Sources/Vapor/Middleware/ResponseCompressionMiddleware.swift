@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 
 /// Overrides the response compression settings for a route.
 ///

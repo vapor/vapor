@@ -1,5 +1,5 @@
-import RoutingKit
-import HTTPTypes
+public import RoutingKit
+public import HTTPTypes
 import NIOPosix
 import NIOCore
 

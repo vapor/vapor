@@ -100,14 +100,12 @@ enum FreestandingRouteMacro {
         // Determine if the closure is async
         let isAsync = trailingClosure.signature?.effectSpecifiers?.asyncSpecifier != nil
 
-        // Generate a unique name for the handler binding
-        let uniqueName = context.makeUniqueName("_handler")
-
         let registration: DeclSyntax
 
+        // The registered `Route` is unused, so bind it to `_` to avoid an unused value warning
         if parameterTypes.isEmpty {
             registration = """
-            let \(uniqueName) = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
+            let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
                 let _closure = \(trailingClosure)
                 let result: some ResponseEncodable = try \(raw: isAsync ? "await " : "")_closure(req)
                 return try await result.encodeResponse(for: req)
@@ -115,7 +113,7 @@ enum FreestandingRouteMacro {
             """
         } else {
             registration = """
-            let \(uniqueName) = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
+            let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
                 \(raw: parameterExtraction)let _closure = \(trailingClosure)
                 let result: some ResponseEncodable = try \(raw: isAsync ? "await " : "")_closure(req\(raw: callParameters))
                 return try await result.encodeResponse(for: req)

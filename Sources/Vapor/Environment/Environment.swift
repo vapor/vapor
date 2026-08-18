@@ -1,4 +1,4 @@
-import Configuration
+public import Configuration
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else

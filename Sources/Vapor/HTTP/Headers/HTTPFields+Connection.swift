@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 
 extension HTTPFields {
     public struct Connection: ExpressibleByStringLiteral, Equatable, Sendable {

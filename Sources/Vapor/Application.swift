@@ -1,9 +1,10 @@
-import Configuration
+public import Configuration
 import Logging
-import NIOConcurrencyHelpers
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
+public import NIOConcurrencyHelpers
 import NIOPosix
-import ServiceLifecycle
+public import ServiceLifecycle
 import UnixSignals
 #if HTTPClient
 import AsyncHTTPClient
@@ -72,7 +73,6 @@ public final class Application: Sendable, Service {
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
     package let responder: ServiceOptionType<any Responder>
-    public let byteBufferAllocator: ByteBufferAllocator = .init()
     public let viewRenderer: any ViewRenderer
     public let directoryConfiguration: DirectoryConfiguration
     public let cache: any Cache
@@ -150,9 +150,9 @@ public final class Application: Sendable, Service {
         switch services.client {
         case .default:
             #if HTTPClient
-            self.client = VaporHTTPClient(http: HTTPClient.shared, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+            self.client = VaporHTTPClient(http: HTTPClient.shared, contentConfiguration: self.contentConfiguration)
             #else
-            self.client = BlackholeClient(byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+            self.client = BlackholeClient(contentConfiguration: self.contentConfiguration)
             #endif
         case .provided(let client):
             self.client = client

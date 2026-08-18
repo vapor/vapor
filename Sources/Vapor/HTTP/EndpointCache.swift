@@ -6,7 +6,7 @@ import Foundation
 import NIOConcurrencyHelpers
 import NIOCore
 import Logging
-import HTTPTypes
+public import HTTPTypes
 
 public enum EndpointCacheError: Swift.Error {
     case unexpectedResponseStatus(HTTPResponse.Status, uri: URI)

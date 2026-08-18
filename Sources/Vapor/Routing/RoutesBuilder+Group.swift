@@ -1,4 +1,4 @@
-import RoutingKit
+public import RoutingKit
 
 extension RoutesBuilder {
     // MARK: Path

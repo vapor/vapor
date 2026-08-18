@@ -1,10 +1,11 @@
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-import HTTPTypes
+public import HTTPTypes
 
 /// Decodes instances of `Decodable` types from `application/x-www-form-urlencoded` data.
 ///

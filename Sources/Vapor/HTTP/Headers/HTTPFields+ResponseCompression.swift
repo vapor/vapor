@@ -3,7 +3,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import HTTPTypes
+public import HTTPTypes
 
 extension HTTPFields {
     /// A marker header internal to vapor that explicitely allows or disallows response compression.

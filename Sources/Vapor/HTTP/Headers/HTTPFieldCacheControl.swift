@@ -3,7 +3,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import HTTPTypes
+public import HTTPTypes
 
 // Comments on these properties are copied from the mozilla doc URL shown below.
 extension HTTPFields {

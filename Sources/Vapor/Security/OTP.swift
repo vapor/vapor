@@ -14,15 +14,11 @@ import WASILibc
 #error("Unsupported runtime")
 #endif
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-#if canImport(Darwin) && compiler(>=6.1)
-import Crypto
-#else
-@preconcurrency import Crypto
-#endif
+public import Crypto
 
 /// Supported OTP output sizes.
 public enum OTPDigits: Int, Sendable {
@@ -71,7 +67,7 @@ internal extension OTP {
         counter: UInt64
     ) -> String {
         let hmac = Array(HMAC<H>.authenticationCode(
-            for: /*counter.bigEndian.data */Data([
+            for: Data([
                 UInt8(truncatingIfNeeded: counter >> 56), UInt8(truncatingIfNeeded: counter >> 48),
                 UInt8(truncatingIfNeeded: counter >> 40), UInt8(truncatingIfNeeded: counter >> 32),
                 UInt8(truncatingIfNeeded: counter >> 24), UInt8(truncatingIfNeeded: counter >> 16),
@@ -281,13 +277,5 @@ public struct TOTP: OTP, Sendable {
         time: Date
     ) -> String {
         Self.init(key: key, digest: digest, digits: digits, interval: interval).generate(time: time)
-    }
-}
-
-fileprivate extension FixedWidthInteger {
-    /// The raw data representing the integer.
-    var data: Data {
-        var copy = self
-        return .init(bytes: &copy, count: MemoryLayout<Self>.size)
     }
 }

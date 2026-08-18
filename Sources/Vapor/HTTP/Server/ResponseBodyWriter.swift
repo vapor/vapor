@@ -1,5 +1,6 @@
-import NIOCore
-import HTTPTypes
+#warning("Make this internal")
+public import NIOCore
+public import HTTPTypes
 
 /// Protocol for writing HTTP response bodies.
 ///

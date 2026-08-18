@@ -1,5 +1,6 @@
-import NIOCore
-import HTTPTypes
+#warning("Make this internal")
+public import NIOCore
+public import HTTPTypes
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -13,11 +14,11 @@ public struct ClientResponse: Sendable {
     private let byteBufferAllocator: ByteBufferAllocator
     private let contentConfiguration: ContentConfiguration
 
-    public init(status: HTTPResponse.Status = .ok, headers: HTTPFields = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), contentConfiguration: ContentConfiguration = .default()) {
+    public init(status: HTTPResponse.Status = .ok, headers: HTTPFields = [:], body: ByteBuffer? = nil, contentConfiguration: ContentConfiguration = .default()) {
         self.status = status
         self.headers = headers
         self.body = body
-        self.byteBufferAllocator = byteBufferAllocator
+        self.byteBufferAllocator = ByteBufferAllocator()
         self.contentConfiguration = contentConfiguration
     }
 }

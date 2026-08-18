@@ -1,9 +1,9 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-import HTTPTypes
+public import HTTPTypes
 
 extension HTTPFields {
     /// Determines when the cached data should be expired.

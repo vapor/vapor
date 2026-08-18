@@ -1,10 +1,11 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-import HTTPTypes
-import NIOCore
+public import HTTPTypes
+#warning("Make this internal")
+public import NIOCore
 
 /// Encodes `Encodable` instances to `application/x-www-form-urlencoded` data.
 ///
