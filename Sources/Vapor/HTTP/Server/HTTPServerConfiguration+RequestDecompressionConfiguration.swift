@@ -1,4 +1,5 @@
-import NIOHTTPCompression
+#warning("Should this be internal?")
+public import NIOHTTPCompression
 
 extension ServerConfiguration {
     /// Supported HTTP decompression options.

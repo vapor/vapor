@@ -68,7 +68,7 @@ public struct DotEnvFile: Sendable {
     ///                  will be overwritten. Defaults to `false`.
     public func load(overwrite: Bool = false) {
         for line in self.lines {
-            setenv(line.key, line.value, overwrite ? 1 : 0)
+            unsafe setenv(line.key, line.value, overwrite ? 1 : 0)
         }
     }
 

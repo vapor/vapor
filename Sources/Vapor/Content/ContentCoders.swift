@@ -3,8 +3,9 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOCore
-import HTTPTypes
+#warning("Make this internal")
+public import NIOCore
+public import HTTPTypes
 
 /// Conform a type to this protocol to make it usable for encoding data via Vapor's ``ContentConfiguration`` system.
 public protocol ContentEncoder: Sendable {

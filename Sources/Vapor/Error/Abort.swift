@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 
 /// Default implementation of `AbortError`. You can use this as a convenient method for throwing
 /// `AbortError`s without having to conform your own error-type to `AbortError`.

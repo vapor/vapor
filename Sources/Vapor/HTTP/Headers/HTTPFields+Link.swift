@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 
 extension HTTPFields {
     /// Convenience for accessing the Link header as an array of provided links.

@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 
 /// A bearer token.
 public struct BearerAuthorization: Sendable {

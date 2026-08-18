@@ -1,7 +1,8 @@
 #if Multipart
-import MultipartKit
-import HTTPTypes
-import NIOCore
+public import MultipartKit
+public import HTTPTypes
+#warning("Make this internal")
+public import NIOCore
 
 extension File: MultipartPartConvertible {
     public typealias Body = ByteBufferView

@@ -1,5 +1,5 @@
 import NIOCore
-import HTTPTypes
+public import HTTPTypes
 
 extension Authenticatable {
     /// This middleware ensures that an `Authenticatable` type `A` has been authenticated

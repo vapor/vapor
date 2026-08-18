@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 
 extension HTTPFields {
     /// Represents the HTTP `WWW-Authenticate` header.

@@ -1,4 +1,4 @@
-import Logging
+public import Logging
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else

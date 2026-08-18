@@ -1,9 +1,8 @@
 import NIOCore
 import Logging
-import HTTPTypes
+public import HTTPTypes
 
 public protocol Client: Sendable {
-    var byteBufferAllocator: ByteBufferAllocator { get }
     var contentConfiguration: ContentConfiguration { get }
     func send(_ request: ClientRequest) async throws -> ClientResponse
 }
@@ -47,7 +46,7 @@ extension Client {
         to url: URI,
         beforeSend: (inout ClientRequest) throws -> () = { _ in }
     ) async throws -> ClientResponse {
-        var request = ClientRequest(method: method, url: url, headers: headers, body: nil, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+        var request = ClientRequest(method: method, url: url, headers: headers, body: nil, contentConfiguration: self.contentConfiguration)
         try beforeSend(&request)
         return try await self.send(request)
     }

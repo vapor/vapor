@@ -4,9 +4,9 @@
 /// in the extensions and the extreme awkwardness of vendor prefixing for this use case.
 
 #if canImport(FoundationEssentials)
-import struct FoundationEssentials.Data
+public import struct FoundationEssentials.Data
 #else
-import struct Foundation.Data
+public import struct Foundation.Data
 #endif
 
 extension BaseNEncoding {

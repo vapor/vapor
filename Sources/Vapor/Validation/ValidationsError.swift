@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 
 public struct ValidationsResult: Sendable {
     public let results: [ValidationResult]
