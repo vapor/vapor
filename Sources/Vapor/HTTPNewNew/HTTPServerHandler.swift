@@ -79,12 +79,51 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 Logger.current.critical("Invalid server state - no response sender")
                 throw Abort(.internalServerError)
             }
-            // TODO: Handle streaming response bodies
-            var responseBody = UniqueArray<UInt8>()
-            if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
-                responseBody.append(copying: buffer.readableBytesView)
+            switch vaporResponse.body.storage {
+            case .stream(let bodyStream):
+                // Streaming body: send the head, then let the body closure write chunks straight
+                // into the server's writer. The writer is move-only and non-Sendable, so it stays
+                // in this task; each `write` awaits the transport, so backpressure propagates to
+                // the closure. The server appends the final chunk once the closure returns.
+                var writer: ResponseBodyStreamWriter = NIOResponseBodyWriter(inner: try await sender.send(httpResponse))
+                try await bodyStream.callback(&writer)
+                try await writer.finish(nil)
+            default:
+                // Buffered body: single-shot write.
+                var responseBody = UniqueArray<UInt8>()
+                if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
+                    responseBody.append(copying: buffer.readableBytesView)
+                }
+                try await sender.sendAndFinish(httpResponse, buffer: &responseBody)
             }
-            try await sender.sendAndFinish(httpResponse, buffer: &responseBody)
         }
+    }
+}
+
+/// Bridges Vapor's ``ResponseBodyWriter`` onto the server's move-only response writer.
+///
+/// Each chunk is copied into a `UniqueArray<UInt8>` and forwarded with `await`, so the transport's
+/// backpressure (the socket/HTTP-2 flow-control window) propagates straight to the body-stream
+/// closure — a fast producer suspends while a slow client catches up. The underlying writer is
+/// held in an `Optional` so ``finish(_:)`` can take it out and consume it exactly once.
+struct NIOResponseBodyWriter: ResponseBodyWriter, ~Copyable {
+    private var inner: NIOHTTPServer.ResponseSender.Writer?
+
+    init(inner: consuming NIOHTTPServer.ResponseSender.Writer) {
+        self.inner = consume inner
+    }
+
+    mutating func write(_ buffer: ByteBuffer) async throws {
+        var out = UniqueArray<UInt8>()
+        out.append(copying: buffer.readableBytesView)
+        // `inner` is always present during writes (the body closure runs before `finish`, which
+        // takes it); the optional-chaining is just how we reach the move-only writer in place.
+        try await self.inner?.write(buffer: &out)
+    }
+
+    mutating func finish(_ trailingHeaders: HTTPFields?) async throws {
+        guard var writer = self.inner.take() else { return }
+        var empty = UniqueArray<UInt8>()
+        try await writer.finish(buffer: &empty, finalElement: trailingHeaders)
     }
 }

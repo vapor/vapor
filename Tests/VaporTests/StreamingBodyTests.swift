@@ -2,6 +2,7 @@ import Vapor
 import VaporTesting
 import AsyncHTTPClient
 import NIOCore
+import NIOPosix
 import NIOHTTP1
 import HTTPTypes
 import ServiceLifecycle
@@ -47,12 +48,11 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("stream") { _ -> Response in
-                Response(status: .ok, body: .init(asyncStream: { writer in
-                    try await writer.write(.buffer(ByteBuffer(string: "Hello, ")))
-                    try await writer.write(.buffer(ByteBuffer(string: "streaming, ")))
-                    try await writer.write(.buffer(ByteBuffer(string: "world!")))
-                    try await writer.write(.end)
-                }, count: -1))
+                Response(status: .ok, body: .init(stream: { writer in
+                    try await writer.write(ByteBuffer(string: "Hello, "))
+                    try await writer.write(ByteBuffer(string: "streaming, "))
+                    try await writer.write(ByteBuffer(string: "world!"))
+                }))
             }
 
             try await app.boot()
@@ -84,9 +84,7 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("empty") { _ -> Response in
-                Response(status: .ok, body: .init(asyncStream: { writer in
-                    try await writer.write(.end)
-                }, count: -1))
+                Response(status: .ok, body: .init(stream: { _ in }))
             }
 
             try await app.boot()
@@ -151,12 +149,11 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("many") { _ -> Response in
-                Response(status: .ok, body: .init(asyncStream: { writer in
+                Response(status: .ok, body: .init(stream: { writer in
                     for _ in 0..<chunkCount {
-                        try await writer.write(.buffer(ByteBuffer(string: "x")))
+                        try await writer.write(ByteBuffer(string: "x"))
                     }
-                    try await writer.write(.end)
-                }, count: -1))
+                }))
             }
 
             try await app.boot()
@@ -190,10 +187,10 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("error-mid-stream") { _ -> Response in
-                Response(status: .ok, body: .init(asyncStream: { writer in
-                    try await writer.write(.buffer(ByteBuffer(string: "partial")))
-                    try await writer.write(.error(MidStreamError()))
-                }, count: -1))
+                Response(status: .ok, body: .init(stream: { writer in
+                    try await writer.write(ByteBuffer(string: "partial"))
+                    throw MidStreamError()
+                }))
             }
             app.get("ok") { _ in "ok" }
 
@@ -238,12 +235,11 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("firehose") { _ -> Response in
-                Response(status: .ok, body: .init(asyncStream: { writer in
+                Response(status: .ok, body: .init(stream: { writer in
                     for _ in 0..<100_000 {
-                        try await writer.write(.buffer(ByteBuffer(string: "x")))
+                        try await writer.write(ByteBuffer(string: "x"))
                     }
-                    try await writer.write(.end)
-                }, count: -1))
+                }))
             }
             app.get("ok") { _ in "ok" }
 
@@ -280,40 +276,13 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server streams an EventLoop-based stream response body in chunks")
-    func testStreamResponse() async throws {
-        try await withApp { app in
-            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-            app.get("stream") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
-                    writer.write(.buffer(ByteBuffer(string: "Hello, ")), promise: nil)
-                    writer.write(.buffer(ByteBuffer(string: "legacy, ")), promise: nil)
-                    writer.write(.buffer(ByteBuffer(string: "world!")), promise: nil)
-                    writer.write(.end, promise: nil)
-                }, count: -1))
-            }
-
-            try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
-            try await withThrowingTaskGroup(of: Void.self) { tg in
-                tg.addTask {
-                    try await group.run()
-                }
-                let address = try await app.server.listeningAddress
-                let port = try #require(address.port)
-
-                let resp = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/stream"), timeout: .seconds(10)
-                )
-                #expect(resp.status == .ok)
-                let body = try await resp.body.collect(upTo: 1 << 20).string
-                #expect(body == "Hello, legacy, world!")
-
-                await group.triggerGracefulShutdown()
-                try await tg.waitForAll()
-            }
-        }
+    @Test("collect(on:) gathers a streaming body into a single buffer")
+    func testCollectStreamingBody() async throws {
+        let body = Response.Body(stream: { writer in
+            try await writer.write(ByteBuffer(string: "Hello, "))
+            try await writer.write(ByteBuffer(string: "collected!"))
+        })
+        let collected = try await body.collect(on: MultiThreadedEventLoopGroup.singleton.any()).get()
+        #expect(collected.map { String(buffer: $0) } == "Hello, collected!")
     }
 }
