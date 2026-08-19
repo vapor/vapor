@@ -133,7 +133,6 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         )
 
         let nioServer = NIOHTTPServer(
-            logger: Logger.current,
             configuration: configuration
         )
 
