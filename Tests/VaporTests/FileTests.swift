@@ -14,7 +14,7 @@ import Foundation
 import RoutingKit
 import _NIOFileSystemFoundationCompat
 
-@Suite("File Tests", .disabled("Disabled until response streaming is working"))
+@Suite("File Tests")
 struct FileTests {
 
     @Test("Test Stream File")
@@ -253,12 +253,12 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: -20, end: 25)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 10, end: 100000000)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
         }
@@ -277,12 +277,12 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: -20)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 100000000)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
         }
@@ -301,12 +301,12 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: -20)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 100000000)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headerRequest) { res async in
                 #expect(res.status == .badRequest)
             }
         }
@@ -472,42 +472,43 @@ struct FileTests {
 
             var headers = HTTPFields()
             headers[.range] = "bytes=0-9223372036854775807"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
+            // `bytes=1-10` is a satisfiable range on this file, so it's served as 206, not rejected.
             headers[.range] = "bytes=1-10"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
-                #expect(res.status == .badRequest)
+            try await app.testing().test(.get, "/file-stream", headers: headers) { res async in
+                #expect(res.status == .partialContent)
             }
 
             headers[.range] = "bytes=100-10"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers[.range] = "bytes=10--100"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers[.range] = "bytes=9223372036854775808-"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers[.range] = "bytes=922337203-"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers[.range] = "bytes=-922337203"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
 
             headers[.range] = "bytes=-9223372036854775808-"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing().test(.get, "/file-stream", headers: headers) { res async in
                 #expect(res.status == .badRequest)
             }
         }
