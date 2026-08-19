@@ -86,6 +86,8 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 } else {
                     credentials = .x509(.pemFile(certificateChainPath: certPath, privateKeyPath: keyPath))
                 }
+            case .reloading(let reloader):
+                credentials = .x509(.reloading(reloader))
             }
             transportSecurity = .tls(credentials: credentials)
         } else {
