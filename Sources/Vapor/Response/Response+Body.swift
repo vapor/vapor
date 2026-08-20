@@ -8,6 +8,7 @@ public import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOConcurrencyHelpers
 import HTTPTypes
+import NIOPosix
 
 extension Response {
     struct BodyStream: Sendable {
@@ -96,22 +97,18 @@ extension Response {
             }
         }
 
-        public func collect(on eventLoop: any EventLoop) -> EventLoopFuture<ByteBuffer?> {
+        public func collect() async throws -> ByteBuffer? {
             switch self.storage {
             case .stream(let stream):
-                let collector = ResponseBodyCollector(eventLoop: eventLoop, byteBufferAllocator: self.byteBufferAllocator)
+                let collector = ResponseBodyCollector(eventLoop: MultiThreadedEventLoopGroup.singleton.any(), byteBufferAllocator: self.byteBufferAllocator)
                 stream.callback(collector)
-                return collector.promise.futureResult
-                    .map { $0 }
+                return try await collector.promise.futureResult.get()
             case .asyncStream(let stream):
-                let collector = ResponseBodyCollector(eventLoop: eventLoop, byteBufferAllocator: self.byteBufferAllocator)
-                return eventLoop.makeFutureWithTask {
-                    try await stream.callback(collector)
-                }.flatMap {
-                    collector.promise.futureResult.map { $0 }
-                }
+                let collector = ResponseBodyCollector(eventLoop: MultiThreadedEventLoopGroup.singleton.any(), byteBufferAllocator: self.byteBufferAllocator)
+                try await stream.callback(collector)
+                return try await collector.promise.futureResult.get()
             default:
-                return eventLoop.makeSucceededFuture(self.buffer)
+                return self.buffer
             }
         }
 
