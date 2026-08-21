@@ -197,6 +197,85 @@ final class PipelineTests: XCTestCase {
         try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 200 OK")
     }
 
+    // https://github.com/vapor/vapor/issues/3002
+    func testResponseBodyStreamCallbackIsOnlyInvokedOnceWhenTheConnectionFails() throws {
+        let callbackCount = NIOLockedValueBox(0)
+        let completionCount = NIOLockedValueBox(0)
+
+        app.get("stream") { request -> Response in
+            Response(body: .init(stream: { writer in
+                callbackCount.withLockedValue { $0 += 1 }
+                // Mimic `Request.FileIO.streamFile(at:)`
+                writer.write(.buffer(ByteBuffer(string: "hello"))).whenComplete { result in
+                    switch result {
+                    case .failure(let error): writer.write(.error(error), promise: nil)
+                    case .success: writer.write(.end, promise: nil)
+                    }
+                    completionCount.withLockedValue { $0 += 1 }
+                }
+            }))
+        }
+
+        let channel = EmbeddedChannel()
+        try channel.connect(to: .init(unixDomainSocketPath: "/foo")).wait()
+        try channel.pipeline.addVaporHTTP1Handlers(
+            application: app,
+            responder: app.responder,
+            configuration: app.http.server.configuration
+        ).wait()
+        try channel.pipeline.syncOperations.addHandler(ConnectionResetHandler(), position: .first)
+
+        _ = try? channel.writeInbound(ByteBuffer(string: "GET /stream HTTP/1.1\r\n\r\n"))
+
+        XCTAssertEqual(callbackCount.withLockedValue { $0 }, 1, "The body stream callback should only be invoked once")
+        XCTAssertEqual(completionCount.withLockedValue { $0 }, 1, "The stream's completion handler should only be invoked once")
+    }
+
+    /// async version of test above
+    /// See https://github.com/vapor/vapor/issues/3002
+    func testAsyncResponseBodyStreamCallbackIsOnlyInvokedOnceWhenTheConnectionFails() async throws {
+        let callbackCount = NIOLockedValueBox(0)
+        let (completions, completionsContinuation) = AsyncStream<Void>.makeStream()
+
+        app.get("stream") { request -> Response in
+            Response(body: .init(asyncStream: { writer in
+                callbackCount.withLockedValue { $0 += 1 }
+                do {
+                    try await writer.write(.buffer(ByteBuffer(string: "hello")))
+                    try await writer.write(.end)
+                } catch {
+                    try? await writer.write(.error(error))
+                }
+                completionsContinuation.yield()
+            }))
+        }
+
+        let channel = NIOAsyncTestingChannel()
+        try await channel.connect(to: .init(unixDomainSocketPath: "/foo"))
+        let app = self.app!
+        let pipelineConfigured = try await channel.testingEventLoop.executeInContext {
+            channel.pipeline.addVaporHTTP1Handlers(
+                application: app,
+                responder: app.responder,
+                configuration: app.http.server.configuration
+            )
+        }
+        try await pipelineConfigured.get()
+        try await channel.testingEventLoop.executeInContext {
+            try channel.pipeline.syncOperations.addHandler(ConnectionResetHandler(), position: .first)
+        }
+
+        _ = try? await channel.writeInbound(ByteBuffer(string: "GET /stream HTTP/1.1\r\n\r\n"))
+
+        var completionsIterator = completions.makeAsyncIterator()
+        await completionsIterator.next()
+
+        try await Task.sleep(for: .milliseconds(200))
+        await channel.testingEventLoop.run()
+
+        XCTAssertEqual(callbackCount.withLockedValue { $0 }, 1, "The body stream callback should only be invoked once")
+    }
+
     func testBadStreamLength() throws {
         app.on(.POST, "echo", body: .stream) { request -> Response in
             Response(body: .init(stream: { writer in
@@ -440,3 +519,24 @@ final class PipelineTests: XCTestCase {
         XCTAssert(isLoggingConfigured)
     }
 }
+
+private struct SimulatedConnectionReset: Error { }
+
+/// Forwards the response head, then fails every subsequent write, mimicking a client that resets
+/// the connection before the response body has been fully streamed.
+private final class ConnectionResetHandler: ChannelOutboundHandler {
+    typealias OutboundIn = ByteBuffer
+    typealias OutboundOut = ByteBuffer
+
+    private var hasWrittenHead = false
+
+    func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
+        if self.hasWrittenHead {
+            promise?.fail(SimulatedConnectionReset())
+        } else {
+            self.hasWrittenHead = true
+            context.write(data, promise: promise)
+        }
+    }
+}
+
