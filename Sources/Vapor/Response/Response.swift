@@ -176,7 +176,8 @@ public final class Response: CustomStringConvertible, Sendable {
         var upgrader: Upgrader?
         // If `true`, don't serialize the body.
         var forHeadRequest: Bool
-
+        // If `true`, the callback of a streaming body has already been invoked and must not be invoked again
+        var bodyStreamCallbackInvoked: Bool = false
     }
     
     let responseBox: NIOLockedValueBox<ResponseBox>
