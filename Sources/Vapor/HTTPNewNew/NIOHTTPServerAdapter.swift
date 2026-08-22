@@ -113,16 +113,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             configuration: configuration
         )
 
-        let responder: any Responder
-        switch self.application.responder {
-        case .default:
-            responder = DefaultResponder(
-                routes: self.application.routes,
-                middleware: self.application.middleware.resolve(),
-            )
-        case .provided(let provided):
-            responder = provided
-        }
+        let responder = self.application.makeResponder()
 
         let handler = VaporHTTPServerHandler(
             application: self.application,

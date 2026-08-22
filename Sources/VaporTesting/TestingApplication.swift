@@ -96,13 +96,7 @@ extension Application {
                 collectedBody: request.body.readableBytes == 0 ? nil : request.body,
                 remoteAddress: nil
             )
-            let responder: any Responder
-            switch self.app.responder {
-            case .provided(let provided):
-                responder = provided
-            case .default:
-                responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve())
-            }
+            let responder = app.makeResponder()
             let res = try await responder.respond(to: request)
             return try await TestingHTTPResponse(
                 status: res.status,
