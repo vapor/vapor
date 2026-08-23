@@ -77,6 +77,7 @@ public func withApp<T>(
 /// ```
 public func withRunningApp<T: Sendable>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
     app.serverConfiguration.address = .hostname(hostname, port: portToUse)
+    defer { app.serverConfiguration.address = nil }
     try await app.boot()
 
     return try await withThrowingTaskGroup(of: T?.self) { group in
