@@ -266,23 +266,36 @@ public struct FileIO: Sendable {
             response.headers.contentType = type
         }
 
-        response.body = .init(asyncStream: { stream in
+        let fileSystem = self.fileSystem
+        response.body = .init(stream: { writer in
+            // Open the handle directly (rather than the scoped `readFile`/`withFileHandle` API):
+            // that API's chunk closure is `@Sendable`, but `writer` is a non-Sendable
+            // `ResponseBodyWriter`, so it can't be captured there. We open here, write each chunk
+            // straight to `writer` with `await` (the transport backpressures us), and always close.
+            let handle: ReadFileHandle
             do {
-                try await self.readFile(at: path, chunkSize: chunkSize, offset: offset, byteCount: byteCount) { chunks in
-                    do {
-                        for try await chunk in chunks {
-                            try await stream.writeBuffer(chunk)
-                        }
-                    } catch {
-                        throw error
-                    }
-                    try await stream.write(.end)
-                    try await onCompleted(.success(()))
+                handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
+            } catch {
+                try await onCompleted(.failure(error))
+                throw error
+            }
+            // Close on the way out (success or throw), exactly once. The handle is being discarded,
+            // so a close failure isn't actionable, hence `try?`.
+            defer { try? await handle.close() }
+
+            do {
+                let chunks = handle.readChunks(
+                    in: offset..<(offset + Int64(byteCount)),
+                    chunkLength: .bytes(chunkSize)
+                )
+                for try await chunk in chunks {
+                    try await writer.write(chunk)
                 }
             } catch {
-                try? await stream.write(.error(error))
                 try await onCompleted(.failure(error))
+                throw error
             }
+            try await onCompleted(.success(()))
         }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
 
         return response

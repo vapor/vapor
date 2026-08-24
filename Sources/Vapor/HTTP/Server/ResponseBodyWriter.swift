@@ -1,23 +1,27 @@
 #warning("Make this internal")
 public import NIOCore
-public import HTTPTypes
 
 /// Protocol for writing HTTP response bodies.
 ///
-/// Implementations of this protocol are provided by the HTTP server layer
-/// and allow Vapor's response body types to write their data to the underlying connection.
-public protocol ResponseBodyWriter {
+/// Implementations of this protocol are provided by the HTTP server layer and allow Vapor's
+/// response body types to write their data straight to the underlying connection. Writes are
+/// backpressured: `write` suspends while the transport can't accept more data, so a streaming
+/// body naturally throttles to the speed of the client.
+///
+/// The protocol is class-bound because concrete writers wrap the server's move-only response
+/// writer, which they mutate in place across `await` points as chunks are written. Only `write`
+/// is exposed: concluding the response is the server's responsibility, so a body-stream closure
+/// can never end the stream itself.
+public protocol ResponseBodyWriter: AnyObject {
     /// Write a single ByteBuffer.
-    mutating func write(_ buffer: ByteBuffer) async throws
+    func write(_ buffer: ByteBuffer) async throws
     /// Write a sequence of ByteBuffers.
-    mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws
-    /// Finish writing the body with optional trailing headers.
-    consuming func finish(_ trailingHeaders: HTTPFields?) async throws
+    func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws
 }
 
 extension ResponseBodyWriter {
     @inlinable
-    public mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
+    public func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
         for buffer in buffers {
             try await self.write(buffer)
         }

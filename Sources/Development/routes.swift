@@ -98,6 +98,60 @@ func routes(_ app: Application) async throws {
         return "Done"
     }
 
+    app.get("stream", "chunks") { _ -> Response in
+        Response(body: .init(stream: { writer in
+            for i in 1...5 {
+                try await writer.write(ByteBuffer(string: "chunk \(i)\n"))
+            }
+        }))
+    }
+
+    app.get("stream", "sequence") { _ -> Response in
+        let lines = AsyncStream<ByteBuffer> { continuation in
+            for i in 1...10 {
+                continuation.yield(ByteBuffer(string: "line \(i)\n"))
+            }
+            continuation.finish()
+        }
+        return Response(body: .init(stream: { writer in
+            for await chunk in lines {
+                try await writer.write(chunk)
+            }
+        }))
+    }
+
+    app.get("stream", "firehose") { _ -> Response in
+        Response(body: .init(stream: { writer in
+            let chunk = ByteBuffer(repeating: 0x41, count: 16 * 1024)
+            for _ in 0..<10_000 {
+                try await writer.write(chunk)
+            }
+        }))
+    }
+
+    // Sleeps between chunks: with `curl` you can see each line arrive ~0.5s apart, which shows
+    // the write suspends and the response is produced lazily rather than buffered up front.
+    app.get("stream", "slow") { _ -> Response in
+        Response(body: .init(stream: { writer in
+            for i in 1...10 {
+                try await writer.write(ByteBuffer(string: "chunk \(i)\n"))
+                try await Task.sleep(for: .milliseconds(500))
+            }
+        }))
+    }
+
+    app.get("stream", "file") { _ -> Response in
+        let path = #filePath
+        let fileSystem = FileSystem.shared
+        return Response(body: .init(stream: { writer in
+            let handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
+            defer { try? await handle.close() }
+            for try await chunk in handle.readChunks(chunkLength: .bytes(64 * 1024)) {
+                try await writer.write(chunk)
+            }
+        }))
+    }
+
     // TODO: Implement shutdown route using structured concurrency
     // With ServiceGroup, shutdown is triggered via SIGTERM/SIGINT signals
 
