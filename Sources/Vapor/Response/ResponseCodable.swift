@@ -53,9 +53,10 @@ extension ResponseEncodable {
             for header in headers {
                 box.headers.append(header)
             }
-            box.status = status
         }
-        return response
+        #warning("We should be able to mutate this is response is a struct")
+        let responseWithStatus = Response(status: status, version: response.version, headers: response.headers, body: response.body)
+        return responseWithStatus
     }
 }
 

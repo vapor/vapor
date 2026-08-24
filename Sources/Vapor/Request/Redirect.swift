@@ -16,9 +16,8 @@ extension Request {
     ///   - redirectType: The type of redirect to perform
     /// - Returns: A response that redirects the client to the specified location
     public func redirect(to location: String, redirectType: Redirect = .normal) -> Response {
-        let response = Response()
+        let response = Response(status: redirectType.status)
         response.responseBox.withLockedValue { box in
-            box.status = redirectType.status
             box.headers[.location] = location
         }
         return response

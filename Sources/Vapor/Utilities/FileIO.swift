@@ -235,16 +235,16 @@ public struct FileIO: Sendable {
         }
 
         // Create the HTTP response.
-        let response = Response(status: .ok, headers: headers)
+        let responseStatus: HTTPResponse.Status
         let offset: Int64
         let byteCount: Int
         if let contentRange = contentRange {
-            response.status = .partialContent
-            response.headers[.accept] = contentRange.unit.serialize()
+            responseStatus = .partialContent
+            headers[.accept] = contentRange.unit.serialize()
             if let firstRange = contentRange.ranges.first {
                 do {
                     let range = try firstRange.asResponseContentRange(limit: Int(fileInfo.size))
-                    response.headers.contentRange = HTTPFields.ContentRange(unit: contentRange.unit, range: range)
+                    headers.contentRange = HTTPFields.ContentRange(unit: contentRange.unit, range: range)
                     (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: Int(fileInfo.size))
                 } catch {
                     throw Abort(.badRequest)
@@ -254,6 +254,7 @@ public struct FileIO: Sendable {
                 byteCount = Int(fileInfo.size)
             }
         } else {
+            responseStatus = .ok
             offset = 0
             byteCount = Int(fileInfo.size)
         }
@@ -263,10 +264,11 @@ public struct FileIO: Sendable {
             let fileExtension = path.components(separatedBy: ".").last,
             let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
         {
-            response.headers.contentType = type
+            headers.contentType = type
         }
 
         let fileSystem = self.fileSystem
+        let response = Response(status: responseStatus, headers: headers)
         response.body = .init(stream: { writer in
             // Open the handle directly (rather than the scoped `readFile`/`withFileHandle` API):
             // that API's chunk closure is `@Sendable`, but `writer` is a non-Sendable

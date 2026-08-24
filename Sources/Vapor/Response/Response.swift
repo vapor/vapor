@@ -16,14 +16,8 @@ public final class Response: CustomStringConvertible, Sendable {
     public let version: HTTPVersion
     
     /// The HTTP response status.
-    public var status: HTTPResponse.Status {
-        get {
-            self.responseBox.withLockedValue { $0.status }
-        }
-        set {
-            self.responseBox.withLockedValue { $0.status = newValue }
-        }
-    }
+    #warning("This probably should be mutable when a struct")
+    public let status: HTTPResponse.Status
     
     /// The header fields for this HTTP response.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
@@ -84,7 +78,7 @@ public final class Response: CustomStringConvertible, Sendable {
     public var description: String {
         var desc: [String] = []
         self.responseBox.withLockedValue { box in
-            desc.append("HTTP/\(version.major).\(version.minor) \(box.status.code) \(box.status.reasonPhrase)")
+            desc.append("HTTP/\(version.major).\(version.minor) \(status.code) \(status.reasonPhrase)")
             desc.append(box.headers.debugDescription)
             desc.append(box.body.description)
         }
@@ -153,7 +147,6 @@ public final class Response: CustomStringConvertible, Sendable {
     }
     
     struct ResponseBox: Sendable {
-        var status: HTTPResponse.Status
         var headers: HTTPFields
         var body: Body {
             didSet {
@@ -207,9 +200,10 @@ public final class Response: CustomStringConvertible, Sendable {
         body: Body,
         contentConfiguration: ContentConfiguration = .default()
     ) {
-        self.responseBox = .init(.init(status: status, headers: headers, body: body, forHeadRequest: false))
+        self.responseBox = .init(.init(headers: headers, body: body, forHeadRequest: false))
         self.contentConfiguration = contentConfiguration
         self.version = version
+        self.status = status
     }
 }
 
