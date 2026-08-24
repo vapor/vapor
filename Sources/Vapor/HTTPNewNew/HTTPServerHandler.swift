@@ -90,6 +90,16 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // of the public `ResponseBodyWriter` protocol); the closure only sees `write`.
                 let writer = NIOResponseBodyWriter(inner: try await sender.send(httpResponse))
                 try await bodyStream.callback(writer)
+                guard bodyStream.count < 0 || writer.bytesWritten == bodyStream.count else {
+                    // Stream lenght is different to what was expecting, this is an error state to close the connection
+                    Logger.current.debug(
+                        "Response body stream wrote a different number of bytes than it declared, closing the connection",
+                        metadata: [
+                            "written": "\(writer.bytesWritten)",
+                            "declared": "\(bodyStream.count)",
+                        ])
+                    return
+                }
                 try await writer.finish(nil)
             default:
                 // Buffered body: single-shot write.
@@ -113,6 +123,9 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
 final class NIOResponseBodyWriter: ResponseBodyWriter {
     private var inner: NIOHTTPServer.ResponseSender.Writer?
 
+    /// The number of body bytes written so far, used to check a stream against its declared length.
+    private(set) var bytesWritten = 0
+
     init(inner: consuming NIOHTTPServer.ResponseSender.Writer) {
         self.inner = consume inner
     }
@@ -123,6 +136,7 @@ final class NIOResponseBodyWriter: ResponseBodyWriter {
         // `inner` is always present during writes (the body closure runs before `finish`, which
         // takes it); the optional-chaining is just how we reach the move-only writer in place.
         try await self.inner?.write(buffer: &out)
+        self.bytesWritten += buffer.readableBytes
     }
 
     func finish(_ trailingHeaders: HTTPFields?) async throws {
