@@ -21,14 +21,7 @@ public struct Response: CustomStringConvertible, Sendable {
     /// The header fields for this HTTP response.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPFields {
-        get {
-            self.responseBox.withLockedValue { $0.headers }
-        }
-        set {
-            self.responseBox.withLockedValue { $0.headers = newValue }
-        }
-    }
+    public var headers: HTTPFields
     
     /// The `Body`. Updating this property will also update the associated transport headers.
     ///
@@ -37,13 +30,8 @@ public struct Response: CustomStringConvertible, Sendable {
     /// Also be sure to set this message's `contentType` property to a `MediaType` that correctly
     /// represents the `Body`.
     public var body: Body {
-        get {
-            responseBox.withLockedValue { $0.body }
-        }
-        set {
-            responseBox.withLockedValue { box in
-                box.body = newValue
-            }
+        didSet {
+            self.headers.updateContentLength(body.count)
         }
     }
 
@@ -62,75 +50,61 @@ public struct Response: CustomStringConvertible, Sendable {
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
         get {
-            return self.responseBox.withLockedValue { box in
-                box.headers.setCookie ?? .init()
-            }
+            self.headers.setCookie ?? .init()
         }
         set {
-            self.responseBox.withLockedValue { box in
-                box.headers.setCookie = newValue
-            }
+            self.headers.setCookie = newValue
         }
     }
     
     // See `CustomStringConvertible.description`.
     public var description: String {
         var desc: [String] = []
-        self.responseBox.withLockedValue { box in
-            desc.append("HTTP/\(version.major).\(version.minor) \(status.code) \(status.reasonPhrase)")
-            desc.append(box.headers.debugDescription)
-            desc.append(box.body.description)
-        }
+        desc.append("HTTP/\(version.major).\(version.minor) \(status.code) \(status.reasonPhrase)")
+        desc.append(self.headers.debugDescription)
+        desc.append(self.body.description)
         return desc.joined(separator: "\n")
     }
 
     // MARK: Content
 
     private struct _ContentContainer: ContentContainer {
-        let response: Response
+        var response: Response
 
         var contentConfiguration: ContentConfiguration {
             self.response.contentConfiguration
         }
 
         var contentType: HTTPMediaType? {
-            return self.response.headers.contentType
+            self.response.headers.contentType
         }
 
-        func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
-            try self.response.responseBox.withLockedValue { box in
-                var body = box.body.byteBufferAllocator.buffer(capacity: 0)
-                try encoder.encode(encodable, to: &body, headers: &box.headers)
-                box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E: Encodable {
+            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
+            try encoder.encode(encodable, to: &body, headers: &self.response.headers)
+            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
+        }
+
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D: Decodable {
+            guard let body = self.response.body.buffer else {
+                throw Abort(.unprocessableContent)
             }
+            return try decoder.decode(D.self, from: body, headers: self.response.headers)
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
-            try self.response.responseBox.withLockedValue { box in
-                guard let body = box.body.buffer else {
-                    throw Abort(.unprocessableContent)
-                }
-                return try decoder.decode(D.self, from: body, headers: box.headers)
-            }
-        }
-
-        func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C: Content {
             var content = content
             try content.beforeEncode()
-            try self.response.responseBox.withLockedValue { box in
-                var body = box.body.byteBufferAllocator.buffer(capacity: 0)
-                try encoder.encode(content, to: &body, headers: &box.headers)
-                box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
-            }
+            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
+            try encoder.encode(content, to: &body, headers: &self.response.headers)
+            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
         }
 
-        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
-            var decoded = try self.response.responseBox.withLockedValue { box in
-                guard let body = box.body.buffer else {
-                    throw Abort(.unprocessableContent)
-                }
-                return try decoder.decode(C.self, from: body, headers: box.headers)
+        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C: Content {
+            guard let body = self.response.body.buffer else {
+                throw Abort(.unprocessableContent)
             }
+            var decoded = try decoder.decode(C.self, from: body, headers: self.response.headers)
             try decoded.afterDecode()
             return decoded
         }
@@ -138,26 +112,19 @@ public struct Response: CustomStringConvertible, Sendable {
 
     public var content: any ContentContainer {
         get {
-            return _ContentContainer(response: self)
+            _ContentContainer(response: self)
         }
         set {
-            // ignore since Request is a reference type
-        }
-    }
-    
-    struct ResponseBox: Sendable {
-        var headers: HTTPFields
-        var body: Body {
-            didSet {
-                self.headers.updateContentLength(body.count)
+            // Write back whatever the container mutated to allow content to be set
+            if let container = newValue as? _ContentContainer {
+                self = container.response
             }
         }
-        // If `true`, don't serialize the body.
-        var forHeadRequest: Bool
-
     }
-    
-    let responseBox: NIOLockedValueBox<ResponseBox>
+
+    /// If `true`, don't serialize the body.
+    var forHeadRequest: Bool = false
+
     private let contentConfiguration: ContentConfiguration
 
     // MARK: Init
@@ -199,7 +166,8 @@ public struct Response: CustomStringConvertible, Sendable {
         body: Body,
         contentConfiguration: ContentConfiguration = .default()
     ) {
-        self.responseBox = .init(.init(headers: headers, body: body, forHeadRequest: false))
+        self.headers = headers
+        self.body = body
         self.contentConfiguration = contentConfiguration
         self.version = version
         self.status = status

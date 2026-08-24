@@ -138,34 +138,33 @@ public final class CORSMiddleware: Middleware {
 
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
-        let response = request.isPreflight ? Response() : try await next.respond(to: request)
+        var response = request.isPreflight ? Response() : try await next.respond(to: request)
 
         // Modify response headers based on CORS settings
         let accessControlAllowOriginHeader = self.configuration.allowedOrigin.header(forRequest: request)
-        response.responseBox.withLockedValue { box in
-            if !accessControlAllowOriginHeader.isEmpty {
-                box.headers[.accessControlAllowOrigin] = accessControlAllowOriginHeader
-            }
-
-            box.headers[.accessControlAllowMethods] = self.configuration.allowedMethods
-            box.headers[.accessControlAllowHeaders] = self.configuration.allowedHeaders
-
-            if let exposedHeaders = self.configuration.exposedHeaders {
-                box.headers[.accessControlExposeHeaders] = exposedHeaders
-            }
-
-            if let cacheExpiration = self.configuration.cacheExpiration {
-                box.headers[.accessControlMaxAge] = String(cacheExpiration)
-            }
-
-            if self.configuration.allowCredentials {
-                box.headers[.accessControlAllowCredentials] = "true"
-            }
-
-            if self.configuration.allowedOrigin.variesByRequestOrigin, !accessControlAllowOriginHeader.isEmpty {
-                box.headers[.vary] = "origin"
-            }
+        if !accessControlAllowOriginHeader.isEmpty {
+            response.headers[.accessControlAllowOrigin] = accessControlAllowOriginHeader
         }
+
+        response.headers[.accessControlAllowMethods] = self.configuration.allowedMethods
+        response.headers[.accessControlAllowHeaders] = self.configuration.allowedHeaders
+
+        if let exposedHeaders = self.configuration.exposedHeaders {
+            response.headers[.accessControlExposeHeaders] = exposedHeaders
+        }
+
+        if let cacheExpiration = self.configuration.cacheExpiration {
+            response.headers[.accessControlMaxAge] = String(cacheExpiration)
+        }
+
+        if self.configuration.allowCredentials {
+            response.headers[.accessControlAllowCredentials] = "true"
+        }
+
+        if self.configuration.allowedOrigin.variesByRequestOrigin, !accessControlAllowOriginHeader.isEmpty {
+            response.headers[.vary] = "origin"
+        }
+
         return response
     }
 }
