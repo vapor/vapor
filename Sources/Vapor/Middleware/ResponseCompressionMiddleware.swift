@@ -35,7 +35,7 @@ public struct ResponseCompressionMiddleware: Middleware {
     }
     
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
-        let response = try await next.respond(to: request)
+        var response = try await next.respond(to: request)
         /// Only set the header if it is unset, and prefer the next responder's header over our own override, as _it_ is overriding ours.
         if response.headers.responseCompression == .unset || shouldForce {
             response.headers.responseCompression = responseCompressionOverride

@@ -95,10 +95,10 @@ public final class FileMiddleware: Middleware {
 
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
-                            return try await request
+                            var response = try await request
                                 .fileio
                                 .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
-                                .cachePolicy(cachePolicy)
+                            return response.cachePolicy(cachePolicy)
                         }
                     }
                 } else {
@@ -110,10 +110,10 @@ public final class FileMiddleware: Middleware {
                 }
             } else {
                 // file exists, stream it
-                return try await request
+                var response = try await request
                     .fileio
                     .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
-                    .cachePolicy(cachePolicy)
+                return response.cachePolicy(cachePolicy)
             }
         }
 
@@ -241,7 +241,7 @@ extension Response {
     /// - Parameter policy: The cache policy to use.
     /// - Returns: The same response as the receiver.
     @discardableResult
-    func cachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
+    mutating func cachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
         self.headers.cacheControl = policy.cacheControlHeader
         if let age = policy.ageHeader {
             self.headers[.age] = "\(age)"

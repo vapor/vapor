@@ -118,7 +118,7 @@ struct AuthenticationTests {
                 Response(status: .unauthorized)
             }
             app.routes.grouped(TestAuthenticator()).get("existing") { _ -> Response in
-                let response = Response(status: .unauthorized)
+                var response = Response(status: .unauthorized)
                 response.headers[.wwwAuthenticate] = #"Basic realm="Existing""#
                 return response
             }
@@ -155,7 +155,7 @@ struct AuthenticationTests {
                 Response(status: .unauthorized)
             }
             app.routes.grouped(CustomRealmAuthenticator()).get("existing") { _ -> Response in
-                let response = Response(status: .unauthorized)
+                var response = Response(status: .unauthorized)
                 response.headers[.wwwAuthenticate] = #"Bearer realm="Existing""#
                 return response
             }

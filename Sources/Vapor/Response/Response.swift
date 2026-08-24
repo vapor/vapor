@@ -8,7 +8,7 @@ public import HTTPTypes
 ///     let res = Response(status: .ok)
 ///
 /// See `HTTPClient`.
-public final class Response: CustomStringConvertible, Sendable {
+public struct Response: CustomStringConvertible, Sendable {
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
 
@@ -175,7 +175,7 @@ public final class Response: CustomStringConvertible, Sendable {
     ///                The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically.
     ///     - body: `Body` for this response, defaults to an empty body.
     ///             See `Response.Body` for more information.
-    public convenience init(
+    public init(
         status: HTTPResponse.Status = .ok,
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPFields = .init(),

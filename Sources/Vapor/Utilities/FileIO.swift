@@ -268,7 +268,7 @@ public struct FileIO: Sendable {
         }
 
         let fileSystem = self.fileSystem
-        let response = Response(status: responseStatus, headers: headers)
+        var response = Response(status: responseStatus, headers: headers)
         response.body = .init(stream: { writer in
             // Open the handle directly (rather than the scoped `readFile`/`withFileHandle` API):
             // that API's chunk closure is `@Sendable`, but `writer` is a non-Sendable

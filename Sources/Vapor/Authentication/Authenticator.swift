@@ -32,7 +32,7 @@ extension RequestAuthenticator {
     ) async throws -> Response {
         do {
             try await self.authenticate(request: request)
-            let response = try await next.respond(to: request)
+            var response = try await next.respond(to: request)
             if response.status == .unauthorized, response.headers[.wwwAuthenticate] == nil {
                 response.headers.wwwAuthenticate = challenge
             }
