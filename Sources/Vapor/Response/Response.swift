@@ -16,9 +16,8 @@ public struct Response: CustomStringConvertible, Sendable {
     public let version: HTTPVersion
     
     /// The HTTP response status.
-    #warning("This probably should be mutable when a struct")
-    public let status: HTTPResponse.Status
-    
+    public var status: HTTPResponse.Status
+
     /// The header fields for this HTTP response.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.

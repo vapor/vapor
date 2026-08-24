@@ -48,15 +48,14 @@ extension ResponseEncodable {
     ///     - headers: `HTTPFields` to merge into the `Response`'s headers.
     /// - returns: Newly encoded `Response`.
     public func encodeResponse(status: HTTPResponse.Status, headers: HTTPFields = [:], for request: Request) async throws -> Response {
-        let response = try await encodeResponse(for: request)
+        var response = try await encodeResponse(for: request)
         response.responseBox.withLockedValue { box in
             for header in headers {
                 box.headers.append(header)
             }
         }
-        #warning("We should be able to mutate this is response is a struct")
-        let responseWithStatus = Response(status: status, version: response.version, headers: response.headers, body: response.body)
-        return responseWithStatus
+        response.status = status
+        return response
     }
 }
 
