@@ -7,20 +7,13 @@ public import HTTPTypes
 ///
 ///     let res = Response(status: .ok)
 ///
-/// See `HTTPClient` and `HTTPServerOld`.
+/// See `HTTPClient`.
 public final class Response: CustomStringConvertible, Sendable {
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
 
     /// The HTTP version that corresponds to this response.
-    public var version: HTTPVersion {
-        get {
-            self.responseBox.withLockedValue { $0.version }
-        }
-        set {
-            self.responseBox.withLockedValue { $0.version = newValue }
-        }
-    }
+    public let version: HTTPVersion
     
     /// The HTTP response status.
     public var status: HTTPResponse.Status {
@@ -100,7 +93,7 @@ public final class Response: CustomStringConvertible, Sendable {
     public var description: String {
         var desc: [String] = []
         self.responseBox.withLockedValue { box in
-            desc.append("HTTP/\(box.version.major).\(box.version.minor) \(box.status.code) \(box.status.reasonPhrase)")
+            desc.append("HTTP/\(version.major).\(version.minor) \(box.status.code) \(box.status.reasonPhrase)")
             desc.append(box.headers.debugDescription)
             desc.append(box.body.description)
         }
@@ -169,7 +162,6 @@ public final class Response: CustomStringConvertible, Sendable {
     }
     
     struct ResponseBox: Sendable {
-        var version: HTTPVersion
         var status: HTTPResponse.Status
         var headers: HTTPFields
         var body: Body {
@@ -226,8 +218,9 @@ public final class Response: CustomStringConvertible, Sendable {
         contentConfiguration: ContentConfiguration = .default()
     ) {
         self._storage = .init(.init())
-        self.responseBox = .init(.init(version: version, status: status, headers: headers, body: body, forHeadRequest: false))
+        self.responseBox = .init(.init(status: status, headers: headers, body: body, forHeadRequest: false))
         self.contentConfiguration = contentConfiguration
+        self.version = version
     }
 }
 

@@ -4,7 +4,7 @@ public import HTTPTypes
 ///
 /// This is useful when a set of static routes does not need compression, or a set of dynamic routes does.
 ///
-/// When the ``HTTPServerOld/Configuration-swift.struct/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPFields/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPFields/ResponseCompression/disable`` can be set to explicitly disable compression.
+/// When the ``ServerConfiguration/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPFields/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPFields/ResponseCompression/disable`` can be set to explicitly disable compression.
 ///
 /// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPFields/ResponseCompression/useDefault``.
 ///
@@ -12,7 +12,7 @@ public import HTTPTypes
 public struct ResponseCompressionMiddleware: Middleware {
     /// The response compression override to use over the base configuration.
     ///
-    /// Overrides are only used when the server's ``HTTPServerOld/Configuration-swift.struct/ResponseCompressionConfiguration/allowRequestOverrides`` property is enabled, otherwise they are ignored.
+    /// Overrides are only used when the server's ``ServerConfiguration/ResponseCompressionConfiguration/allowRequestOverrides`` property is enabled, otherwise they are ignored.
     ///
     /// To clear an override set previously in the chain (ie. closer to the root route than to the original response), set ``HTTPFields/ResponseCompression/useDefault``.
     ///
@@ -49,7 +49,7 @@ extension RoutesBuilder {
     /// 
     /// This is useful when a set of static routes does not need compression, or a set of dynamic routes does.
     /// 
-    /// When the ``HTTPServerOld/Configuration-swift.struct/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPFields/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPFields/ResponseCompression/disable`` can be set to explicitly disable compression.
+    /// When the ``ServerConfiguration/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPFields/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPFields/ResponseCompression/disable`` can be set to explicitly disable compression.
     ///
     /// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPFields/ResponseCompression/useDefault``.
     ///
