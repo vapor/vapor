@@ -1,6 +1,5 @@
 import NIOCore
 import NIOFoundationEssentialsCompat
-import NIOConcurrencyHelpers
 public import HTTPTypes
 
 /// An HTTP response from a server back to the client.
