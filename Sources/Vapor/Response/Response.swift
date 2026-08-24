@@ -64,15 +64,6 @@ public final class Response: CustomStringConvertible, Sendable {
 //            self.responseBox.withLockedValue { $0.upgrader = newValue }
 //        }
 //    }
-
-    public var storage: Storage {
-        get {
-            self._storage.withLockedValue { $0 }
-        }
-        set {
-            self._storage.withLockedValue { $0 = newValue }
-        }
-    }
     
     /// Get and set `HTTPCookies` for this `Response`.
     /// This accesses the `"Set-Cookie"` header.
@@ -175,7 +166,6 @@ public final class Response: CustomStringConvertible, Sendable {
     }
     
     let responseBox: NIOLockedValueBox<ResponseBox>
-    private let _storage: NIOLockedValueBox<Storage>
     private let contentConfiguration: ContentConfiguration
 
     // MARK: Init
@@ -217,7 +207,6 @@ public final class Response: CustomStringConvertible, Sendable {
         body: Body,
         contentConfiguration: ContentConfiguration = .default()
     ) {
-        self._storage = .init(.init())
         self.responseBox = .init(.init(status: status, headers: headers, body: body, forHeadRequest: false))
         self.contentConfiguration = contentConfiguration
         self.version = version
