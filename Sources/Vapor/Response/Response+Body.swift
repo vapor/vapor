@@ -150,8 +150,7 @@ extension Response {
         ///
         /// The closure receives a ``ResponseBodyWriter`` and writes chunks to it with `await`. Writes are
         /// backpressured by the transport, so the closure naturally throttles to the speed of the client.
-        /// It **must not** end the stream — the server appends the final chunk once the closure returns;
-        /// throwing from the closure fails the response.
+        /// Throwing from the closure fails the response.
         ///
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
