@@ -107,7 +107,7 @@ extension Application {
             return try await TestingHTTPResponse(
                 status: res.status,
                 headers: res.headers,
-                body: res.body.collect(on: MultiThreadedEventLoopGroup.singleton.any()).get() ?? ByteBufferAllocator().buffer(capacity: 0),
+                body: res.body.collect() ?? ByteBufferAllocator().buffer(capacity: 0),
                 contentConfiguration: self.app.contentConfiguration
             )
         }

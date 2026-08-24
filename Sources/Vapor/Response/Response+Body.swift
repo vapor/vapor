@@ -7,6 +7,7 @@ public import Foundation
 public import NIOCore
 import NIOFoundationEssentialsCompat
 import HTTPTypes
+import NIOPosix
 
 extension Response {
     struct BodyStream {
@@ -86,17 +87,15 @@ extension Response {
             }
         }
 
-        public func collect(on eventLoop: any EventLoop) -> EventLoopFuture<ByteBuffer?> {
+        public func collect() async throws -> ByteBuffer? {
             switch self.storage {
             case .stream(let stream):
                 let accumulator = ByteBufferAccumulator(self.byteBufferAllocator.buffer(capacity: 0))
-                return eventLoop.makeFutureWithTask {
-                    var writer: ResponseBodyStreamWriter = CollectingBodyWriter(accumulator: accumulator)
-                    try await stream.callback(&writer)
-                    return Optional(accumulator.buffer)
-                }
+                var writer: ResponseBodyStreamWriter = CollectingBodyWriter(accumulator: accumulator)
+                try await stream.callback(&writer)
+                return accumulator.buffer
             default:
-                return eventLoop.makeSucceededFuture(self.buffer)
+                return self.buffer
             }
         }
 
