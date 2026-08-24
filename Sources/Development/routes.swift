@@ -129,6 +129,17 @@ func routes(_ app: Application) async throws {
         }))
     }
 
+    // Sleeps between chunks: with `curl` you can see each line arrive ~0.5s apart, which shows
+    // the write suspends and the response is produced lazily rather than buffered up front.
+    app.get("stream", "slow") { _ -> Response in
+        Response(body: .init(stream: { writer in
+            for i in 1...10 {
+                try await writer.write(ByteBuffer(string: "chunk \(i)\n"))
+                try await Task.sleep(for: .milliseconds(500))
+            }
+        }))
+    }
+
     app.get("stream", "file") { _ -> Response in
         let path = #filePath
         let fileSystem = FileSystem.shared

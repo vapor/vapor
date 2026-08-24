@@ -268,9 +268,10 @@ public struct FileIO: Sendable {
 
         let fileSystem = self.fileSystem
         response.body = .init(stream: { writer in
-            // Open the handle without the scoped `withFileHandle` API so we can iterate the
-            // chunks at the top level of this closure and write each one straight to `writer`
-            // with `await` — the transport backpressures us, no intermediate buffering.
+            // Open the handle directly (rather than the scoped `readFile`/`withFileHandle` API):
+            // that API's chunk closure is `@Sendable`, but `writer` is a non-Sendable
+            // `ResponseBodyWriter`, so it can't be captured there. We open here, write each chunk
+            // straight to `writer` with `await` (the transport backpressures us), and always close.
             let handle: ReadFileHandle
             do {
                 handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
@@ -278,8 +279,8 @@ public struct FileIO: Sendable {
                 try await onCompleted(.failure(error))
                 throw error
             }
-            // Always close the handle on the way out (success or throw) — exactly once. The handle
-            // is being discarded, so a close failure isn't actionable, hence `try?`.
+            // Close on the way out (success or throw), exactly once. The handle is being discarded,
+            // so a close failure isn't actionable, hence `try?`.
             defer { try? await handle.close() }
 
             do {

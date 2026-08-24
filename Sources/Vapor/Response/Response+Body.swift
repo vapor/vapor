@@ -93,10 +93,9 @@ extension Response {
                 // Reserve the declared length up front when known (`count >= 0`) to avoid repeated
                 // grow-and-copy reallocations; `-1` means unknown/chunked, so start empty.
                 let initialCapacity = stream.count >= 0 ? stream.count : 0
-                let accumulator = ByteBufferAccumulator(self.byteBufferAllocator.buffer(capacity: initialCapacity))
-                let writer: any ResponseBodyWriter = CollectingBodyWriter(accumulator: accumulator)
+                let writer = CollectingBodyWriter(buffer: self.byteBufferAllocator.buffer(capacity: initialCapacity))
                 try await stream.callback(writer)
-                return accumulator.buffer
+                return writer.buffer
             default:
                 return self.buffer
             }
@@ -188,28 +187,17 @@ extension Response {
     }
 }
 
-/// Accumulates streamed body chunks into a single `ByteBuffer` for ``Response/Body/collect()``.
-/// Reference-typed so the collecting writer can append to the shared buffer while the stream closure runs.
-private final class ByteBufferAccumulator: @unchecked Sendable {
-    var buffer: ByteBuffer
-    init(_ buffer: ByteBuffer) { self.buffer = buffer }
-}
-
 /// A ``ResponseBodyWriter`` that accumulates everything written into a `ByteBuffer`, used to
 /// eagerly collect a streaming body instead of forwarding it to the connection.
-private class CollectingBodyWriter: ResponseBodyWriter {
-    let accumulator: ByteBufferAccumulator
+private final class CollectingBodyWriter: ResponseBodyWriter {
+    var buffer: ByteBuffer
 
-    init(accumulator: ByteBufferAccumulator) {
-        self.accumulator = accumulator
+    init(buffer: ByteBuffer) {
+        self.buffer = buffer
     }
 
     func write(_ buffer: ByteBuffer) async throws {
         var buffer = buffer
-        self.accumulator.buffer.writeBuffer(&buffer)
+        self.buffer.writeBuffer(&buffer)
     }
-
-    // No-op: collecting into a buffer has nothing to finish (no connection, and trailers
-    // aren't part of a collected `ByteBuffer`). Required only to satisfy `ResponseBodyWriter`.
-    func finish(_ trailingHeaders: HTTPFields?) async throws {}
 }

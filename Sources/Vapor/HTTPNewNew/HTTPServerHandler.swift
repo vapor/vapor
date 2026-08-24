@@ -86,7 +86,9 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // move-only response writer), so it stays in this task; each `write` awaits the
                 // transport, so backpressure propagates to the closure. The server appends the
                 // final chunk via `finish` once the closure returns.
-                let writer: any ResponseBodyWriter = NIOResponseBodyWriter(inner: try await sender.send(httpResponse))
+                // Keep the concrete type so we can call `finish` (which is intentionally not part
+                // of the public `ResponseBodyWriter` protocol); the closure only sees `write`.
+                let writer = NIOResponseBodyWriter(inner: try await sender.send(httpResponse))
                 try await bodyStream.callback(writer)
                 try await writer.finish(nil)
             default:
@@ -108,7 +110,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
 /// closure — a fast producer suspends while a slow client catches up. The underlying writer is
 /// move-only (`~Copyable`) and ``finish(_:)`` consumes it, so it's stored in an `Optional`: a class
 /// can't move a stored property out in place, and `Optional.take()` is how ``finish(_:)`` moves it out.
-class NIOResponseBodyWriter: ResponseBodyWriter {
+final class NIOResponseBodyWriter: ResponseBodyWriter {
     private var inner: NIOHTTPServer.ResponseSender.Writer?
 
     init(inner: consuming NIOHTTPServer.ResponseSender.Writer) {
