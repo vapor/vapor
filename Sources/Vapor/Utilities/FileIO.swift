@@ -270,8 +270,7 @@ public struct FileIO: Sendable {
         response.body = .init(stream: { writer in
             // Open the handle without the scoped `withFileHandle` API so we can iterate the
             // chunks at the top level of this closure and write each one straight to `writer`
-            // with `await` — the transport backpressures us, no intermediate buffering. (A
-            // nested closure can't hold the move-only `inout` writer.)
+            // with `await` — the transport backpressures us, no intermediate buffering.
             let handle: ReadFileHandle
             do {
                 handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())

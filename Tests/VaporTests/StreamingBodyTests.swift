@@ -2,6 +2,7 @@ import Vapor
 import VaporTesting
 import AsyncHTTPClient
 import NIOCore
+import NIOConcurrencyHelpers
 import NIOPosix
 import NIOHTTP1
 import HTTPTypes
@@ -205,17 +206,79 @@ struct StreamingBodyTests {
                 let address = try await app.server.listeningAddress
                 let port = try #require(address.port)
 
-                // The errored request either fails while collecting or returns a truncated
-                // body — either is acceptable, we only require the server not to crash.
+                // An error thrown mid-stream must surface to the client as a failure, not as a
+                // clean response: the head (200, chunked) is already flushed, so the server drops
+                // `finish` and tears the connection down without a terminating chunk. Collecting
+                // the incomplete body must therefore throw (or the request fails outright). We
+                // require that failure signal — silently delivering a well-formed body would be a
+                // regression.
+                var sawFailureSignal = false
                 do {
                     let resp = try await HTTPClient.shared.execute(
                         HTTPClientRequest(url: "http://127.0.0.1:\(port)/error-mid-stream"), timeout: .seconds(10)
                     )
-                    let body = try await resp.body.collect(upTo: 1 << 20).string
-                    #expect(body != "partial-complete")
+                    do {
+                        _ = try await resp.body.collect(upTo: 1 << 20)
+                    } catch {
+                        sawFailureSignal = true // truncated/incomplete body surfaced as an error
+                    }
                 } catch {
-                    // Truncated/failed body is expected.
+                    sawFailureSignal = true // request failed outright
                 }
+                #expect(sawFailureSignal, "client must observe truncation/failure when the stream errors mid-body")
+
+                // The server must keep serving subsequent requests.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                )
+                #expect(ok.status == .ok)
+                #expect(try await ok.body.collect(upTo: 1 << 20).string == "ok")
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
+
+    @Test("An error thrown mid-stream aborts the response instead of completing it")
+    func testMidStreamErrorWithDeclaredLengthAbortsResponse() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            // Declares Content-Length: 8, writes 4 bytes, then throws. Throwing out of the handler
+            // aborts the stream (swift-http-server#115): `finish` is skipped, so the response is
+            // never concluded and the client can never receive the full 8-byte body — it either
+            // errors on the truncated response or sees fewer bytes than advertised.
+            app.get("abort") { _ -> Response in
+                Response(status: .ok, body: .init(stream: { writer in
+                    try await writer.write(ByteBuffer(string: "AAAA"))
+                    throw MidStreamError()
+                }, count: 8))
+            }
+            app.get("ok") { _ in "ok" }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                // The full declared body must never arrive intact.
+                var deliveredFullBody = false
+                do {
+                    let resp = try await HTTPClient.shared.execute(
+                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/abort"), timeout: .seconds(10)
+                    )
+                    let body = try await resp.body.collect(upTo: 1 << 20)
+                    deliveredFullBody = body.readableBytes == 8
+                } catch {
+                    // Aborted/truncated response is expected.
+                }
+                #expect(!deliveredFullBody, "aborted stream must not deliver the full declared body")
 
                 // The server must keep serving subsequent requests.
                 let ok = try await HTTPClient.shared.execute(
@@ -276,13 +339,116 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("collect(on:) gathers a streaming body into a single buffer")
+    @Test("Server backpressures a fast producer against a stalled client")
+    func testStreamingBodyBackpressure() async throws {
+        let chunkSize = 16 * 1024
+        let totalChunks = 2048 // 32 MiB — far larger than any socket/NIO buffer window.
+        let produced = NIOLockedValueBox(0)
+
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.get("firehose") { _ -> Response in
+                Response(status: .ok, body: .init(stream: { writer in
+                    let chunk = ByteBuffer(repeating: 0x41, count: chunkSize)
+                    for _ in 0..<totalChunks {
+                        try await writer.write(chunk)
+                        produced.withLockedValue { $0 += 1 }
+                    }
+                }))
+            }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                let resp = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/firehose"), timeout: .seconds(30)
+                )
+                #expect(resp.status == .ok)
+
+                // Don't read the body yet: the socket and NIO write buffers fill, and `write`
+                // must suspend, so the producer cannot race to the last chunk while we stall.
+                try await Task.sleep(for: .milliseconds(500))
+                let stalledAt = produced.withLockedValue { $0 }
+                #expect(stalledAt < totalChunks, "producer was not backpressured (produced \(stalledAt)/\(totalChunks))")
+
+                // Drain the body: the producer resumes and runs to completion.
+                var received = 0
+                for try await chunk in resp.body {
+                    received += chunk.readableBytes
+                }
+                #expect(received == totalChunks * chunkSize)
+                #expect(produced.withLockedValue { $0 } == totalChunks)
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
+
+    @Test("Server survives a stream that writes fewer bytes than its declared length")
+    func testBadStreamLengthDoesNotBreakServer() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            // Declares `Content-Length: 2` (via `count`) but only writes a single byte.
+            app.get("bad-length") { _ -> Response in
+                Response(status: .ok, body: .init(stream: { writer in
+                    try await writer.write(ByteBuffer(string: "a"))
+                }, count: 2))
+            }
+            app.get("ok") { _ in "ok" }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                // A body shorter than the declared length can't be delivered cleanly: the client
+                // either errors on the truncated response or sees fewer bytes than advertised.
+                // Either is acceptable — we only require the server not to crash.
+                do {
+                    let resp = try await HTTPClient.shared.execute(
+                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/bad-length"), timeout: .seconds(5)
+                    )
+                    let body = try await resp.body.collect(upTo: 1 << 20)
+                    #expect(body.readableBytes < 2)
+                } catch {
+                    // Truncated/failed response is expected.
+                }
+
+                // The server must keep serving subsequent requests.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                )
+                #expect(ok.status == .ok)
+                #expect(try await ok.body.collect(upTo: 1 << 20).string == "ok")
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
+
+    @Test("collect() gathers a streaming body into a single buffer")
     func testCollectStreamingBody() async throws {
         let body = Response.Body(stream: { writer in
             try await writer.write(ByteBuffer(string: "Hello, "))
             try await writer.write(ByteBuffer(string: "collected!"))
         })
-        let collected = try await body.collect(on: MultiThreadedEventLoopGroup.singleton.any()).get()
+        let collected = try await body.collect()
         #expect(collected.map { String(buffer: $0) } == "Hello, collected!")
     }
 }

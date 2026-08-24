@@ -12,7 +12,7 @@ import NIOPosix
 extension Response {
     struct BodyStream {
         let count: Int
-        let callback: @Sendable (inout ResponseBodyStreamWriter) async throws -> ()
+        let callback: @Sendable (any ResponseBodyWriter) async throws -> ()
     }
 
     /// Represents a `Response`'s body.
@@ -90,9 +90,12 @@ extension Response {
         public func collect() async throws -> ByteBuffer? {
             switch self.storage {
             case .stream(let stream):
-                let accumulator = ByteBufferAccumulator(self.byteBufferAllocator.buffer(capacity: 0))
-                var writer: ResponseBodyStreamWriter = CollectingBodyWriter(accumulator: accumulator)
-                try await stream.callback(&writer)
+                // Reserve the declared length up front when known (`count >= 0`) to avoid repeated
+                // grow-and-copy reallocations; `-1` means unknown/chunked, so start empty.
+                let initialCapacity = stream.count >= 0 ? stream.count : 0
+                let accumulator = ByteBufferAccumulator(self.byteBufferAllocator.buffer(capacity: initialCapacity))
+                let writer: any ResponseBodyWriter = CollectingBodyWriter(accumulator: accumulator)
+                try await stream.callback(writer)
                 return accumulator.buffer
             default:
                 return self.buffer
@@ -155,7 +158,7 @@ extension Response {
         ///   - stream: The closure that writes the body chunks.
         ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly `count` bytes.
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(stream: @escaping @Sendable (inout ResponseBodyStreamWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .stream(.init(count: count, callback: stream))
         }
@@ -167,7 +170,7 @@ extension Response {
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
         ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(stream: @escaping @Sendable (inout ResponseBodyStreamWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
 
@@ -185,8 +188,8 @@ extension Response {
     }
 }
 
-/// Accumulates streamed body chunks into a single `ByteBuffer` for ``Response/Body/collect(on:)``.
-/// Reference-typed so a `Copyable` writer can append to it while the stream closure runs.
+/// Accumulates streamed body chunks into a single `ByteBuffer` for ``Response/Body/collect()``.
+/// Reference-typed so the collecting writer can append to the shared buffer while the stream closure runs.
 private final class ByteBufferAccumulator: @unchecked Sendable {
     var buffer: ByteBuffer
     init(_ buffer: ByteBuffer) { self.buffer = buffer }
@@ -194,8 +197,12 @@ private final class ByteBufferAccumulator: @unchecked Sendable {
 
 /// A ``ResponseBodyWriter`` that accumulates everything written into a `ByteBuffer`, used to
 /// eagerly collect a streaming body instead of forwarding it to the connection.
-private struct CollectingBodyWriter: ResponseBodyWriter {
+private class CollectingBodyWriter: ResponseBodyWriter {
     let accumulator: ByteBufferAccumulator
+
+    init(accumulator: ByteBufferAccumulator) {
+        self.accumulator = accumulator
+    }
 
     func write(_ buffer: ByteBuffer) async throws {
         var buffer = buffer
