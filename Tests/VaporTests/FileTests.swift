@@ -544,6 +544,36 @@ struct FileTests {
 //        }
 //    }
 
+    @Test("Cancelling a file stream still closes the file handle")
+    func testCancelledFileStreamClosesHandle() async throws {
+        // Large enough that a read is still in flight when the cancellation lands: the whole point
+        // is to cancel between opening the handle and closing it.
+        let fileURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("vapor-cancel-\(UUID().uuidString).bin")
+        try Data(repeating: 0x41, count: 8 << 20).write(to: fileURL)
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        try await withApp { app in
+            let request = Request(application: app)
+
+            // `close()` is dispatched through a thread pool that refuses cancelled work, so a
+            // handle closed naively from a cancelled task stays open and trips NIOFileSystem's
+            // `deinit` precondition — which traps the process rather than throwing. Cancelling
+            // repeatedly at slightly different points covers the window between open and close.
+            for iteration in 1...10 {
+                let response = try await request.fileio.streamFile(
+                    at: fileURL.path, advancedETagComparison: false)
+
+                let collecting = Task { try await response.body.collect() }
+                try await Task.sleep(for: .microseconds(200 * iteration))
+                collecting.cancel()
+                _ = try? await collecting.value
+            }
+        }
+
+        // Getting here at all is the assertion: a leaked descriptor would have killed the process.
+    }
+
     // MARK: Bodyless methods
 
     @Test("HEAD request does not read the file")

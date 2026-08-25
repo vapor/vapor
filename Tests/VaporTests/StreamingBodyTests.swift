@@ -10,6 +10,11 @@ import ServiceLifecycle
 import Logging
 import Testing
 import RoutingKit
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite("Streaming Body Tests")
 struct StreamingBodyTests {
@@ -462,6 +467,7 @@ struct StreamingBodyTests {
     private func rawExchange(
         port: Int,
         path: String,
+        extraHeaders: String = "",
         grace: Duration = .milliseconds(250)
     ) async throws -> (bytes: String, serverClosed: Bool) {
         let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
@@ -472,7 +478,7 @@ struct StreamingBodyTests {
             }
         return try await channel.executeThenClose { inbound, outbound in
             try await outbound.write(ByteBuffer(
-                string: "GET \(path) HTTP/1.1\r\nHost: localhost\r\n\r\n"))
+                string: "GET \(path) HTTP/1.1\r\nHost: localhost\r\n\(extraHeaders)\r\n"))
             let received = NIOLockedValueBox("")
             let reachedEnd = NIOLockedValueBox(false)
             await withTaskGroup(of: Void.self) { group in
@@ -532,6 +538,95 @@ struct StreamingBodyTests {
                 withKnownIssue("304 response carries the handler's body") {
                     #expect(!notModified.contains("Hello, world!"), "\(notModified.debugDescription)")
                 }
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
+
+    @Test("Server closes the connection when the client asks for Connection: close", .timeLimit(.minutes(1)))
+    func testConnectionCloseIsHonoured() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.get("hello") { _ in "hi" }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                let exchange = try await rawExchange(
+                    port: port,
+                    path: "/hello",
+                    extraHeaders: "Connection: close\r\n",
+                    grace: .seconds(1))
+                #expect(exchange.bytes.contains("hi"))
+
+                // RFC 9112 § 9.6: a server that receives `Connection: close` must close the
+                // connection once the response is sent, and should echo the header back. Today the
+                // connection is left open until the 30s read-header timeout reaps it.
+                withKnownIssue("the connection is left open after the response") {
+                    #expect(exchange.serverClosed)
+                    #expect(exchange.bytes.lowercased().contains("connection: close"))
+                }
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
+
+    @Test("Server survives a client aborting mid-file-stream")
+    func testClientAbortMidFileStreamDoesNotBreakServer() async throws {
+        // Big enough that the server is still reading when the client gives up: the transport
+        // can't have buffered the whole thing, so the body closure is mid-read when it's cancelled.
+        let fileURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("vapor-abort-\(UUID().uuidString).bin")
+        try Data(repeating: 0x41, count: 8 << 20).write(to: fileURL)
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.get("file") { req -> Response in
+                try await req.fileio.streamFile(at: fileURL.path, advancedETagComparison: false)
+            }
+            app.get("ok") { _ in "ok" }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                // Abort mid-stream: collect with a tiny limit so the client drops the connection
+                // while the file is still being read. The writes then fail with an I/O error rather
+                // than cancelling the task, so this covers the error path out of the body closure;
+                // the cancellation path is covered by `testCancelledFileStreamClosesHandle`.
+                await #expect(throws: (any Error).self) {
+                    let resp = try await HTTPClient.shared.execute(
+                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/file"), timeout: .seconds(10)
+                    )
+                    _ = try await resp.body.collect(upTo: 16)
+                }
+
+                // The server must still be alive and serving.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                )
+                #expect(ok.status == .ok)
+                #expect(try await ok.body.collect(upTo: 1 << 20).string == "ok")
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
