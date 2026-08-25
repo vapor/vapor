@@ -163,7 +163,7 @@ public final class Application: Sendable, Service {
         self.sessions.initialize()
         self.sessions.use(.memory)
         self.servers.initialize()
-        self.servers.use(.httpNew)
+        self.servers.use(.http)
     }
 
     /// Register an additional `Service` to run alongside the HTTP server.
