@@ -115,9 +115,6 @@ public struct Response: CustomStringConvertible, Sendable {
         }
     }
 
-    /// If `true`, don't serialize the body.
-    var forHeadRequest: Bool = false
-
     private let contentConfiguration: ContentConfiguration
 
     // MARK: Init

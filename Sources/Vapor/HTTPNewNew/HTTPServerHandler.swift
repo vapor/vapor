@@ -79,6 +79,19 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 Logger.current.critical("Invalid server state - no response sender")
                 throw Abort(.internalServerError)
             }
+            // If this is a HEAD request we don't need a body, so write an empty body out and don't
+            // waste time going through the response body. `204` and `304` are defined as bodyless
+            // too: writing one anyway breaks framing, and the client reads it as the start of the
+            // next response.
+            let bodyIsForbidden = request.method == .head
+                || vaporResponse.status == .noContent
+                || vaporResponse.status == .notModified
+            guard !bodyIsForbidden else {
+                var empty = UniqueArray<UInt8>()
+                try await sender.sendAndFinish(httpResponse, buffer: &empty)
+                return
+            }
+
             switch vaporResponse.body.storage {
             case .stream(let bodyStream):
                 // Streaming body: send the head, then let the body closure write chunks straight

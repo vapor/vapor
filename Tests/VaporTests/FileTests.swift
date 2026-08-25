@@ -594,14 +594,10 @@ struct FileTests {
                 #expect(res.body.readableBytes == 0)
             }
 
-            // A HEAD response carries no body, so opening and reading the file is wasted work:
-            // the transport discards every byte before it reaches the client. Vapor 4 skipped body
-            // serialisation entirely via `Response.forHeadRequest`; the new server doesn't, so the
-            // whole file is still read off disk.
-            #warning("Vapor: HEAD still produces the response body — wire up `Response.forHeadRequest` in the server handler, then drop this `withKnownIssue`")
-            withKnownIssue("HEAD still runs the body stream and reads the file") {
-                #expect(fileWasRead.withLockedValue { $0 } == false)
-            }
+            // A HEAD response carries no body, so opening and reading the file would be wasted
+            // work: the transport discards every byte before it reaches the client. The server
+            // handler concludes HEAD responses without running the body stream at all.
+            #expect(fileWasRead.withLockedValue { $0 } == false)
         }
     }
 

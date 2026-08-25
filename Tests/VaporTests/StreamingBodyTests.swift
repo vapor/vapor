@@ -531,17 +531,11 @@ struct StreamingBodyTests {
 
                 let noContent = try await rawExchange(port: port, path: "/no-content").bytes
                 #expect(noContent.hasPrefix("HTTP/1.1 204 No Content"))
-                #warning("swift-http-server#118: 204 responses still write the body — drop this `withKnownIssue` when the upstream fix lands")
-                withKnownIssue("204 response carries the handler's body") {
-                    #expect(!noContent.contains("Hello, world!"), "\(noContent.debugDescription)")
-                }
+                #expect(!noContent.contains("Hello, world!"), "\(noContent.debugDescription)")
 
                 let notModified = try await rawExchange(port: port, path: "/not-modified").bytes
                 #expect(notModified.hasPrefix("HTTP/1.1 304 Not Modified"))
-                #warning("swift-http-server#118: 304 responses still write the body — drop this `withKnownIssue` when the upstream fix lands")
-                withKnownIssue("304 response carries the handler's body") {
-                    #expect(!notModified.contains("Hello, world!"), "\(notModified.debugDescription)")
-                }
+                #expect(!notModified.contains("Hello, world!"), "\(notModified.debugDescription)")
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
