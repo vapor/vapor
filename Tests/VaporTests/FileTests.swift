@@ -624,23 +624,28 @@ struct FileTests {
         }
     }
 
-    @Test("FileMiddleware does not send a file body for HEAD and OPTIONS")
-    func testFileMiddlewareBodylessMethods() async throws {
+    @Test("FileMiddleware only serves GET and HEAD")
+    func testFileMiddlewareOnlyServesGetAndHead() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
             try await app.test(method: .running) { runner in
+                let get = try await runner.sendRequest(.get, "/Utilities/foo.txt")
+                #expect(get.status == .ok)
+                #expect(get.body.readableBytes > 0)
+
+                // HEAD gets the headers a GET would have returned, with no body.
                 let head = try await runner.sendRequest(.head, "/Utilities/foo.txt")
                 #expect(head.status == .ok)
+                #expect(head.headers[.contentLength] == get.headers[.contentLength])
                 #expect(head.body.readableBytes == 0)
 
-                // `FileMiddleware` doesn't look at the method at all: any method whose path matches
-                // a file is served the file.
-                let options = try await runner.sendRequest(.options, "/Utilities/foo.txt")
-                #warning("Vapor: FileMiddleware ignores the request method and serves files for any of them — drop this `withKnownIssue` once it only answers GET and HEAD")
-                withKnownIssue("FileMiddleware serves the file body for OPTIONS") {
-                    #expect(options.body.readableBytes == 0)
+                // Everything else falls through the middleware; nothing else is registered here,
+                // so it 404s rather than being answered with the file.
+                for method in [HTTPRequest.Method.options, .post, .delete] {
+                    let res = try await runner.sendRequest(method, "/Utilities/foo.txt")
+                    #expect(res.status == .notFound, "\(method) was served by FileMiddleware")
                 }
             }
         }

@@ -64,6 +64,13 @@ public final class FileMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        // Only GET and HEAD retrieve a representation of a file. Anything else — writes, OPTIONS,
+        // and so on — isn't ours to answer just because the path happens to match a file on disk,
+        // so hand it down the chain where a route (or the 404) can deal with it.
+        guard request.method == .get || request.method == .head else {
+            return try await next.respond(to: request)
+        }
+
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {
             throw Abort(.badRequest)
