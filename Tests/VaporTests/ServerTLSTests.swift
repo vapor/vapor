@@ -234,6 +234,72 @@ struct ServerTLSTests {
         }
     }
 
+    @Test("Concurrent waiters all receive the listening address", .timeLimit(.minutes(1)))
+    func testConcurrentListeningAddressWaiters() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+
+                // Several tasks ask for the address before it is published. Each has to be resumed;
+                // holding a single waiter would strand all but the last one forever.
+                try await withThrowingTaskGroup(of: Int?.self) { waiters in
+                    for _ in 0..<4 {
+                        waiters.addTask { try await app.server.listeningAddress.port }
+                    }
+                    var ports: [Int?] = []
+                    for try await port in waiters {
+                        ports.append(port)
+                    }
+                    #expect(ports.count == 4)
+                    #expect(Set(ports.map { $0 ?? 0 }).count == 1, "waiters disagreed about the port")
+                }
+
+                group.cancelAll()
+            }
+        }
+    }
+
+    @Test("Concurrent waiters all see a startup failure", .timeLimit(.minutes(1)))
+    func testConcurrentListeningAddressWaitersOnFailure() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: "/nonexistent/certificate.crt",
+                privateKeyPath: "/nonexistent/private.key"
+            )
+            try await app.boot()
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+
+                // The address never arrives, so every waiter must be handed the startup error
+                // rather than being left parked on it.
+                await withTaskGroup(of: Bool.self) { waiters in
+                    for _ in 0..<4 {
+                        waiters.addTask {
+                            do {
+                                _ = try await app.server.listeningAddress
+                                return false
+                            } catch {
+                                return true
+                            }
+                        }
+                    }
+                    var threw = 0
+                    for await didThrow in waiters where didThrow {
+                        threw += 1
+                    }
+                    #expect(threw == 4, "some waiters were never resumed")
+                }
+
+                group.cancelAll()
+            }
+        }
+    }
+
     @Test("HTTP/1.1 client is served when the server also offers HTTP/2", .timeLimit(.minutes(1)))
     func testHTTP1ClientAgainstHTTP2EnabledServer() async throws {
         try await withApp { app in
