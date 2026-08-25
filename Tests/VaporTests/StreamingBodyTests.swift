@@ -398,7 +398,8 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server survives a stream that writes fewer bytes than its declared length")
+    @Test("Server survives a stream that writes fewer bytes than its declared length",
+          .bug("https://github.com/swift-server/swift-http-server/issues/116"))
     func testBadStreamLengthDoesNotBreakServer() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -504,7 +505,8 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server does not write a body for a status that cannot carry one", .timeLimit(.minutes(1)))
+    @Test("Server does not write a body for a status that cannot carry one", .timeLimit(.minutes(1)),
+          .bug("https://github.com/swift-server/swift-http-server/issues/118"))
     func testBodylessStatusDoesNotWriteBody() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -529,14 +531,14 @@ struct StreamingBodyTests {
 
                 let noContent = try await rawExchange(port: port, path: "/no-content").bytes
                 #expect(noContent.hasPrefix("HTTP/1.1 204 No Content"))
-                #warning("swift-http-server: 204 responses still write the body — drop this `withKnownIssue` when the upstream fix lands")
+                #warning("swift-http-server#118: 204 responses still write the body — drop this `withKnownIssue` when the upstream fix lands")
                 withKnownIssue("204 response carries the handler's body") {
                     #expect(!noContent.contains("Hello, world!"), "\(noContent.debugDescription)")
                 }
 
                 let notModified = try await rawExchange(port: port, path: "/not-modified").bytes
                 #expect(notModified.hasPrefix("HTTP/1.1 304 Not Modified"))
-                #warning("swift-http-server: 304 responses still write the body — drop this `withKnownIssue` when the upstream fix lands")
+                #warning("swift-http-server#118: 304 responses still write the body — drop this `withKnownIssue` when the upstream fix lands")
                 withKnownIssue("304 response carries the handler's body") {
                     #expect(!notModified.contains("Hello, world!"), "\(notModified.debugDescription)")
                 }
@@ -547,7 +549,8 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server closes the connection when the client asks for Connection: close", .timeLimit(.minutes(1)))
+    @Test("Server closes the connection when the client asks for Connection: close", .timeLimit(.minutes(1)),
+          .bug("https://github.com/swift-server/swift-http-server/issues/119"))
     func testConnectionCloseIsHonoured() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -574,7 +577,7 @@ struct StreamingBodyTests {
                 // RFC 9112 § 9.6: a server that receives `Connection: close` must close the
                 // connection once the response is sent, and should echo the header back. Today the
                 // connection is left open until the 30s read-header timeout reaps it.
-                #warning("swift-http-server: the request's `Connection` header is never read, so `Connection: close` is ignored — drop this `withKnownIssue` when the upstream fix lands")
+                #warning("swift-http-server#119: the request's `Connection` header is never read, so `Connection: close` is ignored — drop this `withKnownIssue` when the upstream fix lands")
                 withKnownIssue("the connection is left open after the response") {
                     #expect(exchange.serverClosed)
                     #expect(exchange.bytes.lowercased().contains("connection: close"))
@@ -586,7 +589,8 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server survives a client aborting mid-file-stream")
+    @Test("Server survives a client aborting mid-file-stream",
+          .bug("https://github.com/swift-server/swift-http-server/issues/53"))
     func testClientAbortMidFileStreamDoesNotBreakServer() async throws {
         // Big enough that the server is still reading when the client gives up: the transport
         // can't have buffered the whole thing, so the body closure is mid-read when it's cancelled.
