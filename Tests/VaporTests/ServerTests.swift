@@ -956,24 +956,6 @@ struct ServerTests {
         //
         //        app = try await Application(Environment(
         //            name: "testing",
-        //            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4"]
-        //        ))
-        //        try await checkForError(app)
-        //
-        //        app = try await Application(Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081"]
-        //        ))
-        //        try await checkForError(app)
-        //
-        //        app = try await Application(Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081", "--unix-socket", "/path/to/socket"]
-        //        ))
-        //        try await checkForError(app)
-        //
-        //        app = try await Application(Environment(
-        //            name: "testing",
         //            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--unix-socket", "/path/to/socket"]
         //        ))
         //        try await checkForError(app)
@@ -1038,19 +1020,6 @@ struct ServerTests {
     //            }
     //        }
     //    }
-    //
-    //    @Test("Test Start With Default Hostname Configuration")
-    //    func testStartWithDefaultHostnameConfiguration() async throws {
-    //        try await withApp { app in
-    //            app.http.server.configuration.address = .hostname()
-    //            app.environment.arguments = ["serve"]
-    //
-    //            await #expect(throws: Never.self) {
-    //                try await app.startup()
-    //            }
-    //        }
-    //    }
-    //
 
         @Test("Test Configuration Has Actual Port After Start")
         func testConfigurationHasActualPortAfterStart() async throws {
