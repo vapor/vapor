@@ -22,7 +22,7 @@ struct WebSocketTests {
 //            // TODO: Update to structured concurrency pattern when re-enabling
 //            // try await app.server.run()
 //
-//            let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+//            let port = try #require(app.sharedAddress.withLockedValue({ $0 })?.port)
 //            let promise = MultiThreadedEventLoopGroup.singleton.next().makePromise(of: String.self)
 //            try await WebSocket.connect(
 //                to: "ws://localhost:\(port)/echo",
@@ -52,7 +52,7 @@ struct WebSocketTests {
 //            // TODO: Update to structured concurrency pattern when re-enabling
 //            // try await app.server.run()
 //
-//            let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+//            let port = try #require(app.sharedAddress.withLockedValue({ $0 })?.port)
 //            await #expect(performing: {
 //                try await WebSocket.connect(
 //                    to: "ws://localhost:\(port)/foo",
@@ -83,7 +83,7 @@ struct WebSocketTests {
 //            // TODO: Update to structured concurrency pattern when re-enabling
 //            // try await app.server.run()
 //
-//            let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+//            let port = try #require(app.sharedAddress.withLockedValue({ $0 })?.port)
 //            let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: String.self)
 //            WebSocket.connect(
 //                to: "ws://localhost:\(port)/foo",
@@ -115,7 +115,7 @@ struct WebSocketTests {
 //            // TODO: Update to structured concurrency pattern when re-enabling
 //            // try await app.server.run()
 //
-//            let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port)
+//            let port = try #require(app.sharedAddress.withLockedValue({ $0 })?.port)
 //            let promise = MultiThreadedEventLoopGroup.singleton.any().makePromise(of: String.self)
 //            WebSocket.connect(
 //                to: "ws://localhost:\(port)/foo",

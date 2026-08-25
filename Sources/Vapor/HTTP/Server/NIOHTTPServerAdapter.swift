@@ -144,7 +144,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             let nioAddress = try NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
 
             // Atomically set the address and resume any waiting continuation
-            self.application.sharedNewAddress.withLockedValue { $0 = nioAddress }
+            self.application.sharedAddress.withLockedValue { $0 = nioAddress }
             self.addressWaiters.withLockedValue { waiters in
                 waiters.continuation?.resume(returning: nioAddress)
                 waiters.continuation = nil
@@ -161,11 +161,11 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         get async throws {
             // Check atomically: if address is already set, return it;
             // otherwise register a continuation to be fulfilled by run()
-            let needsWait: Bool = self.application.sharedNewAddress.withLockedValue { address in
+            let needsWait: Bool = self.application.sharedAddress.withLockedValue { address in
                 address != nil ? false : true
             }
             if !needsWait {
-                return self.application.sharedNewAddress.withLockedValue { $0! }
+                return self.application.sharedAddress.withLockedValue { $0! }
             }
             enum Resolution {
                 case address(SocketAddress)
@@ -176,7 +176,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 // Double-check under lock: the address may have been published, or startup may have
                 // failed outright, between our check above and here.
                 let resolution: Resolution = self.addressWaiters.withLockedValue { waiters in
-                    if let address = self.application.sharedNewAddress.withLockedValue({ $0 }) {
+                    if let address = self.application.sharedAddress.withLockedValue({ $0 }) {
                         return .address(address)
                     }
                     if let error = waiters.startupError {

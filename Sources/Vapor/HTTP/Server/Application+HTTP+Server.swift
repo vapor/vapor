@@ -3,7 +3,7 @@ import NIOConcurrencyHelpers
 import Logging
 
 extension Application.Servers.Provider {
-    public static var httpNew: Self {
+    public static var http: Self {
         .init {
             $0.servers.use { app in
                 if let existing = app.storage[ServerKey.self] {

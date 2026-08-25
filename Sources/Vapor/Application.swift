@@ -50,7 +50,7 @@ public final class Application: Sendable, Service {
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
-    public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
+    public let sharedAddress: NIOLockedValueBox<SocketAddress?>
     private let _services: NIOLockedValueBox<[any Service]>
     public let routes: Routes
     // TODO: inline this when application is a struct
@@ -127,7 +127,7 @@ public final class Application: Sendable, Service {
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
-        self.sharedNewAddress = .init(nil)
+        self.sharedAddress = .init(nil)
         self._services = .init([])
         self._serverConfiguration = .init(configuration)
         self.configReader = configReader
@@ -163,7 +163,7 @@ public final class Application: Sendable, Service {
         self.sessions.initialize()
         self.sessions.use(.memory)
         self.servers.initialize()
-        self.servers.use(.httpNew)
+        self.servers.use(.http)
     }
 
     /// Register an additional `Service` to run alongside the HTTP server.
