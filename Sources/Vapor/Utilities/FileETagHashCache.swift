@@ -59,7 +59,7 @@ package actor FileETagHashCache {
         forFileAt path: String,
         lastModified: Date,
         size: Int64,
-        compute: @escaping @Sendable () async throws -> String
+        compute: @escaping @Sendable @concurrent () async throws -> String
     ) async throws -> String {
         if let entry = self.entries[path], entry.lastModified == lastModified, entry.size == size {
             self.touch(path)
@@ -73,7 +73,7 @@ package actor FileETagHashCache {
             return try await existing.value
         }
 
-        let task = self.makeComputeTask(compute)
+        let task = Task { try await compute() }
         self.inFlight[generation] = task
         defer { self.inFlight[generation] = nil }
 
@@ -90,21 +90,6 @@ package actor FileETagHashCache {
     /// How many entries are currently cached. For tests.
     package var count: Int {
         self.entries.count
-    }
-
-    /// Starts the hashing off the actor.
-    ///
-    /// A `Task` created inside an actor method inherits that actor's isolation, which would run the
-    /// hashing — a CPU-bound loop over the whole file — on the cache's executor and block every
-    /// other lookup behind it. Created from a `nonisolated` context it runs on the global executor
-    /// instead, while still inheriting task locals (unlike a detached task).
-    ///
-    /// The task is deliberately unstructured: if the caller who started it goes away, the remaining
-    /// waiters still need the result, so it isn't cancelled with them.
-    private nonisolated func makeComputeTask(
-        _ compute: @escaping @Sendable () async throws -> String
-    ) -> Task<String, any Error> {
-        Task { try await compute() }
     }
 
     private func store(_ entry: Entry, for path: String) {
