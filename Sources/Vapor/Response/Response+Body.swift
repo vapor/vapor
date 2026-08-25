@@ -63,7 +63,7 @@ extension Response {
             switch self.storage {
             case .buffer(var buffer): return buffer.readData(length: buffer.readableBytes)
             case .data(let data): return data
-            case .staticString(let staticString): return Data(bytes: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
+            case .staticString(let staticString): return unsafe Data(bytes: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
             case .string(let string): return Data(string.utf8)
             case .none: return nil
             case .stream: return nil

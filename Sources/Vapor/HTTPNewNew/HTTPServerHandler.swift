@@ -79,6 +79,30 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 Logger.current.critical("Invalid server state - no response sender")
                 throw Abort(.internalServerError)
             }
+            // Vapor currently doesn't have an API for informational responses, trying to return one would
+            // result in a crash, so bypass that here
+            guard vaporResponse.status.kind != .informational else {
+                Logger.current.error(
+                    "Handler returned an informational status, which cannot be sent as a final response",
+                    metadata: ["status": "\(vaporResponse.status.code)"])
+                var empty = UniqueArray<UInt8>()
+                try await sender.sendAndFinish(HTTPResponse(status: .internalServerError), buffer: &empty)
+                return
+            }
+
+            // If this is a HEAD request we don't need a body, so write an empty body out and don't
+            // waste time going through the response body. `204` and `304` are defined as bodyless
+            // too: writing one anyway breaks framing, and the client reads it as the start of the
+            // next response.
+            let bodyIsForbidden = request.method == .head
+                || vaporResponse.status == .noContent
+                || vaporResponse.status == .notModified
+            guard !bodyIsForbidden else {
+                var empty = UniqueArray<UInt8>()
+                try await sender.sendAndFinish(httpResponse, buffer: &empty)
+                return
+            }
+
             switch vaporResponse.body.storage {
             case .stream(let bodyStream):
                 // Streaming body: send the head, then let the body closure write chunks straight
@@ -90,6 +114,16 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // of the public `ResponseBodyWriter` protocol); the closure only sees `write`.
                 let writer = NIOResponseBodyWriter(inner: try await sender.send(httpResponse))
                 try await bodyStream.callback(writer)
+                guard bodyStream.count < 0 || writer.bytesWritten == bodyStream.count else {
+                    // Stream lenght is different to what was expecting, this is an error state to close the connection
+                    Logger.current.debug(
+                        "Response body stream wrote a different number of bytes than it declared, closing the connection",
+                        metadata: [
+                            "written": "\(writer.bytesWritten)",
+                            "declared": "\(bodyStream.count)",
+                        ])
+                    return
+                }
                 try await writer.finish(nil)
             default:
                 // Buffered body: single-shot write.
@@ -113,6 +147,9 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
 final class NIOResponseBodyWriter: ResponseBodyWriter {
     private var inner: NIOHTTPServer.ResponseSender.Writer?
 
+    /// The number of body bytes written so far, used to check a stream against its declared length.
+    private(set) var bytesWritten = 0
+
     init(inner: consuming NIOHTTPServer.ResponseSender.Writer) {
         self.inner = consume inner
     }
@@ -123,6 +160,7 @@ final class NIOResponseBodyWriter: ResponseBodyWriter {
         // `inner` is always present during writes (the body closure runs before `finish`, which
         // takes it); the optional-chaining is just how we reach the move-only writer in place.
         try await self.inner?.write(buffer: &out)
+        self.bytesWritten += buffer.readableBytes
     }
 
     func finish(_ trailingHeaders: HTTPFields?) async throws {

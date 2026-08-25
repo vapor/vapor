@@ -194,7 +194,7 @@ struct QueryTests {
     func testCustomEncode() async throws {
         try await withApp { app throws in
             app.get("custom-encode") { req -> Response in
-                let res = Response(status: .ok)
+                var res = Response(status: .ok)
                 let jsonEncoder = JSONEncoder()
                 jsonEncoder.outputFormatting = .prettyPrinted
                 try res.content.encode(["hello": "world"], using: jsonEncoder)

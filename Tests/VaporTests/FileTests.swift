@@ -1,5 +1,6 @@
 import Vapor
 import NIOCore
+import NIOConcurrencyHelpers
 import HTTPTypes
 import _NIOFileSystem
 import Crypto
@@ -97,6 +98,29 @@ struct FileTests {
                 let digest = SHA256.hash(data: fileData)
                 let eTag = res.headers[.eTag]
                 #expect(eTag == digest.hex)
+            }
+        }
+    }
+
+    @Test("Advanced ETag hashes are cached across requests")
+    func testAdvancedETagHashIsCached() async throws {
+        try await withApp { app in
+            app.get("file-stream") { req -> Response in
+                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+            }
+
+            #expect(app.storage[FileMiddleware.ETagHashes.self] == nil)
+
+            try await app.test(method: .running) { runner in
+                let first = try await runner.sendRequest(.get, "/file-stream")
+                let firstETag = try #require(first.headers[.eTag])
+
+                // Without a populated cache every request re-reads and re-hashes the whole file.
+                let cached = try #require(app.storage[FileMiddleware.ETagHashes.self]?[#filePath])
+                #expect(cached.digestHex == firstETag)
+
+                let second = try await runner.sendRequest(.get, "/file-stream")
+                #expect(second.headers[.eTag] == firstETag)
             }
         }
     }
@@ -542,4 +566,85 @@ struct FileTests {
 //            throw error
 //        }
 //    }
+
+    @Test("Cancelling a file stream still closes the file handle")
+    func testCancelledFileStreamClosesHandle() async throws {
+        // Large enough that a read is still in flight when the cancellation lands: the whole point
+        // is to cancel between opening the handle and closing it.
+        let filePath = try await makeTemporaryFile(size: 8 << 20)
+
+        try await withApp { app in
+            let request = Request(application: app)
+
+            // `close()` is dispatched through a thread pool that refuses cancelled work, so a
+            // handle closed naively from a cancelled task stays open and trips NIOFileSystem's
+            // `deinit` precondition — which traps the process rather than throwing. Cancelling
+            // repeatedly at slightly different points covers the window between open and close.
+            for iteration in 1...10 {
+                let response = try await request.fileio.streamFile(
+                    at: filePath, advancedETagComparison: false)
+
+                let collecting = Task { try await response.body.collect() }
+                try await Task.sleep(for: .microseconds(200 * iteration))
+                collecting.cancel()
+                _ = try? await collecting.value
+            }
+        }
+
+        // Getting here at all is the assertion: a leaked descriptor would have killed the process.
+    }
+
+    // MARK: Bodyless methods
+
+    @Test("HEAD request does not read the file")
+    func testHeadRequestDoesNotReadFile() async throws {
+        try await withApp { app in
+            let fileWasRead = NIOLockedValueBox(false)
+            app.get("file-stream") { req -> Response in
+                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { _ in
+                    fileWasRead.withLockedValue { $0 = true }
+                }
+            }
+
+            try await app.test(method: .running) { runner in
+                let res = try await runner.sendRequest(.head, "/file-stream")
+                #expect(res.status == .ok)
+                // The length is advertised even though no body follows it.
+                #expect(res.headers[.contentLength] != nil)
+                #expect(res.body.readableBytes == 0)
+            }
+
+            // A HEAD response carries no body, so opening and reading the file would be wasted
+            // work: the transport discards every byte before it reaches the client. The server
+            // handler concludes HEAD responses without running the body stream at all.
+            #expect(fileWasRead.withLockedValue { $0 } == false)
+        }
+    }
+
+    @Test("FileMiddleware only serves GET and HEAD")
+    func testFileMiddlewareOnlyServesGetAndHead() async throws {
+        try await withApp { app in
+            let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+
+            try await app.test(method: .running) { runner in
+                let get = try await runner.sendRequest(.get, "/Utilities/foo.txt")
+                #expect(get.status == .ok)
+                #expect(get.body.readableBytes > 0)
+
+                // HEAD gets the headers a GET would have returned, with no body.
+                let head = try await runner.sendRequest(.head, "/Utilities/foo.txt")
+                #expect(head.status == .ok)
+                #expect(head.headers[.contentLength] == get.headers[.contentLength])
+                #expect(head.body.readableBytes == 0)
+
+                // Everything else falls through the middleware; nothing else is registered here,
+                // so it 404s rather than being answered with the file.
+                for method in [HTTPRequest.Method.options, .post, .delete] {
+                    let res = try await runner.sendRequest(method, "/Utilities/foo.txt")
+                    #expect(res.status == .notFound, "\(method) was served by FileMiddleware")
+                }
+            }
+        }
+    }
 }

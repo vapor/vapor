@@ -31,12 +31,12 @@ public final class FileMiddleware: Middleware {
         public static let publicDirectoryIsNotAFolder: Self = .init(description: "Cannot find any actual folder for the given Public Directory")
     }
 
-    struct ETagHashes: StorageKey {
-        public typealias Value = [String: FileHash]
+    package struct ETagHashes: StorageKey {
+        package typealias Value = [String: FileHash]
 
-        public struct FileHash {
-            let lastModified: Date
-            let digestHex: String
+        package struct FileHash {
+            package let lastModified: Date
+            package let digestHex: String
         }
     }
 
@@ -64,6 +64,13 @@ public final class FileMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        // Only GET and HEAD retrieve a representation of a file. Anything else — writes, OPTIONS,
+        // and so on — isn't ours to answer just because the path happens to match a file on disk,
+        // so hand it down the chain where a route (or the 404) can deal with it.
+        guard request.method == .get || request.method == .head else {
+            return try await next.respond(to: request)
+        }
+
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {
             throw Abort(.badRequest)
@@ -98,7 +105,7 @@ public final class FileMiddleware: Middleware {
                             return try await request
                                 .fileio
                                 .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
-                                .cachePolicy(cachePolicy)
+                                .applyingCachePolicy(cachePolicy)
                         }
                     }
                 } else {
@@ -113,7 +120,7 @@ public final class FileMiddleware: Middleware {
                 return try await request
                     .fileio
                     .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
-                    .cachePolicy(cachePolicy)
+                    .applyingCachePolicy(cachePolicy)
             }
         }
 
@@ -237,17 +244,14 @@ extension FileMiddleware {
 }
 
 extension Response {
-    /// Update the response with a cache policy.
+    /// Returns a copy of the response carrying the given cache policy.
     /// - Parameter policy: The cache policy to use.
-    /// - Returns: The same response as the receiver.
-    @discardableResult
-    func cachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
-        self.headers.cacheControl = policy.cacheControlHeader
-        if let age = policy.ageHeader {
-            self.headers[.age] = "\(age)"
-        } else {
-            self.headers[.age] = nil
-        }
-        return self
+    /// - Returns: A copy of the receiver with the policy's `Cache-Control` and `Age` headers set.
+    ///            A policy that doesn't specify a header clears any header already there.
+    func applyingCachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
+        var response = self
+        response.headers.cacheControl = policy.cacheControlHeader
+        response.headers[.age] = policy.ageHeader.map { "\($0)" }
+        return response
     }
 }

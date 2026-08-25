@@ -101,7 +101,7 @@ struct ContentTests {
 
         try await withApp { app in
             app.routes.get("encode") { _ -> Response in
-                let res = Response()
+                var res = Response()
                 try res.content.encode(FooContent())
                 try res.content.encode(FooContent(), as: .json)
                 try res.content.encode(FooEncodable(), as: .json)
@@ -485,12 +485,33 @@ struct ContentTests {
         }
     }
 
+    @Test("Assigning content from another response copies only the content")
+    func testContentAssignmentCopiesOnlyContent() throws {
+        struct FooContent: Content {
+            var message: String = "hi"
+        }
+
+        var source = Response(status: .ok)
+        try source.content.encode(FooContent())
+
+        var destination = Response(status: .created)
+        destination.headers[.xRequestId] = "abc123"
+        destination.content = source.content
+
+        // The content — body and the headers that describe it — comes across...
+        #expect(destination.body.string == source.body.string)
+        #expect(destination.headers.contentType == source.headers.contentType)
+        #expect(destination.headers[.contentLength] == source.headers[.contentLength])
+        // ...but the rest of the response is left alone.
+        #expect(destination.status == .created)
+    }
+
     @Test("Test Before Encode Content")
     func testBeforeEncodeContent() throws {
         let content = SampleContent()
         #expect(content.name == "old name")
 
-        let response = Response(status: .ok)
+        var response = Response(status: .ok)
         try response.content.encode(content)
 
         let body = try #require(response.body.string)
@@ -685,13 +706,13 @@ struct ContentTests {
         try await withApp { app in
             let data = "255"
             app.routes.get("plaintext") { _ -> Response in
-                let res = Response()
+                var res = Response()
                 try res.content.encode(data, as: .plainText)
                 return res
             }
 
             app.routes.get("empty-plaintext") { _ -> Response in
-                let res = Response()
+                var res = Response()
                 try res.content.encode("", as: .plainText)
                 return res
             }

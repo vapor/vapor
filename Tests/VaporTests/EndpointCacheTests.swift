@@ -60,7 +60,7 @@ struct EndpointCacheTests {
             }
 
             app.get("number") { req -> Response in
-                let res = Response()
+                var res = Response()
                 let current = await currentActor.getCurrent()
                 try res.content.encode(Test(number: current))
                 res.headers.cacheControl = .init(maxAge: 1)
@@ -103,7 +103,7 @@ struct EndpointCacheTests {
             }
 
             app.get("number") { req -> Response in
-                let res = Response()
+                var res = Response()
                 let current = await currentActor.getCurrent()
                 try res.content.encode(Test(number: current))
                 res.headers.cacheControl = .init(maxAge: 10)

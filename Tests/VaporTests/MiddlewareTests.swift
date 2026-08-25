@@ -75,6 +75,30 @@ struct MiddlewareTests {
         }
     }
 
+    @Test("Test CORS Middleware Preflight Returns No Body")
+    func testCORSMiddlewarePreflightReturnsNoBody() async throws {
+        try await withApp { app in
+            // Registered globally rather than on a route group: a preflight is an OPTIONS request
+            // that matches no route, so middleware attached to the group never runs for it.
+            app.middleware.use(
+                CORSMiddleware(configuration: .init(allowedOrigin: .any(["foo"]), allowedMethods: [.get], allowedHeaders: [.origin]))
+            )
+            app.get("order") { req -> String in
+                return "done"
+            }
+
+            // A preflight is answered by the middleware itself rather than the route, so it carries
+            // the CORS headers and no body — the route's "done" must not leak into the response.
+            let headers: HTTPFields = [.origin: "foo", .accessControlRequestMethod: "GET"]
+            try await app.testing().test(.options, "/order", headers: headers) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.readableBytes == 0)
+                #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
+                #expect(res.headers[values: .accessControlAllowMethods] == ["GET"])
+            }
+        }
+    }
+
     @Test("Test CORS Middleware Varied By Request Origin")
     func testCORSMiddlewareVariedByRequestOrigin() async throws {
         try await withApp { app in

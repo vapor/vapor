@@ -71,20 +71,31 @@ public struct FileIO: Sendable {
     ///   - path: The file's path.
     ///   - lastModified: When the file was last modified.
     /// - Returns: A `String` which holds the ETag.
+    // TODO: Rework this caching in a follow-up PR. The `Application.storage`-based cache is a
+    // candidate for removal, and the edge cases need working through: the cache is unbounded (one
+    // entry per file ever served, never evicted), concurrent misses each read and hash the file
+    // rather than sharing one computation, and the read-modify-write below can lose an entry
+    // because reading and writing `Application.storage` take the lock separately.
     private func generateETagHash(path: String, lastModified: Date) async throws -> String {
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
             return hash.digestHex
-        } else {
-            return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
-                let buffer = try await handle.readToEnd(maximumSizeAllowed: .bytes(.max))
-                let digest = SHA256.hash(data: buffer.readableBytesView)
-
-                // update hash in dictionary
-                request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
-
-                return digest.hex
-            }
         }
+
+        let digestHex = try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
+            // Hashing in chunks is constant memory and has no size ceiling.
+            var hasher = SHA256()
+            for try await chunk in handle.readChunks(chunkLength: .bytes(128 * 1024)) {
+                hasher.update(data: chunk.readableBytesView)
+            }
+            return hasher.finalize().hex
+        }
+
+        // Cache the digest so later requests don't re-read the file
+        var hashes = request.application.storage[FileMiddleware.ETagHashes.self] ?? [:]
+        hashes[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digestHex)
+        request.application.storage[FileMiddleware.ETagHashes.self] = hashes
+
+        return digestHex
     }
 
     // MARK: - Concurrency
@@ -231,20 +242,20 @@ public struct FileIO: Sendable {
             // and here: https://www.rfc-editor.org/rfc/rfc9110.html#name-content-encoding
             // A 304 response MUST include the ETag header and a Content-Length header matching what the original resource's content length would have been were this a 200 response.
             headers[.contentLength] = fileInfo.size.description
-            return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
+            return Response(status: .notModified, headersNoUpdate: headers, body: .empty)
         }
 
         // Create the HTTP response.
-        let response = Response(status: .ok, headers: headers)
+        let responseStatus: HTTPResponse.Status
         let offset: Int64
         let byteCount: Int
         if let contentRange = contentRange {
-            response.status = .partialContent
-            response.headers[.accept] = contentRange.unit.serialize()
+            responseStatus = .partialContent
+            headers[.accept] = contentRange.unit.serialize()
             if let firstRange = contentRange.ranges.first {
                 do {
                     let range = try firstRange.asResponseContentRange(limit: Int(fileInfo.size))
-                    response.headers.contentRange = HTTPFields.ContentRange(unit: contentRange.unit, range: range)
+                    headers.contentRange = HTTPFields.ContentRange(unit: contentRange.unit, range: range)
                     (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: Int(fileInfo.size))
                 } catch {
                     throw Abort(.badRequest)
@@ -254,6 +265,7 @@ public struct FileIO: Sendable {
                 byteCount = Int(fileInfo.size)
             }
         } else {
+            responseStatus = .ok
             offset = 0
             byteCount = Int(fileInfo.size)
         }
@@ -263,15 +275,17 @@ public struct FileIO: Sendable {
             let fileExtension = path.components(separatedBy: ".").last,
             let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
         {
-            response.headers.contentType = type
+            headers.contentType = type
         }
 
         let fileSystem = self.fileSystem
+        var response = Response(status: responseStatus, headers: headers)
         response.body = .init(stream: { writer in
-            // Open the handle directly (rather than the scoped `readFile`/`withFileHandle` API):
-            // that API's chunk closure is `@Sendable`, but `writer` is a non-Sendable
-            // `ResponseBodyWriter`, so it can't be captured there. We open here, write each chunk
-            // straight to `writer` with `await` (the transport backpressures us), and always close.
+            // The scoped `withFileHandle` API would close the handle for us, but its `execute`
+            // parameter is `@concurrent` from here (Vapor builds with `NonisolatedNonsendingByDefault`,
+            // NIO doesn't), so the closure would have to be sent — and it captures the non-Sendable
+            // `writer`. So we open by hand, and write each chunk with `await` so the transport
+            // backpressures the read.
             let handle: ReadFileHandle
             do {
                 handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
@@ -279,9 +293,10 @@ public struct FileIO: Sendable {
                 try await onCompleted(.failure(error))
                 throw error
             }
-            // Close on the way out (success or throw), exactly once. The handle is being discarded,
-            // so a close failure isn't actionable, hence `try?`.
-            defer { try? await handle.close() }
+            // Wrap the close handle in a task to avoid inheriting cancellation. We always want to close the
+            // handle, but without it we can hit a subtle issue where the defer would be cancelled before
+            // close had triggered, leading to a crash
+            defer { await Task { try? await handle.close() }.value }
 
             do {
                 let chunks = handle.readChunks(

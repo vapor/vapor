@@ -757,7 +757,7 @@ struct ValidationTests {
                                 return "\(failure.key) \(reason)"
                             }
                             // Create the 400 response and encode the custom error content.
-                            let response = Response(status: .badRequest)
+                            var response = Response(status: .badRequest)
                             try response.content.encode(ErrorResponse(errors: errorMessages))
                             return response
                         } else {
