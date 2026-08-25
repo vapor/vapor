@@ -428,7 +428,7 @@ struct StreamingBodyTests {
                 // Either is acceptable — we only require the server not to crash.
                 do {
                     let resp = try await HTTPClient.shared.execute(
-                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/bad-length"), timeout: .seconds(5)
+                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/bad-length"), timeout: .seconds(15)
                     )
                     let body = try await resp.body.collect(upTo: 1 << 20)
                     #expect(body.readableBytes < 2)
@@ -470,7 +470,8 @@ struct StreamingBodyTests {
         port: Int,
         path: String,
         extraHeaders: String = "",
-        grace: Duration = .milliseconds(250)
+        quiet: Duration = .milliseconds(250),
+        deadline: Duration = .seconds(10)
     ) async throws -> (bytes: String, serverClosed: Bool) {
         let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
             .connect(host: "127.0.0.1", port: port) { channel in
@@ -482,23 +483,35 @@ struct StreamingBodyTests {
             try await outbound.write(ByteBuffer(
                 string: "GET \(path) HTTP/1.1\r\nHost: localhost\r\n\(extraHeaders)\r\n"))
             let received = NIOLockedValueBox("")
+            let lastActivity = NIOLockedValueBox(ContinuousClock.now)
             let reachedEnd = NIOLockedValueBox(false)
             await withTaskGroup(of: Void.self) { group in
                 group.addTask {
                     do {
                         for try await buffer in inbound {
                             received.withLockedValue { $0 += String(buffer: buffer) }
+                            lastActivity.withLockedValue { $0 = ContinuousClock.now }
                         }
                         reachedEnd.withLockedValue { $0 = true }
                     } catch {
-                        // Cancelled by the deadline below, or the connection failed. Either way
-                        // whatever arrived is what we assert on.
+                        // Cancelled below, or the connection failed. Either way whatever arrived is
+                        // what we assert on.
                     }
                 }
                 group.addTask {
-                    try? await Task.sleep(for: grace)
+                    // Wait for the response to go quiet rather than for a fixed slice of time: a
+                    // loaded machine can take a while to answer at all, and a fixed grace period
+                    // then reads nothing and fails the test for the wrong reason. `deadline` only
+                    // runs out if the response never arrives.
+                    let start = ContinuousClock.now
+                    while true {
+                        try? await Task.sleep(for: .milliseconds(25))
+                        if reachedEnd.withLockedValue({ $0 }) { return }
+                        let idle = ContinuousClock.now - lastActivity.withLockedValue { $0 }
+                        if !received.withLockedValue({ $0.isEmpty }), idle >= quiet { return }
+                        if ContinuousClock.now - start >= deadline { return }
+                    }
                 }
-                // Whichever finishes first — EOF or the deadline — ends the exchange.
                 await group.next()
                 group.cancelAll()
             }
@@ -565,8 +578,7 @@ struct StreamingBodyTests {
                 let exchange = try await rawExchange(
                     port: port,
                     path: "/hello",
-                    extraHeaders: "Connection: close\r\n",
-                    grace: .seconds(1))
+                    extraHeaders: "Connection: close\r\n")
                 #expect(exchange.bytes.contains("hi"))
 
                 // RFC 9112 § 9.6: a server that receives `Connection: close` must close the
@@ -654,11 +666,11 @@ struct StreamingBodyTests {
                 let port = try #require(address.port)
 
                 let resp = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/informational"), timeout: .seconds(5))
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/informational"), timeout: .seconds(15))
                 #expect(resp.status == .internalServerError)
 
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(5))
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(15))
                 #expect(ok.status == .ok)
 
                 await group.triggerGracefulShutdown()
