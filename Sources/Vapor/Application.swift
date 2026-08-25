@@ -51,6 +51,8 @@ public final class Application: Sendable, Service {
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     public let sharedAddress: NIOLockedValueBox<SocketAddress?>
+    /// Content hashes for advanced ETag comparison, shared by every request.
+    package let fileETagHashCache: FileETagHashCache
     private let _services: NIOLockedValueBox<[any Service]>
     public let routes: Routes
     // TODO: inline this when application is a struct
@@ -128,6 +130,7 @@ public final class Application: Sendable, Service {
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
         self.sharedAddress = .init(nil)
+        self.fileETagHashCache = .init()
         self._services = .init([])
         self._serverConfiguration = .init(configuration)
         self.configReader = configReader
