@@ -108,10 +108,10 @@ public struct Response: CustomStringConvertible, Sendable {
             _ContentContainer(response: self)
         }
         set {
-            // Write back whatever the container mutated to allow content to be set
-            if let container = newValue as? _ContentContainer {
-                self = container.response
-            }
+            // Just need to copy the parts of a response that can be changed
+            guard let container = newValue as? _ContentContainer else { return }
+            self.headers = container.response.headers
+            self.body = container.response.body
         }
     }
 
