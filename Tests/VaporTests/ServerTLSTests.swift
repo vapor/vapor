@@ -199,7 +199,7 @@ struct ServerTLSTests {
     @Test("Server startup fails when the PEM files do not exist", .timeLimit(.minutes(1)))
     func testInvalidPEMPathFailsServerStartup() async throws {
         try await withApp { app in
-            app.serverConfiguration.address = .hostname("localhost", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.serverConfiguration.tlsConfiguration = .pemFile(
                 certificateChainPath: "/nonexistent/certificate.crt",
                 privateKeyPath: "/nonexistent/private.key"
@@ -217,7 +217,7 @@ struct ServerTLSTests {
     @Test("Waiting on the listening address fails when startup fails", .timeLimit(.minutes(1)))
     func testListeningAddressFailsWhenStartupFails() async throws {
         try await withApp { app in
-            app.serverConfiguration.address = .hostname("localhost", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.serverConfiguration.tlsConfiguration = .pemFile(
                 certificateChainPath: "/nonexistent/certificate.crt",
                 privateKeyPath: "/nonexistent/private.key"
