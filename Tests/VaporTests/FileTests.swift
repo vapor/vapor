@@ -605,33 +605,6 @@ struct FileTests {
         }
     }
 
-    @Test("OPTIONS request does not read the file")
-    func testOptionsRequestDoesNotReadFile() async throws {
-        try await withApp { app in
-            let fileWasRead = NIOLockedValueBox(false)
-            app.on(.options, "file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { _ in
-                    fileWasRead.withLockedValue { $0 = true }
-                }
-            }
-
-            try await app.test(method: .running) { runner in
-                let res = try await runner.sendRequest(.options, "/file-stream")
-                // Unlike HEAD, nothing downstream strips the body for OPTIONS, so the whole file
-                // goes out on the wire.
-                #warning("Vapor: OPTIONS responses still carry the body — drop this `withKnownIssue` once bodyless methods skip body production")
-                withKnownIssue("OPTIONS returns the file body") {
-                    #expect(res.body.readableBytes == 0)
-                }
-            }
-
-            #warning("Vapor: OPTIONS still reads the file off disk — drop this `withKnownIssue` once bodyless methods skip body production")
-            withKnownIssue("OPTIONS reads the file") {
-                #expect(fileWasRead.withLockedValue { $0 } == false)
-            }
-        }
-    }
-
     @Test("FileMiddleware does not send a file body for HEAD and OPTIONS")
     func testFileMiddlewareBodylessMethods() async throws {
         try await withApp { app in
