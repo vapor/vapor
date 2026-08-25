@@ -29,22 +29,17 @@ package actor FileETagHashCache {
         let size: Int64
     }
 
-    /// The most entries to keep. A cache of one entry per file ever served would grow without
-    /// limit; static sites can have plenty of files, and a directory of user uploads has no bound
-    /// at all.
-    package static let defaultCapacity = 1024
-
-    private let capacity: Int
     private var entries: [String: Entry] = [:]
     /// Bumped on every hit and insert so eviction can pick the coldest entry.
     private var useCounter: UInt64 = 0
     private var lastUsed: [String: UInt64] = [:]
     /// Hashes currently being computed, so concurrent callers share one read of the file.
     private var inFlight: [Generation: Task<String, any Error>] = [:]
+    /// Size of the cache before we start evicting old entries
+    private var cacheCapacity: UInt
 
-    package init(capacity: Int = FileETagHashCache.defaultCapacity) {
-        precondition(capacity > 0, "The ETag hash cache needs room for at least one entry")
-        self.capacity = capacity
+    package init(cacheCapacity: UInt) {
+        self.cacheCapacity = cacheCapacity
     }
 
     /// Returns the hash for a file, computing it only if it isn't already cached or being computed.
@@ -78,7 +73,9 @@ package actor FileETagHashCache {
         defer { self.inFlight[generation] = nil }
 
         let digestHex = try await task.value
-        self.store(Entry(lastModified: lastModified, size: size, digestHex: digestHex), for: path)
+        self.store(
+            Entry(lastModified: lastModified, size: size, digestHex: digestHex),
+            for: path)
         return digestHex
     }
 
@@ -98,7 +95,7 @@ package actor FileETagHashCache {
 
         // Evict coldest-first until we're back within capacity. Entries are only added one at a
         // time, so this drops at most one per insert.
-        while self.entries.count > self.capacity {
+        while self.entries.count > self.cacheCapacity {
             guard let coldest = self.lastUsed.min(by: { $0.value < $1.value })?.key else { break }
             self.entries[coldest] = nil
             self.lastUsed[coldest] = nil
