@@ -102,6 +102,29 @@ struct FileTests {
         }
     }
 
+    @Test("Advanced ETag hashes are cached across requests")
+    func testAdvancedETagHashIsCached() async throws {
+        try await withApp { app in
+            app.get("file-stream") { req -> Response in
+                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+            }
+
+            #expect(app.storage[FileMiddleware.ETagHashes.self] == nil)
+
+            try await app.test(method: .running) { runner in
+                let first = try await runner.sendRequest(.get, "/file-stream")
+                let firstETag = try #require(first.headers[.eTag])
+
+                // Without a populated cache every request re-reads and re-hashes the whole file.
+                let cached = try #require(app.storage[FileMiddleware.ETagHashes.self]?[#filePath])
+                #expect(cached.digestHex == firstETag)
+
+                let second = try await runner.sendRequest(.get, "/file-stream")
+                #expect(second.headers[.eTag] == firstETag)
+            }
+        }
+    }
+
     @Test("Test Simple ETag Headers")
     func testSimpleETagHeaders() async throws {
         try await withApp { app in

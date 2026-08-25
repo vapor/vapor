@@ -74,17 +74,23 @@ public struct FileIO: Sendable {
     private func generateETagHash(path: String, lastModified: Date) async throws -> String {
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
             return hash.digestHex
-        } else {
-            return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
-                let buffer = try await handle.readToEnd(maximumSizeAllowed: .bytes(.max))
-                let digest = SHA256.hash(data: buffer.readableBytesView)
-
-                // update hash in dictionary
-                request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
-
-                return digest.hex
-            }
         }
+
+        let digestHex = try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
+            // Hashing in chunks is constant memory and has no size ceiling.
+            var hasher = SHA256()
+            for try await chunk in handle.readChunks(chunkLength: .bytes(128 * 1024)) {
+                hasher.update(data: chunk.readableBytesView)
+            }
+            return hasher.finalize().hex
+        }
+
+        // Cache the digest so later requests don't re-read the file
+        var hashes = request.application.storage[FileMiddleware.ETagHashes.self] ?? [:]
+        hashes[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digestHex)
+        request.application.storage[FileMiddleware.ETagHashes.self] = hashes
+
+        return digestHex
     }
 
     // MARK: - Concurrency

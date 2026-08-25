@@ -31,12 +31,12 @@ public final class FileMiddleware: Middleware {
         public static let publicDirectoryIsNotAFolder: Self = .init(description: "Cannot find any actual folder for the given Public Directory")
     }
 
-    struct ETagHashes: StorageKey {
-        public typealias Value = [String: FileHash]
+    package struct ETagHashes: StorageKey {
+        package typealias Value = [String: FileHash]
 
-        public struct FileHash {
-            let lastModified: Date
-            let digestHex: String
+        package struct FileHash {
+            package let lastModified: Date
+            package let digestHex: String
         }
     }
 
