@@ -95,10 +95,10 @@ public final class FileMiddleware: Middleware {
 
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
-                            var response = try await request
+                            return try await request
                                 .fileio
                                 .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
-                            return response.cachePolicy(cachePolicy)
+                                .applyingCachePolicy(cachePolicy)
                         }
                     }
                 } else {
@@ -110,10 +110,10 @@ public final class FileMiddleware: Middleware {
                 }
             } else {
                 // file exists, stream it
-                var response = try await request
+                return try await request
                     .fileio
                     .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
-                return response.cachePolicy(cachePolicy)
+                    .applyingCachePolicy(cachePolicy)
             }
         }
 
@@ -237,17 +237,14 @@ extension FileMiddleware {
 }
 
 extension Response {
-    /// Update the response with a cache policy.
+    /// Returns a copy of the response carrying the given cache policy.
     /// - Parameter policy: The cache policy to use.
-    /// - Returns: The same response as the receiver.
-    @discardableResult
-    mutating func cachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
-        self.headers.cacheControl = policy.cacheControlHeader
-        if let age = policy.ageHeader {
-            self.headers[.age] = "\(age)"
-        } else {
-            self.headers[.age] = nil
-        }
-        return self
+    /// - Returns: A copy of the receiver with the policy's `Cache-Control` and `Age` headers set.
+    ///            A policy that doesn't specify a header clears any header already there.
+    func applyingCachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
+        var response = self
+        response.headers.cacheControl = policy.cacheControlHeader
+        response.headers[.age] = policy.ageHeader.map { "\($0)" }
+        return response
     }
 }
