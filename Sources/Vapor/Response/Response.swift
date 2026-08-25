@@ -8,9 +8,6 @@ public import HTTPTypes
 ///
 /// See `HTTPClient`.
 public struct Response: CustomStringConvertible, Sendable {
-    /// Maximum streaming body size to use for `debugPrint(_:)`.
-    private let maxDebugStreamingBodySize: Int = 1_000_000
-
     /// The HTTP version that corresponds to this response.
     public let version: HTTPVersion
     
