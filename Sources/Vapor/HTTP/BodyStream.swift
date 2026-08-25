@@ -40,7 +40,7 @@ extension BodyStreamResult: CustomDebugStringConvertible {
     }
 }
 
-/// A type that represents the writable handle of a streamed ``Response`` body
+/// A type that represents the writable handle of a streamed ``Request`` body
 public protocol BodyStreamWriter: Sendable {
     /// Writes an event to a streaming HTTP body. If the `result` is `.end` or `.error`, the stream ends.
     func write(_ result: BodyStreamResult) async throws
