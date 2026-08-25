@@ -406,7 +406,7 @@ struct MiddlewareTests {
                 #expect(span.attributes["network.protocol.name"]?.toSpanAttribute() == "http")
                 let serverAddress = span.attributes["server.address"]?.toSpanAttribute()
                 #expect(serverAddress == "127.0.0.1" || serverAddress == "::1")
-                let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port, "Failed to get port")
+                let port = try #require(app.sharedAddress.withLockedValue({ $0 })?.port, "Failed to get port")
                 #expect(span.attributes["server.port"]?.toSpanAttribute() == port.toSpanAttribute())
                 #expect(span.attributes["url.query"]?.toSpanAttribute() == "foo=bar")
 

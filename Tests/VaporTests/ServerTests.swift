@@ -1266,7 +1266,7 @@ struct ServerTests {
 //            try await app.startup()
 //
 //            #expect(app.serverConfiguration.port != 0)
-//            #expect(app.serverConfiguration.port == app.sharedNewAddress.withLockedValue({ $0 })?.port)
+//            #expect(app.serverConfiguration.port == app.sharedAddress.withLockedValue({ $0 })?.port)
 //        }
 //    }
 //
