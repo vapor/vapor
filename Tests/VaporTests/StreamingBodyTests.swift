@@ -529,12 +529,14 @@ struct StreamingBodyTests {
 
                 let noContent = try await rawExchange(port: port, path: "/no-content").bytes
                 #expect(noContent.hasPrefix("HTTP/1.1 204 No Content"))
+                #warning("swift-http-server: 204 responses still write the body — drop this `withKnownIssue` when the upstream fix lands")
                 withKnownIssue("204 response carries the handler's body") {
                     #expect(!noContent.contains("Hello, world!"), "\(noContent.debugDescription)")
                 }
 
                 let notModified = try await rawExchange(port: port, path: "/not-modified").bytes
                 #expect(notModified.hasPrefix("HTTP/1.1 304 Not Modified"))
+                #warning("swift-http-server: 304 responses still write the body — drop this `withKnownIssue` when the upstream fix lands")
                 withKnownIssue("304 response carries the handler's body") {
                     #expect(!notModified.contains("Hello, world!"), "\(notModified.debugDescription)")
                 }
@@ -572,6 +574,7 @@ struct StreamingBodyTests {
                 // RFC 9112 § 9.6: a server that receives `Connection: close` must close the
                 // connection once the response is sent, and should echo the header back. Today the
                 // connection is left open until the 30s read-header timeout reaps it.
+                #warning("swift-http-server: the request's `Connection` header is never read, so `Connection: close` is ignored — drop this `withKnownIssue` when the upstream fix lands")
                 withKnownIssue("the connection is left open after the response") {
                     #expect(exchange.serverClosed)
                     #expect(exchange.bytes.lowercased().contains("connection: close"))

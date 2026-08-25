@@ -598,6 +598,7 @@ struct FileTests {
             // the transport discards every byte before it reaches the client. Vapor 4 skipped body
             // serialisation entirely via `Response.forHeadRequest`; the new server doesn't, so the
             // whole file is still read off disk.
+            #warning("Vapor: HEAD still produces the response body — wire up `Response.forHeadRequest` in the server handler, then drop this `withKnownIssue`")
             withKnownIssue("HEAD still runs the body stream and reads the file") {
                 #expect(fileWasRead.withLockedValue { $0 } == false)
             }
@@ -618,11 +619,13 @@ struct FileTests {
                 let res = try await runner.sendRequest(.options, "/file-stream")
                 // Unlike HEAD, nothing downstream strips the body for OPTIONS, so the whole file
                 // goes out on the wire.
+                #warning("Vapor: OPTIONS responses still carry the body — drop this `withKnownIssue` once bodyless methods skip body production")
                 withKnownIssue("OPTIONS returns the file body") {
                     #expect(res.body.readableBytes == 0)
                 }
             }
 
+            #warning("Vapor: OPTIONS still reads the file off disk — drop this `withKnownIssue` once bodyless methods skip body production")
             withKnownIssue("OPTIONS reads the file") {
                 #expect(fileWasRead.withLockedValue { $0 } == false)
             }
@@ -643,6 +646,7 @@ struct FileTests {
                 // `FileMiddleware` doesn't look at the method at all: any method whose path matches
                 // a file is served the file.
                 let options = try await runner.sendRequest(.options, "/Utilities/foo.txt")
+                #warning("Vapor: FileMiddleware ignores the request method and serves files for any of them — drop this `withKnownIssue` once it only answers GET and HEAD")
                 withKnownIssue("FileMiddleware serves the file body for OPTIONS") {
                     #expect(options.body.readableBytes == 0)
                 }
