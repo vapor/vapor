@@ -270,10 +270,11 @@ public struct FileIO: Sendable {
         let fileSystem = self.fileSystem
         var response = Response(status: responseStatus, headers: headers)
         response.body = .init(stream: { writer in
-            // Open the handle directly (rather than the scoped `readFile`/`withFileHandle` API):
-            // that API's chunk closure is `@Sendable`, but `writer` is a non-Sendable
-            // `ResponseBodyWriter`, so it can't be captured there. We open here, write each chunk
-            // straight to `writer` with `await` (the transport backpressures us), and always close.
+            // The scoped `withFileHandle` API would close the handle for us, but its `execute`
+            // parameter is `@concurrent` from here (Vapor builds with `NonisolatedNonsendingByDefault`,
+            // NIO doesn't), so the closure would have to be sent — and it captures the non-Sendable
+            // `writer`. So we open by hand, and write each chunk with `await` so the transport
+            // backpressures the read.
             let handle: ReadFileHandle
             do {
                 handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
@@ -281,9 +282,14 @@ public struct FileIO: Sendable {
                 try await onCompleted(.failure(error))
                 throw error
             }
-            // Close on the way out (success or throw), exactly once. The handle is being discarded,
-            // so a close failure isn't actionable, hence `try?`.
-            defer { try? await handle.close() }
+            // Close on the way out (success or throw), exactly once — and shielded from
+            // cancellation. `close()` hops to a thread pool via `runIfActive`, which resumes with
+            // `CancellationError` *without running the close* if the current task is already
+            // cancelled: the descriptor stays open, and dropping the handle then trips its `deinit`
+            // precondition and traps the process. An unstructured task doesn't inherit
+            // cancellation, and awaiting its value keeps the close ordered before we return. This
+            // is what NIOFileSystem's own `withUncancellableTearDown` does.
+            defer { await Task { try? await handle.close() }.value }
 
             do {
                 let chunks = handle.readChunks(
