@@ -16,6 +16,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+
 @Suite("Streaming Body Tests")
 struct StreamingBodyTests {
 
@@ -588,15 +589,12 @@ struct StreamingBodyTests {
     func testClientAbortMidFileStreamDoesNotBreakServer() async throws {
         // Big enough that the server is still reading when the client gives up: the transport
         // can't have buffered the whole thing, so the body closure is mid-read when it's cancelled.
-        let fileURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("vapor-abort-\(UUID().uuidString).bin")
-        try Data(repeating: 0x41, count: 8 << 20).write(to: fileURL)
-        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let filePath = try await makeTemporaryFile(size: 8 << 20)
 
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("file") { req -> Response in
-                try await req.fileio.streamFile(at: fileURL.path, advancedETagComparison: false)
+                try await req.fileio.streamFile(at: filePath, advancedETagComparison: false)
             }
             app.get("ok") { _ in "ok" }
 
@@ -676,17 +674,14 @@ struct StreamingBodyTests {
         // the server concluded the same response, so a connection failure ran the completion twice.
         // `ResponseBodyWriter` can only write buffers now — concluding is the server's job — so the
         // race has nowhere to happen, and this pins that down.
-        let fileURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("vapor-once-\(UUID().uuidString).bin")
-        try Data(repeating: 0x41, count: 8 << 20).write(to: fileURL)
-        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let filePath = try await makeTemporaryFile(size: 8 << 20)
 
         let completions = NIOLockedValueBox(0)
 
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("file") { req -> Response in
-                try await req.fileio.streamFile(at: fileURL.path, advancedETagComparison: false) { _ in
+                try await req.fileio.streamFile(at: filePath, advancedETagComparison: false) { _ in
                     completions.withLockedValue { $0 += 1 }
                 }
             }
