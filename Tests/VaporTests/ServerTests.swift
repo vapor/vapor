@@ -685,60 +685,65 @@ struct ServerTests {
 //            #expect(numberOfClients * 2 == numRequests.load(ordering: .relaxed))
 //        }
 //    }
-//
-//    @Test("Test Live Server")
-//    func testLiveServer() async throws {
-//        try await withApp { app in
-//            app.routes.get("ping") { req -> String in
-//                return "123"
-//            }
-//
-//            try await app.testing().test(.get, "/ping") { res in
-//                #expect(res.status == .ok)
-//                #expect(res.body.string == "123")
-//            }
-//        }
-//    }
-//
-//    @Test("Test Custom Server")
-//    func testCustomServer() async throws {
-//        try await withApp { app in
-//            app.servers.use(.custom)
-//            #expect(app.customServer.didStart.withLockedValue({ $0 }) == false)
-//            #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == false)
-//
-//            try await app.server.start()
-//            #expect(app.customServer.didStart.withLockedValue({ $0 }) == true)
-//            #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == false)
-//
-//            try await app.server.shutdown()
-//            #expect(app.customServer.didStart.withLockedValue({ $0 }) == true)
-//            #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == true)
-//        }
-//    }
-//
-//    @Test("Test Multiple Chunk Body")
-//    func testMultipleChunkBody() async throws {
-//        try await withApp { app in
-//            let payload = [UInt8].random(count: 1 << 20)
-//
-//            app.on(.post, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPResponse.Status in
-//                guard let data = req.body.data else {
-//                    throw Abort(.internalServerError)
-//                }
-//                #expect(payload.count == data.readableBytes)
-//                #expect([UInt8](data.readableBytesView) == payload)
-//                return .ok
-//            }
-//
-//            var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
-//            buffer.writeBytes(payload)
-//            try await app.testing(method: .running).test(.post, "payload", body: buffer) { res in
-//                #expect(res.status == .ok)
-//            }
-//        }
-//    }
-//
+
+    @Test("Test Live Server")
+    func testLiveServer() async throws {
+        try await withApp { app in
+            app.routes.get("ping") { req -> String in
+                return "123"
+            }
+
+            try await app.testing().test(.get, "/ping") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "123")
+            }
+        }
+    }
+
+    @Test("Test Custom Server")
+    func testCustomServer() async throws {
+        try await withApp { app in
+            app.servers.use(.custom)
+            #expect(app.customServer.didStart.withLockedValue({ $0 }) == false)
+            #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == false)
+
+            // `Server` is a ServiceLifecycle `Service`: it runs until cancelled rather than
+            // offering start/shutdown.
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+                for _ in 0..<200 where app.customServer.didStart.withLockedValue({ $0 }) == false {
+                    try? await Task.sleep(for: .milliseconds(10))
+                }
+                #expect(app.customServer.didStart.withLockedValue({ $0 }) == true)
+                #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == false)
+                group.cancelAll()
+            }
+            #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == true)
+        }
+    }
+
+    @Test("Test Multiple Chunk Body")
+    func testMultipleChunkBody() async throws {
+        try await withApp { app in
+            let payload = [UInt8].random(count: 1 << 20)
+
+            app.on(.post, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPResponse.Status in
+                guard let data = req.body.data else {
+                    throw Abort(.internalServerError)
+                }
+                #expect(payload.count == data.readableBytes)
+                #expect([UInt8](data.readableBytesView) == payload)
+                return .ok
+            }
+
+            var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
+            buffer.writeBytes(payload)
+            try await app.testing(method: .running).test(.post, "payload", body: buffer) { res in
+                #expect(res.status == .ok)
+            }
+        }
+    }
+
 //    @Test("Test Collecting Request Body")
 //    func testCollectedResponseBodyEnd() async throws {
 //        try await withApp { app in
@@ -756,32 +761,34 @@ struct ServerTests {
 //            })
 //        }
 //    }
-//
-//    @Test("Test Missing Body", .bug("https://github.com/vapor/vapor/issues/1786"))
-//    func testMissingBody() async throws {
-//        struct User: Content { }
-//
-//        try await withApp { app in
-//            app.get("user") { req -> User in
-//                return try await req.content.decode(User.self)
-//            }
-//
-//            try await app.testing().test(.get, "/user") { res in
-//                #expect(res.status == .unsupportedMediaType)
-//            }
-//        }
-//    }
-//
-//    @Test("Test Too Large Port", .bug("https://github.com/vapor/vapor/issues/2245"))
-//    func testTooLargePort() async throws {
-//        try await withApp { app in
-//            app.serverConfiguration.address = .hostname("127.0.0.1", port: .max)
-//            await #expect(throws: SocketAddressError.unknown(host: "127.0.0.1", port: Int.max)) {
-//                try await app.startup()
-//            }
-//        }
-//    }
-//
+
+    @Test("Test Missing Body", .bug("https://github.com/vapor/vapor/issues/1786"))
+    func testMissingBody() async throws {
+        struct User: Content { }
+
+        try await withApp { app in
+            app.get("user") { req -> User in
+                return try await req.content.decode(User.self)
+            }
+
+            try await app.testing().test(.get, "/user") { res in
+                #expect(res.status == .unsupportedMediaType)
+            }
+        }
+    }
+
+    @Test("Test Too Large Port", .bug("https://github.com/vapor/vapor/issues/2245"))
+    func testTooLargePort() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: .max)
+            // This is a ListeningAddressError but not public so we can't assert on that
+            await #expect(throws: (any Error).self) {
+                try await app.boot()
+                try await app.server.run()
+            }
+        }
+    }
+
 //    @Test("Test Early Exit Streaming Request")
 //    func testEarlyExitStreamingRequest() async throws {
 //        try await withApp { app in
@@ -1060,30 +1067,39 @@ struct ServerTests {
 //        #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
 //        #expect(configuration.address == .hostname())
 //    }
-//
-//    @Test("Test Quiesce Keep Alive Connections")
-//    func testQuiesceKeepAliveConnections() async throws {
-//        try await withApp { app in
-//            app.get("hello") { req in
-//                "world"
-//            }
-//
-//            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-//            app.environment.arguments = ["serve"]
-//            try await app.startup()
-//
-//            let port = try #require(app.http.server.shared.localAddress?.port, "Failed to get port")
-//            let request = try HTTPClient.Request(
-//                url: "http://localhost:\(port)/hello",
-//                method: .GET,
-//                headers: ["connection": "keep-alive"]
-//            )
-//            let a = try await HTTPClient.shared.execute(request: request).get()
-//            let newHeaders = HTTPFields(a.headers, splitCookie: false)
-//            #expect(newHeaders.connection == .keepAlive)
-//        }
-//    }
-//
+
+    @Test("Test Quiesce Keep Alive Connections", .timeLimit(.minutes(1)))
+    func testQuiesceKeepAliveConnections() async throws {
+        try await withApp { app in
+            app.get("hello") { req in
+                "world"
+            }
+
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask { try await group.run() }
+                let port = try #require(try await app.server.listeningAddress.port)
+
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/hello")
+                request.headers.add(name: "connection", value: "keep-alive")
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(15))
+                #expect(response.status == .ok)
+                // HTTP/1.1 connections persist by default, so a correct server says nothing rather
+                // than sending `Connection: keep-alive` — only `close` needs announcing. What
+                // matters is that it doesn't ask to hang up, and that the graceful shutdown below
+                // still completes with the connection open.
+                #expect(HTTPFields(response.headers, splitCookie: false).connection != .close)
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
+
 //    @Test("Test Request Body Stream Gets Finalised Even If Client Disappears")
 //    func testRequestBodyStreamGetsFinalisedEvenIfClientDisappears() async throws {
 //        try await withApp { app in
@@ -1338,19 +1354,29 @@ struct ServerTests {
 //            try await httpClient.shutdown()
 //        }
 //    }
-//
-//    @Test("Test Configuration Has Actual Port After Start")
-//    func testConfigurationHasActualPortAfterStart() async throws {
-//        try await withApp { app in
-//            app.environment.arguments = ["serve"]
-//            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-//            try await app.startup()
-//
-//            #expect(app.serverConfiguration.port != 0)
-//            #expect(app.serverConfiguration.port == app.sharedAddress.withLockedValue({ $0 })?.port)
-//        }
-//    }
-//
+
+    @Test("Test Configuration Has Actual Port After Start")
+    func testConfigurationHasActualPortAfterStart() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask { try await group.run() }
+
+                // Binding with port 0 picks a port; the bound address has to report the real one.
+                let bound = try await app.server.listeningAddress
+                #expect(bound.port != 0)
+                #expect(bound.port == app.sharedAddress.withLockedValue({ $0 })?.port)
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
+
 //    func testCanOverrideCertValidationWithMetadata() async throws {
 //         guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
 //               let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
