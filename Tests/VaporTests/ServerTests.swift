@@ -13,15 +13,96 @@ import NIOConcurrencyHelpers
 import HTTPTypes
 import NIOSSL
 import Atomics
+import ServiceLifecycle
+import Logging
+import RoutingKit
 import Testing
 import VaporTesting
 import NIOHTTPTypesHTTP1
 import X509
 import SwiftASN1
 
-#warning("Bring back")
-@Suite("Server Tests", .disabled())
+#warning("Bring back the commented-out tests below")
+@Suite("Server Tests")
 struct ServerTests {
+    @Test("Server answers pipelined requests in request order")
+    func testPipelinedRequestsAnswerInOrder() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.get("sleep", ":ms") { req -> String in
+                let ms = try req.parameters.require("ms", as: Int64.self)
+                try await Task.sleep(for: .milliseconds(ms))
+                return "slept \(ms)ms"
+            }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                // Both requests go out before either is answered, and the first is much slower than
+                // the second. HTTP/1.1 has no way to say which response belongs to which request, so
+                // answering out of order hands the client the wrong body.
+                let exchange = try await rawExchange(port: port, rawRequest: """
+                    GET /sleep/100 HTTP/1.1\r
+                    Host: localhost\r
+                    \r
+                    GET /sleep/0 HTTP/1.1\r
+                    Host: localhost\r
+                    \r
+
+                    """)
+
+                let slow = try #require(exchange.bytes.firstRange(of: "slept 100ms"))
+                let fast = try #require(exchange.bytes.firstRange(of: "slept 0ms"))
+                #expect(slow.lowerBound < fast.lowerBound, "responses came back out of order")
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
+
+    @Test("Server rejects invalid HTTP without breaking")
+    func testInvalidHTTPDoesNotBreakServer() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.get("ok") { _ in "ok" }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                let garbage = try await rawExchange(
+                    port: port, rawRequest: "TOTALLY not a valid HTTP request\r\n\r\n")
+                // Rejecting outright or hanging up are both fine; carrying on as if it parsed is not.
+                print("=== garbage: closed=\(garbage.serverClosed) bytes=\(garbage.bytes.debugDescription)")
+                #expect(garbage.serverClosed || garbage.bytes.contains("400"))
+
+                // And the listener is still healthy for everyone else.
+                let ok = try await rawExchange(port: port, path: "/ok")
+                #expect(ok.bytes.contains("ok"))
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
+
+
 //    @Test("Test Port Override")
 //    func testPortOverride() async throws {
 //        let env = Environment(
