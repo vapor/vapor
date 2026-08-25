@@ -282,13 +282,9 @@ public struct FileIO: Sendable {
                 try await onCompleted(.failure(error))
                 throw error
             }
-            // Close on the way out (success or throw), exactly once — and shielded from
-            // cancellation. `close()` hops to a thread pool via `runIfActive`, which resumes with
-            // `CancellationError` *without running the close* if the current task is already
-            // cancelled: the descriptor stays open, and dropping the handle then trips its `deinit`
-            // precondition and traps the process. An unstructured task doesn't inherit
-            // cancellation, and awaiting its value keeps the close ordered before we return. This
-            // is what NIOFileSystem's own `withUncancellableTearDown` does.
+            // Wrap the close handle in a task to avoid inheriting cancellation. We always want to close the
+            // handle, but without it we can hit a subtle issue where the defer would be cancelled before
+            // close had triggered, leading to a crash
             defer { await Task { try? await handle.close() }.value }
 
             do {
