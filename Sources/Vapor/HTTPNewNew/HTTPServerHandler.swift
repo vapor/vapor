@@ -79,6 +79,17 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 Logger.current.critical("Invalid server state - no response sender")
                 throw Abort(.internalServerError)
             }
+            // Vapor currently doesn't have an API for informational responses, trying to return one would
+            // result in a crash, so bypass that here
+            guard vaporResponse.status.kind != .informational else {
+                Logger.current.error(
+                    "Handler returned an informational status, which cannot be sent as a final response",
+                    metadata: ["status": "\(vaporResponse.status.code)"])
+                var empty = UniqueArray<UInt8>()
+                try await sender.sendAndFinish(HTTPResponse(status: .internalServerError), buffer: &empty)
+                return
+            }
+
             // If this is a HEAD request we don't need a body, so write an empty body out and don't
             // waste time going through the response body. `204` and `304` are defined as bodyless
             // too: writing one anyway breaks framing, and the client reads it as the start of the

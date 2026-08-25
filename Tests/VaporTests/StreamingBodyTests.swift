@@ -634,4 +634,38 @@ struct StreamingBodyTests {
             }
         }
     }
+
+    @Test("Server does not crash when a handler returns an informational status")
+    func testInformationalStatusDoesNotCrashServer() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            // A 1xx can only precede a final response. The server trapped on one before Vapor
+            // started rejecting it, so this is really a "the process is still alive" test.
+            app.get("informational") { _ in Response(status: .continue) }
+            app.get("ok") { _ in "ok" }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                let resp = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/informational"), timeout: .seconds(5))
+                #expect(resp.status == .internalServerError)
+
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(5))
+                #expect(ok.status == .ok)
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
 }
