@@ -668,4 +668,59 @@ struct StreamingBodyTests {
             }
         }
     }
+
+    @Test("Response body stream completion runs once when the client disconnects",
+          .bug("https://github.com/vapor/vapor/issues/3002"))
+    func testStreamCompletionRunsOnceOnClientDisconnect() async throws {
+        // The Vapor 4 shape of this bug: the body-stream closure wrote `.end`/`.error` itself while
+        // the server concluded the same response, so a connection failure ran the completion twice.
+        // `ResponseBodyWriter` can only write buffers now — concluding is the server's job — so the
+        // race has nowhere to happen, and this pins that down.
+        let fileURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("vapor-once-\(UUID().uuidString).bin")
+        try Data(repeating: 0x41, count: 8 << 20).write(to: fileURL)
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        let completions = NIOLockedValueBox(0)
+
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.get("file") { req -> Response in
+                try await req.fileio.streamFile(at: fileURL.path, advancedETagComparison: false) { _ in
+                    completions.withLockedValue { $0 += 1 }
+                }
+            }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                await #expect(throws: (any Error).self) {
+                    let resp = try await HTTPClient.shared.execute(
+                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/file"), timeout: .seconds(10)
+                    )
+                    _ = try await resp.body.collect(upTo: 16)
+                }
+
+                // The server unwinds the aborted response on its own schedule, so wait for the
+                // completion rather than assuming it has already run...
+                for _ in 0..<200 where completions.withLockedValue({ $0 }) == 0 {
+                    try await Task.sleep(for: .milliseconds(10))
+                }
+                // ...then give a second call a chance to land before declaring there wasn't one.
+                try await Task.sleep(for: .milliseconds(200))
+                #expect(completions.withLockedValue { $0 } == 1)
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
 }
