@@ -170,12 +170,15 @@ struct ServerTLSTests {
             app.get("hello") { _ in "world" }
 
             try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
-                // Without setting the trust store this will fail
+                // Without setting the trust store this will fail. The deadline is generous
+                // because it isn't what's under test: a rejected handshake fails in milliseconds,
+                // and a tight deadline just races it, turning a TLS error into a timeout on a
+                // loaded machine — which is what the assertion below then trips over.
                 let error = await #expect(throws: (any Error).self) {
                     try await withTLSClient { client in
                         try await client.execute(
                             HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                            timeout: .seconds(2)
+                            timeout: .seconds(15)
                         )
                     }
                 }
@@ -400,6 +403,11 @@ private func withTLSClient<T>(
     var clientConfiguration = HTTPClient.Configuration()
     clientConfiguration.tlsConfiguration = tlsConfiguration
     clientConfiguration.httpVersion = httpVersion
+    // Everything here talks to a server on loopback, so a connection that hasn't been established
+    // in a second isn't going to be. Without this, a rejected handshake isn't reported until the
+    // default 10s connect timeout expires, which turns "the client refuses this certificate" into
+    // a ten-second test.
+    clientConfiguration.timeout = .init(connect: .seconds(2))
 
     let client = HTTPClient(
         eventLoopGroup: MultiThreadedEventLoopGroup.singleton,

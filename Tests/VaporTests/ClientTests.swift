@@ -51,8 +51,11 @@ struct ClientTests {
     func testClientTimeout() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
+                // A request that should comfortably succeed. The timeout is generous: this half
+                // of the test is "a normal request doesn't time out", so a tight deadline only
+                // buys a false failure on a slow machine.
                 await #expect(throws: Never.self, performing: {
-                    try await app.client.get("http://localhost:\(remoteAppPort)/json") { $0.timeout = .seconds(1) }
+                    try await app.client.get("http://localhost:\(remoteAppPort)/json") { $0.timeout = .seconds(15) }
                 })
                 await #expect(throws: HTTPClientError.deadlineExceeded) {
                     try await app.client.get("http://localhost:\(remoteAppPort)/stalling") {
