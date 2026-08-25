@@ -8,9 +8,6 @@ public import HTTPTypes
 ///
 /// See `HTTPClient`.
 public struct Response: CustomStringConvertible, Sendable {
-    /// The HTTP version that corresponds to this response.
-    public let version: HTTPVersion
-    
     /// The HTTP response status.
     public var status: HTTPResponse.Status
 
@@ -56,7 +53,7 @@ public struct Response: CustomStringConvertible, Sendable {
     // See `CustomStringConvertible.description`.
     public var description: String {
         var desc: [String] = []
-        desc.append("HTTP/\(version.major).\(version.minor) \(status.code) \(status.reasonPhrase)")
+        desc.append("\(status.code) \(status.reasonPhrase)")
         desc.append(self.headers.debugDescription)
         desc.append(self.body.description)
         return desc.joined(separator: "\n")
@@ -131,7 +128,6 @@ public struct Response: CustomStringConvertible, Sendable {
     ///
     /// - parameters:
     ///     - status: `HTTPResponse.Status` to use. This defaults to `HTTPResponse.Status.ok`
-    ///     - version: `HTTPVersion` of this response, should usually be (and defaults to) 1.1.
     ///     - headers: `HTTPFields` to include with this response.
     ///                Defaults to empty headers.
     ///                The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically.
@@ -139,14 +135,12 @@ public struct Response: CustomStringConvertible, Sendable {
     ///             See `Response.Body` for more information.
     public init(
         status: HTTPResponse.Status = .ok,
-        version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPFields = .init(),
         body: Body = .empty,
         contentConfiguration: ContentConfiguration = .default()
     ) {
         self.init(
             status: status,
-            version: version,
             headersNoUpdate: headers,
             body: body,
             contentConfiguration: contentConfiguration
@@ -157,7 +151,6 @@ public struct Response: CustomStringConvertible, Sendable {
     /// Internal init that creates a new `Response` without sanitizing headers.
     package init(
         status: HTTPResponse.Status,
-        version: HTTPVersion,
         headersNoUpdate headers: HTTPFields,
         body: Body,
         contentConfiguration: ContentConfiguration = .default()
@@ -165,7 +158,6 @@ public struct Response: CustomStringConvertible, Sendable {
         self.headers = headers
         self.body = body
         self.contentConfiguration = contentConfiguration
-        self.version = version
         self.status = status
     }
 }

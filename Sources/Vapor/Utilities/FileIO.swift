@@ -231,7 +231,7 @@ public struct FileIO: Sendable {
             // and here: https://www.rfc-editor.org/rfc/rfc9110.html#name-content-encoding
             // A 304 response MUST include the ETag header and a Content-Length header matching what the original resource's content length would have been were this a 200 response.
             headers[.contentLength] = fileInfo.size.description
-            return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
+            return Response(status: .notModified, headersNoUpdate: headers, body: .empty)
         }
 
         // Create the HTTP response.
