@@ -29,6 +29,7 @@ public import Logging
 @discardableResult
 public func withApp<T>(
     address: BindAddress? = nil,
+    configuration: ServerConfiguration = .init(),
     configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
     logger: Logger = Logger.current,
     services: Application.ServiceConfiguration = .init(),
@@ -38,7 +39,7 @@ public func withApp<T>(
     MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
     InstrumentationSystem.bootstrapInternal(TaskLocalTracingSystemWrapper())
     return try await withLogger(logger) { _ in
-        let app = try await Application(.testing, configReader: configReader, services: services)
+        let app = try await Application(.testing, configuration: configuration, configReader: configReader, services: services)
         if let address {
             app.serverConfiguration.address = address
         }

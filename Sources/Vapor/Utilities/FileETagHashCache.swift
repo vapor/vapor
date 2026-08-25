@@ -35,11 +35,12 @@ package actor FileETagHashCache {
     private var lastUsed: [String: UInt64] = [:]
     /// Hashes currently being computed, so concurrent callers share one read of the file.
     private var inFlight: [Generation: Task<String, any Error>] = [:]
-    /// Size of the cache before we start evicting old entries
-    private var cacheCapacity: UInt
+    /// How many entries to hold before evicting the coldest. Fixed for the cache's lifetime: it
+    /// comes from the server configuration, which is read when the application is created.
+    private let capacity: UInt
 
-    package init(cacheCapacity: UInt) {
-        self.cacheCapacity = cacheCapacity
+    package init(capacity: UInt) {
+        self.capacity = capacity
     }
 
     /// Returns the hash for a file, computing it only if it isn't already cached or being computed.
@@ -95,7 +96,7 @@ package actor FileETagHashCache {
 
         // Evict coldest-first until we're back within capacity. Entries are only added one at a
         // time, so this drops at most one per insert.
-        while self.entries.count > self.cacheCapacity {
+        while self.entries.count > self.capacity {
             guard let coldest = self.lastUsed.min(by: { $0.value < $1.value })?.key else { break }
             self.entries[coldest] = nil
             self.lastUsed[coldest] = nil

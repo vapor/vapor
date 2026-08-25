@@ -130,7 +130,7 @@ public final class Application: Sendable, Service {
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
         self.sharedAddress = .init(nil)
-        self.fileETagHashCache = .init(cacheCapacity: configuration.eTagHashCacheCapacity)
+        self.fileETagHashCache = .init(capacity: configuration.eTagHashCacheCapacity)
         self._services = .init([])
         self._serverConfiguration = .init(configuration)
         self.configReader = configReader
