@@ -19,7 +19,7 @@ struct CacheTests {
 
             let value3: String? = try await app.cache.get("foo2")
             #expect(value3 == "bar2")
-            try await Task.sleep(for: .seconds(1))
+            try await Task.sleep(for: .milliseconds(1200))
             let value4 = try await app.cache.get("foo2", as: String.self)
             #expect(value4 == nil)
 
