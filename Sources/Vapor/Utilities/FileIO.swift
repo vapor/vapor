@@ -71,6 +71,11 @@ public struct FileIO: Sendable {
     ///   - path: The file's path.
     ///   - lastModified: When the file was last modified.
     /// - Returns: A `String` which holds the ETag.
+    // TODO: Rework this caching in a follow-up PR. The `Application.storage`-based cache is a
+    // candidate for removal, and the edge cases need working through: the cache is unbounded (one
+    // entry per file ever served, never evicted), concurrent misses each read and hash the file
+    // rather than sharing one computation, and the read-modify-write below can lose an entry
+    // because reading and writing `Application.storage` take the lock separately.
     private func generateETagHash(path: String, lastModified: Date) async throws -> String {
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
             return hash.digestHex
