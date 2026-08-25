@@ -873,26 +873,35 @@ struct ServerTests {
             #expect(configuration.address == .hostname("1.2.3.4", port: 123))
         }
 
-        //    @Test("Test Port Override")
-        //    func testPortOverride() async throws {
-        //        let env = Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--port", "8123"]
-        //        )
-        //
-        //        let app = try await Application(env)
-        //
-        //        app.get("foo") { req in
-        //            return "bar"
-        //        }
-        //        try await app.startup()
-        //
-        //        let res = try await app.client.get("http://127.0.0.1:8123/foo")
-        //        #expect(res.body?.string == "bar")
-        //
-        //        try await app.shutdown()
-        //    }
-        //
+        @Test("Test Port Override")
+        func testPortOverride() async throws {
+            try await withApp { app in
+                // A port set in configuration is the port it binds — not an ephemeral one, and not
+                // the default. Hence a fixed port here rather than 0.
+                app.serverConfiguration.port = 8123
+                app.get("foo") { _ in "bar" }
+
+                try await app.boot()
+                let group = ServiceGroup(configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
+                try await withThrowingTaskGroup(of: Void.self) { tg in
+                    tg.addTask { try await group.run() }
+
+                    let bound = try await app.server.listeningAddress
+                    #expect(bound.port == 8123)
+
+                    let res = try await HTTPClient.shared.execute(
+                        HTTPClientRequest(url: "http://127.0.0.1:8123/foo"), timeout: .seconds(15))
+                    #expect(res.status == .ok)
+                    #expect(try await res.body.collect(upTo: 1 << 20).string == "bar")
+
+                    await group.triggerGracefulShutdown()
+                    try await tg.waitForAll()
+                }
+            }
+        }
+
         //    @Test("Test Socket Path Override")
         //    func testSocketPathOverride() async throws {
         //        let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
