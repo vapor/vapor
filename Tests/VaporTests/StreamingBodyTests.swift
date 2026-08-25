@@ -451,4 +451,91 @@ struct StreamingBodyTests {
         let collected = try await body.collect()
         #expect(collected.map { String(buffer: $0) } == "Hello, collected!")
     }
+
+    /// Sends a raw request over a plain TCP socket and returns every byte the server sends back
+    /// within `grace`, along with whether the server closed the connection.
+    ///
+    /// A real HTTP client hides framing violations — it parses the response according to the rules
+    /// the server is supposed to be following — so checking "is there a body on the wire" needs a
+    /// socket, not a client. The deadline is client-side: waiting for the server to close would
+    /// otherwise park the test on the server's read-header timeout.
+    private func rawExchange(
+        port: Int,
+        path: String,
+        grace: Duration = .milliseconds(250)
+    ) async throws -> (bytes: String, serverClosed: Bool) {
+        let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+            .connect(host: "127.0.0.1", port: port) { channel in
+                channel.eventLoop.makeCompletedFuture {
+                    try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
+                }
+            }
+        return try await channel.executeThenClose { inbound, outbound in
+            try await outbound.write(ByteBuffer(
+                string: "GET \(path) HTTP/1.1\r\nHost: localhost\r\n\r\n"))
+            let received = NIOLockedValueBox("")
+            let reachedEnd = NIOLockedValueBox(false)
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    do {
+                        for try await buffer in inbound {
+                            received.withLockedValue { $0 += String(buffer: buffer) }
+                        }
+                        reachedEnd.withLockedValue { $0 = true }
+                    } catch {
+                        // Cancelled by the deadline below, or the connection failed. Either way
+                        // whatever arrived is what we assert on.
+                    }
+                }
+                group.addTask {
+                    try? await Task.sleep(for: grace)
+                }
+                // Whichever finishes first — EOF or the deadline — ends the exchange.
+                await group.next()
+                group.cancelAll()
+            }
+            return (received.withLockedValue { $0 }, reachedEnd.withLockedValue { $0 })
+        }
+    }
+
+    @Test("Server does not write a body for a status that cannot carry one", .timeLimit(.minutes(1)))
+    func testBodylessStatusDoesNotWriteBody() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            // Both statuses are defined to have no body, whatever the handler attaches.
+            app.get("no-content") { _ in
+                Response(status: .noContent, body: .init(string: "Hello, world!"))
+            }
+            app.get("not-modified") { _ in
+                Response(status: .notModified, body: .init(string: "Hello, world!"))
+            }
+
+            try await app.boot()
+            let group = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                let noContent = try await rawExchange(port: port, path: "/no-content").bytes
+                #expect(noContent.hasPrefix("HTTP/1.1 204 No Content"))
+                withKnownIssue("204 response carries the handler's body") {
+                    #expect(!noContent.contains("Hello, world!"), "\(noContent.debugDescription)")
+                }
+
+                let notModified = try await rawExchange(port: port, path: "/not-modified").bytes
+                #expect(notModified.hasPrefix("HTTP/1.1 304 Not Modified"))
+                withKnownIssue("304 response carries the handler's body") {
+                    #expect(!notModified.contains("Hello, world!"), "\(notModified.debugDescription)")
+                }
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
+    }
 }

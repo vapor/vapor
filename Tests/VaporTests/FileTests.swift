@@ -1,5 +1,6 @@
 import Vapor
 import NIOCore
+import NIOConcurrencyHelpers
 import HTTPTypes
 import _NIOFileSystem
 import Crypto
@@ -542,4 +543,80 @@ struct FileTests {
 //            throw error
 //        }
 //    }
+
+    // MARK: Bodyless methods
+
+    @Test("HEAD request does not read the file")
+    func testHeadRequestDoesNotReadFile() async throws {
+        try await withApp { app in
+            let fileWasRead = NIOLockedValueBox(false)
+            app.get("file-stream") { req -> Response in
+                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { _ in
+                    fileWasRead.withLockedValue { $0 = true }
+                }
+            }
+
+            try await app.test(method: .running) { runner in
+                let res = try await runner.sendRequest(.head, "/file-stream")
+                #expect(res.status == .ok)
+                // The length is advertised even though no body follows it.
+                #expect(res.headers[.contentLength] != nil)
+                #expect(res.body.readableBytes == 0)
+            }
+
+            // A HEAD response carries no body, so opening and reading the file is wasted work:
+            // the transport discards every byte before it reaches the client. Vapor 4 skipped body
+            // serialisation entirely via `Response.forHeadRequest`; the new server doesn't, so the
+            // whole file is still read off disk.
+            withKnownIssue("HEAD still runs the body stream and reads the file") {
+                #expect(fileWasRead.withLockedValue { $0 } == false)
+            }
+        }
+    }
+
+    @Test("OPTIONS request does not read the file")
+    func testOptionsRequestDoesNotReadFile() async throws {
+        try await withApp { app in
+            let fileWasRead = NIOLockedValueBox(false)
+            app.on(.options, "file-stream") { req -> Response in
+                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { _ in
+                    fileWasRead.withLockedValue { $0 = true }
+                }
+            }
+
+            try await app.test(method: .running) { runner in
+                let res = try await runner.sendRequest(.options, "/file-stream")
+                // Unlike HEAD, nothing downstream strips the body for OPTIONS, so the whole file
+                // goes out on the wire.
+                withKnownIssue("OPTIONS returns the file body") {
+                    #expect(res.body.readableBytes == 0)
+                }
+            }
+
+            withKnownIssue("OPTIONS reads the file") {
+                #expect(fileWasRead.withLockedValue { $0 } == false)
+            }
+        }
+    }
+
+    @Test("FileMiddleware does not send a file body for HEAD and OPTIONS")
+    func testFileMiddlewareBodylessMethods() async throws {
+        try await withApp { app in
+            let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+
+            try await app.test(method: .running) { runner in
+                let head = try await runner.sendRequest(.head, "/Utilities/foo.txt")
+                #expect(head.status == .ok)
+                #expect(head.body.readableBytes == 0)
+
+                // `FileMiddleware` doesn't look at the method at all: any method whose path matches
+                // a file is served the file.
+                let options = try await runner.sendRequest(.options, "/Utilities/foo.txt")
+                withKnownIssue("FileMiddleware serves the file body for OPTIONS") {
+                    #expect(options.body.readableBytes == 0)
+                }
+            }
+        }
+    }
 }
