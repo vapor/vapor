@@ -823,6 +823,56 @@ struct ServerTests {
 
     @Suite("Address Configuration Tests")
     struct AddressConfigurationTests {
+        @Test("Address, hostname and port stay consistent")
+        func testAddressConfigurations() throws {
+            // `hostname` and `port` are views over `address`, so every way of setting one has to
+            // leave the other two agreeing.
+            var configuration = ServerConfiguration()
+            #expect(configuration.address == .hostname())
+            #expect(configuration.hostname == "127.0.0.1")
+            #expect(configuration.port == 8080)
+
+            configuration = ServerConfiguration(address: .hostname("1.2.3.4", port: 123))
+            #expect(configuration.hostname == "1.2.3.4")
+            #expect(configuration.port == 123)
+
+            configuration = ServerConfiguration(address: .hostname("1.2.3.4"))
+            #expect(configuration.address == .hostname("1.2.3.4"))
+            #expect(configuration.port == 8080)
+
+            configuration = ServerConfiguration(address: .hostname(port: 123))
+            #expect(configuration.hostname == "127.0.0.1")
+            #expect(configuration.port == 123)
+        }
+
+        @Test("A socket path has no hostname or port")
+        func testUnixDomainSocketHasNoHostnameOrPort() throws {
+            // Unlike the old configuration, which reported defaults here, these are `nil`: a socket
+            // path genuinely doesn't have a hostname or a port.
+            var configuration = ServerConfiguration(address: .unixDomainSocket(path: "/path"))
+            #expect(configuration.address == .unixDomainSocket(path: "/path"))
+            #expect(configuration.hostname == nil)
+            #expect(configuration.port == nil)
+
+            // Setting either one converts the address, defaulting the half that wasn't given.
+            configuration.hostname = "1.2.3.4"
+            #expect(configuration.address == .hostname("1.2.3.4", port: 8080))
+
+            configuration.address = .unixDomainSocket(path: "/path")
+            configuration.port = 123
+            #expect(configuration.address == .hostname("127.0.0.1", port: 123))
+        }
+
+        @Test("Setting hostname or port to nil leaves the address alone")
+        func testNilHostnameOrPortIsIgnored() throws {
+            // The setters ignore `nil` rather than clearing the address — assigning nil can't
+            // leave the server with nothing to bind to.
+            var configuration = ServerConfiguration(address: .hostname("1.2.3.4", port: 123))
+            configuration.hostname = nil
+            configuration.port = nil
+            #expect(configuration.address == .hostname("1.2.3.4", port: 123))
+        }
+
         //    @Test("Test Port Override")
         //    func testPortOverride() async throws {
         //        let env = Environment(
@@ -843,7 +893,7 @@ struct ServerTests {
         //        try await app.shutdown()
         //    }
         //
-        //    @Test("Test Socke Path Override")
+        //    @Test("Test Socket Path Override")
         //    func testSocketPathOverride() async throws {
         //        let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
         //
@@ -992,69 +1042,6 @@ struct ServerTests {
     //        }
     //    }
     //
-    //    @Test("Test Address Configurations")
-    //    func testAddressConfigurations() throws {
-    //        var configuration = HTTPServerOld.Configuration()
-    //        #expect(configuration.address == .hostname(HTTPServerOld.Configuration.defaultHostname, port: HTTPServerOld.Configuration.defaultPort))
-    //
-    //        configuration = HTTPServerOld.Configuration(hostname: "1.2.3.4", port: 123)
-    //        #expect(configuration.address == .hostname("1.2.3.4", port: 123))
-    //        #expect(configuration.hostname == "1.2.3.4")
-    //        #expect(configuration.port == 123)
-    //
-    //        configuration = HTTPServerOld.Configuration(address: .hostname("1.2.3.4", port: 123))
-    //        #expect(configuration.address == .hostname("1.2.3.4", port: 123))
-    //        #expect(configuration.hostname == "1.2.3.4")
-    //        #expect(configuration.port == 123)
-    //
-    //        configuration = HTTPServerOld.Configuration(address: .hostname("1.2.3.4"))
-    //        #expect(configuration.address == .hostname("1.2.3.4"))
-    //        #expect(configuration.hostname == "1.2.3.4")
-    //        #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
-    //
-    //        configuration = HTTPServerOld.Configuration(address: .hostname(port: 123))
-    //        #expect(configuration.address == .hostname(port: 123))
-    //        #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
-    //        #expect(configuration.port == 123)
-    //
-    //        configuration = HTTPServerOld.Configuration(address: .hostname())
-    //        #expect(configuration.address == .hostname())
-    //        #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
-    //        #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
-    //
-    //        configuration = HTTPServerOld.Configuration(address: .unixDomainSocket(path: "/path"))
-    //        #expect(configuration.address == .unixDomainSocket(path: "/path"))
-    //
-    //
-    //        // Test mutating a config that was originally a socket path
-    //        configuration = HTTPServerOld.Configuration(address: .unixDomainSocket(path: "/path"))
-    //        #expect(configuration.address == .unixDomainSocket(path: "/path"))
-    //
-    //        configuration.hostname = "1.2.3.4"
-    //        #expect(configuration.hostname == "1.2.3.4")
-    //        #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
-    //        #expect(configuration.address == .hostname("1.2.3.4"))
-    //
-    //        configuration.address = .unixDomainSocket(path: "/path")
-    //        #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
-    //        #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
-    //        #expect(configuration.address == .unixDomainSocket(path: "/path"))
-    //
-    //        configuration.port = 123
-    //        #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
-    //        #expect(configuration.port == 123)
-    //        #expect(configuration.address == .hostname(port: 123))
-    //
-    //        configuration.hostname = "1.2.3.4"
-    //        #expect(configuration.hostname == "1.2.3.4")
-    //        #expect(configuration.port == 123)
-    //        #expect(configuration.address == .hostname("1.2.3.4", port: 123))
-    //
-    //        configuration.address = .hostname()
-    //        #expect(configuration.hostname == HTTPServerOld.Configuration.defaultHostname)
-    //        #expect(configuration.port == HTTPServerOld.Configuration.defaultPort)
-    //        #expect(configuration.address == .hostname())
-    //    }
 
         @Test("Test Configuration Has Actual Port After Start")
         func testConfigurationHasActualPortAfterStart() async throws {
