@@ -364,7 +364,7 @@ struct MiddlewareTests {
         }
     }
 
-    @Test("Test Tracing Middleware", .withTracer(InMemoryTracer()), .disabled("Blocked on swift-http-server exposing the client remote/peer address; NIOHTTPServer.ConnectionContext has no remote-address API yet, so the client.address / network.peer.* span attributes are absent"))
+    @Test("Test Tracing Middleware", .withTracer(InMemoryTracer()))
     func testTracingMiddleware() async throws {
         try await withApp { app in
             struct TestServiceContextMiddleware: Middleware {
