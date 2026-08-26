@@ -199,4 +199,7 @@ private final class CollectingBodyWriter: ResponseBodyWriter {
         var buffer = buffer
         self.buffer.writeBuffer(&buffer)
     }
+
+    func write(_ bytes: RawSpan) async throws {
+    }
 }
