@@ -132,7 +132,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // into the server's container - a `.string`/`.data`/`.staticString` body is no
                 // longer materialised into an intermediate `ByteBuffer` first.
                 var responseBody = UniqueArray<UInt8>(minimumCapacity: vaporResponse.body.count)
-                vaporResponse.body.withBytes { bytes in
+                try await vaporResponse.body.withStreamingBytes { bytes in
                     bytes.withUnsafeBytes { unsafe responseBody.append(copying: $0) }
                 }
                 try await sender.sendAndFinish(httpResponse, buffer: &responseBody)

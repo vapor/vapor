@@ -481,6 +481,61 @@ struct StreamingBodyTests {
         #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "abcdefg")
     }
 
+    @Test("withStreamingBytes delivers a streaming body chunk by chunk")
+    func testWithStreamingBytesOnStream() async throws {
+        let chunks = NIOLockedValueBox([String]())
+        let body = Response.Body(stream: { writer in
+            try await writer.write("alpha")
+            try await writer.write("beta")
+            try await writer.write("gamma")
+        })
+        try await body.withStreamingBytes { span in
+            var bytes = [UInt8]()
+            for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
+            chunks.withLockedValue { $0.append(String(decoding: bytes, as: UTF8.self)) }
+        }
+        // Delivered separately and in order - not collected into one blob.
+        #expect(chunks.withLockedValue { $0 } == ["alpha", "beta", "gamma"])
+    }
+
+    @Test("withStreamingBytes hands a buffered body over as a single chunk")
+    func testWithStreamingBytesOnBuffered() async throws {
+        for body in [Response.Body(string: "hello"), Response.Body(data: Data("hello".utf8))] {
+            let chunks = NIOLockedValueBox([String]())
+            try await body.withStreamingBytes { span in
+                var bytes = [UInt8]()
+                for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
+                chunks.withLockedValue { $0.append(String(decoding: bytes, as: UTF8.self)) }
+            }
+            #expect(chunks.withLockedValue { $0 } == ["hello"])
+        }
+    }
+
+    @Test("withStreamingBytes does not call the closure for an empty body")
+    func testWithStreamingBytesOnEmpty() async throws {
+        let calls = NIOLockedValueBox(0)
+        try await Response.Body().withStreamingBytes { _ in
+            calls.withLockedValue { $0 += 1 }
+        }
+        #expect(calls.withLockedValue { $0 } == 0)
+    }
+
+    @Test("withStreamingBytes propagates an error thrown mid-stream")
+    func testWithStreamingBytesPropagatesError() async throws {
+        let seen = NIOLockedValueBox(0)
+        let body = Response.Body(stream: { writer in
+            try await writer.write("first")
+            throw MidStreamError()
+        })
+        await #expect(throws: MidStreamError.self) {
+            try await body.withStreamingBytes { _ in
+                seen.withLockedValue { $0 += 1 }
+            }
+        }
+        // The closure saw the chunk that was written before the throw.
+        #expect(seen.withLockedValue { $0 } == 1)
+    }
+
     @Test("An empty write does not corrupt the stream")
     func testEmptyWrite() async throws {
         let body = Response.Body(stream: { writer in

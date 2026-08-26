@@ -35,33 +35,38 @@ extension Response {
         /// An empty `Response.Body`.
         public static let empty: Body = .init()
 
-        /// Borrow the body's bytes without copying.
+        /// Read the body's bytes incrementally, without buffering the whole thing.
         ///
-        /// The span is only valid for the duration of `body`. `RawSpan` is non-escapable, so the
-        /// compiler enforces that: the closure cannot stash the span and read it later.
+        /// The closure is called once per chunk, in order, and is backpressured: a streaming body
+        /// only produces the next chunk once the closure returns. Each span is only valid for the
+        /// duration of that call - `RawSpan` is non-escapable, so the compiler enforces that: the
+        /// closure cannot stash a span and read it later.
         ///
-        /// Every buffered case borrows its existing storage, so nothing is copied on the way in -
-        /// including `.string` and `.staticString`, which are not materialised.
+        /// Works for every kind of body - a buffered one is handed over as a single chunk, and an
+        /// empty one calls the closure not at all - so callers do not need to branch on storage.
         ///
-        /// - Returns: The closure's result, or `nil` if the body is empty or still streaming.
-        ///            A streaming body has to be read with ``collect()`` instead.
-        public func withBytes<R>(_ body: (RawSpan) throws -> R) rethrows -> R? {
+        /// Note this *consumes* a streaming body: it runs the stream's callback,
+        /// so it has that closure's side effects and must not be called twice on the same body.
+        /// A streaming body can also throw part-way, after the closure has already seen chunks.
+        ///
+        /// Use ``collect()`` instead when the whole body is genuinely needed in memory.
+        public func withStreamingBytes(_ body: @escaping (RawSpan) async throws -> Void) async throws {
             switch self.storage {
+            case .stream(let stream):
+                try await stream.callback(ForwardingBodyWriter(body))
+            case .none:
+                return
+            // Buffered: the whole body is handed over as a single chunk.
             case .buffer(let buffer):
-                return try body(buffer.readableBytesSpan)
+                try await body(buffer.readableBytesSpan)
             case .data(let data):
-                return try body(data.span.bytes)
+                try await body(data.span.bytes)
             case .string(let string):
-                return try body(string.utf8Span.span.bytes)
+                try await body(string.utf8Span.span.bytes)
             case .staticString(let staticString):
-                // No public pointer-to-`RawSpan` initialiser exists yet, so the span over a
-                // `StaticString`'s UTF-8 has to be built with the underscored one. Safe here: a
-                // `StaticString`'s storage is immortal, so the span cannot outlive its bytes.
-                return try unsafe body(
+                try await unsafe body(
                     RawSpan(_unsafeStart: staticString.utf8Start, byteCount: staticString.utf8CodeUnitCount)
                 )
-            case .none, .stream:
-                return nil
             }
         }
 
@@ -185,6 +190,20 @@ extension Response {
         internal init(storage: Storage) {
             self.storage = storage
         }
+    }
+}
+
+/// A ``ResponseBodyWriter`` that forwards each chunk straight to a closure, used to drive a
+/// streaming body incrementally instead of collecting it.
+private final class ForwardingBodyWriter: ResponseBodyWriter {
+    let onChunk: (RawSpan) async throws -> Void
+
+    init(_ onChunk: @escaping (RawSpan) async throws -> Void) {
+        self.onChunk = onChunk
+    }
+
+    func write(_ bytes: RawSpan) async throws {
+        try await self.onChunk(bytes)
     }
 }
 
