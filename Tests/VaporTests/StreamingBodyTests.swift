@@ -452,7 +452,7 @@ struct StreamingBodyTests {
 
     @Test("collect() gathers a streaming body into a single buffer")
     func testCollectStreamingBody() async throws {
-        let body = Response.Body(stream: { writer in
+        var body = Response.Body(stream: { writer in
             try await writer.write("Hello, ")
             try await writer.write("collected!")
         })
@@ -462,7 +462,7 @@ struct StreamingBodyTests {
 
     @Test("Every ResponseBodyWriter overload reaches the stream")
     func testWriterOverloads() async throws {
-        let body = Response.Body(stream: { writer in
+        var body = Response.Body(stream: { writer in
             // String
             try await writer.write("a")
             // some Sequence<UInt8>
@@ -581,9 +581,45 @@ struct StreamingBodyTests {
         #expect(Array(streamed) == Array(expected))
     }
 
+    @Test("collect() caches, so the stream closure runs only once")
+    func testCollectCachesStream() async throws {
+        let runs = NIOLockedValueBox(0)
+        var body = Response.Body(stream: { writer in
+            runs.withLockedValue { $0 += 1 }
+            try await writer.write("payload")
+        })
+        let first = try await body.collect()
+        let second = try await body.collect()
+        #expect(first.map { String(decoding: $0, as: UTF8.self) } == "payload")
+        #expect(second.map { String(decoding: $0, as: UTF8.self) } == "payload")
+        #expect(runs.withLockedValue { $0 } == 1)
+    }
+
+    @Test("collect() replaces a stream with an in-memory body for anything downstream")
+    func testCollectReplacesStreamStorage() async throws {
+        // Exactly the middleware case: read the body, then hand the response on. A stream backed by
+        // a source that can only be drained once used to silently send nothing after this point.
+        let (chunks, continuation) = AsyncStream<String>.makeStream()
+        continuation.yield("alpha")
+        continuation.yield("beta")
+        continuation.finish()
+
+        var response = Response(status: .ok, body: .init(stream: { writer in
+            for await chunk in chunks { try await writer.write(chunk) }
+        }))
+        let collected = try await response.body.collect()
+        #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "alphabeta")
+
+        // The response now carries the bytes, not the drained stream, so a second reader sees them.
+        #expect(response.body.string == "alphabeta")
+        #expect(response.body.count == 9)
+        var again = response.body
+        #expect(try await again.collect().map { String(decoding: $0, as: UTF8.self) } == "alphabeta")
+    }
+
     @Test("An empty write does not corrupt the stream")
     func testEmptyWrite() async throws {
-        let body = Response.Body(stream: { writer in
+        var body = Response.Body(stream: { writer in
             try await writer.write("")
             try await writer.write([UInt8]())
             try await writer.write("done")

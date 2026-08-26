@@ -135,7 +135,16 @@ extension Response {
             }
         }
 
-        public func collect() async throws -> Data? {
+        /// Reads the whole body into memory, running a streaming body to completion.
+        ///
+        /// Collecting a streaming body **replaces** it with the bytes it produced as a mutating operation. A stream's
+        /// closure can only be relied on to run once - it may be reading a file handle, or draining
+        /// an `AsyncSequence` - so re-running it silently yields a short or empty body. Caching the
+        /// result means anything further down the chain, including the server that serialises the
+        /// response, sees an ordinary in-memory body instead.
+        ///
+        /// - Returns: The body's bytes, or `nil` if the body is empty.
+        public mutating func collect() async throws -> Data? {
             switch self.storage {
             case .stream(let stream):
                 // Reserve the declared length up front when known (`count >= 0`) to avoid repeated
@@ -143,6 +152,7 @@ extension Response {
                 let initialCapacity = stream.count >= 0 ? stream.count : 0
                 let writer = CollectingBodyWriter(capacity: initialCapacity)
                 try await stream.callback(writer)
+                self.storage = .data(writer.data)
                 return writer.data
             default:
                 return self.data
