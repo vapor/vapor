@@ -459,6 +459,39 @@ struct StreamingBodyTests {
         #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "Hello, collected!")
     }
 
+    @Test("Every ResponseBodyWriter overload reaches the stream")
+    func testWriterOverloads() async throws {
+        let body = Response.Body(stream: { writer in
+            // String
+            try await writer.write("a")
+            // some Sequence<UInt8>
+            try await writer.write([UInt8]([0x62]))
+            // Data, via the same Sequence overload
+            try await writer.write(Data("c".utf8))
+            // Span<UInt8>
+            let d: [UInt8] = [0x64]
+            try await writer.write(d.span)
+            // RawSpan - the protocol requirement itself
+            let e: [UInt8] = [0x65]
+            try await writer.write(e.span.bytes)
+            // A sequence of chunks
+            try await writer.write(contentsOf: [[UInt8]([0x66]), [UInt8]([0x67])])
+        })
+        let collected = try await body.collect()
+        #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "abcdefg")
+    }
+
+    @Test("An empty write does not corrupt the stream")
+    func testEmptyWrite() async throws {
+        let body = Response.Body(stream: { writer in
+            try await writer.write("")
+            try await writer.write([UInt8]())
+            try await writer.write("done")
+        })
+        let collected = try await body.collect()
+        #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "done")
+    }
+
     @Test("Server does not write a body for a status that cannot carry one", .timeLimit(.minutes(1)),
           .bug("https://github.com/swift-server/swift-http-server/issues/118"))
     func testBodylessStatusDoesNotWriteBody() async throws {
