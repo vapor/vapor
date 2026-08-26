@@ -12,6 +12,7 @@ let benchmarks: @Sendable () -> Void = {
     authenticationBenchmarks()
     routingBenchmarks()
     responseBenchmarks()
+    serialisationBenchmarks()
     contentBenchmarks()
     middlewareBenchmarks()
     macroRoutingBenchmarks()

@@ -1,4 +1,5 @@
 import Benchmark
+import Foundation
 import NIOCore
 import Vapor
 import HTTPTypes
@@ -100,15 +101,17 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/ByteBuffer") { benchmark in
+    // Uses `Data` rather than `ByteBuffer` so the benchmark keeps working as NIO types are
+    // removed from `Response.Body`'s public API, and stays comparable across those changes.
+    Benchmark("response/binary body 1KiB") { benchmark in
         let call = RequestCall(.get, "/buffer")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
         }
     } setup: {
         try await setUpApplication { app in
-            let buffer = ByteBuffer(string: String(repeating: "x", count: 1024))
-            app.get("buffer") { _ in Response(body: .init(buffer: buffer)) }
+            let payload = Data(String(repeating: "x", count: 1024).utf8)
+            app.get("buffer") { _ in Response(body: .init(data: payload)) }
         }
     } teardown: {
         try await tearDownApplication()
