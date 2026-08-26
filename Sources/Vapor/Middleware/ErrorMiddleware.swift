@@ -63,10 +63,9 @@ public final class ErrorMiddleware: Middleware {
 
                 body = .init(
                     buffer: byteBuffer,
-                    byteBufferAllocator: req.byteBufferAllocator
                 )
             } catch {
-                body = .init(string: "Oops: \(String(describing: error))\nWhile encoding error: \(reason)", byteBufferAllocator: req.byteBufferAllocator)
+                body = .init(string: "Oops: \(String(describing: error))\nWhile encoding error: \(reason)")
                 headers.contentType = .plainText
             }
 

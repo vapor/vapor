@@ -75,7 +75,7 @@ public struct Response: CustomStringConvertible, Sendable {
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E: Encodable {
             var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
+            self.response.body = .init(buffer: body)
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D: Decodable {
@@ -90,7 +90,7 @@ public struct Response: CustomStringConvertible, Sendable {
             try content.beforeEncode()
             var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
+            self.response.body = .init(buffer: body)
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C: Content {

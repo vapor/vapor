@@ -93,7 +93,7 @@ extension ClientResponse: ResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
         let body: Response.Body
         if let buffer = self.body {
-            body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
+            body = .init(buffer: buffer)
         } else {
             body = .empty
         }

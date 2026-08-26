@@ -117,32 +117,32 @@ extension Response {
         internal let byteBufferAllocator: ByteBufferAllocator
 
         /// Creates an empty body. Useful for `GET` requests where HTTP bodies are forbidden.
-        public init(byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init() {
+            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .none
         }
 
         /// Create a new body wrapping `Data`.
-        public init(data: Data, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init(data: Data) {
+            self.byteBufferAllocator = ByteBufferAllocator()
             storage = .data(data)
         }
 
         /// Create a new body from the UTF8 representation of a `StaticString`.
-        public init(staticString: StaticString, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init(staticString: StaticString) {
+            self.byteBufferAllocator = ByteBufferAllocator()
             storage = .staticString(staticString)
         }
 
         /// Create a new body from the UTF8 representation of a `String`.
-        public init(string: String, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init(string: String) {
+            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .string(string)
         }
 
         /// Create a new body from a Swift NIO `ByteBuffer`.
-        public init(buffer: ByteBuffer, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init(buffer: ByteBuffer) {
+            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .buffer(buffer)
         }
 
@@ -155,9 +155,8 @@ extension Response {
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
         ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly `count` bytes.
-        ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int) {
+            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .stream(.init(count: count, callback: stream))
         }
 
@@ -167,9 +166,8 @@ extension Response {
         ///
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
-        ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
+        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> ()) {
+            self.init(stream: stream, count: -1)
         }
 
         /// `ExpressibleByStringLiteral` conformance.

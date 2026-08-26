@@ -304,7 +304,7 @@ public struct FileIO: Sendable {
                 throw error
             }
             try await onCompleted(.success(()))
-        }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
+        }, count: byteCount)
 
         return response
     }
