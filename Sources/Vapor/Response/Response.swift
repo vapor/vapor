@@ -79,10 +79,10 @@ public struct Response: CustomStringConvertible, Sendable {
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D: Decodable {
-            guard let body = self.response.body.buffer else {
+            guard let body = self.response.body.data else {
                 throw Abort(.unprocessableContent)
             }
-            return try decoder.decode(D.self, from: body, headers: self.response.headers)
+            return try decoder.decode(D.self, from: ByteBuffer(data: body), headers: self.response.headers)
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C: Content {
@@ -94,10 +94,10 @@ public struct Response: CustomStringConvertible, Sendable {
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C: Content {
-            guard let body = self.response.body.buffer else {
+            guard let body = self.response.body.data else {
                 throw Abort(.unprocessableContent)
             }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.response.headers)
+            var decoded = try decoder.decode(C.self, from: ByteBuffer(data: body), headers: self.response.headers)
             try decoded.afterDecode()
             return decoded
         }
