@@ -74,13 +74,13 @@ extension Response {
             switch self.storage {
             case .buffer(let buffer): return buffer
             case .data(let data):
-                let buffer = self.byteBufferAllocator.buffer(bytes: data)
+                let buffer = ByteBufferAllocator().buffer(bytes: data)
                 return buffer
             case .staticString(let staticString):
-                let buffer = self.byteBufferAllocator.buffer(staticString: staticString)
+                let buffer = ByteBufferAllocator().buffer(staticString: staticString)
                 return buffer
             case .string(let string):
-                let buffer = self.byteBufferAllocator.buffer(string: string)
+                let buffer = ByteBufferAllocator().buffer(string: string)
                 return buffer
             case .none: return nil
             case .stream: return nil
@@ -114,35 +114,29 @@ extension Response {
         }
 
         internal var storage: Storage
-        internal let byteBufferAllocator: ByteBufferAllocator
 
         /// Creates an empty body. Useful for `GET` requests where HTTP bodies are forbidden.
         public init() {
-            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .none
         }
 
         /// Create a new body wrapping `Data`.
         public init(data: Data) {
-            self.byteBufferAllocator = ByteBufferAllocator()
             storage = .data(data)
         }
 
         /// Create a new body from the UTF8 representation of a `StaticString`.
         public init(staticString: StaticString) {
-            self.byteBufferAllocator = ByteBufferAllocator()
             storage = .staticString(staticString)
         }
 
         /// Create a new body from the UTF8 representation of a `String`.
         public init(string: String) {
-            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .string(string)
         }
 
         /// Create a new body from a Swift NIO `ByteBuffer`.
         public init(buffer: ByteBuffer) {
-            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .buffer(buffer)
         }
 
@@ -156,13 +150,12 @@ extension Response {
         ///   - stream: The closure that writes the body chunks.
         ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly `count` bytes.
         public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int) {
-            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .stream(.init(count: count, callback: stream))
         }
 
         /// Creates a chunked, streaming HTTP ``Response`` body of unknown length.
         ///
-        /// See ``init(stream:count:byteBufferAllocator:)`` for the streaming semantics.
+        /// See ``init(stream:count:)`` for the streaming semantics.
         ///
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
@@ -172,13 +165,11 @@ extension Response {
 
         /// `ExpressibleByStringLiteral` conformance.
         public init(stringLiteral value: String) {
-            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .string(value)
         }
 
         /// Internal init.
-        internal init(storage: Storage, byteBufferAllocator: ByteBufferAllocator) {
-            self.byteBufferAllocator = byteBufferAllocator
+        internal init(storage: Storage) {
             self.storage = storage
         }
     }
