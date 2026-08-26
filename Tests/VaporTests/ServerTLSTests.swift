@@ -6,6 +6,7 @@ import NIOHTTP1
 import NIOPosix
 import NIOSSL
 import ServiceLifecycle
+import Logging
 import Testing
 import Foundation
 import X509
@@ -170,12 +171,15 @@ struct ServerTLSTests {
             app.get("hello") { _ in "world" }
 
             try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
-                // Without setting the trust store this will fail
+                // Without setting the trust store this will fail. The deadline is generous
+                // because it isn't what's under test: a rejected handshake fails in milliseconds,
+                // and a tight deadline just races it, turning a TLS error into a timeout on a
+                // loaded machine — which is what the assertion below then trips over.
                 let error = await #expect(throws: (any Error).self) {
                     try await withTLSClient { client in
                         try await client.execute(
                             HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                            timeout: .seconds(2)
+                            timeout: .seconds(15)
                         )
                     }
                 }
@@ -196,7 +200,7 @@ struct ServerTLSTests {
     @Test("Server startup fails when the PEM files do not exist", .timeLimit(.minutes(1)))
     func testInvalidPEMPathFailsServerStartup() async throws {
         try await withApp { app in
-            app.serverConfiguration.address = .hostname("localhost", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.serverConfiguration.tlsConfiguration = .pemFile(
                 certificateChainPath: "/nonexistent/certificate.crt",
                 privateKeyPath: "/nonexistent/private.key"
@@ -214,7 +218,7 @@ struct ServerTLSTests {
     @Test("Waiting on the listening address fails when startup fails", .timeLimit(.minutes(1)))
     func testListeningAddressFailsWhenStartupFails() async throws {
         try await withApp { app in
-            app.serverConfiguration.address = .hostname("localhost", port: 0)
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.serverConfiguration.tlsConfiguration = .pemFile(
                 certificateChainPath: "/nonexistent/certificate.crt",
                 privateKeyPath: "/nonexistent/private.key"
@@ -230,6 +234,72 @@ struct ServerTLSTests {
                     _ = try await app.server.listeningAddress
                     group.cancelAll()
                 }
+            }
+        }
+    }
+
+    @Test("Concurrent waiters all receive the listening address", .timeLimit(.minutes(1)))
+    func testConcurrentListeningAddressWaiters() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+
+                // Several tasks ask for the address before it is published. Each has to be resumed;
+                // holding a single waiter would strand all but the last one forever.
+                try await withThrowingTaskGroup(of: Int?.self) { waiters in
+                    for _ in 0..<4 {
+                        waiters.addTask { try await app.server.listeningAddress.port }
+                    }
+                    var ports: [Int?] = []
+                    for try await port in waiters {
+                        ports.append(port)
+                    }
+                    #expect(ports.count == 4)
+                    #expect(Set(ports.map { $0 ?? 0 }).count == 1, "waiters disagreed about the port")
+                }
+
+                group.cancelAll()
+            }
+        }
+    }
+
+    @Test("Concurrent waiters all see a startup failure", .timeLimit(.minutes(1)))
+    func testConcurrentListeningAddressWaitersOnFailure() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: "/nonexistent/certificate.crt",
+                privateKeyPath: "/nonexistent/private.key"
+            )
+            try await app.boot()
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+
+                // The address never arrives, so every waiter must be handed the startup error
+                // rather than being left parked on it.
+                await withTaskGroup(of: Bool.self) { waiters in
+                    for _ in 0..<4 {
+                        waiters.addTask {
+                            do {
+                                _ = try await app.server.listeningAddress
+                                return false
+                            } catch {
+                                return true
+                            }
+                        }
+                    }
+                    var threw = 0
+                    for await didThrow in waiters where didThrow {
+                        threw += 1
+                    }
+                    #expect(threw == 4, "some waiters were never resumed")
+                }
+
+                group.cancelAll()
             }
         }
     }
@@ -319,10 +389,16 @@ private struct TestCredentials {
     }
 }
 
+/// Runs `body` with an HTTP client configured to trust `trustedCertificate` and nothing else.
+///
+/// Every exchange is logged with the calling test's name and how long it took. These tests run
+/// alongside a couple of hundred others, so a failure in CI is otherwise a bare error with no way
+/// to tell which test's connection stalled, or whether it stalled at all versus never starting.
 private func withTLSClient<T>(
     trustingOnly trustedCertificate: NIOSSLCertificate? = nil,
     verification: CertificateVerification = .fullVerification,
     httpVersion: HTTPClient.Configuration.HTTPVersion = .automatic,
+    test: String = #function,
     _ body: (HTTPClient) async throws -> T
 ) async throws -> T {
     var tlsConfiguration = TLSConfiguration.makeClientConfiguration()
@@ -334,16 +410,42 @@ private func withTLSClient<T>(
     var clientConfiguration = HTTPClient.Configuration()
     clientConfiguration.tlsConfiguration = tlsConfiguration
     clientConfiguration.httpVersion = httpVersion
+    // A rejected certificate is a terminal failure — it won't start being trusted on a later
+    // attempt. AsyncHTTPClient retries connection establishment with backoff by default and only
+    // reports the failure once the connect timeout expires, which both slows these tests down and
+    // replaces the real `NIOSSLError` with `deadlineExceeded`. Fail on the first attempt so the
+    // assertions see the actual error.
+    clientConfiguration.connectionPool.retryConnectionEstablishment = false
+
+    // `.notice` so it survives the log level the tests run at; the pool's own logging is `.debug`,
+    // so the logger handed to AsyncHTTPClient below is set to that level to let it through.
+    var logger = Logger(label: "tls-test")
+    logger.logLevel = .debug
 
     let client = HTTPClient(
         eventLoopGroup: MultiThreadedEventLoopGroup.singleton,
-        configuration: clientConfiguration
+        configuration: clientConfiguration,
+        // Connection establishment, backoff and pool state are logged here — that's the detail
+        // missing when CI reports a bare `connectTimeout`.
+        backgroundActivityLogger: logger
     )
+    let start = ContinuousClock.now
+    logger.notice("TLS exchange starting", metadata: ["test": "\(test)"])
     do {
         let result = try await body(client)
+        logger.notice(
+            "TLS exchange finished",
+            metadata: ["test": "\(test)", "duration": "\(ContinuousClock.now - start)"])
         try await client.shutdown()
         return result
     } catch {
+        logger.notice(
+            "TLS exchange threw",
+            metadata: [
+                "test": "\(test)",
+                "duration": "\(ContinuousClock.now - start)",
+                "error": "\(error)",
+            ])
         try? await client.shutdown()
         throw error
     }
