@@ -23,13 +23,23 @@ enum NIOHTTPServerAdapterError: Error {
 /// parent task (via `ServiceGroup` or task cancellation) through to
 /// `NIOHTTPServer.serve()`'s built-in `withGracefulShutdownHandler`.
 final class NIOHTTPServerAdapter: Server, Sendable {
-    /// Tracks anyone waiting on ``listeningAddress`` along with a startup failure, if one occurred.
+    /// Tracks everyone waiting on ``listeningAddress`` along with a startup failure, if one occurred.
     ///
     /// `startupError` is retained so that a waiter arriving *after* `run()` has already failed
     /// throws instead of waiting on an address that will never be published.
+    ///
+    /// Waiters are held in an array rather than a single slot: nothing stops two tasks awaiting the
+    /// address at once, and with one slot the second would overwrite the first, leaving it parked
+    /// forever on a continuation nobody resumes.
     private struct AddressWaiters {
-        var continuation: CheckedContinuation<SocketAddress, any Error>?
+        var continuations: [CheckedContinuation<SocketAddress, any Error>] = []
         var startupError: (any Error)?
+
+        /// Removes the parked waiters, for resuming outside the lock.
+        mutating func takeContinuations() -> [CheckedContinuation<SocketAddress, any Error>] {
+            defer { self.continuations = [] }
+            return self.continuations
+        }
     }
 
     let application: Application
@@ -47,10 +57,12 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             // If we failed before publishing the listening address — bad TLS credentials, the port
             // already being in use, a bind failure — anyone awaiting `listeningAddress` would wait
             // forever, because only the success path below ever resumes them. Hand them the error.
-            self.addressWaiters.withLockedValue { waiters in
+            let waiting = self.addressWaiters.withLockedValue { waiters in
                 waiters.startupError = error
-                waiters.continuation?.resume(throwing: error)
-                waiters.continuation = nil
+                return waiters.takeContinuations()
+            }
+            for continuation in waiting {
+                continuation.resume(throwing: error)
             }
             throw error
         }
@@ -145,9 +157,9 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
             // Atomically set the address and resume any waiting continuation
             self.application.sharedAddress.withLockedValue { $0 = nioAddress }
-            self.addressWaiters.withLockedValue { waiters in
-                waiters.continuation?.resume(returning: nioAddress)
-                waiters.continuation = nil
+            let waiting = self.addressWaiters.withLockedValue { $0.takeContinuations() }
+            for continuation in waiting {
+                continuation.resume(returning: nioAddress)
             }
 
             Logger.current.notice("Server started on \(address.host):\(address.port)")
@@ -182,7 +194,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                     if let error = waiters.startupError {
                         return .failure(error)
                     }
-                    waiters.continuation = continuation
+                    waiters.continuations.append(continuation)
                     return .waiting
                 }
                 switch resolution {

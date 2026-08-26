@@ -10,11 +10,16 @@ import HTTPTypes
 extension Application {
     public enum Method {
         case inMemory
+        /// Runs the app on an ephemeral port.
+        ///
+        /// Bound by IP rather than by name: `localhost` resolves to `::1` before `127.0.0.1`, so a
+        /// name here makes every test that uses it depend on the host's IPv6 loopback. Use
+        /// ``running(hostname:port:)`` to bind something else.
         public static var running: Method {
-            return .running(hostname:"localhost", port: 0)
+            return .running(hostname: "127.0.0.1", port: 0)
         }
         public static func running(port: Int) -> Self {
-            .running(hostname: "localhost", port: port)
+            .running(hostname: "127.0.0.1", port: port)
         }
         case running(hostname: String, port: Int)
     }
@@ -24,7 +29,7 @@ extension Application {
         let port: Int
         let hostname: String
 
-        package init(app: Application, hostname: String = "localhost", port: Int) throws {
+        package init(app: Application, hostname: String = "127.0.0.1", port: Int) throws {
             self.app = app
             self.hostname = hostname
             self.port = port

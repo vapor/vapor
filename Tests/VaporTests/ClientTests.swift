@@ -23,7 +23,7 @@ struct ClientTests {
     func testClientBeforeSend() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
-                let res = try await app.client.post("http://localhost:\(remoteAppPort)/anything") { req in
+                let res = try await app.client.post("http://127.0.0.1:\(remoteAppPort)/anything") { req in
                     try req.content.encode(["hello": "world"])
                 }
 
@@ -38,7 +38,7 @@ struct ClientTests {
     func testClientContent() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
-                let res = try await app.client.post("http://localhost:\(remoteAppPort)/anything", content: ["hello": "world"])
+                let res = try await app.client.post("http://127.0.0.1:\(remoteAppPort)/anything", content: ["hello": "world"])
 
                 let data = try await res.content.decode(AnythingResponse.self)
                 #expect(data.json == ["hello": "world"])
@@ -51,11 +51,16 @@ struct ClientTests {
     func testClientTimeout() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
+                // A request to loopback that should succeed in milliseconds. Addressed by IP
+                // rather than `localhost`: the remote app binds IPv4 only, and `localhost`
+                // resolves to `::1` first, so a name here means every request starts with a
+                // doomed IPv6 attempt whose cost depends on whether the host refuses it or
+                // black-holes it.
                 await #expect(throws: Never.self, performing: {
-                    try await app.client.get("http://localhost:\(remoteAppPort)/json") { $0.timeout = .seconds(1) }
+                    try await app.client.get("http://127.0.0.1:\(remoteAppPort)/json") { $0.timeout = .seconds(2) }
                 })
                 await #expect(throws: HTTPClientError.deadlineExceeded) {
-                    try await app.client.get("http://localhost:\(remoteAppPort)/stalling") {
+                    try await app.client.get("http://127.0.0.1:\(remoteAppPort)/stalling") {
                         $0.timeout = .milliseconds(200)
                     }
                 }
@@ -72,7 +77,7 @@ struct ClientTests {
 
                 app.get("foo") { req async throws -> String in
                     do {
-                        let response = try await req.application.client.get("http://localhost:\(remoteAppPort)/status/201")
+                        let response = try await req.application.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
                         #expect(response.status.code == 201)
                         // Server shutdown handled by task cancellation
                         return "bar"
@@ -83,7 +88,7 @@ struct ClientTests {
                 }
 
                 try await withRunningApp(app: app) { port in
-                    let res = try await app.client.get("http://localhost:\(port)/foo")
+                    let res = try await app.client.get("http://127.0.0.1:\(port)/foo")
                     #expect(res.body?.string == "bar")
                 }
             }
@@ -98,7 +103,7 @@ struct ClientTests {
                 logHandler
             })
             try await withApp(logger: logger) { app in
-                _ = try await app.client.get("http://localhost:\(remoteAppPort)/status/201")
+                _ = try await app.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
 
                 #expect(logHandler.metadata["ahc-request-id"] != nil)
             }

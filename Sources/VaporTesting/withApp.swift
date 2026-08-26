@@ -76,7 +76,13 @@ public func withApp<T>(
 ///    }
 /// }
 /// ```
-public func withRunningApp<T: Sendable>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
+/// Runs `app`'s server for the duration of `block`, handing it the port the server bound to.
+///
+/// The hostname defaults to `127.0.0.1` rather than `localhost` so the server binds IPv4. A name
+/// resolves to `::1` before `127.0.0.1`, which quietly makes every test depend on the host's IPv6
+/// behaviour — including tests that then address the server by IP and can't reach it. Pass an
+/// explicit hostname to test other bindings.
+public func withRunningApp<T: Sendable>(app: Application, hostname: String = "127.0.0.1", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
     app.serverConfiguration.address = .hostname(hostname, port: portToUse)
     try await app.boot()
 

@@ -28,7 +28,7 @@ extension VaporTestingRunner {
     public func sendRequest(
         _ method: HTTPRequest.Method,
         _ path: String,
-        hostname: String = "localhost",
+        hostname: String = "127.0.0.1",
         port: Int? = nil,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
