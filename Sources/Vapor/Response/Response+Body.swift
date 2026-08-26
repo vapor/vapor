@@ -87,7 +87,7 @@ extension Response {
             }
         }
 
-        public func collect() async throws -> ByteBuffer? {
+        public func collect() async throws -> Data? {
             switch self.storage {
             case .stream(let stream):
                 // Reserve the declared length up front when known (`count >= 0`) to avoid repeated
@@ -95,9 +95,9 @@ extension Response {
                 let initialCapacity = stream.count >= 0 ? stream.count : 0
                 let writer = CollectingBodyWriter(buffer: self.byteBufferAllocator.buffer(capacity: initialCapacity))
                 try await stream.callback(writer)
-                return writer.buffer
+                return writer.buffer.readData(length: writer.buffer.readableBytes)
             default:
-                return self.buffer
+                return self.buffer?.getData(at: 0, length: self.buffer?.readableBytes ?? 0)
             }
         }
 

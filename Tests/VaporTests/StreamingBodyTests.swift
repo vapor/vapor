@@ -456,7 +456,7 @@ struct StreamingBodyTests {
             try await writer.write(ByteBuffer(string: "collected!"))
         })
         let collected = try await body.collect()
-        #expect(collected.map { String(buffer: $0) } == "Hello, collected!")
+        #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "Hello, collected!")
     }
 
     @Test("Server does not write a body for a status that cannot carry one", .timeLimit(.minutes(1)),
