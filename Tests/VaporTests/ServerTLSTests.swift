@@ -6,6 +6,7 @@ import NIOHTTP1
 import NIOPosix
 import NIOSSL
 import ServiceLifecycle
+import Logging
 import Testing
 import Foundation
 import X509
@@ -388,10 +389,16 @@ private struct TestCredentials {
     }
 }
 
+/// Runs `body` with an HTTP client configured to trust `trustedCertificate` and nothing else.
+///
+/// Every exchange is logged with the calling test's name and how long it took. These tests run
+/// alongside a couple of hundred others, so a failure in CI is otherwise a bare error with no way
+/// to tell which test's connection stalled, or whether it stalled at all versus never starting.
 private func withTLSClient<T>(
     trustingOnly trustedCertificate: NIOSSLCertificate? = nil,
     verification: CertificateVerification = .fullVerification,
     httpVersion: HTTPClient.Configuration.HTTPVersion = .automatic,
+    test: String = #function,
     _ body: (HTTPClient) async throws -> T
 ) async throws -> T {
     var tlsConfiguration = TLSConfiguration.makeClientConfiguration()
@@ -403,21 +410,42 @@ private func withTLSClient<T>(
     var clientConfiguration = HTTPClient.Configuration()
     clientConfiguration.tlsConfiguration = tlsConfiguration
     clientConfiguration.httpVersion = httpVersion
-    // Everything here talks to a server on loopback, so a connection that hasn't been established
-    // in a second isn't going to be. Without this, a rejected handshake isn't reported until the
-    // default 10s connect timeout expires, which turns "the client refuses this certificate" into
-    // a ten-second test.
-    clientConfiguration.timeout = .init(connect: .seconds(2))
+    // A rejected certificate is a terminal failure — it won't start being trusted on a later
+    // attempt. AsyncHTTPClient retries connection establishment with backoff by default and only
+    // reports the failure once the connect timeout expires, which both slows these tests down and
+    // replaces the real `NIOSSLError` with `deadlineExceeded`. Fail on the first attempt so the
+    // assertions see the actual error.
+    clientConfiguration.connectionPool.retryConnectionEstablishment = false
+
+    // `.notice` so it survives the log level the tests run at; the pool's own logging is `.debug`,
+    // so the logger handed to AsyncHTTPClient below is set to that level to let it through.
+    var logger = Logger(label: "tls-test")
+    logger.logLevel = .debug
 
     let client = HTTPClient(
         eventLoopGroup: MultiThreadedEventLoopGroup.singleton,
-        configuration: clientConfiguration
+        configuration: clientConfiguration,
+        // Connection establishment, backoff and pool state are logged here — that's the detail
+        // missing when CI reports a bare `connectTimeout`.
+        backgroundActivityLogger: logger
     )
+    let start = ContinuousClock.now
+    logger.notice("TLS exchange starting", metadata: ["test": "\(test)"])
     do {
         let result = try await body(client)
+        logger.notice(
+            "TLS exchange finished",
+            metadata: ["test": "\(test)", "duration": "\(ContinuousClock.now - start)"])
         try await client.shutdown()
         return result
     } catch {
+        logger.notice(
+            "TLS exchange threw",
+            metadata: [
+                "test": "\(test)",
+                "duration": "\(ContinuousClock.now - start)",
+                "error": "\(error)",
+            ])
         try? await client.shutdown()
         throw error
     }
