@@ -158,15 +158,6 @@ final class NIOResponseBodyWriter: ResponseBodyWriter {
         self.inner = consume inner
     }
 
-    func write(_ buffer: ByteBuffer) async throws {
-        var out = UniqueArray<UInt8>(minimumCapacity: buffer.readableBytes)
-        out.append(copying: buffer.readableBytesView)
-        // `inner` is always present during writes (the body closure runs before `finish`, which
-        // takes it); the optional-chaining is just how we reach the move-only writer in place.
-        try await self.inner?.write(buffer: &out)
-        self.bytesWritten += buffer.readableBytes
-    }
-
     func write(_ bytes: RawSpan) async throws {
         // We need to copy here so the writer takes ownership of the data
         // TODO: This should be fixed in HTTP Server to avoid the copy

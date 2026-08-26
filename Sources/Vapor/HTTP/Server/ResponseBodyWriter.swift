@@ -1,6 +1,3 @@
-#warning("Make this internal")
-public import NIOCore
-
 /// Protocol for writing HTTP response bodies.
 ///
 /// Implementations of this protocol are provided by the HTTP server layer and allow Vapor's
@@ -13,10 +10,6 @@ public import NIOCore
 /// is exposed: concluding the response is the server's responsibility, so a body-stream closure
 /// can never end the stream itself.
 public protocol ResponseBodyWriter: AnyObject {
-    /// Write a single ByteBuffer.
-    func write(_ buffer: ByteBuffer) async throws
-    /// Write a sequence of ByteBuffers.
-    func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws
     /// Write a sindle chunk of bytes
     func write(_ bytes: RawSpan) async throws
 }
@@ -48,18 +41,6 @@ extension ResponseBodyWriter {
     public func write(contentsOf chunks: some Sequence<some Sequence<UInt8>>) async throws {
         for chunk in chunks {
             try await self.write(chunk)
-        }
-    }
-
-    // Internal helper to map to what NIOHTTPServer wants
-    func write(_ buffer: ByteBuffer) async throws {
-        try await self.write(buffer.readableBytesSpan)
-    }
-
-    #warning("Remove")
-    public func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
-        for buffer in buffers {
-            try await write(buffer)
         }
     }
 }

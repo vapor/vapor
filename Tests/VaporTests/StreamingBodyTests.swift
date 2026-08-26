@@ -56,9 +56,9 @@ struct StreamingBodyTests {
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("stream") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write(ByteBuffer(string: "Hello, "))
-                    try await writer.write(ByteBuffer(string: "streaming, "))
-                    try await writer.write(ByteBuffer(string: "world!"))
+                    try await writer.write("Hello, ")
+                    try await writer.write("streaming, ")
+                    try await writer.write("world!")
                 }))
             }
 
@@ -158,7 +158,7 @@ struct StreamingBodyTests {
             app.get("many") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
                     for _ in 0..<chunkCount {
-                        try await writer.write(ByteBuffer(string: "x"))
+                        try await writer.write("x")
                     }
                 }))
             }
@@ -195,7 +195,7 @@ struct StreamingBodyTests {
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("error-mid-stream") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write(ByteBuffer(string: "partial"))
+                    try await writer.write("partial")
                     throw MidStreamError()
                 }))
             }
@@ -256,7 +256,7 @@ struct StreamingBodyTests {
             // errors on the truncated response or sees fewer bytes than advertised.
             app.get("abort") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write(ByteBuffer(string: "AAAA"))
+                    try await writer.write("AAAA")
                     throw MidStreamError()
                 }, count: 8))
             }
@@ -306,7 +306,7 @@ struct StreamingBodyTests {
             app.get("firehose") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
                     for _ in 0..<100_000 {
-                        try await writer.write(ByteBuffer(string: "x"))
+                        try await writer.write("x")
                     }
                 }))
             }
@@ -355,7 +355,7 @@ struct StreamingBodyTests {
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("firehose") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    let chunk = ByteBuffer(repeating: 0x41, count: chunkSize)
+                    let chunk = [UInt8](repeating: 0x41, count: chunkSize)
                     for _ in 0..<totalChunks {
                         try await writer.write(chunk)
                         produced.withLockedValue { $0 += 1 }
@@ -407,7 +407,7 @@ struct StreamingBodyTests {
             // Declares `Content-Length: 2` (via `count`) but only writes a single byte.
             app.get("bad-length") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write(ByteBuffer(string: "a"))
+                    try await writer.write("a")
                 }, count: 2))
             }
             app.get("ok") { _ in "ok" }
@@ -452,8 +452,8 @@ struct StreamingBodyTests {
     @Test("collect() gathers a streaming body into a single buffer")
     func testCollectStreamingBody() async throws {
         let body = Response.Body(stream: { writer in
-            try await writer.write(ByteBuffer(string: "Hello, "))
-            try await writer.write(ByteBuffer(string: "collected!"))
+            try await writer.write("Hello, ")
+            try await writer.write("collected!")
         })
         let collected = try await body.collect()
         #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "Hello, collected!")

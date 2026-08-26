@@ -297,7 +297,7 @@ public struct FileIO: Sendable {
                     chunkLength: .bytes(chunkSize)
                 )
                 for try await chunk in chunks {
-                    try await writer.write(chunk)
+                    try await writer.write(chunk.readableBytesSpan)
                 }
             } catch {
                 try await onCompleted(.failure(error))
