@@ -3,8 +3,8 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-#warning("Make this internal")
-public import NIOCore
+#warning("Remove")
+import NIOCore
 import NIOFoundationEssentialsCompat
 import HTTPTypes
 import NIOPosix
@@ -184,7 +184,7 @@ extension Response {
         }
 
         /// Create a new body from a Swift NIO `ByteBuffer`.
-        public init(buffer: ByteBuffer) {
+        init(buffer: ByteBuffer) {
             self.storage = .buffer(buffer)
         }
 
@@ -252,10 +252,6 @@ private final class CollectingBodyWriter: ResponseBodyWriter {
 
     init(capacity: Int) {
         self.data = Data(capacity: capacity)
-    }
-
-    func write(_ buffer: ByteBuffer) async throws {
-        try await self.write(buffer.readableBytesSpan)
     }
 
     func write(_ bytes: RawSpan) async throws {
