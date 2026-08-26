@@ -74,14 +74,11 @@ extension Response {
             switch self.storage {
             case .buffer(let buffer): return buffer
             case .data(let data):
-                let buffer = ByteBufferAllocator().buffer(bytes: data)
-                return buffer
+                return ByteBuffer(data: data)
             case .staticString(let staticString):
-                let buffer = ByteBufferAllocator().buffer(staticString: staticString)
-                return buffer
+                return ByteBuffer(staticString: staticString)
             case .string(let string):
-                let buffer = ByteBufferAllocator().buffer(string: string)
-                return buffer
+                return ByteBuffer(string: string)
             case .none: return nil
             case .stream: return nil
             }

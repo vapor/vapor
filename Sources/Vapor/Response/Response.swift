@@ -73,7 +73,7 @@ public struct Response: CustomStringConvertible, Sendable {
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E: Encodable {
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = ByteBuffer()
             try encoder.encode(encodable, to: &body, headers: &self.response.headers)
             self.response.body = .init(buffer: body)
         }
