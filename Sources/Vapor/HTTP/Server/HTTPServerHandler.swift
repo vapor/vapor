@@ -167,6 +167,14 @@ final class NIOResponseBodyWriter: ResponseBodyWriter {
         self.bytesWritten += buffer.readableBytes
     }
 
+    func write(_ bytes: RawSpan) async throws {
+        // We need to copy here so the writer takes ownership of the data
+        // TODO: This should be fixed in HTTP Server to avoid the copy
+        var out = UniqueArray<UInt8>(minimumCapacity: bytes.byteCount)
+        bytes.withUnsafeBytes { out.append(copying: $0) }
+        self.bytesWritten += bytes.byteCount
+    }
+
     func finish(_ trailingHeaders: HTTPFields?) async throws {
         guard let writer = self.inner.take() else { return }
         var empty = UniqueArray<UInt8>()
