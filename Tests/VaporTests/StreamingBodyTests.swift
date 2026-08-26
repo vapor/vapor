@@ -1,4 +1,5 @@
 import Vapor
+import Crypto
 import VaporTesting
 import AsyncHTTPClient
 import NIOCore
@@ -534,6 +535,50 @@ struct StreamingBodyTests {
         }
         // The closure saw the chunk that was written before the throw.
         #expect(seen.withLockedValue { $0 } == 1)
+    }
+
+    @Test("reduceBytes folds a streaming body chunk by chunk")
+    func testReduceBytesOnStream() async throws {
+        let body = Response.Body(stream: { writer in
+            try await writer.write("alpha")
+            try await writer.write("beta")
+            try await writer.write("gamma")
+        })
+        // Chunk sizes prove the fold sees each chunk separately rather than one blob.
+        let sizes = try await body.reduceBytes(into: [Int]()) { acc, span in
+            acc.append(span.byteCount)
+        }
+        #expect(sizes == [5, 4, 5])
+    }
+
+    @Test("reduceBytes folds a buffered body in a single step")
+    func testReduceBytesOnBuffered() async throws {
+        let total = try await Response.Body(string: "hello").reduceBytes(into: 0) { acc, span in
+            acc += span.byteCount
+        }
+        #expect(total == 5)
+    }
+
+    @Test("reduceBytes returns the initial value for an empty body")
+    func testReduceBytesOnEmpty() async throws {
+        let total = try await Response.Body().reduceBytes(into: 42) { acc, span in
+            acc += span.byteCount
+        }
+        #expect(total == 42)
+    }
+
+    @Test("reduceBytes hashes a streaming body without buffering it")
+    func testReduceBytesHashing() async throws {
+        let chunks = ["alpha", "beta", "gamma"]
+        let body = Response.Body(stream: { writer in
+            for chunk in chunks { try await writer.write(chunk) }
+        })
+        let streamed = try await body.reduceBytes(into: SHA256()) { hasher, span in
+            span.withUnsafeBytes { unsafe hasher.update(bufferPointer: $0) }
+        }.finalize()
+        // Same digest as hashing the whole thing at once.
+        let expected = SHA256.hash(data: Data(chunks.joined().utf8))
+        #expect(Array(streamed) == Array(expected))
     }
 
     @Test("An empty write does not corrupt the stream")

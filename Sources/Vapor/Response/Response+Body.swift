@@ -70,6 +70,36 @@ extension Response {
             }
         }
 
+        /// Fold the body's bytes into a value, one chunk at a time.
+        ///
+        /// The streaming counterpart to computing something over a whole body without ever holding
+        /// it in memory - hashing, counting, checksumming, incremental parsing. Chunk delivery and
+        /// backpressure are exactly ``withStreamingBytes(_:)``'s, so a streaming body is folded as
+        /// it arrives and a buffered one is folded in a single step.
+        ///
+        ///     let digest = try await body.reduceBytes(into: SHA256()) { hasher, span in
+        ///         span.withUnsafeBytes { hasher.update(bufferPointer: $0) }
+        ///     }.finalize()
+        ///
+        /// Like ``withStreamingBytes(_:)`` this consumes a streaming body.
+        ///
+        /// - Parameters:
+        ///   - initialResult: The value to start from.
+        ///   - updateAccumulatingResult: Folds each chunk into the accumulator.
+        /// - Returns: The accumulated value. An empty body returns `initialResult` untouched.
+        public func reduceBytes<R>(
+            into initialResult: R,
+            _ updateAccumulatingResult: @escaping (inout R, RawSpan) async throws -> Void
+        ) async throws -> R {
+            // `inout` can't cross into an escaping closure, so the accumulator is boxed for the
+            // duration. That is an implementation detail: callers still write plain `inout`.
+            let accumulator = ReduceBox(initialResult)
+            try await self.withStreamingBytes { span in
+                try await updateAccumulatingResult(&accumulator.value, span)
+            }
+            return accumulator.value
+        }
+
         public var string: String? {
             switch self.storage {
             case .buffer(var buffer): return buffer.readString(length: buffer.readableBytes)
@@ -191,6 +221,14 @@ extension Response {
             self.storage = storage
         }
     }
+}
+
+/// Holds a ``Response/Body/reduceBytes(into:_:)`` accumulator so it can be mutated from inside an
+/// escaping closure. Not locked: the chunk closure is driven serially by the body itself, never
+/// concurrently.
+private final class ReduceBox<R> {
+    var value: R
+    init(_ value: R) { self.value = value }
 }
 
 /// A ``ResponseBodyWriter`` that forwards each chunk straight to a closure, used to drive a
