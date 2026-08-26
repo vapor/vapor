@@ -109,14 +109,14 @@ struct FileTests {
                 try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
             }
 
-            #expect(app.storage[FileMiddleware.ETagHashes.self] == nil)
+            #expect(await app.fileETagHashCache.entry(forFileAt: #filePath) == nil)
 
             try await app.test(method: .running) { runner in
                 let first = try await runner.sendRequest(.get, "/file-stream")
                 let firstETag = try #require(first.headers[.eTag])
 
                 // Without a populated cache every request re-reads and re-hashes the whole file.
-                let cached = try #require(app.storage[FileMiddleware.ETagHashes.self]?[#filePath])
+                let cached = try #require(await app.fileETagHashCache.entry(forFileAt: #filePath))
                 #expect(cached.digestHex == firstETag)
 
                 let second = try await runner.sendRequest(.get, "/file-stream")

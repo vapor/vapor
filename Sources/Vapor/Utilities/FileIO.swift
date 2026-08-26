@@ -71,31 +71,21 @@ public struct FileIO: Sendable {
     ///   - path: The file's path.
     ///   - lastModified: When the file was last modified.
     /// - Returns: A `String` which holds the ETag.
-    // TODO: Rework this caching in a follow-up PR. The `Application.storage`-based cache is a
-    // candidate for removal, and the edge cases need working through: the cache is unbounded (one
-    // entry per file ever served, never evicted), concurrent misses each read and hash the file
-    // rather than sharing one computation, and the read-modify-write below can lose an entry
-    // because reading and writing `Application.storage` take the lock separately.
-    private func generateETagHash(path: String, lastModified: Date) async throws -> String {
-        if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
-            return hash.digestHex
-        }
-
-        let digestHex = try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
-            // Hashing in chunks is constant memory and has no size ceiling.
-            var hasher = SHA256()
-            for try await chunk in handle.readChunks(chunkLength: .bytes(128 * 1024)) {
-                hasher.update(data: chunk.readableBytesView)
+    private func generateETagHash(path: String, lastModified: Date, size: Int64) async throws -> String {
+        try await self.request.application.fileETagHashCache.digestHex(
+            forFileAt: path,
+            lastModified: lastModified,
+            size: size
+        ) {
+            try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
+                // Hashing in chunks is constant memory and has no size ceiling.
+                var hasher = SHA256()
+                for try await chunk in handle.readChunks(chunkLength: .bytes(128 * 1024)) {
+                    hasher.update(data: chunk.readableBytesView)
+                }
+                return hasher.finalize().hex
             }
-            return hasher.finalize().hex
         }
-
-        // Cache the digest so later requests don't re-read the file
-        var hashes = request.application.storage[FileMiddleware.ETagHashes.self] ?? [:]
-        hashes[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digestHex)
-        request.application.storage[FileMiddleware.ETagHashes.self] = hashes
-
-        return digestHex
     }
 
     // MARK: - Concurrency
@@ -222,7 +212,10 @@ public struct FileIO: Sendable {
         let eTag: String
 
         if advancedETagComparison {
-            eTag = try await generateETagHash(path: path, lastModified: fileInfo.lastDataModificationTime.date)
+            eTag = try await generateETagHash(
+                path: path,
+                lastModified: fileInfo.lastDataModificationTime.date,
+                size: Int64(fileInfo.size))
         } else {
             // Generate ETag value, "last modified date in epoch time" + "-" + "file size"
             eTag = "\"\(fileInfo.lastDataModificationTime.seconds)-\(fileInfo.size)\""

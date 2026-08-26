@@ -31,14 +31,6 @@ public final class FileMiddleware: Middleware {
         public static let publicDirectoryIsNotAFolder: Self = .init(description: "Cannot find any actual folder for the given Public Directory")
     }
 
-    package struct ETagHashes: StorageKey {
-        package typealias Value = [String: FileHash]
-
-        package struct FileHash {
-            package let lastModified: Date
-            package let digestHex: String
-        }
-    }
 
     /// Creates a new `FileMiddleware`.
     ///
