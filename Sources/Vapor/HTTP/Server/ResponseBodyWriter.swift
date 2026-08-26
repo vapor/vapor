@@ -55,4 +55,11 @@ extension ResponseBodyWriter {
     func write(_ buffer: ByteBuffer) async throws {
         try await self.write(buffer.readableBytesSpan)
     }
+
+    #warning("Remove")
+    public func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
+        for buffer in buffers {
+            try await write(buffer)
+        }
+    }
 }

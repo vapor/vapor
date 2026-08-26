@@ -93,11 +93,11 @@ extension Response {
                 // Reserve the declared length up front when known (`count >= 0`) to avoid repeated
                 // grow-and-copy reallocations; `-1` means unknown/chunked, so start empty.
                 let initialCapacity = stream.count >= 0 ? stream.count : 0
-                let writer = CollectingBodyWriter(buffer: self.byteBufferAllocator.buffer(capacity: initialCapacity))
+                let writer = CollectingBodyWriter(capacity: initialCapacity)
                 try await stream.callback(writer)
-                return writer.buffer.readData(length: writer.buffer.readableBytes)
+                return writer.data
             default:
-                return self.buffer?.getData(at: 0, length: self.buffer?.readableBytes ?? 0)
+                return self.data
             }
         }
 
@@ -186,20 +186,20 @@ extension Response {
     }
 }
 
-/// A ``ResponseBodyWriter`` that accumulates everything written into a `ByteBuffer`, used to
+/// A ``ResponseBodyWriter`` that accumulates everything written into `Data`, used to
 /// eagerly collect a streaming body instead of forwarding it to the connection.
-private final class CollectingBodyWriter: ResponseBodyWriter {
-    var buffer: ByteBuffer
+private final class CollectingBodyWriter: ResponseBodyWriter {    
+    var data: Data
 
-    init(buffer: ByteBuffer) {
-        self.buffer = buffer
+    init(capacity: Int) {
+        self.data = Data(capacity: capacity)
     }
 
     func write(_ buffer: ByteBuffer) async throws {
-        var buffer = buffer
-        self.buffer.writeBuffer(&buffer)
+        try await self.write(buffer.readableBytesSpan)
     }
 
     func write(_ bytes: RawSpan) async throws {
+        bytes.withUnsafeBytes { self.data.append(contentsOf: $0) }
     }
 }
