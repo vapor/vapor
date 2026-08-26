@@ -114,8 +114,6 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // move-only response writer), so it stays in this task; each `write` awaits the
                 // transport, so backpressure propagates to the closure. The server appends the
                 // final chunk via `finish` once the closure returns.
-                // Keep the concrete type so we can call `finish` (which is intentionally not part
-                // of the public `ResponseBodyWriter` protocol); the closure only sees `write`.
                 let writer = NIOResponseBodyWriter(inner: try await sender.send(httpResponse))
                 try await bodyStream.callback(writer)
                 guard bodyStream.count < 0 || writer.bytesWritten == bodyStream.count else {
