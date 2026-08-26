@@ -163,6 +163,7 @@ final class NIOResponseBodyWriter: ResponseBodyWriter {
         // TODO: This should be fixed in HTTP Server to avoid the copy
         var out = UniqueArray<UInt8>(minimumCapacity: bytes.byteCount)
         bytes.withUnsafeBytes { out.append(copying: $0) }
+        try await self.inner?.write(buffer: &out)
         self.bytesWritten += bytes.byteCount
     }
 
