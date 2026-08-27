@@ -1,4 +1,4 @@
-// swift-tools-version:6.3
+// swift-tools-version:6.4
 import PackageDescription
 
 let package = Package(
@@ -17,7 +17,18 @@ let package = Package(
             ],
             path: "Sources/PerformanceServer",
             swiftSettings: [
+                .strictMemorySafety(),
                 .enableUpcomingFeature("ExistentialAny"),
+                .enableUpcomingFeature("InternalImportsByDefault"),
+                .enableUpcomingFeature("MemberImportVisibility"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("ImmutableWeakCaptures"),
+                .enableExperimentalFeature("SuppressedAssociatedTypesWithDefaults"),
+                .enableExperimentalFeature("LifetimeDependence"),
+                .enableExperimentalFeature("Lifetimes"),
+                .enableUpcomingFeature("LifetimeDependence"),
+                .enableUpcomingFeature("ImmutableWeakCaptures"),
             ]
         ),
     ]
