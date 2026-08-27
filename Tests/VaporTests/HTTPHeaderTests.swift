@@ -456,11 +456,9 @@ final class HTTPHeaderTests: XCTestCase {
     func testRetryAfterHeaderSeconds() throws {
         var headers = HTTPHeaders()
         headers.retryAfter = .seconds(120)
-        guard case .seconds(let seconds) = headers.retryAfter else {
-            XCTFail("HTTPHeaders.RetryAfter parsing failed")
-            return
-        }
-        XCTAssertEqual(seconds, 120)
+        XCTAssertEqual(headers.retryAfter, .seconds(120))
+        XCTAssertEqual(headers.retryAfter?.seconds, 120)
+        XCTAssertNil(headers.retryAfter?.date)
         XCTAssertEqual(headers.first(name: .retryAfter), "120")
     }
 
@@ -468,11 +466,8 @@ final class HTTPHeaderTests: XCTestCase {
     func testRetryAfterHeaderDate() throws {
         var headers = HTTPHeaders()
         headers.retryAfter = .date(Date(timeIntervalSince1970: 18*3600))
-        guard case .date(let date) = headers.retryAfter else {
-            XCTFail("HTTPHeaders.RetryAfter parsing failed")
-            return
-        }
-        XCTAssertEqual(date.timeIntervalSince1970, 18*3600)
+        XCTAssertEqual(headers.retryAfter?.date?.timeIntervalSince1970, 18*3600)
+        XCTAssertNil(headers.retryAfter?.seconds)
         XCTAssertEqual(headers.first(name: .retryAfter), "Thu, 01 Jan 1970 18:00:00 GMT")
     }
 

@@ -7,13 +7,47 @@ extension HTTPHeaders {
     /// The value is either a number of seconds to wait before retrying, or a specific
     /// date after which the client may retry. This is typically sent with `429 Too Many
     /// Requests` or `503 Service Unavailable` responses.
+    ///
+    ///     headers.retryAfter = .seconds(120)
+    ///     headers.retryAfter?.seconds // 120
+    ///
     /// - See Also:
     /// [Retry-After](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After)
-    public enum RetryAfter {
-        /// The number of seconds to wait before retrying.
-        case seconds(Int)
-        /// The date after which the client may retry.
-        case date(Date)
+    public struct RetryAfter: Sendable, Equatable {
+        private enum Storage: Sendable, Equatable {
+            case seconds(Int)
+            case date(Date)
+        }
+
+        private let storage: Storage
+
+        private init(_ storage: Storage) {
+            self.storage = storage
+        }
+
+        /// A number of seconds to wait before retrying.
+        public static func seconds(_ seconds: Int) -> Self {
+            .init(.seconds(seconds))
+        }
+
+        /// A date after which the client may retry.
+        public static func date(_ date: Date) -> Self {
+            .init(.date(date))
+        }
+
+        /// The number of seconds to wait before retrying, or `nil` if this value
+        /// is expressed as a date instead.
+        public var seconds: Int? {
+            guard case .seconds(let seconds) = self.storage else { return nil }
+            return seconds
+        }
+
+        /// The date after which the client may retry, or `nil` if this value is
+        /// expressed as a number of seconds instead.
+        public var date: Date? {
+            guard case .date(let date) = self.storage else { return nil }
+            return date
+        }
 
         internal static func parse(_ value: String) -> RetryAfter? {
             let trimmed = value.trimmingCharacters(in: .whitespaces)
@@ -32,10 +66,12 @@ extension HTTPHeaders {
         }
 
         public func serialize() -> String {
-            switch self {
+            switch self.storage {
             case .seconds(let seconds):
                 return String(seconds)
             case .date(let date):
+                // The formatter is created per call rather than cached in a
+                // `static let`, since `DateFormatter` is not `Sendable`.
                 let fmt = DateFormatter()
                 fmt.locale = Locale(identifier: "en_US_POSIX")
                 fmt.timeZone = TimeZone(secondsFromGMT: 0)
