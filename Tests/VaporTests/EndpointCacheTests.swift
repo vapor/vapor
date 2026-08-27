@@ -34,7 +34,7 @@ struct EndpointCacheTests {
             }
 
             try await withRunningApp(app: app) { port in
-                let cache = EndpointCache<Test>(uri: "http://localhost:\(port)/number")
+                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number")
                 do {
                     let test = try await cache.get(
                         using: app.client
@@ -53,6 +53,7 @@ struct EndpointCacheTests {
 
     @Test("Test cache is refreshed when cache age is expired")
     func testEndpointCacheMaxAge() async throws {
+        let maxAge = 2
         try await withApp { app in
             let currentActor = CurrentActor()
             struct Test: Content {
@@ -63,33 +64,27 @@ struct EndpointCacheTests {
                 var res = Response()
                 let current = await currentActor.getCurrent()
                 try res.content.encode(Test(number: current))
-                res.headers.cacheControl = .init(maxAge: 1)
+                res.headers.cacheControl = .init(maxAge: maxAge)
                 await currentActor.increment()
                 return res
             }
 
             try await withRunningApp(app: app) { port in
-                let cache = EndpointCache<Test>(uri: "http://localhost:\(port)/number")
-                do {
-                    let test = try await cache.get(
-                        using: app.client
-                    )
-                    #expect(test.number == 0)
-                }
-                do {
-                    let test = try await cache.get(
-                        using: app.client
-                    )
-                    #expect(test.number == 0)
-                }
-                // wait for expiry
-                try await Task.sleep(for: .seconds(1))
-                do {
-                    let test = try await cache.get(
-                        using: app.client
-                    )
-                    #expect(test.number == 1)
-                }
+                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number")
+
+                // Two reads inside the cache's lifetime must return the same value. `maxAge` is
+                // deliberately big to ensure we don't hit a timing issue in CI when the CI runner
+                // is being slow
+                let first = try await cache.get(using: app.client).number
+                let second = try await cache.get(using: app.client).number
+                #expect(first == second, "cached value changed inside its lifetime")
+
+                // Past the lifetime, the next read must go back to the server. The new value is
+                // whatever the counter has reached, so assert that it moved rather than pinning a
+                // number the timing above could legitimately change.
+                try await Task.sleep(for: .seconds(maxAge + 1))
+                let refreshed = try await cache.get(using: app.client).number
+                #expect(refreshed > second, "cache did not refresh after its lifetime expired")
             }
         }
     }
@@ -113,7 +108,7 @@ struct EndpointCacheTests {
             }
 
             try await withRunningApp(app: app) { port in
-                let cache = EndpointCache<Test>(uri: "http://localhost:\(port)/number")
+                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number")
                 async let request1 = cache.get(using: app.client)
                 async let request2 = cache.get(using: app.client)
                 try await Task.sleep(for: .milliseconds(100))
