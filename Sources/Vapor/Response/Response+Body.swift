@@ -278,4 +278,6 @@ private final class CollectingBodyWriter: ResponseBodyWriter {
             self.data.append(contentsOf: bytes)
         }
     }
-}
+    func write(_ bytes: some Sequence<UInt8>) async throws {
+        self.data.append(contentsOf: bytes)
+    }
