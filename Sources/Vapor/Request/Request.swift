@@ -129,15 +129,11 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
-            if let stream = self.request.streamBodyStorage.withLockedValue({ $0 }) {
-                let buffer = try await self.request.collectStream(stream, maxSize: request.application.routes.defaultMaxBodySize.value)
-                return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
-            }
-            guard let body = self.request.body.data else {
+            guard let buffer = try await self.request.body.collect(max: request.application.routes.defaultMaxBodySize.value) else {
                 Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
-            return try decoder.decode(D.self, from: body, headers: self.request.headers)
+            return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
         }
 
         func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
@@ -170,14 +166,12 @@ public final class Request: CustomStringConvertible, Sendable {
         Body(self)
     }
 
-    public var newBody: NewBody {
-        NewBody(underlying: self.streamBodyStorage.withLockedValue({ $0 }), maxBodySize: 16*1024)
-    }
-
+    /// How the request body is held: absent, fully buffered in memory, or a lazy pull-based stream.
+    /// `collect` promotes `.stream` to `.collected` so a body is only drained once.
     internal enum BodyStorage: Sendable {
         case none
         case collected(ByteBuffer)
-        case stream(BodyStream)
+        case stream(RequestBodyStream)
     }
 
     /// Get and set `HTTPCookies` for this `Request`
@@ -237,7 +231,6 @@ public final class Request: CustomStringConvertible, Sendable {
 
     private let _storage: NIOLockedValueBox<Storage>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
-    internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
 
     public convenience init(
         application: Application,
@@ -275,14 +268,18 @@ public final class Request: CustomStringConvertible, Sendable {
         version: HTTPVersion = .init(major: 1, minor: 1),
         headersNoUpdate headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
+        bodyStream: RequestBodyStream? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         requestID: String = UUID().uuidString
     ) {
+        // A pre-collected body wins over a stream; with neither, the request has no body.
         let bodyStorage: BodyStorage
         if let body = collectedBody {
             bodyStorage = .collected(body)
+        } else if let bodyStream {
+            bodyStorage = .stream(bodyStream)
         } else {
             bodyStorage = .none
         }
@@ -305,18 +302,6 @@ public final class Request: CustomStringConvertible, Sendable {
         self.remoteAddress = remoteAddress
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
-        self.streamBodyStorage = .init(nil)
         self.auth = Authentication()
-    }
-
-    internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
-        var collected = self.byteBufferAllocator.buffer(capacity: 0)
-        for await var chunk in stream {
-            collected.writeBuffer(&chunk)
-            guard collected.readableBytes <= maxSize else {
-                throw Abort(.contentTooLarge)
-            }
-        }
-        return collected
     }
 }

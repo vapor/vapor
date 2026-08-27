@@ -54,7 +54,7 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Streaming Request", .disabled())
+    @Test("Test Streaming Request")
     func testStreamingRequest() async throws {
         try await withApp { app in
             let testValue = String.randomDigits()
@@ -82,7 +82,36 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Streaming Request Body Cleanup", .disabled())
+    @Test("Test Streaming Request Is Echoed Back As A Streaming Response")
+    func testStreamingRequestEcho() async throws {
+        try await withApp { app in
+            let testValue = String.randomDigits()
+
+            // Read the streamed request body chunk by chunk and write each chunk straight back
+            // out as the streamed response body, exercising request streaming and response
+            // streaming together in a single round-trip.
+            app.on(.post, "echo", body: .stream) { req -> Response in
+                Response(body: .init(stream: { writer in
+                    for try await chunk in req.body {
+                        try await writer.write(chunk)
+                    }
+                }))
+            }
+
+            try await withRunningApp(app: app) { port in
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/echo")
+                request.method = .POST
+                request.body = .stream(testValue.utf8.async, length: .unknown)
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
+            }
+        }
+    }
+
+    @Test("Test Streaming Request Body Cleanup")
     func testStreamingRequestBodyCleansUp() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -110,10 +139,7 @@ struct RequestTests {
         }
     }
 
-#warning("Try when new server working")
-    // TODO: Re-enable once it reliably works and doesn't cause issues with trying to shut the application down
-    // This may require some work in Vapor
-    @Test("Test Request Body Backpressure Works with Async Streaming", .disabled())
+    @Test("Test Request Body Backpressure Works with Async Streaming")
     func testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -198,11 +224,11 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Large Body Collection Doesn't Crash", .bug("https://github.com/vapor/vapor/issues/2985"), .disabled())
+    @Test("Test Large Body Collection Doesn't Crash", .bug("https://github.com/vapor/vapor/issues/2985"))
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
             app.on(.post, "upload", body: .stream, use: { request async throws -> String  in
-                let buffer = try await request.body.collect(upTo: Int.max)
+                let buffer = try await request.body.collect(max: Int.max) ?? ByteBuffer()
                 return "Received \(buffer.readableBytes) bytes"
             })
 
@@ -218,6 +244,139 @@ struct RequestTests {
                     let body = try await response.body.collect(upTo: 1024 * 1024)
                     #expect(body.string == "Received \(fiftyMB.readableBytes) bytes")
                 }
+            }
+        }
+    }
+
+    @Test("Test Empty Streaming Request Body")
+    func testEmptyStreamingRequestBody() async throws {
+        try await withApp { app in
+            // Streaming a request with no body must simply produce zero chunks, not hang or fail.
+            app.on(.post, "count", body: .stream) { req -> String in
+                var total = 0
+                for try await chunk in req.body {
+                    total += chunk.readableBytes
+                }
+                return "\(total)"
+            }
+
+            try await withRunningApp(app: app) { port in
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/count")
+                request.method = .POST
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == "0")
+            }
+        }
+    }
+
+    @Test("Test Large Multi-Chunk Streaming Request Body Is Fully Received")
+    func testLargeMultiChunkStreamingRequest() async throws {
+        let bodySize = 4 * 1024 * 1024
+        try await withApp { app in
+            // Read a multi-megabyte streamed body chunk by chunk and report the total size, so the
+            // test fails if any chunk is dropped or the reassembly across reads is wrong.
+            app.on(.post, "count", body: .stream) { req -> String in
+                var total = 0
+                for try await chunk in req.body {
+                    total += chunk.readableBytes
+                }
+                return "\(total)"
+            }
+
+            try await withRunningApp(app: app) { port in
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/count")
+                request.method = .POST
+                request.body = .bytes(ByteBuffer(repeating: 0x41, count: bodySize))
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(10))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == "\(bodySize)")
+            }
+        }
+    }
+
+    @Test("Test Server Survives A Handler That Ignores The Streamed Request Body")
+    func testServerSurvivesHandlerIgnoringStreamedBody() async throws {
+        try await withApp { app in
+            // The handler returns without reading the (large) request body. The server must drain
+            // the unread body so the keep-alive connection stays usable for the next request.
+            app.on(.post, "ignore", body: .stream) { _ in "ignored" }
+            app.get("ok") { _ in "ok" }
+
+            try await withRunningApp(app: app) { port in
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/ignore")
+                request.method = .POST
+                request.body = .bytes(ByteBuffer(repeating: 0x41, count: 5 * 1024 * 1024))
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(10))
+                #expect(response.status == .ok)
+                #expect(try await response.body.collect(upTo: 1024 * 1024).string == "ignored")
+
+                // The server must keep serving subsequent requests.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://localhost:\(port)/ok"), timeout: .seconds(10))
+                #expect(ok.status == .ok)
+                #expect(try await ok.body.collect(upTo: 1024 * 1024).string == "ok")
+            }
+        }
+    }
+
+    @Test("Test Collecting A Streaming Body Over The Max Returns 413")
+    func testStreamingBodyExceedingCollectMaxReturns413() async throws {
+        try await withApp { app in
+            // Collecting a streamed body with an explicit limit must abort with 413 once the body
+            // exceeds it, and the server must stay alive for later requests.
+            app.on(.post, "limited", body: .stream) { req -> String in
+                _ = try await req.body.collect(max: 1024)
+                return "ok"
+            }
+            app.get("ok") { _ in "ok" }
+
+            try await withRunningApp(app: app) { port in
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/limited")
+                request.method = .POST
+                request.body = .bytes(ByteBuffer(repeating: 0x41, count: 500_000))
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(10))
+                #expect(response.status.code == 413)
+
+                // The server must keep serving subsequent requests.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://localhost:\(port)/ok"), timeout: .seconds(10))
+                #expect(ok.status == .ok)
+                #expect(try await ok.body.collect(upTo: 1024 * 1024).string == "ok")
+            }
+        }
+    }
+
+    @Test("Test Collecting A Streaming Body Is Accepted At The Max And Rejected One Byte Over")
+    func testStreamingBodyCollectMaxBoundary() async throws {
+        let maxSize = 1024
+        try await withApp { app in
+            // Collect with an explicit limit and report the byte count so we can assert the exact
+            // boundary: a body of exactly `maxSize` is accepted, one byte more is rejected with 413.
+            app.on(.post, "limited", body: .stream) { req -> String in
+                let buffer = try await req.body.collect(max: maxSize) ?? ByteBuffer()
+                return "\(buffer.readableBytes)"
+            }
+
+            try await withRunningApp(app: app) { port in
+                var atLimit = HTTPClientRequest(url: "http://localhost:\(port)/limited")
+                atLimit.method = .POST
+                atLimit.body = .bytes(ByteBuffer(repeating: 0x41, count: maxSize))
+                let accepted = try await HTTPClient.shared.execute(atLimit, timeout: .seconds(10))
+                #expect(accepted.status == .ok)
+                #expect(try await accepted.body.collect(upTo: 1024 * 1024).string == "\(maxSize)")
+
+                var overLimit = HTTPClientRequest(url: "http://localhost:\(port)/limited")
+                overLimit.method = .POST
+                overLimit.body = .bytes(ByteBuffer(repeating: 0x41, count: maxSize + 1))
+                let rejected = try await HTTPClient.shared.execute(overLimit, timeout: .seconds(10))
+                #expect(rejected.status.code == 413)
             }
         }
     }

@@ -1,29 +1,9 @@
 #warning("Make this internal")
 public import NIOCore
-import NIOPosix
 import NIOConcurrencyHelpers
 import HTTPTypes
 
 extension Request {
-    public struct NewBody: Sendable {
-        let underlying: AsyncStream<ByteBuffer>?
-        let maxBodySize: Int
-
-        public var data: ByteBuffer? {
-            get async throws {
-                guard let stream = underlying else { return nil }
-                var collected = ByteBuffer()
-                for await var chunk in stream {
-                    collected.writeBuffer(&chunk)
-                    guard collected.readableBytes <= maxBodySize else {
-                        throw Abort(.contentTooLarge)
-                    }
-                }
-                return collected
-            }
-        }
-    }
-
     public struct Body: CustomStringConvertible, Sendable {
         let request: Request
 
@@ -31,6 +11,8 @@ extension Request {
             self.request = request
         }
 
+        /// The buffered body, or `nil` if there is none or it is still an unread stream.
+        /// Call ``collect(max:)`` first to buffer a streamed body.
         public var data: ByteBuffer? {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .collected(let buffer): return buffer
@@ -46,40 +28,25 @@ extension Request {
             }
         }
 
-         public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
+        /// Buffers the body into memory, up to `max` bytes (`nil` means no limit).
+        public func collect(max: Int? = 1 << 14) async throws -> ByteBuffer? {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
-                stream.read { (result, promise) in
-                    handler(result).cascade(to: promise)
-                }
+                // A stream can only be drained once, so cache the result as `.collected` for any
+                // later `data`/`collect`/`decode` access.
+                let buffer = try await stream.collect(max: max ?? .max)
+                self.request.bodyStorage.withLockedValue { $0 = .collected(buffer) }
+                return buffer
             case .collected(let buffer):
-                _ = handler(.buffer(buffer))
-                    .map {
-                        handler(.end)
-                    }
+                return buffer
             case .none:
-                _ = handler(.end)
-            }
-        }
-
-        public func collect(max: Int? = 1 << 14) -> EventLoopFuture<ByteBuffer?> {
-            let eventLoop = MultiThreadedEventLoopGroup.singleton.any()
-            switch self.request.bodyStorage.withLockedValue({ $0 }) {
-            case .stream(let stream):
-                return stream.consume(max: max, on: eventLoop).map { buffer in
-                    self.request.bodyStorage.withLockedValue({ $0 = .collected(buffer) })
-                    return buffer
-                }
-            case .collected(let buffer):
-                return eventLoop.makeSucceededFuture(buffer)
-            case .none:
-                return eventLoop.makeSucceededFuture(nil)
+                return nil
             }
         }
 
         public var description: String {
             if var data = self.data,
-               let description = data.readString(length: data.readableBytes) {
+                let description = data.readString(length: data.readableBytes) {
                 return description
             } else {
                 return ""

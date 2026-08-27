@@ -23,39 +23,18 @@ func routes(_ app: Application) async throws {
         return uuid.uuidString
     }
 
-    #warning("Fix")
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
-//    app.on(.post, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
-//        let done = req.eventLoop.makePromise(of: String.self)
-//
-//        let totalBox = NIOLoopBoundBox(0, eventLoop: req.eventLoop)
-//        req.body.drain { result in
-//            let promise = req.eventLoop.makePromise(of: Void.self)
-//
-//            switch result {
-//            case .buffer(let buffer):
-//                req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
-//                    totalBox.value += buffer.readableBytes
-//                    promise.succeed(())
-//                }
-//            case .error(let error):
-//                done.fail(error)
-//            case .end:
-//                promise.succeed(())
-//                done.succeed(totalBox.value.description)
-//            }
-//
-//            // manually return pre-completed future
-//            // this should balloon in memory
-//            // return req.eventLoop.makeSucceededFuture(())
-//
-//            // return real future that indicates bytes were handled
-//            // this should use very little memory
-//            return promise.futureResult
-//        }
-//
-//        return done.futureResult
-//    }
+    app.on(.post, "slow-stream", body: .stream) { req -> String in
+        // Consume the streamed body slowly to demonstrate backpressure: sleeping between
+        // reads keeps memory flat because the server stops pulling more of the body until
+        // this loop asks for the next chunk.
+        var total = 0
+        for try await buffer in req.body {
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+            total += buffer.readableBytes
+        }
+        return total.description
+    }
 
     app.get("test", "head") { req -> String in
         return "OK!"

@@ -381,7 +381,7 @@ struct RouteTests {
         }
     }
 
-    @Test("Test Configurable Max Body Size", .disabled())
+    @Test("Test Configurable Max Body Size")
     func testConfigurableMaxBodySize() async throws {
         try await withApp { app in
             #expect(app.routes.defaultMaxBodySize == 16384)
@@ -403,20 +403,19 @@ struct RouteTests {
 
             var buffer = ByteBufferAllocator().buffer(capacity: 0)
             buffer.writeBytes(Array(repeating: 0, count: 500_000))
-            try await app.testing(method: .running).test(.post, "/default", body: buffer) { res in
-                #expect(res.status == .contentTooLarge)
-            }
 
-            try await app.testing(method: .running).test(.post, "/1kb", body: buffer) { res in
-                #expect(res.status == .contentTooLarge)
-            }
+            try await app.test(method: .running) { testApp in
+                let defaultRes = try await testApp.sendRequest(.post, "/default", body: buffer)
+                #expect(defaultRes.status == .contentTooLarge)
 
-            try await app.testing(method: .running).test(.post, "/1mb", body: buffer) { res in
-                #expect(res.status == .ok)
-            }
+                let kbRes = try await testApp.sendRequest(.post, "/1kb", body: buffer)
+                #expect(kbRes.status == .contentTooLarge)
 
-            try await app.testing(method: .running).test(.post, "/1gb", body: buffer) { res in
-                #expect(res.status == .ok)
+                let mbRes = try await testApp.sendRequest(.post, "/1mb", body: buffer)
+                #expect(mbRes.status == .ok)
+
+                let gbRes = try await testApp.sendRequest(.post, "/1gb", body: buffer)
+                #expect(gbRes.status == .ok)
             }
         }
     }

@@ -2,7 +2,7 @@ import NIOHTTPServer
 import BasicContainers
 import HTTPTypes
 import HTTPAPIs
-import NIOCore
+package import NIOCore
 import NIOHTTP1
 import NIOConcurrencyHelpers
 import Logging
@@ -27,21 +27,9 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         reader: consuming sending NIOHTTPServer.Reader,
         responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
-        // 1. Eagerly collect the full request body
-        var reader = reader
-        var bodyBuffer = ByteBuffer()
-        var reachedEndOfBody = false
-        while !reachedEndOfBody {
-            // A non-nil outer optional marks the final chunk; the inner value is the trailers.
-            try await reader.read { chunk, trailers in
-                if !chunk.isEmpty {
-                    bodyBuffer.writeBytes(chunk.span.bytes)
-                }
-                if trailers != nil {
-                    reachedEndOfBody = true
-                }
-            }
-        }
+        // 1. Wrap the request body in a lazy pull-based stream (no eager collection).
+        let bodyStream = RequestBodyStream(reader: consume reader)
+        defer { try? await bodyStream.drain() }
 
         // 2. Build Vapor request
         let peerCerts = try? await requestContext.peerCertificateChain
@@ -65,7 +53,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 url: URI(path: rawPath),
                 version: .init(major: 1, minor: 1),
                 headersNoUpdate: request.headerFields,
-                collectedBody: bodyBuffer.readableBytes > 0 ? bodyBuffer : nil,
+                bodyStream: bodyStream,
                 remoteAddress: remoteAddress,
                 peerCertificateChain: peerCerts,
                 requestID: requestID
@@ -171,5 +159,85 @@ final class NIOResponseBodyWriter: ResponseBodyWriter {
         guard let writer = self.inner.take() else { return }
         var empty = UniqueArray<UInt8>()
         try await writer.finish(buffer: &empty, finalElement: trailingHeaders)
+    }
+}
+
+/// Lazily exposes the server's request body as an `AsyncSequence` of `ByteBuffer`s.
+///
+/// This is the request-side mirror of ``NIOResponseBodyWriter``: it wraps the server's move-only,
+/// non-Sendable `Reader` and pulls one part at a time, so backpressure propagates to the producer
+/// (the server stops reading until the handler asks for the next chunk).
+///
+/// It is `@unchecked Sendable` (not checked): the stored `Reader` is a move-only, non-Sendable type
+/// that can't live behind a lock, so the compiler can't verify safety. Safety rests on a contract —
+/// **a request body is consumed by a single task**: iterated or collected once, never concurrently.
+/// `Request` is `Sendable` so it can cross tasks, but its body must not be read from two of them.
+package final class RequestBodyStream: AsyncSequence, @unchecked Sendable {
+    package typealias Element = ByteBuffer
+
+    package struct AsyncIterator: AsyncIteratorProtocol {
+        let stream: RequestBodyStream
+
+        fileprivate init(stream: RequestBodyStream) {
+            self.stream = stream
+        }
+
+        package mutating func next() async throws -> ByteBuffer? {
+            try await stream.readChunk()
+        }
+    }
+
+    private var reader: NIOHTTPServer.Reader?
+    /// Latches once the body ends so further reads short-circuit instead of touching a spent reader.
+    private var finished = false
+
+    init(reader: consuming NIOHTTPServer.Reader) {
+        self.reader = consume reader
+    }
+
+    package func makeAsyncIterator() -> AsyncIterator {
+        AsyncIterator(stream: self)
+    }
+
+    /// Reads the whole body into one buffer, aborting with 413 if it exceeds `max`.
+    func collect(max: Int) async throws -> ByteBuffer {
+        var collected = ByteBuffer()
+        while let chunk = try await readChunk() {
+            // Check before appending so an over-limit chunk is never buffered. Subtracting
+            // (rather than adding) keeps the bound exact and can't overflow when `max` is `.max`.
+            guard chunk.readableBytes <= max - collected.readableBytes else {
+                throw Abort(.contentTooLarge)
+            }
+            collected.writeBytes(chunk.readableBytesView)
+        }
+        return collected
+    }
+
+    /// Discards any unread body. Needed so an unconsumed request doesn't wedge keep-alive reuse.
+    func drain() async throws {
+        while try await readChunk() != nil { }
+    }
+
+    private func readChunk() async throws -> ByteBuffer? {
+        guard !self.finished else {
+            return nil
+        }
+        // The server delivers body and end as separate reads: a body part always has `nil`
+        // trailers and carries the bytes, while the end read carries a non-nil `trailers` and an
+        // empty buffer. So a non-nil `trailers` means end-of-body with nothing to hand back, and
+        // no bytes are lost by returning nil here. The server reuses its buffer across calls, so
+        // the bytes are copied out.
+        let chunk: ByteBuffer? = try await self.reader?.read { chunk, trailers in
+            if trailers != nil {
+                return nil
+            }
+            var byteBuffer = ByteBuffer()
+            byteBuffer.writeBytes(chunk.span.bytes)
+            return byteBuffer
+        }
+        if chunk == nil {
+            self.finished = true
+        }
+        return chunk
     }
 }
