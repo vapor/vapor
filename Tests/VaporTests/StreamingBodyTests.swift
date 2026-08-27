@@ -374,23 +374,41 @@ struct StreamingBodyTests {
                 let address = try await app.server.listeningAddress
                 let port = try #require(address.port)
 
-                let resp = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/firehose"), timeout: .seconds(30)
-                )
-                #expect(resp.status == .ok)
+                // A raw socket, deliberately not read from. An HTTP client can't be used here:
+                // it buffers the response body internally whether or not the test iterates it, so
+                // the server sees a reader that keeps consuming and is never backpressured — which
+                // is exactly how this test failed in CI, reporting 2048/2048 produced.
+                let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                    .connect(host: "127.0.0.1", port: port) { channel in
+                        channel.eventLoop.makeCompletedFuture {
+                            try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
+                        }
+                    }
 
-                // Don't read the body yet: the socket and NIO write buffers fill, and `write`
-                // must suspend, so the producer cannot race to the last chunk while we stall.
-                try await Task.sleep(for: .milliseconds(500))
-                let stalledAt = produced.withLockedValue { $0 }
-                #expect(stalledAt < totalChunks, "producer was not backpressured (produced \(stalledAt)/\(totalChunks))")
+                try await channel.executeThenClose { inbound, outbound in
+                    try await outbound.write(ByteBuffer(
+                        string: "GET /firehose HTTP/1.1\r\nHost: localhost\r\n\r\n"))
 
-                // Drain the body: the producer resumes and runs to completion.
-                var received = 0
-                for try await chunk in resp.body {
-                    received += chunk.readableBytes
+                    // Nothing reads the socket, so the kernel receive buffer fills, then the send
+                    // side, and the producer's `write` must suspend well short of the last chunk.
+                    try await Task.sleep(for: .milliseconds(500))
+                    let stalledAt = produced.withLockedValue { $0 }
+                    #expect(
+                        stalledAt < totalChunks,
+                        "producer was not backpressured (produced \(stalledAt)/\(totalChunks))")
+
+                    // Draining lets it resume and run to completion.
+                    var received = 0
+                    for try await buffer in inbound {
+                        received += buffer.readableBytes
+                        if produced.withLockedValue({ $0 }) == totalChunks,
+                            received >= totalChunks * chunkSize {
+                            break
+                        }
+                    }
+                    #expect(received >= totalChunks * chunkSize)
                 }
-                #expect(received == totalChunks * chunkSize)
+
                 #expect(produced.withLockedValue { $0 } == totalChunks)
 
                 await group.triggerGracefulShutdown()
