@@ -50,7 +50,7 @@ extension Application {
             do {
                 var path = request.url.path
                 path = path.hasPrefix("/") ? path : "/\(path)"
-                #warning("This needs tidying up")
+#warning("This needs tidying up")
                 let portToUse = request.url.port ?? self.port
                 let hostnameToUse = request.url.host ?? self.hostname
                 var url = "http://\(hostnameToUse):\(portToUse)\(path)"
@@ -115,66 +115,6 @@ extension Application {
                 body: res.body.collect() ?? ByteBufferAllocator().buffer(capacity: 0),
                 contentConfiguration: self.app.contentConfiguration
             )
-        }
-    }
-}
-
-import NIOConcurrencyHelpers
-
-/// Promise type.
-package final class Promise<Value: Sendable>: Sendable {
-    enum State {
-        case blocked([CheckedContinuation<Value, any Error>])
-        case unblocked(Value)
-        case failed(any Error)
-    }
-
-    let state: NIOLockedValueBox<State>
-
-    package init() {
-        self.state = .init(.blocked([]))
-    }
-
-    /// wait from promise to be completed
-    package func wait() async throws -> Value {
-        try await withCheckedThrowingContinuation { cont in
-            self.state.withLockedValue { state in
-                switch state {
-                case .blocked(var continuations):
-                    continuations.append(cont)
-                    state = .blocked(continuations)
-                case .unblocked(let value):
-                    cont.resume(returning: value)
-                case .failed(let error):
-                    cont.resume(throwing: error)
-                }
-            }
-        }
-    }
-
-    /// complete promise with value
-    package func complete(_ value: Value) {
-        self.state.withLockedValue { state in
-            switch state {
-            case .blocked(let continuations):
-                for cont in continuations {
-                    cont.resume(returning: value)
-                }
-                state = .unblocked(value)
-            default: break
-            }
-        }
-    }
-
-    package func fail(_ error: any Error) {
-        self.state.withLockedValue { state in
-            switch state {
-            case .blocked(let continuations):
-                for cont in continuations {
-                    cont.resume(throwing: error)
-                }
-            default: break
-            }
         }
     }
 }
