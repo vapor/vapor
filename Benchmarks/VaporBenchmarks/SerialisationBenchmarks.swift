@@ -3,11 +3,9 @@ import Foundation
 import NIOCore
 import Vapor
 
-// Isolates the buffered serialisation step: take a `Response.Body` and produce the bytes that
-// `HTTPServerHandler` hands to the transport. The `response/*` benchmarks cover this as part of a
-// whole request; these measure it on its own, so a change in how a body is turned into bytes shows
-// up without routing and middleware costs on top. Sized to show both the fixed per-response cost
-// (1 KiB) and the part that scales with the payload (64 KiB).
+// Models `HTTPServerHandler`'s buffered branch: take a `Response.Body` and produce the bytes handed
+// to the transport. The `response/*` benchmarks stop at the responder and never reach this path,
+// which is where the ByteBuffer-removal work actually changed the number of copies.
 private let payload1k = String(repeating: "x", count: 1024)
 private let payload64k = String(repeating: "x", count: 64 * 1024)
 private let data1k = Data(String(repeating: "x", count: 1024).utf8)
@@ -16,8 +14,8 @@ private let data1k = Data(String(repeating: "x", count: 1024).utf8)
 private func serialise(_ body: Response.Body) async throws -> Int {
     var out = [UInt8]()
     out.reserveCapacity(body.count)
-    if let buffer = body.buffer, buffer.readableBytes > 0 {
-        out.append(contentsOf: buffer.readableBytesView)
+    try await body.withStreamingBytes { span in
+        span.withUnsafeBytes { unsafe out.append(contentsOf: $0) }
     }
     return out.count
 }

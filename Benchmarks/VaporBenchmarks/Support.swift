@@ -45,15 +45,9 @@ struct RequestCall {
 /// Drive a request through the responder chain *and* consume the response body, mirroring what
 /// `HTTPServerHandler` does when it serialises a response onto the transport.
 ///
-/// Without this drain the benchmarks stopped at `respond(to:)`, so nothing in the suite exercised
-/// response serialisation at all. Hummingbird closes the same gap by writing the body to a no-op
-/// `ResponseBodyWriter`; the sink here copies instead of discarding, because the copy into the
-/// server's byte container is part of what we want to measure.
-///
-/// Returns the number of body bytes produced, purely so callers have something to `blackHole`.
-///
-/// - Note: buffered bodies only. `body.buffer` is nil for a streaming body, so a streaming
-///   benchmark would silently measure zero bytes - drain those explicitly if any are added.
+/// Without the drain these benchmarks stopped at `respond(to:)` and never measured serialisation -
+/// the same gap Hummingbird closes with its no-op `ResponseBodyWriter`. The sink here copies rather
+/// than discarding, because the copy into the server's byte container is part of the cost.
 func run(_ call: RequestCall) async throws -> Int {
     let request = Request(
         application: app,
@@ -65,8 +59,8 @@ func run(_ call: RequestCall) async throws -> Int {
     let response = try await responder.respond(to: request)
     var sink = [UInt8]()
     sink.reserveCapacity(max(0, response.body.count))
-    if let buffer = response.body.buffer, buffer.readableBytes > 0 {
-        sink.append(contentsOf: buffer.readableBytesView)
+    try await response.body.withStreamingBytes { span in
+        span.withUnsafeBytes { unsafe sink.append(contentsOf: $0) }
     }
     return sink.count
 }
