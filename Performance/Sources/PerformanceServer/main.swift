@@ -1,5 +1,6 @@
 import Foundation
 import NIOCore
+import RoutingKit
 import Vapor
 
 let port = Int(ProcessInfo.processInfo.environment["PERF_PORT"] ?? "") ?? 8080

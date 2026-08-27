@@ -26,18 +26,6 @@ actually serving, runs a discarded warm-up before each measurement, and shuts it
 | `/bench/stream` | 16 KiB | streaming writer, 16 awaited chunks |
 | `/bench/file` | 1 MiB | real `FileIO` streaming, 8 x 128 KiB chunks |
 
-Payloads are constants built at start-up, so a run measures Vapor rather than handler work. The
-1 MiB file is generated into the temp directory, so it is identical on every machine and checkout.
-
 ## Interpreting the numbers
 
-`wrk` measures the whole stack - kernel networking, HTTP parsing, routing, serialisation - so it is
-the right tool for *"how many requests per second can Vapor sustain"* and the wrong tool for
-attributing a change to a particular line of code.
-
-It is also **very** sensitive to machine state. A background build roughly halved throughput on the
-same binary and route when this harness was written. Run it on an otherwise idle machine, and do not
-read anything into a few percent between runs.
-
-For changes you want to attribute, use `../Benchmarks`: instruction counts and `mallocCountTotal`
-are deterministic (flat p0-p100 over thousands of samples) where wall-clock throughput is not.
+**Note**: the numbers generated here can change depending on what else your computer is doing and will vary machine to machine. This is just a rough guide to ensure we don't regress and to give us some end-to-end saturation. We have actual benchmarks in `Benchmarks/` that give actual consistent measurements.
