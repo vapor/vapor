@@ -271,13 +271,6 @@ private final class CollectingBodyWriter: ResponseBodyWriter {
     /// Appending is synchronous, so the sequence's own storage can be borrowed instead of copying
     /// it into a `ContiguousArray` first, as the protocol's default implementation must.
     func write(_ bytes: some Sequence<UInt8>) async throws {
-        let borrowed: Void? = bytes.withContiguousStorageIfAvailable { buffer in
-            unsafe self.data.append(contentsOf: buffer)
-        }
-        if borrowed == nil {
-            self.data.append(contentsOf: bytes)
-        }
-    }
-    func write(_ bytes: some Sequence<UInt8>) async throws {
         self.data.append(contentsOf: bytes)
     }
+}
