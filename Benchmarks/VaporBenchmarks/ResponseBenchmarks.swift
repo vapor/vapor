@@ -101,8 +101,8 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    // Uses `Data` rather than `ByteBuffer` so the benchmark keeps working as NIO types are
-    // removed from `Response.Body`'s public API, and stays comparable across those changes.
+    // Was `.init(buffer:)`; that initialiser is gone from the public API on the
+    // remove-byte-buffer-response branch, so all three environments use `Data` to stay comparable.
     Benchmark("response/binary body 1KiB") { benchmark in
         let call = RequestCall(.get, "/buffer")
         for _ in benchmark.scaledIterations {
