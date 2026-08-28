@@ -5,6 +5,7 @@ import Foundation
 #endif
 import HTTPTypes
 import NIOCore
+import NIOFoundationEssentialsCompat
 
 public struct Validations: Sendable {
     var storage: [Validation]
@@ -55,11 +56,11 @@ public struct Validations: Sendable {
         guard let contentType = request.headers.contentType else {
             throw Abort(.unprocessableContent, reason: "Missing \"Content-Type\" header")
         }
-        guard let body = request.body.data else {
+        guard let body = request.body.data, let bodyData = body.getData(at: 0, length: body.readableBytes) else {
             throw Abort(.unprocessableContent, reason: "Empty Body")
         }
         let contentDecoder = try request.application.contentConfiguration.requireDecoder(for: contentType)
-        return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
+        return try contentDecoder.decode(ValidationsExecutor.self, from: bodyData, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
 
     public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
@@ -69,7 +70,7 @@ public struct Validations: Sendable {
 
     public func validate(json: String, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
         return try contentConfiguration.requireDecoder(for: .json)
-            .decode(ValidationsExecutor.self, from: .init(string: json), headers: [:], userInfo: [.pendingValidations: self]).results
+            .decode(ValidationsExecutor.self, from: Data(json.utf8), headers: [:], userInfo: [.pendingValidations: self]).results
     }
 
     public func validate(_ decoder: any Decoder) throws -> ValidationsResult {

@@ -1,5 +1,9 @@
 import HTTPTypes
-import NIOCore
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 public protocol ContentContainer {
     /// The type of data stored in the container.
@@ -135,10 +139,7 @@ extension ContentContainer {
 fileprivate struct ForwardingContentDecoder: ContentDecoder {
     let base: any ContentDecoder, info: [CodingUserInfoKey: any Sendable]
 
-    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
-        try self.base.decode(D.self, from: body, headers: headers, userInfo: self.info)
-    }
-    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
+    func decode<D>(_ decodable: D.Type, from body: Data, headers: HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws -> D where D : Decodable {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: userInfo.merging(self.info) { $1 })
     }
 }
