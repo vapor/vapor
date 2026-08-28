@@ -53,38 +53,47 @@ struct EndpointCacheTests {
 
     @Test("Test cache is refreshed when cache age is expired")
     func testEndpointCacheMaxAge() async throws {
-        let maxAge = 2
+        let shortMaxAge = 1
         try await withApp { app in
             let currentActor = CurrentActor()
             struct Test: Content {
                 let number: Int
             }
 
-            app.get("number") { req -> Response in
-                var res = Response()
-                let current = await currentActor.getCurrent()
-                try res.content.encode(Test(number: current))
-                res.headers.cacheControl = .init(maxAge: maxAge)
-                await currentActor.increment()
-                return res
+            // Two endpoints rather than one, because the halves of this test want opposite
+            // things from a lifetime. A single `maxAge` has to be short enough to expire
+            // during the test and long enough to survive two back-to-back requests, and on a
+            // loaded machine those two requests alone can outlast it — which is exactly how
+            // this test failed in CI, reporting a value that changed while still cached.
+            func number(maxAge: Int) -> @Sendable (Request) async throws -> Response {
+                { _ in
+                    var res = Response()
+                    let current = await currentActor.getCurrent()
+                    try res.content.encode(Test(number: current))
+                    res.headers.cacheControl = .init(maxAge: maxAge)
+                    await currentActor.increment()
+                    return res
+                }
             }
+            app.get("cached", use: number(maxAge: 3600))
+            app.get("expiring", use: number(maxAge: shortMaxAge))
 
             try await withRunningApp(app: app) { port in
-                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number")
-
-                // Two reads inside the cache's lifetime must return the same value. `maxAge` is
-                // deliberately big to ensure we don't hit a timing issue in CI when the CI runner
-                // is being slow
-                let first = try await cache.get(using: app.client).number
-                let second = try await cache.get(using: app.client).number
+                // Two reads inside a lifetime nothing can outlast must return the same value.
+                let cached = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/cached")
+                let first = try await cached.get(using: app.client).number
+                let second = try await cached.get(using: app.client).number
                 #expect(first == second, "cached value changed inside its lifetime")
 
-                // Past the lifetime, the next read must go back to the server. The new value is
-                // whatever the counter has reached, so assert that it moved rather than pinning a
-                // number the timing above could legitimately change.
-                try await Task.sleep(for: .seconds(maxAge + 1))
-                let refreshed = try await cache.get(using: app.client).number
-                #expect(refreshed > second, "cache did not refresh after its lifetime expired")
+                // Past the lifetime, the next read must go back to the server. Only elapsed
+                // time can break this one, and a slow machine only ever adds more of it. The
+                // new value is whatever the counter has reached, so assert that it moved
+                // rather than pinning a number the timing above could legitimately change.
+                let expiring = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/expiring")
+                let before = try await expiring.get(using: app.client).number
+                try await Task.sleep(for: .seconds(shortMaxAge + 1))
+                let refreshed = try await expiring.get(using: app.client).number
+                #expect(refreshed > before, "cache did not refresh after its lifetime expired")
             }
         }
     }
