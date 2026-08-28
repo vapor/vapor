@@ -92,7 +92,7 @@ struct MiddlewareTests {
             let headers: HTTPFields = [.origin: "foo", .accessControlRequestMethod: "GET"]
             try await app.testing().test(.options, "/order", headers: headers) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.readableBytes == 0)
+                #expect(res.body.count == 0)
                 #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
                 #expect(res.headers[values: .accessControlAllowMethods] == ["GET"])
             }

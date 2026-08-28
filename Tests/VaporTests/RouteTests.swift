@@ -269,7 +269,7 @@ struct RouteTests {
             try await app.testing(method: .running).test(.head, "/hello") { res in
                 #expect(res.status == .ok)
                 #expect(res.headers[.contentLength] == "2")
-                #expect(res.body.readableBytes == 0)
+                #expect(res.body.count == 0)
             }
         }
     }
@@ -288,7 +288,7 @@ struct RouteTests {
             try await app.testing(method: .running).test(.head, "/hello") { res in
                 #expect(res.status == .found)
                 #expect(res.headers[.contentLength] == "0")
-                #expect(res.body.readableBytes == 0)
+                #expect(res.body.count == 0)
             }
         }
     }
@@ -322,7 +322,7 @@ struct RouteTests {
 
             try await app.testing(method: .running).test(.get, "/no-content") { res in
                 #expect(res.status.code == 204)
-                #expect(res.body.readableBytes == 0)
+                #expect(res.body.count == 0)
             }
         }
     }

@@ -2,10 +2,16 @@ import AsyncHTTPClient
 public import Vapor
 import NIOPosix
 import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTPTypesHTTP1
 import Logging
 import NIOHTTP1
 import HTTPTypes
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension Application {
     public enum Method {
@@ -64,10 +70,11 @@ extension Application {
                 let response = try await client.execute(clientRequest, timeout: .seconds(30))
                 // Collect up to 1MB
                 let responseBody = try await response.body.collect(upTo: 1024 * 1024)
+                let responseBodyData = responseBody.getData(at: 0, length: responseBody.readableBytes) ?? Data()
                 return TestingHTTPResponse(
                     status: .init(code: Int(response.status.code)),
                     headers: .init(response.headers, splitCookie: false),
-                    body: responseBody,
+                    body: responseBodyData,
                     contentConfiguration: self.app.contentConfiguration
                 )
             } catch {
@@ -109,11 +116,7 @@ extension Application {
                 responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve())
             }
             var res = try await responder.respond(to: request)
-            let body = if let collectBody = try await res.body.collect() {
-                ByteBuffer(bytes: collectBody)
-            } else {
-                ByteBufferAllocator().buffer(capacity: 0)
-            }
+            let body = try await res.body.collect() ?? Data()
             return TestingHTTPResponse(
                 status: res.status,
                 headers: res.headers,
