@@ -108,11 +108,16 @@ extension Application {
             case .default:
                 responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve())
             }
-            let res = try await responder.respond(to: request)
-            return try await TestingHTTPResponse(
+            var res = try await responder.respond(to: request)
+            let body = if let collectBody = try await res.body.collect() {
+                ByteBuffer(bytes: collectBody)
+            } else {
+                ByteBufferAllocator().buffer(capacity: 0)
+            }
+            return TestingHTTPResponse(
                 status: res.status,
                 headers: res.headers,
-                body: res.body.collect() ?? ByteBufferAllocator().buffer(capacity: 0),
+                body: body,
                 contentConfiguration: self.app.contentConfiguration
             )
         }

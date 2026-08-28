@@ -584,7 +584,13 @@ struct FileTests {
                 let response = try await request.fileio.streamFile(
                     at: filePath, advancedETagComparison: false)
 
-                let collecting = Task { try await response.body.collect() }
+                // `collect()` is mutating, so the Task works on its own copy of the body. That
+                // is fine here: this test is about descriptor cleanup on cancellation, not the
+                // collected value.
+                let collecting = Task { () -> Data? in
+                    var body = response.body
+                    return try await body.collect()
+                }
                 try await Task.sleep(for: .microseconds(200 * iteration))
                 collecting.cancel()
                 _ = try? await collecting.value

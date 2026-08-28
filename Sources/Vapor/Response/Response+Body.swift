@@ -3,8 +3,8 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-#warning("Make this internal")
-public import NIOCore
+#warning("Remove")
+import NIOCore
 import NIOFoundationEssentialsCompat
 import HTTPTypes
 import NIOPosix
@@ -34,6 +34,71 @@ extension Response {
 
         /// An empty `Response.Body`.
         public static let empty: Body = .init()
+
+        /// Read the body's bytes incrementally, without buffering the whole thing.
+        ///
+        /// The closure is called once per chunk, in order, and is backpressured: a streaming body
+        /// only produces the next chunk once the closure returns. Each span is only valid for the
+        /// duration of that call - `RawSpan` is non-escapable, so the compiler enforces that: the
+        /// closure cannot stash a span and read it later.
+        ///
+        /// Works for every kind of body - a buffered one is handed over as a single chunk, and an
+        /// empty one calls the closure not at all - so callers do not need to branch on storage.
+        ///
+        /// Note this *consumes* a streaming body: it runs the stream's callback,
+        /// so it has that closure's side effects and must not be called twice on the same body.
+        /// A streaming body can also throw part-way, after the closure has already seen chunks.
+        ///
+        /// Use ``collect()`` instead when the whole body is genuinely needed in memory.
+        public func withStreamingBytes(_ body: @escaping (RawSpan) async throws -> Void) async throws {
+            switch self.storage {
+            case .stream(let stream):
+                try await stream.callback(ForwardingBodyWriter(body))
+            case .none:
+                return
+            // Buffered: the whole body is handed over as a single chunk.
+            case .buffer(let buffer):
+                try await body(buffer.readableBytesSpan)
+            case .data(let data):
+                try await body(data.span.bytes)
+            case .string(let string):
+                try await body(string.utf8Span.span.bytes)
+            case .staticString(let staticString):
+                try await unsafe body(
+                    RawSpan(_unsafeStart: staticString.utf8Start, byteCount: staticString.utf8CodeUnitCount)
+                )
+            }
+        }
+
+        /// Fold the body's bytes into a value, one chunk at a time.
+        ///
+        /// The streaming counterpart to computing something over a whole body without ever holding
+        /// it in memory - hashing, counting, checksumming, incremental parsing. Chunk delivery and
+        /// backpressure are exactly ``withStreamingBytes(_:)``'s, so a streaming body is folded as
+        /// it arrives and a buffered one is folded in a single step.
+        ///
+        ///     let digest = try await body.reduceBytes(into: SHA256()) { hasher, span in
+        ///         span.withUnsafeBytes { hasher.update(bufferPointer: $0) }
+        ///     }.finalize()
+        ///
+        /// Like ``withStreamingBytes(_:)`` this consumes a streaming body.
+        ///
+        /// - Parameters:
+        ///   - initialResult: The value to start from.
+        ///   - updateAccumulatingResult: Folds each chunk into the accumulator.
+        /// - Returns: The accumulated value. An empty body returns `initialResult` untouched.
+        public func reduceBytes<R>(
+            into initialResult: R,
+            _ updateAccumulatingResult: @escaping (inout R, RawSpan) async throws -> Void
+        ) async throws -> R {
+            // `inout` can't cross into an escaping closure, so the accumulator is boxed for the
+            // duration. That is an implementation detail: callers still write plain `inout`.
+            let accumulator = ReduceBox(initialResult)
+            try await self.withStreamingBytes { span in
+                try await updateAccumulatingResult(&accumulator.value, span)
+            }
+            return accumulator.value
+        }
 
         public var string: String? {
             switch self.storage {
@@ -70,34 +135,27 @@ extension Response {
             }
         }
 
-        public var buffer: ByteBuffer? {
-            switch self.storage {
-            case .buffer(let buffer): return buffer
-            case .data(let data):
-                let buffer = self.byteBufferAllocator.buffer(bytes: data)
-                return buffer
-            case .staticString(let staticString):
-                let buffer = self.byteBufferAllocator.buffer(staticString: staticString)
-                return buffer
-            case .string(let string):
-                let buffer = self.byteBufferAllocator.buffer(string: string)
-                return buffer
-            case .none: return nil
-            case .stream: return nil
-            }
-        }
-
-        public func collect() async throws -> ByteBuffer? {
+        /// Reads the whole body into memory, running a streaming body to completion.
+        ///
+        /// Collecting a streaming body **replaces** it with the bytes it produced as a mutating operation. A stream's
+        /// closure can only be relied on to run once - it may be reading a file handle, or draining
+        /// an `AsyncSequence` - so re-running it silently yields a short or empty body. Caching the
+        /// result means anything further down the chain, including the server that serialises the
+        /// response, sees an ordinary in-memory body instead.
+        ///
+        /// - Returns: The body's bytes, or `nil` if the body is empty.
+        public mutating func collect() async throws -> Data? {
             switch self.storage {
             case .stream(let stream):
                 // Reserve the declared length up front when known (`count >= 0`) to avoid repeated
                 // grow-and-copy reallocations; `-1` means unknown/chunked, so start empty.
                 let initialCapacity = stream.count >= 0 ? stream.count : 0
-                let writer = CollectingBodyWriter(buffer: self.byteBufferAllocator.buffer(capacity: initialCapacity))
+                let writer = CollectingBodyWriter(capacity: initialCapacity)
                 try await stream.callback(writer)
-                return writer.buffer
+                self.storage = .data(writer.data)
+                return writer.data
             default:
-                return self.buffer
+                return self.data
             }
         }
 
@@ -114,35 +172,29 @@ extension Response {
         }
 
         internal var storage: Storage
-        internal let byteBufferAllocator: ByteBufferAllocator
 
         /// Creates an empty body. Useful for `GET` requests where HTTP bodies are forbidden.
-        public init(byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init() {
             self.storage = .none
         }
 
         /// Create a new body wrapping `Data`.
-        public init(data: Data, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init(data: Data) {
             storage = .data(data)
         }
 
         /// Create a new body from the UTF8 representation of a `StaticString`.
-        public init(staticString: StaticString, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init(staticString: StaticString) {
             storage = .staticString(staticString)
         }
 
         /// Create a new body from the UTF8 representation of a `String`.
-        public init(string: String, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init(string: String) {
             self.storage = .string(string)
         }
 
         /// Create a new body from a Swift NIO `ByteBuffer`.
-        public init(buffer: ByteBuffer, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        init(buffer: ByteBuffer) {
             self.storage = .buffer(buffer)
         }
 
@@ -155,48 +207,71 @@ extension Response {
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
         ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly `count` bytes.
-        ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.byteBufferAllocator = byteBufferAllocator
+        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int) {
             self.storage = .stream(.init(count: count, callback: stream))
         }
 
         /// Creates a chunked, streaming HTTP ``Response`` body of unknown length.
         ///
-        /// See ``init(stream:count:byteBufferAllocator:)`` for the streaming semantics.
+        /// See ``init(stream:count:)`` for the streaming semantics.
         ///
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
-        ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
-        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
+        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> ()) {
+            self.init(stream: stream, count: -1)
         }
 
         /// `ExpressibleByStringLiteral` conformance.
         public init(stringLiteral value: String) {
-            self.byteBufferAllocator = ByteBufferAllocator()
             self.storage = .string(value)
         }
 
         /// Internal init.
-        internal init(storage: Storage, byteBufferAllocator: ByteBufferAllocator) {
-            self.byteBufferAllocator = byteBufferAllocator
+        internal init(storage: Storage) {
             self.storage = storage
         }
     }
 }
 
-/// A ``ResponseBodyWriter`` that accumulates everything written into a `ByteBuffer`, used to
-/// eagerly collect a streaming body instead of forwarding it to the connection.
-private final class CollectingBodyWriter: ResponseBodyWriter {
-    var buffer: ByteBuffer
+/// Holds a ``Response/Body/reduceBytes(into:_:)`` accumulator so it can be mutated from inside an
+/// escaping closure. Not locked: the chunk closure is driven serially by the body itself, never
+/// concurrently.
+private final class ReduceBox<R> {
+    var value: R
+    init(_ value: R) { self.value = value }
+}
 
-    init(buffer: ByteBuffer) {
-        self.buffer = buffer
+/// A ``ResponseBodyWriter`` that forwards each chunk straight to a closure, used to drive a
+/// streaming body incrementally instead of collecting it.
+private final class ForwardingBodyWriter: ResponseBodyWriter {
+    let onChunk: (RawSpan) async throws -> Void
+
+    init(_ onChunk: @escaping (RawSpan) async throws -> Void) {
+        self.onChunk = onChunk
     }
 
-    func write(_ buffer: ByteBuffer) async throws {
-        var buffer = buffer
-        self.buffer.writeBuffer(&buffer)
+    func write(_ bytes: RawSpan) async throws {
+        try await self.onChunk(bytes)
+    }
+}
+
+/// A ``ResponseBodyWriter`` that accumulates everything written into `Data`, used to
+/// eagerly collect a streaming body instead of forwarding it to the connection.
+private final class CollectingBodyWriter: ResponseBodyWriter {    
+    var data: Data
+
+    init(capacity: Int) {
+        self.data = Data(capacity: capacity)
+    }
+
+    func write(_ bytes: RawSpan) async throws {
+        bytes.withUnsafeBytes { self.data.append(contentsOf: $0) }
+    }
+
+    /// Appending is synchronous, so the sequence's own storage can be borrowed instead of copying
+    /// it into a `ContiguousArray` first, as the protocol's default implementation must.
+    func write(_ bytes: some Sequence<UInt8>) async throws {
+        // `Data.append(contentsOf:)` already takes the contiguous fast path internally
+        self.data.append(contentsOf: bytes)
     }
 }

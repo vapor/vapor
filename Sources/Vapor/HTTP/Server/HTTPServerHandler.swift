@@ -114,8 +114,6 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // move-only response writer), so it stays in this task; each `write` awaits the
                 // transport, so backpressure propagates to the closure. The server appends the
                 // final chunk via `finish` once the closure returns.
-                // Keep the concrete type so we can call `finish` (which is intentionally not part
-                // of the public `ResponseBodyWriter` protocol); the closure only sees `write`.
                 let writer = NIOResponseBodyWriter(inner: try await sender.send(httpResponse))
                 try await bodyStream.callback(writer)
                 guard bodyStream.count < 0 || writer.bytesWritten == bodyStream.count else {
@@ -130,10 +128,12 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 }
                 try await writer.finish(nil)
             default:
-                // Buffered body: single-shot write.
-                var responseBody = UniqueArray<UInt8>()
-                if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
-                    responseBody.append(copying: buffer.readableBytesView)
+                // Buffered body: single-shot write. Borrowing the body's bytes copies them straight
+                // into the server's container - a `.string`/`.data`/`.staticString` body is no
+                // longer materialised into an intermediate `ByteBuffer` first.
+                var responseBody = UniqueArray<UInt8>(minimumCapacity: vaporResponse.body.count)
+                try await vaporResponse.body.withStreamingBytes { bytes in
+                    bytes.withUnsafeBytes { unsafe responseBody.append(copying: $0) }
                 }
                 try await sender.sendAndFinish(httpResponse, buffer: &responseBody)
             }
@@ -158,13 +158,22 @@ final class NIOResponseBodyWriter: ResponseBodyWriter {
         self.inner = consume inner
     }
 
-    func write(_ buffer: ByteBuffer) async throws {
-        var out = UniqueArray<UInt8>(minimumCapacity: buffer.readableBytes)
-        out.append(copying: buffer.readableBytesView)
-        // `inner` is always present during writes (the body closure runs before `finish`, which
-        // takes it); the optional-chaining is just how we reach the move-only writer in place.
+    func write(_ bytes: RawSpan) async throws {
+        // We need to copy here so the writer takes ownership of the data
+        // TODO: This should be fixed in HTTP Server to avoid the copy
+        var out = UniqueArray<UInt8>(minimumCapacity: bytes.byteCount)
+        bytes.withUnsafeBytes { out.append(copying: $0) }
         try await self.inner?.write(buffer: &out)
-        self.bytesWritten += buffer.readableBytes
+        self.bytesWritten += bytes.byteCount
+    }
+
+    func write(_ bytes: some Sequence<UInt8>) async throws {
+        var out = UniqueArray<UInt8>(minimumCapacity: bytes.underestimatedCount)
+        out.append(copying: bytes)
+        // `write` drains `out`, so the count has to be taken first.
+        let count = out.count
+        try await self.inner?.write(buffer: &out)
+        self.bytesWritten += count
     }
 
     func finish(_ trailingHeaders: HTTPFields?) async throws {

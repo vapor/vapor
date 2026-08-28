@@ -73,31 +73,31 @@ public struct Response: CustomStringConvertible, Sendable {
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E: Encodable {
-            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
+            var body = ByteBuffer()
             try encoder.encode(encodable, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
+            self.response.body = .init(buffer: body)
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D: Decodable {
-            guard let body = self.response.body.buffer else {
+            guard let body = self.response.body.data else {
                 throw Abort(.unprocessableContent)
             }
-            return try decoder.decode(D.self, from: body, headers: self.response.headers)
+            return try decoder.decode(D.self, from: ByteBuffer(data: body), headers: self.response.headers)
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C: Content {
             var content = content
             try content.beforeEncode()
-            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
+            var body = ByteBufferAllocator().buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
+            self.response.body = .init(buffer: body)
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C: Content {
-            guard let body = self.response.body.buffer else {
+            guard let body = self.response.body.data else {
                 throw Abort(.unprocessableContent)
             }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.response.headers)
+            var decoded = try decoder.decode(C.self, from: ByteBuffer(data: body), headers: self.response.headers)
             try decoded.afterDecode()
             return decoded
         }

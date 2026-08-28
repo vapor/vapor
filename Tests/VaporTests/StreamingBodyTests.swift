@@ -1,4 +1,5 @@
 import Vapor
+import Crypto
 import VaporTesting
 import AsyncHTTPClient
 import NIOCore
@@ -56,9 +57,9 @@ struct StreamingBodyTests {
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("stream") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write(ByteBuffer(string: "Hello, "))
-                    try await writer.write(ByteBuffer(string: "streaming, "))
-                    try await writer.write(ByteBuffer(string: "world!"))
+                    try await writer.write("Hello, ")
+                    try await writer.write("streaming, ")
+                    try await writer.write("world!")
                 }))
             }
 
@@ -158,7 +159,7 @@ struct StreamingBodyTests {
             app.get("many") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
                     for _ in 0..<chunkCount {
-                        try await writer.write(ByteBuffer(string: "x"))
+                        try await writer.write("x")
                     }
                 }))
             }
@@ -195,7 +196,7 @@ struct StreamingBodyTests {
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("error-mid-stream") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write(ByteBuffer(string: "partial"))
+                    try await writer.write("partial")
                     throw MidStreamError()
                 }))
             }
@@ -256,7 +257,7 @@ struct StreamingBodyTests {
             // errors on the truncated response or sees fewer bytes than advertised.
             app.get("abort") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write(ByteBuffer(string: "AAAA"))
+                    try await writer.write("AAAA")
                     throw MidStreamError()
                 }, count: 8))
             }
@@ -306,7 +307,7 @@ struct StreamingBodyTests {
             app.get("firehose") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
                     for _ in 0..<100_000 {
-                        try await writer.write(ByteBuffer(string: "x"))
+                        try await writer.write("x")
                     }
                 }))
             }
@@ -355,7 +356,7 @@ struct StreamingBodyTests {
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("firehose") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    let chunk = ByteBuffer(repeating: 0x41, count: chunkSize)
+                    let chunk = [UInt8](repeating: 0x41, count: chunkSize)
                     for _ in 0..<totalChunks {
                         try await writer.write(chunk)
                         produced.withLockedValue { $0 += 1 }
@@ -425,7 +426,7 @@ struct StreamingBodyTests {
             // Declares `Content-Length: 2` (via `count`) but only writes a single byte.
             app.get("bad-length") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write(ByteBuffer(string: "a"))
+                    try await writer.write("a")
                 }, count: 2))
             }
             app.get("ok") { _ in "ok" }
@@ -469,12 +470,180 @@ struct StreamingBodyTests {
 
     @Test("collect() gathers a streaming body into a single buffer")
     func testCollectStreamingBody() async throws {
-        let body = Response.Body(stream: { writer in
-            try await writer.write(ByteBuffer(string: "Hello, "))
-            try await writer.write(ByteBuffer(string: "collected!"))
+        var body = Response.Body(stream: { writer in
+            try await writer.write("Hello, ")
+            try await writer.write("collected!")
         })
         let collected = try await body.collect()
-        #expect(collected.map { String(buffer: $0) } == "Hello, collected!")
+        #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "Hello, collected!")
+    }
+
+    @Test("Every ResponseBodyWriter overload reaches the stream")
+    func testWriterOverloads() async throws {
+        var body = Response.Body(stream: { writer in
+            // String
+            try await writer.write("a")
+            // some Sequence<UInt8>
+            try await writer.write([UInt8]([0x62]))
+            // Data, via the same Sequence overload
+            try await writer.write(Data("c".utf8))
+            // Span<UInt8>
+            let d: [UInt8] = [0x64]
+            try await writer.write(d.span)
+            // RawSpan - the protocol requirement itself
+            let e: [UInt8] = [0x65]
+            try await writer.write(e.span.bytes)
+            // A sequence of chunks
+            try await writer.write(contentsOf: [[UInt8]([0x66]), [UInt8]([0x67])])
+        })
+        let collected = try await body.collect()
+        #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "abcdefg")
+    }
+
+    @Test("withStreamingBytes delivers a streaming body chunk by chunk")
+    func testWithStreamingBytesOnStream() async throws {
+        let chunks = NIOLockedValueBox([String]())
+        let body = Response.Body(stream: { writer in
+            try await writer.write("alpha")
+            try await writer.write("beta")
+            try await writer.write("gamma")
+        })
+        try await body.withStreamingBytes { span in
+            var bytes = [UInt8]()
+            for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
+            chunks.withLockedValue { $0.append(String(decoding: bytes, as: UTF8.self)) }
+        }
+        // Delivered separately and in order - not collected into one blob.
+        #expect(chunks.withLockedValue { $0 } == ["alpha", "beta", "gamma"])
+    }
+
+    @Test("withStreamingBytes hands a buffered body over as a single chunk")
+    func testWithStreamingBytesOnBuffered() async throws {
+        for body in [Response.Body(string: "hello"), Response.Body(data: Data("hello".utf8))] {
+            let chunks = NIOLockedValueBox([String]())
+            try await body.withStreamingBytes { span in
+                var bytes = [UInt8]()
+                for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
+                chunks.withLockedValue { $0.append(String(decoding: bytes, as: UTF8.self)) }
+            }
+            #expect(chunks.withLockedValue { $0 } == ["hello"])
+        }
+    }
+
+    @Test("withStreamingBytes does not call the closure for an empty body")
+    func testWithStreamingBytesOnEmpty() async throws {
+        let calls = NIOLockedValueBox(0)
+        try await Response.Body().withStreamingBytes { _ in
+            calls.withLockedValue { $0 += 1 }
+        }
+        #expect(calls.withLockedValue { $0 } == 0)
+    }
+
+    @Test("withStreamingBytes propagates an error thrown mid-stream")
+    func testWithStreamingBytesPropagatesError() async throws {
+        let seen = NIOLockedValueBox(0)
+        let body = Response.Body(stream: { writer in
+            try await writer.write("first")
+            throw MidStreamError()
+        })
+        await #expect(throws: MidStreamError.self) {
+            try await body.withStreamingBytes { _ in
+                seen.withLockedValue { $0 += 1 }
+            }
+        }
+        // The closure saw the chunk that was written before the throw.
+        #expect(seen.withLockedValue { $0 } == 1)
+    }
+
+    @Test("reduceBytes folds a streaming body chunk by chunk")
+    func testReduceBytesOnStream() async throws {
+        let body = Response.Body(stream: { writer in
+            try await writer.write("alpha")
+            try await writer.write("beta")
+            try await writer.write("gamma")
+        })
+        // Chunk sizes prove the fold sees each chunk separately rather than one blob.
+        let sizes = try await body.reduceBytes(into: [Int]()) { acc, span in
+            acc.append(span.byteCount)
+        }
+        #expect(sizes == [5, 4, 5])
+    }
+
+    @Test("reduceBytes folds a buffered body in a single step")
+    func testReduceBytesOnBuffered() async throws {
+        let total = try await Response.Body(string: "hello").reduceBytes(into: 0) { acc, span in
+            acc += span.byteCount
+        }
+        #expect(total == 5)
+    }
+
+    @Test("reduceBytes returns the initial value for an empty body")
+    func testReduceBytesOnEmpty() async throws {
+        let total = try await Response.Body().reduceBytes(into: 42) { acc, span in
+            acc += span.byteCount
+        }
+        #expect(total == 42)
+    }
+
+    @Test("reduceBytes hashes a streaming body without buffering it")
+    func testReduceBytesHashing() async throws {
+        let chunks = ["alpha", "beta", "gamma"]
+        let body = Response.Body(stream: { writer in
+            for chunk in chunks { try await writer.write(chunk) }
+        })
+        let streamed = try await body.reduceBytes(into: SHA256()) { hasher, span in
+            span.withUnsafeBytes { unsafe hasher.update(bufferPointer: $0) }
+        }.finalize()
+        // Same digest as hashing the whole thing at once.
+        let expected = SHA256.hash(data: Data(chunks.joined().utf8))
+        #expect(Array(streamed) == Array(expected))
+    }
+
+    @Test("collect() caches, so the stream closure runs only once")
+    func testCollectCachesStream() async throws {
+        let runs = NIOLockedValueBox(0)
+        var body = Response.Body(stream: { writer in
+            runs.withLockedValue { $0 += 1 }
+            try await writer.write("payload")
+        })
+        let first = try await body.collect()
+        let second = try await body.collect()
+        #expect(first.map { String(decoding: $0, as: UTF8.self) } == "payload")
+        #expect(second.map { String(decoding: $0, as: UTF8.self) } == "payload")
+        #expect(runs.withLockedValue { $0 } == 1)
+    }
+
+    @Test("collect() replaces a stream with an in-memory body for anything downstream")
+    func testCollectReplacesStreamStorage() async throws {
+        // Exactly the middleware case: read the body, then hand the response on. A stream backed by
+        // a source that can only be drained once used to silently send nothing after this point.
+        let (chunks, continuation) = AsyncStream<String>.makeStream()
+        continuation.yield("alpha")
+        continuation.yield("beta")
+        continuation.finish()
+
+        var response = Response(status: .ok, body: .init(stream: { writer in
+            for await chunk in chunks { try await writer.write(chunk) }
+        }))
+        let collected = try await response.body.collect()
+        #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "alphabeta")
+
+        // The response now carries the bytes, not the drained stream, so a second reader sees them.
+        #expect(response.body.string == "alphabeta")
+        #expect(response.body.count == 9)
+        var again = response.body
+        #expect(try await again.collect().map { String(decoding: $0, as: UTF8.self) } == "alphabeta")
+    }
+
+    @Test("An empty write does not corrupt the stream")
+    func testEmptyWrite() async throws {
+        var body = Response.Body(stream: { writer in
+            try await writer.write("")
+            try await writer.write([UInt8]())
+            try await writer.write("done")
+        })
+        let collected = try await body.collect()
+        #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "done")
     }
 
     @Test("Server does not write a body for a status that cannot carry one", .timeLimit(.minutes(1)),
