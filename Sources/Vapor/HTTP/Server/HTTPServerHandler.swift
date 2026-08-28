@@ -169,12 +169,7 @@ final class NIOResponseBodyWriter: ResponseBodyWriter {
 
     func write(_ bytes: some Sequence<UInt8>) async throws {
         var out = UniqueArray<UInt8>(minimumCapacity: bytes.underestimatedCount)
-        let borrowed: Void? = bytes.withContiguousStorageIfAvailable { buffer in
-            out.append(copying: buffer)
-        }
-        if borrowed == nil {
-            out.append(copying: bytes)
-        }
+        out.append(copying: bytes)
         // `write` drains `out`, so the count has to be taken first.
         let count = out.count
         try await self.inner?.write(buffer: &out)

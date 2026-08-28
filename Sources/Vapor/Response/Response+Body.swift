@@ -271,6 +271,7 @@ private final class CollectingBodyWriter: ResponseBodyWriter {
     /// Appending is synchronous, so the sequence's own storage can be borrowed instead of copying
     /// it into a `ContiguousArray` first, as the protocol's default implementation must.
     func write(_ bytes: some Sequence<UInt8>) async throws {
+        // `Data.append(contentsOf:)` already takes the contiguous fast path internally
         self.data.append(contentsOf: bytes)
     }
 }
