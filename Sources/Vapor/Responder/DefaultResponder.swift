@@ -5,7 +5,6 @@ import Foundation
 #endif
 public import HTTPTypes
 public import Logging
-import NIOCore
 import RoutingKit
 
 /// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.

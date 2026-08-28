@@ -4,7 +4,6 @@ public import FoundationEssentials
 public import Foundation
 #endif
 public import HTTPTypes
-import NIOFoundationEssentialsCompat
 
 extension JSONEncoder: ContentEncoder {
     public func encode(_ encodable: some Encodable, to body: inout Data, headers: inout HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws {

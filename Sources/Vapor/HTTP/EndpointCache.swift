@@ -3,8 +3,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOConcurrencyHelpers
-import NIOCore
 import Logging
 public import HTTPTypes
 

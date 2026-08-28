@@ -518,8 +518,8 @@ struct ContentTests {
         #expect(body == #"{"name":"new name"}"#)
     }
 
-    @Test("Test After Content Encode")
-    func testAfterContentEncode() async throws {
+    @Test("afterDecode runs for a Request's content")
+    func testAfterDecodeOnRequest() async throws {
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString(#"{"name": "before decode"}"#)
 

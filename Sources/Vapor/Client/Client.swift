@@ -1,4 +1,3 @@
-import NIOCore
 import Logging
 public import HTTPTypes
 

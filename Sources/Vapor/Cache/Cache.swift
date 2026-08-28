@@ -1,4 +1,3 @@
-import NIOCore
 /// Codable key-value pair cache.
 public protocol Cache: Sendable {
     /// Gets a decodable value from the cache. Returns `nil` if not found.

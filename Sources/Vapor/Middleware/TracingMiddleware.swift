@@ -1,8 +1,7 @@
 import HTTPTypes
 public import Tracing
-import NIOConcurrencyHelpers
 import NIOCore
-import NIOHTTP1
+import NIOConcurrencyHelpers
 
 /// Creates a trace and metadata for every request
 ///
