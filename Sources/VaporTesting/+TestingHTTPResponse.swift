@@ -22,7 +22,7 @@ public func expectContent<D>(
 
     do {
         let decoder = try contentConfiguration.requireDecoder(for: contentType)
-        content = try decoder.decode(D.self, from: res.body, headers: res.headers)
+        content = try decoder.decode(D.self, from: res.body, headers: res.headers, userInfo: [:])
     } catch {
         Issue.record("could not decode body: \(error)", sourceLocation: sourceLocation)
         return

@@ -6,3 +6,15 @@ extension ByteBuffer {
         .init(decoding: self.readableBytesView, as: UTF8.self)
     }
 }
+
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
+
+extension Data {
+    public var string: String {
+        .init(decoding: self, as: UTF8.self)
+    }
+}

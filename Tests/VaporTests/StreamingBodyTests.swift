@@ -349,7 +349,11 @@ struct StreamingBodyTests {
     @Test("Server backpressures a fast producer against a stalled client")
     func testStreamingBodyBackpressure() async throws {
         let chunkSize = 16 * 1024
-        let totalChunks = 2048 // 32 MiB — far larger than any socket/NIO buffer window.
+        // A safety valve, not a target: a backpressured producer stalls a few hundred chunks in,
+        // once the socket buffers fill. It has to clear the several MiB the writer accepts past
+        // the channel's watermark, which varies with how promptly the event loop is scheduled,
+        // so the cap is set well clear of that; all it does is bound what a broken run buffers.
+        let maxChunks = 8192 // 128 MiB
         let produced = NIOLockedValueBox(0)
 
         try await withApp { app in
@@ -357,7 +361,7 @@ struct StreamingBodyTests {
             app.get("firehose") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
                     let chunk = [UInt8](repeating: 0x41, count: chunkSize)
-                    for _ in 0..<totalChunks {
+                    for _ in 0..<maxChunks {
                         try await writer.write(chunk)
                         produced.withLockedValue { $0 += 1 }
                     }
@@ -380,37 +384,46 @@ struct StreamingBodyTests {
                 // the server sees a reader that keeps consuming and is never backpressured — which
                 // is exactly how this test failed in CI, reporting 2048/2048 produced.
                 let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                    // A small receive buffer keeps the advertised window — and so the total the
+                    // kernel can absorb — well under the body size on any host. Socket buffers
+                    // autotune, and CI hosts tune their ceilings differently, so without this the
+                    // test is really asserting "32 MiB doesn't fit in this machine's buffers".
+                    .channelOption(.socketOption(.so_rcvbuf), value: 16 * 1024)
                     .connect(host: "127.0.0.1", port: port) { channel in
                         channel.eventLoop.makeCompletedFuture {
                             try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
                         }
                     }
 
-                try await channel.executeThenClose { inbound, outbound in
+                try await channel.executeThenClose { _, outbound in
                     try await outbound.write(ByteBuffer(
                         string: "GET /firehose HTTP/1.1\r\nHost: localhost\r\n\r\n"))
 
                     // Nothing reads the socket, so the kernel receive buffer fills, then the send
-                    // side, and the producer's `write` must suspend well short of the last chunk.
+                    // side, and the producer's writes must suspend. Two samples assert it is
+                    // *stalled* rather than merely unfinished: a count short of the cap can just
+                    // mean a slow producer, which would pass on a loaded machine whether or not
+                    // backpressure works at all.
+                    try await Task.sleep(for: .milliseconds(500))
+                    let firstSample = produced.withLockedValue { $0 }
                     try await Task.sleep(for: .milliseconds(500))
                     let stalledAt = produced.withLockedValue { $0 }
                     #expect(
-                        stalledAt < totalChunks,
-                        "producer was not backpressured (produced \(stalledAt)/\(totalChunks))")
+                        stalledAt == firstSample,
+                        """
+                        producer kept writing while the client read nothing \
+                        (\(firstSample) → \(stalledAt) of \(maxChunks))
+                        """)
+                    #expect(
+                        stalledAt < maxChunks,
+                        "producer was not backpressured (produced \(stalledAt)/\(maxChunks))")
 
-                    // Draining lets it resume and run to completion.
-                    var received = 0
-                    for try await buffer in inbound {
-                        received += buffer.readableBytes
-                        if produced.withLockedValue({ $0 }) == totalChunks,
-                            received >= totalChunks * chunkSize {
-                            break
-                        }
-                    }
-                    #expect(received >= totalChunks * chunkSize)
+                    // No drain-and-resume check here on purpose. The producer only wakes once
+                    // the channel is writable again, which means reading *everything* buffered
+                    // in-process — on CI that has taken over five seconds and timed out the
+                    // tests running alongside it. Delivery of a full streamed body is covered
+                    // by the other tests in this suite.
                 }
-
-                #expect(produced.withLockedValue { $0 } == totalChunks)
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()

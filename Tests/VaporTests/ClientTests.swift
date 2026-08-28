@@ -56,8 +56,12 @@ struct ClientTests {
                 // resolves to `::1` first, so a name here means every request starts with a
                 // doomed IPv6 attempt whose cost depends on whether the host refuses it or
                 // black-holes it.
+                // The budget here is not the thing under test — that a request carrying a
+                // timeout still completes is. It is set far above any plausible loopback
+                // round trip because a tight one measures how busy the machine is instead:
+                // at two seconds this failed in 4 of 10 loaded CI-like runs.
                 await #expect(throws: Never.self, performing: {
-                    try await app.client.get("http://127.0.0.1:\(remoteAppPort)/json") { $0.timeout = .seconds(2) }
+                    try await app.client.get("http://127.0.0.1:\(remoteAppPort)/json") { $0.timeout = .seconds(30) }
                 })
                 await #expect(throws: HTTPClientError.deadlineExceeded) {
                     try await app.client.get("http://127.0.0.1:\(remoteAppPort)/stalling") {
