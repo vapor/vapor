@@ -1,6 +1,10 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
-import HTTPTypes
-import Logging
+#endif
+public import HTTPTypes
+public import Logging
 import NIOCore
 import RoutingKit
 

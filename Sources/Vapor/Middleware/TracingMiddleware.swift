@@ -1,5 +1,5 @@
 import HTTPTypes
-import Tracing
+public import Tracing
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
@@ -47,7 +47,7 @@ public final class TracingMiddleware: Middleware {
                 }
 
                 attributes["network.protocol.name"] = "http"
-                let address = request.application.sharedNewAddress.withLockedValue({ $0 })
+                let address = request.application.sharedAddress.withLockedValue({ $0 })
                 switch address {
                 case .v4:
                     fallthrough

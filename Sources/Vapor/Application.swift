@@ -1,9 +1,10 @@
-import Configuration
+public import Configuration
 import Logging
-import NIOConcurrencyHelpers
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
+public import NIOConcurrencyHelpers
 import NIOPosix
-import ServiceLifecycle
+public import ServiceLifecycle
 import UnixSignals
 #if HTTPClient
 import AsyncHTTPClient
@@ -11,15 +12,6 @@ import AsyncHTTPClient
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable, Service {
-    public var environment: Environment {
-        get {
-            self._environment.withLockedValue { $0 }
-        }
-        set {
-            self._environment.withLockedValue { $0 = newValue }
-        }
-    }
-
     public var storage: Storage {
         get {
             self._storage.withLockedValue { $0 }
@@ -54,11 +46,13 @@ public final class Application: Sendable, Service {
     }
 
     internal let isBooted: NIOLockedValueBox<Bool>
-    private let _environment: NIOLockedValueBox<Environment>
+    public let environment: Environment
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
-    public let sharedNewAddress: NIOLockedValueBox<SocketAddress?>
+    public let sharedAddress: NIOLockedValueBox<SocketAddress?>
+    /// Content hashes for advanced ETag comparison, shared by every request.
+    package let fileETagHashCache: FileETagHashCache
     private let _services: NIOLockedValueBox<[any Service]>
     public let routes: Routes
     // TODO: inline this when application is a struct
@@ -81,17 +75,14 @@ public final class Application: Sendable, Service {
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
     package let responder: ServiceOptionType<any Responder>
-    public let byteBufferAllocator: ByteBufferAllocator = .init()
     public let viewRenderer: any ViewRenderer
     public let directoryConfiguration: DirectoryConfiguration
-    public let passwordHasher: any PasswordHasher
     public let cache: any Cache
     public let client: any Client
 
     public struct ServiceConfiguration: Sendable {
         let contentConfiguration: ContentConfiguration
         let viewRenderer: ServiceOptionType<any ViewRenderer>
-        let passwordHasher: ServiceOptionType<any PasswordHasher>
         let cache: ServiceOptionType<any Cache>
         let responder: ServiceOptionType<any Responder>
         let client: ServiceOptionType<any Client>
@@ -99,14 +90,12 @@ public final class Application: Sendable, Service {
         public init(
             contentConfiguration: ContentConfiguration = .default(),
             viewRenderer: ServiceOptionType<any ViewRenderer> = .default,
-            passwordHasher: ServiceOptionType<any PasswordHasher> = .default,
             cache: ServiceOptionType<any Cache> = .default,
             responder: ServiceOptionType<any Responder> = .default,
             client: ServiceOptionType<any Client> = .default,
         ) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
-            self.passwordHasher = passwordHasher
             self.cache = cache
             self.responder = responder
             self.client = client
@@ -116,71 +105,6 @@ public final class Application: Sendable, Service {
     public enum ServiceOptionType<Service: Sendable>: Sendable {
         case `default`
         case provided(Service)
-    }
-
-    public struct ServerConfiguration: Sendable {
-        public var address: BindAddress
-
-        public init(address: BindAddress = .hostname()) {
-            self.address = address
-        }
-
-        /// Host name the server will bind to.
-        public var hostname: String? {
-            get {
-                switch address {
-                case .hostname(let hostname, _):
-                    return hostname
-                default:
-                    return nil
-                }
-            }
-            set {
-                if let newValue {
-                    switch address {
-                    case .hostname(_, let port):
-                        address = .hostname(newValue, port: port)
-                    default:
-                        address = .hostname(newValue)
-                    }
-                }
-            }
-        }
-
-        /// Port the server will bind to.
-        public var port: Int? {
-            get {
-                switch address {
-                case .hostname(_, let port):
-                    port
-                default:
-                    nil
-                }
-            }
-            set {
-                if let newValue {
-                    switch address {
-                    case .hostname(let hostname, _):
-                        address = .hostname(hostname, port: newValue)
-                    default:
-                        address = .hostname(port: newValue)
-                    }
-                }
-            }
-        }
-
-        /// A human-readable description of the configured address. Used in log messages when starting server.
-        var addressDescription: String {
-            #warning("Bring back")
-//            let scheme = tlsConfiguration == nil ? "http" : "https"
-            let scheme = "https"
-            switch address {
-            case .hostname(let hostname, let port):
-                return "\(scheme)://\(hostname):\(port)"
-            case .unixDomainSocket(let socketPath):
-                return "\(scheme)+unix: \(socketPath)"
-            }
-        }
     }
 
     // MARK: - Initialization
@@ -198,15 +122,15 @@ public final class Application: Sendable, Service {
 
     // internal flag here is just to stop the compiler from complaining about duplicates
     package init(_ environment: Environment = .development, configuration: ServerConfiguration, configReader: ConfigReader, services: ServiceConfiguration, internal: Bool) {
-        self._environment = .init(environment)
-
+        self.environment = environment
         self._didShutdown = .init(false)
         self._storage = .init(.init())
         self._lifecycle = .init(.init())
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
-        self.sharedNewAddress = .init(nil)
+        self.sharedAddress = .init(nil)
+        self.fileETagHashCache = .init(capacity: configuration.eTagHashCacheCapacity)
         self._services = .init([])
         self._serverConfiguration = .init(configuration)
         self.configReader = configReader
@@ -219,17 +143,6 @@ public final class Application: Sendable, Service {
                 self.viewRenderer = renderer
         }
 
-        switch services.passwordHasher {
-            case .default:
-            #if bcrypt
-                self.passwordHasher = BcryptHasher()
-            #else
-                self.passwordHasher = PlaintextHasher()
-            #endif
-            case .provided(let hasher):
-                self.passwordHasher = hasher
-        }
-
         switch services.cache {
             case .default:
                 self.cache = MemoryCache()
@@ -240,9 +153,9 @@ public final class Application: Sendable, Service {
         switch services.client {
         case .default:
             #if HTTPClient
-            self.client = VaporHTTPClient(http: HTTPClient.shared, byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+            self.client = VaporHTTPClient(http: HTTPClient.shared, contentConfiguration: self.contentConfiguration)
             #else
-            self.client = BlackholeClient(byteBufferAllocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+            self.client = BlackholeClient(contentConfiguration: self.contentConfiguration)
             #endif
         case .provided(let client):
             self.client = client
@@ -250,11 +163,10 @@ public final class Application: Sendable, Service {
 
         self.responder = services.responder
         self.routes = Routes()
-        self.core.initialize()
         self.sessions.initialize()
         self.sessions.use(.memory)
         self.servers.initialize()
-        self.servers.use(.httpNew)
+        self.servers.use(.http)
     }
 
     /// Register an additional `Service` to run alongside the HTTP server.

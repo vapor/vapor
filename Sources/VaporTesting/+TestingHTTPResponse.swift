@@ -1,6 +1,10 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
-import Testing
-import Vapor
+#endif
+public import Testing
+public import Vapor
 
 public func expectContent<D>(
     _ type: D.Type,
@@ -18,7 +22,7 @@ public func expectContent<D>(
 
     do {
         let decoder = try contentConfiguration.requireDecoder(for: contentType)
-        content = try decoder.decode(D.self, from: res.body, headers: res.headers)
+        content = try decoder.decode(D.self, from: res.body, headers: res.headers, userInfo: [:])
     } catch {
         Issue.record("could not decode body: \(error)", sourceLocation: sourceLocation)
         return

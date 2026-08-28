@@ -2,7 +2,11 @@ import Vapor
 import Logging
 import Testing
 import VaporTesting
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
 import RoutingKit
 
@@ -117,7 +121,7 @@ struct ErrorTests {
             }
 
             try await app.testing().test(.get, "foo") { res in
-                #expect(res.status == HTTPStatus.internalServerError)
+                #expect(res.status == HTTPResponse.Status.internalServerError)
                 let option1 = "error=true&reason=Foo"
                 let option2 = "reason=Foo&error=true"
                 guard res.body.string == option1 || res.body.string == option2 else {

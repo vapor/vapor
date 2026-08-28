@@ -2,14 +2,17 @@
 import NIOCore
 import AsyncHTTPClient
 import Logging
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOHTTPTypesHTTP1
 import HTTPTypes
 import NIOHTTP1
 
 internal struct VaporHTTPClient: Client {
     let http: HTTPClient
-    var byteBufferAllocator: ByteBufferAllocator
     let contentConfiguration: ContentConfiguration
 
     func send(_ clientRequest: ClientRequest) async throws -> ClientResponse {
@@ -32,7 +35,6 @@ internal struct VaporHTTPClient: Client {
             status: .init(code: Int(response.status.code)),
             headers: .init(response.headers, splitCookie: false),
             body: response.body.collect(upTo: clientRequest.maxResponseBodySize),
-            byteBufferAllocator: self.byteBufferAllocator,
             contentConfiguration: self.contentConfiguration
         )
     }

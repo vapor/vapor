@@ -1,6 +1,25 @@
 @testable import Vapor
 import Testing
+#if canImport(Darwin)
+import Darwin
+#elseif os(Windows)
+import CRT
+#elseif canImport(Glibc)
+@preconcurrency import Glibc
+#elseif canImport(Android)
+@preconcurrency import Android
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(WASILibc)
+import WASILibc
+#else
+#error("Unsupported runtime")
+#endif
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @Suite("Environment Secret Tests")
 struct EnvironmentSecretTests {
@@ -28,9 +47,9 @@ struct EnvironmentSecretTests {
         let path = "/" + folder + "/Utilities/my-secret-env-content"
 
         let key = "MY_ENVIRONMENT_SECRET"
-        setenv(key, path, 1)
+        unsafe setenv(key, path, 1)
         defer {
-            unsetenv(key)
+            unsafe unsetenv(key)
         }
 
         let secretContent = try await Environment.secret(key: key)

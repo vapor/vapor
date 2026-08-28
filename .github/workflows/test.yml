@@ -75,6 +75,19 @@ jobs:
       - name: Run tests with traits disabled
         run: swift test --disable-default-traits
 
+  performance-harness:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    container: swiftlang/swift:nightly-6.4.x-bookworm
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v7
+      # Just build for now to make sure it actually compiles
+      - name: Build the performance harness
+        run: swift build --package-path Performance
+
   submit-dependencies:
     permissions:
       contents: write
@@ -82,3 +95,10 @@ jobs:
     uses: vapor/ci/.github/workflows/submit-deps.yml@main
     secrets: inherit
 
+  foundation-linking:
+    uses: vapor/ci/.github/workflows/check-foundation-linking.yml@main
+    permissions:
+      contents: read
+    with:
+      swift_image: swiftlang/swift:nightly-6.4.x-bookworm
+      excluded_products: 'VaporTesting'

@@ -1,11 +1,11 @@
-import Configuration
-import Vapor
+public import Configuration
+public import Vapor
 import NIOCore
 import NIOConcurrencyHelpers
 import ServiceLifecycle
 @testable import CoreMetrics
 @testable import Instrumentation
-import Logging
+public import Logging
 
 /// Perform a test while handling lifecycle of the application.
 /// Feel free to create a custom function like this, tailored to your project.
@@ -29,6 +29,7 @@ import Logging
 @discardableResult
 public func withApp<T>(
     address: BindAddress? = nil,
+    configuration: ServerConfiguration = .init(),
     configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
     logger: Logger = Logger.current,
     services: Application.ServiceConfiguration = .init(),
@@ -38,7 +39,7 @@ public func withApp<T>(
     MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
     InstrumentationSystem.bootstrapInternal(TaskLocalTracingSystemWrapper())
     return try await withLogger(logger) { _ in
-        let app = try await Application(.testing, configReader: configReader, services: services)
+        let app = try await Application(.testing, configuration: configuration, configReader: configReader, services: services)
         if let address {
             app.serverConfiguration.address = address
         }
@@ -75,7 +76,23 @@ public func withApp<T>(
 ///    }
 /// }
 /// ```
-public func withRunningApp<T: Sendable>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
+/// Runs `app`'s server for the duration of `block`, handing it the port the server bound to.
+///
+/// The hostname defaults to `127.0.0.1` rather than `localhost` so the server binds IPv4. A name
+/// resolves to `::1` before `127.0.0.1`, which quietly makes every test depend on the host's IPv6
+/// behaviour — including tests that then address the server by IP and can't reach it. Pass an
+/// explicit hostname to test other bindings.
+public func withRunningApp<T: Sendable>(
+    app: Application,
+    hostname: String = "127.0.0.1",
+    portToUse: Int = 0,
+    test: String = #function,
+    _ block: (Int) async throws -> T
+) async throws -> T {
+    // Tmp logger to debug hanging tests
+    var logger = Logger(label: "running-app")
+    logger.logLevel = .debug
+
     app.serverConfiguration.address = .hostname(hostname, port: portToUse)
     try await app.boot()
 
@@ -92,12 +109,42 @@ public func withRunningApp<T: Sendable>(app: Application, hostname: String = "lo
             group.cancelAll()
             throw TestErrors.portNotSet
         }
+        logger.notice("server bound", metadata: ["test": "\(test)", "port": "\(port)"])
 
         // Run the test block
-        let result = try await block(port)
+        let blockStart = ContinuousClock.now
+        let result: T
+        do {
+            result = try await block(port)
+        } catch {
+            logger.notice(
+                "test block threw",
+                metadata: [
+                    "test": "\(test)",
+                    "duration": "\(ContinuousClock.now - blockStart)",
+                    "error": "\(error)",
+                ])
+            group.cancelAll()
+            throw error
+        }
+        logger.notice(
+            "test block finished, shutting down server",
+            metadata: ["test": "\(test)", "duration": "\(ContinuousClock.now - blockStart)"])
 
-        // Cancel the server task (triggers graceful shutdown)
+        // Cancel the server task (triggers graceful shutdown). The implicit await on the child
+        // task at the end of this scope is where a server that won't stop shows up as a hang, so
+        // bracket it: a "shutting down" with no matching "shut down" line names the culprit.
+        let shutdownStart = ContinuousClock.now
         group.cancelAll()
+        do {
+            for try await _ in group {}
+        } catch {
+            // The server task finishing in `CancellationError` is the expected shutdown path, not
+            // a test failure.
+        }
+        logger.notice(
+            "server shut down",
+            metadata: ["test": "\(test)", "duration": "\(ContinuousClock.now - shutdownStart)"])
         return result
     }!
 }

@@ -10,6 +10,8 @@ import VaporTesting
 import HTTPTypes
 import RoutingKit
 import Logging
+import Foundation
+import NIOFoundationEssentialsCompat
 
 @Suite("Application Tests")
 struct ApplicationTests {
@@ -23,7 +25,7 @@ struct ApplicationTests {
                 try await app.server.run()
             }
             // Poll for address (run() publishes it before blocking on serve)
-            while app.sharedNewAddress.withLockedValue({ $0 }) == nil {
+            while app.sharedAddress.withLockedValue({ $0 }) == nil {
                 try await Task.sleep(for: .milliseconds(10))
             }
             // Cancel to trigger shutdown
@@ -198,10 +200,10 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            #expect(app.sharedNewAddress.withLockedValue({ $0 }) == nil)
+            #expect(app.sharedAddress.withLockedValue({ $0 }) == nil)
 
             try await withRunningApp(app: app, portToUse: 0) { port in
-                let address = try #require(app.sharedNewAddress.withLockedValue({ $0 }))
+                let address = try #require(app.sharedAddress.withLockedValue({ $0 }))
 
                 let ip = try #require(address.ipAddress)
                 #expect(port == address.port)
@@ -227,7 +229,7 @@ struct ApplicationTests {
             }
 
             app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: req.application.sharedNewAddress.withLockedValue({ $0 })?.hostname, port: req.application.sharedNewAddress.withLockedValue({ $0 })?.port)
+                let config = AddressConfig(hostname: req.application.sharedAddress.withLockedValue({ $0 })?.hostname, port: req.application.sharedAddress.withLockedValue({ $0 })?.port)
                 return config
             }
 
@@ -237,8 +239,8 @@ struct ApplicationTests {
                 }
 
                 let address = try await app.server.listeningAddress
-                #expect(app.sharedNewAddress.withLockedValue({ $0 }) != nil)
-                #expect(app.sharedNewAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
+                #expect(app.sharedAddress.withLockedValue({ $0 }) != nil)
+                #expect(app.sharedAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
                 if case let .hostname(_, port) = app.serverConfiguration.address {
                     #expect(0 == port)
                 } else {
@@ -251,8 +253,9 @@ struct ApplicationTests {
                 #expect(port > 0)
                 let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
+                let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
-                    .decode(AddressConfig.self, from: body, headers: [:])
+                    .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
 
                 #expect(returnedConfig.hostname == "0.0.0.0")
                 #expect(returnedConfig.port == port)
@@ -283,8 +286,9 @@ struct ApplicationTests {
 
                 let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
+                let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
-                    .decode(AddressConfig.self, from: body, headers: [:])
+                    .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
                 #expect(returnedConfig.hostname == "0.0.0.0")
                 #expect(returnedConfig.port == 3000)
             }

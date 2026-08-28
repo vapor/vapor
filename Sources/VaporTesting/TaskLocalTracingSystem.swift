@@ -1,12 +1,10 @@
-import Tracing
-import InMemoryTracing
-import Foundation
-import NIOConcurrencyHelpers
-import Testing
+public import Tracing
+public import InMemoryTracing
+public import Testing
 
 public final class TaskLocalTracingSystemWrapper: Tracer {
     public init() {}
-    
+
     public func forceFlush() {
         tracer.forceFlush()
     }

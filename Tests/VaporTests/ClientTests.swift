@@ -1,12 +1,16 @@
 import Vapor
 import NIOConcurrencyHelpers
 import NIOCore
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import Logging
 import NIOEmbedded
 import Testing
 import VaporTesting
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import AsyncHTTPClient
 import HTTPTypes
 import RoutingKit
@@ -19,7 +23,7 @@ struct ClientTests {
     func testClientBeforeSend() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
-                let res = try await app.client.post("http://localhost:\(remoteAppPort)/anything") { req in
+                let res = try await app.client.post("http://127.0.0.1:\(remoteAppPort)/anything") { req in
                     try req.content.encode(["hello": "world"])
                 }
 
@@ -34,7 +38,7 @@ struct ClientTests {
     func testClientContent() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
-                let res = try await app.client.post("http://localhost:\(remoteAppPort)/anything", content: ["hello": "world"])
+                let res = try await app.client.post("http://127.0.0.1:\(remoteAppPort)/anything", content: ["hello": "world"])
 
                 let data = try await res.content.decode(AnythingResponse.self)
                 #expect(data.json == ["hello": "world"])
@@ -47,11 +51,20 @@ struct ClientTests {
     func testClientTimeout() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
+                // A request to loopback that should succeed in milliseconds. Addressed by IP
+                // rather than `localhost`: the remote app binds IPv4 only, and `localhost`
+                // resolves to `::1` first, so a name here means every request starts with a
+                // doomed IPv6 attempt whose cost depends on whether the host refuses it or
+                // black-holes it.
+                // The budget here is not the thing under test — that a request carrying a
+                // timeout still completes is. It is set far above any plausible loopback
+                // round trip because a tight one measures how busy the machine is instead:
+                // at two seconds this failed in 4 of 10 loaded CI-like runs.
                 await #expect(throws: Never.self, performing: {
-                    try await app.client.get("http://localhost:\(remoteAppPort)/json") { $0.timeout = .seconds(1) }
+                    try await app.client.get("http://127.0.0.1:\(remoteAppPort)/json") { $0.timeout = .seconds(30) }
                 })
                 await #expect(throws: HTTPClientError.deadlineExceeded) {
-                    try await app.client.get("http://localhost:\(remoteAppPort)/stalling") {
+                    try await app.client.get("http://127.0.0.1:\(remoteAppPort)/stalling") {
                         $0.timeout = .milliseconds(200)
                     }
                 }
@@ -68,7 +81,7 @@ struct ClientTests {
 
                 app.get("foo") { req async throws -> String in
                     do {
-                        let response = try await req.application.client.get("http://localhost:\(remoteAppPort)/status/201")
+                        let response = try await req.application.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
                         #expect(response.status.code == 201)
                         // Server shutdown handled by task cancellation
                         return "bar"
@@ -79,7 +92,7 @@ struct ClientTests {
                 }
 
                 try await withRunningApp(app: app) { port in
-                    let res = try await app.client.get("http://localhost:\(port)/foo")
+                    let res = try await app.client.get("http://127.0.0.1:\(port)/foo")
                     #expect(res.body?.string == "bar")
                 }
             }
@@ -94,7 +107,7 @@ struct ClientTests {
                 logHandler
             })
             try await withApp(logger: logger) { app in
-                _ = try await app.client.get("http://localhost:\(remoteAppPort)/status/201")
+                _ = try await app.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
 
                 #expect(logHandler.metadata["ahc-request-id"] != nil)
             }
@@ -138,9 +151,9 @@ struct ClientTests {
             SomeJSON()
         }
 
-        remoteApp.get("status", ":status") { req -> HTTPStatus in
+        remoteApp.get("status", ":status") { req in
             let status = try req.parameters.require("status", as: Int.self)
-            return HTTPStatus(code: status)
+            return HTTPResponse.Status(code: status)
         }
 
         remoteApp.post("anything") { req -> AnythingResponse in
@@ -148,9 +161,7 @@ struct ClientTests {
                 $0[$1.name.canonicalName] = $1.value
             }
 
-            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
-                throw Abort(.badRequest)
-            }
+            let json = try JSONDecoder().decode([String: String].self, from: req.body.data!)
 
             let jsonResponse = json.mapValues {
                 return "\($0)"

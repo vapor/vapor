@@ -1,5 +1,5 @@
-import RoutingKit
-import HTTPTypes
+public import RoutingKit
+public import HTTPTypes
 import NIOPosix
 import NIOCore
 
@@ -32,81 +32,91 @@ extension RoutesBuilder {
     @discardableResult
     public func get(
         _ path: PathComponent...,
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.get, path, use: closure)
+        self.on(.get, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
     public func get(
         _ path: [PathComponent],
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.get, path, use: closure)
+        self.on(.get, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
     public func post(
         _ path: PathComponent...,
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.post, path, use: closure)
+        self.on(.post, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
     public func post(
         _ path: [PathComponent],
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.post, path, use: closure)
+        self.on(.post, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
     public func patch(
         _ path: PathComponent...,
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.patch, path, use: closure)
+        self.on(.patch, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
     public func patch(
         _ path: [PathComponent],
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.patch, path, use: closure)
+        self.on(.patch, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
     public func put(
         _ path: PathComponent...,
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.put, path, use: closure)
+        self.on(.put, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
     public func put(
         _ path: [PathComponent],
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.put, path, use: closure)
+        self.on(.put, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
     public func delete(
         _ path: PathComponent...,
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.delete, path, use: closure)
+        self.on(.delete, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
     public func delete(
         _ path: [PathComponent],
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(.delete, path, use: closure)
+        self.on(.delete, path, routeDescription: routeDescription, use: closure)
     }
 
     @discardableResult
@@ -154,9 +164,10 @@ extension RoutesBuilder {
         _ method: HTTPRequest.Method,
         _ path: PathComponent...,
         body: HTTPBodyStreamStrategy = .collect,
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(method, path, body: body, use: { request in
+        self.on(method, path, body: body, routeDescription: routeDescription, use: { request in
             try await closure(request)
         })
     }
@@ -166,6 +177,7 @@ extension RoutesBuilder {
         _ method: HTTPRequest.Method,
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
+        routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         let responder = BasicResponder { request in
@@ -182,7 +194,8 @@ extension RoutesBuilder {
             path: path,
             responder: responder,
             requestType: Request.self,
-            responseType: Response.self
+            responseType: Response.self,
+            routeDescription: routeDescription
         )
         self.add(route)
         return route

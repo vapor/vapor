@@ -1,8 +1,13 @@
-import SwiftSyntax
-import SwiftSyntaxMacros
+public import SwiftSyntax
+public import SwiftSyntaxMacros
 import SwiftSyntaxBuilder
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import HTTPTypes
+import Algorithms
 
 enum FreestandingRouteMacro {
     public static func expansion(
@@ -20,7 +25,7 @@ enum FreestandingRouteMacro {
 
         for argument in arguments {
             if argument.label?.text == "on" {
-                routeRegistrationVariable = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                routeRegistrationVariable = String(argument.expression.description.trimming(while: \.isWhitespace))
                 continue
             }
             // Skip the first non-on: argument for custom HTTP methods (that's the HTTP method itself)
@@ -46,16 +51,16 @@ enum FreestandingRouteMacro {
         var pathComponents: [String] = []
 
         for arg in pathArguments {
-            let exprStr = arg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+            let exprStr = arg.expression.description.trimming(while: \.isWhitespace)
 
             if exprStr.hasSuffix(".self") {
-                let typeName = exprStr.replacingOccurrences(of: ".self", with: "")
-                parameterTypes.append(typeName)
+                let typeName = exprStr.replacing(".self", with: "")
+                parameterTypes.append(String(typeName))
                 pathComponents.append(":\(typeName.lowercased())\(currentDynamicPathParameterIndex)")
                 currentDynamicPathParameterIndex += 1
             } else {
-                let cleaned = exprStr.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-                pathComponents.append(cleaned)
+                let cleaned = exprStr.trimming(while: { $0 == "\"" })
+                pathComponents.append(String(cleaned))
             }
         }
 
@@ -95,14 +100,12 @@ enum FreestandingRouteMacro {
         // Determine if the closure is async
         let isAsync = trailingClosure.signature?.effectSpecifiers?.asyncSpecifier != nil
 
-        // Generate a unique name for the handler binding
-        let uniqueName = context.makeUniqueName("_handler")
-
         let registration: DeclSyntax
 
+        // The registered `Route` is unused, so bind it to `_` to avoid an unused value warning
         if parameterTypes.isEmpty {
             registration = """
-            let \(uniqueName) = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
+            let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
                 let _closure = \(trailingClosure)
                 let result: some ResponseEncodable = try \(raw: isAsync ? "await " : "")_closure(req)
                 return try await result.encodeResponse(for: req)
@@ -110,7 +113,7 @@ enum FreestandingRouteMacro {
             """
         } else {
             registration = """
-            let \(uniqueName) = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
+            let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
                 \(raw: parameterExtraction)let _closure = \(trailingClosure)
                 let result: some ResponseEncodable = try \(raw: isAsync ? "await " : "")_closure(req\(raw: callParameters))
                 return try await result.encodeResponse(for: req)
@@ -179,14 +182,14 @@ public struct FreestandingHTTPMethodMacro: DeclarationMacro {
             throw MacroError.missingArguments("Route")
         }
 
-        let methodText = firstArg.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        let methodText = firstArg.expression.description.trimming(while: \.isWhitespace)
         guard let memberAccess = firstArg.expression.as(MemberAccessExprSyntax.self) else {
-            throw MacroError.invalidHTTPMethod(methodText)
+            throw MacroError.invalidHTTPMethod(String(methodText))
         }
         let baseName = memberAccess.declName.baseName.text
         let methodName = baseName.prefix(1).uppercased() + baseName.dropFirst()
         guard let method = HTTPRequest.Method(rawValue: methodName) else {
-            throw MacroError.invalidHTTPMethod(methodText)
+            throw MacroError.invalidHTTPMethod(String(methodText))
         }
 
         return try FreestandingRouteMacro.expansion(of: node, in: context, for: method, customHTTPMethod: true)

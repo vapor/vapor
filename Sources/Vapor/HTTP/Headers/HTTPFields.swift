@@ -1,4 +1,4 @@
-import HTTPTypes
+public import HTTPTypes
 
 extension HTTPFields {
     /// `MediaType` specified by this message's `"Content-Type"` header.

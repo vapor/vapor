@@ -1,20 +1,31 @@
 import AsyncHTTPClient
-import Vapor
+public import Vapor
 import NIOPosix
 import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTPTypesHTTP1
 import Logging
 import NIOHTTP1
 import HTTPTypes
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension Application {
     public enum Method {
         case inMemory
+        /// Runs the app on an ephemeral port.
+        ///
+        /// Bound by IP rather than by name: `localhost` resolves to `::1` before `127.0.0.1`, so a
+        /// name here makes every test that uses it depend on the host's IPv6 loopback. Use
+        /// ``running(hostname:port:)`` to bind something else.
         public static var running: Method {
-            return .running(hostname:"localhost", port: 0)
+            return .running(hostname: "127.0.0.1", port: 0)
         }
         public static func running(port: Int) -> Self {
-            .running(hostname: "localhost", port: port)
+            .running(hostname: "127.0.0.1", port: port)
         }
         case running(hostname: String, port: Int)
     }
@@ -24,7 +35,7 @@ extension Application {
         let port: Int
         let hostname: String
 
-        package init(app: Application, hostname: String = "localhost", port: Int) throws {
+        package init(app: Application, hostname: String = "127.0.0.1", port: Int) throws {
             self.app = app
             self.hostname = hostname
             self.port = port
@@ -45,7 +56,7 @@ extension Application {
             do {
                 var path = request.url.path
                 path = path.hasPrefix("/") ? path : "/\(path)"
-                #warning("This needs tidying up")
+#warning("This needs tidying up")
                 let portToUse = request.url.port ?? self.port
                 let hostnameToUse = request.url.host ?? self.hostname
                 var url = "http://\(hostnameToUse):\(portToUse)\(path)"
@@ -59,10 +70,11 @@ extension Application {
                 let response = try await client.execute(clientRequest, timeout: .seconds(30))
                 // Collect up to 1MB
                 let responseBody = try await response.body.collect(upTo: 1024 * 1024)
+                let responseBodyData = responseBody.getData(at: 0, length: responseBody.readableBytes) ?? Data()
                 return TestingHTTPResponse(
                     status: .init(code: Int(response.status.code)),
                     headers: .init(response.headers, splitCookie: false),
-                    body: responseBody,
+                    body: responseBodyData,
                     contentConfiguration: self.app.contentConfiguration
                 )
             } catch {
@@ -103,73 +115,14 @@ extension Application {
             case .default:
                 responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve())
             }
-            let res = try await responder.respond(to: request)
-            return try await TestingHTTPResponse(
+            var res = try await responder.respond(to: request)
+            let body = try await res.body.collect() ?? Data()
+            return TestingHTTPResponse(
                 status: res.status,
                 headers: res.headers,
-                body: res.body.collect(on: MultiThreadedEventLoopGroup.singleton.any()).get() ?? ByteBufferAllocator().buffer(capacity: 0),
+                body: body,
                 contentConfiguration: self.app.contentConfiguration
             )
-        }
-    }
-}
-
-import NIOConcurrencyHelpers
-
-/// Promise type.
-package final class Promise<Value: Sendable>: Sendable {
-    enum State {
-        case blocked([CheckedContinuation<Value, any Error>])
-        case unblocked(Value)
-        case failed(any Error)
-    }
-
-    let state: NIOLockedValueBox<State>
-
-    package init() {
-        self.state = .init(.blocked([]))
-    }
-
-    /// wait from promise to be completed
-    package func wait() async throws -> Value {
-        try await withCheckedThrowingContinuation { cont in
-            self.state.withLockedValue { state in
-                switch state {
-                case .blocked(var continuations):
-                    continuations.append(cont)
-                    state = .blocked(continuations)
-                case .unblocked(let value):
-                    cont.resume(returning: value)
-                case .failed(let error):
-                    cont.resume(throwing: error)
-                }
-            }
-        }
-    }
-
-    /// complete promise with value
-    package func complete(_ value: Value) {
-        self.state.withLockedValue { state in
-            switch state {
-            case .blocked(let continuations):
-                for cont in continuations {
-                    cont.resume(returning: value)
-                }
-                state = .unblocked(value)
-            default: break
-            }
-        }
-    }
-
-    package func fail(_ error: any Error) {
-        self.state.withLockedValue { state in
-            switch state {
-            case .blocked(let continuations):
-                for cont in continuations {
-                    cont.resume(throwing: error)
-                }
-            default: break
-            }
         }
     }
 }

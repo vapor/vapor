@@ -1,4 +1,5 @@
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers
 import HTTPTypes

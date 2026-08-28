@@ -4,7 +4,11 @@ import VaporTesting
 import Vapor
 import HTTPTypes
 import RoutingKit
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @Suite("Route Tests")
 struct RouteTests {
@@ -219,7 +223,7 @@ struct RouteTests {
 
             try await app.testing().test(.post, "/users") { res in
                 #expect(res.status == .unprocessableContent)
-                #expect(res.body.string.replacingOccurrences(of: "\\", with: "").contains("Missing \"Content-Type\" header"))
+                #expect(res.body.string.replacing("\\", with: "").contains("Missing \"Content-Type\" header"))
             }
 
             try await app.testing().test(.post, "/users", headers: [.contentType: "application/json"]) { res in
@@ -265,7 +269,7 @@ struct RouteTests {
             try await app.testing(method: .running).test(.head, "/hello") { res in
                 #expect(res.status == .ok)
                 #expect(res.headers[.contentLength] == "2")
-                #expect(res.body.readableBytes == 0)
+                #expect(res.body.count == 0)
             }
         }
     }
@@ -284,7 +288,7 @@ struct RouteTests {
             try await app.testing(method: .running).test(.head, "/hello") { res in
                 #expect(res.status == .found)
                 #expect(res.headers[.contentLength] == "0")
-                #expect(res.body.readableBytes == 0)
+                #expect(res.body.count == 0)
             }
         }
     }
@@ -318,7 +322,7 @@ struct RouteTests {
 
             try await app.testing(method: .running).test(.get, "/no-content") { res in
                 #expect(res.status.code == 204)
-                #expect(res.body.readableBytes == 0)
+                #expect(res.body.count == 0)
             }
         }
     }
@@ -385,16 +389,16 @@ struct RouteTests {
             #expect(app.routes.defaultMaxBodySize == 1)
 
             app.on(.post, "default") { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
             app.on(.post, "1kb", body: .collect(maxSize: "1kb")) { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
             app.on(.post, "1mb", body: .collect(maxSize: "1mb")) { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
             app.on(.post, "1gb", body: .collect(maxSize: "1gb")) { request in
-                HTTPStatus.ok
+                HTTPResponse.Status.ok
             }
 
             var buffer = ByteBufferAllocator().buffer(capacity: 0)
@@ -420,23 +424,23 @@ struct RouteTests {
     #if WebSockets
     @Test("Test Websocket Upgrade", .disabled())
     func testWebsocketUpgrade() async throws {
-        try await withApp { app in
-            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
-            let testMarkerHeaderValue = "addedInShouldUpgrade"
-
-            app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
-                [testMarkerHeaderKey: testMarkerHeaderValue]
-            }, onUpgrade: { _, _ in })
-
-            try await app.testing(method: .running).test(.get, "customshouldupgrade", beforeRequest: { req async in
-                req.headers[.secWebSocketVersion] = "13"
-                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
-                req.headers[.connection] = "Upgrade"
-                req.headers[.upgrade] = "websocket"
-            }) { res in
-                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
-            }
-        }
+//        try await withApp { app in
+//            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
+//            let testMarkerHeaderValue = "addedInShouldUpgrade"
+//
+//            app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
+//                [testMarkerHeaderKey: testMarkerHeaderValue]
+//            }, onUpgrade: { _, _ in })
+//
+//            try await app.testing(method: .running).test(.get, "customshouldupgrade", beforeRequest: { req async in
+//                req.headers[.secWebSocketVersion] = "13"
+//                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
+//                req.headers[.connection] = "Upgrade"
+//                req.headers[.upgrade] = "websocket"
+//            }) { res in
+//                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
+//            }
+//        }
     }
     #endif
 

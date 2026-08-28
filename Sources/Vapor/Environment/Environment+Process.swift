@@ -1,18 +1,37 @@
+#if canImport(Darwin)
+import Darwin
+#elseif os(Windows)
+import CRT
+#elseif canImport(Glibc)
+@preconcurrency import Glibc
+#elseif canImport(Android)
+@preconcurrency import Android
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(WASILibc)
+import WASILibc
+#else
+#error("Unsupported runtime")
+#endif
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
-extension Environment {    
+extension Environment {
     /// The process information of an environment. Wraps `ProcessInto.processInfo`.
     @dynamicMemberLookup public struct Process {
         /// The process information of the environment.
         private let _info: ProcessInfo
-        
+
         /// Creates a new `Process` wrapper for process information.
         ///
         /// - parameter info: The process info that the wrapper accesses. Defaults to `ProcessInto.processInfo`.
         internal init(info: ProcessInfo = .processInfo) {
             self._info = info
         }
-        
+
         /// Gets a variable's value from the process' environment, and converts it to generic type `T`.
         ///
         ///     Environment.process.DATABASE_PORT = 3306
@@ -24,13 +43,13 @@ extension Environment {
 
             nonmutating set (value) {
                 if let raw = value?.description {
-                    setenv(member, raw, 1)
+                    unsafe setenv(member, raw, 1)
                 } else {
-                    unsetenv(member)
+                    unsafe unsetenv(member)
                 }
             }
         }
-        
+
         /// Gets a variable's value from the process' environment as a `String`.
         ///
         ///     Environment.process.DATABASE_USER = "root"
@@ -42,9 +61,9 @@ extension Environment {
 
             nonmutating set (value) {
                 if let raw = value {
-                    setenv(member, raw, 1)
+                    unsafe setenv(member, raw, 1)
                 } else {
-                    unsetenv(member)
+                    unsafe unsetenv(member)
                 }
             }
         }

@@ -16,7 +16,7 @@ extension Application {
     /// The path will be displayed with the same syntax that is used to register a route.
     public func routesASCIITable() -> String {
         let routes = self.routes
-        let includeDescription = !routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
+        let includeDescription = !routes.all.filter { $0.routeDescription != nil }.isEmpty
         let pathSeparator = "/"
         return String.asciiTable(routes.all.map { route -> [String] in
             var column = [route.method.rawValue]
@@ -29,8 +29,7 @@ extension Application {
                 )
             }
             if includeDescription {
-                let desc = route.userInfo["description"]
-                    .flatMap { $0 as? String }
+                let desc = route.routeDescription
                     .flatMap { $0 } ?? ""
                 column.append(desc)
             }

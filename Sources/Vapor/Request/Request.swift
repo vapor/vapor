@@ -1,13 +1,19 @@
-import Foundation
-import NIOCore
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
+#warning("Make this internal")
+public import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import Logging
-import RoutingKit
+public import RoutingKit
 import NIOConcurrencyHelpers
-import HTTPTypes
+public import HTTPTypes
 import NIOPosix
 import ServiceContextModule
-import X509
+public import X509
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {
@@ -21,19 +27,19 @@ public final class Request: CustomStringConvertible, Sendable {
         get { self.requestBox.withLockedValue { $0.method } }
         set { self.requestBox.withLockedValue { $0.method = newValue } }
     }
-    
+
     /// The URL used on this request.
     public var url: URI {
         get { self.requestBox.withLockedValue { $0.url } }
         set { self.requestBox.withLockedValue { $0.url = newValue } }
     }
-    
+
     /// The version for this HTTP request.
     public var version: HTTPVersion {
         get { self.requestBox.withLockedValue { $0.version } }
         set { self.requestBox.withLockedValue { $0.version = newValue } }
     }
-    
+
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
@@ -41,15 +47,15 @@ public final class Request: CustomStringConvertible, Sendable {
         get { self.requestBox.withLockedValue { $0.headers } }
         set { self.requestBox.withLockedValue { $0.headers = newValue } }
     }
-    
+
     /// A unique ID for the request.
     ///
     /// The request identifier is set to value of the `X-Request-Id` header when present, or to a
     /// uniquely generated value otherwise.
     public let id: String
-    
+
     // MARK: Metadata
-    
+
     /// Route object we found for this request.
     /// This holds metadata that can be used for (for example) Metrics.
     ///
@@ -100,7 +106,7 @@ public final class Request: CustomStringConvertible, Sendable {
             try encoder.encode(encodable, to: &self.request.url)
         }
     }
-    
+
     public var query: any URLQueryContainer {
         get { _URLQueryContainer(request: self, contentConfiguration: self.application.contentConfiguration) }
         set { } // ignore since Request is a reference type
@@ -118,29 +124,33 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
-            var body = self.request.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(encodable, to: &body, headers: &self.request.headers)
-            self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
+            var body = Data()
+            try encoder.encode(encodable, to: &body, headers: &self.request.headers, userInfo: [:])
+            let byteBuffer = ByteBuffer(data: body)
+            self.request.bodyStorage.withLockedValue { $0 = .collected(byteBuffer) }
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
             if let stream = self.request.streamBodyStorage.withLockedValue({ $0 }) {
                 let buffer = try await self.request.collectStream(stream, maxSize: request.application.routes.defaultMaxBodySize.value)
-                return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
+                let bufferData = buffer.getData(at: 0, length: buffer.readableBytes) ?? Data()
+                return try decoder.decode(D.self, from: bufferData, headers: self.request.headers, userInfo: [:])
             }
             guard let body = self.request.body.data else {
                 Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
-            return try decoder.decode(D.self, from: body, headers: self.request.headers)
+            let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+            return try decoder.decode(D.self, from: bodyData, headers: self.request.headers, userInfo: [:])
         }
 
         func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
-            var body = self.request.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(content, to: &body, headers: &self.request.headers)
-            self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
+            var body = Data()
+            try encoder.encode(content, to: &body, headers: &self.request.headers, userInfo: [:])
+            let byteBuffer = ByteBuffer(data: body)
+            self.request.bodyStorage.withLockedValue { $0 = .collected(byteBuffer) }
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
@@ -148,7 +158,8 @@ public final class Request: CustomStringConvertible, Sendable {
                 Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
+            let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+            var decoded = try decoder.decode(C.self, from: bodyData, headers: self.request.headers, userInfo: [:])
             try decoded.afterDecode()
             return decoded
         }
@@ -160,7 +171,7 @@ public final class Request: CustomStringConvertible, Sendable {
         get { _ContentContainer(request: self) }
         set { } // ignore since Request is a reference type
     }
-    
+
     public var body: Body {
         Body(self)
     }
@@ -174,14 +185,14 @@ public final class Request: CustomStringConvertible, Sendable {
         case collected(ByteBuffer)
         case stream(BodyStream)
     }
-        
+
     /// Get and set `HTTPCookies` for this `Request`
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
         get { self.headers.cookie ?? .init() }
         set { self.headers.cookie = newValue }
     }
-    
+
     // See `CustomStringConvertible.description`
     public var description: String {
         var desc: [String] = []
@@ -194,13 +205,16 @@ public final class Request: CustomStringConvertible, Sendable {
     /// The address from which this HTTP request was received by SwiftNIO.
     /// This address may not represent the original address of the peer, especially if Vapor receives its requests through a reverse-proxy such as nginx.
     public let remoteAddress: SocketAddress?
-    
+
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters {
         get { self.requestBox.withLockedValue { $0.parameters } }
         set { self.requestBox.withLockedValue { $0.parameters = newValue } }
     }
+
+    /// Authentication storage for the request
+    public let auth: Authentication
 
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage {
@@ -212,7 +226,7 @@ public final class Request: CustomStringConvertible, Sendable {
         get { self.requestBox.withLockedValue { $0.byteBufferAllocator } }
         set { self.requestBox.withLockedValue { $0.byteBufferAllocator = newValue } }
     }
-    
+
     struct RequestBox: Sendable {
         var method: HTTPRequest.Method
         var url: URI
@@ -224,13 +238,13 @@ public final class Request: CustomStringConvertible, Sendable {
         var peerCertificateChain: ValidatedCertificateChain?
         var byteBufferAllocator: ByteBufferAllocator
     }
-    
+
     let requestBox: NIOLockedValueBox<RequestBox>
+
     private let _storage: NIOLockedValueBox<Storage>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
 
-    #warning("Sort out all these initialisers")
     public convenience init(
         application: Application,
         method: HTTPRequest.Method = .get,
@@ -239,34 +253,9 @@ public final class Request: CustomStringConvertible, Sendable {
         headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        peerCertificateChain: ValidatedCertificateChain? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-    ) {
-        self.init(
-            application: application,
-            method: method,
-            url: url,
-            version: version,
-            headersNoUpdate: headers,
-            collectedBody: collectedBody,
-            remoteAddress: remoteAddress,
-            peerCertificateChain: nil,
-            byteBufferAllocator: byteBufferAllocator
-        )
-        if let body = collectedBody {
-            self.headers.updateContentLength(body.readableBytes)
-        }
-    }
-
-    public convenience init(
-        application: Application,
-        method: HTTPRequest.Method = .get,
-        url: URI = "/",
-        version: HTTPVersion = .init(major: 1, minor: 1),
-        headers: HTTPFields = .init(),
-        collectedBody: ByteBuffer? = nil,
-        remoteAddress: SocketAddress? = nil,
-        peerCertificateChain: ValidatedCertificateChain?,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        requestID: String = UUID().uuidString
     ) {
         self.init(
             application: application,
@@ -277,15 +266,15 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: peerCertificateChain,
-            byteBufferAllocator: byteBufferAllocator
+            byteBufferAllocator: byteBufferAllocator,
+            requestID: requestID
         )
         if let body = collectedBody {
             self.headers.updateContentLength(body.readableBytes)
         }
     }
 
-    @_disfavoredOverload
-    public convenience init(
+    package init(
         application: Application,
         method: HTTPRequest.Method,
         url: URI,
@@ -293,30 +282,7 @@ public final class Request: CustomStringConvertible, Sendable {
         headersNoUpdate headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
-    ) {
-        self.init(
-            application: application,
-            method: method,
-            url: url,
-            version: version,
-            headersNoUpdate: headers,
-            collectedBody: collectedBody,
-            remoteAddress: remoteAddress,
-            peerCertificateChain: nil,
-            byteBufferAllocator: byteBufferAllocator
-        )
-    }
-
-    public init(
-        application: Application,
-        method: HTTPRequest.Method,
-        url: URI,
-        version: HTTPVersion = .init(major: 1, minor: 1),
-        headersNoUpdate headers: HTTPFields = .init(),
-        collectedBody: ByteBuffer? = nil,
-        remoteAddress: SocketAddress? = nil,
-        peerCertificateChain: ValidatedCertificateChain?,
+        peerCertificateChain: ValidatedCertificateChain? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         requestID: String = UUID().uuidString
     ) {
@@ -341,11 +307,12 @@ public final class Request: CustomStringConvertible, Sendable {
         self.requestBox = .init(storageBox)
         self.id = requestID
         self.application = application
-        
+
         self.remoteAddress = remoteAddress
         self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
         self.streamBodyStorage = .init(nil)
+        self.auth = Authentication()
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {

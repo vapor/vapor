@@ -1,7 +1,8 @@
-import NIOCore
-import Testing
-import Vapor
-import HTTPTypes
+#warning("This should be internal")
+public import NIOCore
+public import Testing
+public import Vapor
+public import HTTPTypes
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
@@ -80,7 +81,7 @@ extension TestingApplicationTester {
     public func sendRequest(
         _ method: HTTPRequest.Method,
         _ path: String,
-        hostname: String = "localhost",
+        hostname: String = "127.0.0.1",
         port: Int? = nil,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,

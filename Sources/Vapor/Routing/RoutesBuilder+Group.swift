@@ -1,4 +1,4 @@
-import RoutingKit
+public import RoutingKit
 
 extension RoutesBuilder {
     // MARK: Path
@@ -82,6 +82,7 @@ private final class HTTPRoutesGroup: RoutesBuilder {
     
     // See `RoutesBuilder.add(_:)`.
     func add(_ route: Route) {
+        var route = route
         route.path = self.path + route.path
         self.root.add(route)
     }

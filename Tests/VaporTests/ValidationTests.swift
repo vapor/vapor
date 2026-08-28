@@ -1,7 +1,11 @@
 import Vapor
 import NIOCore
 import Testing
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import VaporTesting
 import HTTPTypes
 import RoutingKit
@@ -529,6 +533,21 @@ struct ValidationTests {
         expect([1, 2], passes: !.empty)
     }
 
+    @Test("Test Nil")
+    func testNil() {
+        expect(nil as String?, passes: .nil)
+        expect("vapor" as String?, fails: .nil, "is not null")
+        expect("vapor" as String?, passes: !.nil)
+        expect(nil as String?, fails: !.nil, "is null")
+        expect(nil as Int?, passes: .nil)
+        expect(nil as Int?, fails: !.nil, "is null")
+        expect(0 as Int?, fails: .nil, "is not null")
+        expect([] as [String]?, fails: .nil, "is not null")
+        // only the outer optional counts, so `.some(nil)` is not null
+        expect(nil as String??, passes: .nil)
+        expect(Optional<String?>.some(nil), fails: .nil, "is not null")
+    }
+
     @Test("Test Email")
     func testEmail() {
         expect("tanner@vapor.codes", passes: .email)
@@ -738,7 +757,7 @@ struct ValidationTests {
                                 return "\(failure.key) \(reason)"
                             }
                             // Create the 400 response and encode the custom error content.
-                            let response = Response(status: .badRequest)
+                            var response = Response(status: .badRequest)
                             try response.content.encode(ErrorResponse(errors: errorMessages))
                             return response
                         } else {
@@ -751,7 +770,7 @@ struct ValidationTests {
             }
             app.middleware.use(ValidationErrorMiddleware())
 
-            app.post("users") { req -> HTTPStatus in
+            app.post("users") { req -> HTTPResponse.Status in
                 try User.validate(content: req)
                 return .ok
             }

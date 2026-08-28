@@ -60,7 +60,7 @@ struct SessionTests {
             app.middleware.use(app.sessions.middleware)
 
             // Adds data to the request session.
-            app.get("set") { req -> HTTPStatus in
+            app.get("set") { req -> HTTPResponse.Status in
                 req.session.data["foo"] = "bar"
                 return .ok
             }

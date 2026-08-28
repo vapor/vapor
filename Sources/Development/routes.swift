@@ -2,7 +2,6 @@ import Foundation
 import Vapor
 import NIOCore
 import HTTPTypes
-import NIOConcurrencyHelpers
 import _NIOFileSystem
 import RoutingKit
 import Logging
@@ -13,7 +12,7 @@ struct Creds: Content {
     var password: String
 }
 
-public func routes(_ app: Application) async throws {
+func routes(_ app: Application) async throws {
     app.on(.get, "ping") { req -> StaticString in
         return "123" as StaticString
     }
@@ -74,9 +73,9 @@ public func routes(_ app: Application) async throws {
         return req.body.data?.readableBytes.description  ?? "none"
     }
 
-    app.get("json") { req -> [String: String] in
+    app.get("json", routeDescription: "Returns Some Test JSON") { req -> [String: String] in
         return ["foo": "bar"]
-    }.description("returns some test json")
+    }
 
     #warning("TODO")
 //    app.webSocket("ws") { req, ws in
@@ -96,6 +95,60 @@ public func routes(_ app: Application) async throws {
             debugPrint(part)
         }
         return "Done"
+    }
+
+    app.get("stream", "chunks") { _ -> Response in
+        Response(body: .init(stream: { writer in
+            for i in 1...5 {
+                try await writer.write("chunk \(i)\n")
+            }
+        }))
+    }
+
+    app.get("stream", "sequence") { _ -> Response in
+        let lines = AsyncStream<String> { continuation in
+            for i in 1...10 {
+                continuation.yield("line \(i)\n")
+            }
+            continuation.finish()
+        }
+        return Response(body: .init(stream: { writer in
+            for await chunk in lines {
+                try await writer.write(chunk)
+            }
+        }))
+    }
+
+    app.get("stream", "firehose") { _ -> Response in
+        Response(body: .init(stream: { writer in
+            let chunk = [UInt8](repeating: 0x41, count: 16 * 1024)
+            for _ in 0..<10_000 {
+                try await writer.write(chunk)
+            }
+        }))
+    }
+
+    // Sleeps between chunks: with `curl` you can see each line arrive ~0.5s apart, which shows
+    // the write suspends and the response is produced lazily rather than buffered up front.
+    app.get("stream", "slow") { _ -> Response in
+        Response(body: .init(stream: { writer in
+            for i in 1...10 {
+                try await writer.write("chunk \(i)\n")
+                try await Task.sleep(for: .milliseconds(500))
+            }
+        }))
+    }
+
+    app.get("stream", "file") { _ -> Response in
+        let path = #filePath
+        let fileSystem = FileSystem.shared
+        return Response(body: .init(stream: { writer in
+            let handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
+            defer { try? await handle.close() }
+            for try await chunk in handle.readChunks(chunkLength: .bytes(64 * 1024)) {
+                try await writer.write(chunk.readableBytesSpan)
+            }
+        }))
     }
 
     // TODO: Implement shutdown route using structured concurrency
@@ -129,7 +182,7 @@ public func routes(_ app: Application) async throws {
 
     let sessions = app.grouped("sessions")
         .grouped(app.sessions.middleware)
-    sessions.get("set", ":value") { req -> HTTPStatus in
+    sessions.get("set", ":value") { req -> HTTPResponse.Status in
         req.session.data["name"] = req.parameters.get("value")
         return .ok
     }
@@ -166,7 +219,6 @@ public func routes(_ app: Application) async throws {
         return req.parameters.get("userID") ?? "no id"
     }
 
-    app.directory.viewsDirectory = "/Users/tanner/Desktop"
     app.get("view") { req in
         try await req.view.render("hello.txt", ["name": "world"])
     }
@@ -182,12 +234,13 @@ public func routes(_ app: Application) async throws {
         return secret
     }
 
-    app.on(.post, "max-256", body: .collect(maxSize: 256)) { req -> HTTPStatus in
+    app.on(.post, "max-256", body: .collect(maxSize: 256)) { req -> HTTPResponse.Status in
         print("in route")
         return .ok
     }
 
-    app.on(.post, "upload", body: .stream) { req -> HTTPStatus in
+    #if !canImport(FoundationEssentials)
+    app.on(.post, "upload", body: .stream) { req -> HTTPResponse.Status in
         return try await FileSystem.shared.withFileHandle(
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
             options: .newFile(replaceExisting: true)) { handle in
@@ -198,6 +251,7 @@ public func routes(_ app: Application) async throws {
                 return .ok
             }
     }
+    #endif
 
     let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in
@@ -241,7 +295,7 @@ public func routes(_ app: Application) async throws {
     }
 
     struct Test: Authenticatable {
-        static func authenticator() -> any Authenticator {
+        static func authenticator() -> any RequestAuthenticator {
             TestAuthenticator()
         }
 

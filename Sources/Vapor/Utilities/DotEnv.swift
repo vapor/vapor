@@ -11,7 +11,11 @@ import Logging
 import NIOCore
 import NIOPosix
 import _NIOFileSystem
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Reads dotenv (`.env`) files and loads them into the current process.
 ///
@@ -64,7 +68,7 @@ public struct DotEnvFile: Sendable {
     ///                  will be overwritten. Defaults to `false`.
     public func load(overwrite: Bool = false) {
         for line in self.lines {
-            setenv(line.key, line.value, overwrite ? 1 : 0)
+            unsafe setenv(line.key, line.value, overwrite ? 1 : 0)
         }
     }
 
@@ -223,8 +227,8 @@ extension DotEnvFile {
             switch (first, last) {
             case ("\"", "\""):
                 // double quoted strings support escaped \n
-                return value.dropFirst().dropLast()
-                    .replacingOccurrences(of: "\\n", with: "\n")
+                return String(value.dropFirst().dropLast())
+                    .replacing("\\n", with: "\n")
             case ("'", "'"):
                 // single quoted strings just need quotes removed
                 return value.dropFirst().dropLast() + ""

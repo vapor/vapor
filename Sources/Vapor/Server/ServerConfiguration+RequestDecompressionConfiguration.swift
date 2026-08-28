@@ -1,6 +1,7 @@
-import NIOHTTPCompression
+#warning("Should this be internal?")
+public import NIOHTTPCompression
 
-extension Application.ServerConfiguration {
+extension ServerConfiguration {
     /// Supported HTTP decompression options.
     public struct RequestDecompressionConfiguration: Sendable {
         /// Disables decompression. This is the default option.

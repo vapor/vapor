@@ -1,15 +1,19 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOConcurrencyHelpers
 import NIOCore
 import Logging
-import HTTPTypes
+public import HTTPTypes
 
 public enum EndpointCacheError: Swift.Error {
-    case unexpectedResponseStatus(HTTPStatus, uri: URI)
+    case unexpectedResponseStatus(HTTPResponse.Status, uri: URI)
     case contentDecodeFailure(any Error)
 
     @available(*, deprecated, renamed: "unexpectedResponseStatus")
-    public static func unexpctedResponseStatus(_ status: HTTPStatus, uri: URI) -> Self {
+    public static func unexpctedResponseStatus(_ status: HTTPResponse.Status, uri: URI) -> Self {
         .unexpectedResponseStatus(status, uri: uri)
     }
 }

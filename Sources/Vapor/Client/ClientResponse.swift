@@ -1,26 +1,32 @@
-import NIOCore
-import HTTPTypes
+#warning("Make this internal")
+public import NIOCore
+import NIOFoundationEssentialsCompat
+public import HTTPTypes
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public struct ClientResponse: Sendable {
-    public var status: HTTPStatus
+    public var status: HTTPResponse.Status
     public var headers: HTTPFields
     public var body: ByteBuffer?
     private let byteBufferAllocator: ByteBufferAllocator
     private let contentConfiguration: ContentConfiguration
 
-    public init(status: HTTPStatus = .ok, headers: HTTPFields = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), contentConfiguration: ContentConfiguration = .default()) {
+    public init(status: HTTPResponse.Status = .ok, headers: HTTPFields = [:], body: ByteBuffer? = nil, contentConfiguration: ContentConfiguration = .default()) {
         self.status = status
         self.headers = headers
         self.body = body
-        self.byteBufferAllocator = byteBufferAllocator
+        self.byteBufferAllocator = ByteBufferAllocator()
         self.contentConfiguration = contentConfiguration
     }
 }
 
 extension ClientResponse {
     private struct _ContentContainer: ContentContainer {
-        var body: ByteBuffer?
+        var body: Data?
         var headers: HTTPFields
         let allocator: ByteBufferAllocator
         let contentConfiguration: ContentConfiguration
@@ -30,8 +36,8 @@ extension ClientResponse {
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
-            var body = self.allocator.buffer(capacity: 0)
-            try encoder.encode(encodable, to: &body, headers: &self.headers)
+            var body = Data()
+            try encoder.encode(encodable, to: &body, headers: &self.headers, userInfo: [:])
             self.body = body
         }
 
@@ -39,14 +45,14 @@ extension ClientResponse {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
-            return try decoder.decode(D.self, from: body, headers: self.headers)
+            return try decoder.decode(D.self, from: body, headers: self.headers, userInfo: [:])
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
-            var body = self.allocator.buffer(capacity: 0)
+            var body = Data()
             var content = content
             try content.beforeEncode()
-            try encoder.encode(content, to: &body, headers: &self.headers)
+            try encoder.encode(content, to: &body, headers: &self.headers, userInfo: [:])
             self.body = body
         }
 
@@ -54,7 +60,7 @@ extension ClientResponse {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.headers)
+            var decoded = try decoder.decode(C.self, from: body, headers: self.headers, userInfo: [:])
             try decoded.afterDecode()
             return decoded
         }
@@ -62,11 +68,11 @@ extension ClientResponse {
 
     public var content: any ContentContainer {
         get {
-            return _ContentContainer(body: self.body, headers: self.headers, allocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+            _ContentContainer(body: body?.getData(at: 0, length: body?.readableBytes ?? 0), headers: self.headers, allocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
         }
         set {
             let container = (newValue as! _ContentContainer)
-            self.body = container.body
+            self.body = ByteBuffer(data: container.body ?? Data())
             self.headers = container.headers
         }
     }
@@ -86,19 +92,12 @@ extension ClientResponse: CustomStringConvertible {
 
 extension ClientResponse: ResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
-        let body: Response.Body
-        if let buffer = self.body {
-            body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
-        } else {
-            body = .empty
-        }
-        let response = Response(
+        Response(
             status: self.status,
             headers: self.headers,
-            body: body,
+            body: .empty,
             contentConfiguration: request.application.contentConfiguration
         )
-        return response
     }
 }
 

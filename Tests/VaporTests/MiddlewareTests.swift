@@ -11,6 +11,7 @@ import RegexBuilder
 import RoutingKit
 import NIOConcurrencyHelpers
 import InMemoryTracing
+import Foundation
 
 @Suite("Middleware Tests")
 struct MiddlewareTests {
@@ -70,6 +71,30 @@ struct MiddlewareTests {
                 #expect(res.headers[values: .vary] == ["origin"])
                 #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
                 #expect(res.headers[values: .accessControlAllowHeaders] == ["origin"])
+            }
+        }
+    }
+
+    @Test("Test CORS Middleware Preflight Returns No Body")
+    func testCORSMiddlewarePreflightReturnsNoBody() async throws {
+        try await withApp { app in
+            // Registered globally rather than on a route group: a preflight is an OPTIONS request
+            // that matches no route, so middleware attached to the group never runs for it.
+            app.middleware.use(
+                CORSMiddleware(configuration: .init(allowedOrigin: .any(["foo"]), allowedMethods: [.get], allowedHeaders: [.origin]))
+            )
+            app.get("order") { req -> String in
+                return "done"
+            }
+
+            // A preflight is answered by the middleware itself rather than the route, so it carries
+            // the CORS headers and no body — the route's "done" must not leak into the response.
+            let headers: HTTPFields = [.origin: "foo", .accessControlRequestMethod: "GET"]
+            try await app.testing().test(.options, "/order", headers: headers) { res in
+                #expect(res.status == .ok)
+                #expect(res.body.count == 0)
+                #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
+                #expect(res.headers[values: .accessControlAllowMethods] == ["GET"])
             }
         }
     }
@@ -158,6 +183,7 @@ struct MiddlewareTests {
         }
     }
 
+    #if !canImport(FoundationEssentials)
     @Test("Test File Middleware From Bundle")
     func testFileMiddlewareFromBundle() async throws {
         try await withApp { app in
@@ -253,6 +279,7 @@ struct MiddlewareTests {
             try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")
         }
     }
+    #endif
     
     @Test("Test Metrics Middleware", .withMetrics(TestMetrics()))
     func testMetricsMiddleware() async throws {
@@ -337,7 +364,7 @@ struct MiddlewareTests {
         }
     }
 
-    @Test("Test Tracing Middleware", .withTracer(InMemoryTracer()), .disabled("Blocked on swift-http-server exposing the client remote/peer address; NIOHTTPServer.ConnectionContext has no remote-address API yet, so the client.address / network.peer.* span attributes are absent"))
+    @Test("Test Tracing Middleware", .withTracer(InMemoryTracer()))
     func testTracingMiddleware() async throws {
         try await withApp { app in
             struct TestServiceContextMiddleware: Middleware {
@@ -379,7 +406,7 @@ struct MiddlewareTests {
                 #expect(span.attributes["network.protocol.name"]?.toSpanAttribute() == "http")
                 let serverAddress = span.attributes["server.address"]?.toSpanAttribute()
                 #expect(serverAddress == "127.0.0.1" || serverAddress == "::1")
-                let port = try #require(app.sharedNewAddress.withLockedValue({ $0 })?.port, "Failed to get port")
+                let port = try #require(app.sharedAddress.withLockedValue({ $0 })?.port, "Failed to get port")
                 #expect(span.attributes["server.port"]?.toSpanAttribute() == port.toSpanAttribute())
                 #expect(span.attributes["url.query"]?.toSpanAttribute() == "foo=bar")
 

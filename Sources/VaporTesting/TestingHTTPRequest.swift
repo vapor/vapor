@@ -1,7 +1,14 @@
-import NIOCore
+#warning("This should be internal")
+public import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOConcurrencyHelpers
-import Vapor
-import HTTPTypes
+public import Vapor
+public import HTTPTypes
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 
 public struct TestingHTTPRequest: Sendable {
     public var method: HTTPRequest.Method
@@ -19,7 +26,7 @@ public struct TestingHTTPRequest: Sendable {
     }
 
     private struct _ContentContainer: ContentContainer {
-        var body: ByteBuffer
+        var body: Data
         var headers: HTTPFields
         let contentConfiguration: ContentConfiguration
 
@@ -28,7 +35,7 @@ public struct TestingHTTPRequest: Sendable {
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
-            try encoder.encode(encodable, to: &self.body, headers: &self.headers)
+            try encoder.encode(encodable, to: &self.body, headers: &self.headers, userInfo: [:])
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
@@ -38,15 +45,15 @@ public struct TestingHTTPRequest: Sendable {
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
-            try encoder.encode(content, to: &self.body, headers: &self.headers)
+            try encoder.encode(content, to: &self.body, headers: &self.headers, userInfo: [:])
         }
     }
 
     public var content: any ContentContainer {
-        get { _ContentContainer(body: self.body, headers: self.headers, contentConfiguration: self.contentConfiguration) }
+        get { _ContentContainer(body: self.body.getData(at: 0, length: self.body.readableBytes) ?? Data(), headers: self.headers, contentConfiguration: self.contentConfiguration) }
         set {
             let content = (newValue as! _ContentContainer)
-            self.body = content.body
+            self.body = ByteBuffer(data: content.body)
             self.headers = content.headers
         }
     }

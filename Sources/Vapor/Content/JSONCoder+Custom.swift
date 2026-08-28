@@ -1,4 +1,8 @@
-import Foundation
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 
 extension JSONEncoder {
     /// Convenience for creating a customized ``Foundation/JSONEncoder``.

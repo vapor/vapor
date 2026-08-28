@@ -2,8 +2,11 @@
 ///
 /// These APIs are `internal` rather than `public` on purpose - specifically due to the high risk of name collisions
 /// in the extensions and the extreme awkwardness of vendor prefixing for this use case.
-
+#if canImport(FoundationEssentials)
+import struct FoundationEssentials.Data
+#else
 import struct Foundation.Data
+#endif
 
 extension BaseNEncoding {
     /// Specialization of ``encode(_:base:pad:using:)`` for Base64.

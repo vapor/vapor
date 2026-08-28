@@ -3,7 +3,7 @@ import NIOConcurrencyHelpers
 import HTTPTypes
 
 extension Request {
-    final class BodyStream: BodyStreamWriter, AsyncBodyStreamWriter {
+    final class BodyStream: BodyStreamWriter {
         let eventLoop: any EventLoop
 
         var isBeingRead: Bool {

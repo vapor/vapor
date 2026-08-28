@@ -1,5 +1,9 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
-import HTTPTypes
+#endif
+public import HTTPTypes
 
 /// A basic username and password.
 public struct BasicAuthorization: Sendable {

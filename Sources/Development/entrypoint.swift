@@ -11,7 +11,7 @@ struct Entrypoint {
                 EnvironmentVariablesProvider(),
             ]
         )
-        ConsoleLogger.bootstrap(config: config)
+        ConsoleLogger.bootstrapWithConfigReader(config: config)
         var logger = Logger(label: "codes.vapor.app")
         logger.logLevel = .debug
         return try await withLogger(logger) { _ in
