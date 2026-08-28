@@ -256,18 +256,18 @@ func routes(_ app: Application) async throws {
     let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in
         let response = try await req.application.client.get("https://www.google.com")
-        guard let body = response.body else {
+        guard let bodyString = response.body.string else {
             throw Abort(.internalServerError)
         }
-        return String(buffer: body)
+        return bodyString
     }
 
     asyncRoutes.get("client2") { req -> String in
         let response = try await req.application.client.get("https://www.google.com")
-        guard let body = response.body else {
+        guard let bodyString = response.body.string else {
             throw Abort(.internalServerError)
         }
-        return String(buffer: body)
+        return bodyString
     }
 
     asyncRoutes.get("content") { req in
