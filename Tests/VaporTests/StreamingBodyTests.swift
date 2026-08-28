@@ -380,6 +380,11 @@ struct StreamingBodyTests {
                 // the server sees a reader that keeps consuming and is never backpressured — which
                 // is exactly how this test failed in CI, reporting 2048/2048 produced.
                 let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                    // A small receive buffer keeps the advertised window — and so the total the
+                    // kernel can absorb — well under the body size on any host. Socket buffers
+                    // autotune, and CI hosts tune their ceilings differently, so without this the
+                    // test is really asserting "32 MiB doesn't fit in this machine's buffers".
+                    .channelOption(.socketOption(.so_rcvbuf), value: 16 * 1024)
                     .connect(host: "127.0.0.1", port: port) { channel in
                         channel.eventLoop.makeCompletedFuture {
                             try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
@@ -391,12 +396,23 @@ struct StreamingBodyTests {
                         string: "GET /firehose HTTP/1.1\r\nHost: localhost\r\n\r\n"))
 
                     // Nothing reads the socket, so the kernel receive buffer fills, then the send
-                    // side, and the producer's `write` must suspend well short of the last chunk.
+                    // side, and the producer's `write` must suspend. Sampling twice asserts it is
+                    // *stalled* rather than merely unfinished: a single count below the total can
+                    // just mean a slow producer, which would pass on a loaded machine whether or
+                    // not backpressure works at all.
+                    try await Task.sleep(for: .milliseconds(500))
+                    let firstSample = produced.withLockedValue { $0 }
                     try await Task.sleep(for: .milliseconds(500))
                     let stalledAt = produced.withLockedValue { $0 }
                     #expect(
                         stalledAt < totalChunks,
                         "producer was not backpressured (produced \(stalledAt)/\(totalChunks))")
+                    #expect(
+                        stalledAt == firstSample,
+                        """
+                        producer kept writing while the client read nothing \
+                        (\(firstSample) → \(stalledAt) of \(totalChunks))
+                        """)
 
                     // Draining lets it resume and run to completion.
                     var received = 0
