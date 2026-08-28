@@ -93,7 +93,7 @@ struct ClientTests {
 
                 try await withRunningApp(app: app) { port in
                     let res = try await app.client.get("http://127.0.0.1:\(port)/foo")
-                    #expect(res.body.string == "bar")
+                    #expect(try await res.body.string() == "bar")
                 }
             }
         }

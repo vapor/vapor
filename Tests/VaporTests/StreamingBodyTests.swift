@@ -764,6 +764,53 @@ struct StreamingBodyTests {
         }
     }
 
+    @Test("data(max:) and string(max:) collect a stream without needing a var")
+    func testCollectingAccessorsWorkOnALet() async throws {
+        let runs = NIOLockedValueBox(0)
+        let (chunks, continuation) = AsyncStream<String>.makeStream()
+        continuation.yield("hello ")
+        continuation.yield("world")
+        continuation.finish()
+
+        // `let`, deliberately: the plain properties cannot collect, so these have to.
+        let body = Response.Body(stream: { writer in
+            runs.withLockedValue { $0 += 1 }
+            for await chunk in chunks { try await writer.write(chunk) }
+        })
+
+        #expect(body.string == nil)
+        #expect(body.data == nil)
+        #expect(body.count == -1)
+
+        #expect(try await body.string() == "hello world")
+
+        // Collecting through the accessor's copy still fills the shared cache, so the plain
+        // properties answer afterwards and the stream is never run a second time.
+        #expect(body.string == "hello world")
+        #expect(body.data.map { String(decoding: $0, as: UTF8.self) } == "hello world")
+        #expect(body.count == 11)
+        #expect(try await body.data().map { String(decoding: $0, as: UTF8.self) } == "hello world")
+        #expect(runs.withLockedValue { $0 } == 1)
+    }
+
+    @Test("The collecting accessors honour their limit")
+    func testCollectingAccessorsHonourMax() async throws {
+        let body = Response.Body(stream: { writer in
+            try await writer.write(String(repeating: "x", count: 1000))
+        })
+        await #expect(throws: Abort.self) { try await body.string(max: 256) }
+        await #expect(throws: Abort.self) { try await body.data(max: 256) }
+    }
+
+    @Test("The collecting accessors pass a buffered body straight through")
+    func testCollectingAccessorsOnBufferedBodies() async throws {
+        #expect(try await Response.Body(string: "plain").string() == "plain")
+        #expect(try await Response.Body(staticString: "static").string() == "static")
+        #expect(try await Response.Body(data: Data("bytes".utf8)).string() == "bytes")
+        #expect(try await Response.Body.empty.string() == nil)
+        #expect(try await Response.Body.empty.data() == nil)
+    }
+
     @Test("An empty write does not corrupt the stream")
     func testEmptyWrite() async throws {
         var body = Response.Body(stream: { writer in

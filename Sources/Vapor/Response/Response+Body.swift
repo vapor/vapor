@@ -113,6 +113,9 @@ extension Response {
             return accumulator.value
         }
 
+        /// The body decoded as UTF-8, or `nil` if it is empty or is a stream nothing has collected.
+        ///
+        /// Use ``string(max:)`` to collect the body and always return a string
         public var string: String? {
             switch self.storage {
             case .data(let data): return String(decoding: data, as: UTF8.self)
@@ -124,8 +127,9 @@ extension Response {
         }
 
         /// The size of the HTTP body's data.
-        /// `-1` is a chunked stream whose lenght it unknown. If the stream has already been collected, then the correct length
-        /// will be reported
+        /// `-1` is a chunked stream whose length is unknown. If the stream has already been collected,
+        /// then the correct length will be reported - including when another copy of the body collected
+        /// it. Collect one with ``collect(max:)``, ``data(max:)`` or ``string(max:)``.
         public var count: Int {
             switch self.storage {
             case .data(let data): return data.count
@@ -136,7 +140,9 @@ extension Response {
             }
         }
 
-        /// Returns static data if not streaming.
+        /// The body's bytes, or `nil` if it is empty or is a stream nothing has collected.
+        ///
+        /// Use ``data(max:)`` to collect the body and always return ``Foundation/Data``
         public var data: Data? {
             switch self.storage {
             case .data(let data): return data
@@ -145,6 +151,36 @@ extension Response {
             case .none: return nil
             case .stream(let stream): return stream.state.collected
             }
+        }
+
+        /// The body's bytes, collecting a streaming body first if nothing has collected it yet.
+        ///
+        /// The collecting counterpart to ``data``, for where the body may or may not be a stream and
+        /// the bytes are genuinely needed - a client response, say. An already-collected or buffered
+        /// body is returned without re-reading anything.
+        /// 
+        /// - Parameter max: The most bytes to buffer, as ``collect(max:)``. `nil` buffers whatever
+        ///   the body produces.
+        /// - Returns: The body's bytes, or `nil` if the body is empty.
+        /// - Throws: ``Abort`` with `.contentTooLarge` if a streaming body exceeds `max`.
+        public func data(max: Int? = nil) async throws -> Data? {
+            // Collecting through a copy: `collect(max:)` is `mutating`, but the bytes it produces
+            // land in the stream's shared state, so the caller's body sees them regardless.
+            var body = self
+            return try await body.collect(max: max)
+        }
+
+        /// The body decoded as UTF-8, collecting a streaming body first if nothing has collected it yet.
+        ///
+        /// The collecting counterpart to ``string``. See ``data(max:)`` for the semantics; this
+        /// decodes the result, substituting U+FFFD for any invalid UTF-8 rather than failing.
+        ///
+        /// - Parameter max: The most bytes to buffer, as ``collect(max:)``. `nil` buffers whatever
+        ///   the body produces.
+        /// - Returns: The body decoded as UTF-8, or `nil` if the body is empty.
+        /// - Throws: ``Abort`` with `.contentTooLarge` if a streaming body exceeds `max`.
+        public func string(max: Int? = nil) async throws -> String? {
+            try await self.data(max: max).map { String(decoding: $0, as: UTF8.self) }
         }
 
         /// Reads the whole body into memory, running a streaming body to completion.
