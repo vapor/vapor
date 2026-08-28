@@ -15,7 +15,7 @@ public struct ClientResponse: Sendable {
     }
     private let contentConfiguration: ContentConfiguration
 
-    public init(status: HTTPResponse.Status = .ok, headers: HTTPFields = [:], body: Response.Body, contentConfiguration: ContentConfiguration = .default()) {
+    public init(status: HTTPResponse.Status = .ok, headers: HTTPFields = [:], body: Response.Body = .empty, contentConfiguration: ContentConfiguration = .default()) {
         self.status = status
         self.headers = headers
         self.body = body
