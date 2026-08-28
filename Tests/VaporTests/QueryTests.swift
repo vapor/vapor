@@ -232,7 +232,7 @@ struct QueryTests {
 
             try await app.testing().test(.post, "/decode-fail", headers: headers, body: body) { res in
                 #expect(res.status == .badRequest)
-                #expect(res.body.string.contains("missing"))
+                try #expect(await res.body.requireString().contains("missing"))
             }
         }
     }

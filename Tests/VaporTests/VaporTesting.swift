@@ -28,7 +28,7 @@ struct VaporTestingTests {
                 try req.content.encode(FooContent())
             } afterResponse: { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string.contains("decoded!"))
+                try #expect(await res.body.string()?.contains("decoded!") ?? false)
             }
 
             app.routes.post("decode-bad-header") { req async throws -> String in
@@ -54,7 +54,7 @@ struct VaporTestingTests {
                 req.headers.contentType = .audio
             } afterResponse: { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string.contains("decoded!"))
+                try #expect(await res.body.string()?.contains("decoded!") ?? false)
             }
         }
     }
