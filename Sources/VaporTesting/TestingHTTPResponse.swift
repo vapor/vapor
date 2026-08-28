@@ -1,18 +1,13 @@
 public import Vapor
 public import HTTPTypes
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
 
 public struct TestingHTTPResponse: Sendable {
     public var status: HTTPResponse.Status
     public var headers: HTTPFields
-    public var body: Data
+    public var body: Response.Body
     private let contentConfiguration: ContentConfiguration
 
-    package init(status: HTTPResponse.Status, headers: HTTPFields, body: Data, contentConfiguration: ContentConfiguration) {
+    package init(status: HTTPResponse.Status, headers: HTTPFields, body: Response.Body, contentConfiguration: ContentConfiguration) {
         self.status = status
         self.headers = headers
         self.body = body
@@ -22,7 +17,7 @@ public struct TestingHTTPResponse: Sendable {
 
 extension TestingHTTPResponse {
     private struct _ContentContainer: ContentContainer {
-        var body: Data
+        var body: Response.Body
         var headers: HTTPFields
         let contentConfiguration: ContentConfiguration
 
@@ -34,8 +29,12 @@ extension TestingHTTPResponse {
             fatalError("Encoding to test response is not supported")
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
-            try decoder.decode(D.self, from: self.body, headers: self.headers, userInfo: [:])
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
+            var body = self.body
+            guard let data = try await body.collect() else {
+                throw Abort(.lengthRequired)
+            }
+            return try decoder.decode(D.self, from: data, headers: self.headers, userInfo: [:])
         }
     }
 
