@@ -75,6 +75,19 @@ jobs:
       - name: Run tests with traits disabled
         run: swift test --disable-default-traits
 
+  benchmarks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    container: swiftlang/swift:nightly-6.4.x-bookworm
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v7
+      # Just build for now to make sure it actually compiles
+      - name: Build the benchmarks
+        run: swift build --package-path Benchmarks
+
   performance-harness:
     runs-on: ubuntu-latest
     permissions:
