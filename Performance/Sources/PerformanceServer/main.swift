@@ -34,7 +34,7 @@ app.get("bench", "json") { _ in json }
 app.get("bench", "stream") { _ -> Response in
     Response(body: .init(stream: { writer in
         for _ in 0..<16 {
-            try await writer.write(ByteBuffer(string: chunk))
+            try await writer.write(chunk)
         }
     }, count: 16 * 1024))
 }
