@@ -121,7 +121,7 @@ struct QueryTests {
 
             try await app.testing().test(.get, "/todos?a=b") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "hi")
+                try #expect(await res.body.requireString() == "hi")
             }
         }
     }
@@ -202,7 +202,7 @@ struct QueryTests {
             }
 
             try await app.testing().test(.get, "/custom-encode") { res in
-                #expect(res.body.string == """
+                try #expect(await res.body.requireString() == """
             {
               "hello" : "world"
             }

@@ -25,7 +25,7 @@ struct SessionTests {
             }
 
             try await app.testing().test(.get, "/set") { res in
-                #expect(res.body.string == "set")
+                try #expect(await res.body.requireString() == "set")
                 cookie = res.headers.setCookie?["vapor-session"]
                 #expect(cookie != nil)
                 let ops = await cache.ops
@@ -42,7 +42,7 @@ struct SessionTests {
             cookies["vapor-session"] = cookie
             headers.cookie = cookies
             try await app.testing().test(.get, "/del", headers: headers) { res in
-                #expect(res.body.string == "del")
+                try #expect(await res.body.requireString() == "del")
                 let ops = await cache.ops
                 #expect(ops == [
                     #"read SessionID(string: "a")"#,
@@ -98,7 +98,7 @@ struct SessionTests {
                 req.headers.cookie = ["vapor-session": newCookie!]
             }, afterResponse: { res in
                 // Session access should be successful.
-                #expect(res.body.string == "bar")
+                try #expect(await res.body.requireString() == "bar")
                 #expect(res.status == .ok)
             })
         }

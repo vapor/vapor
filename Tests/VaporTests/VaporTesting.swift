@@ -76,7 +76,7 @@ struct VaporTestingTests {
         try await withApp(configure: configure) { app in
             try await app.testing().test(.get, "hello") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Hello, world!")
+                try #expect(await res.body.requireString() == "Hello, world!")
             }
         }
     }

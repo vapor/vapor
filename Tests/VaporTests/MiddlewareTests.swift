@@ -29,7 +29,7 @@ struct MiddlewareTests {
                 let order = await store.getOrder()
                 #expect(res.status == .ok)
                 #expect(order == ["a", "b", "c"])
-                #expect(res.body.string == "done")
+                try #expect(await res.body.requireString() == "done")
             }
         }
     }
@@ -51,7 +51,7 @@ struct MiddlewareTests {
                 let order = await store.getOrder()
                 #expect(res.status == .ok)
                 #expect(order == ["a", "b", "c", "d"])
-                #expect(res.body.string == "done")
+                try #expect(await res.body.requireString() == "done")
             }
         }
     }
@@ -67,7 +67,7 @@ struct MiddlewareTests {
 
             try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "done")
+                try #expect(await res.body.requireString() == "done")
                 #expect(res.headers[values: .vary] == ["origin"])
                 #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
                 #expect(res.headers[values: .accessControlAllowHeaders] == ["origin"])
@@ -110,7 +110,7 @@ struct MiddlewareTests {
 
             try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "done")
+                try #expect(await res.body.requireString() == "done")
                 #expect(res.headers[values: .vary] == ["origin"])
                 #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
                 #expect(res.headers[values: .accessControlAllowHeaders] == ["origin"])
@@ -129,7 +129,7 @@ struct MiddlewareTests {
 
             try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "done")
+                try #expect(await res.body.requireString() == "done")
                 #expect(res.headers[values: .vary] == [])
                 #expect(res.headers[values: .accessControlAllowOrigin] == [])
                 #expect(res.headers[values: .accessControlAllowHeaders] == [""])
@@ -167,7 +167,7 @@ struct MiddlewareTests {
 
             try await app.testing().test(.get, "/order", headers: [.origin: "http://example-123.com"]) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "done")
+                try #expect(await res.body.requireString() == "done")
                 #expect(res.headers[values: .vary] == ["origin"])
                 #expect(res.headers[values: .accessControlAllowOrigin] == ["http://example-123.com"])
                 #expect(res.headers[values: .accessControlAllowHeaders] == [""])
@@ -175,7 +175,7 @@ struct MiddlewareTests {
 
             try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "done")
+                try #expect(await res.body.requireString() == "done")
                 #expect(res.headers[values: .vary] == [])
                 #expect(res.headers[values: .accessControlAllowOrigin] == [])
                 #expect(res.headers[values: .accessControlAllowHeaders] == [""])

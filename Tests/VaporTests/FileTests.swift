@@ -34,7 +34,7 @@ struct FileTests {
             try await app.testing(method: .running).test(.get, "/file-stream") { res async in
                 let test = "the quick brown fox"
                 #expect(res.headers[.eTag] != nil)
-                #expect(res.body.string.contains(test))
+                try #expect(await res.body.requireString().contains(test))
             }
         }
     }
@@ -51,7 +51,7 @@ struct FileTests {
             try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
                 let test = "the quick brown fox"
                 #expect(res.headers[.eTag] != nil)
-                #expect(res.body.string.contains(test))
+                try #expect(await res.body.requireString().contains(test))
             }
         }
     }
@@ -346,7 +346,7 @@ struct FileTests {
 
             try await app.testing().test(.get, "/Utilities/foo%20bar.html") { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Hello</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Hello</h1>\n")
             }
         }
     }
@@ -363,7 +363,7 @@ struct FileTests {
 
             try await app.testing().test(.get, "Utilities/foo.txt") { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "bar\n")
+                try #expect(await res.body.requireString() == "bar\n")
             }
         }
     }
@@ -376,12 +376,12 @@ struct FileTests {
 
             try await app.testing().test(.get, "Utilities/") { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Root Default</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Root Default</h1>\n")
             }
 
             try await app.testing().test(.get, "Utilities/SubUtilities/") { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Subdirectory Default</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Subdirectory Default</h1>\n")
             }
         }
     }
@@ -394,12 +394,12 @@ struct FileTests {
 
             try await app.testing().test(.get, "Utilities/") { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Root Default</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Root Default</h1>\n")
             }
 
             try await app.testing().test(.get, "Utilities/SubUtilities/") { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Root Default</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Root Default</h1>\n")
             }
         }
     }

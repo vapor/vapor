@@ -17,7 +17,7 @@ public import Logging
 ///     try await withApp(configure: configure) { app in
 ///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
 ///             #expect(res.status == .ok)
-///             #expect(res.body.string == "Hello, world!")
+///             try #expect(await res.body.requireString() == "Hello, world!")
 ///         })
 ///     }
 /// }
@@ -71,7 +71,7 @@ public func withApp<T>(
 ///        try await withRunningApp(app: app) { port in
 ///            let res = try await app.client.get("http://localhost:\(port)/hello")
 ///            #expect(res.status == .ok)
-///            #expect(res.body.string == "Hello, world!")
+///            try #expect(await res.body.requireString() == "Hello, world!")
 ///        }
 ///    }
 /// }

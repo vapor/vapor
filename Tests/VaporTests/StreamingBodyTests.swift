@@ -759,7 +759,7 @@ struct StreamingBodyTests {
 
             try await app.testing(method: .running).test(.get, "/proxied") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "hello world")
+                try #expect(await res.body.requireString() == "hello world")
             }
         }
     }

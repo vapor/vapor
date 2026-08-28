@@ -47,13 +47,13 @@ struct AuthenticationTests {
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer test"]) { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
                 #expect(res.headers[.wwwAuthenticate] == nil)
             }
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "bearer test"]) { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }
@@ -94,13 +94,13 @@ struct AuthenticationTests {
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
                 #expect(res.headers[.wwwAuthenticate] == nil)
             }
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }
@@ -219,21 +219,21 @@ struct AuthenticationTests {
             try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer revoked"]) { res async in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="API""#)
-                #expect(res.body.string.contains("Token has been revoked."))
+                try #expect(await res.body.requireString().contains("Token has been revoked."))
             }
 
             // An error carrying its own challenge keeps it verbatim.
             try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer expired"]) { res async in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="API", error="invalid_token""#)
-                #expect(res.body.string.contains("Token has expired."))
+                try #expect(await res.body.requireString().contains("Token has expired."))
             }
 
             // Errors with any other status are left alone.
             try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer forbidden"]) { res async in
                 #expect(res.status == .forbidden)
                 #expect(res.headers[.wwwAuthenticate] == nil)
-                #expect(res.body.string.contains("Insufficient scope."))
+                try #expect(await res.body.requireString().contains("Insufficient scope."))
             }
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer nonsense"]) { res async in
@@ -298,7 +298,7 @@ struct AuthenticationTests {
             try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Vapor", charset="UTF-8""#)
-                #expect(res.body.string.contains("The credentials have expired."))
+                try #expect(await res.body.requireString().contains("The credentials have expired."))
             }
 
             let error = try #require(captured.withLockedValue { $0 })
@@ -400,7 +400,7 @@ struct AuthenticationTests {
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }
@@ -441,7 +441,7 @@ struct AuthenticationTests {
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }
@@ -486,7 +486,7 @@ struct AuthenticationTests {
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }
@@ -544,7 +544,7 @@ struct AuthenticationTests {
 
             try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer test"]) { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
                 if let cookie = res.headers.setCookie?["vapor-session"] {
                     sessionCookie = cookie
                 } else {
@@ -554,7 +554,7 @@ struct AuthenticationTests {
 
             try await app.testing().test(.get, "/test", headers: [.cookie: sessionCookie!.serialize(name: "vapor-session")]) { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
                 #expect(res.headers[.setCookie] != nil)
             }
         }
@@ -594,7 +594,7 @@ struct AuthenticationTests {
 
             try await app.testing().test(.get, "/test") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == #"{"name":"none"}"#)
+                try #expect(await res.body.requireString() == #"{"name":"none"}"#)
                 #expect(res.headers[.setCookie] == nil)
             }
         }
@@ -764,7 +764,7 @@ struct AuthenticationTests {
             let cookie = try #require(sessionCookie)
             try await app.testing().test(.get, "/me", headers: [.cookie: cookie.serialize(name: "vapor-session")]) { res async in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }
