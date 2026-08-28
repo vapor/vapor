@@ -68,13 +68,14 @@ extension Application {
                 clientRequest.headers = .init(request.headers)
                 clientRequest.body = .bytes(request.body)
                 let response = try await client.execute(clientRequest, timeout: .seconds(30))
-                // Collect up to 1MB
-                let responseBody = try await response.body.collect(upTo: 1024 * 1024)
-                let responseBodyData = responseBody.getData(at: 0, length: responseBody.readableBytes) ?? Data()
                 return TestingHTTPResponse(
                     status: .init(code: Int(response.status.code)),
                     headers: .init(response.headers, splitCookie: false),
-                    body: responseBodyData,
+                    body: .init(stream: { writer in
+                        for try await chunk in response.body {
+                            try await writer.write(chunk.readableBytesView)
+                        }
+                    }),
                     contentConfiguration: self.app.contentConfiguration
                 )
             } catch {
@@ -115,12 +116,11 @@ extension Application {
             case .default:
                 responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve())
             }
-            var res = try await responder.respond(to: request)
-            let body = try await res.body.collect() ?? Data()
+            let res = try await responder.respond(to: request)
             return TestingHTTPResponse(
                 status: res.status,
                 headers: res.headers,
-                body: body,
+                body: res.body,
                 contentConfiguration: self.app.contentConfiguration
             )
         }
