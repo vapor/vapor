@@ -3,11 +3,7 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-#warning("Remove")
-import NIOCore
-import NIOFoundationEssentialsCompat
 import HTTPTypes
-import NIOPosix
 
 extension Response {
     struct BodyStream {
@@ -25,7 +21,6 @@ extension Response {
         internal enum Storage: Sendable {
             /// Cases
             case none
-            case buffer(ByteBuffer)
             case data(Data)
             case staticString(StaticString)
             case string(String)
@@ -56,9 +51,6 @@ extension Response {
                 try await stream.callback(ForwardingBodyWriter(body))
             case .none:
                 return
-            // Buffered: the whole body is handed over as a single chunk.
-            case .buffer(let buffer):
-                try await body(buffer.readableBytesSpan)
             case .data(let data):
                 try await body(data.span.bytes)
             case .string(let string):
@@ -102,7 +94,6 @@ extension Response {
 
         public var string: String? {
             switch self.storage {
-            case .buffer(var buffer): return buffer.readString(length: buffer.readableBytes)
             case .data(let data): return String(decoding: data, as: UTF8.self)
             case .staticString(let staticString): return staticString.description
             case .string(let string): return string
@@ -117,7 +108,6 @@ extension Response {
             case .data(let data): return data.count
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
             case .string(let string): return string.utf8.count
-            case .buffer(let buffer): return buffer.readableBytes
             case .none: return 0
             case .stream(let stream): return stream.count
             }
@@ -126,7 +116,6 @@ extension Response {
         /// Returns static data if not streaming.
         public var data: Data? {
             switch self.storage {
-            case .buffer(var buffer): return buffer.readData(length: buffer.readableBytes)
             case .data(let data): return data
             case .staticString(let staticString): return unsafe Data(bytes: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
             case .string(let string): return Data(string.utf8)
@@ -163,7 +152,6 @@ extension Response {
         public var description: String {
             switch storage {
             case .none: return "<no body>"
-            case .buffer(let buffer): return buffer.getString(at: 0, length: buffer.readableBytes) ?? "n/a"
             case .data(let data): return String(data: data, encoding: .ascii) ?? "n/a"
             case .staticString(let string): return string.description
             case .string(let string): return string
@@ -191,11 +179,6 @@ extension Response {
         /// Create a new body from the UTF8 representation of a `String`.
         public init(string: String) {
             self.storage = .string(string)
-        }
-
-        /// Create a new body from a Swift NIO `ByteBuffer`.
-        init(buffer: ByteBuffer) {
-            self.storage = .buffer(buffer)
         }
 
         /// Creates a chunked, streaming HTTP ``Response`` body.

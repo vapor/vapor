@@ -68,8 +68,7 @@ extension ClientResponse {
 
     public var content: any ContentContainer {
         get {
-            var bodyData = body
-            return _ContentContainer(body: bodyData?.getData(at: 0, length: bodyData?.readableBytes ?? 0), headers: self.headers, allocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
+            _ContentContainer(body: body?.getData(at: 0, length: body?.readableBytes ?? 0), headers: self.headers, allocator: self.byteBufferAllocator, contentConfiguration: self.contentConfiguration)
         }
         set {
             let container = (newValue as! _ContentContainer)
@@ -93,19 +92,12 @@ extension ClientResponse: CustomStringConvertible {
 
 extension ClientResponse: ResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
-        let body: Response.Body
-        if let buffer = self.body {
-            body = .init(buffer: buffer)
-        } else {
-            body = .empty
-        }
-        let response = Response(
+        Response(
             status: self.status,
             headers: self.headers,
-            body: body,
+            body: .empty,
             contentConfiguration: request.application.contentConfiguration
         )
-        return response
     }
 }
 

@@ -1,5 +1,3 @@
-import NIOCore
-import NIOFoundationEssentialsCompat
 public import HTTPTypes
 #if canImport(FoundationEssentials)
 import FoundationEssentials
