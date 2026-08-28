@@ -1,10 +1,8 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-#warning("Make this internal")
-public import NIOCore
 public import HTTPTypes
 
 /// Encodes data as plaintext, utf8.
@@ -20,13 +18,8 @@ public struct PlaintextEncoder: ContentEncoder {
         self.contentType = contentType
     }
 
-    // See `ContentEncoder.encode(_:to:headers:)`.
-    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
-        try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
-    }
-
     // See `ContentEncoder.encode(_:to:headers:userInfo:)`.
-    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
+    public func encode(_ encodable: some Encodable, to body: inout Data, headers: inout HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws {
         let encoder = _PlaintextEncoder(userInfo: userInfo)
         var container = encoder.singleValueContainer()
         try container.encode(encodable)
@@ -35,7 +28,7 @@ public struct PlaintextEncoder: ContentEncoder {
             throw EncodingError.invalidValue(encodable, .init(codingPath: [], debugDescription: "Nothing was encoded!"))
         }
         headers.contentType = self.contentType
-        body.writeString(string)
+        body.append(Data(string.utf8))
     }
 }
 

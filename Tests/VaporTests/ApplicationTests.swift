@@ -10,6 +10,8 @@ import VaporTesting
 import HTTPTypes
 import RoutingKit
 import Logging
+import Foundation
+import NIOFoundationEssentialsCompat
 
 @Suite("Application Tests")
 struct ApplicationTests {
@@ -251,8 +253,9 @@ struct ApplicationTests {
                 #expect(port > 0)
                 let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
+                let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
-                    .decode(AddressConfig.self, from: body, headers: [:])
+                    .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
 
                 #expect(returnedConfig.hostname == "0.0.0.0")
                 #expect(returnedConfig.port == port)
@@ -283,8 +286,9 @@ struct ApplicationTests {
 
                 let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
+                let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
-                    .decode(AddressConfig.self, from: body, headers: [:])
+                    .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
                 #expect(returnedConfig.hostname == "0.0.0.0")
                 #expect(returnedConfig.port == 3000)
             }

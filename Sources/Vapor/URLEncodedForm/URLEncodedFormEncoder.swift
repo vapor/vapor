@@ -4,8 +4,6 @@ public import FoundationEssentials
 public import Foundation
 #endif
 public import HTTPTypes
-#warning("Make this internal")
-public import NIOCore
 
 /// Encodes `Encodable` instances to `application/x-www-form-urlencoded` data.
 ///
@@ -79,15 +77,11 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
         self.configuration = configuration
     }
 
-    // See `ContentEncoder.encode(_:to:headers:)`.
-    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
-        try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
-    }
-
     // See `ContentEncoder.encode(_:to:headers:userInfo:)`.
-    public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
+    public func encode(_ encodable: some Encodable, to body: inout Data, headers: inout HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws {
         headers.contentType = .urlEncodedForm
-        try body.writeString(self.encode(encodable, userInfo: userInfo))
+        let string = try self.encode(encodable, userInfo: userInfo)
+        body.append(Data(string.utf8))
     }
 
     // See `URLQueryEncoder.encode(_:to:)`.

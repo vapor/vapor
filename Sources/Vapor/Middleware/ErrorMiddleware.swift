@@ -3,7 +3,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOCore
 import HTTPTypes
 import Logging
 
@@ -58,11 +57,11 @@ public final class ErrorMiddleware: Middleware {
             let body: Response.Body
             do {
                 let encoder = try req.application.contentConfiguration.requireEncoder(for: .json)
-                var byteBuffer = req.byteBufferAllocator.buffer(capacity: 0)
-                try encoder.encode(ErrorResponse(error: true, reason: reason), to: &byteBuffer, headers: &headers)
+                var data = Data()
+                try encoder.encode(ErrorResponse(error: true, reason: reason), to: &data, headers: &headers, userInfo: [:])
 
                 body = .init(
-                    buffer: byteBuffer,
+                    data: data,
                 )
             } catch {
                 body = .init(string: "Oops: \(String(describing: error))\nWhile encoding error: \(reason)")
