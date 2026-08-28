@@ -5,6 +5,7 @@ public import Foundation
 #endif
 #warning("Make this internal")
 public import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import Logging
 public import RoutingKit
@@ -123,29 +124,33 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
-            var body = self.request.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(encodable, to: &body, headers: &self.request.headers)
-            self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
+            var body = Data()
+            try encoder.encode(encodable, to: &body, headers: &self.request.headers, userInfo: [:])
+            let byteBuffer = ByteBuffer(data: body)
+            self.request.bodyStorage.withLockedValue { $0 = .collected(byteBuffer) }
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
             if let stream = self.request.streamBodyStorage.withLockedValue({ $0 }) {
                 let buffer = try await self.request.collectStream(stream, maxSize: request.application.routes.defaultMaxBodySize.value)
-                return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
+                let bufferData = buffer.getData(at: 0, length: buffer.readableBytes) ?? Data()
+                return try decoder.decode(D.self, from: bufferData, headers: self.request.headers, userInfo: [:])
             }
             guard let body = self.request.body.data else {
                 Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
-            return try decoder.decode(D.self, from: body, headers: self.request.headers)
+            let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+            return try decoder.decode(D.self, from: bodyData, headers: self.request.headers, userInfo: [:])
         }
 
         func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
-            var body = self.request.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(content, to: &body, headers: &self.request.headers)
-            self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
+            var body = Data()
+            try encoder.encode(content, to: &body, headers: &self.request.headers, userInfo: [:])
+            let byteBuffer = ByteBuffer(data: body)
+            self.request.bodyStorage.withLockedValue { $0 = .collected(byteBuffer) }
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
@@ -153,7 +158,8 @@ public final class Request: CustomStringConvertible, Sendable {
                 Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
+            let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+            var decoded = try decoder.decode(C.self, from: bodyData, headers: self.request.headers, userInfo: [:])
             try decoded.afterDecode()
             return decoded
         }
