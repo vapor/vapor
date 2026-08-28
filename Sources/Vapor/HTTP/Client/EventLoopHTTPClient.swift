@@ -31,10 +31,14 @@ internal struct VaporHTTPClient: Client {
             request,
             deadline: .now() + clientRequest.timeout,
             logger: Logger.current)
-        return try await ClientResponse(
+        return ClientResponse(
             status: .init(code: Int(response.status.code)),
             headers: .init(response.headers, splitCookie: false),
-            body: response.body.collect(upTo: clientRequest.maxResponseBodySize),
+            body: .init(stream: { writer in
+                for try await chunk in response.body {
+                    try await writer.write(chunk.readableBytesSpan)
+                }
+            }),
             contentConfiguration: self.contentConfiguration
         )
     }

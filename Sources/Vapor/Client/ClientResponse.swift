@@ -97,9 +97,3 @@ extension ClientResponse: ResponseEncodable {
         )
     }
 }
-
-extension ClientResponse: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        return lhs.status == rhs.status && lhs.headers == rhs.headers && lhs.body == rhs.body
-    }
-}
