@@ -536,6 +536,72 @@ struct ContentTests {
         }
     }
 
+    @Test("afterDecode runs when decoding with an explicit content type")
+    func testAfterDecodeWithExplicitContentType() async throws {
+        // `decode(_:as:)` used to bind a `Content` type to the `Decodable` overload, which has no
+        // way to know about the hook, so the value came back unprocessed.
+        try await withApp { app in
+            let request = Request(
+                application: app,
+                collectedBody: .init(string: #"{"name": "before decode"}"#)
+            )
+            request.headers.contentType = .json
+
+            let content = try await request.content.decode(SampleContent.self, as: .json)
+            #expect(content.name == "new name after decode")
+        }
+    }
+
+    @Test("afterDecode runs for a Response's content")
+    func testAfterDecodeOnResponse() async throws {
+        var response = Response(status: .ok)
+        response.headers.contentType = .json
+        response.body = .init(string: #"{"name": "before decode"}"#)
+
+        #expect(try await response.content.decode(SampleContent.self).name == "new name after decode")
+        #expect(try await response.content.decode(SampleContent.self, as: .json).name == "new name after decode")
+    }
+
+    @Test("afterDecode runs for a ClientResponse's content, including a streaming body")
+    func testAfterDecodeOnClientResponse() async throws {
+        var headers = HTTPFields()
+        headers.contentType = .json
+        func response() -> ClientResponse {
+            ClientResponse(
+                status: .ok,
+                headers: headers,
+                body: .init(stream: { writer in try await writer.write(#"{"name": "before decode"}"#) })
+            )
+        }
+
+        #expect(try await response().content.decode(SampleContent.self).name == "new name after decode")
+        #expect(try await response().content.decode(SampleContent.self, as: .json).name == "new name after decode")
+    }
+
+    @Test("afterDecode runs for a TestingHTTPResponse's content")
+    func testAfterDecodeOnTestingHTTPResponse() async throws {
+        var headers = HTTPFields()
+        headers.contentType = .json
+        let response = TestingHTTPResponse(
+            status: .ok,
+            headers: headers,
+            body: Data(#"{"name": "before decode"}"#.utf8),
+            contentConfiguration: .default()
+        )
+
+        #expect(try await response.content.decode(SampleContent.self).name == "new name after decode")
+        #expect(try await response.content.decode(SampleContent.self, as: .json).name == "new name after decode")
+    }
+
+    @Test("afterDecode runs for a ClientRequest's content")
+    func testAfterDecodeOnClientRequest() async throws {
+        var request = ClientRequest(method: .post, url: "/")
+        try request.content.encode(SampleContent(), as: .json)
+
+        #expect(try await request.content.decode(SampleContent.self).name == "new name after decode")
+        #expect(try await request.content.decode(SampleContent.self, as: .json).name == "new name after decode")
+    }
+
     @Test("Test Supports JSON API")
     func testSupportsJsonApi() async throws {
         var body = ByteBufferAllocator().buffer(capacity: 0)

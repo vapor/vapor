@@ -37,12 +37,6 @@ extension TestingHTTPResponse {
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
             try decoder.decode(D.self, from: self.body, headers: self.headers, userInfo: [:])
         }
-
-        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
-            var decoded = try decoder.decode(C.self, from: self.body, headers: self.headers, userInfo: [:])
-            try decoded.afterDecode()
-            return decoded
-        }
     }
 
     public var content: any ContentContainer {

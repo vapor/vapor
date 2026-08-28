@@ -95,15 +95,6 @@ public struct Response: CustomStringConvertible, Sendable {
             try encoder.encode(content, to: &body, headers: &self.response.headers, userInfo: [:])
             self.response.body = .init(data: body)
         }
-
-        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C: Content {
-            guard let body = self.response.body.data else {
-                throw Abort(.unprocessableContent)
-            }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.response.headers, userInfo: [:])
-            try decoded.afterDecode()
-            return decoded
-        }
     }
 
     public var content: any ContentContainer {

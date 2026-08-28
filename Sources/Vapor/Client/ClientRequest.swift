@@ -86,15 +86,6 @@ extension ClientRequest {
             try encoder.encode(content, to: &body, headers: &self.headers, userInfo: [:])
             self.body = body
         }
-
-        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
-            guard let body = self.body else {
-                throw Abort(.lengthRequired)
-            }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.headers, userInfo: [:])
-            try decoded.afterDecode()
-            return decoded
-        }
     }
 
     public var content: any ContentContainer {
