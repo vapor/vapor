@@ -108,7 +108,10 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
             }
 
             switch vaporResponse.body.storage {
-            case .stream(let bodyStream):
+            // A stream some copy of this body already collected is spent: its bytes live in the
+            // body's shared cache, so it is serialised down the buffered path below instead of by
+            // re-running a callback that would now write nothing.
+            case .stream(let bodyStream) where bodyStream.state.collected == nil:
                 // Streaming body: send the head, then let the body closure write chunks straight
                 // into the server's writer. The writer is non-Sendable (it wraps the server's
                 // move-only response writer), so it stays in this task; each `write` awaits the

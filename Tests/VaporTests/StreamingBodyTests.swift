@@ -648,6 +648,122 @@ struct StreamingBodyTests {
         #expect(try await again.collect().map { String(decoding: $0, as: UTF8.self) } == "alphabeta")
     }
 
+    @Test("Collecting through one copy of a body is visible from the others")
+    func testCollectSharesBytesAcrossCopies() async throws {
+        // A `ContentContainer` reached through a computed `content` property holds a *copy* of the
+        // body, so its collection cannot be written back. Without state shared between copies that
+        // would drain the stream and leave the original pointing at a spent source.
+        let runs = NIOLockedValueBox(0)
+        let original = Response.Body(stream: { writer in
+            runs.withLockedValue { $0 += 1 }
+            try await writer.write("shared")
+        })
+
+        var copy = original
+        #expect(try await copy.collect().map { String(decoding: $0, as: UTF8.self) } == "shared")
+
+        // The original still holds `.stream`, but the bytes are reachable without re-running it.
+        #expect(original.string == "shared")
+        #expect(original.data.map { String(decoding: $0, as: UTF8.self) } == "shared")
+        #expect(original.count == 6)
+
+        var second = original
+        #expect(try await second.collect().map { String(decoding: $0, as: UTF8.self) } == "shared")
+        #expect(runs.withLockedValue { $0 } == 1)
+    }
+
+    @Test("An unknown-length stream reports its real count once collected")
+    func testCollectedStreamReportsRealCount() async throws {
+        let body = Response.Body(stream: { writer in try await writer.write("twelve bytes") })
+        // `-1` until collected: an unknown-length stream cannot say how long it is in advance.
+        #expect(body.count == -1)
+        var copy = body
+        _ = try await copy.collect()
+        #expect(body.count == 12)
+    }
+
+    @Test("collect(max:) rejects a stream that produces more than the limit")
+    func testCollectMaxRejectsOversizedStream() async throws {
+        var body = Response.Body(stream: { writer in
+            for _ in 0..<10 { try await writer.write(String(repeating: "x", count: 100)) }
+        })
+        await #expect(throws: Abort.self) { try await body.collect(max: 256) }
+    }
+
+    @Test("collect(max:) allows a stream that stays within the limit")
+    func testCollectMaxAllowsStreamWithinLimit() async throws {
+        var body = Response.Body(stream: { writer in try await writer.write("small") })
+        #expect(try await body.collect(max: 256).map { String(decoding: $0, as: UTF8.self) } == "small")
+    }
+
+    @Test("collect(max:) rejects a declared length over the limit without running the stream")
+    func testCollectMaxRejectsDeclaredLengthBeforeRunning() async throws {
+        let ran = NIOLockedValueBox(false)
+        var body = Response.Body(stream: { writer in
+            ran.withLockedValue { $0 = true }
+            try await writer.write(String(repeating: "x", count: 1000))
+        }, count: 1000)
+        await #expect(throws: Abort.self) { try await body.collect(max: 256) }
+        #expect(ran.withLockedValue { $0 } == false)
+    }
+
+    @Test("Streaming a body a copy already collected replays the bytes instead of re-running it")
+    func testStreamingAfterCollectReplaysFromCache() async throws {
+        // A one-shot source - an `AsyncStream`, a file handle, a client response's iterator - yields
+        // nothing on a second run, so re-running the callback here would silently produce an empty
+        // body rather than an error.
+        let runs = NIOLockedValueBox(0)
+        let (chunks, continuation) = AsyncStream<String>.makeStream()
+        continuation.yield("payload")
+        continuation.finish()
+
+        let original = Response.Body(stream: { writer in
+            runs.withLockedValue { $0 += 1 }
+            for await chunk in chunks { try await writer.write(chunk) }
+        })
+
+        var copy = original
+        _ = try await copy.collect()
+
+        var seen = ""
+        try await original.withStreamingBytes { span in
+            seen += String(decoding: span.withUnsafeBytes { Array($0) }, as: UTF8.self)
+        }
+        #expect(seen == "payload")
+        #expect(runs.withLockedValue { $0 } == 1)
+
+        // `reduceBytes` is built on `withStreamingBytes`, so it replays too.
+        let count = try await original.reduceBytes(into: 0) { total, span in total += span.byteCount }
+        #expect(count == 7)
+        #expect(runs.withLockedValue { $0 } == 1)
+    }
+
+    @Test("The server writes the collected bytes for a body drained through a copy", .timeLimit(.minutes(1)))
+    func testServerSerialisesBodyCollectedThroughACopy() async throws {
+        // Exactly what a middleware calling `content.decode` does: the container holds a copy, so the
+        // response still carries `.stream` storage over a source that has already been drained.
+        try await withApp { app in
+            app.get("proxied") { _ -> Response in
+                let (chunks, continuation) = AsyncStream<String>.makeStream()
+                continuation.yield("hello ")
+                continuation.yield("world")
+                continuation.finish()
+
+                let response = Response(status: .ok, body: .init(stream: { writer in
+                    for await chunk in chunks { try await writer.write(chunk) }
+                }))
+                var copy = response.body
+                _ = try await copy.collect()
+                return response
+            }
+
+            try await app.testing(method: .running).test(.get, "/proxied") { res in
+                #expect(res.status == .ok)
+                #expect(res.body.string == "hello world")
+            }
+        }
+    }
+
     @Test("An empty write does not corrupt the stream")
     func testEmptyWrite() async throws {
         var body = Response.Body(stream: { writer in

@@ -39,11 +39,12 @@ extension ClientResponse {
             self.body = .init(data: data)
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
-            guard let body = self.body.data else {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
+            var body = self.body
+            guard let data = try await body.collect() else {
                 throw Abort(.lengthRequired)
             }
-            return try decoder.decode(D.self, from: body, headers: self.headers, userInfo: [:])
+            return try decoder.decode(D.self, from: data, headers: self.headers, userInfo: [:])
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
