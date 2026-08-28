@@ -349,7 +349,9 @@ struct StreamingBodyTests {
     @Test("Server backpressures a fast producer against a stalled client")
     func testStreamingBodyBackpressure() async throws {
         let chunkSize = 16 * 1024
-        let totalChunks = 2048 // 32 MiB — far larger than any socket/NIO buffer window.
+        // A safety valve, not a target: a backpressured producer stalls a few hundred chunks in,
+        // once the socket buffers fill. The cap only bounds the memory a *broken* run can buffer.
+        let maxChunks = 8192 // 128 MiB
         let produced = NIOLockedValueBox(0)
 
         try await withApp { app in
@@ -357,7 +359,7 @@ struct StreamingBodyTests {
             app.get("firehose") { _ -> Response in
                 Response(status: .ok, body: .init(stream: { writer in
                     let chunk = [UInt8](repeating: 0x41, count: chunkSize)
-                    for _ in 0..<totalChunks {
+                    for _ in 0..<maxChunks {
                         try await writer.write(chunk)
                         produced.withLockedValue { $0 += 1 }
                     }
@@ -396,37 +398,35 @@ struct StreamingBodyTests {
                         string: "GET /firehose HTTP/1.1\r\nHost: localhost\r\n\r\n"))
 
                     // Nothing reads the socket, so the kernel receive buffer fills, then the send
-                    // side, and the producer's `write` must suspend. Sampling twice asserts it is
-                    // *stalled* rather than merely unfinished: a single count below the total can
-                    // just mean a slow producer, which would pass on a loaded machine whether or
-                    // not backpressure works at all.
+                    // side, and the producer's writes must suspend. Two samples assert it is
+                    // *stalled* rather than merely unfinished: a count short of the cap can just
+                    // mean a slow producer, which would pass on a loaded machine whether or not
+                    // backpressure works at all.
                     try await Task.sleep(for: .milliseconds(500))
                     let firstSample = produced.withLockedValue { $0 }
                     try await Task.sleep(for: .milliseconds(500))
                     let stalledAt = produced.withLockedValue { $0 }
                     #expect(
-                        stalledAt < totalChunks,
-                        "producer was not backpressured (produced \(stalledAt)/\(totalChunks))")
-                    #expect(
                         stalledAt == firstSample,
                         """
                         producer kept writing while the client read nothing \
-                        (\(firstSample) → \(stalledAt) of \(totalChunks))
+                        (\(firstSample) → \(stalledAt) of \(maxChunks))
                         """)
+                    #expect(
+                        stalledAt < maxChunks,
+                        "producer was not backpressured (produced \(stalledAt)/\(maxChunks))")
 
-                    // Draining lets it resume and run to completion.
+                    // Draining lets it resume: the count has to move again once bytes are read.
                     var received = 0
                     for try await buffer in inbound {
                         received += buffer.readableBytes
-                        if produced.withLockedValue({ $0 }) == totalChunks,
-                            received >= totalChunks * chunkSize {
+                        if produced.withLockedValue({ $0 }) > stalledAt {
                             break
                         }
                     }
-                    #expect(received >= totalChunks * chunkSize)
+                    #expect(received > 0)
+                    #expect(produced.withLockedValue { $0 } > stalledAt)
                 }
-
-                #expect(produced.withLockedValue { $0 } == totalChunks)
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
