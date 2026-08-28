@@ -152,7 +152,7 @@ extension Response {
         public var description: String {
             switch storage {
             case .none: return "<no body>"
-            case .data(let data): return String(data: data, encoding: .ascii) ?? "n/a"
+            case .data(let data): return String(decoding: data, as: UTF8.self)
             case .staticString(let string): return string.description
             case .string(let string): return string
             case .stream: return "<stream>"
