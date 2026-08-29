@@ -273,7 +273,7 @@ public struct FileIO: Sendable {
 
         let fileSystem = self.fileSystem
         var response = Response(status: responseStatus, headers: headers)
-        response.body = .init(stream: { writer in
+        response.body = try .init(stream: { writer in
             // The scoped `withFileHandle` API would close the handle for us, but its `execute`
             // parameter is `@concurrent` from here (Vapor builds with `NonisolatedNonsendingByDefault`,
             // NIO doesn't), so the closure would have to be sent — and it captures the non-Sendable

@@ -256,7 +256,7 @@ struct StreamingBodyTests {
             // never concluded and the client can never receive the full 8-byte body — it either
             // errors on the truncated response or sees fewer bytes than advertised.
             app.get("abort") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
+                Response(status: .ok, body: try .init(stream: { writer in
                     try await writer.write("AAAA")
                     throw MidStreamError()
                 }, count: 8))
@@ -438,7 +438,7 @@ struct StreamingBodyTests {
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             // Declares `Content-Length: 2` (via `count`) but only writes a single byte.
             app.get("bad-length") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
+                Response(status: .ok, body: try .init(stream: { writer in
                     try await writer.write("a")
                 }, count: 2))
             }
@@ -483,7 +483,7 @@ struct StreamingBodyTests {
 
     @Test("collect() gathers a streaming body into a single buffer")
     func testCollectStreamingBody() async throws {
-        var body = Response.Body(stream: { writer in
+        var body = try Response.Body(stream: { writer in
             try await writer.write("Hello, ")
             try await writer.write("collected!")
         })
@@ -675,8 +675,8 @@ struct StreamingBodyTests {
     @Test("An unknown-length stream reports its real count once collected")
     func testCollectedStreamReportsRealCount() async throws {
         let body = Response.Body(stream: { writer in try await writer.write("twelve bytes") })
-        // `-1` until collected: an unknown-length stream cannot say how long it is in advance.
-        #expect(body.count == -1)
+        // `nil` until collected: an unknown-length stream cannot say how long it is in advance.
+        #expect(body.count == nil)
         var copy = body
         _ = try await copy.collect()
         #expect(body.count == 12)
@@ -699,7 +699,7 @@ struct StreamingBodyTests {
     @Test("collect(max:) rejects a declared length over the limit without running the stream")
     func testCollectMaxRejectsDeclaredLengthBeforeRunning() async throws {
         let ran = NIOLockedValueBox(false)
-        var body = Response.Body(stream: { writer in
+        var body = try Response.Body(stream: { writer in
             ran.withLockedValue { $0 = true }
             try await writer.write(String(repeating: "x", count: 1000))
         }, count: 1000)
@@ -780,7 +780,7 @@ struct StreamingBodyTests {
 
         #expect(body.string == nil)
         #expect(body.data == nil)
-        #expect(body.count == -1)
+        #expect(body.count == nil)
 
         try #expect(await body.string() == "hello world")
 
@@ -815,7 +815,7 @@ struct StreamingBodyTests {
     func testTesterResponseBodyCollection() async throws {
         try await withApp { app in
             app.get("stream") { _ in
-                Response(body: .init(stream: { writer in
+                Response(body: try .init(stream: { writer in
                     try await writer.write("alpha")
                     try await writer.write("beta")
                 }))
@@ -834,6 +834,27 @@ struct StreamingBodyTests {
                 try #expect(await streaming.body.requireString() == "alphabeta")
             }
         }
+    }
+
+    @Test("A streaming body rejects a negative declared length")
+    func testNegativeStreamCountIsRejected() async throws {
+        // Thrown, not trapped: a `precondition` here would be checked in release builds too, so one
+        // handler's arithmetic mistake would take down a server serving everything else correctly.
+        #expect(throws: Response.Body.NegativeCountError(count: -5)) {
+            try Response.Body(stream: { _ in }, count: -5)
+        }
+
+        // `nil` is the way to say "length unknown", and zero is a legitimate length.
+        #expect(throws: Never.self) {
+            _ = try Response.Body(stream: { _ in }, count: 0)
+            _ = try Response.Body(stream: { _ in }, count: nil)
+        }
+        _ = Response.Body(stream: { _ in })   // the convenience cannot fail, so it does not throw
+
+        // It surfaces as a 500 with a diagnosable reason rather than an opaque failure.
+        let error = Response.Body.NegativeCountError(count: -5)
+        #expect(error.status == .internalServerError)
+        #expect(error.reason.contains("-5"))
     }
 
     @Test("An empty write does not corrupt the stream")

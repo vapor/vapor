@@ -364,6 +364,87 @@ struct MiddlewareTests {
         }
     }
 
+    @Test("Metrics middleware records a streaming response body's declared size", .withMetrics(TestMetrics()))
+    func testMetricsMiddlewareStreamingResponseBodySizeDeclared() async throws {
+        try await withApp { app in
+            app.middleware.use(MetricsMiddleware())
+            // A stream that declares its length can be measured without reading it.
+            app.get("streamMetrics") { _ in
+                Response(body: try .init(stream: { writer in
+                    try await writer.write("alpha")
+                    try await writer.write("beta")
+                }, count: 9))
+            }
+
+            let response = try await app.testing().sendRequest(.get, "/streamMetrics")
+            #expect(response.status == .ok)
+
+            let recorder = try metrics.expectRecorder(
+                "http.server.response.body.size",
+                [
+                    ("http.request.method", "GET"),
+                    ("url.scheme", "http"),
+                    ("error.type", "undefined"),
+                    ("http.response.status_code", "200"),
+                    ("http.route", "/streamMetrics"),
+                    ("network.protocol.name", "http"),
+                    ("network.protocol.version", "1.1"),
+                ]
+            )
+            #expect(recorder.lastValue == 9.0)
+        }
+    }
+
+    @Test("Metrics middleware records no body size for a stream of unknown length", .withMetrics(TestMetrics()))
+    func testMetricsMiddlewareStreamingResponseBodySizeUnknown() async throws {
+        try await withApp { app in
+            app.middleware.use(MetricsMiddleware())
+            // No declared length, and the middleware must not read the body to find one - so there is
+            // no size to record. This used to record the `-1` sentinel as if it were a byte count.
+            app.get("streamMetrics") { _ in
+                Response(body: try .init(stream: { writer in
+                    try await writer.write("alpha")
+                    try await writer.write("beta")
+                }))
+            }
+
+            let response = try await app.testing().sendRequest(.get, "/streamMetrics")
+            #expect(response.status == .ok)
+            try #expect(await response.body.requireString() == "alphabeta")
+
+            // The request itself is still measured; only the body size is absent.
+            #expect(throws: Never.self) {
+                try metrics.expectTimer(
+                    "http.server.request.duration",
+                    [
+                        ("http.request.method", "GET"),
+                        ("url.scheme", "http"),
+                        ("error.type", "undefined"),
+                        ("http.response.status_code", "200"),
+                        ("http.route", "/streamMetrics"),
+                        ("network.protocol.name", "http"),
+                        ("network.protocol.version", "1.1"),
+                    ]
+                )
+            }
+
+            #expect(throws: (any Error).self) {
+                try metrics.expectRecorder(
+                    "http.server.response.body.size",
+                    [
+                        ("http.request.method", "GET"),
+                        ("url.scheme", "http"),
+                        ("error.type", "undefined"),
+                        ("http.response.status_code", "200"),
+                        ("http.route", "/streamMetrics"),
+                        ("network.protocol.name", "http"),
+                        ("network.protocol.version", "1.1"),
+                    ]
+                )
+            }
+        }
+    }
+
     @Test("Test Tracing Middleware", .withTracer(InMemoryTracer()))
     func testTracingMiddleware() async throws {
         try await withApp { app in

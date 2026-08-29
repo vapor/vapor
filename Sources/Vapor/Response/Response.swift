@@ -155,19 +155,19 @@ public struct Response: CustomStringConvertible, Sendable {
 
 
 extension HTTPFields {
-    mutating func updateContentLength(_ contentLength: Int) {
-        let count = contentLength.description
-        switch contentLength {
-        case -1:
+    mutating func updateContentLength(_ contentLength: Int?) {
+        guard let contentLength else {
+            // Length not known in advance, so the body has to be chunked.
             self[.contentLength] = nil
             if "chunked" != self[.transferEncoding] {
                 self[.transferEncoding] = "chunked"
             }
-        default:
-            self[.transferEncoding] = nil
-            if count != self[.contentLength] {
-                self[.contentLength] = count
-            }
+            return
+        }
+        self[.transferEncoding] = nil
+        let count = contentLength.description
+        if count != self[.contentLength] {
+            self[.contentLength] = count
         }
     }
 }

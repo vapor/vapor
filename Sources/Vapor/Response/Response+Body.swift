@@ -3,7 +3,7 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-import HTTPTypes
+public import HTTPTypes
 import Synchronization
 
 extension Response {
@@ -22,7 +22,8 @@ extension Response {
     }
 
     struct BodyStream: Sendable {
-        let count: Int
+        /// The number of bytes the stream will produce, or `nil` if that is not known in advance.
+        let count: Int?
         let callback: @Sendable (any ResponseBodyWriter) async throws -> ()
         let state = BodyStreamState()
     }
@@ -126,11 +127,14 @@ extension Response {
             }
         }
 
-        /// The size of the HTTP body's data.
-        /// `-1` is a chunked stream whose length is unknown. If the stream has already been collected,
-        /// then the correct length will be reported - including when another copy of the body collected
-        /// it. Collect one with ``collect(max:)``, ``data(max:)`` or ``string(max:)``.
-        public var count: Int {
+        /// The size of the HTTP body's data, or `nil` if it is not known.
+        ///
+        /// Only a chunked stream is unknown, and only until something reads it: once collected the
+        /// real length is reported, including when another copy of the body did the collecting.
+        /// Collect one with ``collect(max:)``, ``data(max:)`` or ``string(max:)``.
+        ///
+        /// An empty body is `0`, not `nil` - its length is known, and it is zero.
+        public var count: Int? {
             switch self.storage {
             case .data(let data): return data.count
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
@@ -212,10 +216,10 @@ extension Response {
                     self.storage = .data(collected)
                     return collected
                 }
-                if let max, stream.count > max {
+                if let max, let declared = stream.count, declared > max {
                     throw Abort(.contentTooLarge)
                 }
-                let initialCapacity = stream.count >= 0 ? stream.count : 0
+                let initialCapacity = stream.count ?? 0
                 let writer = CollectingBodyWriter(capacity: initialCapacity, max: max)
                 try await stream.callback(writer)
                 stream.state.store(writer.data)
@@ -267,9 +271,37 @@ extension Response {
         ///
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
-        ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly `count` bytes.
-        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int) {
+        ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly
+        ///     `count` bytes. `nil` means the length is not known in advance, and the response is chunked.
+        /// - Throws: ``Response/Body/NegativeCountError`` if `count` is negative.
+        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int?) throws {
+            // A negative length is not a shorter body, it is an impossible one. Left unchecked it
+            // reaches the wire as a malformed `Content-Length`, so it is rejected at the one point a
+            // bad value can enter. Thrown rather than trapped: a mistake in one handler must not
+            // take down a server that is serving everything else correctly.
+            if let count, count < 0 {
+                throw NegativeCountError(count: count)
+            }
             self.storage = .stream(.init(count: count, callback: stream))
+        }
+
+        /// Thrown when a streaming body is created with a negative length.
+        ///
+        /// Conforms to ``AbortError``, so a handler that lets it propagate fails that one request
+        /// with a `500` and a diagnosable reason rather than bringing the process down.
+        public struct NegativeCountError: Error, Equatable, AbortError, CustomStringConvertible {
+            /// The negative length that was given.
+            public let count: Int
+
+            public init(count: Int) {
+                self.count = count
+            }
+
+            public var status: HTTPResponse.Status { .internalServerError }
+            public var reason: String {
+                "A streaming response body cannot declare a negative length (got \(count)). Pass `nil` when the length is not known in advance."
+            }
+            public var description: String { self.reason }
         }
 
         /// Creates a chunked, streaming HTTP ``Response`` body of unknown length.
@@ -279,7 +311,8 @@ extension Response {
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
         public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> ()) {
-            self.init(stream: stream, count: -1)
+            // `nil` can never be rejected, so this stays non-throwing.
+            self.storage = .stream(.init(count: nil, callback: stream))
         }
 
         /// `ExpressibleByStringLiteral` conformance.
