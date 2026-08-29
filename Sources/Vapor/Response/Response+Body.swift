@@ -3,12 +3,29 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-import HTTPTypes
+public import HTTPTypes
+import Synchronization
 
 extension Response {
-    struct BodyStream {
-        let count: Int
+    /// Shared consumption state for a streaming body, this ensures it's only called once and can be shared amongst copies
+    final class BodyStreamState: Sendable {
+        private let cache = Mutex<Data?>(nil)
+
+        /// The bytes this stream produced, or `nil` if it has not been collected yet.
+        var collected: Data? {
+            self.cache.withLock { $0 }
+        }
+
+        func store(_ data: Data) {
+            self.cache.withLock { $0 = data }
+        }
+    }
+
+    struct BodyStream: Sendable {
+        /// The number of bytes the stream will produce, or `nil` if that is not known in advance.
+        let count: Int?
         let callback: @Sendable (any ResponseBodyWriter) async throws -> ()
+        let state = BodyStreamState()
     }
 
     /// Represents a `Response`'s body.
@@ -48,7 +65,12 @@ extension Response {
         public func withStreamingBytes(_ body: @escaping (RawSpan) async throws -> Void) async throws {
             switch self.storage {
             case .stream(let stream):
-                try await stream.callback(ForwardingBodyWriter(body))
+                // See if we're already collection so we don't run again
+                if let collected = stream.state.collected {
+                    try await body(collected.span.bytes)
+                } else {
+                    try await stream.callback(ForwardingBodyWriter(body))
+                }
             case .none:
                 return
             case .data(let data):
@@ -92,36 +114,77 @@ extension Response {
             return accumulator.value
         }
 
+        /// The body decoded as UTF-8, or `nil` if it is empty or is a stream nothing has collected.
+        ///
+        /// Use ``string(max:)`` to collect the body and always return a string
         public var string: String? {
             switch self.storage {
             case .data(let data): return String(decoding: data, as: UTF8.self)
             case .staticString(let staticString): return staticString.description
             case .string(let string): return string
-            default: return nil
+            case .none: return nil
+            case .stream(let stream): return stream.state.collected.map { String(decoding: $0, as: UTF8.self) }
             }
         }
 
-        /// The size of the HTTP body's data.
-        /// `-1` is a chunked stream.
-        public var count: Int {
+        /// The size of the HTTP body's data, or `nil` if it is not known.
+        ///
+        /// Only a chunked stream is unknown, and only until something reads it: once collected the
+        /// real length is reported, including when another copy of the body did the collecting.
+        /// Collect one with ``collect(max:)``, ``data(max:)`` or ``string(max:)``.
+        ///
+        /// An empty body is `0`, not `nil` - its length is known, and it is zero.
+        public var count: Int? {
             switch self.storage {
             case .data(let data): return data.count
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
             case .string(let string): return string.utf8.count
             case .none: return 0
-            case .stream(let stream): return stream.count
+            case .stream(let stream): return stream.state.collected?.count ?? stream.count
             }
         }
 
-        /// Returns static data if not streaming.
+        /// The body's bytes, or `nil` if it is empty or is a stream nothing has collected.
+        ///
+        /// Use ``data(max:)`` to collect the body and always return ``Foundation/Data``
         public var data: Data? {
             switch self.storage {
             case .data(let data): return data
             case .staticString(let staticString): return unsafe Data(bytes: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
             case .string(let string): return Data(string.utf8)
             case .none: return nil
-            case .stream: return nil
+            case .stream(let stream): return stream.state.collected
             }
+        }
+
+        /// The body's bytes, collecting a streaming body first if nothing has collected it yet.
+        ///
+        /// The collecting counterpart to ``data``, for where the body may or may not be a stream and
+        /// the bytes are genuinely needed - a client response, say. An already-collected or buffered
+        /// body is returned without re-reading anything.
+        /// 
+        /// - Parameter max: The most bytes to buffer, as ``collect(max:)``. `nil` buffers whatever
+        ///   the body produces.
+        /// - Returns: The body's bytes, or `nil` if the body is empty.
+        /// - Throws: ``Abort`` with `.contentTooLarge` if a streaming body exceeds `max`.
+        public func data(max: Int? = nil) async throws -> Data? {
+            // Collecting through a copy: `collect(max:)` is `mutating`, but the bytes it produces
+            // land in the stream's shared state, so the caller's body sees them regardless.
+            var body = self
+            return try await body.collect(max: max)
+        }
+
+        /// The body decoded as UTF-8, collecting a streaming body first if nothing has collected it yet.
+        ///
+        /// The collecting counterpart to ``string``. See ``data(max:)`` for the semantics; this
+        /// decodes the result, substituting U+FFFD for any invalid UTF-8 rather than failing.
+        ///
+        /// - Parameter max: The most bytes to buffer, as ``collect(max:)``. `nil` buffers whatever
+        ///   the body produces.
+        /// - Returns: The body decoded as UTF-8, or `nil` if the body is empty.
+        /// - Throws: ``Abort`` with `.contentTooLarge` if a streaming body exceeds `max`.
+        public func string(max: Int? = nil) async throws -> String? {
+            try await self.data(max: max).map { String(decoding: $0, as: UTF8.self) }
         }
 
         /// Reads the whole body into memory, running a streaming body to completion.
@@ -132,15 +195,34 @@ extension Response {
         /// result means anything further down the chain, including the server that serialises the
         /// response, sees an ordinary in-memory body instead.
         ///
+        /// The bytes are also cached in state shared with every *copy* of this body, so collecting
+        /// through one copy is visible from the others. That matters where the collection cannot be
+        /// written back - a `ContentContainer` reached through a computed `content` property holds a
+        /// copy, so without the shared cache decoding a streaming body would drain it and leave the
+        /// original pointing at a spent stream.
+        ///
+        /// Use ``withStreamingBytes(_:)`` instead when the whole body is not genuinely needed in memory.
+        ///
+        /// - Parameter max: The most bytes to buffer. A stream that produces more fails with
+        ///   ``Abort`` `.contentTooLarge` rather than growing without bound - a body arriving from
+        ///   somewhere else, such as a client response, is not bounded by anything this process
+        ///   controls. `nil`, the default, buffers whatever the body produces.
         /// - Returns: The body's bytes, or `nil` if the body is empty.
-        public mutating func collect() async throws -> Data? {
+        /// - Throws: ``Abort`` with `.contentTooLarge` if a streaming body exceeds `max`.
+        public mutating func collect(max: Int? = nil) async throws -> Data? {
             switch self.storage {
             case .stream(let stream):
-                // Reserve the declared length up front when known (`count >= 0`) to avoid repeated
-                // grow-and-copy reallocations; `-1` means unknown/chunked, so start empty.
-                let initialCapacity = stream.count >= 0 ? stream.count : 0
-                let writer = CollectingBodyWriter(capacity: initialCapacity)
+                if let collected = stream.state.collected {
+                    self.storage = .data(collected)
+                    return collected
+                }
+                if let max, let declared = stream.count, declared > max {
+                    throw Abort(.contentTooLarge)
+                }
+                let initialCapacity = stream.count ?? 0
+                let writer = CollectingBodyWriter(capacity: initialCapacity, max: max)
                 try await stream.callback(writer)
+                stream.state.store(writer.data)
                 self.storage = .data(writer.data)
                 return writer.data
             default:
@@ -189,9 +271,37 @@ extension Response {
         ///
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
-        ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly `count` bytes.
-        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int) {
+        ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly
+        ///     `count` bytes. `nil` means the length is not known in advance, and the response is chunked.
+        /// - Throws: ``Response/Body/NegativeCountError`` if `count` is negative.
+        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int?) throws {
+            // A negative length is not a shorter body, it is an impossible one. Left unchecked it
+            // reaches the wire as a malformed `Content-Length`, so it is rejected at the one point a
+            // bad value can enter. Thrown rather than trapped: a mistake in one handler must not
+            // take down a server that is serving everything else correctly.
+            if let count, count < 0 {
+                throw NegativeCountError(count: count)
+            }
             self.storage = .stream(.init(count: count, callback: stream))
+        }
+
+        /// Thrown when a streaming body is created with a negative length.
+        ///
+        /// Conforms to ``AbortError``, so a handler that lets it propagate fails that one request
+        /// with a `500` and a diagnosable reason rather than bringing the process down.
+        public struct NegativeCountError: Error, Equatable, AbortError, CustomStringConvertible {
+            /// The negative length that was given.
+            public let count: Int
+
+            public init(count: Int) {
+                self.count = count
+            }
+
+            public var status: HTTPResponse.Status { .internalServerError }
+            public var reason: String {
+                "A streaming response body cannot declare a negative length (got \(count)). Pass `nil` when the length is not known in advance."
+            }
+            public var description: String { self.reason }
         }
 
         /// Creates a chunked, streaming HTTP ``Response`` body of unknown length.
@@ -201,7 +311,8 @@ extension Response {
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
         public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> ()) {
-            self.init(stream: stream, count: -1)
+            // `nil` can never be rejected, so this stays non-throwing.
+            self.storage = .stream(.init(count: nil, callback: stream))
         }
 
         /// `ExpressibleByStringLiteral` conformance.
@@ -240,21 +351,31 @@ private final class ForwardingBodyWriter: ResponseBodyWriter {
 
 /// A ``ResponseBodyWriter`` that accumulates everything written into `Data`, used to
 /// eagerly collect a streaming body instead of forwarding it to the connection.
-private final class CollectingBodyWriter: ResponseBodyWriter {    
+private final class CollectingBodyWriter: ResponseBodyWriter {
     var data: Data
+    let max: Int?
 
-    init(capacity: Int) {
+    init(capacity: Int, max: Int?) {
         self.data = Data(capacity: capacity)
+        self.max = max
     }
 
     func write(_ bytes: RawSpan) async throws {
+        try self.checkLimit(adding: bytes.byteCount)
         bytes.withUnsafeBytes { self.data.append(contentsOf: $0) }
     }
 
     /// Appending is synchronous, so the sequence's own storage can be borrowed instead of copying
     /// it into a `ContiguousArray` first, as the protocol's default implementation must.
     func write(_ bytes: some Sequence<UInt8>) async throws {
-        // `Data.append(contentsOf:)` already takes the contiguous fast path internally
         self.data.append(contentsOf: bytes)
+        try self.checkLimit(adding: 0)
+    }
+
+    private func checkLimit(adding count: Int) throws {
+        guard let max else { return }
+        guard self.data.count + count <= max else {
+            throw Abort(.contentTooLarge)
+        }
     }
 }

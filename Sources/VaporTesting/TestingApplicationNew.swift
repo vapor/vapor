@@ -32,6 +32,7 @@ extension VaporTestingRunner {
         port: Int? = nil,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
+        responseBodyCollection: ResponseBodyCollection = .collect,
         sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in }
     ) async throws -> TestingHTTPResponse {
@@ -40,7 +41,8 @@ extension VaporTestingRunner {
             url: .init(scheme: "http", host: hostname, port: port, path: path),
             headers: headers,
             body: body ?? ByteBufferAllocator().buffer(capacity: 0),
-            contentConfiguration: .default()
+            contentConfiguration: .default(),
+            responseBodyCollection: responseBodyCollection
         )
         try await beforeRequest(&request)
         do {

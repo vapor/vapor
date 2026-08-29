@@ -16,7 +16,7 @@ struct StandaloneMacroIntegrationTests {
 
             try await app.testing().test(.get, "/standalone/hello") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "hello from standalone")
+                try #expect(await res.body.requireString() == "hello from standalone")
             }
         }
     }
@@ -28,7 +28,7 @@ struct StandaloneMacroIntegrationTests {
 
             try await app.testing().test(.get, "/standalone/users/99") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "standalone user with id: 99")
+                try #expect(await res.body.requireString() == "standalone user with id: 99")
             }
         }
     }
@@ -40,7 +40,7 @@ struct StandaloneMacroIntegrationTests {
 
             try await app.testing().test(.post, "/standalone/create") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "created")
+                try #expect(await res.body.requireString() == "created")
             }
         }
     }
@@ -52,7 +52,7 @@ struct StandaloneMacroIntegrationTests {
 
             try await app.testing().test(.delete, "/standalone/remove/5") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "deleted 5")
+                try #expect(await res.body.requireString() == "deleted 5")
             }
         }
     }

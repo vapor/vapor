@@ -95,15 +95,6 @@ public struct Response: CustomStringConvertible, Sendable {
             try encoder.encode(content, to: &body, headers: &self.response.headers, userInfo: [:])
             self.response.body = .init(data: body)
         }
-
-        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C: Content {
-            guard let body = self.response.body.data else {
-                throw Abort(.unprocessableContent)
-            }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.response.headers, userInfo: [:])
-            try decoded.afterDecode()
-            return decoded
-        }
     }
 
     public var content: any ContentContainer {
@@ -164,19 +155,19 @@ public struct Response: CustomStringConvertible, Sendable {
 
 
 extension HTTPFields {
-    mutating func updateContentLength(_ contentLength: Int) {
-        let count = contentLength.description
-        switch contentLength {
-        case -1:
+    mutating func updateContentLength(_ contentLength: Int?) {
+        guard let contentLength else {
+            // Length not known in advance, so the body has to be chunked.
             self[.contentLength] = nil
             if "chunked" != self[.transferEncoding] {
                 self[.transferEncoding] = "chunked"
             }
-        default:
-            self[.transferEncoding] = nil
-            if count != self[.contentLength] {
-                self[.contentLength] = count
-            }
+            return
+        }
+        self[.transferEncoding] = nil
+        let count = contentLength.description
+        if count != self[.contentLength] {
+            self[.contentLength] = count
         }
     }
 }

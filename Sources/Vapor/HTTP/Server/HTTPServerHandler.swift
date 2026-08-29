@@ -108,7 +108,10 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
             }
 
             switch vaporResponse.body.storage {
-            case .stream(let bodyStream):
+            // A stream some copy of this body already collected is spent: its bytes live in the
+            // body's shared cache, so it is serialised down the buffered path below instead of by
+            // re-running a callback that would now write nothing.
+            case .stream(let bodyStream) where bodyStream.state.collected == nil:
                 // Streaming body: send the head, then let the body closure write chunks straight
                 // into the server's writer. The writer is non-Sendable (it wraps the server's
                 // move-only response writer), so it stays in this task; each `write` awaits the
@@ -116,13 +119,13 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // final chunk via `finish` once the closure returns.
                 let writer = NIOResponseBodyWriter(inner: try await sender.send(httpResponse))
                 try await bodyStream.callback(writer)
-                guard bodyStream.count < 0 || writer.bytesWritten == bodyStream.count else {
-                    // Stream lenght is different to what was expecting, this is an error state to close the connection
+                guard bodyStream.count == nil || writer.bytesWritten == bodyStream.count else {
+                    // Stream length differs from what was declared: an error state, so close the connection
                     Logger.current.debug(
                         "Response body stream wrote a different number of bytes than it declared, closing the connection",
                         metadata: [
                             "written": "\(writer.bytesWritten)",
-                            "declared": "\(bodyStream.count)",
+                            "declared": "\(bodyStream.count.map(String.init) ?? "unknown")",
                         ])
                     return
                 }
@@ -131,7 +134,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // Buffered body: single-shot write. Borrowing the body's bytes copies them straight
                 // into the server's container - a `.string`/`.data`/`.staticString` body is no
                 // longer materialised into an intermediate `ByteBuffer` first.
-                var responseBody = UniqueArray<UInt8>(minimumCapacity: vaporResponse.body.count)
+                var responseBody = UniqueArray<UInt8>(minimumCapacity: vaporResponse.body.count ?? 0)
                 try await vaporResponse.body.withStreamingBytes { bytes in
                     bytes.withUnsafeBytes { unsafe responseBody.append(copying: $0) }
                 }

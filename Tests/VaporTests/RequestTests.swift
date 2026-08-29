@@ -231,7 +231,7 @@ struct RequestTests {
 
             let ipV4Hostname = "127.0.0.1"
             try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.get, "vapor/is/fun") { res in
-                #expect(res.body.string == ipV4Hostname)
+                try #expect(await res.body.requireString() == ipV4Hostname)
             }
         }
     }
@@ -276,7 +276,7 @@ struct RequestTests {
             }
 
             try await app.testing(method: .running).test(.get, "remote") { res in
-                #expect(res.body.string == "[IPv4]192.0.2.60:80")
+                try #expect(await res.body.requireString() == "[IPv4]192.0.2.60:80")
             }
         }
     }
@@ -293,7 +293,7 @@ struct RequestTests {
             }
 
             try await app.testing(method: .running).test(.get, "remote") { res in
-                #expect(res.body.string == "[IPv4]5.6.7.8:80")
+                try #expect(await res.body.requireString() == "[IPv4]5.6.7.8:80")
             }
         }
     }
@@ -310,7 +310,7 @@ struct RequestTests {
 
             let ipV4Hostname = "127.0.0.1"
             try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.get, "remote") { res in
-                #expect(res.body.string.contains("[IPv4]\(ipV4Hostname)"))
+                try #expect(await res.body.requireString().contains("[IPv4]\(ipV4Hostname)"))
             }
         }
     }
@@ -329,7 +329,7 @@ struct RequestTests {
 
             let ipV4Hostname = "127.0.0.1"
             try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.get, "remote") { res in
-                #expect(res.body.string == "[IPv4]192.0.2.60:80")
+                try #expect(await res.body.requireString() == "[IPv4]192.0.2.60:80")
             }
         }
     }
@@ -348,7 +348,7 @@ struct RequestTests {
             try await app.testing(method: .running).test(.get, "remote", beforeRequest: { req in
                 req.headers[.xRequestId] = "test"
             }, afterResponse: { res in
-                #expect(res.body.string == "test")
+                try #expect(await res.body.requireString() == "test")
             })
         }
     }
@@ -361,7 +361,7 @@ struct RequestTests {
             }
 
             try await app.testing(method: .running).test(.get, "remote") { res in
-                #expect(res.body.string.contains("IP"))
+                try #expect(await res.body.requireString().contains("IP"))
             }
         }
     }

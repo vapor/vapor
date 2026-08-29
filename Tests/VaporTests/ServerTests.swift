@@ -1321,7 +1321,7 @@ struct ServerTests {
 
             try await app.testing().test(.get, "/ping") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "123")
+                try #expect(await res.body.requireString() == "123")
             }
         }
     }
