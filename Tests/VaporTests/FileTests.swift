@@ -31,7 +31,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.get, "/file-stream") { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream") { res in
                 let test = "the quick brown fox"
                 #expect(res.headers[.eTag] != nil)
                 try #expect(await res.body.requireString().contains(test))
@@ -48,7 +48,7 @@ struct FileTests {
 
             var headers = HTTPFields()
             headers[.connection] = "close"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res in
                 let test = "the quick brown fox"
                 #expect(res.headers[.eTag] != nil)
                 try #expect(await res.body.requireString().contains(test))
@@ -74,7 +74,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.get, "/file-stream") { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream") { res in
                 #expect(res.status == .internalServerError)
             }
         }
@@ -164,7 +164,7 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res in
                 let contentRange = res.headers[.contentRange]
                 let contentLength = res.headers[.contentLength]
 
@@ -194,7 +194,7 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res in
 
                 let contentRange = res.headers[.contentRange]
                 let contentLength = res.headers[.contentLength]
@@ -223,7 +223,7 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res in
 
                 let contentRange = res.headers[.contentRange]
                 let contentLength = res.headers[.contentLength]
@@ -252,7 +252,7 @@ struct FileTests {
 
             var headers = HTTPFields()
             headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res in
                 #expect(res.status == .partialContent)
 
                 #expect(res.headers[.contentLength] == "1")
@@ -344,7 +344,7 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-            try await app.testing().test(.get, "/Utilities/foo%20bar.html") { res async in
+            try await app.testing().test(.get, "/Utilities/foo%20bar.html") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "<h1>Hello</h1>\n")
             }
@@ -357,11 +357,11 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-            try await app.testing().test(.get, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
+            try await app.testing().test(.get, "%2e%2e/VaporTests/Utilities/foo.txt") { res in
                 #expect(res.status == .forbidden)
             }
 
-            try await app.testing().test(.get, "Utilities/foo.txt") { res async in
+            try await app.testing().test(.get, "Utilities/foo.txt") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "bar\n")
             }
@@ -374,12 +374,12 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
 
-            try await app.testing().test(.get, "Utilities/") { res async in
+            try await app.testing().test(.get, "Utilities/") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "<h1>Root Default</h1>\n")
             }
 
-            try await app.testing().test(.get, "Utilities/SubUtilities/") { res async in
+            try await app.testing().test(.get, "Utilities/SubUtilities/") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "<h1>Subdirectory Default</h1>\n")
             }
@@ -392,12 +392,12 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
 
-            try await app.testing().test(.get, "Utilities/") { res async in
+            try await app.testing().test(.get, "Utilities/") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "<h1>Root Default</h1>\n")
             }
 
-            try await app.testing().test(.get, "Utilities/SubUtilities/") { res async in
+            try await app.testing().test(.get, "Utilities/SubUtilities/") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "<h1>Root Default</h1>\n")
             }

@@ -182,12 +182,12 @@ struct RouteTests {
                 }
             }
 
-            try await app.testing().test(.get, "/foo?number=true") { res async in
+            try await app.testing().test(.get, "/foo?number=true") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "42")
             }
 
-            try await app.testing().test(.get, "/foo?number=false") { res async in
+            try await app.testing().test(.get, "/foo?number=false") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "string")
             }

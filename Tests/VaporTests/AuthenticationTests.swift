@@ -40,18 +40,18 @@ struct AuthenticationTests {
                 return try req.auth.require(Test.self).name
             }
 
-            try await app.testing().test(.get, "/test") { res async in
+            try await app.testing().test(.get, "/test") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Vapor""#)
             }
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer test"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer test"]) { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
                 #expect(res.headers[.wwwAuthenticate] == nil)
             }
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "bearer test"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "bearer test"]) { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
             }
@@ -87,18 +87,18 @@ struct AuthenticationTests {
             }
 
             let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-            try await app.testing().test(.get, "/test") { res async in
+            try await app.testing().test(.get, "/test") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Vapor", charset="UTF-8""#)
             }
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
                 #expect(res.headers[.wwwAuthenticate] == nil)
             }
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "basic \(basic)"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "basic \(basic)"]) { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
             }
@@ -123,12 +123,12 @@ struct AuthenticationTests {
                 return response
             }
 
-            try await app.testing().test(.get, "/test") { res async in
+            try await app.testing().test(.get, "/test") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Private \"Area\"", charset="UTF-8""#)
             }
 
-            try await app.testing().test(.get, "/existing") { res async in
+            try await app.testing().test(.get, "/existing") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Existing""#)
             }
@@ -163,24 +163,24 @@ struct AuthenticationTests {
                 Response(status: .ok)
             }
 
-            try await app.testing().test(.get, "/default") { res async in
+            try await app.testing().test(.get, "/default") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Vapor""#)
             }
 
-            try await app.testing().test(.get, "/custom") { res async in
+            try await app.testing().test(.get, "/custom") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="API \"v2\"""#)
             }
 
             // A challenge the responder chain set itself must not be replaced.
-            try await app.testing().test(.get, "/existing") { res async in
+            try await app.testing().test(.get, "/existing") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Existing""#)
             }
 
             // Only unauthorized responses get a challenge.
-            try await app.testing().test(.get, "/ok") { res async in
+            try await app.testing().test(.get, "/ok") { res in
                 #expect(res.status == .ok)
                 #expect(res.headers[.wwwAuthenticate] == nil)
             }
@@ -216,27 +216,27 @@ struct AuthenticationTests {
             }
 
             // An unauthorized error picks up the challenge but keeps its own reason.
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer revoked"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer revoked"]) { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="API""#)
                 try #expect(await res.body.requireString().contains("Token has been revoked."))
             }
 
             // An error carrying its own challenge keeps it verbatim.
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer expired"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer expired"]) { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="API", error="invalid_token""#)
                 try #expect(await res.body.requireString().contains("Token has expired."))
             }
 
             // Errors with any other status are left alone.
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer forbidden"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer forbidden"]) { res in
                 #expect(res.status == .forbidden)
                 #expect(res.headers[.wwwAuthenticate] == nil)
                 try #expect(await res.body.requireString().contains("Insufficient scope."))
             }
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer nonsense"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer nonsense"]) { res in
                 #expect(res.status == .internalServerError)
                 #expect(res.headers[.wwwAuthenticate] == nil)
             }
@@ -295,7 +295,7 @@ struct AuthenticationTests {
             }
 
             let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Vapor", charset="UTF-8""#)
                 try #expect(await res.body.requireString().contains("The credentials have expired."))
@@ -345,20 +345,20 @@ struct AuthenticationTests {
                 Response(status: .unauthorized)
             }
 
-            try await app.testing().test(.get, "/bearer-innermost") { res async in
+            try await app.testing().test(.get, "/bearer-innermost") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Bearer Realm""#)
                 // Only one scheme is advertised, even though the route accepts both.
                 #expect(res.headers[values: .wwwAuthenticate].count == 1)
             }
 
-            try await app.testing().test(.get, "/basic-innermost") { res async in
+            try await app.testing().test(.get, "/basic-innermost") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Basic realm="Basic Realm", charset="UTF-8""#)
                 #expect(res.headers[values: .wwwAuthenticate].count == 1)
             }
 
-            try await app.testing().test(.get, "/returned") { res async in
+            try await app.testing().test(.get, "/returned") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Bearer Realm""#)
             }
@@ -394,11 +394,11 @@ struct AuthenticationTests {
             }
 
             let basic = "test:secret:with:colon".data(using: .utf8)!.base64EncodedString()
-            try await app.testing().test(.get, "/test") { res async in
+            try await app.testing().test(.get, "/test") { res in
                 #expect(res.status == .unauthorized)
             }
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
             }
@@ -479,12 +479,12 @@ struct AuthenticationTests {
             }
 
             let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-            try await app.testing().test(.get, "/test") { res async in
+            try await app.testing().test(.get, "/test") { res in
                 #expect(res.status == .seeOther)
                 #expect(res.headers[.location] == "/redirect?orig=/test")
             }
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Basic \(basic)"]) { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
             }
@@ -537,12 +537,12 @@ struct AuthenticationTests {
             }
 
             var sessionCookie: HTTPCookies.Value?
-            try await app.testing().test(.get, "/test") { res async in
+            try await app.testing().test(.get, "/test") { res in
                 #expect(res.status == .unauthorized)
                 #expect(res.headers[.setCookie] == nil)
             }
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer test"]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer test"]) { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
                 if let cookie = res.headers.setCookie?["vapor-session"] {
@@ -552,7 +552,7 @@ struct AuthenticationTests {
                 }
             }
 
-            try await app.testing().test(.get, "/test", headers: [.cookie: sessionCookie!.serialize(name: "vapor-session")]) { res async in
+            try await app.testing().test(.get, "/test", headers: [.cookie: sessionCookie!.serialize(name: "vapor-session")]) { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
                 #expect(res.headers[.setCookie] != nil)
@@ -752,7 +752,7 @@ struct AuthenticationTests {
             }
 
             var sessionCookie: HTTPCookies.Value?
-            try await app.testing().test(.get, "/login") { res async in
+            try await app.testing().test(.get, "/login") { res in
                 #expect(res.status == .ok)
                 if let cookie = res.headers.setCookie?["vapor-session"] {
                     sessionCookie = cookie
@@ -762,7 +762,7 @@ struct AuthenticationTests {
             }
 
             let cookie = try #require(sessionCookie)
-            try await app.testing().test(.get, "/me", headers: [.cookie: cookie.serialize(name: "vapor-session")]) { res async in
+            try await app.testing().test(.get, "/me", headers: [.cookie: cookie.serialize(name: "vapor-session")]) { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
             }

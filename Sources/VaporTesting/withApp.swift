@@ -15,7 +15,7 @@ public import Logging
 /// @Test
 /// func helloWorld() async throws {
 ///     try await withApp(configure: configure) { app in
-///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
+///         try await app.testing().test(.GET, "hello", afterResponse: { res in
 ///             #expect(res.status == .ok)
 ///             try #expect(await res.body.requireString() == "Hello, world!")
 ///         })

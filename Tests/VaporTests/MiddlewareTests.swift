@@ -190,9 +190,9 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/")
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result async in
+            try await app.testing().test(.get, "/foo.txt") { result in
                 #expect(result.status == .ok)
-                #expect(result.body.string == "bar\n")
+                try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == nil)
                 #expect(result.headers[.age] == nil)
             }
@@ -205,9 +205,9 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .browserDefault)
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result async in
+            try await app.testing().test(.get, "/foo.txt") { result in
                 #expect(result.status == .ok)
-                #expect(result.body.string == "bar\n")
+                try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == nil)
                 #expect(result.headers[.age] == nil)
             }
@@ -221,9 +221,9 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .noCache)
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result async in
+            try await app.testing().test(.get, "/foo.txt") { result in
                 #expect(result.status == .ok)
-                #expect(result.body.string == "bar\n")
+                try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == "no-cache")
                 #expect(result.headers[.age] == nil)
             }
@@ -236,9 +236,9 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .cacheUpToDuration(.minutes(5)))
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result async in
+            try await app.testing().test(.get, "/foo.txt") { result in
                 #expect(result.status == .ok)
-                #expect(result.body.string == "bar\n")
+                try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == "max-age=300")
                 #expect(result.headers[.age] == "0")
             }
@@ -251,9 +251,9 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .custom(cacheControlHeader: .init(isPublic: true), ageHeader: 10))
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result async in
+            try await app.testing().test(.get, "/foo.txt") { result in
                 #expect(result.status == .ok)
-                #expect(result.body.string == "bar\n")
+                try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == "public")
                 #expect(result.headers[.age] == "10")
             }
@@ -266,9 +266,9 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities")
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/index.html") { result async in
+            try await app.testing().test(.get, "/index.html") { result in
                 #expect(result.status == .ok)
-                #expect(result.body.string == "<h1>Subdirectory Default</h1>\n")
+                try #expect(await result.body.requireString() == "<h1>Subdirectory Default</h1>\n")
             }
         }
     }
@@ -393,7 +393,7 @@ struct MiddlewareTests {
                 $0.headers[.userAgent] = "test"
             }) { response in
                 #expect(response.status == .ok)
-                #expect(response.body.string == "done")
+                try #expect(await response.body.requireString() == "done")
 
                 let span = try #require(tracer.finishedSpans.first)
                 #expect(span.operationName == "GET /testTracing")
