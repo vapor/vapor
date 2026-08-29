@@ -38,6 +38,7 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
+        responseBodyCollection: ResponseBodyCollection = .collect,
         sourceLocation: SourceLocation = #_sourceLocation,
         afterResponse: (TestingHTTPResponse) async throws -> ()
     ) async throws {
@@ -46,6 +47,7 @@ extension TestingApplicationTester {
             path,
             headers: headers,
             body: body,
+            responseBodyCollection: responseBodyCollection,
             sourceLocation: sourceLocation,
             beforeRequest: { _ in },
             afterResponse: afterResponse
@@ -57,6 +59,7 @@ extension TestingApplicationTester {
         _ path: String,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
+        responseBodyCollection: ResponseBodyCollection = .collect,
         sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in },
         afterResponse: (TestingHTTPResponse) async throws -> () = { _ in }
@@ -66,7 +69,8 @@ extension TestingApplicationTester {
             url: .init(path: path),
             headers: headers,
             body: body ?? ByteBufferAllocator().buffer(capacity: 0),
-            contentConfiguration: .default()
+            contentConfiguration: .default(),
+            responseBodyCollection: responseBodyCollection
         )
         try await beforeRequest(&request)
         do {
@@ -85,6 +89,7 @@ extension TestingApplicationTester {
         port: Int? = nil,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
+        responseBodyCollection: ResponseBodyCollection = .collect,
         sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in }
     ) async throws -> TestingHTTPResponse {
@@ -93,7 +98,8 @@ extension TestingApplicationTester {
             url: .init(scheme: "http", host: hostname, port: port, path: path),
             headers: headers,
             body: body ?? ByteBufferAllocator().buffer(capacity: 0),
-            contentConfiguration: .default()
+            contentConfiguration: .default(),
+            responseBodyCollection: responseBodyCollection
         )
         try await beforeRequest(&request)
         do {

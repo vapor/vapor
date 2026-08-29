@@ -269,7 +269,9 @@ struct RouteTests {
             try await app.testing(method: .running).test(.head, "/hello") { res in
                 #expect(res.status == .ok)
                 #expect(res.headers[.contentLength] == "2")
-                #expect(res.body.count == 0)
+                // The body has to be collected before it can be counted: an uncollected stream
+                // reports `-1`, not the number of bytes that actually arrived.
+                try #expect(await res.body.data()?.count == 0)
             }
         }
     }
@@ -288,7 +290,7 @@ struct RouteTests {
             try await app.testing(method: .running).test(.head, "/hello") { res in
                 #expect(res.status == .found)
                 #expect(res.headers[.contentLength] == "0")
-                #expect(res.body.count == 0)
+                try #expect(await res.body.data()?.count == 0)
             }
         }
     }
@@ -322,7 +324,7 @@ struct RouteTests {
 
             try await app.testing(method: .running).test(.get, "/no-content") { res in
                 #expect(res.status.code == 204)
-                #expect(res.body.count == 0)
+                try #expect(await res.body.data()?.count == 0)
             }
         }
     }
@@ -339,10 +341,10 @@ struct RouteTests {
 
             try await app.test(method: .running) { testApp in
                 let rootResponse = try await testApp.sendRequest(.get, "/api/addresses")
-                #expect(rootResponse.body.string == "a")
+                try #expect(await rootResponse.body.requireString() == "a")
 
                 let testResponse = try await testApp.sendRequest(.get, "/api/addresses/search/test")
-                #expect(testResponse.body.string == "b")
+                try #expect(await testResponse.body.requireString() == "b")
 
                 let emptySearch = try await testApp.sendRequest(.get, "/api/addresses/search")
                 #expect(emptySearch.status == .notFound)
@@ -453,35 +455,35 @@ struct RouteTests {
 
             try await app.test(method: .running) { testApp in
                 let happyPath = try await testApp.sendRequest(.get, "/foop/barp/buz")
-                #expect(happyPath.body.string == "foopbarp")
+                try #expect(await happyPath.body.requireString() == "foopbarp")
                 #expect(happyPath.status == .ok)
 
                 let leadingDoubleSlash = try await testApp.sendRequest(.get, "//foop/barp/buz")
-                #expect(leadingDoubleSlash.body.string == "foopbarp")
+                try #expect(await leadingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(leadingDoubleSlash.status == .ok)
 
                 let leadingAndMiddleDoubleSlash = try await testApp.sendRequest(.get, "//foop//barp/buz")
-                #expect(leadingAndMiddleDoubleSlash.body.string == "foopbarp")
+                try #expect(await leadingAndMiddleDoubleSlash.body.requireString() == "foopbarp")
                 #expect(leadingAndMiddleDoubleSlash.status == .ok)
 
                 let leadingMiddleAndTrailingDoubleSlash = try await testApp.sendRequest(.get, "//foop//barp//buz")
-                #expect(leadingMiddleAndTrailingDoubleSlash.body.string == "foopbarp")
+                try #expect(await leadingMiddleAndTrailingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(leadingMiddleAndTrailingDoubleSlash.status == .ok)
 
                 let middleDoubleSlash = try await testApp.sendRequest(.get, "/foop//barp/buz")
-                #expect(middleDoubleSlash.body.string == "foopbarp")
+                try #expect(await middleDoubleSlash.body.requireString() == "foopbarp")
                 #expect(middleDoubleSlash.status == .ok)
 
                 let middleAndTrailingDoubleSlash = try await testApp.sendRequest(.get, "/foop//barp//buz")
-                #expect(middleAndTrailingDoubleSlash.body.string == "foopbarp")
+                try #expect(await middleAndTrailingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(middleAndTrailingDoubleSlash.status == .ok)
 
                 let trailingDoubleSlash = try await testApp.sendRequest(.get, "/foop/barp//buz")
-                #expect(trailingDoubleSlash.body.string == "foopbarp")
+                try #expect(await trailingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(trailingDoubleSlash.status == .ok)
 
                 let leadingAndTrailingDoubleSlash = try await testApp.sendRequest(.get, "//foop/barp//buz")
-                #expect(leadingAndTrailingDoubleSlash.body.string == "foopbarp")
+                try #expect(await leadingAndTrailingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(leadingAndTrailingDoubleSlash.status == .ok)
             }
         }
@@ -516,11 +518,11 @@ struct RouteTests {
 
             try await app.test(method: .running) { testApp in
                 let emoticon = try await testApp.sendRequest(.get, "/Good👍")
-                #expect(emoticon.body.string == "👍")
+                try #expect(await emoticon.body.requireString() == "👍")
                 #expect(emoticon.status == .ok)
 
                 let japanese = try await testApp.sendRequest(.get, "/ようこそ世界へ")
-                #expect(japanese.body.string == "おめでとう")
+                try #expect(await japanese.body.requireString() == "おめでとう")
                 #expect(japanese.status == .ok)
             }
         }

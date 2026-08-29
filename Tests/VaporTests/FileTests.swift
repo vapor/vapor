@@ -259,7 +259,7 @@ struct FileTests {
                 let range = res.headers[.contentRange]!.split(separator: "/").first!.split(separator: " ").last!
                 #expect(range == "0-0")
 
-                #expect(res.body.count == 1)
+                try #expect(await res.body.data()?.count == 1)
             }
         }
     }
@@ -617,7 +617,7 @@ struct FileTests {
                 #expect(res.status == .ok)
                 // The length is advertised even though no body follows it.
                 #expect(res.headers[.contentLength] != nil)
-                #expect(res.body.count == 0)
+                try #expect(await res.body.data()?.count == 0)
             }
 
             // A HEAD response carries no body, so opening and reading the file would be wasted
@@ -636,13 +636,13 @@ struct FileTests {
             try await app.test(method: .running) { runner in
                 let get = try await runner.sendRequest(.get, "/Utilities/foo.txt")
                 #expect(get.status == .ok)
-                #expect(get.body.count > 0)
+                try #expect(await (get.body.data()?.count ?? 0) > 0)
 
                 // HEAD gets the headers a GET would have returned, with no body.
                 let head = try await runner.sendRequest(.head, "/Utilities/foo.txt")
                 #expect(head.status == .ok)
                 #expect(head.headers[.contentLength] == get.headers[.contentLength])
-                #expect(head.body.count == 0)
+                try #expect(await head.body.data()?.count == 0)
 
                 // Everything else falls through the middleware; nothing else is registered here,
                 // so it 404s rather than being answered with the file.
