@@ -14,11 +14,24 @@ public struct ClientResponse: Sendable {
         }
     }
     private let contentConfiguration: ContentConfiguration
+    /// The most bytes ``content`` will buffer when decoding a streaming body.
+    ///
+    /// A response arriving from somewhere else is not bounded by anything this process controls, so
+    /// collecting one has to have a ceiling. Streaming it with ``Response/Body/withStreamingBytes(_:)``
+    /// is not limited by this - only holding the whole thing in memory is.
+    public let maxBodySize: Int
 
-    public init(status: HTTPResponse.Status = .ok, headers: HTTPFields = [:], body: Response.Body = .empty, contentConfiguration: ContentConfiguration = .default()) {
+    public init(
+        status: HTTPResponse.Status = .ok,
+        headers: HTTPFields = [:],
+        body: Response.Body = .empty,
+        maxBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB, matching `ClientRequest`
+        contentConfiguration: ContentConfiguration = .default()
+    ) {
         self.status = status
         self.headers = headers
         self.body = body
+        self.maxBodySize = maxBodySize
         self.contentConfiguration = contentConfiguration
     }
 }
@@ -27,6 +40,7 @@ extension ClientResponse {
     private struct _ContentContainer: ContentContainer {
         var body: Response.Body
         var headers: HTTPFields
+        let maxBodySize: Int
         let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
@@ -41,7 +55,7 @@ extension ClientResponse {
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
             var body = self.body
-            guard let data = try await body.collect() else {
+            guard let data = try await body.collect(max: self.maxBodySize) else {
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: data, headers: self.headers, userInfo: [:])
@@ -58,7 +72,7 @@ extension ClientResponse {
 
     public var content: any ContentContainer {
         get {
-            _ContentContainer(body: self.body, headers: self.headers, contentConfiguration: self.contentConfiguration)
+            _ContentContainer(body: self.body, headers: self.headers, maxBodySize: self.maxBodySize, contentConfiguration: self.contentConfiguration)
         }
         set {
             let container = (newValue as! _ContentContainer)
@@ -81,10 +95,16 @@ extension ClientResponse: CustomStringConvertible {
 
 extension ClientResponse: ResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
-        Response(
+        // Returning a client response from a handler is proxying, so the origin's connection-specific
+        // fields have to go: its `Connection: close` would close *our* client's connection, and its
+        // framing headers describe a hop this response is not travelling over. `Response.init` then
+        // sets the framing to match the body actually being sent.
+        var headers = self.headers
+        headers.removeHopByHopFields()
+        return Response(
             status: self.status,
-            headers: self.headers,
-            body: .empty,
+            headers: headers,
+            body: self.body,
             contentConfiguration: request.application.contentConfiguration
         )
     }

@@ -31,14 +31,29 @@ internal struct VaporHTTPClient: Client {
             request,
             deadline: .now() + clientRequest.timeout,
             logger: Logger.current)
+        // Wrapping AHC's body ourselves means losing its `collect(upTo:)` size check, so the declared
+        // length is rejected here instead - before a byte is read, as AHC did.
+        let declaredLength = response.headers.first(name: "content-length").flatMap(Int.init)
+        if let declaredLength, declaredLength > clientRequest.maxResponseBodySize {
+            Logger.current.debug(
+                "Response body is larger than the configured maximum",
+                metadata: [
+                    "declared": "\(declaredLength)",
+                    "maximum": "\(clientRequest.maxResponseBodySize)",
+                ])
+            throw Abort(.contentTooLarge)
+        }
         return ClientResponse(
             status: .init(code: Int(response.status.code)),
             headers: .init(response.headers, splitCookie: false),
-            body: .init(stream: { writer in
+            // Declaring the length lets a proxied response keep its `Content-Length` instead of
+            // being re-framed as chunked. `nil` when the origin did not say.
+            body: try .init(stream: { writer in
                 for try await chunk in response.body {
                     try await writer.write(chunk.readableBytesSpan)
                 }
-            }),
+            }, count: declaredLength),
+            maxBodySize: clientRequest.maxResponseBodySize,
             contentConfiguration: self.contentConfiguration
         )
     }
