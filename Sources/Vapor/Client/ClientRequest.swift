@@ -13,7 +13,7 @@ public struct ClientRequest: Sendable {
     public var url: URI
     public var headers: HTTPFields
     public var body: ByteBuffer?
-    public var timeout: TimeAmount
+    public var timeout: Duration
     public var maxResponseBodySize: Int
     private let contentConfiguration: ContentConfiguration
 
@@ -22,7 +22,7 @@ public struct ClientRequest: Sendable {
         url: URI = "/",
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        timeout: TimeAmount? = nil,
+        timeout: Duration? = nil,
         maxResponseBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB
         contentConfiguration: ContentConfiguration = .default()
     ) {

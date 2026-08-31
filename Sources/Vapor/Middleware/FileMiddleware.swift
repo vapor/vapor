@@ -3,8 +3,7 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-#warning("Make this internal")
-public import NIOCore
+import NIOCore
 import _NIOFileSystem
 public import HTTPTypes
 
@@ -220,8 +219,8 @@ extension FileMiddleware {
         /// The browser will cache the file for the specified duration.
         ///
         /// A typical cache duration may be 5 minutes, for instance: `.cacheUpToDuration(.minutes(5))`
-        public static func cacheUpToDuration(_ duration: TimeAmount) -> CachePolicy {
-            CachePolicy(cacheControlHeader: .init(maxAge: Int(duration.nanoseconds/1_000_000_000)), ageHeader: 0)
+        public static func cacheUpToDuration(_ duration: Duration) -> CachePolicy {
+            CachePolicy(cacheControlHeader: .init(maxAge: Int(duration.components.seconds)), ageHeader: 0)
         }
 
         /// A custom cache control policy that should be used for all files.
