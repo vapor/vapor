@@ -29,7 +29,7 @@ internal struct VaporHTTPClient: Client {
         }
         let response = try await self.http.execute(
             request,
-            deadline: .now() + clientRequest.timeout,
+            deadline: .now() + TimeAmount(clientRequest.timeout),
             logger: Logger.current)
         // Wrapping AHC's body ourselves means losing its `collect(upTo:)` size check, so the declared
         // length is rejected here instead - before a byte is read, as AHC did.
