@@ -218,8 +218,8 @@ extension FileMiddleware {
 
         /// The browser will cache the file for the specified duration.
         ///
-        /// A typical cache duration may be 5 minutes, for instance: `.cacheUpToDuration(.minutes(5))`
-        public static func cacheUpToDuration(_ duration: Duration) -> CachePolicy {
+        /// A typical cache duration may be 5 minutes, for instance: `.cache(upTo: .seconds(300))`
+        public static func cache(upTo duration: Duration) -> CachePolicy {
             CachePolicy(cacheControlHeader: .init(maxAge: Int(duration.components.seconds)), ageHeader: 0)
         }
 
