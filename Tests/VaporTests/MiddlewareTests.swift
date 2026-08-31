@@ -233,7 +233,7 @@ struct MiddlewareTests {
     @Test("Test File Middleware With Max Age Cache Policy")
     func testFileMiddlewareWithMaxAgeCachePolicy() async throws {
         try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .cacheUpToDuration(.minutes(5)))
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .cacheUpToDuration(.seconds(300)))
             app.middleware.use(fileMiddleware)
 
             try await app.testing().test(.get, "/foo.txt") { result in
