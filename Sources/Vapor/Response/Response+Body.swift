@@ -362,7 +362,7 @@ private final class CollectingBodyWriter: ResponseBodyWriter {
 
     func write(_ bytes: RawSpan) async throws {
         try self.checkLimit(adding: bytes.byteCount)
-        bytes.withUnsafeBytes { self.data.append(contentsOf: $0) }
+        bytes.withUnsafeBytes { unsafe self.data.append(contentsOf: $0) }
     }
 
     /// Appending is synchronous, so the sequence's own storage can be borrowed instead of copying

@@ -90,8 +90,7 @@ extension ClientRequest {
 
     public var content: any ContentContainer {
         get {
-            var bodyData = body
-            return _ContentContainer(body: bodyData?.getData(at: 0, length: bodyData?.readableBytes ?? 0), headers: self.headers, contentConfiguration: self.contentConfiguration) }
+            return _ContentContainer(body: body?.getData(at: 0, length: body?.readableBytes ?? 0), headers: self.headers, contentConfiguration: self.contentConfiguration) }
         set {
             let container = (newValue as! _ContentContainer)
             self.body = ByteBuffer(data: container.body ?? Data())
