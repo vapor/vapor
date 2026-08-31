@@ -483,7 +483,7 @@ struct StreamingBodyTests {
 
     @Test("collect() gathers a streaming body into a single buffer")
     func testCollectStreamingBody() async throws {
-        var body = try Response.Body(stream: { writer in
+        var body = Response.Body(stream: { writer in
             try await writer.write("Hello, ")
             try await writer.write("collected!")
         })
@@ -727,7 +727,7 @@ struct StreamingBodyTests {
 
         var seen = ""
         try await original.withStreamingBytes { span in
-            seen += String(decoding: span.withUnsafeBytes { Array($0) }, as: UTF8.self)
+            seen += String(decoding: span.withUnsafeBytes { unsafe Array($0) }, as: UTF8.self)
         }
         #expect(seen == "payload")
         #expect(runs.withLockedValue { $0 } == 1)
@@ -815,7 +815,7 @@ struct StreamingBodyTests {
     func testTesterResponseBodyCollection() async throws {
         try await withApp { app in
             app.get("stream") { _ in
-                Response(body: try .init(stream: { writer in
+                Response(body: .init(stream: { writer in
                     try await writer.write("alpha")
                     try await writer.write("beta")
                 }))
