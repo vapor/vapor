@@ -285,7 +285,7 @@ struct ServerTLSTests {
             )
             try await app.boot()
 
-            try await withThrowingTaskGroup(of: Void.self) { group in
+            await withTaskGroup(of: Void.self) { group in
                 group.addTask { try? await app.server.run() }
 
                 // The address never arrives, so every waiter must be handed the startup error

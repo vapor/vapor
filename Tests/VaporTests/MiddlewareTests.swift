@@ -402,7 +402,7 @@ struct MiddlewareTests {
             // No declared length, and the middleware must not read the body to find one - so there is
             // no size to record. This used to record the `-1` sentinel as if it were a byte count.
             app.get("streamMetrics") { _ in
-                Response(body: try .init(stream: { writer in
+                Response(body: .init(stream: { writer in
                     try await writer.write("alpha")
                     try await writer.write("beta")
                 }))
