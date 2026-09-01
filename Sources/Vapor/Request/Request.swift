@@ -34,10 +34,7 @@ public struct Request: CustomStringConvertible, Sendable {
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPFields {
-        get { self.requestBox.withLockedValue { $0.headers } }
-        set { self.requestBox.withLockedValue { $0.headers = newValue } }
-    }
+    public var headers: HTTPFields
 
     /// A unique ID for the request.
     ///
@@ -101,52 +98,71 @@ public struct Request: CustomStringConvertible, Sendable {
     }
 
     private struct _ContentContainer: ContentContainer, Sendable {
-        var request: Request
+        var body: ByteBuffer?
+        var headers: HTTPFields
+        let contentConfiguration: ContentConfiguration
+
+        /// The request's own box rather than a snapshot: a streamed body is consumed as it is read,
+        /// so the container has to draw from the same stream the request holds.
+        let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
+        let maxBodySize: Int
 
         var contentType: HTTPMediaType? {
-            self.request.headers.contentType
-        }
-
-        var contentConfiguration: ContentConfiguration {
-            self.request.application.contentConfiguration
+            self.headers.contentType
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = Data()
-            try encoder.encode(encodable, to: &body, headers: &self.request.headers, userInfo: [:])
-            let byteBuffer = ByteBuffer(data: body)
-            self.request.bodyStorage.withLockedValue { $0 = .collected(byteBuffer) }
+            try encoder.encode(encodable, to: &body, headers: &self.headers, userInfo: [:])
+            self.body = ByteBuffer(data: body)
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
-            if let stream = self.request.streamBodyStorage.withLockedValue({ $0 }) {
-                let buffer = try await self.request.collectStream(stream, maxSize: request.application.routes.defaultMaxBodySize.value)
+            if let stream = self.streamBodyStorage.withLockedValue({ $0 }) {
+                let buffer = try await Request.collectStream(stream, maxSize: self.maxBodySize)
                 let bufferData = buffer.getData(at: 0, length: buffer.readableBytes) ?? Data()
-                return try decoder.decode(D.self, from: bufferData, headers: self.request.headers, userInfo: [:])
+                return try decoder.decode(D.self, from: bufferData, headers: self.headers, userInfo: [:])
             }
-            guard let body = self.request.body.data else {
+            guard let body = self.body else {
                 Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
             let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
-            return try decoder.decode(D.self, from: bodyData, headers: self.request.headers, userInfo: [:])
+            return try decoder.decode(D.self, from: bodyData, headers: self.headers, userInfo: [:])
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
             var body = Data()
-            try encoder.encode(content, to: &body, headers: &self.request.headers, userInfo: [:])
-            let byteBuffer = ByteBuffer(data: body)
-            self.request.bodyStorage.withLockedValue { $0 = .collected(byteBuffer) }
+            try encoder.encode(content, to: &body, headers: &self.headers, userInfo: [:])
+            self.body = ByteBuffer(data: body)
         }
     }
 
     /// This container is used to read your `Decodable` type using a `ContentDecoder` implementation.
     /// If no `ContentDecoder` is provided, a `Request`'s `Content-Type` header is used to select a registered decoder.
+    ///
+    /// As with ``query``, the container holds copies of the body and headers and the setter writes
+    /// them back, so `req.content.encode(_:)` propagates without relying on that state living behind
+    /// a reference.
     public var content: any ContentContainer {
-        get { _ContentContainer(request: self) }
-        set { } // ignore since Request is a reference type
+        get {
+            _ContentContainer(
+                body: self.body.data,
+                headers: self.headers,
+                contentConfiguration: self.application.contentConfiguration,
+                streamBodyStorage: self.streamBodyStorage,
+                maxBodySize: self.application.routes.defaultMaxBodySize.value
+            )
+        }
+        set {
+            let container = newValue as! _ContentContainer
+            self.headers = container.headers
+            self.bodyStorage.withLockedValue { storage in
+                storage = container.body.map { .collected($0) } ?? .none
+            }
+        }
     }
 
     public var body: Body {
@@ -189,12 +205,6 @@ public struct Request: CustomStringConvertible, Sendable {
 
     /// Authentication storage for the request
     public let auth: Authentication
-
-    struct RequestBox: Sendable {
-        var headers: HTTPFields
-    }
-
-    let requestBox: NIOLockedValueBox<RequestBox>
 
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
@@ -245,10 +255,6 @@ public struct Request: CustomStringConvertible, Sendable {
             bodyStorage = .none
         }
 
-        let storageBox = RequestBox(
-            headers: headers,
-        )
-        self.requestBox = .init(storageBox)
         self.id = requestID
         self.application = application
 
@@ -264,6 +270,7 @@ public struct Request: CustomStringConvertible, Sendable {
         self.route = nil
         self.parameters = .init()
         self.url = url
+        self.headers = headers
     }
 
     package init(_ other: Request, route: Route?, parameters: Parameters) {
@@ -275,15 +282,15 @@ public struct Request: CustomStringConvertible, Sendable {
         self.peerCertificateChain = other.peerCertificateChain
         self.auth = other.auth
         self.sessionCache = other.sessionCache
-        self.requestBox = other.requestBox
         self.bodyStorage = other.bodyStorage
         self.streamBodyStorage = other.streamBodyStorage
         self.route = route
         self.parameters = parameters
         self.url = other.url
+        self.headers = other.headers
     }
 
-    internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
+    internal static func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
         var collected = ByteBuffer()
         for await var chunk in stream {
             collected.writeBuffer(&chunk)
