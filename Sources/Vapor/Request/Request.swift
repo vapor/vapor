@@ -102,11 +102,6 @@ public struct Request: CustomStringConvertible, Sendable {
         var headers: HTTPFields
         let contentConfiguration: ContentConfiguration
 
-        /// The request's own box rather than a snapshot: a streamed body is consumed as it is read,
-        /// so the container has to draw from the same stream the request holds.
-        let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
-        let maxBodySize: Int
-
         var contentType: HTTPMediaType? {
             self.headers.contentType
         }
@@ -118,13 +113,8 @@ public struct Request: CustomStringConvertible, Sendable {
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
-            if let stream = self.streamBodyStorage.withLockedValue({ $0 }) {
-                let buffer = try await Request.collectStream(stream, maxSize: self.maxBodySize)
-                let bufferData = buffer.getData(at: 0, length: buffer.readableBytes) ?? Data()
-                return try decoder.decode(D.self, from: bufferData, headers: self.headers, userInfo: [:])
-            }
             guard let body = self.body else {
-                Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
+                // This shouldn't be an issue when we support streaming bodies, we should just be able to collect the body
                 throw Abort(.unprocessableContent)
             }
             let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
@@ -152,8 +142,6 @@ public struct Request: CustomStringConvertible, Sendable {
                 body: self.body.data,
                 headers: self.headers,
                 contentConfiguration: self.application.contentConfiguration,
-                streamBodyStorage: self.streamBodyStorage,
-                maxBodySize: self.application.routes.defaultMaxBodySize.value
             )
         }
         set {
@@ -167,10 +155,6 @@ public struct Request: CustomStringConvertible, Sendable {
 
     public var body: Body {
         Body(self)
-    }
-
-    public var newBody: NewBody {
-        NewBody(underlying: self.streamBodyStorage.withLockedValue({ $0 }), maxBodySize: 16*1024)
     }
 
     internal enum BodyStorage: Sendable {
@@ -207,7 +191,6 @@ public struct Request: CustomStringConvertible, Sendable {
     public let auth: Authentication
 
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
-    internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
     internal let sessionCache: SessionCache
 
     public init(
@@ -260,7 +243,6 @@ public struct Request: CustomStringConvertible, Sendable {
 
         self.remoteAddress = remoteAddress
         self.bodyStorage = .init(bodyStorage)
-        self.streamBodyStorage = .init(nil)
         self.auth = Authentication()
         self.sessionCache = SessionCache()
 
@@ -283,21 +265,9 @@ public struct Request: CustomStringConvertible, Sendable {
         self.auth = other.auth
         self.sessionCache = other.sessionCache
         self.bodyStorage = other.bodyStorage
-        self.streamBodyStorage = other.streamBodyStorage
         self.route = route
         self.parameters = parameters
         self.url = other.url
         self.headers = other.headers
-    }
-
-    internal static func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
-        var collected = ByteBuffer()
-        for await var chunk in stream {
-            collected.writeBuffer(&chunk)
-            guard collected.readableBytes <= maxSize else {
-                throw Abort(.contentTooLarge)
-            }
-        }
-        return collected
     }
 }
