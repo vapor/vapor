@@ -115,6 +115,35 @@ struct ContentTests {
         }
     }
 
+    @Test("Encoding a Request's content writes back both the body and the content type")
+    func testRequestContentContainerEncodeWritesBack() async throws {
+        struct FooContent: Content, Equatable {
+            var message: String = "hi"
+        }
+
+        try await withApp { app in
+            // `content` vends a value, so `encode` mutates a copy and the setter on
+            // ``Request/content`` is what puts the result back on the request. Both halves are
+            // asserted deliberately: a container that reached the body through a reference but the
+            // headers through a copy would still land the body while silently dropping the content
+            // type the encoder sets, leaving the request undecodable for a non-obvious reason.
+            var request = Request(application: app)
+            try request.content.encode(FooContent())
+
+            #expect(request.headers.contentType == .json)
+            #expect(request.body.string == #"{"message":"hi"}"#)
+            #expect(try await request.content.decode(FooContent.self) == FooContent())
+
+            // Same again for the overload taking an explicit content type.
+            var explicit = Request(application: app)
+            try explicit.content.encode(FooContent(), as: .json)
+
+            #expect(explicit.headers.contentType == .json)
+            #expect(explicit.body.string == #"{"message":"hi"}"#)
+            #expect(try await explicit.content.decode(FooContent.self) == FooContent())
+        }
+    }
+
     @Test("Test Content Container Decode")
     func testContentContainerDecode() async throws {
         struct FooContent: Content, Equatable {
