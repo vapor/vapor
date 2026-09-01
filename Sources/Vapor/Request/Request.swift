@@ -187,7 +187,6 @@ public struct Request: CustomStringConvertible, Sendable {
     internal let defaultMaxBodySize: ByteCount
 
     public init(
-        application: Application,
         method: HTTPRequest.Method = .get,
         url: URI = "/",
         version: HTTPVersion = .init(major: 1, minor: 1),
@@ -200,7 +199,6 @@ public struct Request: CustomStringConvertible, Sendable {
         defaultMaxBodySize: ByteCount = "16kb",
     ) {
         self.init(
-            application: application,
             method: method,
             url: url,
             version: version,
@@ -218,7 +216,6 @@ public struct Request: CustomStringConvertible, Sendable {
     }
 
     internal init(
-        application: Application,
         method: HTTPRequest.Method,
         url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
@@ -238,13 +235,10 @@ public struct Request: CustomStringConvertible, Sendable {
         }
 
         self.id = requestID
-//        self.application = application
-
         self.remoteAddress = remoteAddress
         self.bodyStorage = .init(bodyStorage)
         self.auth = Authentication()
         self.sessionCache = SessionCache()
-
         self.method = method
         self.peerCertificateChain = peerCertificateChain
         self.version = version
@@ -257,7 +251,6 @@ public struct Request: CustomStringConvertible, Sendable {
     }
 
     package init(_ other: Request, route: Route?, parameters: Parameters) {
-//        self.application = other.application
         self.method = other.method
         self.version = other.version
         self.id = other.id
