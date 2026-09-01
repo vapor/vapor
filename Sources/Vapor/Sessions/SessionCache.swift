@@ -1,6 +1,7 @@
 import NIOConcurrencyHelpers
 
 /// Singleton service cache for a `Session`. Used with a message's private container.
+#warning("Match the Authentication style to avoid lots of allocations on every `Request`")
 internal final class SessionCache: Sendable {
     /// Set to `true` when passing through middleware.
     let middlewareFlag: NIOLockedValueBox<Bool>
