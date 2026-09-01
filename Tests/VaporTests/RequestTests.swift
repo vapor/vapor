@@ -82,6 +82,35 @@ struct RequestTests {
         }
     }
 
+    @Test("Test Streaming Request Content Decoding", .timeLimit(.minutes(1)))
+    func testStreamingRequestContentDecoding() async throws {
+        struct Payload: Content, Equatable {
+            var message: String
+        }
+
+        try await withApp { app in
+            app.on(.post, "stream-decode", body: .stream) { req async throws -> String in
+                #expect(req.body.data != nil)
+                return try await req.content.decode(Payload.self).message
+            }
+
+            try await withRunningApp(app: app) { port in
+                let testValue = String.randomDigits()
+                let json = #"{"message":"\#(testValue)"}"#
+
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/stream-decode")
+                request.method = .POST
+                request.headers.add(name: "content-type", value: "application/json")
+                request.body = .stream(json.utf8.async, length: .unknown)
+
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
+            }
+        }
+    }
+
     @Test("Test Streaming Request Body Cleanup", .disabled())
     func testStreamingRequestBodyCleansUp() async throws {
         try await withApp { app in
