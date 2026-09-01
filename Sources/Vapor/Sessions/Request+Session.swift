@@ -32,18 +32,4 @@ extension Request {
     public var hasSession: Bool {
         self.sessionCache.session.withLockedValue { $0 != nil }
     }
-
-    private struct SessionCacheKey: StorageKey {
-        typealias Value = SessionCache
-    }
-
-//    internal var _sessionCache: SessionCache {
-//        if let existing = self.storage[SessionCacheKey.self] {
-//            return existing
-//        } else {
-//            let new = SessionCache()
-//            self.storage[SessionCacheKey.self] = new
-//            return new
-//        }
-//    }
 }
