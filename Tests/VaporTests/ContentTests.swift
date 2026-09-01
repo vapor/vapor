@@ -144,6 +144,29 @@ struct ContentTests {
         }
     }
 
+    @Test("Encoding a Request's content updates Content-Length")
+    func testRequestContentContainerEncodeUpdatesContentLength() async throws {
+        struct FooContent: Content, Equatable {
+            var message: String = "hi"
+        }
+
+        try await withApp { app in
+            var request = Request(application: app, collectedBody: .init(string: "xx"))
+            #expect(request.headers[.contentLength] == "2")
+
+            try request.content.encode(FooContent())
+
+            // The body really is replaced...
+            #expect(request.body.string == #"{"message":"hi"}"#)
+
+            // ...but the header is left describing the old one.
+            #warning("`Request.body` is computed, so unlike `Response` there is no `didSet` to refresh Content-Length when the body changes. Fix in the body overhaul and drop this `withKnownIssue`")
+            withKnownIssue("Content-Length still describes the previous body") {
+                #expect(request.headers[.contentLength] == "16")
+            }
+        }
+    }
+
     @Test("Test Content Container Decode")
     func testContentContainerDecode() async throws {
         struct FooContent: Content, Equatable {

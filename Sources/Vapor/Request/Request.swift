@@ -16,9 +16,6 @@ public struct Request: CustomStringConvertible, Sendable {
     public let application: Application
 
     /// The HTTP method for this request.
-    ///
-    ///     httpReq.method = .get
-    ///
     public let method: HTTPRequest.Method
 
     /// The URL used on this request.
@@ -28,8 +25,6 @@ public struct Request: CustomStringConvertible, Sendable {
     public let version: HTTPVersion
 
     /// The header fields for this HTTP request.
-    /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
-    /// when the `body` property is mutated.
     public var headers: HTTPFields
 
     /// A unique ID for the request.
