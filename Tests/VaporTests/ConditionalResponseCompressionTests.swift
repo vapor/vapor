@@ -783,7 +783,7 @@ struct ConditionalCompressionTests {
             on app: Application,
             sourceLocation: SourceLocation = #_sourceLocation
         ) async throws {
-            let response = try await middleware.respond(to: Request(application: app), chainingTo: responder)
+            let response = try await middleware.respond(to: Request(), chainingTo: responder)
             let header = response.headers[values: .xVaporResponseCompression]
 
             #expect(header == compressionValue.map { $0.components(separatedBy: ", ") }?.map { String($0[...]) } ?? [], sourceLocation: sourceLocation)

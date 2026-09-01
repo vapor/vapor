@@ -577,7 +577,7 @@ struct FileTests {
         let filePath = try await makeTemporaryFile(size: 8 << 20)
 
         try await withApp { app in
-            let request = Request(application: app)
+            let request = Request()
 
             // `close()` is dispatched through a thread pool that refuses cancelled work, so a
             // handle closed naively from a cancelled task stays open and trips NIOFileSystem's

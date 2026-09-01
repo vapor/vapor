@@ -268,8 +268,8 @@ struct RequestTests {
     @Test("Test Request IDs are Unique")
     func testRequestIdsAreUnique() async throws {
         try await withApp { app in
-            let request1 = Request(application: app)
-            let request2 = Request(application: app)
+            let request1 = Request()
+            let request2 = Request()
 
             #expect(request1.id != request2.id)
         }

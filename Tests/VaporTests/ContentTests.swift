@@ -17,7 +17,6 @@ struct ContentTests {
     func testContent() async throws {
         try await withApp { app throws in
             var request = Request(
-                application: app,
                 collectedBody: .init(string: #"{"hello": "world"}"#)
             )
             request.headers.contentType = .json
@@ -59,7 +58,6 @@ struct ContentTests {
 
         try await withApp { app throws in
             var request = Request(
-                application: app,
                 collectedBody: .init(string: complexJSON)
             )
             request.headers.contentType = .json
@@ -127,7 +125,7 @@ struct ContentTests {
             // asserted deliberately: a container that reached the body through a reference but the
             // headers through a copy would still land the body while silently dropping the content
             // type the encoder sets, leaving the request undecodable for a non-obvious reason.
-            var request = Request(application: app)
+            var request = Request()
             try request.content.encode(FooContent())
 
             #expect(request.headers.contentType == .json)
@@ -135,7 +133,7 @@ struct ContentTests {
             #expect(try await request.content.decode(FooContent.self) == FooContent())
 
             // Same again for the overload taking an explicit content type.
-            var explicit = Request(application: app)
+            var explicit = Request()
             try explicit.content.encode(FooContent(), as: .json)
 
             #expect(explicit.headers.contentType == .json)
@@ -151,7 +149,7 @@ struct ContentTests {
         }
 
         try await withApp { app in
-            var request = Request(application: app, collectedBody: .init(string: "xx"))
+            var request = Request(collectedBody: .init(string: "xx"))
             #expect(request.headers[.contentLength] == "2")
 
             try request.content.encode(FooContent())
@@ -577,7 +575,6 @@ struct ContentTests {
 
         try await withApp { app in
             var request = Request(
-                application: app,
                 collectedBody: body
             )
 
@@ -594,7 +591,6 @@ struct ContentTests {
         // way to know about the hook, so the value came back unprocessed.
         try await withApp { app in
             var request = Request(
-                application: app,
                 collectedBody: .init(string: #"{"name": "before decode"}"#)
             )
             request.headers.contentType = .json
@@ -661,7 +657,6 @@ struct ContentTests {
 
         try await withApp { app in
             var request = Request(
-                application: app,
                 collectedBody: body
             )
 
@@ -676,7 +671,6 @@ struct ContentTests {
     func testQueryHooks() async throws {
         try await withApp { app in
             var request = Request(
-                application: app,
                 collectedBody: .init(string: "")
             )
             request.url.query = "name=before+decode"
@@ -693,7 +687,6 @@ struct ContentTests {
     func testDecodePercentEncodedQuery() async throws {
         try await withApp { app throws in
             var request = Request(
-                application: app,
                 collectedBody: .init(string: "")
             )
             request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
@@ -720,7 +713,7 @@ struct ContentTests {
     @Test("Test Snake Case Coding Key Error")
     func testSnakeCaseCodingKeyError() async throws {
         try await withApp { app in
-            var req = Request(application: app)
+            var req = Request()
             try req.content.encode([
                 "title": "The title"
             ], as: .json)
@@ -747,7 +740,6 @@ struct ContentTests {
     func testDataCorruptionError() async throws {
         try await withApp { app in
             var req = Request(
-                application: app,
                 method: .get,
                 url: URI(string: "https://vapor.codes"),
                 collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#)
@@ -768,7 +760,7 @@ struct ContentTests {
     @Test("Test ValueNotFoundError")
     func testValueNotFoundError() async throws {
         try await withApp { app in
-            var req = Request(application: app)
+            var req = Request()
             try req.content.encode([
                 "items": ["1"]
             ], as: .json)
@@ -797,7 +789,7 @@ struct ContentTests {
     @Test("Test Type Mismatch Error")
     func testTypeMismatchError() async throws {
         try await withApp { app in
-            var req = Request(application: app)
+            var req = Request()
             try req.content.encode([
                 "item": [
                     "title": "The title"

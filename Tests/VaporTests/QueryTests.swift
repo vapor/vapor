@@ -12,7 +12,7 @@ struct QueryTests {
     @Test("Test Query")
     func testQuery() async throws {
         try await withApp { app throws in
-            var request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = "hello=world"
@@ -23,7 +23,7 @@ struct QueryTests {
     @Test("Test Query as Array")
     func testQueryAsArray() async throws {
         try await withApp { app throws in
-            var request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = "hello=world&hello[]=you"
@@ -35,7 +35,7 @@ struct QueryTests {
     @Test("Test Wrapped Single Value Query Decoding", .bug("https://github.com/vapor/vapor/pull/2163"))
     func testWrappedSingleValueQueryDecoding() async throws {
         try await withApp { app throws in
-            var request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = ""
@@ -59,7 +59,7 @@ struct QueryTests {
     @Test("Test Does Not Crash with an Array with Percent Encoding")
     func testNotCrashingArrayWithPercentEncoding() async throws {
         try await withApp { app throws in
-            var request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/"
             request.url.query = "emailsToSearch%5B%5D=xyz"
@@ -72,7 +72,6 @@ struct QueryTests {
     func testQueryGet() async throws {
         try await withApp { app throws in
             var request1 = Request(
-                application: app,
                 method: .get,
                 url: .init(string: "/path?foo=a")
             )
@@ -100,7 +99,6 @@ struct QueryTests {
             #expect(request1.query[String.self, at: "bar"] == nil)
 
             let request2 = Request(
-                application: app,
                 method: .get,
                 url: .init(string: "/path")
             )
@@ -243,7 +241,7 @@ struct QueryTests {
             var name: String
         }
         try await withApp { app in
-            var req = Request(application: app)
+            var req = Request()
             try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
             #expect(req.url.query == "name=Vapor%20Test")
         }
@@ -278,7 +276,6 @@ struct QueryTests {
     func testOptionalGet() async throws {
         try await withApp { app in
             var req = Request(
-                application: app,
                 method: .get,
                 url: URI(string: "/")
             )
@@ -299,7 +296,6 @@ struct QueryTests {
     func testValuelessParamGet() async throws {
         try await withApp { app throws in
             var req = Request(
-                application: app,
                 method: .get,
                 url: URI(string: "/")
             )
@@ -340,7 +336,7 @@ struct QueryTests {
         }
 
         try await withApp { app in
-            var request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/"
             request.url.query = "closedRange=1"
