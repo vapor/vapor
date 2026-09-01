@@ -211,11 +211,6 @@ public final class Request: CustomStringConvertible, Sendable {
         set { self._storage.withLockedValue { $0 = newValue } }
     }
 
-    public var byteBufferAllocator: ByteBufferAllocator {
-        get { self.requestBox.withLockedValue { $0.byteBufferAllocator } }
-        set { self.requestBox.withLockedValue { $0.byteBufferAllocator = newValue } }
-    }
-
     struct RequestBox: Sendable {
         var method: HTTPRequest.Method
         var url: URI
@@ -225,7 +220,6 @@ public final class Request: CustomStringConvertible, Sendable {
         var route: Route?
         var parameters: Parameters
         var peerCertificateChain: ValidatedCertificateChain?
-        var byteBufferAllocator: ByteBufferAllocator
     }
 
     let requestBox: NIOLockedValueBox<RequestBox>
@@ -243,7 +237,6 @@ public final class Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         requestID: String = UUID().uuidString
     ) {
         self.init(
@@ -255,7 +248,6 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: peerCertificateChain,
-            byteBufferAllocator: byteBufferAllocator,
             requestID: requestID
         )
         if let body = collectedBody {
@@ -272,7 +264,6 @@ public final class Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         requestID: String = UUID().uuidString
     ) {
         let bodyStorage: BodyStorage
@@ -291,7 +282,6 @@ public final class Request: CustomStringConvertible, Sendable {
             route: nil,
             parameters: .init(),
             peerCertificateChain: peerCertificateChain,
-            byteBufferAllocator: byteBufferAllocator
         )
         self.requestBox = .init(storageBox)
         self.id = requestID
@@ -305,7 +295,7 @@ public final class Request: CustomStringConvertible, Sendable {
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
-        var collected = self.byteBufferAllocator.buffer(capacity: 0)
+        var collected = ByteBuffer()
         for await var chunk in stream {
             collected.writeBuffer(&chunk)
             guard collected.readableBytes <= maxSize else {
