@@ -17,7 +17,7 @@ public final class FileMiddleware: Middleware {
     private let directoryAction: DirectoryAction
     private let advancedETagComparison: Bool
     private let cachePolicy: CachePolicy
-    private let etagCache: FileETagHashCache
+    private let fileIO: FileIO
 
     public struct BundleSetupError: Equatable, Error {
 
@@ -54,7 +54,7 @@ public final class FileMiddleware: Middleware {
         self.directoryAction = directoryAction
         self.advancedETagComparison = advancedETagComparison
         self.cachePolicy = cachePolicy
-        self.etagCache = etagCache
+        self.fileIO = FileIO(fileETagHashCache: etagCache)
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
@@ -96,9 +96,8 @@ public final class FileMiddleware: Middleware {
 
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
-                            return try await request
-                                .fileio(etagCache: etagCache)
-                                .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                            return try await fileIO
+                                .streamFile(at: absPath, for: request, advancedETagComparison: advancedETagComparison)
                                 .applyingCachePolicy(cachePolicy)
                         }
                     }
@@ -111,9 +110,8 @@ public final class FileMiddleware: Middleware {
                 }
             } else {
                 // file exists, stream it
-                return try await request
-                    .fileio(etagCache: etagCache)
-                    .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                return try await fileIO
+                    .streamFile(at: absPath, for: request, advancedETagComparison: advancedETagComparison)
                     .applyingCachePolicy(cachePolicy)
             }
         }

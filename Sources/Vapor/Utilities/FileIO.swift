@@ -12,49 +12,26 @@ import NIOConcurrencyHelpers
 import _NIOFileSystemFoundationCompat
 import NIOHTTP1
 
-extension Request {
-    public func fileio(etagCache: FileETagHashCache) -> FileIO {
+extension Application {
+    public var fileio: FileIO {
         return .init(
-            request: self,
-            fileETagHashCache: etagCache,
+            fileETagHashCache: self.fileETagHashCache,
         )
     }
 }
 
 // MARK: FileIO
 
-/// `FileIO` is a convenience wrapper around SwiftNIO's `FileSystem`.
-///
-/// It can read files, both in their entirety and chunked.
-///
-///     try await req.fileio.readFile(at: "/path/to/file.txt") { chunks in
-///         for try await chunk in chunks {
-///             print(chunk) // part of file
-///         }
-///     }
-///
-///     let file = try await req.fileio.collectFile(at: "/path/to/file.txt")
-///     print(file) // entire file
-///
-/// It can also create streaming HTTP responses.
-///
-///     app.get("file-stream") { req -> Response in
-///         return try await req.fileio.streamFile(at: "/path/to/file.txt")
-///     }
-///
-/// Streaming file responses respect `E-Tag` headers present in the request.
+/// `FileIO` is a convenience wrapper around SwiftNIO's `FileSystem` for streaming files with a ``Request``
+/// to a ``Response``. It handles streaming file chunks to the response body, ETag support and caching and request ranges.
 public struct FileIO: Sendable {
     /// Cache for eTag hashes for each file
     let fileETagHashCache: FileETagHashCache
-
-    let request: Request
-
     let fileSystem: FileSystem = .shared
 
     /// Creates a new ``FileIO``.
-    internal init(request: Request, fileETagHashCache: FileETagHashCache) {
+    internal init(fileETagHashCache: FileETagHashCache) {
         self.fileETagHashCache = fileETagHashCache
-        self.request = request
     }
 
     /// Generates a fresh ETag for a file or returns its currently cached one.
@@ -99,6 +76,7 @@ public struct FileIO: Sendable {
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
     public func streamFile(
         at path: String,
+        for request: Request,
         chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool = false,
@@ -226,7 +204,6 @@ public struct FileIO: Sendable {
 }
 
 extension HTTPFields.Range.Value {
-
     fileprivate func asByteBufferBounds(withMaxSize size: Int) throws -> (offset: Int64, byteCount: Int) {
         switch self {
             case .start(let value):
