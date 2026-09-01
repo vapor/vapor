@@ -13,7 +13,7 @@ public import X509
 
 /// Represents an HTTP request in an application.
 public struct Request: CustomStringConvertible, Sendable {
-    public let application: Application
+//    public let application: Application
 
     /// The HTTP method for this request.
     public let method: HTTPRequest.Method
@@ -84,7 +84,7 @@ public struct Request: CustomStringConvertible, Sendable {
     /// This container is used to read and write the request's query string. Changes (e.g. via `req.query.encode`)
     /// are written back to the request
     public var query: any URLQueryContainer {
-        get { _URLQueryContainer(url: self.url, contentConfiguration: self.application.contentConfiguration) }
+        get { _URLQueryContainer(url: self.url, contentConfiguration: self.contentConfiguration) }
         set { self.url = (newValue as! _URLQueryContainer).url }
     }
 
@@ -132,7 +132,7 @@ public struct Request: CustomStringConvertible, Sendable {
             _ContentContainer(
                 body: self.body.data,
                 headers: self.headers,
-                contentConfiguration: self.application.contentConfiguration,
+                contentConfiguration: self.contentConfiguration,
             )
         }
         set {
@@ -183,6 +183,7 @@ public struct Request: CustomStringConvertible, Sendable {
 
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let sessionCache: SessionCache
+    internal let contentConfiguration: ContentConfiguration
 
     public init(
         application: Application,
@@ -193,7 +194,8 @@ public struct Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
-        requestID: String = UUID().uuidString
+        requestID: String = UUID().uuidString,
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         self.init(
             application: application,
@@ -204,7 +206,8 @@ public struct Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: peerCertificateChain,
-            requestID: requestID
+            requestID: requestID,
+            contentConfiguration: contentConfiguration
         )
         if let body = collectedBody {
             self.headers.updateContentLength(body.readableBytes)
@@ -220,7 +223,8 @@ public struct Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
-        requestID: String = UUID().uuidString
+        requestID: String = UUID().uuidString,
+        contentConfiguration: ContentConfiguration = .default()
     ) {
         let bodyStorage: BodyStorage
         if let body = collectedBody {
@@ -230,7 +234,7 @@ public struct Request: CustomStringConvertible, Sendable {
         }
 
         self.id = requestID
-        self.application = application
+//        self.application = application
 
         self.remoteAddress = remoteAddress
         self.bodyStorage = .init(bodyStorage)
@@ -244,10 +248,11 @@ public struct Request: CustomStringConvertible, Sendable {
         self.parameters = .init()
         self.url = url
         self.headers = headers
+        self.contentConfiguration = contentConfiguration
     }
 
     package init(_ other: Request, route: Route?, parameters: Parameters) {
-        self.application = other.application
+//        self.application = other.application
         self.method = other.method
         self.version = other.version
         self.id = other.id
@@ -260,5 +265,6 @@ public struct Request: CustomStringConvertible, Sendable {
         self.parameters = parameters
         self.url = other.url
         self.headers = other.headers
+        self.contentConfiguration = other.contentConfiguration
     }
 }
