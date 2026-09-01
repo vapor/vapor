@@ -6,13 +6,9 @@ public import Foundation
 #warning("Make this internal")
 public import NIOCore
 import NIOFoundationEssentialsCompat
-import NIOHTTP1
-import Logging
 public import RoutingKit
 import NIOConcurrencyHelpers
 public import HTTPTypes
-import NIOPosix
-import ServiceContextModule
 public import X509
 
 /// Represents an HTTP request in an application.
