@@ -32,18 +32,12 @@ public struct Request: CustomStringConvertible, Sendable {
     }
 
     /// The version for this HTTP request.
-    public var version: HTTPVersion {
-        get { self.requestBox.withLockedValue { $0.version } }
-        set { self.requestBox.withLockedValue { $0.version = newValue } }
-    }
+    public let version: HTTPVersion
 
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPFields {
-        get { self.requestBox.withLockedValue { $0.headers } }
-        set { self.requestBox.withLockedValue { $0.headers = newValue } }
-    }
+    public var headers: HTTPFields
 
     /// A unique ID for the request.
     ///
@@ -83,9 +77,7 @@ public struct Request: CustomStringConvertible, Sendable {
 
     /// The validated certificate chain. This returns nil if the peer did not authenticate with a certificate. Requires
     /// configuring a `customCertificateVerifyCallbackWithMetadata` that performs the verification.
-    public var peerCertificateChain: ValidatedCertificateChain? {
-        return self.requestBox.withLockedValue { $0.peerCertificateChain }
-    }
+    public let peerCertificateChain: ValidatedCertificateChain?
 
     // MARK: Content
 
@@ -210,12 +202,9 @@ public struct Request: CustomStringConvertible, Sendable {
 
     struct RequestBox: Sendable {
         var url: URI
-        var version: HTTPVersion
-        var headers: HTTPFields
         var isKeepAlive: Bool
         var route: Route?
         var parameters: Parameters
-        var peerCertificateChain: ValidatedCertificateChain?
     }
 
     let requestBox: NIOLockedValueBox<RequestBox>
@@ -272,12 +261,9 @@ public struct Request: CustomStringConvertible, Sendable {
 
         let storageBox = RequestBox(
             url: url,
-            version: version,
-            headers: headers,
             isKeepAlive: true,
             route: nil,
             parameters: .init(),
-            peerCertificateChain: peerCertificateChain,
         )
         self.requestBox = .init(storageBox)
         self.id = requestID
@@ -291,6 +277,9 @@ public struct Request: CustomStringConvertible, Sendable {
         self.sessionCache = SessionCache()
 
         self.method = method
+        self.headers = headers
+        self.version = version
+        self.peerCertificateChain = peerCertificateChain
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
