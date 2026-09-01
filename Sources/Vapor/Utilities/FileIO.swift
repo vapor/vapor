@@ -3,9 +3,8 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-#warning("Make this internal")
-public import NIOCore
-public import _NIOFileSystem
+import NIOCore
+import _NIOFileSystem
 import HTTPTypes
 import Logging
 import Crypto
@@ -58,16 +57,6 @@ public struct FileIO: Sendable {
         self.request = request
     }
 
-    private func read(
-        path: String,
-        fromOffset offset: Int64,
-        byteCount: Int
-    ) async throws -> ByteBuffer {
-        return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
-            return try await handle.readChunk(fromAbsoluteOffset: offset, length: .bytes(Int64(byteCount)))
-        }
-    }
-
     /// Generates a fresh ETag for a file or returns its currently cached one.
     /// - Parameters:
     ///   - path: The file's path.
@@ -87,82 +76,6 @@ public struct FileIO: Sendable {
                 }
                 return hasher.finalize().hex
             }
-        }
-    }
-
-    // MARK: - Concurrency
-
-    /// Reads the contents of a file at the supplied path.
-    ///
-    ///     let data = try await req.fileio.collectFile(at: "/path/to/file.txt")
-    ///     print(data) // file data
-    ///
-    /// - parameters:
-    ///     - path: Path to file on the disk.
-    /// - returns: `ByteBuffer` containing the file data.
-    public func collectFile(at path: String) async throws -> ByteBuffer {
-        guard let fileSize = try await FileSystem.shared.info(forFileAt: .init(path))?.size else {
-            throw Abort(.internalServerError)
-        }
-        return try await self.read(path: path, fromOffset: 0, byteCount: Int(fileSize))
-    }
-
-    /// Reads the contents of a file at the supplied path in chunks.
-    ///
-    ///     try await req.fileio.readFile(at: "/path/to/file.txt") { chunks in
-    ///         for try await chunk in chunks {
-    ///             print("chunk: \(chunk)")
-    ///         }
-    ///     }
-    ///
-    /// > Warning: The file is only open for the duration of `processChunks`, so the chunks must be
-    /// > consumed inside the closure rather than escaping it.
-    ///
-    /// - parameters:
-    ///     - path: Path to file on the disk.
-    ///     - chunkSize: Maximum size for the file data chunks.
-    ///     - offset: The offset to start reading from.
-    ///     - byteCount: The number of bytes to read from the file. If `nil`, the file will be read to the end.
-    ///     - processChunks: Closure receiving the ``FileChunks`` to read the file data from.
-    public func readFile(
-        at path: String,
-        chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
-        offset: Int64? = nil,
-        byteCount: Int? = nil,
-        processChunks: @Sendable (FileChunks) async throws -> Void
-    ) async throws {
-        let filePath = FilePath(path)
-
-        return try await fileSystem.withFileHandle(forReadingAt: filePath) { readHandle in
-            let chunks: FileChunks
-
-            if let offset {
-                if let byteCount {
-                    chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(chunkSize))
-                } else {
-                    chunks = readHandle.readChunks(in: offset..., chunkLength: .bytes(chunkSize))
-                }
-            } else {
-                chunks = readHandle.readChunks(chunkLength: .bytes(chunkSize))
-            }
-            try await processChunks(chunks)
-        }
-    }
-
-    /// Write the contents of buffer to a file at the supplied path.
-    ///
-    ///     let data = ByteBuffer(string: "ByteBuffer")
-    ///     try await req.fileio.writeFile(data, at: "/path/to/file.txt")
-    ///
-    /// > Warning: This method will overwrite the file if it already exists.
-    ///
-    /// - parameters:
-    ///     - buffer: The `ByteBuffer` to write.
-    ///     - path: Path to file on the disk.
-    public func writeFile(_ buffer: ByteBuffer, at path: String) async throws {
-        // This returns the number of bytes written which we don't need
-        _ = try await FileSystem.shared.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: true)) { handle in
-            try await handle.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
     }
 

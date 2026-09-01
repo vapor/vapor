@@ -537,39 +537,6 @@ struct FileTests {
         }
     }
 
-    #warning("Consider whether we should offer these anymoer instead of just deferring to NIOFileSystem")
-//    func testFileRead() async throws {
-//        let request = Request(application: app, on: app.eventLoopGroup.next())
-//
-//        let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/long-test-file.txt"
-//
-//        let content = try String(contentsOfFile: path, encoding: .utf8)
-//
-//        var readContent = ""
-//        let file = try await request.fileio.readFile(at: path, chunkSize: 16 * 1024) // 32Kb, ~5 chunks
-//        for try await chunk in file {
-//            readContent += String(buffer: chunk)
-//        }
-//
-//        XCTAssertEqual(readContent, content, "The content read from the file does not match the expected content.")
-//    }
-//    func testFileWrite() async throws {
-//        let data = "Hello"
-//        let path = "/tmp/fileio_write.txt"
-//
-//        do {
-//            let request = Request(application: app, on: app.eventLoopGroup.next())
-//
-//            try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
-//
-//            let result = try String(contentsOfFile: path, encoding: .utf8)
-//            XCTAssertEqual(result, data)
-//        } catch {
-//            try await FileSystem.shared.removeItem(at: .init(path))
-//            throw error
-//        }
-//    }
-
     @Test("Cancelling a file stream still closes the file handle")
     func testCancelledFileStreamClosesHandle() async throws {
         // Large enough that a read is still in flight when the cancellation lands: the whole point
