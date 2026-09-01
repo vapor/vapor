@@ -197,12 +197,6 @@ public struct Request: CustomStringConvertible, Sendable {
     /// Authentication storage for the request
     public let auth: Authentication
 
-    /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
-    public var storage: Storage {
-        get { self._storage.withLockedValue { $0 } }
-        set { self._storage.withLockedValue { $0 = newValue } }
-    }
-
     struct RequestBox: Sendable {
         var url: URI
         var headers: HTTPFields
@@ -213,7 +207,6 @@ public struct Request: CustomStringConvertible, Sendable {
 
     let requestBox: NIOLockedValueBox<RequestBox>
 
-    private let _storage: NIOLockedValueBox<Storage>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
     internal let sessionCache: SessionCache
@@ -275,7 +268,6 @@ public struct Request: CustomStringConvertible, Sendable {
         self.application = application
 
         self.remoteAddress = remoteAddress
-        self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
         self.streamBodyStorage = .init(nil)
         self.auth = Authentication()
