@@ -82,23 +82,25 @@ public struct Request: CustomStringConvertible, Sendable {
     // MARK: Content
 
     private struct _URLQueryContainer: URLQueryContainer, Sendable {
-        var request: Request
+        var url: URI
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
             where D: Decodable
         {
-            try decoder.decode(D.self, from: self.request.url)
+            try decoder.decode(D.self, from: self.url)
         }
 
         mutating func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
-            try encoder.encode(encodable, to: &self.request.url)
+            try encoder.encode(encodable, to: &self.url)
         }
     }
 
+    /// This container is used to read and write the request's query string. Changes (e.g. via `req.query.encode`)
+    /// are written back to the request
     public var query: any URLQueryContainer {
-        get { _URLQueryContainer(request: self, contentConfiguration: self.application.contentConfiguration) }
-        set { } // ignore since Request is a reference type
+        get { _URLQueryContainer(url: self.url, contentConfiguration: self.application.contentConfiguration) }
+        set { self.url = (newValue as! _URLQueryContainer).url }
     }
 
     private struct _ContentContainer: ContentContainer, Sendable {
