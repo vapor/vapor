@@ -81,7 +81,7 @@ struct ClientTests {
 
                 app.get("foo") { req async throws -> String in
                     do {
-                        let response = try await req.application.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
+                        let response = try await app.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
                         #expect(response.status.code == 201)
                         // Server shutdown handled by task cancellation
                         return "bar"
@@ -118,7 +118,7 @@ struct ClientTests {
     func testGH2716() async throws {
         try await withApp { app in
             app.get("client") { req in
-                let response = try await req.application.client.get("htp://localhost/status/2 1")
+                let response = try await app.client.get("htp://localhost/status/2 1")
                 return response.description
             }
 

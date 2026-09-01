@@ -15,9 +15,10 @@ public final class TracingMiddleware: Middleware {
     /// - Parameter setCustomAttributes: Closure that allows setting custom span attributes for a particular request. A custom span attribute could be extracted from a request
     /// header, for example. This closure is called during span creation on every request, so should be lightweight.
     /// - Parameter serverAddress: The address the server is running on
+    #warning("We need to check server address is set at the point we can use it, or path a closure we can call")
     public init(
-        setCustomAttributes: @escaping @Sendable (inout SpanAttributes, Request) -> Void = { _, _ in },
-        serverAddress: SocketAddress?
+        serverAddress: SocketAddress?,
+        setCustomAttributes: @escaping @Sendable (inout SpanAttributes, Request) -> Void = { _, _ in }
     ) {
         self.setCustomAttributes = setCustomAttributes
         self.serverAddress = serverAddress

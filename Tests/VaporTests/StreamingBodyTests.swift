@@ -955,7 +955,7 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("file") { req -> Response in
-                try await req.fileio.streamFile(at: filePath, advancedETagComparison: false)
+                try await req.fileio(etagCache: app.fileETagHashCache).streamFile(at: filePath, advancedETagComparison: false)
             }
             app.get("ok") { _ in "ok" }
 
@@ -1042,7 +1042,7 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("file") { req -> Response in
-                try await req.fileio.streamFile(at: filePath, advancedETagComparison: false) { _ in
+                try await req.fileio(etagCache: app.fileETagHashCache).streamFile(at: filePath, advancedETagComparison: false) { _ in
                     completions.withLockedValue { $0 += 1 }
                 }
             }
