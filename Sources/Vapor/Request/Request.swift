@@ -37,7 +37,10 @@ public struct Request: CustomStringConvertible, Sendable {
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPFields
+    public var headers: HTTPFields {
+        get { self.requestBox.withLockedValue { $0.headers } }
+        set { self.requestBox.withLockedValue { $0.headers = newValue } }
+    }
 
     /// A unique ID for the request.
     ///
@@ -202,6 +205,7 @@ public struct Request: CustomStringConvertible, Sendable {
 
     struct RequestBox: Sendable {
         var url: URI
+        var headers: HTTPFields
         var isKeepAlive: Bool
         var route: Route?
         var parameters: Parameters
@@ -261,6 +265,7 @@ public struct Request: CustomStringConvertible, Sendable {
 
         let storageBox = RequestBox(
             url: url,
+            headers: headers,
             isKeepAlive: true,
             route: nil,
             parameters: .init(),
@@ -277,9 +282,8 @@ public struct Request: CustomStringConvertible, Sendable {
         self.sessionCache = SessionCache()
 
         self.method = method
-        self.headers = headers
-        self.version = version
         self.peerCertificateChain = peerCertificateChain
+        self.version = version
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
