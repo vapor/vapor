@@ -17,6 +17,7 @@ public final class FileMiddleware: Middleware {
     private let directoryAction: DirectoryAction
     private let advancedETagComparison: Bool
     private let cachePolicy: CachePolicy
+    private let etagCache: FileETagHashCache
 
     public struct BundleSetupError: Equatable, Error {
 
@@ -45,13 +46,15 @@ public final class FileMiddleware: Middleware {
         defaultFile: String? = nil,
         directoryAction: DirectoryAction = .none,
         advancedETagComparison: Bool = false,
-        cachePolicy: CachePolicy = .browserDefault
+        cachePolicy: CachePolicy = .browserDefault,
+        etagCache: FileETagHashCache
     ) {
         self.publicDirectory = publicDirectory.addTrailingSlash()
         self.defaultFile = defaultFile
         self.directoryAction = directoryAction
         self.advancedETagComparison = advancedETagComparison
         self.cachePolicy = cachePolicy
+        self.etagCache = etagCache
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
@@ -94,7 +97,7 @@ public final class FileMiddleware: Middleware {
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
                             return try await request
-                                .fileio
+                                .fileio(etagCache: etagCache)
                                 .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
                                 .applyingCachePolicy(cachePolicy)
                         }
@@ -109,7 +112,7 @@ public final class FileMiddleware: Middleware {
             } else {
                 // file exists, stream it
                 return try await request
-                    .fileio
+                    .fileio(etagCache: etagCache)
                     .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
                     .applyingCachePolicy(cachePolicy)
             }
@@ -135,7 +138,8 @@ public final class FileMiddleware: Middleware {
         publicDirectory: String = "Public",
         defaultFile: String? = nil,
         directoryAction: DirectoryAction = .none,
-        cachePolicy: CachePolicy = .browserDefault
+        cachePolicy: CachePolicy = .browserDefault,
+        etagCache: FileETagHashCache
     ) throws {
         guard let bundleResourceURL = bundle.resourceURL else {
             throw BundleSetupError.bundleResourceURLIsNil
@@ -149,7 +153,8 @@ public final class FileMiddleware: Middleware {
             publicDirectory: publicDirectoryURL.path,
             defaultFile: defaultFile,
             directoryAction: directoryAction,
-            cachePolicy: cachePolicy
+            cachePolicy: cachePolicy,
+            etagCache: etagCache
         )
     }
     #endif

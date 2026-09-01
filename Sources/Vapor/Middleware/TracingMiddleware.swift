@@ -1,6 +1,7 @@
 import HTTPTypes
 public import Tracing
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 import NIOConcurrencyHelpers
 
 /// Creates a trace and metadata for every request
@@ -8,19 +9,18 @@ import NIOConcurrencyHelpers
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-spans/
 public final class TracingMiddleware: Middleware {
     private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
-
-    /// Create a TracingMiddleware
-    public init() {
-        self.setCustomAttributes = { _, _ in }
-    }
+    private let serverAddress: SocketAddress?
 
     /// Create a TracingMiddleware
     /// - Parameter setCustomAttributes: Closure that allows setting custom span attributes for a particular request. A custom span attribute could be extracted from a request
     /// header, for example. This closure is called during span creation on every request, so should be lightweight.
+    /// - Parameter serverAddress: The address the server is running on
     public init(
-        setCustomAttributes: @escaping @Sendable (inout SpanAttributes, Request) -> Void
+        setCustomAttributes: @escaping @Sendable (inout SpanAttributes, Request) -> Void = { _, _ in },
+        serverAddress: SocketAddress?
     ) {
         self.setCustomAttributes = setCustomAttributes
+        self.serverAddress = serverAddress
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
@@ -46,15 +46,14 @@ public final class TracingMiddleware: Middleware {
                 }
 
                 attributes["network.protocol.name"] = "http"
-                let address = request.application.sharedAddress.withLockedValue({ $0 })
-                switch address {
+                switch self.serverAddress {
                 case .v4:
                     fallthrough
                 case .v6:
-                    attributes["server.address"] = address?.ipAddress
-                    attributes["server.port"] = address?.port
+                    attributes["server.address"] = serverAddress?.ipAddress
+                    attributes["server.port"] = serverAddress?.port
                 case .unixDomainSocket:
-                    attributes["server.address"] = address?.description
+                    attributes["server.address"] = serverAddress?.description
                 case .none:
                     break
                 }

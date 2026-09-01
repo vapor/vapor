@@ -14,9 +14,10 @@ import _NIOFileSystemFoundationCompat
 import NIOHTTP1
 
 extension Request {
-    public var fileio: FileIO {
+    public func fileio(etagCache: FileETagHashCache) -> FileIO {
         return .init(
-            request: self
+            request: self,
+            fileETagHashCache: etagCache,
         )
     }
 }
@@ -44,15 +45,16 @@ extension Request {
 ///
 /// Streaming file responses respect `E-Tag` headers present in the request.
 public struct FileIO: Sendable {
-    /// HTTP request context.
+    /// Cache for eTag hashes for each file
+    let fileETagHashCache: FileETagHashCache
+
     let request: Request
 
     let fileSystem: FileSystem = .shared
 
     /// Creates a new ``FileIO``.
-    ///
-    /// Use ``Request/fileio`` to get one.
-    internal init(request: Request) {
+    internal init(request: Request, fileETagHashCache: FileETagHashCache) {
+        self.fileETagHashCache = fileETagHashCache
         self.request = request
     }
 
@@ -72,7 +74,7 @@ public struct FileIO: Sendable {
     ///   - lastModified: When the file was last modified.
     /// - Returns: A `String` which holds the ETag.
     private func generateETagHash(path: String, lastModified: Date, size: Int64) async throws -> String {
-        try await self.request.application.fileETagHashCache.digestHex(
+        try await self.fileETagHashCache.digestHex(
             forFileAt: path,
             lastModified: lastModified,
             size: size

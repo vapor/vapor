@@ -10,7 +10,7 @@ public import Foundation
 /// rather than a dictionary in `Application.storage` for two reasons: storage hands back a copy, so
 /// read-modify-write updates could lose entries, and a shared mutable dictionary can't dedupe
 /// concurrent work. Here a miss becomes a single task that every caller for that file awaits.
-package actor FileETagHashCache {
+public actor FileETagHashCache {
     /// A cached hash, along with what it was computed from.
     package struct Entry: Sendable, Equatable {
         package let lastModified: Date
