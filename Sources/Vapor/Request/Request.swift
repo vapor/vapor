@@ -55,10 +55,7 @@ public struct Request: CustomStringConvertible, Sendable {
     ///
     ///     req.route?.description // "GET /hello/:name"
     ///
-    public var route: Route? {
-        get { self.requestBox.withLockedValue { $0.route } }
-        set { self.requestBox.withLockedValue { $0.route = newValue } }
-    }
+    public let route: Route?
 
     /// We try to determine true peer address if load balancer or reversed proxy provided info in headers
     ///
@@ -189,10 +186,7 @@ public struct Request: CustomStringConvertible, Sendable {
 
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
-    public var parameters: Parameters {
-        get { self.requestBox.withLockedValue { $0.parameters } }
-        set { self.requestBox.withLockedValue { $0.parameters = newValue } }
-    }
+    public let parameters: Parameters
 
     /// Authentication storage for the request
     public let auth: Authentication
@@ -200,8 +194,6 @@ public struct Request: CustomStringConvertible, Sendable {
     struct RequestBox: Sendable {
         var url: URI
         var headers: HTTPFields
-        var route: Route?
-        var parameters: Parameters
     }
 
     let requestBox: NIOLockedValueBox<RequestBox>
@@ -258,8 +250,6 @@ public struct Request: CustomStringConvertible, Sendable {
         let storageBox = RequestBox(
             url: url,
             headers: headers,
-            route: nil,
-            parameters: .init(),
         )
         self.requestBox = .init(storageBox)
         self.id = requestID
@@ -274,6 +264,24 @@ public struct Request: CustomStringConvertible, Sendable {
         self.method = method
         self.peerCertificateChain = peerCertificateChain
         self.version = version
+        self.route = nil
+        self.parameters = .init()
+    }
+
+    package init(_ other: Request, route: Route?, parameters: Parameters) {
+        self.application = other.application
+        self.method = other.method
+        self.version = other.version
+        self.id = other.id
+        self.remoteAddress = other.remoteAddress
+        self.peerCertificateChain = other.peerCertificateChain
+        self.auth = other.auth
+        self.sessionCache = other.sessionCache
+        self.requestBox = other.requestBox
+        self.bodyStorage = other.bodyStorage
+        self.streamBodyStorage = other.streamBodyStorage
+        self.route = route
+        self.parameters = parameters
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
