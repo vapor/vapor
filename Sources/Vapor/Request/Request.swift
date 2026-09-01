@@ -200,7 +200,6 @@ public struct Request: CustomStringConvertible, Sendable {
     struct RequestBox: Sendable {
         var url: URI
         var headers: HTTPFields
-        var isKeepAlive: Bool
         var route: Route?
         var parameters: Parameters
     }
@@ -259,7 +258,6 @@ public struct Request: CustomStringConvertible, Sendable {
         let storageBox = RequestBox(
             url: url,
             headers: headers,
-            isKeepAlive: true,
             route: nil,
             parameters: .init(),
         )
