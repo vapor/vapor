@@ -26,10 +26,7 @@ public struct Request: CustomStringConvertible, Sendable {
     public let method: HTTPRequest.Method
 
     /// The URL used on this request.
-    public var url: URI {
-        get { self.requestBox.withLockedValue { $0.url } }
-        set { self.requestBox.withLockedValue { $0.url = newValue } }
-    }
+    public var url: URI
 
     /// The version for this HTTP request.
     public let version: HTTPVersion
@@ -194,7 +191,6 @@ public struct Request: CustomStringConvertible, Sendable {
     public let auth: Authentication
 
     struct RequestBox: Sendable {
-        var url: URI
         var headers: HTTPFields
     }
 
@@ -250,7 +246,6 @@ public struct Request: CustomStringConvertible, Sendable {
         }
 
         let storageBox = RequestBox(
-            url: url,
             headers: headers,
         )
         self.requestBox = .init(storageBox)
@@ -268,6 +263,7 @@ public struct Request: CustomStringConvertible, Sendable {
         self.version = version
         self.route = nil
         self.parameters = .init()
+        self.url = url
     }
 
     package init(_ other: Request, route: Route?, parameters: Parameters) {
@@ -284,6 +280,7 @@ public struct Request: CustomStringConvertible, Sendable {
         self.streamBodyStorage = other.streamBodyStorage
         self.route = route
         self.parameters = parameters
+        self.url = other.url
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
