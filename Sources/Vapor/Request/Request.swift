@@ -184,6 +184,7 @@ public struct Request: CustomStringConvertible, Sendable {
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let sessionCache: SessionCache
     internal let contentConfiguration: ContentConfiguration
+    internal let defaultMaxBodySize: ByteCount
 
     public init(
         application: Application,
@@ -195,7 +196,8 @@ public struct Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
         requestID: String = UUID().uuidString,
-        contentConfiguration: ContentConfiguration = .default()
+        contentConfiguration: ContentConfiguration = .default(),
+        defaultMaxBodySize: ByteCount = "16kb",
     ) {
         self.init(
             application: application,
@@ -207,7 +209,8 @@ public struct Request: CustomStringConvertible, Sendable {
             remoteAddress: remoteAddress,
             peerCertificateChain: peerCertificateChain,
             requestID: requestID,
-            contentConfiguration: contentConfiguration
+            contentConfiguration: contentConfiguration,
+            defaultMaxBodySize: defaultMaxBodySize,
         )
         if let body = collectedBody {
             self.headers.updateContentLength(body.readableBytes)
@@ -224,7 +227,8 @@ public struct Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
         requestID: String = UUID().uuidString,
-        contentConfiguration: ContentConfiguration = .default()
+        contentConfiguration: ContentConfiguration = .default(),
+        defaultMaxBodySize: ByteCount = "16kb",
     ) {
         let bodyStorage: BodyStorage
         if let body = collectedBody {
@@ -249,6 +253,7 @@ public struct Request: CustomStringConvertible, Sendable {
         self.url = url
         self.headers = headers
         self.contentConfiguration = contentConfiguration
+        self.defaultMaxBodySize = defaultMaxBodySize
     }
 
     package init(_ other: Request, route: Route?, parameters: Parameters) {
@@ -266,5 +271,6 @@ public struct Request: CustomStringConvertible, Sendable {
         self.url = other.url
         self.headers = other.headers
         self.contentConfiguration = other.contentConfiguration
+        self.defaultMaxBodySize = other.defaultMaxBodySize
     }
 }

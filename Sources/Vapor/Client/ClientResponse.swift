@@ -105,7 +105,7 @@ extension ClientResponse: ResponseEncodable {
             status: self.status,
             headers: headers,
             body: self.body,
-            contentConfiguration: request.application.contentConfiguration
+            contentConfiguration: request.contentConfiguration
         )
     }
 }
