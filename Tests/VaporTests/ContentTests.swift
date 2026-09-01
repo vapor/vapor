@@ -16,7 +16,7 @@ struct ContentTests {
     @Test("Test Content")
     func testContent() async throws {
         try await withApp { app throws in
-            let request = Request(
+            var request = Request(
                 application: app,
                 collectedBody: .init(string: #"{"hello": "world"}"#)
             )
@@ -58,7 +58,7 @@ struct ContentTests {
         """
 
         try await withApp { app throws in
-            let request = Request(
+            var request = Request(
                 application: app,
                 collectedBody: .init(string: complexJSON)
             )
@@ -524,7 +524,7 @@ struct ContentTests {
         body.writeString(#"{"name": "before decode"}"#)
 
         try await withApp { app in
-            let request = Request(
+            var request = Request(
                 application: app,
                 collectedBody: body
             )
@@ -541,7 +541,7 @@ struct ContentTests {
         // `decode(_:as:)` used to bind a `Content` type to the `Decodable` overload, which has no
         // way to know about the hook, so the value came back unprocessed.
         try await withApp { app in
-            let request = Request(
+            var request = Request(
                 application: app,
                 collectedBody: .init(string: #"{"name": "before decode"}"#)
             )
@@ -608,7 +608,7 @@ struct ContentTests {
         body.writeString(#"{"data": ["entity0", "entity1"], "meta": {}}"#)
 
         try await withApp { app in
-            let request = Request(
+            var request = Request(
                 application: app,
                 collectedBody: body
             )
@@ -623,7 +623,7 @@ struct ContentTests {
     @Test("Test Query Hooks")
     func testQueryHooks() async throws {
         try await withApp { app in
-            let request = Request(
+            var request = Request(
                 application: app,
                 collectedBody: .init(string: "")
             )
@@ -640,7 +640,7 @@ struct ContentTests {
     @Test("Test Decode Percent Encoded Query", .bug("https://github.com/vapor/vapor/issues/3135"))
     func testDecodePercentEncodedQuery() async throws {
         try await withApp { app throws in
-            let request = Request(
+            var request = Request(
                 application: app,
                 collectedBody: .init(string: "")
             )
@@ -668,7 +668,7 @@ struct ContentTests {
     @Test("Test Snake Case Coding Key Error")
     func testSnakeCaseCodingKeyError() async throws {
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request(application: app)
             try req.content.encode([
                 "title": "The title"
             ], as: .json)
@@ -694,13 +694,13 @@ struct ContentTests {
     @Test("Test Data Corruption Error")
     func testDataCorruptionError() async throws {
         try await withApp { app in
-            let req = Request(
+            var req = Request(
                 application: app,
                 method: .get,
                 url: URI(string: "https://vapor.codes"),
-                headersNoUpdate: [.contentType: "application/json"],
                 collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#)
             )
+            req.headers.contentType = .json
 
             struct DecodeModel: Content {
                 let badJson: String
@@ -716,7 +716,7 @@ struct ContentTests {
     @Test("Test ValueNotFoundError")
     func testValueNotFoundError() async throws {
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request(application: app)
             try req.content.encode([
                 "items": ["1"]
             ], as: .json)
@@ -745,7 +745,7 @@ struct ContentTests {
     @Test("Test Type Mismatch Error")
     func testTypeMismatchError() async throws {
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request(application: app)
             try req.content.encode([
                 "item": [
                     "title": "The title"

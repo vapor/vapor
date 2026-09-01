@@ -50,7 +50,8 @@ package struct DefaultResponder: Responder {
 
     // See `Responder.respond(to:)`
     package func respond(to request: Request) async throws -> Response {
-        if let cachedRoute = self.getRoute(for: request) {
+        var request = request
+        if let cachedRoute = self.getRoute(for: &request) {
             request.route = cachedRoute.route
             return try await cachedRoute.responder.respond(to: request)
         } else {
@@ -59,7 +60,7 @@ package struct DefaultResponder: Responder {
     }
 
     /// Gets a `Route` from the underlying `TrieRouter`.
-    private func getRoute(for request: Request) -> CachedRoute? {
+    private func getRoute(for request: inout Request) -> CachedRoute? {
         let pathComponents = request.url.path
             .split(separator: "/")
             .map { String($0).removingPercentEncoding ?? String($0) }

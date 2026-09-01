@@ -16,17 +16,14 @@ import ServiceContextModule
 public import X509
 
 /// Represents an HTTP request in an application.
-public final class Request: CustomStringConvertible, Sendable {
+public struct Request: CustomStringConvertible, Sendable {
     public let application: Application
 
     /// The HTTP method for this request.
     ///
     ///     httpReq.method = .get
     ///
-    public var method: HTTPRequest.Method {
-        get { self.requestBox.withLockedValue { $0.method } }
-        set { self.requestBox.withLockedValue { $0.method = newValue } }
-    }
+    public let method: HTTPRequest.Method
 
     /// The URL used on this request.
     public var url: URI {
@@ -93,7 +90,7 @@ public final class Request: CustomStringConvertible, Sendable {
     // MARK: Content
 
     private struct _URLQueryContainer: URLQueryContainer, Sendable {
-        let request: Request
+        var request: Request
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
@@ -102,7 +99,7 @@ public final class Request: CustomStringConvertible, Sendable {
             try decoder.decode(D.self, from: self.request.url)
         }
 
-        func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
+        mutating func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
             try encoder.encode(encodable, to: &self.request.url)
         }
     }
@@ -113,7 +110,7 @@ public final class Request: CustomStringConvertible, Sendable {
     }
 
     private struct _ContentContainer: ContentContainer, Sendable {
-        let request: Request
+        var request: Request
 
         var contentType: HTTPMediaType? {
             self.request.headers.contentType
@@ -123,7 +120,7 @@ public final class Request: CustomStringConvertible, Sendable {
             self.request.application.contentConfiguration
         }
 
-        func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = Data()
             try encoder.encode(encodable, to: &body, headers: &self.request.headers, userInfo: [:])
             let byteBuffer = ByteBuffer(data: body)
@@ -144,7 +141,7 @@ public final class Request: CustomStringConvertible, Sendable {
             return try decoder.decode(D.self, from: bodyData, headers: self.request.headers, userInfo: [:])
         }
 
-        func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
             var body = Data()
@@ -212,7 +209,6 @@ public final class Request: CustomStringConvertible, Sendable {
     }
 
     struct RequestBox: Sendable {
-        var method: HTTPRequest.Method
         var url: URI
         var version: HTTPVersion
         var headers: HTTPFields
@@ -227,8 +223,9 @@ public final class Request: CustomStringConvertible, Sendable {
     private let _storage: NIOLockedValueBox<Storage>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
+    internal let sessionCache: SessionCache
 
-    public convenience init(
+    public init(
         application: Application,
         method: HTTPRequest.Method = .get,
         url: URI = "/",
@@ -255,7 +252,7 @@ public final class Request: CustomStringConvertible, Sendable {
         }
     }
 
-    package init(
+    internal init(
         application: Application,
         method: HTTPRequest.Method,
         url: URI,
@@ -274,7 +271,6 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         let storageBox = RequestBox(
-            method: method,
             url: url,
             version: version,
             headers: headers,
@@ -292,6 +288,9 @@ public final class Request: CustomStringConvertible, Sendable {
         self.bodyStorage = .init(bodyStorage)
         self.streamBodyStorage = .init(nil)
         self.auth = Authentication()
+        self.sessionCache = SessionCache()
+
+        self.method = method
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
