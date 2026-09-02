@@ -1,6 +1,7 @@
 import HTTPTypes
 public import Tracing
-import NIOCore
+#warning("Make this internal")
+public import NIOCore
 import NIOConcurrencyHelpers
 
 /// Creates a trace and metadata for every request
@@ -8,24 +9,30 @@ import NIOConcurrencyHelpers
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-spans/
 public final class TracingMiddleware: Middleware {
     private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
+    private let serverAddress: @Sendable () -> SocketAddress?
 
     /// Create a TracingMiddleware
-    public init() {
-        self.setCustomAttributes = { _, _ in }
-    }
-
-    /// Create a TracingMiddleware
+    /// - Parameter serverAddress: The address the server is running on, resolved once per request.
+    /// This is a closure rather than a value because middleware is built while routes are registered,
+    /// which happens before the server binds and therefore before its address is known. Reading it
+    /// eagerly would capture `nil` for the middleware's whole lifetime and silently drop the
+    /// `server.address` and `server.port` attributes.
     /// - Parameter setCustomAttributes: Closure that allows setting custom span attributes for a particular request. A custom span attribute could be extracted from a request
     /// header, for example. This closure is called during span creation on every request, so should be lightweight.
     public init(
-        setCustomAttributes: @escaping @Sendable (inout SpanAttributes, Request) -> Void
+        serverAddress: @escaping @Sendable () -> SocketAddress?,
+        setCustomAttributes: @escaping @Sendable (inout SpanAttributes, Request) -> Void = { _, _ in }
     ) {
         self.setCustomAttributes = setCustomAttributes
+        self.serverAddress = serverAddress
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         var parentContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &parentContext, using: HTTPHeadersExtractor())
+
+        // Resolved here rather than at init, when the server may not have bound yet.
+        let serverAddress = self.serverAddress()
 
         return try await withSpan(
             // Name: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
@@ -46,15 +53,14 @@ public final class TracingMiddleware: Middleware {
                 }
 
                 attributes["network.protocol.name"] = "http"
-                let address = request.application.sharedAddress.withLockedValue({ $0 })
-                switch address {
+                switch serverAddress {
                 case .v4:
                     fallthrough
                 case .v6:
-                    attributes["server.address"] = address?.ipAddress
-                    attributes["server.port"] = address?.port
+                    attributes["server.address"] = serverAddress?.ipAddress
+                    attributes["server.port"] = serverAddress?.port
                 case .unixDomainSocket:
-                    attributes["server.address"] = address?.description
+                    attributes["server.address"] = serverAddress?.description
                 case .none:
                     break
                 }

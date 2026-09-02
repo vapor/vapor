@@ -16,8 +16,7 @@ struct ContentTests {
     @Test("Test Content")
     func testContent() async throws {
         try await withApp { app throws in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: .init(string: #"{"hello": "world"}"#)
             )
             request.headers.contentType = .json
@@ -58,8 +57,7 @@ struct ContentTests {
         """
 
         try await withApp { app throws in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: .init(string: complexJSON)
             )
             request.headers.contentType = .json
@@ -111,6 +109,58 @@ struct ContentTests {
             try await app.testing().test(.get, "/encode") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString().contains("hi"))
+            }
+        }
+    }
+
+    @Test("Encoding a Request's content writes back both the body and the content type")
+    func testRequestContentContainerEncodeWritesBack() async throws {
+        struct FooContent: Content, Equatable {
+            var message: String = "hi"
+        }
+
+        try await withApp { app in
+            // `content` vends a value, so `encode` mutates a copy and the setter on
+            // ``Request/content`` is what puts the result back on the request. Both halves are
+            // asserted deliberately: a container that reached the body through a reference but the
+            // headers through a copy would still land the body while silently dropping the content
+            // type the encoder sets, leaving the request undecodable for a non-obvious reason.
+            var request = Request()
+            try request.content.encode(FooContent())
+
+            #expect(request.headers.contentType == .json)
+            #expect(request.body.string == #"{"message":"hi"}"#)
+            #expect(try await request.content.decode(FooContent.self) == FooContent())
+
+            // Same again for the overload taking an explicit content type.
+            var explicit = Request()
+            try explicit.content.encode(FooContent(), as: .json)
+
+            #expect(explicit.headers.contentType == .json)
+            #expect(explicit.body.string == #"{"message":"hi"}"#)
+            #expect(try await explicit.content.decode(FooContent.self) == FooContent())
+        }
+    }
+
+    @Test("Encoding a Request's content updates Content-Length")
+    func testRequestContentContainerEncodeUpdatesContentLength() async throws {
+        struct FooContent: Content, Equatable {
+            var message: String = "hi"
+        }
+
+        try await withApp { app in
+            var request = Request(collectedBody: .init(string: "xx"))
+            #expect(request.headers[.contentLength] == "2")
+
+            try request.content.encode(FooContent())
+
+            // The body really is replaced...
+            #expect(request.body.string == #"{"message":"hi"}"#)
+
+            // ...but the header is left describing the old one.
+            #warning("`Request.body` is computed, so unlike `Response` there is no `didSet` to refresh Content-Length when the body changes. Fix in the body overhaul and drop this `withKnownIssue`")
+            withKnownIssue("Content-Length still describes the previous body") {
+                #expect(request.headers[.contentLength] == "16")
             }
         }
     }
@@ -524,8 +574,7 @@ struct ContentTests {
         body.writeString(#"{"name": "before decode"}"#)
 
         try await withApp { app in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: body
             )
 
@@ -541,8 +590,7 @@ struct ContentTests {
         // `decode(_:as:)` used to bind a `Content` type to the `Decodable` overload, which has no
         // way to know about the hook, so the value came back unprocessed.
         try await withApp { app in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: .init(string: #"{"name": "before decode"}"#)
             )
             request.headers.contentType = .json
@@ -608,8 +656,7 @@ struct ContentTests {
         body.writeString(#"{"data": ["entity0", "entity1"], "meta": {}}"#)
 
         try await withApp { app in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: body
             )
 
@@ -623,8 +670,7 @@ struct ContentTests {
     @Test("Test Query Hooks")
     func testQueryHooks() async throws {
         try await withApp { app in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: .init(string: "")
             )
             request.url.query = "name=before+decode"
@@ -640,8 +686,7 @@ struct ContentTests {
     @Test("Test Decode Percent Encoded Query", .bug("https://github.com/vapor/vapor/issues/3135"))
     func testDecodePercentEncodedQuery() async throws {
         try await withApp { app throws in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: .init(string: "")
             )
             request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
@@ -668,7 +713,7 @@ struct ContentTests {
     @Test("Test Snake Case Coding Key Error")
     func testSnakeCaseCodingKeyError() async throws {
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request()
             try req.content.encode([
                 "title": "The title"
             ], as: .json)
@@ -694,13 +739,12 @@ struct ContentTests {
     @Test("Test Data Corruption Error")
     func testDataCorruptionError() async throws {
         try await withApp { app in
-            let req = Request(
-                application: app,
+            var req = Request(
                 method: .get,
                 url: URI(string: "https://vapor.codes"),
-                headersNoUpdate: [.contentType: "application/json"],
                 collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#)
             )
+            req.headers.contentType = .json
 
             struct DecodeModel: Content {
                 let badJson: String
@@ -716,7 +760,7 @@ struct ContentTests {
     @Test("Test ValueNotFoundError")
     func testValueNotFoundError() async throws {
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request()
             try req.content.encode([
                 "items": ["1"]
             ], as: .json)
@@ -745,7 +789,7 @@ struct ContentTests {
     @Test("Test Type Mismatch Error")
     func testTypeMismatchError() async throws {
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request()
             try req.content.encode([
                 "item": [
                     "title": "The title"

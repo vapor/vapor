@@ -1,3 +1,13 @@
+/// Anchors a ``ResponseBodyWriter``'s lifetime to the scope that lends it out.
+///
+/// A writer is non-escapable, and its lifetime is expressed as a dependency on a borrow of one of
+/// these. Whoever drives a body stream creates a token as a local, lends it to the writer it builds,
+/// and lets it die when the call returns — at which point the compiler considers every writer
+/// derived from it dead too.
+struct ResponseBodyWriterScope: ~Copyable {
+    init() {}
+}
+
 /// Protocol for writing HTTP response bodies.
 ///
 /// Implementations of this protocol are provided by the HTTP server layer and allow Vapor's
@@ -5,11 +15,13 @@
 /// backpressured: `write` suspends while the transport can't accept more data, so a streaming
 /// body naturally throttles to the speed of the client.
 ///
-/// The protocol is class-bound because concrete writers wrap the server's move-only response
-/// writer, which they mutate in place across `await` points as chunks are written. Only `write`
-/// is exposed: concluding the response is the server's responsibility, so a body-stream closure
-/// can never end the stream itself.
-public protocol ResponseBodyWriter: AnyObject {
+/// Only `write` is exposed: concluding the response is the server's responsibility, so a
+/// body-stream closure can never end the stream itself.
+///
+/// A writer is **non-escapable**, and is only valid for the duration of the body-stream closure it
+/// was handed to. This ensures a write can never happen after the response was concluded
+/// See https://github.com/vapor/vapor/issues/2976.
+public protocol ResponseBodyWriter: ~Escapable {
     /// Write a single chunk of bytes
     func write(_ bytes: RawSpan) async throws
 
@@ -19,7 +31,7 @@ public protocol ResponseBodyWriter: AnyObject {
     func write(_ bytes: some Sequence<UInt8>) async throws
 }
 
-extension ResponseBodyWriter {
+extension ResponseBodyWriter where Self: ~Escapable {
     /// Write a single chunk of bytes
     @inlinable
     public func write(_ bytes: Span<UInt8>) async throws {

@@ -167,7 +167,7 @@ extension RoutesBuilder {
         let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
                 _ = try await MultiThreadedEventLoopGroup.singleton.any().flatSubmit {
-                    request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
+                    request.body.collect(max: max?.value ?? request.defaultMaxBodySize.value)
                 }.get()
 
             }

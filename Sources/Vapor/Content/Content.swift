@@ -68,7 +68,7 @@ extension Content {
     }
     
     public func encodeResponse(for request: Request) async throws -> Response {
-        var response = Response(contentConfiguration: request.application.contentConfiguration)
+        var response = Response(contentConfiguration: request.contentConfiguration)
         try response.content.encode(self)
         return response
     }

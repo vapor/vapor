@@ -22,7 +22,7 @@ struct FileTests {
     func testStreamFile() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                     } catch {
@@ -43,7 +43,7 @@ struct FileTests {
     func testStreamFileConnectionClose() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true)
             }
 
             var headers = HTTPFields()
@@ -65,7 +65,7 @@ struct FileTests {
                     tmpPath = try await FilePath(FileSystem.shared.temporaryDirectory.description).appending(UUID().uuidString).string
                 } while try await FileSystem.shared.info(forFileAt: .init(tmpPath)) != nil
 
-                return try await req.fileio.streamFile(at: tmpPath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: tmpPath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                         Issue.record("File Stream should have failed")
@@ -84,7 +84,7 @@ struct FileTests {
     func testAdvancedETagHeaders() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                     } catch {
@@ -106,7 +106,7 @@ struct FileTests {
     func testAdvancedETagHashIsCached() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true)
             }
 
             #expect(await app.fileETagHashCache.entry(forFileAt: #filePath) == nil)
@@ -129,7 +129,7 @@ struct FileTests {
     func testSimpleETagHeaders() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: false) { result in
                     do {
                         try result.get()
                     } catch {
@@ -153,7 +153,7 @@ struct FileTests {
     func testStreamFileContentHeaderTail() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                     } catch {
@@ -183,7 +183,7 @@ struct FileTests {
     func testStreamFileContentHeaderStart() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                     } catch {
@@ -214,7 +214,7 @@ struct FileTests {
     func testStreamFileContentHeadersWithin() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     #expect(throws: Never.self) {
                         try result.get()
                     }
@@ -243,7 +243,7 @@ struct FileTests {
     func testStreamFileContentHeadersOnlyFirstByte() async throws {
         try await withApp { app in
             app.get("file-stream") { req in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     #expect(throws: Never.self) {
                         try result.get()
                     }
@@ -264,85 +264,285 @@ struct FileTests {
         }
     }
 
-    @Test("Test Stream File Content Headers Within Fail")
-    func testStreamFileContentHeadersWithinFail() async throws {
+    // MARK: Byte ranges
+
+    /// The file the range tests below are served from, and its contents for comparison. Big enough
+    /// that a range spans several of `streamFile`'s 128 KB chunks.
+    private static var rangeTestFile: String {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("Utilities/long-test-file.txt")
+            .path
+    }
+
+    /// Serves ``rangeTestFile`` at `/file-stream` and hands the block a live server plus the file's
+    /// bytes, so a response can be compared against exactly the slice that was asked for.
+    private func withRangeServer(
+        _ body: (any VaporTestingRunner, Data) async throws -> Void
+    ) async throws {
+        let path = Self.rangeTestFile
+        let contents = try Data(contentsOf: URL(fileURLWithPath: path))
         try await withApp { app in
-            app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
-                    #expect(throws: Never.self) {
-                        try result.get()
-                    }
-                }
+            app.get("file-stream") { req in
+                try await app.fileio.streamFile(at: path, for: req)
             }
-
-            // Run against a real server so range validation is exercised end-to-end. A single boot
-            // serves every request in the block; multiple `.test` calls would re-boot (see vapor#3521).
             try await app.test(method: .running) { runner in
-                var headerRequest = HTTPFields()
-                headerRequest.range = .init(unit: .bytes, ranges: [.within(start: -20, end: 25)])
-                let res1 = try await runner.sendRequest(.get, "/file-stream", headers: headerRequest)
-                #expect(res1.status == .badRequest)
-
-                headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 10, end: 100000000)])
-                let res2 = try await runner.sendRequest(.get, "/file-stream", headers: headerRequest)
-                #expect(res2.status == .badRequest)
+                try await body(runner, contents)
             }
         }
     }
 
-    @Test("Test Stream File Content Headers Start Fail")
-    func testStreamFileContentHeadersStartFail() async throws {
-        try await withApp { app in
-            app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
-                    #expect(throws: Never.self) {
-                        try result.get()
-                    }
-                }
-            }
+    @Test("A file response advertises range support with Accept-Ranges")
+    func testFileResponseAdvertisesAcceptRanges() async throws {
+        try await withRangeServer { runner, _ in
+            // A whole-file response is what tells a client it may ask for a range at all, so it
+            // carries the header just as a partial one does.
+            let whole = try await runner.sendRequest(.get, "/file-stream")
+            #expect(whole.status == .ok)
+            #expect(whole.headers[.acceptRanges] == "bytes")
 
-            try await app.test(method: .running) { runner in
-                var headerRequest = HTTPFields()
-                headerRequest.range = .init(unit: .bytes, ranges: [.start(value: -20)])
-                let res1 = try await runner.sendRequest(.get, "/file-stream", headers: headerRequest)
-                #expect(res1.status == .badRequest)
+            var headers = HTTPFields()
+            headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 99)])
+            let partial = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+            #expect(partial.status == .partialContent)
+            #expect(partial.headers[.acceptRanges] == "bytes")
 
-                headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 100000000)])
-                let res2 = try await runner.sendRequest(.get, "/file-stream", headers: headerRequest)
-                #expect(res2.status == .badRequest)
+            // `Accept` is a request header describing the client's media-type preferences. A
+            // response claiming `Accept: bytes` is meaningless, and is what was sent before.
+            #expect(whole.headers[.accept] == nil)
+            #expect(partial.headers[.accept] == nil)
+        }
+    }
+
+    @Test("A byte range serves exactly the bytes it asked for",
+          .bug("https://github.com/vapor/vapor/issues/2566"))
+    func testByteRangeServesExactlyTheRequestedBytes() async throws {
+        try await withRangeServer { runner, contents in
+            // The three ranges from the issue, which each came back with `end + 1` bytes (the range
+            // start was ignored) rather than `end - start + 1`.
+            for (start, end) in [(1024, 24601), (24602, 68000), (0, 0), (168_000, 168_502)] {
+                var headers = HTTPFields()
+                headers.range = .init(unit: .bytes, ranges: [.within(start: start, end: end)])
+                let res = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+
+                let expected = contents[start...end]
+                #expect(res.status == .partialContent, "bytes=\(start)-\(end)")
+                #expect(
+                    res.headers[.contentRange] == "bytes \(start)-\(end)/\(contents.count)",
+                    "bytes=\(start)-\(end)")
+                #expect(
+                    res.headers[.contentLength] == "\(expected.count)",
+                    "bytes=\(start)-\(end)")
+
+                let body = try await res.body.data() ?? Data()
+                #expect(body.count == expected.count, "bytes=\(start)-\(end)")
+                #expect(body == Data(expected), "bytes=\(start)-\(end) served the wrong bytes")
             }
         }
     }
 
-    @Test("Test Stream File Content Headers Tail Fail")
-    func testStreamFileContentHeadersTailFail() async throws {
-        try await withApp { app in
-            app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
-                    #expect(throws: Never.self) {
-                        try result.get()
-                    }
-                }
-            }
+    @Test("An open-ended and a suffix range serve exactly the bytes they asked for",
+          .bug("https://github.com/vapor/vapor/issues/2566"))
+    func testOpenEndedAndSuffixRangesServeExactBytes() async throws {
+        try await withRangeServer { runner, contents in
+            let size = contents.count
 
-            try await app.test(method: .running) { runner in
-                var headerRequest = HTTPFields()
-                headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: -20)])
-                let res1 = try await runner.sendRequest(.get, "/file-stream", headers: headerRequest)
-                #expect(res1.status == .badRequest)
+            // `bytes=1024-` is everything from 1024 to the last byte.
+            var headers = HTTPFields()
+            headers.range = .init(unit: .bytes, ranges: [.start(value: 1024)])
+            let open = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+            #expect(open.status == .partialContent)
+            #expect(open.headers[.contentRange] == "bytes 1024-\(size - 1)/\(size)")
+            #expect(open.headers[.contentLength] == "\(size - 1024)")
+            #expect(try await open.body.data() == Data(contents[1024...]))
 
-                headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 100000000)])
-                let res2 = try await runner.sendRequest(.get, "/file-stream", headers: headerRequest)
-                #expect(res2.status == .badRequest)
+            // `bytes=-500` is the last 500 bytes.
+            headers.range = .init(unit: .bytes, ranges: [.tail(value: 500)])
+            let suffix = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+            #expect(suffix.status == .partialContent)
+            #expect(suffix.headers[.contentRange] == "bytes \(size - 500)-\(size - 1)/\(size)")
+            #expect(suffix.headers[.contentLength] == "500")
+            #expect(try await suffix.body.data() == Data(contents[(size - 500)...]))
+        }
+    }
+
+    @Test("A byte range running past the end of the file is clamped to the end",
+          .bug("https://github.com/vapor/vapor/issues/2991"))
+    func testRangePastEndOfFileIsClamped() async throws {
+        try await withRangeServer { runner, contents in
+            let size = contents.count
+
+            // The case from the issue: an end past EOF used to be a 400. Other servers serve up to
+            // the end of the file, and RFC 9110 §14.1.2 says a range should be clamped, not refused.
+            var headers = HTTPFields()
+            headers.range = .init(unit: .bytes, ranges: [.within(start: 100, end: size + 5000)])
+            let clamped = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+            #expect(clamped.status == .partialContent)
+            #expect(clamped.headers[.contentRange] == "bytes 100-\(size - 1)/\(size)")
+            #expect(clamped.headers[.contentLength] == "\(size - 100)")
+            #expect(try await clamped.body.data() == Data(contents[100...]))
+
+            // An end exactly one past the last byte is the off-by-one edge of the same case. It
+            // used to declare one byte more than the file holds, which truncated the response
+            // mid-stream and broke the connection.
+            headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: size)])
+            let offByOne = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+            #expect(offByOne.status == .partialContent)
+            #expect(offByOne.headers[.contentRange] == "bytes 0-\(size - 1)/\(size)")
+            #expect(offByOne.headers[.contentLength] == "\(size)")
+            #expect(try await offByOne.body.data() == contents)
+
+            // A suffix longer than the file selects the whole file, per RFC 9110 §14.1.2.
+            headers.range = .init(unit: .bytes, ranges: [.tail(value: size + 5000)])
+            let suffix = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+            #expect(suffix.status == .partialContent)
+            #expect(suffix.headers[.contentRange] == "bytes 0-\(size - 1)/\(size)")
+            #expect(suffix.headers[.contentLength] == "\(size)")
+            #expect(try await suffix.body.data() == contents)
+        }
+    }
+
+    @Test("A byte range that selects no bytes is 416, not 400",
+          .bug("https://github.com/vapor/vapor/issues/2991"))
+    func testRangePastEndOfFileIs416() async throws {
+        try await withRangeServer { runner, contents in
+            let size = contents.count
+
+            // A range whose *start* is at or past the end selects nothing, so there is nothing to
+            // clamp to. RFC 9110 §15.5.17 wants a 416 carrying the representation's real length.
+            let unsatisfiable: [HTTPFields.Range.Value] = [
+                .start(value: size),
+                .start(value: size + 5000),
+                .within(start: size, end: size + 10),
+                .within(start: size + 5000, end: size + 6000),
+                .tail(value: 0),
+            ]
+
+            for range in unsatisfiable {
+                var headers = HTTPFields()
+                headers.range = .init(unit: .bytes, ranges: [range])
+                let res = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+                #expect(res.status == .rangeNotSatisfiable, "\(range.serialize())")
+                #expect(res.headers[.contentRange] == "bytes */\(size)", "\(range.serialize())")
             }
         }
+    }
+
+    @Test("A malformed byte range is a 400, not a 416",
+          .bug("https://github.com/vapor/vapor/issues/2991"))
+    func testMalformedRangeIsBadRequest() async throws {
+        // A malformed range is rejected outright rather than narrowed. Unlike one that merely runs
+        // past the end of the file, there is no sensible window to clamp these to: the client asked
+        // for something that isn't a range at all. The well-formed-but-unsatisfiable cases, which
+        // are a 416, live in `testRangePastEndOfFileIs416`.
+        try await withRangeServer { runner, _ in
+            let malformed: [HTTPFields.Range.Value] = [
+                // Negative bounds, for each of the three range shapes.
+                .start(value: -20),
+                .tail(value: -20),
+                .within(start: -20, end: 25),
+                // Inverted: the end precedes the start.
+                .within(start: 25, end: 20),
+            ]
+
+            for range in malformed {
+                var headers = HTTPFields()
+                headers.range = .init(unit: .bytes, ranges: [range])
+                let res = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+                #expect(res.status == .badRequest, "\(range.serialize())")
+                // A 400 says nothing about the representation, so unlike a 416 it carries no
+                // `Content-Range`.
+                #expect(res.headers[.contentRange] == nil, "\(range.serialize())")
+            }
+        }
+    }
+
+    @Test("Every byte range against an empty file is unsatisfiable",
+          .bug("https://github.com/vapor/vapor/issues/2991"))
+    func testRangeAgainstEmptyFileIs416() async throws {
+        let path = try await makeTemporaryFile(size: 0)
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        try await withApp { app in
+            app.get("file-stream") { req in
+                try await app.fileio.streamFile(at: path, for: req)
+            }
+            try await app.test(method: .running) { runner in
+                for range in [HTTPFields.Range.Value.start(value: 0), .within(start: 0, end: 0), .tail(value: 10)] {
+                    var headers = HTTPFields()
+                    headers.range = .init(unit: .bytes, ranges: [range])
+                    let res = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+                    #expect(res.status == .rangeNotSatisfiable, "\(range.serialize())")
+                    #expect(res.headers[.contentRange] == "bytes */0", "\(range.serialize())")
+                }
+            }
+        }
+    }
+
+    @Test("FileMiddleware clamps a range past the end of the file too",
+          .bug("https://github.com/vapor/vapor/issues/2991"))
+    func testFileMiddlewareRangePastEndOfFile() async throws {
+        // The issue was reported against `FileMiddleware`, which reaches the same range handling
+        // through `FileIO`. Checked here so the fix can't regress for only one of the two entry points.
+        let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let contents = try Data(contentsOf: directory.appendingPathComponent("Utilities/long-test-file.txt"))
+        let size = contents.count
+
+        try await withApp { app in
+            app.middleware.use(FileMiddleware(publicDirectory: directory.path, etagCache: app.fileETagHashCache))
+
+            try await app.test(method: .running) { runner in
+                var headers = HTTPFields()
+                headers.range = .init(unit: .bytes, ranges: [.within(start: 64, end: size * 2)])
+                let clamped = try await runner.sendRequest(.get, "/Utilities/long-test-file.txt", headers: headers)
+                #expect(clamped.status == .partialContent)
+                #expect(clamped.headers[.contentRange] == "bytes 64-\(size - 1)/\(size)")
+                #expect(try await clamped.body.data() == Data(contents[64...]))
+
+                headers.range = .init(unit: .bytes, ranges: [.start(value: size)])
+                let unsatisfiable = try await runner.sendRequest(.get, "/Utilities/long-test-file.txt", headers: headers)
+                #expect(unsatisfiable.status == .rangeNotSatisfiable)
+                #expect(unsatisfiable.headers[.contentRange] == "bytes */\(size)")
+            }
+        }
+    }
+
+    @Test("Range resolution clamps and rejects the same way the file streamer does",
+          .bug("https://github.com/vapor/vapor/issues/2991"))
+    func testAsResponseContentRangeLeniency() throws {
+        // The header-level API backing the streamer, checked directly so the semantics are pinned
+        // without needing a server.
+        #expect(try HTTPFields.Range.Value.within(start: 200, end: 1000)
+            .asResponseContentRange(limit: 600) == .withinWithLimit(start: 200, end: 599, limit: 600))
+        #expect(try HTTPFields.Range.Value.within(start: 0, end: 600)
+            .asResponseContentRange(limit: 600) == .withinWithLimit(start: 0, end: 599, limit: 600))
+        #expect(try HTTPFields.Range.Value.start(value: 200)
+            .asResponseContentRange(limit: 600) == .withinWithLimit(start: 200, end: 599, limit: 600))
+        #expect(try HTTPFields.Range.Value.tail(value: 1000)
+            .asResponseContentRange(limit: 600) == .withinWithLimit(start: 0, end: 599, limit: 600))
+
+        func expectStatus(_ status: HTTPResponse.Status, _ range: HTTPFields.Range.Value) {
+            #expect(performing: {
+                _ = try range.asResponseContentRange(limit: 600)
+            }, throws: { error in
+                (error as? Abort)?.status == status
+            })
+        }
+        // Unsatisfiable: selects no bytes.
+        expectStatus(.rangeNotSatisfiable, .start(value: 600))
+        expectStatus(.rangeNotSatisfiable, .within(start: 600, end: 700))
+        expectStatus(.rangeNotSatisfiable, .tail(value: 0))
+        // Malformed: negative or inverted.
+        expectStatus(.badRequest, .start(value: -1))
+        expectStatus(.badRequest, .tail(value: -1))
+        expectStatus(.badRequest, .within(start: -1, end: 10))
+        expectStatus(.badRequest, .within(start: 10, end: 5))
     }
 
     @Test("Test Percent Decoded File Path")
     func testPercentDecodedFilePath() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
             try await app.testing().test(.get, "/Utilities/foo%20bar.html") { res in
                 #expect(res.status == .ok)
@@ -355,7 +555,7 @@ struct FileTests {
     func testPercentDecodedRelativePath() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
             try await app.testing().test(.get, "%2e%2e/VaporTests/Utilities/foo.txt") { res in
                 #expect(res.status == .forbidden)
@@ -372,7 +572,7 @@ struct FileTests {
     func testDefaultFileRelative() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html", etagCache: app.fileETagHashCache))
 
             try await app.testing().test(.get, "Utilities/") { res in
                 #expect(res.status == .ok)
@@ -390,7 +590,7 @@ struct FileTests {
     func testDefaultFileAbsolute() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html", etagCache: app.fileETagHashCache))
 
             try await app.testing().test(.get, "Utilities/") { res in
                 #expect(res.status == .ok)
@@ -408,7 +608,7 @@ struct FileTests {
     func testNoDefaultFile() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
             try await app.testing().test(.get, "Utilities/") { res in
                 #expect(res.status == .notFound)
@@ -424,7 +624,8 @@ struct FileTests {
                 FileMiddleware(
                     publicDirectory: "/" + path,
                     defaultFile: "index.html",
-                    directoryAction: .redirect
+                    directoryAction: .redirect,
+                    etagCache: app.fileETagHashCache
                 )
             )
 
@@ -446,7 +647,8 @@ struct FileTests {
                 FileMiddleware(
                     publicDirectory: "/" + path,
                     defaultFile: "index.html",
-                    directoryAction: .redirect
+                    directoryAction: .redirect,
+                    etagCache: app.fileETagHashCache
                 )
             )
 
@@ -475,7 +677,8 @@ struct FileTests {
                 FileMiddleware(
                     publicDirectory: "/" + path,
                     defaultFile: "index.html",
-                    directoryAction: .none
+                    directoryAction: .none,
+                    etagCache: app.fileETagHashCache
                 )
             )
 
@@ -493,39 +696,52 @@ struct FileTests {
     func testInvalidRangeHeaderDoesNotCrash() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true)
             }
 
+            let size = try Data(contentsOf: URL(fileURLWithPath: #filePath)).count
+
             try await app.test(method: .running) { runner in
+                // An end of `Int.max` must not overflow when the served length is worked out. Since
+                // vapor#2991 it is clamped to the last byte rather than rejected, so what this pins
+                // is that the arithmetic stays safe on the lenient path too.
                 var headers = HTTPFields()
                 headers[.range] = "bytes=0-9223372036854775807"
                 let res1 = try await runner.sendRequest(.get, "/file-stream", headers: headers)
-                #expect(res1.status == .badRequest)
+                #expect(res1.status == .partialContent)
+                #expect(res1.headers[.contentRange] == "bytes 0-\(size - 1)/\(size)")
 
                 // `bytes=1-10` is a satisfiable range on this file, so it's served as 206, not rejected.
                 headers[.range] = "bytes=1-10"
                 let res2 = try await runner.sendRequest(.get, "/file-stream", headers: headers)
                 #expect(res2.status == .partialContent)
 
+                // Inverted: malformed, still a 400.
                 headers[.range] = "bytes=100-10"
                 let res3 = try await runner.sendRequest(.get, "/file-stream", headers: headers)
                 #expect(res3.status == .badRequest)
 
+                // Negative end: malformed, still a 400.
                 headers[.range] = "bytes=10--100"
                 let res4 = try await runner.sendRequest(.get, "/file-stream", headers: headers)
                 #expect(res4.status == .badRequest)
 
+                // Doesn't fit in an `Int`, so the header doesn't parse at all: a 400.
                 headers[.range] = "bytes=9223372036854775808-"
                 let res5 = try await runner.sendRequest(.get, "/file-stream", headers: headers)
                 #expect(res5.status == .badRequest)
 
+                // A start far past the end selects no bytes: unsatisfiable, so a 416 since vapor#2991.
                 headers[.range] = "bytes=922337203-"
                 let res6 = try await runner.sendRequest(.get, "/file-stream", headers: headers)
-                #expect(res6.status == .badRequest)
+                #expect(res6.status == .rangeNotSatisfiable)
+                #expect(res6.headers[.contentRange] == "bytes */\(size)")
 
+                // A suffix far longer than the file selects all of it, again since vapor#2991.
                 headers[.range] = "bytes=-922337203"
                 let res7 = try await runner.sendRequest(.get, "/file-stream", headers: headers)
-                #expect(res7.status == .badRequest)
+                #expect(res7.status == .partialContent)
+                #expect(res7.headers[.contentRange] == "bytes 0-\(size - 1)/\(size)")
 
                 headers[.range] = "bytes=-9223372036854775808-"
                 let res8 = try await runner.sendRequest(.get, "/file-stream", headers: headers)
@@ -534,39 +750,6 @@ struct FileTests {
         }
     }
 
-    #warning("Consider whether we should offer these anymoer instead of just deferring to NIOFileSystem")
-//    func testFileRead() async throws {
-//        let request = Request(application: app, on: app.eventLoopGroup.next())
-//
-//        let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/long-test-file.txt"
-//
-//        let content = try String(contentsOfFile: path, encoding: .utf8)
-//
-//        var readContent = ""
-//        let file = try await request.fileio.readFile(at: path, chunkSize: 16 * 1024) // 32Kb, ~5 chunks
-//        for try await chunk in file {
-//            readContent += String(buffer: chunk)
-//        }
-//
-//        XCTAssertEqual(readContent, content, "The content read from the file does not match the expected content.")
-//    }
-//    func testFileWrite() async throws {
-//        let data = "Hello"
-//        let path = "/tmp/fileio_write.txt"
-//
-//        do {
-//            let request = Request(application: app, on: app.eventLoopGroup.next())
-//
-//            try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
-//
-//            let result = try String(contentsOfFile: path, encoding: .utf8)
-//            XCTAssertEqual(result, data)
-//        } catch {
-//            try await FileSystem.shared.removeItem(at: .init(path))
-//            throw error
-//        }
-//    }
-
     @Test("Cancelling a file stream still closes the file handle")
     func testCancelledFileStreamClosesHandle() async throws {
         // Large enough that a read is still in flight when the cancellation lands: the whole point
@@ -574,15 +757,15 @@ struct FileTests {
         let filePath = try await makeTemporaryFile(size: 8 << 20)
 
         try await withApp { app in
-            let request = Request(application: app)
+            let request = Request()
 
             // `close()` is dispatched through a thread pool that refuses cancelled work, so a
             // handle closed naively from a cancelled task stays open and trips NIOFileSystem's
             // `deinit` precondition — which traps the process rather than throwing. Cancelling
             // repeatedly at slightly different points covers the window between open and close.
             for iteration in 1...10 {
-                let response = try await request.fileio.streamFile(
-                    at: filePath, advancedETagComparison: false)
+                let response = try await app.fileio.streamFile(
+                    at: filePath, for: request, advancedETagComparison: false)
 
                 // `collect()` is mutating, so the Task works on its own copy of the body. That
                 // is fine here: this test is about descriptor cleanup on cancellation, not the
@@ -607,7 +790,7 @@ struct FileTests {
         try await withApp { app in
             let fileWasRead = NIOLockedValueBox(false)
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { _ in
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: false) { _ in
                     fileWasRead.withLockedValue { $0 = true }
                 }
             }
@@ -631,7 +814,7 @@ struct FileTests {
     func testFileMiddlewareOnlyServesGetAndHead() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
             try await app.test(method: .running) { runner in
                 let get = try await runner.sendRequest(.get, "/Utilities/foo.txt")

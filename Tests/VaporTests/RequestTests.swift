@@ -40,10 +40,10 @@ struct RequestTests {
 
             do {
                 try await withRunningApp(app: app) { port throws in
-                    #expect(try await httpClient.get("http://localhost:\(port)/redirect_normal").status == .seeOther)
-                    #expect(try await httpClient.get("http://localhost:\(port)/redirect_permanent").status == .movedPermanently)
-                    #expect(try await httpClient.post("http://localhost:\(port)/redirect_temporary").status == .temporaryRedirect)
-                    #expect(try await httpClient.post("http://localhost:\(port)/redirect_permanentPost").status == .permanentRedirect)
+                    #expect(try await httpClient.get("http://127.0.0.1:\(port)/redirect_normal").status == .seeOther)
+                    #expect(try await httpClient.get("http://127.0.0.1:\(port)/redirect_permanent").status == .movedPermanently)
+                    #expect(try await httpClient.post("http://127.0.0.1:\(port)/redirect_temporary").status == .temporaryRedirect)
+                    #expect(try await httpClient.post("http://127.0.0.1:\(port)/redirect_permanentPost").status == .permanentRedirect)
                 }
             } catch {
                 try await httpClient.shutdown()
@@ -70,11 +70,43 @@ struct RequestTests {
             }
 
             try await withRunningApp(app: app) { port in
-                var request = HTTPClientRequest(url: "http://localhost:\(port)/stream")
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/stream")
                 request.method = .POST
                 request.body = .stream(testValue.utf8.async, length: .unknown)
 
                 let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
+            }
+        }
+    }
+
+    @Test("Test Streaming Request Content Decoding", .timeLimit(.minutes(1)))
+    func testStreamingRequestContentDecoding() async throws {
+        struct Payload: Content, Equatable {
+            var message: String
+        }
+
+        try await withApp { app in
+            app.on(.post, "stream-decode", body: .stream) { req async throws -> String in
+                #expect(req.body.data != nil)
+                return try await req.content.decode(Payload.self).message
+            }
+
+            try await withRunningApp(app: app) { port in
+                let testValue = String.randomDigits()
+                let json = #"{"message":"\#(testValue)"}"#
+
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/stream-decode")
+                request.method = .POST
+                request.headers.add(name: "content-type", value: "application/json")
+                request.body = .stream(json.utf8.async, length: .unknown)
+
+                // Not a measurement of how fast this has to be: a budget tight enough to catch a
+                // loaded machine fails for that reason instead of a real one, which is how this
+                // test failed in CI. The `.timeLimit` on the test is the real backstop.
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
                 #expect(response.status == .ok)
                 let body = try await response.body.collect(upTo: 1024 * 1024)
                 #expect(body.string == testValue)
@@ -99,7 +131,7 @@ struct RequestTests {
             try await withRunningApp(app: app) { port in
                 var oneMBBB = ByteBuffer(repeating: 0x41, count: 1024 * 1024)
                 let oneMB = try #require(oneMBBB.readData(length: oneMBBB.readableBytes) as Data?)
-                var request = HTTPClientRequest(url: "http://localhost:\(port)/hello")
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/hello")
                 request.method = .POST
                 request.body = .stream(oneMB.async, length: .known(Int64(oneMB.count)))
                 if let response = try? await HTTPClient.shared.execute(request, timeout: .seconds(5)) {
@@ -171,7 +203,7 @@ struct RequestTests {
                 }
 
                 let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
-                let request = try! HTTPClient.Request(url: "http://localhost:\(port)/hello",
+                let request = try! HTTPClient.Request(url: "http://127.0.0.1:\(port)/hello",
                                                       method: .POST,
                                                       headers: [:],
                                                       body: .byteBuffer(tenMB))
@@ -208,7 +240,7 @@ struct RequestTests {
 
             try await withRunningApp(app: app) { port in
                 let fiftyMB = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
-                var request = HTTPClientRequest(url: "http://localhost:\(port)/upload")
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/upload")
                 request.method = .POST
                 request.body = .bytes(fiftyMB)
 
@@ -239,8 +271,8 @@ struct RequestTests {
     @Test("Test Request IDs are Unique")
     func testRequestIdsAreUnique() async throws {
         try await withApp { app in
-            let request1 = Request(application: app)
-            let request2 = Request(application: app)
+            let request1 = Request()
+            let request2 = Request()
 
             #expect(request1.id != request2.id)
         }
@@ -267,7 +299,8 @@ struct RequestTests {
     @Test("Test Request Peer Address Forwarded")
     func testRequestPeerAddressForwarded() async throws {
         try await withApp { app in
-            app.get("remote") { req -> String in
+            app.get("remote") { request -> String in
+                var req = request
                 req.headers[.forwarded] = "for=192.0.2.60; proto=http; by=203.0.113.43"
                 guard let peerAddress = req.peerAddress else {
                     return "n/a"
@@ -284,7 +317,8 @@ struct RequestTests {
     @Test("Test Request Peer Address X-Forwarded-For")
     func testRequestPeerAddressXForwardedFor() async throws {
         try await withApp { app in
-            app.get("remote") { req -> String in
+            app.get("remote") { request -> String in
+                var req = request
                 req.headers[.xForwardedFor] = "5.6.7.8"
                 guard let peerAddress = req.peerAddress else {
                     return "n/a"
@@ -318,7 +352,8 @@ struct RequestTests {
     @Test("Test Request Peer Address Multiple Headers Order")
     func testRequestPeerAddressMultipleHeadersOrder() async throws {
         try await withApp { app in
-            app.get("remote") { req -> String in
+            app.get("remote") { request -> String in
+                var req = request
                 req.headers[.xForwardedFor] = "5.6.7.8"
                 req.headers[.forwarded] = "for=192.0.2.60; proto=http; by=203.0.113.43"
                 guard let peerAddress = req.peerAddress else {
