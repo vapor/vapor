@@ -27,9 +27,16 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         reader: consuming sending NIOHTTPServer.Reader,
         responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
-        // 1. Wrap the request body in a lazy pull-based stream (no eager collection).
         let bodyStream = RequestBodyStream(reader: consume reader)
-        defer { try? await bodyStream.drain() }
+
+        // 1. Drain any body the handler didn't read so the keep-alive connection stays usable. GET/HEAD
+        // aren't expected to carry a body, so their budget is 0: a body-less request drains nothing
+        // (just reads `.end`), and one that does carry a body is left unread, closing the connection.
+        let drainLimit = (request.method == .get || request.method == .head)
+            ? 0
+            : application.serverConfiguration.maxDrainBytes
+
+        defer { try? await bodyStream.drain(max: drainLimit) }
 
         // 2. Build Vapor request
         let peerCerts = try? await requestContext.peerCertificateChain
@@ -190,6 +197,9 @@ package final class RequestBodyStream: AsyncSequence, @unchecked Sendable {
     private var reader: NIOHTTPServer.Reader?
     /// Latches once the body ends so further reads short-circuit instead of touching a spent reader.
     private var finished = false
+    /// Total bytes handed out over the body's whole lifetime (iterate + collect + drain), so limits
+    /// account for what the handler already read, not just what a later drain reads.
+    private var bytesRead = 0
 
     init(reader: consuming NIOHTTPServer.Reader) {
         self.reader = consume reader
@@ -213,9 +223,19 @@ package final class RequestBodyStream: AsyncSequence, @unchecked Sendable {
         return collected
     }
 
-    /// Discards any unread body. Needed so an unconsumed request doesn't wedge keep-alive reuse.
-    func drain() async throws {
-        while try await readChunk() != nil { }
+    /// Discards any unread body until the end, or stops once *total* consumption (whatever the
+    /// handler already read, plus this drain) exceeds `max`.
+    ///
+    /// Draining to the body's end lets the server reuse the keep-alive connection. Bounding it is a
+    /// DoS guard: a request the handler didn't consume (e.g. a 404) must not let a client force the
+    /// server to read an unbounded body. If we stop before reaching `.end`, the server closes the
+    /// connection with `Connection: close` rather than read on.
+    func drain(max: Int) async throws {
+        while try await readChunk() != nil {
+            if bytesRead > max {
+                return
+            }
+        }
     }
 
     private func readChunk() async throws -> ByteBuffer? {
@@ -235,7 +255,9 @@ package final class RequestBodyStream: AsyncSequence, @unchecked Sendable {
             byteBuffer.writeBytes(chunk.span.bytes)
             return byteBuffer
         }
-        if chunk == nil {
+        if let chunk {
+            self.bytesRead += chunk.readableBytes
+        } else {
             self.finished = true
         }
         return chunk

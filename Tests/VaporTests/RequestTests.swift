@@ -302,15 +302,17 @@ struct RequestTests {
     @Test("Test Server Survives A Handler That Ignores The Streamed Request Body")
     func testServerSurvivesHandlerIgnoringStreamedBody() async throws {
         try await withApp { app in
-            // The handler returns without reading the (large) request body. The server must drain
-            // the unread body so the keep-alive connection stays usable for the next request.
+            // The handler returns without reading the request body. For a body within the drain
+            // limit the server drains it so the keep-alive connection stays usable for the next
+            // request. (An oversized unread body is handled by closing the connection instead —
+            // see `testUnknownRouteWithLargeBodyDoesNotHang`.)
             app.on(.post, "ignore", body: .stream) { _ in "ignored" }
             app.get("ok") { _ in "ok" }
 
             try await withRunningApp(app: app) { port in
                 var request = HTTPClientRequest(url: "http://localhost:\(port)/ignore")
                 request.method = .POST
-                request.body = .bytes(ByteBuffer(repeating: 0x41, count: 5 * 1024 * 1024))
+                request.body = .bytes(ByteBuffer(repeating: 0x41, count: 4 * 1024))
 
                 let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(10))
                 #expect(response.status == .ok)
@@ -329,7 +331,9 @@ struct RequestTests {
     func testStreamingBodyExceedingCollectMaxReturns413() async throws {
         try await withApp { app in
             // Collecting a streamed body with an explicit limit must abort with 413 once the body
-            // exceeds it, and the server must stay alive for later requests.
+            // exceeds it, and the server must stay alive for later requests. The body is kept small
+            // (over the collect limit but within the drain limit) so the unread remainder is drained
+            // and the 413 is delivered on a reusable connection rather than racing a close.
             app.on(.post, "limited", body: .stream) { req -> String in
                 _ = try await req.body.collect(max: 1024)
                 return "ok"
@@ -339,7 +343,7 @@ struct RequestTests {
             try await withRunningApp(app: app) { port in
                 var request = HTTPClientRequest(url: "http://localhost:\(port)/limited")
                 request.method = .POST
-                request.body = .bytes(ByteBuffer(repeating: 0x41, count: 500_000))
+                request.body = .bytes(ByteBuffer(repeating: 0x41, count: 2048))
 
                 let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(10))
                 #expect(response.status.code == 413)
@@ -378,6 +382,157 @@ struct RequestTests {
                 let rejected = try await HTTPClient.shared.execute(overLimit, timeout: .seconds(10))
                 #expect(rejected.status.code == 413)
             }
+        }
+    }
+
+    @Test("Test Unknown Route With A Large Body Is Not Fully Drained")
+    func testUnknownRouteWithLargeBodyDoesNotHang() async throws {
+        try await withApp { app in
+            // No route matches POST /unknown, so it 404s without reading the body. The server must
+            // answer promptly and stay alive without draining the whole (large) upload — otherwise an
+            // unknown route would be a trivial DoS vector.
+            app.get("known") { _ in "ok" }
+
+            try await withRunningApp(app: app) { port in
+                var unknown = HTTPClientRequest(url: "http://localhost:\(port)/unknown")
+                unknown.method = .POST
+                unknown.body = .bytes(ByteBuffer(repeating: 0x41, count: 50 * 1024 * 1024))
+
+                // Because the server refuses to read the whole body, it closes the connection rather
+                // than draining 50 MB — so the client sees either a 404 or a dropped connection.
+                // Both are fine; the point is the request resolves quickly (no unbounded drain) and
+                // the server stays up. A hang would trip the timeout and fail here.
+                _ = try? await HTTPClient.shared.execute(unknown, timeout: .seconds(10))
+
+                // The server must keep serving subsequent requests.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://localhost:\(port)/known"), timeout: .seconds(10))
+                #expect(ok.status == .ok)
+                #expect(try await ok.body.collect(upTo: 1024 * 1024).string == "ok")
+            }
+        }
+    }
+
+    @Test("Test The Drain Limit Is Method-Aware (GET/HEAD Never Consume A Body)")
+    func testDrainLimitIsMethodAware() async throws {
+        try await withApp { app in
+            // Unknown paths (404) so no `.collect` gate consumes the body first — the unread body
+            // reaches the handler's `defer` drain, which is what we're exercising. A raw socket lets
+            // us see whether the server kept the connection alive or closed it.
+            try await withRunningApp(app: app) { port in
+                let body = String(repeating: "A", count: 128)
+
+                // GET/HEAD → drain budget 0: any body is left unread, so the server closes the connection.
+                let get = try await rawExchange(
+                    port: port,
+                    rawRequest: "GET /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                #expect(get.serverClosed)
+
+                let head = try await rawExchange(
+                    port: port,
+                    rawRequest: "HEAD /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                #expect(head.serverClosed)
+
+                // A body-less GET/HEAD drains nothing (just reads `.end`), so the connection stays alive.
+                let bodylessHead = try await rawExchange(
+                    port: port,
+                    rawRequest: "HEAD /nope HTTP/1.1\r\nHost: localhost\r\n\r\n")
+                #expect(!bodylessHead.serverClosed)
+
+                // POST → drain budget is the (large default) limit: 128 bytes are drained, so the
+                // connection stays alive.
+                let post = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                #expect(!post.serverClosed)
+            }
+        }
+    }
+
+    @Test("Test Draining Stops Once The Configured Budget Is Exceeded")
+    func testDrainStopsOverConfiguredBudget() async throws {
+        try await withApp { app in
+            app.serverConfiguration.maxDrainBytes = 8
+
+            try await withRunningApp(app: app) { port in
+                // Over the 8-byte budget → the server stops draining and closes the connection.
+                let big = String(repeating: "A", count: 128)
+                let over = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(big.count)\r\n\r\n\(big)")
+                #expect(over.serverClosed)
+
+                // Within the budget → fully drained, connection stays alive.
+                let small = "AAAA"
+                let under = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(small.count)\r\n\r\n\(small)")
+                #expect(!under.serverClosed)
+            }
+        }
+    }
+
+    @Test("Test Collecting Rejects When The Declared Content-Length Exceeds The Max")
+    func testCollectRejectsWhenDeclaredContentLengthExceedsMax() async throws {
+        try await withApp { app in
+            // A collected body sets Content-Length to its own size. Declaring 2048 while collecting
+            // with a 1024 limit must be rejected up front with 413.
+            let request = Request(
+                application: app,
+                method: .post,
+                collectedBody: ByteBuffer(repeating: 0x41, count: 2048))
+
+            await #expect(performing: {
+                _ = try await request.body.collect(max: 1024)
+            }, throws: { error in
+                (error as? any AbortError)?.status.code == 413
+            })
+        }
+    }
+
+    @Test("Test Collecting Rejects On The Declared Content-Length Before Reading The Body")
+    func testCollectRejectsOnDeclaredContentLengthBeforeReadingBody() async throws {
+        try await withApp { app in
+            // No body is attached (storage is `.none`, which would normally collect to `nil`), but the
+            // request claims a huge Content-Length. The reject must fire from the header check *before*
+            // the storage switch — proving it's the declared length, not the bytes, that drives it.
+            let request = Request(application: app, method: .post)
+            request.headers[.contentLength] = "1000000"
+
+            await #expect(performing: {
+                _ = try await request.body.collect(max: 1024)
+            }, throws: { error in
+                (error as? any AbortError)?.status.code == 413
+            })
+        }
+    }
+
+    @Test("Test Collecting Accepts When The Declared Content-Length Is Within The Max")
+    func testCollectAcceptsWhenDeclaredContentLengthWithinMax() async throws {
+        try await withApp { app in
+            // A declared length at or under the limit must not be rejected: the body collects normally.
+            let request = Request(
+                application: app,
+                method: .post,
+                collectedBody: ByteBuffer(repeating: 0x41, count: 512))
+
+            let collected = try await request.body.collect(max: 1024)
+            #expect(collected?.readableBytes == 512)
+        }
+    }
+
+    @Test("Test Collecting With No Max Never Rejects On Content-Length")
+    func testCollectWithNilMaxDoesNotRejectOnContentLength() async throws {
+        try await withApp { app in
+            // `max: nil` means no limit, so even a large declared Content-Length must pass the check
+            // and collect the whole body.
+            let request = Request(
+                application: app,
+                method: .post,
+                collectedBody: ByteBuffer(repeating: 0x41, count: 2048))
+
+            let collected = try await request.body.collect(max: nil)
+            #expect(collected?.readableBytes == 2048)
         }
     }
 

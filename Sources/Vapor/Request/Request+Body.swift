@@ -29,11 +29,19 @@ extension Request {
         }
 
         /// Buffers the body into memory, up to `max` bytes (`nil` means no limit).
+        ///
+        /// Aborts with 413 if the declared `Content-Length` already exceeds `max`, before reading any
+        /// body. A client that under-declares is still caught while streaming as the body is collected.
         public func collect(max: Int? = 1 << 14) async throws -> ByteBuffer? {
+            // Reject early on an over-limit declared length; skip when there's no limit or no header.
+            let declaredLength = self.request.headers[.contentLength].flatMap { Int($0) }
+            let exceedsDeclaredLimit = if let max, let declaredLength { declaredLength > max } else { false }
+            guard !exceedsDeclaredLimit else {
+                throw Abort(.contentTooLarge)
+            }
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
-                // A stream can only be drained once, so cache the result as `.collected` for any
-                // later `data`/`collect`/`decode` access.
+                // A stream drains once, so cache the result as `.collected` for later `data`/`collect`/`decode`.
                 let buffer = try await stream.collect(max: max ?? .max)
                 self.request.bodyStorage.withLockedValue { $0 = .collected(buffer) }
                 return buffer

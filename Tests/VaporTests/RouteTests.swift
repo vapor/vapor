@@ -401,8 +401,11 @@ struct RouteTests {
                 HTTPResponse.Status.ok
             }
 
+            // Small enough that the rejected (413) requests' unread remainder stays within the
+            // keep-alive drain cap, so the connection is reused and the 413 is delivered rather than
+            // racing a connection close; still over the 1-byte and 1kb limits and under 1mb/1gb.
             var buffer = ByteBufferAllocator().buffer(capacity: 0)
-            buffer.writeBytes(Array(repeating: 0, count: 500_000))
+            buffer.writeBytes(Array(repeating: 0, count: 2048))
 
             try await app.test(method: .running) { testApp in
                 let defaultRes = try await testApp.sendRequest(.post, "/default", body: buffer)

@@ -15,16 +15,25 @@ public struct ServerConfiguration: Sendable {
     /// cached, so lowering it doesn't discard entries already held.
     public var eTagHashCacheCapacity: UInt
 
+    /// How many bytes of an unread request body the server will drain to keep the connection alive.
+    /// Past this it stops and closes the connection instead of reading on — a DoS guard. Defaults to 16 KB.
+    ///
+    /// The budget covers the body's *total* consumption (whatever the handler already read plus the
+    /// drain), not just the drain, so a handler that read past it and left a remainder also closes.
+    public var maxDrainBytes: Int
+
     public init(
         address: BindAddress = .hostname(),
         tlsConfiguration: TLSConfiguration? = nil,
         httpVersions: Set<HTTPVersion> = [.http1_1],
-        eTagHashCacheCapacity: UInt = 1024
+        eTagHashCacheCapacity: UInt = 1024,
+        maxDrainBytes: Int = 1 << 14
     ) {
         self.address = address
         self.tlsConfiguration = tlsConfiguration
         self.httpVersions = httpVersions
         self.eTagHashCacheCapacity = eTagHashCacheCapacity
+        self.maxDrainBytes = maxDrainBytes
     }
 
     /// Host name the server will bind to.
