@@ -3,8 +3,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOCore
-import NIOConcurrencyHelpers
 
 /// Simple in-memory sessions implementation.
 public struct MemorySessions: SessionDriver, Sendable {

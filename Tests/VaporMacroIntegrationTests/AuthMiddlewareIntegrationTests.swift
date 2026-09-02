@@ -20,7 +20,7 @@ struct AuthMiddlewareIntegrationTests {
                 headers: [.authorization: "Bearer test-token"]
             ) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }
@@ -47,7 +47,7 @@ struct AuthMiddlewareIntegrationTests {
                 headers: [.authorization: "Bearer test-token"]
             ) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor promoted 42")
+                try #expect(await res.body.requireString() == "Vapor promoted 42")
             }
         }
     }
@@ -59,7 +59,7 @@ struct AuthMiddlewareIntegrationTests {
 
             try await app.testing().test(.get, "/api/auth/feed") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "anonymous")
+                try #expect(await res.body.requireString() == "anonymous")
             }
         }
     }
@@ -75,7 +75,7 @@ struct AuthMiddlewareIntegrationTests {
                 headers: [.authorization: "Bearer test-token"]
             ) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }
@@ -99,7 +99,7 @@ struct AuthMiddlewareIntegrationTests {
                 headers: [.authorization: "Bearer admin-token"]
             ) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Admin")
+                try #expect(await res.body.requireString() == "Admin")
             }
         }
     }

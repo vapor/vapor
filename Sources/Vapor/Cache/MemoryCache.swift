@@ -3,7 +3,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOCore
 import NIOConcurrencyHelpers
 
 private actor MemoryCacheStorage: Sendable {

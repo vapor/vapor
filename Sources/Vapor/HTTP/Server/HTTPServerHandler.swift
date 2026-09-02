@@ -55,7 +55,6 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         var responseSender = Optional(consume responseSender)
         try await withLogger(mergingMetadata: ["request-id": "\(requestID)"]) { _ in
             let vaporRequest = Request(
-                application: self.application,
                 method: request.method,
                 url: URI(path: rawPath),
                 version: .init(major: 1, minor: 1),
@@ -63,7 +62,9 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 bodyStream: bodyStream,
                 remoteAddress: remoteAddress,
                 peerCertificateChain: peerCerts,
-                requestID: requestID
+                requestID: requestID,
+                contentConfiguration: application.contentConfiguration,
+                defaultMaxBodySize: application.routes.defaultMaxBodySize
             )
 
             // 3. Run responder chain
@@ -103,32 +104,36 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
             }
 
             switch vaporResponse.body.storage {
-            case .stream(let bodyStream):
+            // A stream some copy of this body already collected is spent: its bytes live in the
+            // body's shared cache, so it is serialised down the buffered path below instead of by
+            // re-running a callback that would now write nothing.
+            case .stream(let bodyStream) where bodyStream.state.collected == nil:
                 // Streaming body: send the head, then let the body closure write chunks straight
                 // into the server's writer. The writer is non-Sendable (it wraps the server's
                 // move-only response writer), so it stays in this task; each `write` awaits the
                 // transport, so backpressure propagates to the closure. The server appends the
                 // final chunk via `finish` once the closure returns.
-                // Keep the concrete type so we can call `finish` (which is intentionally not part
-                // of the public `ResponseBodyWriter` protocol); the closure only sees `write`.
-                let writer = NIOResponseBodyWriter(inner: try await sender.send(httpResponse))
-                try await bodyStream.callback(writer)
-                guard bodyStream.count < 0 || writer.bytesWritten == bodyStream.count else {
-                    // Stream lenght is different to what was expecting, this is an error state to close the connection
+                let writer = NIOResponseBodyWriterStorage(inner: try await sender.send(httpResponse))
+                let scope = ResponseBodyWriterScope()
+                try await bodyStream.callback(NIOResponseBodyWriter(writer, scope: scope))
+                guard bodyStream.count == nil || writer.bytesWritten == bodyStream.count else {
+                    // Stream length differs from what was declared: an error state, so close the connection
                     Logger.current.debug(
                         "Response body stream wrote a different number of bytes than it declared, closing the connection",
                         metadata: [
                             "written": "\(writer.bytesWritten)",
-                            "declared": "\(bodyStream.count)",
+                            "declared": "\(bodyStream.count.map(String.init) ?? "unknown")",
                         ])
                     return
                 }
                 try await writer.finish(nil)
             default:
-                // Buffered body: single-shot write.
-                var responseBody = UniqueArray<UInt8>()
-                if let buffer = vaporResponse.body.buffer, buffer.readableBytes > 0 {
-                    responseBody.append(copying: buffer.readableBytesView)
+                // Buffered body: single-shot write. Borrowing the body's bytes copies them straight
+                // into the server's container - a `.string`/`.data`/`.staticString` body is no
+                // longer materialised into an intermediate `ByteBuffer` first.
+                var responseBody = UniqueArray<UInt8>(minimumCapacity: vaporResponse.body.count ?? 0)
+                try await vaporResponse.body.withStreamingBytes { bytes in
+                    bytes.withUnsafeBytes { unsafe responseBody.append(copying: $0) }
                 }
                 try await sender.sendAndFinish(httpResponse, buffer: &responseBody)
             }
@@ -136,14 +141,13 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
     }
 }
 
-/// Bridges Vapor's ``ResponseBodyWriter`` onto the server's move-only response writer.
+/// Holds the server's move-only response writer for the duration of one response.
 ///
-/// Each chunk is copied into a `UniqueArray<UInt8>` and forwarded with `await`, so the transport's
-/// backpressure (the socket/HTTP-2 flow-control window) propagates straight to the body-stream
-/// closure — a fast producer suspends while a slow client catches up. The underlying writer is
-/// move-only (`~Copyable`) and ``finish(_:)`` consumes it, so it's stored in an `Optional`: a class
-/// can't move a stored property out in place, and `Optional.take()` is how ``finish(_:)`` moves it out.
-final class NIOResponseBodyWriter: ResponseBodyWriter {
+/// The NIO writer is `~Copyable` and ``finish(_:)`` consumes it, so it lives in an `Optional`: a
+/// class can't move a stored property out in place, and `Optional.take()` is how it is moved out.
+/// This stays a class because the server mutates it across `await` points; the *lent* view handed
+/// to user code is the non-escapable ``NIOResponseBodyWriter`` below.
+final class NIOResponseBodyWriterStorage {
     private var inner: NIOHTTPServer.ResponseSender.Writer?
 
     /// The number of body bytes written so far, used to check a stream against its declared length.
@@ -153,13 +157,29 @@ final class NIOResponseBodyWriter: ResponseBodyWriter {
         self.inner = consume inner
     }
 
-    func write(_ buffer: ByteBuffer) async throws {
-        var out = UniqueArray<UInt8>(minimumCapacity: buffer.readableBytes)
-        out.append(copying: buffer.readableBytesView)
-        // `inner` is always present during writes (the body closure runs before `finish`, which
-        // takes it); the optional-chaining is just how we reach the move-only writer in place.
+    func write(_ bytes: RawSpan) async throws {
+        // We need to copy here so the writer takes ownership of the data
+        // TODO: This should be fixed in HTTP Server to avoid the copy
+        var out = UniqueArray<UInt8>(minimumCapacity: bytes.byteCount)
+        bytes.withUnsafeBytes { unsafe out.append(copying: $0) }
         try await self.inner?.write(buffer: &out)
-        self.bytesWritten += buffer.readableBytes
+        self.bytesWritten += bytes.byteCount
+    }
+
+    func write(_ bytes: some Sequence<UInt8>) async throws {
+        var out = UniqueArray<UInt8>(minimumCapacity: bytes.underestimatedCount)
+        // Staging is synchronous, so the sequence's own storage can be borrowed rather than copied
+        // element by element; only the transport write is awaited, after the borrow has ended.
+        let borrowed: Void? = bytes.withContiguousStorageIfAvailable { buffer in
+            out.append(copying: buffer)
+        }
+        if borrowed == nil {
+            out.append(copying: bytes)
+        }
+        // `write` drains `out`, so the count has to be taken first.
+        let count = out.count
+        try await self.inner?.write(buffer: &out)
+        self.bytesWritten += count
     }
 
     func finish(_ trailingHeaders: HTTPFields?) async throws {
@@ -261,5 +281,30 @@ package final class RequestBodyStream: AsyncSequence, @unchecked Sendable {
             self.finished = true
         }
         return chunk
+    }
+}
+
+/// Bridges Vapor's ``ResponseBodyWriter`` onto the server's move-only response writer.
+///
+/// Each chunk is copied into a `UniqueArray<UInt8>` and forwarded with `await`, so the transport's
+/// backpressure (the socket/HTTP-2 flow-control window) propagates straight to the body-stream
+/// closure — a fast producer suspends while a slow client catches up.
+///
+/// Non-escapable, so it cannot outlive the lend: this is what carries the server's move-only
+/// guarantee through to user code. See https://github.com/vapor/vapor/issues/2976.
+struct NIOResponseBodyWriter: ResponseBodyWriter, ~Escapable {
+    private let storage: NIOResponseBodyWriterStorage
+
+    @_lifetime(borrow scope)
+    init(_ storage: NIOResponseBodyWriterStorage, scope: borrowing ResponseBodyWriterScope) {
+        self.storage = storage
+    }
+
+    func write(_ bytes: RawSpan) async throws {
+        try await self.storage.write(bytes)
+    }
+
+    func write(_ bytes: some Sequence<UInt8>) async throws {
+        try await self.storage.write(bytes)
     }
 }

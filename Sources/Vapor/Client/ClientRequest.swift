@@ -5,6 +5,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
+import NIOFoundationEssentialsCompat
 public import HTTPTypes
 
 public struct ClientRequest: Sendable {
@@ -12,7 +13,7 @@ public struct ClientRequest: Sendable {
     public var url: URI
     public var headers: HTTPFields
     public var body: ByteBuffer?
-    public var timeout: TimeAmount
+    public var timeout: Duration
     public var maxResponseBodySize: Int
     private let contentConfiguration: ContentConfiguration
 
@@ -21,7 +22,7 @@ public struct ClientRequest: Sendable {
         url: URI = "/",
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        timeout: TimeAmount? = nil,
+        timeout: Duration? = nil,
         maxResponseBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB
         contentConfiguration: ContentConfiguration = .default()
     ) {
@@ -57,9 +58,8 @@ extension ClientRequest {
     }
 
     private struct _ContentContainer: ContentContainer {
-        var body: ByteBuffer?
+        var body: Data?
         var headers: HTTPFields
-        let byteBufferAllocator = ByteBufferAllocator()
         let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
@@ -67,8 +67,8 @@ extension ClientRequest {
         }
 
         mutating func encode(_ encodable: some Encodable, using encoder: any ContentEncoder) throws {
-            var body = self.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(encodable, to: &body, headers: &self.headers)
+            var body = Data()
+            try encoder.encode(encodable, to: &body, headers: &self.headers, userInfo: [:])
             self.body = body
         }
 
@@ -76,32 +76,24 @@ extension ClientRequest {
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
-            return try decoder.decode(D.self, from: body, headers: self.headers)
+            return try decoder.decode(D.self, from: body, headers: self.headers, userInfo: [:])
         }
 
         mutating func encode(_ content: some Content, using encoder: any ContentEncoder) throws {
             var content = content
             try content.beforeEncode()
-            var body = self.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(content, to: &body, headers: &self.headers)
+            var body = Data()
+            try encoder.encode(content, to: &body, headers: &self.headers, userInfo: [:])
             self.body = body
-        }
-
-        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
-            guard let body = self.body else {
-                throw Abort(.lengthRequired)
-            }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.headers)
-            try decoded.afterDecode()
-            return decoded
         }
     }
 
     public var content: any ContentContainer {
-        get { _ContentContainer(body: self.body, headers: self.headers, contentConfiguration: self.contentConfiguration) }
+        get {
+            return _ContentContainer(body: body?.getData(at: 0, length: body?.readableBytes ?? 0), headers: self.headers, contentConfiguration: self.contentConfiguration) }
         set {
             let container = (newValue as! _ContentContainer)
-            self.body = container.body
+            self.body = ByteBuffer(data: container.body ?? Data())
             self.headers = container.headers
         }
     }

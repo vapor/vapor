@@ -168,7 +168,7 @@ extension RoutesBuilder {
             // `.collect` routes buffer the body (enforcing the max size) before the handler runs, so
             // handlers see a materialized body. `.stream` routes skip this and read lazily.
             if case .collect(let max) = body, request.body.data == nil {
-                _ = try await request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
+                _ = try await request.body.collect(max: max?.value ?? request.defaultMaxBodySize.value)
             }
             return try await closure(request).encodeResponse(for: request)
         }

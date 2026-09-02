@@ -6,7 +6,6 @@ import Foundation
 #if Multipart
 import MultipartKit
 #endif
-import NIOConcurrencyHelpers
 import HTTPTypes
 
 /// Configures which ``Encoder``s and ``Decoder``s to use when interacting with data in HTTP messages.

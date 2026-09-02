@@ -1,11 +1,7 @@
-#if canImport(Glibc)
-import Glibc
-#elseif canImport(Musl)
-import Musl
-#elseif canImport(Android)
-import Android
+#if canImport(FoundationEssentials)
+import class FoundationEssentials.FileManager
 #else
-import Darwin.C
+import class Foundation.FileManager
 #endif
 import Logging
 
@@ -37,21 +33,9 @@ public struct DirectoryConfiguration: Sendable {
     ///
     /// - returns: The derived `DirectoryConfig` if it could be created, otherwise just "./".
     public static func detect() -> DirectoryConfiguration {
-        // get actual working directory
-        let cwd = getcwd(nil, Int(PATH_MAX))
-        defer {
-            if let cwd = cwd {
-                free(cwd)
-            }
-        }
-
-        let workingDirectory: String
-
-        if let cwd, let string = String(validatingCString: cwd) {
-            workingDirectory = string
-        } else {
-            workingDirectory = "./"
-        }
+        // get actual working directory, falling back to "./" if it's inaccessible
+        let cwd = FileManager.default.currentDirectoryPath
+        let workingDirectory = cwd.isEmpty ? "./" : cwd
 
         #if Xcode
         if workingDirectory.contains("DerivedData") {

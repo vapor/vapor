@@ -1,6 +1,9 @@
 @testable import Vapor
 import VaporTesting
 import AsyncHTTPClient
+import Crypto
+import NIOCertificateReloading
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
 import NIOPosix
@@ -59,6 +62,14 @@ struct ServerTLSTests {
         #expect(config.addressDescription == "https+unix: /tmp/x.sock")
     }
 
+    @Test("tlsConfiguration can be a caller-provided CertificateReloader")
+    func testTLSConfigurationReloading() {
+        var config = ServerConfiguration(address: .hostname("localhost", port: 8080))
+        config.tlsConfiguration = .reloading(EmptyCertificateReloader())
+        #expect(config.tlsConfiguration != nil)
+        #expect(config.isTLSEnabled == true)
+    }
+
     // MARK: - Serving over TLS
 
     @Test("Server serves over TLS with PEM file credentials", .timeLimit(.minutes(1)))
@@ -106,6 +117,111 @@ struct ServerTLSTests {
                     #expect(response.status == .ok)
                     #expect(try await response.body.collect(upTo: 1024).string == "world")
                 }
+            }
+        }
+    }
+
+    @Test("Server presents a certificate updated through a caller-provided CertificateReloader", .timeLimit(.minutes(1)))
+    func testCallerProvidedReloaderUpdatesCertificate() async throws {
+        let first = try SelfSignedCredentials.generate()
+        let second = try SelfSignedCredentials.generate()
+        let reloader = MutableCertificateReloader(
+            certificate: first.nioCertificate,
+            privateKey: first.nioPrivateKey
+        )
+
+        try await withApp { app in
+            app.serverConfiguration.tlsConfiguration = .reloading(reloader)
+            app.get("hello") { _ in "world" }
+
+            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+                try await withTLSClient(trustingOnly: first.nioCertificate) { client in
+                    let response = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                        timeout: .seconds(10)
+                    )
+                    #expect(response.status == .ok)
+                }
+
+                reloader.update(certificate: second.nioCertificate, privateKey: second.nioPrivateKey)
+
+                try await withTLSClient(trustingOnly: second.nioCertificate) { client in
+                    let response = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                        timeout: .seconds(10)
+                    )
+                    #expect(response.status == .ok)
+                }
+
+                await #expect(throws: (any Error).self) {
+                    try await withTLSClient(trustingOnly: first.nioCertificate) { client in
+                        try await client.execute(
+                            HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                            timeout: .seconds(2)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    @Test("Server presents a rotated certificate from a caller-run TimedCertificateReloader", .timeLimit(.minutes(1)))
+    func testCallerRunsTimedCertificateReloader() async throws {
+        let first = try SelfSignedCredentials.generate()
+        let second = try SelfSignedCredentials.generate()
+
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let certificatePath = directory.appendingPathComponent("cert.pem").path
+        let privateKeyPath = directory.appendingPathComponent("key.pem").path
+        try first.certificatePEM.write(toFile: certificatePath, atomically: true, encoding: .utf8)
+        try first.privateKeyPEM.write(toFile: privateKeyPath, atomically: true, encoding: .utf8)
+
+        let reloader = try TimedCertificateReloader.makeReloaderValidatingSources(
+            refreshInterval: .milliseconds(50),
+            certificateSource: .init(location: .file(path: certificatePath), format: .pem),
+            privateKeySource: .init(location: .file(path: privateKeyPath), format: .pem)
+        )
+
+        try await withApp { app in
+            app.serverConfiguration.tlsConfiguration = .reloading(reloader)
+            app.get("hello") { _ in "world" }
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try await reloader.run() }
+
+                try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+                    try await withTLSClient(trustingOnly: first.nioCertificate) { client in
+                        let response = try await client.execute(
+                            HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                            timeout: .seconds(10)
+                        )
+                        #expect(response.status == .ok)
+                    }
+
+                    try second.certificatePEM.write(toFile: certificatePath, atomically: true, encoding: .utf8)
+                    try second.privateKeyPEM.write(toFile: privateKeyPath, atomically: true, encoding: .utf8)
+
+                    var rotated = false
+                    for _ in 0..<50 {
+                        do {
+                            try await withTLSClient(trustingOnly: second.nioCertificate) { client in
+                                _ = try await client.execute(
+                                    HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                                    timeout: .milliseconds(500)
+                                )
+                            }
+                            rotated = true
+                            break
+                        } catch {
+                            try await Task.sleep(for: .milliseconds(100))
+                        }
+                    }
+                    #expect(rotated, "server never presented the rotated certificate")
+                }
+
+                group.cancelAll()
             }
         }
     }
@@ -224,6 +340,45 @@ struct ServerTLSTests {
         }
     }
 
+    @Test("Server startup fails when a CertificateReloader has no credentials", .timeLimit(.minutes(1)))
+    func testEmptyCertificateReloaderFailsServerStartup() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("localhost", port: 0)
+            app.serverConfiguration.tlsConfiguration = .reloading(EmptyCertificateReloader())
+            app.get("hello") { _ in "world" }
+
+            try await app.boot()
+
+            await #expect(throws: (any Error).self) {
+                try await app.server.run()
+            }
+        }
+    }
+
+    @Test("Server startup fails when the in-memory certificate chain is empty", .timeLimit(.minutes(1)))
+    func testEmptyCertificateChainFailsServerStartup() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [],
+                privateKey: credentials.privateKey
+            )
+            app.get("hello") { _ in "world" }
+
+            try await app.boot()
+
+            do {
+                try await app.server.run()
+                Issue.record("Expected run() to throw for an empty certificate chain.")
+            } catch NIOHTTPServerAdapterError.emptyCertificateChain {
+                // Expected.
+            } catch {
+                Issue.record("Expected emptyCertificateChain but got \(error).")
+            }
+        }
+    }
+
     @Test("Waiting on the listening address fails when startup fails", .timeLimit(.minutes(1)))
     func testListeningAddressFailsWhenStartupFails() async throws {
         try await withApp { app in
@@ -285,7 +440,7 @@ struct ServerTLSTests {
             )
             try await app.boot()
 
-            try await withThrowingTaskGroup(of: Void.self) { group in
+            await withTaskGroup(of: Void.self) { group in
                 group.addTask { try? await app.server.run() }
 
                 // The address never arrives, so every waiter must be handed the startup error
@@ -395,6 +550,70 @@ private struct TestCredentials {
             privateKey: try Certificate.PrivateKey(pemEncoded: privateKeyPEM),
             nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem)
         )
+    }
+}
+
+/// Generate a self-signed localhost certificate with SANs for hostname verification.
+private struct SelfSignedCredentials {
+    let certificatePEM: String
+    let privateKeyPEM: String
+    let nioCertificate: NIOSSLCertificate
+    let nioPrivateKey: NIOSSLPrivateKey
+
+    static func generate() throws -> Self {
+        let key = Certificate.PrivateKey(P256.Signing.PrivateKey())
+        let name = try DistinguishedName { CommonName("localhost") }
+        let certificate = try Certificate(
+            version: .v3,
+            serialNumber: .init(),
+            publicKey: key.publicKey,
+            notValidBefore: Date().addingTimeInterval(-3600),
+            notValidAfter: Date().addingTimeInterval(3600),
+            issuer: name,
+            subject: name,
+            signatureAlgorithm: .ecdsaWithSHA256,
+            extensions: try Certificate.Extensions {
+                SubjectAlternativeNames([
+                    .dnsName("localhost"),
+                    .ipAddress(ASN1OctetString(contentBytes: [127, 0, 0, 1])),
+                ])
+            },
+            issuerPrivateKey: key
+        )
+        let certificatePEM = try certificate.serializeAsPEM().pemString
+        let privateKeyPEM = try key.serializeAsPEM().pemString
+        return Self(
+            certificatePEM: certificatePEM,
+            privateKeyPEM: privateKeyPEM,
+            nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem),
+            nioPrivateKey: try NIOSSLPrivateKey(bytes: Array(privateKeyPEM.utf8), format: .pem)
+        )
+    }
+}
+
+private struct EmptyCertificateReloader: CertificateReloader {
+    var sslContextConfigurationOverride: NIOSSLContextConfigurationOverride { .noChanges }
+}
+
+private struct MutableCertificateReloader: CertificateReloader {
+    private let override: NIOLockedValueBox<NIOSSLContextConfigurationOverride>
+
+    init(certificate: NIOSSLCertificate, privateKey: NIOSSLPrivateKey) {
+        var override = NIOSSLContextConfigurationOverride()
+        override.certificateChain = [.certificate(certificate)]
+        override.privateKey = .privateKey(privateKey)
+        self.override = .init(override)
+    }
+
+    var sslContextConfigurationOverride: NIOSSLContextConfigurationOverride {
+        self.override.withLockedValue { $0 }
+    }
+
+    func update(certificate: NIOSSLCertificate, privateKey: NIOSSLPrivateKey) {
+        self.override.withLockedValue {
+            $0.certificateChain = [.certificate(certificate)]
+            $0.privateKey = .privateKey(privateKey)
+        }
     }
 }
 

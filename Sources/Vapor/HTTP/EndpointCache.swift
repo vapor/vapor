@@ -3,8 +3,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOConcurrencyHelpers
-import NIOCore
 import Logging
 public import HTTPTypes
 
@@ -24,22 +22,22 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     private var request: Task<T, any Error>?
     private var headers: HTTPFields?
     private let uri: URI
+    private let client: any Client
 
     /// The designated initializer.
     /// - Parameters:
     ///   - uri: The `URI` of the resource to be downloaded.
-    public init(uri: URI) {
+    public init(uri: URI, client: any Client) {
         self.uri = uri
         self.request = nil
         self.headers = nil
         self.cached = (nil, nil)
+        self.client = client
     }
 
-    /// Downloads the resource.
-    /// - Parameters:
-    ///   - request: The `Request` which is initiating the download.
-    public func get(on request: Request) async throws -> T {
-        try await self.download(using: request.application.client)
+    /// Downloads the resource
+    public func get() async throws -> T {
+        try await self.download(using: self.client)
     }
 
     /// Downloads the resource.

@@ -5,6 +5,7 @@ import Foundation
 #endif
 public import HTTPTypes
 import Algorithms
+import Logging
 
 extension HTTPFields {
 
@@ -253,26 +254,77 @@ extension HTTPFields.ContentRange {
 }
 
 extension HTTPFields.Range.Value {
+    /// Resolves this requested range against the actual length of the representation being served.
+    ///
+    /// Resolution is deliberately lenient, as RFC 9110 §14.1.2 requires: a range whose end runs
+    /// past the last byte is clamped to it rather than rejected, and a suffix longer than the
+    /// representation selects the whole of it. Only a range that selects *no* bytes — one starting
+    /// at or past the end, or a zero-length suffix — is unsatisfiable, and that is a `416` carrying
+    /// `Content-Range: bytes */size`, not a `400`. See https://github.com/vapor/vapor/issues/2991.
+    ///
+    /// A malformed range — negative, or with the start after the end — is still a `400`: that is a
+    /// syntactically broken request rather than one this representation happens not to satisfy.
+    ///
+    /// - Parameter size: The length in bytes of the representation being served.
+    /// - Returns: The concrete window of bytes to serve. `byteCount` is always at least `1`.
+    /// - Throws: ``Abort`` `.badRequest` if the range is malformed, or `.rangeNotSatisfiable` if it
+    ///   selects no bytes.
+    func resolve(againstSize size: Int) throws -> (offset: Int, byteCount: Int) {
+        /// The RFC requires an unsatisfiable range to be answered with the representation's actual
+        /// length, so a client can work out what it should have asked for.
+        func unsatisfiable() -> Abort {
+            var headers = HTTPFields()
+            headers.contentRange = .init(unit: .bytes, range: .any(size: size))
+            return Abort(.rangeNotSatisfiable, headers: headers)
+        }
 
-    ///Converts this `HTTPFields.Range.Value` to a `HTTPFields.ContentRange.Value` with the given `limit`.
-    public func asResponseContentRange(limit: Int) throws -> HTTPFields.ContentRange.Value {
         switch self {
         case .start(let start):
-            guard start <= limit, start >= 0 else {
+            guard start >= 0 else {
+                Logger.current.debug("Requested range start was invalid: \(start)")
                 throw Abort(.badRequest)
             }
-            return .withinWithLimit(start: start, end: limit - 1, limit: limit)
-        case .tail(let end):
-            guard end <= limit, end >= 0 else {
-                throw Abort(.badRequest)
+            // `start == size` selects nothing: the last byte is at `size - 1`.
+            guard start < size else {
+                throw unsatisfiable()
             }
-            return .withinWithLimit(start: (limit - end), end: limit - 1, limit: limit)
-        case .within(let start, let end):
-            guard start >= 0, end >= 0, start <= end, start <= limit, end <= limit else {
-                throw Abort(.badRequest)
-            }
+            return (offset: start, byteCount: size - start)
 
-            return .withinWithLimit(start: start, end: end, limit: limit)
+        case .tail(let suffixLength):
+            guard suffixLength >= 0 else {
+                Logger.current.debug("Requested range suffix length was invalid: \(suffixLength)")
+                throw Abort(.badRequest)
+            }
+            // A suffix longer than the representation selects all of it.
+            let byteCount = min(suffixLength, size)
+            guard byteCount > 0 else {
+                throw unsatisfiable()
+            }
+            return (offset: size - byteCount, byteCount: byteCount)
+
+        case .within(let start, let end):
+            guard start >= 0, end >= 0, start <= end else {
+                Logger.current.debug("Requested range was invalid: \(start)-\(end)")
+                throw Abort(.badRequest)
+            }
+            guard start < size else {
+                throw unsatisfiable()
+            }
+            // Clamp an end that runs past the last byte rather than rejecting the whole request.
+            let lastByte = min(end, size - 1)
+            return (offset: start, byteCount: lastByte - start + 1)
         }
+    }
+
+    ///Converts this `HTTPFields.Range.Value` to a `HTTPFields.ContentRange.Value` with the given `limit`.
+    ///
+    /// The returned range is the one that will actually be served: an end past `limit` is clamped
+    /// to the last byte rather than reflected back verbatim.
+    ///
+    /// - Throws: ``Abort`` `.badRequest` if the range is malformed, or `.rangeNotSatisfiable` if it
+    ///   selects no bytes of a representation of length `limit`.
+    public func asResponseContentRange(limit: Int) throws -> HTTPFields.ContentRange.Value {
+        let (offset, byteCount) = try self.resolve(againstSize: limit)
+        return .withinWithLimit(start: offset, end: offset + byteCount - 1, limit: limit)
     }
 }

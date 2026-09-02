@@ -1,5 +1,3 @@
-#warning("Make this internal")
-public import NIOCore
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else
@@ -93,19 +91,12 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
         self.configuration = configuration
     }
 
-    // See `ContentDecoder.decode(_:from:headers:)`.
-    public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
-        try self.decode(D.self, from: body, headers: headers, userInfo: [:])
-    }
-
     // See `ContentDecoder.decode(_:from:headers:userInfo:)`.
-    public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
+    public func decode<D>(_ decodable: D.Type, from body: Data, headers: HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws -> D where D : Decodable {
         guard headers.contentType == .urlEncodedForm else {
             throw Abort(.unsupportedMediaType)
         }
-
-        let string = body.getString(at: body.readerIndex, length: body.readableBytes) ?? ""
-
+        let string = String(decoding: body, as: UTF8.self)
         return try self.decode(D.self, from: string, userInfo: userInfo)
     }
 

@@ -1,14 +1,20 @@
 #if Multipart
 public import MultipartKit
 public import HTTPTypes
-#warning("Make this internal")
-public import NIOCore
+#warning("Remove")
+import NIOCore
+import NIOFoundationEssentialsCompat
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 
 extension File: MultipartPartConvertible {
-    public typealias Body = ByteBufferView
+    public typealias Body = Data
 
-    public var multipart: MultipartPart<ByteBufferView> {
-        var part = MultipartPart(headerFields: [:], body: self.data.readableBytesView)
+    public var multipart: MultipartPart<Data> {
+        var part = MultipartPart(headerFields: [:], body: self.data.getData(at: 0, length: self.data.readableBytes) ?? Data())
         part.contentType = self.contentType?.serialize()
         part.filename = self.filename
         return part

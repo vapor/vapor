@@ -2,10 +2,16 @@ import AsyncHTTPClient
 public import Vapor
 import NIOPosix
 import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTPTypesHTTP1
 import Logging
 import NIOHTTP1
 import HTTPTypes
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension Application {
     public enum Method {
@@ -62,12 +68,14 @@ extension Application {
                 clientRequest.headers = .init(request.headers)
                 clientRequest.body = .bytes(request.body)
                 let response = try await client.execute(clientRequest, timeout: .seconds(30))
-                // Collect up to 1MB
-                let responseBody = try await response.body.collect(upTo: 1024 * 1024)
                 return TestingHTTPResponse(
                     status: .init(code: Int(response.status.code)),
                     headers: .init(response.headers, splitCookie: false),
-                    body: responseBody,
+                    body: try await request.responseBodyCollection.apply(to: .init(stream: { writer in
+                        for try await chunk in response.body {
+                            try await writer.write(chunk.readableBytesView)
+                        }
+                    })),
                     contentConfiguration: self.app.contentConfiguration
                 )
             } catch {
@@ -91,15 +99,18 @@ extension Application {
         }
 
         package func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
+            // Captured before `request` is shadowed by the `Request` built below.
+            let collection = request.responseBodyCollection
             var headers = request.headers
             headers[.contentLength] = request.body.readableBytes.description
             let request = Request(
-                application: app,
                 method: request.method,
                 url: request.url,
                 headers: headers,
                 collectedBody: request.body.readableBytes == 0 ? nil : request.body,
-                remoteAddress: nil
+                remoteAddress: nil,
+                contentConfiguration: app.contentConfiguration,
+                defaultMaxBodySize: app.routes.defaultMaxBodySize
             )
             let responder: any Responder
             switch self.app.responder {
@@ -109,10 +120,10 @@ extension Application {
                 responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve())
             }
             let res = try await responder.respond(to: request)
-            return try await TestingHTTPResponse(
+            return TestingHTTPResponse(
                 status: res.status,
                 headers: res.headers,
-                body: res.body.collect() ?? ByteBufferAllocator().buffer(capacity: 0),
+                body: try await collection.apply(to: res.body),
                 contentConfiguration: self.app.contentConfiguration
             )
         }
@@ -123,4 +134,22 @@ package enum TestErrors: Error {
     case portNotSet
     case missingPort
     case missingHostname
+}
+
+
+extension ResponseBodyCollection {
+    /// Resolves a response body according to this policy.
+    ///
+    /// `.collect` reads it up front, so the body handed to a test is an ordinary in-memory one and
+    /// the request completes rather than being cancelled when nothing reads it. `.stream` hands it
+    /// over untouched.
+    func apply(to body: Response.Body) async throws -> Response.Body {
+        switch self {
+        case .stream:
+            return body
+        case .collect(let max):
+            var body = body
+            return .init(data: try await body.collect(max: max) ?? Data())
+        }
+    }
 }

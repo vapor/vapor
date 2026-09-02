@@ -1,5 +1,9 @@
 import HTTPTypes
-import NIOCore
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 public protocol ContentContainer {
     /// The type of data stored in the container.
@@ -41,6 +45,20 @@ extension ContentContainer {
     /// of type `D` from the container.
     public func decode<D: Decodable>(_: D.Type, as contentType: HTTPMediaType) async throws -> D {
         try await self.decode(D.self, using: self.configuredDecoder(for: contentType))
+    }
+
+    /// Use the default configured decoder for the ``contentType`` parameter to read a value
+    /// of type `C` from the container.
+    ///
+    /// This overload exists so that passing an explicit content type still runs
+    /// ``Content/afterDecode()``. Without it a ``Content`` type binds to the `Decodable` overload
+    /// above, which cannot know to call the hook, and the type is silently returned unprocessed.
+    ///
+    /// - Note: The ``Content/defaultContentType-9sljl`` of `C` is ignored.
+    public func decode<C: Content>(_: C.Type, as contentType: HTTPMediaType) async throws -> C {
+        var content = try await self.decode(C.self, using: self.configuredDecoder(for: contentType))
+        try content.afterDecode()
+        return content
     }
 
     // MARK: - Encoding helpers
@@ -135,10 +153,7 @@ extension ContentContainer {
 fileprivate struct ForwardingContentDecoder: ContentDecoder {
     let base: any ContentDecoder, info: [CodingUserInfoKey: any Sendable]
 
-    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
-        try self.base.decode(D.self, from: body, headers: headers, userInfo: self.info)
-    }
-    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
+    func decode<D>(_ decodable: D.Type, from body: Data, headers: HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws -> D where D : Decodable {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: userInfo.merging(self.info) { $1 })
     }
 }
