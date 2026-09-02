@@ -4,6 +4,7 @@ import Testing
 import Vapor
 import NIOCore
 import RoutingKit
+import HTTPTypes
 
 @Suite("Endpoint Cache Tests")
 struct EndpointCacheTests {
@@ -124,6 +125,39 @@ struct EndpointCacheTests {
                 #expect(try await request1 == request2)
                 let current = await currentActor.current
                 #expect(current == 1)
+            }
+        }
+    }
+
+    @Test("Test cache retries after a failed request")
+    func testEndpointCacheRetriesAfterFailure() async throws {
+        try await withApp { app in
+            let currentActor = CurrentActor()
+            struct Test: Content, Equatable {
+                let number: Int
+            }
+
+            app.get("number") { req -> Response in
+                let current = await currentActor.getCurrent()
+                await currentActor.increment()
+                guard current > 0 else {
+                    return Response(status: .internalServerError)
+                }
+
+                let response = Response()
+                try response.content.encode(Test(number: current))
+                response.headers.cacheControl = .init(maxAge: 10)
+                return response
+            }
+
+            try await withRunningApp(app: app) { port in
+                let cache = EndpointCache<Test>(uri: "http://localhost:\(port)/number")
+                let first = try? await cache.get(using: app.client)
+                #expect(first == nil)
+
+                let second = try await cache.get(using: app.client)
+                #expect(second.number == 1)
+                #expect(await currentActor.current == 2)
             }
         }
     }
