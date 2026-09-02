@@ -14,7 +14,7 @@ private let chunks = 8
 func writerBenchmarks() {
     Benchmark("writer/Sequence Array 1KiB x8") { benchmark in
         for _ in benchmark.scaledIterations {
-            var body = Response.Body(stream: { writer in
+            var body = try Response.Body(stream: { writer in
                 for _ in 0..<chunks {
                     try await writer.write(arrayPayload)
                 }
@@ -25,7 +25,7 @@ func writerBenchmarks() {
 
     Benchmark("writer/Sequence ArraySlice 1KiB x8") { benchmark in
         for _ in benchmark.scaledIterations {
-            var body = Response.Body(stream: { writer in
+            var body = try Response.Body(stream: { writer in
                 for _ in 0..<chunks {
                     try await writer.write(arrayPayload[0..<1024])
                 }
@@ -36,7 +36,7 @@ func writerBenchmarks() {
 
     Benchmark("writer/Sequence Data 1KiB x8") { benchmark in
         for _ in benchmark.scaledIterations {
-            var body = Response.Body(stream: { writer in
+            var body = try Response.Body(stream: { writer in
                 for _ in 0..<chunks {
                     try await writer.write(dataPayload)
                 }

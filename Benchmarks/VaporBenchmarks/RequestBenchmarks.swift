@@ -6,7 +6,7 @@ import HTTPTypes
 func requestBenchmarks() {
     Benchmark("request/create") { benchmark in
         for _ in benchmark.scaledIterations {
-            blackHole(Request(application: app))
+            blackHole(Request())
         }
     } setup: {
         try await setUpApplication { _ in }
@@ -24,7 +24,6 @@ func requestBenchmarks() {
         for _ in benchmark.scaledIterations {
             blackHole(
                 Request(
-                    application: app,
                     method: .post,
                     url: "/items",
                     headers: headers,
@@ -39,7 +38,7 @@ func requestBenchmarks() {
     }
 
     Benchmark("request/read header") { benchmark in
-        let request = Request(application: app, headers: [.contentType: "application/json"])
+        let request = Request(headers: [.contentType: "application/json"])
         for _ in benchmark.scaledIterations {
             blackHole(request.headers[.contentType])
         }
@@ -50,7 +49,7 @@ func requestBenchmarks() {
     }
 
     Benchmark("request/write header") { benchmark in
-        let request = Request(application: app)
+        var request = Request()
         for _ in benchmark.scaledIterations {
             request.headers[.contentType] = "application/json"
         }

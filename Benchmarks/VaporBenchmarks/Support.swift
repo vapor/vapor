@@ -50,7 +50,6 @@ struct RequestCall {
 /// than discarding, because the copy into the server's byte container is part of the cost.
 func run(_ call: RequestCall) async throws -> Int {
     let request = Request(
-        application: app,
         method: call.method,
         url: URI(string: call.path),
         headers: call.headers,
@@ -58,7 +57,7 @@ func run(_ call: RequestCall) async throws -> Int {
     )
     let response = try await responder.respond(to: request)
     var sink = [UInt8]()
-    sink.reserveCapacity(max(0, response.body.count))
+    sink.reserveCapacity(max(0, response.body.count ?? 0))
     try await response.body.withStreamingBytes { span in
         span.withUnsafeBytes { unsafe sink.append(contentsOf: $0) }
     }

@@ -4,7 +4,7 @@ import HTTPTypes
 
 func authenticationBenchmarks() {
     Benchmark("auth/login") { benchmark in
-        let request = Request(application: app)
+        let request = Request()
         let user = BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes")
         for _ in benchmark.scaledIterations {
             request.auth.login(user)
@@ -17,7 +17,7 @@ func authenticationBenchmarks() {
     }
 
     Benchmark("auth/get") { benchmark in
-        let request = Request(application: app)
+        let request = Request()
         request.auth.login(BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes"))
         for _ in benchmark.scaledIterations {
             blackHole(request.auth.get(BenchUser.self))
@@ -29,7 +29,7 @@ func authenticationBenchmarks() {
     }
 
     Benchmark("auth/get miss") { benchmark in
-        let request = Request(application: app)
+        let request = Request()
         for _ in benchmark.scaledIterations {
             blackHole(request.auth.get(BenchUser.self))
         }
@@ -40,7 +40,7 @@ func authenticationBenchmarks() {
     }
 
     Benchmark("auth/require") { benchmark in
-        let request = Request(application: app)
+        let request = Request()
         request.auth.login(BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes"))
         for _ in benchmark.scaledIterations {
             blackHole(try request.auth.require(BenchUser.self))
@@ -52,7 +52,7 @@ func authenticationBenchmarks() {
     }
 
     Benchmark("auth/has") { benchmark in
-        let request = Request(application: app)
+        let request = Request()
         request.auth.login(BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes"))
         for _ in benchmark.scaledIterations {
             blackHole(request.auth.has(BenchUser.self))
@@ -67,7 +67,7 @@ func authenticationBenchmarks() {
         let user = BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes")
         let token = BenchToken(value: "secret")
         for _ in benchmark.scaledIterations {
-            let request = Request(application: app)
+            let request = Request()
             request.auth.login(user)
             request.auth.login(token)
             blackHole(request.auth.get(BenchUser.self))
@@ -80,7 +80,7 @@ func authenticationBenchmarks() {
     }
 
     Benchmark("auth/logout") { benchmark in
-        let request = Request(application: app)
+        let request = Request()
         let user = BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes")
         for _ in benchmark.scaledIterations {
             request.auth.login(user)
