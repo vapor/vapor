@@ -4,6 +4,7 @@ import VaporTesting
 import Testing
 import HTTPTypes
 import RoutingKit
+import Foundation
 
 @Suite("View Tests")
 struct ViewTests {
@@ -11,9 +12,7 @@ struct ViewTests {
     func viewResponse() async throws {
         try await withApp { app in
             app.get("view") { req -> View in
-                var data = ByteBufferAllocator().buffer(capacity: 0)
-                data.writeString("<h1>hello</h1>")
-                return View(data: data)
+                return View(data: Data("<h1>hello</h1>".utf8))
             }
 
             try await app.testing().test(.get, "/view") { res in

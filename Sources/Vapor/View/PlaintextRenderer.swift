@@ -1,6 +1,12 @@
 import NIOCore
 import Logging
 import _NIOFileSystem
+import NIOFoundationEssentialsCompat
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// A ``ViewRenderer`` that serves views from files on disk, without any templating.
 ///
@@ -58,7 +64,8 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
             : self.viewsDirectory + name
         return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
             let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
-            return View(data: buffer)
+            let data = buffer.getData(at: 0, length: buffer.readableBytes) ?? Data()
+            return View(data: data)
         }
     }
 }
