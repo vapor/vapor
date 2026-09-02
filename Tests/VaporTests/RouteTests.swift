@@ -23,7 +23,7 @@ struct RouteTests {
             }
             try await app.testing().test(.get, "/hello/vapor") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string.contains("vapor"))
+                try #expect(await res.body.requireString().contains("vapor"))
             }
 
             try await app.testing().test(.post, "/hello/vapor") { res in
@@ -32,7 +32,7 @@ struct RouteTests {
 
             try await app.testing().test(.get, "/hello/vapor/development") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == #"["vapor","development"]"#)
+                try #expect(await res.body.requireString() == #"["vapor","development"]"#)
             }
         }
     }
@@ -55,12 +55,12 @@ struct RouteTests {
 
             try await app.testing().test(.get, "/string/test") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string.contains("test"))
+                try #expect(await res.body.requireString().contains("test"))
             }
 
             try await app.testing().test(.get, "/int/123") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "123")
+                try #expect(await res.body.requireString() == "123")
             }
 
             try await app.testing().test(.get, "/int/not-int") { res in
@@ -82,7 +82,7 @@ struct RouteTests {
 
             try await app.testing().test(.get, "/json") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == #"{"foo":"bar"}"#)
+                try #expect(await res.body.requireString() == #"{"foo":"bar"}"#)
             }
         }
     }
@@ -99,12 +99,12 @@ struct RouteTests {
 
             try await app.testing().test(.get, "/") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "root")
+                try #expect(await res.body.requireString() == "root")
             }
 
             try await app.testing().test(.get, "/foo") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "foo")
+                try #expect(await res.body.requireString() == "foo")
             }
         }
     }
@@ -120,12 +120,12 @@ struct RouteTests {
 
             try await app.testing().test(.get, "/foo") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "foo")
+                try #expect(await res.body.requireString() == "foo")
             }
 
             try await app.testing().test(.get, "/FOO") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "foo")
+                try #expect(await res.body.requireString() == "foo")
             }
         }
     }
@@ -145,14 +145,14 @@ struct RouteTests {
                 try req.query.encode(["number": "true"])
             }) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "42")
+                try #expect(await res.body.requireString() == "42")
             }
 
             try await app.testing().test(.get, "/foo", beforeRequest: { req in
                 try req.query.encode(["number": "false"])
             }) { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "string")
+                try #expect(await res.body.requireString() == "string")
             }
         }
     }
@@ -182,14 +182,14 @@ struct RouteTests {
                 }
             }
 
-            try await app.testing().test(.get, "/foo?number=true") { res async in
+            try await app.testing().test(.get, "/foo?number=true") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "42")
+                try #expect(await res.body.requireString() == "42")
             }
 
-            try await app.testing().test(.get, "/foo?number=false") { res async in
+            try await app.testing().test(.get, "/foo?number=false") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "string")
+                try #expect(await res.body.requireString() == "string")
             }
         }
     }
@@ -218,17 +218,17 @@ struct RouteTests {
                 ], as: .json)
             }) { res in
                 #expect(res.status == .badRequest)
-                #expect(res.body.string.contains("email is not a valid email address"))
+                try #expect(await res.body.requireString().contains("email is not a valid email address"))
             }
 
             try await app.testing().test(.post, "/users") { res in
                 #expect(res.status == .unprocessableContent)
-                #expect(res.body.string.replacing("\\", with: "").contains("Missing \"Content-Type\" header"))
+                try #expect(await res.body.requireString().replacing("\\", with: "").contains("Missing \"Content-Type\" header"))
             }
 
             try await app.testing().test(.post, "/users", headers: [.contentType: "application/json"]) { res in
                 #expect(res.status == .unprocessableContent)
-                #expect(res.body.string.contains("Empty Body"))
+                try #expect(await res.body.requireString().contains("Empty Body"))
             }
         }
     }
@@ -251,7 +251,7 @@ struct RouteTests {
             }) { res in
                 #expect(res.status == .created)
                 #expect(res.headers.contentType == .json)
-                #expect(res.body.string == """
+                try #expect(await res.body.requireString() == """
             {"name":"vapor"}
             """)
             }
@@ -269,7 +269,9 @@ struct RouteTests {
             try await app.testing(method: .running).test(.head, "/hello") { res in
                 #expect(res.status == .ok)
                 #expect(res.headers[.contentLength] == "2")
-                #expect(res.body.readableBytes == 0)
+                // The body has to be collected before it can be counted: an uncollected stream
+                // reports `-1`, not the number of bytes that actually arrived.
+                try #expect(await res.body.data()?.count == 0)
             }
         }
     }
@@ -288,7 +290,7 @@ struct RouteTests {
             try await app.testing(method: .running).test(.head, "/hello") { res in
                 #expect(res.status == .found)
                 #expect(res.headers[.contentLength] == "0")
-                #expect(res.body.readableBytes == 0)
+                try #expect(await res.body.data()?.count == 0)
             }
         }
     }
@@ -308,7 +310,7 @@ struct RouteTests {
             try await app.testing().test(.get, "/get", headers: headers) { res in
                 #expect(res.status == .ok)
                 #expect(res.headers[.setCookie] != nil)
-                #expect(res.body.string == "n/a")
+                try #expect(await res.body.requireString() == "n/a")
             }
         }
     }
@@ -322,7 +324,7 @@ struct RouteTests {
 
             try await app.testing(method: .running).test(.get, "/no-content") { res in
                 #expect(res.status.code == 204)
-                #expect(res.body.readableBytes == 0)
+                try #expect(await res.body.data()?.count == 0)
             }
         }
     }
@@ -339,10 +341,10 @@ struct RouteTests {
 
             try await app.test(method: .running) { testApp in
                 let rootResponse = try await testApp.sendRequest(.get, "/api/addresses")
-                #expect(rootResponse.body.string == "a")
+                try #expect(await rootResponse.body.requireString() == "a")
 
                 let testResponse = try await testApp.sendRequest(.get, "/api/addresses/search/test")
-                #expect(testResponse.body.string == "b")
+                try #expect(await testResponse.body.requireString() == "b")
 
                 let emptySearch = try await testApp.sendRequest(.get, "/api/addresses/search")
                 #expect(emptySearch.status == .notFound)
@@ -376,7 +378,7 @@ struct RouteTests {
             try await app.register(collection: Foo())
 
             try await app.test(.get, "foo") { res in
-                #expect(res.body.string == "bar")
+                try #expect(await res.body.requireString() == "bar")
             }
         }
     }
@@ -453,35 +455,35 @@ struct RouteTests {
 
             try await app.test(method: .running) { testApp in
                 let happyPath = try await testApp.sendRequest(.get, "/foop/barp/buz")
-                #expect(happyPath.body.string == "foopbarp")
+                try #expect(await happyPath.body.requireString() == "foopbarp")
                 #expect(happyPath.status == .ok)
 
                 let leadingDoubleSlash = try await testApp.sendRequest(.get, "//foop/barp/buz")
-                #expect(leadingDoubleSlash.body.string == "foopbarp")
+                try #expect(await leadingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(leadingDoubleSlash.status == .ok)
 
                 let leadingAndMiddleDoubleSlash = try await testApp.sendRequest(.get, "//foop//barp/buz")
-                #expect(leadingAndMiddleDoubleSlash.body.string == "foopbarp")
+                try #expect(await leadingAndMiddleDoubleSlash.body.requireString() == "foopbarp")
                 #expect(leadingAndMiddleDoubleSlash.status == .ok)
 
                 let leadingMiddleAndTrailingDoubleSlash = try await testApp.sendRequest(.get, "//foop//barp//buz")
-                #expect(leadingMiddleAndTrailingDoubleSlash.body.string == "foopbarp")
+                try #expect(await leadingMiddleAndTrailingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(leadingMiddleAndTrailingDoubleSlash.status == .ok)
 
                 let middleDoubleSlash = try await testApp.sendRequest(.get, "/foop//barp/buz")
-                #expect(middleDoubleSlash.body.string == "foopbarp")
+                try #expect(await middleDoubleSlash.body.requireString() == "foopbarp")
                 #expect(middleDoubleSlash.status == .ok)
 
                 let middleAndTrailingDoubleSlash = try await testApp.sendRequest(.get, "/foop//barp//buz")
-                #expect(middleAndTrailingDoubleSlash.body.string == "foopbarp")
+                try #expect(await middleAndTrailingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(middleAndTrailingDoubleSlash.status == .ok)
 
                 let trailingDoubleSlash = try await testApp.sendRequest(.get, "/foop/barp//buz")
-                #expect(trailingDoubleSlash.body.string == "foopbarp")
+                try #expect(await trailingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(trailingDoubleSlash.status == .ok)
 
                 let leadingAndTrailingDoubleSlash = try await testApp.sendRequest(.get, "//foop/barp//buz")
-                #expect(leadingAndTrailingDoubleSlash.body.string == "foopbarp")
+                try #expect(await leadingAndTrailingDoubleSlash.body.requireString() == "foopbarp")
                 #expect(leadingAndTrailingDoubleSlash.status == .ok)
             }
         }
@@ -498,7 +500,7 @@ struct RouteTests {
             for method in methods {
                 try await app.testing().test(method, "/universal") { res in
                     #expect(res.status == .ok)
-                    #expect(res.body.string == method.rawValue)
+                    try #expect(await res.body.requireString() == method.rawValue)
                 }
             }
         }
@@ -516,11 +518,11 @@ struct RouteTests {
 
             try await app.test(method: .running) { testApp in
                 let emoticon = try await testApp.sendRequest(.get, "/Good👍")
-                #expect(emoticon.body.string == "👍")
+                try #expect(await emoticon.body.requireString() == "👍")
                 #expect(emoticon.status == .ok)
 
                 let japanese = try await testApp.sendRequest(.get, "/ようこそ世界へ")
-                #expect(japanese.body.string == "おめでとう")
+                try #expect(await japanese.body.requireString() == "おめでとう")
                 #expect(japanese.status == .ok)
             }
         }

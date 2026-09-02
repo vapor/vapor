@@ -1,5 +1,4 @@
 import NIOCore
-import NIOPosix
 import Logging
 import _NIOFileSystem
 

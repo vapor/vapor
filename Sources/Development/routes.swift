@@ -2,7 +2,6 @@ import Foundation
 import Vapor
 import NIOCore
 import HTTPTypes
-import NIOConcurrencyHelpers
 import _NIOFileSystem
 import RoutingKit
 import Logging
@@ -101,15 +100,15 @@ func routes(_ app: Application) async throws {
     app.get("stream", "chunks") { _ -> Response in
         Response(body: .init(stream: { writer in
             for i in 1...5 {
-                try await writer.write(ByteBuffer(string: "chunk \(i)\n"))
+                try await writer.write("chunk \(i)\n")
             }
         }))
     }
 
     app.get("stream", "sequence") { _ -> Response in
-        let lines = AsyncStream<ByteBuffer> { continuation in
+        let lines = AsyncStream<String> { continuation in
             for i in 1...10 {
-                continuation.yield(ByteBuffer(string: "line \(i)\n"))
+                continuation.yield("line \(i)\n")
             }
             continuation.finish()
         }
@@ -122,7 +121,7 @@ func routes(_ app: Application) async throws {
 
     app.get("stream", "firehose") { _ -> Response in
         Response(body: .init(stream: { writer in
-            let chunk = ByteBuffer(repeating: 0x41, count: 16 * 1024)
+            let chunk = [UInt8](repeating: 0x41, count: 16 * 1024)
             for _ in 0..<10_000 {
                 try await writer.write(chunk)
             }
@@ -134,7 +133,7 @@ func routes(_ app: Application) async throws {
     app.get("stream", "slow") { _ -> Response in
         Response(body: .init(stream: { writer in
             for i in 1...10 {
-                try await writer.write(ByteBuffer(string: "chunk \(i)\n"))
+                try await writer.write("chunk \(i)\n")
                 try await Task.sleep(for: .milliseconds(500))
             }
         }))
@@ -147,7 +146,7 @@ func routes(_ app: Application) async throws {
             let handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
             defer { try? await handle.close() }
             for try await chunk in handle.readChunks(chunkLength: .bytes(64 * 1024)) {
-                try await writer.write(chunk)
+                try await writer.write(chunk.readableBytesSpan)
             }
         }))
     }
@@ -196,7 +195,7 @@ func routes(_ app: Application) async throws {
     }
 
     app.get("client") { req in
-        let response = try await req.application.client.get("http://httpbin.org/status/201")
+        let response = try await app.client.get("http://httpbin.org/status/201")
         return response.description
     }
 
@@ -207,7 +206,7 @@ func routes(_ app: Application) async throws {
             }
             var slideshow: Slideshow
         }
-        let response = try await req.application.client.get("http://httpbin.org/json")
+        let response = try await app.client.get("http://httpbin.org/json")
         let data = try await response.content.decode(HTTPBinResponse.self)
         return data.slideshow.title
     }
@@ -221,7 +220,7 @@ func routes(_ app: Application) async throws {
     }
 
     app.get("view") { req in
-        try await req.view.render("hello.txt", ["name": "world"])
+        try await app.viewRenderer.render("hello.txt", ["name": "world"])
     }
 
     app.get("error") { req -> String in
@@ -256,19 +255,19 @@ func routes(_ app: Application) async throws {
 
     let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in
-        let response = try await req.application.client.get("https://www.google.com")
-        guard let body = response.body else {
+        let response = try await app.client.get("https://www.google.com")
+        guard let bodyString = response.body.string else {
             throw Abort(.internalServerError)
         }
-        return String(buffer: body)
+        return bodyString
     }
 
     asyncRoutes.get("client2") { req -> String in
-        let response = try await req.application.client.get("https://www.google.com")
-        guard let body = response.body else {
+        let response = try await app.client.get("https://www.google.com")
+        guard let bodyString = response.body.string else {
             throw Abort(.internalServerError)
         }
-        return String(buffer: body)
+        return bodyString
     }
 
     asyncRoutes.get("content") { req in

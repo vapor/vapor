@@ -13,20 +13,34 @@ func rawExchange(
     port: Int,
     path: String,
     extraHeaders: String = "",
+    until isComplete: (@Sendable (String) -> Bool)? = nil,
     quiet: Duration = .milliseconds(250),
     deadline: Duration = .seconds(10)
 ) async throws -> (bytes: String, serverClosed: Bool) {
     try await rawExchange(
         port: port,
         rawRequest: "GET \(path) HTTP/1.1\r\nHost: localhost\r\n\(extraHeaders)\r\n",
+        until: isComplete,
         quiet: quiet,
         deadline: deadline)
 }
 
 /// As above, but sends `rawRequest` verbatim — for requests a client wouldn't let you make.
+/// - Parameters:
+///   - isComplete: Called with everything received so far; returning `true` ends the exchange.
+///     Give this whenever the test knows what it is waiting for. Supplying it switches `quiet`
+///     off entirely: the two cannot coexist, because any gap the server leaves between responses
+///     — a pipelined second response waiting on a busy machine, say — looks exactly like the end
+///     of the exchange to a quiet timer, and it will stop before what the test is waiting for
+///     arrives. With a predicate the exchange runs until it matches, the server closes, or
+///     `deadline` expires.
+///   - quiet: How long to wait after the last byte before assuming nothing more is coming. Only a
+///     heuristic, and only sound for tests asserting that something is *absent*. Ignored when
+///     `isComplete` is given.
 func rawExchange(
     port: Int,
     rawRequest: String,
+    until isComplete: (@Sendable (String) -> Bool)? = nil,
     quiet: Duration = .milliseconds(250),
     deadline: Duration = .seconds(10)
 ) async throws -> (bytes: String, serverClosed: Bool) {
@@ -63,8 +77,12 @@ func rawExchange(
                 while true {
                     try? await Task.sleep(for: .milliseconds(25))
                     if reachedEnd.withLockedValue({ $0 }) { return }
-                    let idle = ContinuousClock.now - lastActivity.withLockedValue { $0 }
-                    if !received.withLockedValue({ $0.isEmpty }), idle >= quiet { return }
+                    if let isComplete {
+                        if isComplete(received.withLockedValue { $0 }) { return }
+                    } else {
+                        let idle = ContinuousClock.now - lastActivity.withLockedValue { $0 }
+                        if !received.withLockedValue({ $0.isEmpty }), idle >= quiet { return }
+                    }
                     if ContinuousClock.now - start >= deadline { return }
                 }
             }

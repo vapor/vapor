@@ -1253,15 +1253,21 @@ struct ServerTests {
                 // Both requests go out before either is answered, and the first is much slower than
                 // the second. HTTP/1.1 has no way to say which response belongs to which request, so
                 // answering out of order hands the client the wrong body.
-                let exchange = try await rawExchange(port: port, rawRequest: """
-                    GET /sleep/100 HTTP/1.1\r
-                    Host: localhost\r
-                    \r
-                    GET /sleep/0 HTTP/1.1\r
-                    Host: localhost\r
-                    \r
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: """
+                        GET /sleep/100 HTTP/1.1\r
+                        Host: localhost\r
+                        \r
+                        GET /sleep/0 HTTP/1.1\r
+                        Host: localhost\r
+                        \r
 
-                    """)
+                        """,
+                    // Read until the second response lands rather than until the socket goes quiet:
+                    // the two responses are ~100ms apart by design, and a slow machine can stretch
+                    // that past any quiet period, leaving the test reading only the first.
+                    until: { $0.contains("slept 0ms") })
 
                 let slow = try #require(exchange.bytes.firstRange(of: "slept 100ms"))
                 let fast = try #require(exchange.bytes.firstRange(of: "slept 0ms"))
@@ -1315,7 +1321,7 @@ struct ServerTests {
 
             try await app.testing().test(.get, "/ping") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "123")
+                try #expect(await res.body.requireString() == "123")
             }
         }
     }

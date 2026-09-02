@@ -265,13 +265,22 @@ struct ServerTLSTests {
                 }
 
                 // The server cannot parse plaintext HTTP bytes as a TLS handshake, so it drops the
-                // connection rather than answering.
+                // connection rather than answering. Timed and logged: this request has hung in CI
+                // past the test's time limit, and without this there's no way to tell whether it
+                // was the request or the shutdown that stalled.
+                var logger = Logger(label: "tls-test")
+                logger.logLevel = .debug
+                let plaintextStart = ContinuousClock.now
+                logger.notice("plaintext request to TLS port starting", metadata: ["port": "\(port)"])
                 await #expect(throws: (any Error).self) {
                     try await HTTPClient.shared.execute(
                         HTTPClientRequest(url: "http://127.0.0.1:\(port)/hello"),
                         timeout: .seconds(5)
                     )
                 }
+                logger.notice(
+                    "plaintext request to TLS port finished",
+                    metadata: ["port": "\(port)", "duration": "\(ContinuousClock.now - plaintextStart)"])
             }
         }
     }
@@ -407,7 +416,7 @@ struct ServerTLSTests {
             )
             try await app.boot()
 
-            try await withThrowingTaskGroup(of: Void.self) { group in
+            await withTaskGroup(of: Void.self) { group in
                 group.addTask { try? await app.server.run() }
 
                 // The address never arrives, so every waiter must be handed the startup error

@@ -22,7 +22,7 @@ struct FileTests {
     func testStreamFile() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                     } catch {
@@ -31,10 +31,10 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.get, "/file-stream") { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream") { res in
                 let test = "the quick brown fox"
                 #expect(res.headers[.eTag] != nil)
-                #expect(res.body.string.contains(test))
+                try #expect(await res.body.requireString().contains(test))
             }
         }
     }
@@ -43,15 +43,15 @@ struct FileTests {
     func testStreamFileConnectionClose() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true)
             }
 
             var headers = HTTPFields()
             headers[.connection] = "close"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res in
                 let test = "the quick brown fox"
                 #expect(res.headers[.eTag] != nil)
-                #expect(res.body.string.contains(test))
+                try #expect(await res.body.requireString().contains(test))
             }
         }
     }
@@ -65,7 +65,7 @@ struct FileTests {
                     tmpPath = try await FilePath(FileSystem.shared.temporaryDirectory.description).appending(UUID().uuidString).string
                 } while try await FileSystem.shared.info(forFileAt: .init(tmpPath)) != nil
 
-                return try await req.fileio.streamFile(at: tmpPath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: tmpPath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                         Issue.record("File Stream should have failed")
@@ -74,7 +74,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.get, "/file-stream") { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream") { res in
                 #expect(res.status == .internalServerError)
             }
         }
@@ -84,7 +84,7 @@ struct FileTests {
     func testAdvancedETagHeaders() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                     } catch {
@@ -106,7 +106,7 @@ struct FileTests {
     func testAdvancedETagHashIsCached() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true)
             }
 
             #expect(await app.fileETagHashCache.entry(forFileAt: #filePath) == nil)
@@ -129,7 +129,7 @@ struct FileTests {
     func testSimpleETagHeaders() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: false) { result in
                     do {
                         try result.get()
                     } catch {
@@ -153,7 +153,7 @@ struct FileTests {
     func testStreamFileContentHeaderTail() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                     } catch {
@@ -164,7 +164,7 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res in
                 let contentRange = res.headers[.contentRange]
                 let contentLength = res.headers[.contentLength]
 
@@ -183,7 +183,7 @@ struct FileTests {
     func testStreamFileContentHeaderStart() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                return try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                return try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     do {
                         try result.get()
                     } catch {
@@ -194,7 +194,7 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res in
 
                 let contentRange = res.headers[.contentRange]
                 let contentLength = res.headers[.contentLength]
@@ -214,7 +214,7 @@ struct FileTests {
     func testStreamFileContentHeadersWithin() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     #expect(throws: Never.self) {
                         try result.get()
                     }
@@ -223,7 +223,7 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res in
 
                 let contentRange = res.headers[.contentRange]
                 let contentLength = res.headers[.contentLength]
@@ -243,7 +243,7 @@ struct FileTests {
     func testStreamFileContentHeadersOnlyFirstByte() async throws {
         try await withApp { app in
             app.get("file-stream") { req in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     #expect(throws: Never.self) {
                         try result.get()
                     }
@@ -252,14 +252,14 @@ struct FileTests {
 
             var headers = HTTPFields()
             headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res async in
+            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res in
                 #expect(res.status == .partialContent)
 
                 #expect(res.headers[.contentLength] == "1")
                 let range = res.headers[.contentRange]!.split(separator: "/").first!.split(separator: " ").last!
                 #expect(range == "0-0")
 
-                #expect(res.body.readableBytes == 1)
+                try #expect(await res.body.data()?.count == 1)
             }
         }
     }
@@ -268,7 +268,7 @@ struct FileTests {
     func testStreamFileContentHeadersWithinFail() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     #expect(throws: Never.self) {
                         try result.get()
                     }
@@ -294,7 +294,7 @@ struct FileTests {
     func testStreamFileContentHeadersStartFail() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     #expect(throws: Never.self) {
                         try result.get()
                     }
@@ -318,7 +318,7 @@ struct FileTests {
     func testStreamFileContentHeadersTailFail() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true) { result in
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true) { result in
                     #expect(throws: Never.self) {
                         try result.get()
                     }
@@ -342,11 +342,11 @@ struct FileTests {
     func testPercentDecodedFilePath() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
-            try await app.testing().test(.get, "/Utilities/foo%20bar.html") { res async in
+            try await app.testing().test(.get, "/Utilities/foo%20bar.html") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Hello</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Hello</h1>\n")
             }
         }
     }
@@ -355,15 +355,15 @@ struct FileTests {
     func testPercentDecodedRelativePath() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
-            try await app.testing().test(.get, "%2e%2e/VaporTests/Utilities/foo.txt") { res async in
+            try await app.testing().test(.get, "%2e%2e/VaporTests/Utilities/foo.txt") { res in
                 #expect(res.status == .forbidden)
             }
 
-            try await app.testing().test(.get, "Utilities/foo.txt") { res async in
+            try await app.testing().test(.get, "Utilities/foo.txt") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "bar\n")
+                try #expect(await res.body.requireString() == "bar\n")
             }
         }
     }
@@ -372,16 +372,16 @@ struct FileTests {
     func testDefaultFileRelative() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html", etagCache: app.fileETagHashCache))
 
-            try await app.testing().test(.get, "Utilities/") { res async in
+            try await app.testing().test(.get, "Utilities/") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Root Default</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Root Default</h1>\n")
             }
 
-            try await app.testing().test(.get, "Utilities/SubUtilities/") { res async in
+            try await app.testing().test(.get, "Utilities/SubUtilities/") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Subdirectory Default</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Subdirectory Default</h1>\n")
             }
         }
     }
@@ -390,16 +390,16 @@ struct FileTests {
     func testDefaultFileAbsolute() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html", etagCache: app.fileETagHashCache))
 
-            try await app.testing().test(.get, "Utilities/") { res async in
+            try await app.testing().test(.get, "Utilities/") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Root Default</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Root Default</h1>\n")
             }
 
-            try await app.testing().test(.get, "Utilities/SubUtilities/") { res async in
+            try await app.testing().test(.get, "Utilities/SubUtilities/") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "<h1>Root Default</h1>\n")
+                try #expect(await res.body.requireString() == "<h1>Root Default</h1>\n")
             }
         }
     }
@@ -408,7 +408,7 @@ struct FileTests {
     func testNoDefaultFile() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
             try await app.testing().test(.get, "Utilities/") { res in
                 #expect(res.status == .notFound)
@@ -424,7 +424,8 @@ struct FileTests {
                 FileMiddleware(
                     publicDirectory: "/" + path,
                     defaultFile: "index.html",
-                    directoryAction: .redirect
+                    directoryAction: .redirect,
+                    etagCache: app.fileETagHashCache
                 )
             )
 
@@ -446,7 +447,8 @@ struct FileTests {
                 FileMiddleware(
                     publicDirectory: "/" + path,
                     defaultFile: "index.html",
-                    directoryAction: .redirect
+                    directoryAction: .redirect,
+                    etagCache: app.fileETagHashCache
                 )
             )
 
@@ -475,7 +477,8 @@ struct FileTests {
                 FileMiddleware(
                     publicDirectory: "/" + path,
                     defaultFile: "index.html",
-                    directoryAction: .none
+                    directoryAction: .none,
+                    etagCache: app.fileETagHashCache
                 )
             )
 
@@ -493,7 +496,7 @@ struct FileTests {
     func testInvalidRangeHeaderDoesNotCrash() async throws {
         try await withApp { app in
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true)
             }
 
             try await app.test(method: .running) { runner in
@@ -534,39 +537,6 @@ struct FileTests {
         }
     }
 
-    #warning("Consider whether we should offer these anymoer instead of just deferring to NIOFileSystem")
-//    func testFileRead() async throws {
-//        let request = Request(application: app, on: app.eventLoopGroup.next())
-//
-//        let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/long-test-file.txt"
-//
-//        let content = try String(contentsOfFile: path, encoding: .utf8)
-//
-//        var readContent = ""
-//        let file = try await request.fileio.readFile(at: path, chunkSize: 16 * 1024) // 32Kb, ~5 chunks
-//        for try await chunk in file {
-//            readContent += String(buffer: chunk)
-//        }
-//
-//        XCTAssertEqual(readContent, content, "The content read from the file does not match the expected content.")
-//    }
-//    func testFileWrite() async throws {
-//        let data = "Hello"
-//        let path = "/tmp/fileio_write.txt"
-//
-//        do {
-//            let request = Request(application: app, on: app.eventLoopGroup.next())
-//
-//            try await request.fileio.writeFile(ByteBuffer(string: data), at: path)
-//
-//            let result = try String(contentsOfFile: path, encoding: .utf8)
-//            XCTAssertEqual(result, data)
-//        } catch {
-//            try await FileSystem.shared.removeItem(at: .init(path))
-//            throw error
-//        }
-//    }
-
     @Test("Cancelling a file stream still closes the file handle")
     func testCancelledFileStreamClosesHandle() async throws {
         // Large enough that a read is still in flight when the cancellation lands: the whole point
@@ -574,17 +544,23 @@ struct FileTests {
         let filePath = try await makeTemporaryFile(size: 8 << 20)
 
         try await withApp { app in
-            let request = Request(application: app)
+            let request = Request()
 
             // `close()` is dispatched through a thread pool that refuses cancelled work, so a
             // handle closed naively from a cancelled task stays open and trips NIOFileSystem's
             // `deinit` precondition — which traps the process rather than throwing. Cancelling
             // repeatedly at slightly different points covers the window between open and close.
             for iteration in 1...10 {
-                let response = try await request.fileio.streamFile(
-                    at: filePath, advancedETagComparison: false)
+                let response = try await app.fileio.streamFile(
+                    at: filePath, for: request, advancedETagComparison: false)
 
-                let collecting = Task { try await response.body.collect() }
+                // `collect()` is mutating, so the Task works on its own copy of the body. That
+                // is fine here: this test is about descriptor cleanup on cancellation, not the
+                // collected value.
+                let collecting = Task { () -> Data? in
+                    var body = response.body
+                    return try await body.collect()
+                }
                 try await Task.sleep(for: .microseconds(200 * iteration))
                 collecting.cancel()
                 _ = try? await collecting.value
@@ -601,7 +577,7 @@ struct FileTests {
         try await withApp { app in
             let fileWasRead = NIOLockedValueBox(false)
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: false) { _ in
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: false) { _ in
                     fileWasRead.withLockedValue { $0 = true }
                 }
             }
@@ -611,7 +587,7 @@ struct FileTests {
                 #expect(res.status == .ok)
                 // The length is advertised even though no body follows it.
                 #expect(res.headers[.contentLength] != nil)
-                #expect(res.body.readableBytes == 0)
+                try #expect(await res.body.data()?.count == 0)
             }
 
             // A HEAD response carries no body, so opening and reading the file would be wasted
@@ -625,18 +601,18 @@ struct FileTests {
     func testFileMiddlewareOnlyServesGetAndHead() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
             try await app.test(method: .running) { runner in
                 let get = try await runner.sendRequest(.get, "/Utilities/foo.txt")
                 #expect(get.status == .ok)
-                #expect(get.body.readableBytes > 0)
+                try #expect(await (get.body.data()?.count ?? 0) > 0)
 
                 // HEAD gets the headers a GET would have returned, with no body.
                 let head = try await runner.sendRequest(.head, "/Utilities/foo.txt")
                 #expect(head.status == .ok)
                 #expect(head.headers[.contentLength] == get.headers[.contentLength])
-                #expect(head.body.readableBytes == 0)
+                try #expect(await head.body.data()?.count == 0)
 
                 // Everything else falls through the middleware; nothing else is registered here,
                 // so it 404s rather than being answered with the file.

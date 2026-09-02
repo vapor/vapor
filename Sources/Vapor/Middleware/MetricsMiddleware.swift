@@ -11,9 +11,7 @@ public final class MetricsMiddleware: Middleware {
     public init() {}
     
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
-        // per https://github.com/swiftlang/swift-testing/blob/swift-6.1-RELEASE/Sources/Testing/Events/TimeValue.swift#L113
-        let epochDuration = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
-        let startTime = UInt64(epochDuration.components.seconds * 1_000_000_000 + (epochDuration.components.attoseconds / 1_000_000_000))
+        let startInstant = ContinuousClock.now
         
         // Attributes: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#http-server-semantic-conventions
         let httpRequestMethod = request.method.rawValue
@@ -80,8 +78,8 @@ public final class MetricsMiddleware: Middleware {
         
         // http.server.request.duration
         // https://opentelemetry.io/docs/specs/semconv/http/http-metrics/#metric-httpserverrequestduration
-        let now = unsafeBitCast((0, 0), to: ContinuousClock.Instant.self).duration(to: .now)
-        let nowNanos = UInt64(now.components.seconds * 1_000_000_000 + (now.components.attoseconds / 1_000_000_000))
+        let elapsed = startInstant.duration(to: .now)
+        let elapsedNanos = elapsed.components.seconds * 1_000_000_000 + (elapsed.components.attoseconds / 1_000_000_000)
         Timer(
             label: "http.server.request.duration",
             dimensions: [
@@ -98,7 +96,7 @@ public final class MetricsMiddleware: Middleware {
                 // Recommended
                 ("network.protocol.version", networkProtocolVersion),
             ]
-        ).recordNanoseconds(nowNanos - startTime)
+        ).recordNanoseconds(elapsedNanos)
         
         switch responseOrError {
         case .error(let error):
@@ -107,23 +105,29 @@ public final class MetricsMiddleware: Middleware {
             
             // http.server.response.body.size
             // https://opentelemetry.io/docs/specs/semconv/http/http-metrics/#metric-httpserverresponsebodysize
-            Recorder(
-                label: "http.server.response.body.size",
-                dimensions: [
-                    // Required
-                    ("http.request.method", httpRequestMethod),
-                    ("url.scheme", urlScheme),
+            //
+            // Only recorded when the size is actually known. A streaming body of undeclared length
+            // has no size until something reads it, and this middleware must not read it - recording
+            // a placeholder would put a bogus sample in the histogram.
+            if let bodySize = response.body.count {
+                Recorder(
+                    label: "http.server.response.body.size",
+                    dimensions: [
+                        // Required
+                        ("http.request.method", httpRequestMethod),
+                        ("url.scheme", urlScheme),
                     
-                    // Conditionally Required
-                    ("error.type", errorType),
-                    ("http.response.status_code", httpResponseStatusCode),
-                    ("http.route", httpRoute),
-                    ("network.protocol.name", networkProtocolName),
+                        // Conditionally Required
+                        ("error.type", errorType),
+                        ("http.response.status_code", httpResponseStatusCode),
+                        ("http.route", httpRoute),
+                        ("network.protocol.name", networkProtocolName),
                     
-                    // Recommended
-                    ("network.protocol.version", networkProtocolVersion),
-                ]
-            ).record(response.body.count)
+                        // Recommended
+                        ("network.protocol.version", networkProtocolVersion),
+                    ]
+                ).record(bodySize)
+            }
             return response
         }
     }

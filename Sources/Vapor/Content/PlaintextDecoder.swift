@@ -1,24 +1,15 @@
-#warning("Make this internal")
-public import NIOCore
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 public import HTTPTypes
 
 /// Decodes data as plaintext, utf8.
 public struct PlaintextDecoder: ContentDecoder {
     public init() {}
-
-    /// `ContentDecoder` conformance.
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
-        where D : Decodable
-    {
-        try self.decode(D.self, from: body, headers: headers, userInfo: [:])
-    }
-    
-    /// `ContentDecoder` conformance.
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
-        where D : Decodable
-    {
-        let string = body.getString(at: body.readerIndex, length: body.readableBytes)
-        
+    public func decode<D>(_ decodable: D.Type, from body: Data, headers: HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws -> D where D : Decodable {
+        let string = String(decoding: body, as: UTF8.self)
         return try D(from: _PlaintextDecoder(plaintext: string, userInfo: userInfo))
     }
 }

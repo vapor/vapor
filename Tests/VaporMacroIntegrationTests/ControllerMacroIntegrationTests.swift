@@ -16,7 +16,7 @@ struct ControllerMacroIntegrationTests {
 
             try await app.testing().test(.get, "/api/test/users") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "users")
+                try #expect(await res.body.requireString() == "users")
             }
         }
     }
@@ -28,7 +28,7 @@ struct ControllerMacroIntegrationTests {
 
             try await app.testing().test(.get, "/api/test/users/42") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "user with id: 42")
+                try #expect(await res.body.requireString() == "user with id: 42")
             }
         }
     }
@@ -40,7 +40,7 @@ struct ControllerMacroIntegrationTests {
 
             try await app.testing().test(.post, "/api/test/sync") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Sync")
+                try #expect(await res.body.requireString() == "Sync")
             }
         }
     }
@@ -52,7 +52,7 @@ struct ControllerMacroIntegrationTests {
 
             try await app.testing().test(.patch, "/api/test/users/custom") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "custom HTTP method")
+                try #expect(await res.body.requireString() == "custom HTTP method")
             }
         }
     }
@@ -64,7 +64,7 @@ struct ControllerMacroIntegrationTests {
 
             try await app.testing().test(.patch, "/api/test/users/custom/7") { res in
                 #expect(res.status == .ok)
-                #expect(res.body.string == "custom HTTP method with id: 7")
+                try #expect(await res.body.requireString() == "custom HTTP method with id: 7")
             }
         }
     }
