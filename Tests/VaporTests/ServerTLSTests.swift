@@ -355,6 +355,30 @@ struct ServerTLSTests {
         }
     }
 
+    @Test("Server startup fails when the in-memory certificate chain is empty", .timeLimit(.minutes(1)))
+    func testEmptyCertificateChainFailsServerStartup() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [],
+                privateKey: credentials.privateKey
+            )
+            app.get("hello") { _ in "world" }
+
+            try await app.boot()
+
+            do {
+                try await app.server.run()
+                Issue.record("Expected run() to throw for an empty certificate chain.")
+            } catch NIOHTTPServerAdapterError.emptyCertificateChain {
+                // Expected.
+            } catch {
+                Issue.record("Expected emptyCertificateChain but got \(error).")
+            }
+        }
+    }
+
     @Test("Waiting on the listening address fails when startup fails", .timeLimit(.minutes(1)))
     func testListeningAddressFailsWhenStartupFails() async throws {
         try await withApp { app in
