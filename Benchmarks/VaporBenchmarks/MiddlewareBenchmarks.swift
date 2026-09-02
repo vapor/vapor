@@ -90,7 +90,7 @@ func middlewareBenchmarks() {
 
     for count in [0, 1, 5, 20] {
         Benchmark("middleware/chain \(count) layers") { benchmark in
-            let request = Request(application: app)
+            let request = Request()
             let chain = [any Middleware](repeating: PassthroughMiddleware(), count: count)
                 .makeResponder(chainingTo: EchoResponder())
             for _ in benchmark.scaledIterations {

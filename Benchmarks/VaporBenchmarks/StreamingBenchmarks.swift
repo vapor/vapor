@@ -17,7 +17,7 @@ private let bytes4k = [UInt8](repeating: 0x78, count: 4 * 1024)
 func streamingBenchmarks() {
     Benchmark("stream/1 x 64KiB") { benchmark in
         for _ in benchmark.scaledIterations {
-            var body = Response.Body(stream: { writer in
+            var body = try Response.Body(stream: { writer in
                 try await writer.write(chunk64k)
             }, count: 64 * 1024)
             blackHole(try await body.collect())
@@ -26,7 +26,7 @@ func streamingBenchmarks() {
 
     Benchmark("stream/16 x 4KiB") { benchmark in
         for _ in benchmark.scaledIterations {
-            var body = Response.Body(stream: { writer in
+            var body = try Response.Body(stream: { writer in
                 for _ in 0..<16 { try await writer.write(chunk4k) }
             }, count: 64 * 1024)
             blackHole(try await body.collect())
@@ -35,7 +35,7 @@ func streamingBenchmarks() {
 
     Benchmark("stream/256 x 256B") { benchmark in
         for _ in benchmark.scaledIterations {
-            var body = Response.Body(stream: { writer in
+            var body = try Response.Body(stream: { writer in
                 for _ in 0..<256 { try await writer.write(chunk256) }
             }, count: 64 * 1024)
             blackHole(try await body.collect())
@@ -44,7 +44,7 @@ func streamingBenchmarks() {
 
     Benchmark("stream/16 x 4KiB via Span") { benchmark in
         for _ in benchmark.scaledIterations {
-            var body = Response.Body(stream: { writer in
+            var body = try Response.Body(stream: { writer in
                 for _ in 0..<16 { try await writer.write(bytes4k.span) }
             }, count: 64 * 1024)
             blackHole(try await body.collect())
@@ -53,7 +53,7 @@ func streamingBenchmarks() {
 
     Benchmark("stream/16 x 4KiB via Sequence") { benchmark in
         for _ in benchmark.scaledIterations {
-            var body = Response.Body(stream: { writer in
+            var body = try Response.Body(stream: { writer in
                 for _ in 0..<16 { try await writer.write(bytes4k) }
             }, count: 64 * 1024)
             blackHole(try await body.collect())
@@ -70,7 +70,7 @@ func streamingBenchmarks() {
         try await setUpApplication { app in
             app.get("stream") { _ -> Response in
                 Response(
-                    body: .init(
+                    body: try .init(
                         stream: { writer in
                             for _ in 0..<16 { try await writer.write(chunk4k) }
                         },

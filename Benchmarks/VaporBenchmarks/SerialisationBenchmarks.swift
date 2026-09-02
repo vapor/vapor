@@ -13,7 +13,7 @@ private let data1k = Data(String(repeating: "x", count: 1024).utf8)
 @inline(never)
 private func serialise(_ body: Response.Body) async throws -> Int {
     var out = [UInt8]()
-    out.reserveCapacity(body.count)
+    out.reserveCapacity(body.count ?? 0)
     try await body.withStreamingBytes { span in
         span.withUnsafeBytes { unsafe out.append(contentsOf: $0) }
     }

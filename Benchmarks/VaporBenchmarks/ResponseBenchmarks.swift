@@ -131,7 +131,7 @@ func responseBenchmarks() {
     }
 
     Benchmark("response/encode Content directly") { benchmark in
-        let request = Request(application: app)
+        let request = Request()
         let item = makeItem()
         for _ in benchmark.scaledIterations {
             blackHole(try await item.encodeResponse(for: request))
@@ -143,7 +143,7 @@ func responseBenchmarks() {
     }
 
     Benchmark("response/encode String directly") { benchmark in
-        let request = Request(application: app)
+        let request = Request()
         for _ in benchmark.scaledIterations {
             blackHole(try await "hello".encodeResponse(for: request))
         }
