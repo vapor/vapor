@@ -60,7 +60,6 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         var responseSender = Optional(consume responseSender)
         try await withLogger(mergingMetadata: ["request-id": "\(requestID)"]) { _ in
             let vaporRequest = Request(
-                application: self.application,
                 method: request.method,
                 url: URI(path: rawPath),
                 version: .init(major: 1, minor: 1),
@@ -68,7 +67,9 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 collectedBody: bodyBuffer.readableBytes > 0 ? bodyBuffer : nil,
                 remoteAddress: remoteAddress,
                 peerCertificateChain: peerCerts,
-                requestID: requestID
+                requestID: requestID,
+                contentConfiguration: application.contentConfiguration,
+                defaultMaxBodySize: application.routes.defaultMaxBodySize
             )
 
             // 3. Run responder chain

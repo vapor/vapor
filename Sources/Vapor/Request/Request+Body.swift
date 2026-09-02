@@ -5,25 +5,6 @@ import NIOConcurrencyHelpers
 import HTTPTypes
 
 extension Request {
-    public struct NewBody: Sendable {
-        let underlying: AsyncStream<ByteBuffer>?
-        let maxBodySize: Int
-
-        public var data: ByteBuffer? {
-            get async throws {
-                guard let stream = underlying else { return nil }
-                var collected = ByteBuffer()
-                for await var chunk in stream {
-                    collected.writeBuffer(&chunk)
-                    guard collected.readableBytes <= maxBodySize else {
-                        throw Abort(.contentTooLarge)
-                    }
-                }
-                return collected
-            }
-        }
-    }
-
     public struct Body: CustomStringConvertible, Sendable {
         let request: Request
 

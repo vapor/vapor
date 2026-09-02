@@ -187,7 +187,7 @@ struct MiddlewareTests {
     @Test("Test File Middleware From Bundle")
     func testFileMiddlewareFromBundle() async throws {
         try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/")
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
             try await app.testing().test(.get, "/foo.txt") { result in
@@ -202,7 +202,7 @@ struct MiddlewareTests {
     @Test("Test File MIddleware With Browser Default Cache Policy")
     func testFileMiddlewareWithBrowserDefaultCachePolicy() async throws {
         try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .browserDefault)
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .browserDefault, etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
             try await app.testing().test(.get, "/foo.txt") { result in
@@ -218,7 +218,7 @@ struct MiddlewareTests {
     @Test("Test File Middleware With No Cache Policy")
     func testFileMiddlewareWithNoCachePolicy() async throws {
         try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .noCache)
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .noCache, etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
             try await app.testing().test(.get, "/foo.txt") { result in
@@ -234,7 +234,7 @@ struct MiddlewareTests {
     func testFileMiddlewareWithMaxAgeCachePolicy() async throws {
         try await withApp { app in
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .cache(upTo:
-                    .seconds(300)))
+                    .seconds(300)), etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
             try await app.testing().test(.get, "/foo.txt") { result in
@@ -249,7 +249,7 @@ struct MiddlewareTests {
     @Test("Test File Middleware With Custom Cache Policy")
     func testFileMiddlewareWithCustomCachePolicy() async throws {
         try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .custom(cacheControlHeader: .init(isPublic: true), ageHeader: 10))
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .custom(cacheControlHeader: .init(isPublic: true), ageHeader: 10), etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
             try await app.testing().test(.get, "/foo.txt") { result in
@@ -264,7 +264,7 @@ struct MiddlewareTests {
     @Test("Test File Middleware From Bundle Subfolder")
     func testFileMiddlewareFromBundleSubfolder() async throws {
         try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities")
+            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities", etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
             try await app.testing().test(.get, "/index.html") { result in
@@ -277,7 +277,7 @@ struct MiddlewareTests {
     @Test("Test File Middleware From Bundle Invalid Public Directory")
     func testFileMiddlewareFromBundleInvalidPublicDirectory() {
         #expect(throws: FileMiddleware.BundleSetupError.publicDirectoryIsNotAFolder) {
-            try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")
+            try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder", etagCache: FileETagHashCache(capacity: 10))
         }
     }
     #endif
@@ -457,7 +457,7 @@ struct MiddlewareTests {
             }
 
             app.grouped(
-                TracingMiddleware() { attributes, _ in
+                TracingMiddleware(serverAddress: { app.sharedAddress.withLockedValue({ $0 }) }) { attributes, _ in
                     attributes["custom"] = "custom"
                 }
             ).grouped(

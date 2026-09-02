@@ -104,12 +104,13 @@ extension Application {
             var headers = request.headers
             headers[.contentLength] = request.body.readableBytes.description
             let request = Request(
-                application: app,
                 method: request.method,
                 url: request.url,
                 headers: headers,
                 collectedBody: request.body.readableBytes == 0 ? nil : request.body,
-                remoteAddress: nil
+                remoteAddress: nil,
+                contentConfiguration: app.contentConfiguration,
+                defaultMaxBodySize: app.routes.defaultMaxBodySize
             )
             let responder: any Responder
             switch self.app.responder {

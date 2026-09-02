@@ -635,7 +635,7 @@ struct AuthenticationTests {
         try await withApp { app in
             var lost = 0
             for _ in 0..<1_000 {
-                let request = Request(application: app)
+                let request = Request()
 
                 await withTaskGroup(of: Void.self) { group in
                     group.addTask { request.auth.login(User(name: "Vapor")) }
@@ -661,7 +661,7 @@ struct AuthenticationTests {
         }
 
         try await withApp { app in
-            let request = Request(application: app)
+            let request = Request()
             request.auth.login(User(name: "Vapor"))
             request.auth.login(Token(value: "secret"))
 
@@ -683,7 +683,7 @@ struct AuthenticationTests {
         }
 
         try await withApp { app in
-            let request = Request(application: app)
+            let request = Request()
             request.auth.login(User(name: "Vapor"))
             request.auth.login(User(name: "Vapor 2"))
 
@@ -703,7 +703,7 @@ struct AuthenticationTests {
         }
 
         try await withApp { app in
-            let request = Request(application: app)
+            let request = Request()
 
             // Nothing authenticated to begin with.
             #expect(!request.auth.has(User.self))

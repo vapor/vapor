@@ -82,6 +82,35 @@ struct RequestTests {
         }
     }
 
+    @Test("Test Streaming Request Content Decoding", .timeLimit(.minutes(1)))
+    func testStreamingRequestContentDecoding() async throws {
+        struct Payload: Content, Equatable {
+            var message: String
+        }
+
+        try await withApp { app in
+            app.on(.post, "stream-decode", body: .stream) { req async throws -> String in
+                #expect(req.body.data != nil)
+                return try await req.content.decode(Payload.self).message
+            }
+
+            try await withRunningApp(app: app) { port in
+                let testValue = String.randomDigits()
+                let json = #"{"message":"\#(testValue)"}"#
+
+                var request = HTTPClientRequest(url: "http://localhost:\(port)/stream-decode")
+                request.method = .POST
+                request.headers.add(name: "content-type", value: "application/json")
+                request.body = .stream(json.utf8.async, length: .unknown)
+
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
+            }
+        }
+    }
+
     @Test("Test Streaming Request Body Cleanup", .disabled())
     func testStreamingRequestBodyCleansUp() async throws {
         try await withApp { app in
@@ -239,8 +268,8 @@ struct RequestTests {
     @Test("Test Request IDs are Unique")
     func testRequestIdsAreUnique() async throws {
         try await withApp { app in
-            let request1 = Request(application: app)
-            let request2 = Request(application: app)
+            let request1 = Request()
+            let request2 = Request()
 
             #expect(request1.id != request2.id)
         }
@@ -267,7 +296,8 @@ struct RequestTests {
     @Test("Test Request Peer Address Forwarded")
     func testRequestPeerAddressForwarded() async throws {
         try await withApp { app in
-            app.get("remote") { req -> String in
+            app.get("remote") { request -> String in
+                var req = request
                 req.headers[.forwarded] = "for=192.0.2.60; proto=http; by=203.0.113.43"
                 guard let peerAddress = req.peerAddress else {
                     return "n/a"
@@ -284,7 +314,8 @@ struct RequestTests {
     @Test("Test Request Peer Address X-Forwarded-For")
     func testRequestPeerAddressXForwardedFor() async throws {
         try await withApp { app in
-            app.get("remote") { req -> String in
+            app.get("remote") { request -> String in
+                var req = request
                 req.headers[.xForwardedFor] = "5.6.7.8"
                 guard let peerAddress = req.peerAddress else {
                     return "n/a"
@@ -318,7 +349,8 @@ struct RequestTests {
     @Test("Test Request Peer Address Multiple Headers Order")
     func testRequestPeerAddressMultipleHeadersOrder() async throws {
         try await withApp { app in
-            app.get("remote") { req -> String in
+            app.get("remote") { request -> String in
+                var req = request
                 req.headers[.xForwardedFor] = "5.6.7.8"
                 req.headers[.forwarded] = "for=192.0.2.60; proto=http; by=203.0.113.43"
                 guard let peerAddress = req.peerAddress else {
