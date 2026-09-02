@@ -112,13 +112,7 @@ extension Application {
                 contentConfiguration: app.contentConfiguration,
                 defaultMaxBodySize: app.routes.defaultMaxBodySize
             )
-            let responder: any Responder
-            switch self.app.responder {
-            case .provided(let provided):
-                responder = provided
-            case .default:
-                responder = DefaultResponder(routes: app.routes, middleware: app.middleware.resolve())
-            }
+            let responder = app.makeResponder()
             let res = try await responder.respond(to: request)
             return TestingHTTPResponse(
                 status: res.status,
