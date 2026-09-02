@@ -118,6 +118,7 @@ let package = Package(
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
+                .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
@@ -194,6 +195,7 @@ let package = Package(
             dependencies: [
                 .product(name: "NIOTestUtils", package: "swift-nio"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
