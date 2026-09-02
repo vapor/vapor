@@ -292,6 +292,28 @@ struct FileTests {
         }
     }
 
+    @Test("A file response advertises range support with Accept-Ranges")
+    func testFileResponseAdvertisesAcceptRanges() async throws {
+        try await withRangeServer { runner, _ in
+            // A whole-file response is what tells a client it may ask for a range at all, so it
+            // carries the header just as a partial one does.
+            let whole = try await runner.sendRequest(.get, "/file-stream")
+            #expect(whole.status == .ok)
+            #expect(whole.headers[.acceptRanges] == "bytes")
+
+            var headers = HTTPFields()
+            headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 99)])
+            let partial = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+            #expect(partial.status == .partialContent)
+            #expect(partial.headers[.acceptRanges] == "bytes")
+
+            // `Accept` is a request header describing the client's media-type preferences. A
+            // response claiming `Accept: bytes` is meaningless, and is what was sent before.
+            #expect(whole.headers[.accept] == nil)
+            #expect(partial.headers[.accept] == nil)
+        }
+    }
+
     @Test("A byte range serves exactly the bytes it asked for",
           .bug("https://github.com/vapor/vapor/issues/2566"))
     func testByteRangeServesExactlyTheRequestedBytes() async throws {
