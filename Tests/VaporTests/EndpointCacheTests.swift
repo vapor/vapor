@@ -34,7 +34,7 @@ struct EndpointCacheTests {
             }
 
             try await withRunningApp(app: app) { port in
-                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number")
+                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number", client: app.client)
                 do {
                     let test = try await cache.get(
                         using: app.client
@@ -80,7 +80,7 @@ struct EndpointCacheTests {
 
             try await withRunningApp(app: app) { port in
                 // Two reads inside a lifetime nothing can outlast must return the same value.
-                let cached = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/cached")
+                let cached = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/cached", client: app.client)
                 let first = try await cached.get(using: app.client).number
                 let second = try await cached.get(using: app.client).number
                 #expect(first == second, "cached value changed inside its lifetime")
@@ -89,7 +89,7 @@ struct EndpointCacheTests {
                 // time can break this one, and a slow machine only ever adds more of it. The
                 // new value is whatever the counter has reached, so assert that it moved
                 // rather than pinning a number the timing above could legitimately change.
-                let expiring = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/expiring")
+                let expiring = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/expiring", client: app.client)
                 let before = try await expiring.get(using: app.client).number
                 try await Task.sleep(for: .seconds(shortMaxAge + 1))
                 let refreshed = try await expiring.get(using: app.client).number
@@ -117,7 +117,7 @@ struct EndpointCacheTests {
             }
 
             try await withRunningApp(app: app) { port in
-                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number")
+                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number", client: app.client)
                 async let request1 = cache.get(using: app.client)
                 async let request2 = cache.get(using: app.client)
                 try await Task.sleep(for: .milliseconds(100))

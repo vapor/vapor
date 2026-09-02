@@ -97,10 +97,10 @@ struct FileETagHashCacheTests {
                 .path
 
             app.get("file-stream") { req -> Response in
-                try await req.fileio.streamFile(at: #filePath, advancedETagComparison: true)
+                try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: true)
             }
             app.get("other") { req -> Response in
-                try await req.fileio.streamFile(at: otherFile, advancedETagComparison: true)
+                try await app.fileio.streamFile(at: otherFile, for: req, advancedETagComparison: true)
             }
 
             try await app.test(method: .running) { runner in

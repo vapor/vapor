@@ -6,47 +6,26 @@ public import Foundation
 #warning("Make this internal")
 public import NIOCore
 import NIOFoundationEssentialsCompat
-import NIOHTTP1
-import Logging
 public import RoutingKit
 import NIOConcurrencyHelpers
 public import HTTPTypes
-import NIOPosix
-import ServiceContextModule
 public import X509
 
 /// Represents an HTTP request in an application.
-public final class Request: CustomStringConvertible, Sendable {
-    public let application: Application
+public struct Request: CustomStringConvertible, Sendable {
+//    public let application: Application
 
     /// The HTTP method for this request.
-    ///
-    ///     httpReq.method = .get
-    ///
-    public var method: HTTPRequest.Method {
-        get { self.requestBox.withLockedValue { $0.method } }
-        set { self.requestBox.withLockedValue { $0.method = newValue } }
-    }
+    public let method: HTTPRequest.Method
 
     /// The URL used on this request.
-    public var url: URI {
-        get { self.requestBox.withLockedValue { $0.url } }
-        set { self.requestBox.withLockedValue { $0.url = newValue } }
-    }
+    public var url: URI
 
     /// The version for this HTTP request.
-    public var version: HTTPVersion {
-        get { self.requestBox.withLockedValue { $0.version } }
-        set { self.requestBox.withLockedValue { $0.version = newValue } }
-    }
+    public let version: HTTPVersion
 
     /// The header fields for this HTTP request.
-    /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
-    /// when the `body` property is mutated.
-    public var headers: HTTPFields {
-        get { self.requestBox.withLockedValue { $0.headers } }
-        set { self.requestBox.withLockedValue { $0.headers = newValue } }
-    }
+    public var headers: HTTPFields
 
     /// A unique ID for the request.
     ///
@@ -61,10 +40,7 @@ public final class Request: CustomStringConvertible, Sendable {
     ///
     ///     req.route?.description // "GET /hello/:name"
     ///
-    public var route: Route? {
-        get { self.requestBox.withLockedValue { $0.route } }
-        set { self.requestBox.withLockedValue { $0.route = newValue } }
-    }
+    public let route: Route?
 
     /// We try to determine true peer address if load balancer or reversed proxy provided info in headers
     ///
@@ -86,98 +62,90 @@ public final class Request: CustomStringConvertible, Sendable {
 
     /// The validated certificate chain. This returns nil if the peer did not authenticate with a certificate. Requires
     /// configuring a `customCertificateVerifyCallbackWithMetadata` that performs the verification.
-    public var peerCertificateChain: ValidatedCertificateChain? {
-        return self.requestBox.withLockedValue { $0.peerCertificateChain }
-    }
+    public let peerCertificateChain: ValidatedCertificateChain?
 
     // MARK: Content
 
     private struct _URLQueryContainer: URLQueryContainer, Sendable {
-        let request: Request
+        var url: URI
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
             where D: Decodable
         {
-            try decoder.decode(D.self, from: self.request.url)
+            try decoder.decode(D.self, from: self.url)
         }
 
-        func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
-            try encoder.encode(encodable, to: &self.request.url)
+        mutating func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
+            try encoder.encode(encodable, to: &self.url)
         }
     }
 
+    /// This container is used to read and write the request's query string. Changes (e.g. via `req.query.encode`)
+    /// are written back to the request
     public var query: any URLQueryContainer {
-        get { _URLQueryContainer(request: self, contentConfiguration: self.application.contentConfiguration) }
-        set { } // ignore since Request is a reference type
+        get { _URLQueryContainer(url: self.url, contentConfiguration: self.contentConfiguration) }
+        set { self.url = (newValue as! _URLQueryContainer).url }
     }
 
     private struct _ContentContainer: ContentContainer, Sendable {
-        let request: Request
+        var body: ByteBuffer?
+        var headers: HTTPFields
+        let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
-            self.request.headers.contentType
+            self.headers.contentType
         }
 
-        var contentConfiguration: ContentConfiguration {
-            self.request.application.contentConfiguration
-        }
-
-        func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = Data()
-            try encoder.encode(encodable, to: &body, headers: &self.request.headers, userInfo: [:])
-            let byteBuffer = ByteBuffer(data: body)
-            self.request.bodyStorage.withLockedValue { $0 = .collected(byteBuffer) }
+            try encoder.encode(encodable, to: &body, headers: &self.headers, userInfo: [:])
+            self.body = ByteBuffer(data: body)
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
-            if let stream = self.request.streamBodyStorage.withLockedValue({ $0 }) {
-                let buffer = try await self.request.collectStream(stream, maxSize: request.application.routes.defaultMaxBodySize.value)
-                let bufferData = buffer.getData(at: 0, length: buffer.readableBytes) ?? Data()
-                return try decoder.decode(D.self, from: bufferData, headers: self.request.headers, userInfo: [:])
-            }
-            guard let body = self.request.body.data else {
-                Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
+            guard let body = self.body else {
+                // This shouldn't be an issue when we support streaming bodies, we should just be able to collect the body
                 throw Abort(.unprocessableContent)
             }
             let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
-            return try decoder.decode(D.self, from: bodyData, headers: self.request.headers, userInfo: [:])
+            return try decoder.decode(D.self, from: bodyData, headers: self.headers, userInfo: [:])
         }
 
-        func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
             var body = Data()
-            try encoder.encode(content, to: &body, headers: &self.request.headers, userInfo: [:])
-            let byteBuffer = ByteBuffer(data: body)
-            self.request.bodyStorage.withLockedValue { $0 = .collected(byteBuffer) }
-        }
-
-        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
-            guard let body = self.request.body.data else {
-                Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
-                throw Abort(.unprocessableContent)
-            }
-            let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
-            var decoded = try decoder.decode(C.self, from: bodyData, headers: self.request.headers, userInfo: [:])
-            try decoded.afterDecode()
-            return decoded
+            try encoder.encode(content, to: &body, headers: &self.headers, userInfo: [:])
+            self.body = ByteBuffer(data: body)
         }
     }
 
     /// This container is used to read your `Decodable` type using a `ContentDecoder` implementation.
     /// If no `ContentDecoder` is provided, a `Request`'s `Content-Type` header is used to select a registered decoder.
+    ///
+    /// As with ``query``, the container holds copies of the body and headers and the setter writes
+    /// them back, so `req.content.encode(_:)` propagates without relying on that state living behind
+    /// a reference.
     public var content: any ContentContainer {
-        get { _ContentContainer(request: self) }
-        set { } // ignore since Request is a reference type
+        get {
+            _ContentContainer(
+                body: self.body.data,
+                headers: self.headers,
+                contentConfiguration: self.contentConfiguration,
+            )
+        }
+        set {
+            let container = newValue as! _ContentContainer
+            self.headers = container.headers
+            self.bodyStorage.withLockedValue { storage in
+                storage = container.body.map { .collected($0) } ?? .none
+            }
+        }
     }
 
     public var body: Body {
         Body(self)
-    }
-
-    public var newBody: NewBody {
-        NewBody(underlying: self.streamBodyStorage.withLockedValue({ $0 }), maxBodySize: 16*1024)
     }
 
     internal enum BodyStorage: Sendable {
@@ -208,45 +176,17 @@ public final class Request: CustomStringConvertible, Sendable {
 
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
-    public var parameters: Parameters {
-        get { self.requestBox.withLockedValue { $0.parameters } }
-        set { self.requestBox.withLockedValue { $0.parameters = newValue } }
-    }
+    public let parameters: Parameters
 
     /// Authentication storage for the request
     public let auth: Authentication
 
-    /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
-    public var storage: Storage {
-        get { self._storage.withLockedValue { $0 } }
-        set { self._storage.withLockedValue { $0 = newValue } }
-    }
-
-    public var byteBufferAllocator: ByteBufferAllocator {
-        get { self.requestBox.withLockedValue { $0.byteBufferAllocator } }
-        set { self.requestBox.withLockedValue { $0.byteBufferAllocator = newValue } }
-    }
-
-    struct RequestBox: Sendable {
-        var method: HTTPRequest.Method
-        var url: URI
-        var version: HTTPVersion
-        var headers: HTTPFields
-        var isKeepAlive: Bool
-        var route: Route?
-        var parameters: Parameters
-        var peerCertificateChain: ValidatedCertificateChain?
-        var byteBufferAllocator: ByteBufferAllocator
-    }
-
-    let requestBox: NIOLockedValueBox<RequestBox>
-
-    private let _storage: NIOLockedValueBox<Storage>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
-    internal let streamBodyStorage: NIOLockedValueBox<AsyncStream<ByteBuffer>?>
+    internal let sessionCache: SessionCache
+    internal let contentConfiguration: ContentConfiguration
+    internal let defaultMaxBodySize: ByteCount
 
-    public convenience init(
-        application: Application,
+    public init(
         method: HTTPRequest.Method = .get,
         url: URI = "/",
         version: HTTPVersion = .init(major: 1, minor: 1),
@@ -254,11 +194,11 @@ public final class Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        requestID: String = UUID().uuidString
+        requestID: String = UUID().uuidString,
+        contentConfiguration: ContentConfiguration = .default(),
+        defaultMaxBodySize: ByteCount = "16kb",
     ) {
         self.init(
-            application: application,
             method: method,
             url: url,
             version: version,
@@ -266,16 +206,16 @@ public final class Request: CustomStringConvertible, Sendable {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             peerCertificateChain: peerCertificateChain,
-            byteBufferAllocator: byteBufferAllocator,
-            requestID: requestID
+            requestID: requestID,
+            contentConfiguration: contentConfiguration,
+            defaultMaxBodySize: defaultMaxBodySize,
         )
         if let body = collectedBody {
             self.headers.updateContentLength(body.readableBytes)
         }
     }
 
-    package init(
-        application: Application,
+    internal init(
         method: HTTPRequest.Method,
         url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
@@ -283,8 +223,9 @@ public final class Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        requestID: String = UUID().uuidString
+        requestID: String = UUID().uuidString,
+        contentConfiguration: ContentConfiguration = .default(),
+        defaultMaxBodySize: ByteCount = "16kb",
     ) {
         let bodyStorage: BodyStorage
         if let body = collectedBody {
@@ -293,36 +234,36 @@ public final class Request: CustomStringConvertible, Sendable {
             bodyStorage = .none
         }
 
-        let storageBox = RequestBox(
-            method: method,
-            url: url,
-            version: version,
-            headers: headers,
-            isKeepAlive: true,
-            route: nil,
-            parameters: .init(),
-            peerCertificateChain: peerCertificateChain,
-            byteBufferAllocator: byteBufferAllocator
-        )
-        self.requestBox = .init(storageBox)
         self.id = requestID
-        self.application = application
-
         self.remoteAddress = remoteAddress
-        self._storage = .init(.init())
         self.bodyStorage = .init(bodyStorage)
-        self.streamBodyStorage = .init(nil)
         self.auth = Authentication()
+        self.sessionCache = SessionCache()
+        self.method = method
+        self.peerCertificateChain = peerCertificateChain
+        self.version = version
+        self.route = nil
+        self.parameters = .init()
+        self.url = url
+        self.headers = headers
+        self.contentConfiguration = contentConfiguration
+        self.defaultMaxBodySize = defaultMaxBodySize
     }
 
-    internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
-        var collected = self.byteBufferAllocator.buffer(capacity: 0)
-        for await var chunk in stream {
-            collected.writeBuffer(&chunk)
-            guard collected.readableBytes <= maxSize else {
-                throw Abort(.contentTooLarge)
-            }
-        }
-        return collected
+    package init(_ other: Request, route: Route?, parameters: Parameters) {
+        self.method = other.method
+        self.version = other.version
+        self.id = other.id
+        self.remoteAddress = other.remoteAddress
+        self.peerCertificateChain = other.peerCertificateChain
+        self.auth = other.auth
+        self.sessionCache = other.sessionCache
+        self.bodyStorage = other.bodyStorage
+        self.route = route
+        self.parameters = parameters
+        self.url = other.url
+        self.headers = other.headers
+        self.contentConfiguration = other.contentConfiguration
+        self.defaultMaxBodySize = other.defaultMaxBodySize
     }
 }

@@ -1,6 +1,4 @@
-import NIOCore
 public import HTTPTypes
-import NIOConcurrencyHelpers
 
 /// Middleware that adds support for CORS settings in request responses.
 /// For configuration of this middleware please use the `CORSMiddleware.Configuration` object.

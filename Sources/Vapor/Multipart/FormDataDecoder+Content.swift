@@ -6,7 +6,6 @@ public import Foundation
 #endif
 public import MultipartKit
 public import HTTPTypes
-import NIOCore
 
 extension FormDataDecoder: ContentDecoder {
     public func decode<D>(_ decodable: D.Type, from body: Data, headers: HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws -> D where D : Decodable {

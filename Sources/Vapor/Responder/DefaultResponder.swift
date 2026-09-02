@@ -5,14 +5,12 @@ import Foundation
 #endif
 public import HTTPTypes
 public import Logging
-import NIOCore
 import RoutingKit
 
 /// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.
-///
-/// Prefer ``Application/makeResponder()``, which returns this or a provided responder as
+/// Prefer Application/makeResponder(), which returns this or a provided responder as
 /// configured. Build one directly only when you need a responder over a specific set of routes and
-/// middleware, independent of an ``Application``.
+/// middleware, independent of an Application.
 public struct DefaultResponder: Responder {
     /// It's safe to mark this `nonisolated(unsafe)` because there are only two mutating operations
     /// on a `TrieRouter` (calling `.register(_at:)` or changing its `options`), and we never do either
@@ -55,35 +53,53 @@ public struct DefaultResponder: Responder {
 
     // See `Responder.respond(to:)`
     public func respond(to request: Request) async throws -> Response {
-        if let cachedRoute = self.getRoute(for: request) {
-            request.route = cachedRoute.route
-            return try await cachedRoute.responder.respond(to: request)
-        } else {
+        var parameters = Parameters()
+        guard let cachedRoute = self.getRoute(
+            method: request.method,
+            path: request.url.path,
+            parameters: &parameters
+        ) else {
             return try await self.notFoundResponder.respond(to: request)
         }
+        return try await cachedRoute.responder.respond(
+            to: Request(request, route: cachedRoute.route, parameters: parameters)
+        )
     }
 
     /// Gets a `Route` from the underlying `TrieRouter`.
-    private func getRoute(for request: Request) -> CachedRoute? {
-        let pathComponents = request.url.path
+    private func getRoute(
+        method: HTTPRequest.Method,
+        path: String,
+        parameters: inout Parameters
+    ) -> CachedRoute? {
+        let pathComponents = path
             .split(separator: "/")
             .map { String($0).removingPercentEncoding ?? String($0) }
 
         // If it's a HEAD request and a HEAD route exists, return that route...
-        if request.method == .head, let route = self.router.route(
-            path: [HTTPRequest.Method.head.rawValue] + pathComponents,
-            parameters: &request.parameters
-        ) {
-            return route
+        if method == .head {
+            var headParameters = Parameters()
+            if let route = self.router.route(
+                path: [HTTPRequest.Method.head.rawValue] + pathComponents,
+                parameters: &headParameters
+            ) {
+                parameters = headParameters
+                return route
+            }
         }
 
         // ...otherwise forward HEAD requests to GET route
-        let method = (request.method == .head) ? .get : request.method
+        let resolvedMethod = (method == .head) ? .get : method
 
-        return self.router.route(
-            path: [method.rawValue] + pathComponents,
-            parameters: &request.parameters
-        )
+        var routeParameters = Parameters()
+        guard let route = self.router.route(
+            path: [resolvedMethod.rawValue] + pathComponents,
+            parameters: &routeParameters
+        ) else {
+            return nil
+        }
+        parameters = routeParameters
+        return route
     }
 }
 
@@ -108,7 +124,7 @@ extension RouteNotFound: DebuggableError {
 }
 
 extension Application {
-    /// The ``Responder`` that handles requests for this application.
+    /// The Responder that handles requests for this application.
     ///
     /// This is the entry point Vapor's HTTP server uses once a request has been parsed off the
     /// wire, so calling it exercises the same path a live request takes — routing, the middleware

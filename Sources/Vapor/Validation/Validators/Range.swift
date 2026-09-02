@@ -1,5 +1,3 @@
-import NIOCore
-
 extension Validator where T: Comparable & Strideable {
     /// Validates that the data is within the supplied `Range`.
     public static func range(_ range: Swift.Range<T>) -> Validator<T> {

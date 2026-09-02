@@ -5,6 +5,7 @@ import Foundation
 #endif
 public import Testing
 public import Vapor
+import HTTPTypes
 
 public func expectContent<D>(
     _ type: D.Type,
@@ -12,7 +13,7 @@ public func expectContent<D>(
     contentConfiguration: ContentConfiguration = .default(),
     sourceLocation: SourceLocation = #_sourceLocation,
     _ closure: (D) throws -> ()
-) rethrows where D: Decodable {
+) async rethrows where D: Decodable {
     guard let contentType = res.headers.contentType else {
         Issue.record("response does not contain content type", sourceLocation: sourceLocation)
         return
@@ -22,7 +23,11 @@ public func expectContent<D>(
 
     do {
         let decoder = try contentConfiguration.requireDecoder(for: contentType)
-        content = try decoder.decode(D.self, from: res.body, headers: res.headers, userInfo: [:])
+        var body = res.body
+        guard let data = try await body.collect() else {
+            throw Abort(.lengthRequired)
+        }
+        content = try decoder.decode(D.self, from: data, headers: res.headers, userInfo: [:])
     } catch {
         Issue.record("could not decode body: \(error)", sourceLocation: sourceLocation)
         return

@@ -13,7 +13,7 @@ public struct ClientRequest: Sendable {
     public var url: URI
     public var headers: HTTPFields
     public var body: ByteBuffer?
-    public var timeout: TimeAmount
+    public var timeout: Duration
     public var maxResponseBodySize: Int
     private let contentConfiguration: ContentConfiguration
 
@@ -22,7 +22,7 @@ public struct ClientRequest: Sendable {
         url: URI = "/",
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        timeout: TimeAmount? = nil,
+        timeout: Duration? = nil,
         maxResponseBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB
         contentConfiguration: ContentConfiguration = .default()
     ) {
@@ -86,21 +86,11 @@ extension ClientRequest {
             try encoder.encode(content, to: &body, headers: &self.headers, userInfo: [:])
             self.body = body
         }
-
-        func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
-            guard let body = self.body else {
-                throw Abort(.lengthRequired)
-            }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.headers, userInfo: [:])
-            try decoded.afterDecode()
-            return decoded
-        }
     }
 
     public var content: any ContentContainer {
         get {
-            var bodyData = body
-            return _ContentContainer(body: bodyData?.getData(at: 0, length: bodyData?.readableBytes ?? 0), headers: self.headers, contentConfiguration: self.contentConfiguration) }
+            return _ContentContainer(body: body?.getData(at: 0, length: body?.readableBytes ?? 0), headers: self.headers, contentConfiguration: self.contentConfiguration) }
         set {
             let container = (newValue as! _ContentContainer)
             self.body = ByteBuffer(data: container.body ?? Data())

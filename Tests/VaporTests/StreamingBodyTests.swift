@@ -239,7 +239,7 @@ struct StreamingBodyTests {
                     HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
                 )
                 #expect(ok.status == .ok)
-                #expect(try await ok.body.collect(upTo: 1 << 20).string == "ok")
+                try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
@@ -256,7 +256,7 @@ struct StreamingBodyTests {
             // never concluded and the client can never receive the full 8-byte body — it either
             // errors on the truncated response or sees fewer bytes than advertised.
             app.get("abort") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
+                Response(status: .ok, body: try .init(stream: { writer in
                     try await writer.write("AAAA")
                     throw MidStreamError()
                 }, count: 8))
@@ -292,7 +292,7 @@ struct StreamingBodyTests {
                     HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
                 )
                 #expect(ok.status == .ok)
-                #expect(try await ok.body.collect(upTo: 1 << 20).string == "ok")
+                try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
@@ -338,7 +338,7 @@ struct StreamingBodyTests {
                     HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
                 )
                 #expect(ok.status == .ok)
-                #expect(try await ok.body.collect(upTo: 1 << 20).string == "ok")
+                try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
@@ -438,7 +438,7 @@ struct StreamingBodyTests {
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             // Declares `Content-Length: 2` (via `count`) but only writes a single byte.
             app.get("bad-length") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
+                Response(status: .ok, body: try .init(stream: { writer in
                     try await writer.write("a")
                 }, count: 2))
             }
@@ -473,7 +473,7 @@ struct StreamingBodyTests {
                     HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
                 )
                 #expect(ok.status == .ok)
-                #expect(try await ok.body.collect(upTo: 1 << 20).string == "ok")
+                try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
@@ -645,7 +645,216 @@ struct StreamingBodyTests {
         #expect(response.body.string == "alphabeta")
         #expect(response.body.count == 9)
         var again = response.body
-        #expect(try await again.collect().map { String(decoding: $0, as: UTF8.self) } == "alphabeta")
+        try #expect(await again.collect().map { String(decoding: $0, as: UTF8.self) } == "alphabeta")
+    }
+
+    @Test("Collecting through one copy of a body is visible from the others")
+    func testCollectSharesBytesAcrossCopies() async throws {
+        // A `ContentContainer` reached through a computed `content` property holds a *copy* of the
+        // body, so its collection cannot be written back. Without state shared between copies that
+        // would drain the stream and leave the original pointing at a spent source.
+        let runs = NIOLockedValueBox(0)
+        let original = Response.Body(stream: { writer in
+            runs.withLockedValue { $0 += 1 }
+            try await writer.write("shared")
+        })
+
+        var copy = original
+        try #expect(await copy.collect().map { String(decoding: $0, as: UTF8.self) } == "shared")
+
+        // The original still holds `.stream`, but the bytes are reachable without re-running it.
+        #expect(original.string == "shared")
+        #expect(original.data.map { String(decoding: $0, as: UTF8.self) } == "shared")
+        #expect(original.count == 6)
+
+        var second = original
+        try #expect(await second.collect().map { String(decoding: $0, as: UTF8.self) } == "shared")
+        #expect(runs.withLockedValue { $0 } == 1)
+    }
+
+    @Test("An unknown-length stream reports its real count once collected")
+    func testCollectedStreamReportsRealCount() async throws {
+        let body = Response.Body(stream: { writer in try await writer.write("twelve bytes") })
+        // `nil` until collected: an unknown-length stream cannot say how long it is in advance.
+        #expect(body.count == nil)
+        var copy = body
+        _ = try await copy.collect()
+        #expect(body.count == 12)
+    }
+
+    @Test("collect(max:) rejects a stream that produces more than the limit")
+    func testCollectMaxRejectsOversizedStream() async throws {
+        var body = Response.Body(stream: { writer in
+            for _ in 0..<10 { try await writer.write(String(repeating: "x", count: 100)) }
+        })
+        await #expect(throws: Abort.self) { try await body.collect(max: 256) }
+    }
+
+    @Test("collect(max:) allows a stream that stays within the limit")
+    func testCollectMaxAllowsStreamWithinLimit() async throws {
+        var body = Response.Body(stream: { writer in try await writer.write("small") })
+        try #expect(await body.collect(max: 256).map { String(decoding: $0, as: UTF8.self) } == "small")
+    }
+
+    @Test("collect(max:) rejects a declared length over the limit without running the stream")
+    func testCollectMaxRejectsDeclaredLengthBeforeRunning() async throws {
+        let ran = NIOLockedValueBox(false)
+        var body = try Response.Body(stream: { writer in
+            ran.withLockedValue { $0 = true }
+            try await writer.write(String(repeating: "x", count: 1000))
+        }, count: 1000)
+        await #expect(throws: Abort.self) { try await body.collect(max: 256) }
+        #expect(ran.withLockedValue { $0 } == false)
+    }
+
+    @Test("Streaming a body a copy already collected replays the bytes instead of re-running it")
+    func testStreamingAfterCollectReplaysFromCache() async throws {
+        // A one-shot source - an `AsyncStream`, a file handle, a client response's iterator - yields
+        // nothing on a second run, so re-running the callback here would silently produce an empty
+        // body rather than an error.
+        let runs = NIOLockedValueBox(0)
+        let (chunks, continuation) = AsyncStream<String>.makeStream()
+        continuation.yield("payload")
+        continuation.finish()
+
+        let original = Response.Body(stream: { writer in
+            runs.withLockedValue { $0 += 1 }
+            for await chunk in chunks { try await writer.write(chunk) }
+        })
+
+        var copy = original
+        _ = try await copy.collect()
+
+        var seen = ""
+        try await original.withStreamingBytes { span in
+            seen += String(decoding: span.withUnsafeBytes { unsafe Array($0) }, as: UTF8.self)
+        }
+        #expect(seen == "payload")
+        #expect(runs.withLockedValue { $0 } == 1)
+
+        // `reduceBytes` is built on `withStreamingBytes`, so it replays too.
+        let count = try await original.reduceBytes(into: 0) { total, span in total += span.byteCount }
+        #expect(count == 7)
+        #expect(runs.withLockedValue { $0 } == 1)
+    }
+
+    @Test("The server writes the collected bytes for a body drained through a copy", .timeLimit(.minutes(1)))
+    func testServerSerialisesBodyCollectedThroughACopy() async throws {
+        // Exactly what a middleware calling `content.decode` does: the container holds a copy, so the
+        // response still carries `.stream` storage over a source that has already been drained.
+        try await withApp { app in
+            app.get("proxied") { _ -> Response in
+                let (chunks, continuation) = AsyncStream<String>.makeStream()
+                continuation.yield("hello ")
+                continuation.yield("world")
+                continuation.finish()
+
+                let response = Response(status: .ok, body: .init(stream: { writer in
+                    for await chunk in chunks { try await writer.write(chunk) }
+                }))
+                var copy = response.body
+                _ = try await copy.collect()
+                return response
+            }
+
+            try await app.testing(method: .running).test(.get, "/proxied") { res in
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == "hello world")
+            }
+        }
+    }
+
+    @Test("data(max:) and string(max:) collect a stream without needing a var")
+    func testCollectingAccessorsWorkOnALet() async throws {
+        let runs = NIOLockedValueBox(0)
+        let (chunks, continuation) = AsyncStream<String>.makeStream()
+        continuation.yield("hello ")
+        continuation.yield("world")
+        continuation.finish()
+
+        // `let`, deliberately: the plain properties cannot collect, so these have to.
+        let body = Response.Body(stream: { writer in
+            runs.withLockedValue { $0 += 1 }
+            for await chunk in chunks { try await writer.write(chunk) }
+        })
+
+        #expect(body.string == nil)
+        #expect(body.data == nil)
+        #expect(body.count == nil)
+
+        try #expect(await body.string() == "hello world")
+
+        // Collecting through the accessor's copy still fills the shared cache, so the plain
+        // properties answer afterwards and the stream is never run a second time.
+        #expect(body.string == "hello world")
+        #expect(body.data.map { String(decoding: $0, as: UTF8.self) } == "hello world")
+        #expect(body.count == 11)
+        try #expect(await body.data().map { String(decoding: $0, as: UTF8.self) } == "hello world")
+        #expect(runs.withLockedValue { $0 } == 1)
+    }
+
+    @Test("The collecting accessors honour their limit")
+    func testCollectingAccessorsHonourMax() async throws {
+        let body = Response.Body(stream: { writer in
+            try await writer.write(String(repeating: "x", count: 1000))
+        })
+        await #expect(throws: Abort.self) { try await body.string(max: 256) }
+        await #expect(throws: Abort.self) { try await body.data(max: 256) }
+    }
+
+    @Test("The collecting accessors pass a buffered body straight through")
+    func testCollectingAccessorsOnBufferedBodies() async throws {
+        try #expect(await Response.Body(string: "plain").string() == "plain")
+        try #expect(await Response.Body(staticString: "static").string() == "static")
+        try #expect(await Response.Body(data: Data("bytes".utf8)).string() == "bytes")
+        try #expect(await Response.Body.empty.string() == nil)
+        try #expect(await Response.Body.empty.data() == nil)
+    }
+
+    @Test("Testers collect the response body by default, and can be asked not to", .timeLimit(.minutes(1)))
+    func testTesterResponseBodyCollection() async throws {
+        try await withApp { app in
+            app.get("stream") { _ in
+                Response(body: .init(stream: { writer in
+                    try await writer.write("alpha")
+                    try await writer.write("beta")
+                }))
+            }
+
+            try await app.test(method: .running) { runner in
+                // Default: collected. A test that only asserts on headers still drains the request,
+                // so the server is never left writing into a cancelled response.
+                let collected = try await runner.sendRequest(.get, "/stream")
+                #expect(collected.body.string == "alphabeta")
+                #expect(collected.body.count == 9)
+
+                // Opted in: handed over still streaming, so the test owns consuming it.
+                let streaming = try await runner.sendRequest(.get, "/stream", responseBodyCollection: .stream)
+                #expect(streaming.body.string == nil)
+                try #expect(await streaming.body.requireString() == "alphabeta")
+            }
+        }
+    }
+
+    @Test("A streaming body rejects a negative declared length")
+    func testNegativeStreamCountIsRejected() async throws {
+        // Thrown, not trapped: a `precondition` here would be checked in release builds too, so one
+        // handler's arithmetic mistake would take down a server serving everything else correctly.
+        #expect(throws: Response.Body.NegativeCountError(count: -5)) {
+            try Response.Body(stream: { _ in }, count: -5)
+        }
+
+        // `nil` is the way to say "length unknown", and zero is a legitimate length.
+        #expect(throws: Never.self) {
+            _ = try Response.Body(stream: { _ in }, count: 0)
+            _ = try Response.Body(stream: { _ in }, count: nil)
+        }
+        _ = Response.Body(stream: { _ in })   // the convenience cannot fail, so it does not throw
+
+        // It surfaces as a 500 with a diagnosable reason rather than an opaque failure.
+        let error = Response.Body.NegativeCountError(count: -5)
+        #expect(error.status == .internalServerError)
+        #expect(error.reason.contains("-5"))
     }
 
     @Test("An empty write does not corrupt the stream")
@@ -746,7 +955,7 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("file") { req -> Response in
-                try await req.fileio.streamFile(at: filePath, advancedETagComparison: false)
+                try await app.fileio.streamFile(at: filePath, for: req, advancedETagComparison: false)
             }
             app.get("ok") { _ in "ok" }
 
@@ -777,7 +986,7 @@ struct StreamingBodyTests {
                     HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
                 )
                 #expect(ok.status == .ok)
-                #expect(try await ok.body.collect(upTo: 1 << 20).string == "ok")
+                try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
@@ -833,7 +1042,7 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("file") { req -> Response in
-                try await req.fileio.streamFile(at: filePath, advancedETagComparison: false) { _ in
+                try await app.fileio.streamFile(at: filePath, for: req, advancedETagComparison: false) { _ in
                     completions.withLockedValue { $0 += 1 }
                 }
             }

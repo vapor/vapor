@@ -195,7 +195,7 @@ func routes(_ app: Application) async throws {
     }
 
     app.get("client") { req in
-        let response = try await req.application.client.get("http://httpbin.org/status/201")
+        let response = try await app.client.get("http://httpbin.org/status/201")
         return response.description
     }
 
@@ -206,7 +206,7 @@ func routes(_ app: Application) async throws {
             }
             var slideshow: Slideshow
         }
-        let response = try await req.application.client.get("http://httpbin.org/json")
+        let response = try await app.client.get("http://httpbin.org/json")
         let data = try await response.content.decode(HTTPBinResponse.self)
         return data.slideshow.title
     }
@@ -220,7 +220,7 @@ func routes(_ app: Application) async throws {
     }
 
     app.get("view") { req in
-        try await req.view.render("hello.txt", ["name": "world"])
+        try await app.viewRenderer.render("hello.txt", ["name": "world"])
     }
 
     app.get("error") { req -> String in
@@ -255,19 +255,19 @@ func routes(_ app: Application) async throws {
 
     let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in
-        let response = try await req.application.client.get("https://www.google.com")
-        guard let body = response.body else {
+        let response = try await app.client.get("https://www.google.com")
+        guard let bodyString = response.body.string else {
             throw Abort(.internalServerError)
         }
-        return String(buffer: body)
+        return bodyString
     }
 
     asyncRoutes.get("client2") { req -> String in
-        let response = try await req.application.client.get("https://www.google.com")
-        guard let body = response.body else {
+        let response = try await app.client.get("https://www.google.com")
+        guard let bodyString = response.body.string else {
             throw Abort(.internalServerError)
         }
-        return String(buffer: body)
+        return bodyString
     }
 
     asyncRoutes.get("content") { req in

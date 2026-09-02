@@ -10,19 +10,49 @@ public import FoundationEssentials
 public import Foundation
 #endif
 
+/// What a tester should do with a response body before handing the response back.
+public enum ResponseBodyCollection: Sendable {
+    /// Read the whole body before returning. The default.
+    ///
+    /// A test that only asserts on headers would otherwise leave the body unread, and dropping an
+    /// unread body cancels the request - which the server sees as the client hanging up mid-response.
+    /// For a handler streaming a file that surfaces as a spurious failure, raced against however
+    /// quickly the server finishes writing.
+    case collect(max: Int?)
+
+    /// Hand the body back still streaming, for asserting on chunk boundaries or for a response too
+    /// large to hold in memory.
+    ///
+    /// The test is then responsible for consuming it - see ``Vapor/Response/Body/withStreamingBytes(_:)``.
+    case stream
+
+    /// Read the whole body before returning, with no size limit.
+    public static var collect: Self { .collect(max: nil) }
+}
+
 public struct TestingHTTPRequest: Sendable {
     public var method: HTTPRequest.Method
     public var url: URI
     public var headers: HTTPFields
     public var body: ByteBuffer
     public var contentConfiguration: ContentConfiguration
+    /// How the tester should hand back the response body. Defaults to ``ResponseBodyCollection/collect``.
+    public var responseBodyCollection: ResponseBodyCollection
 
-    public init(method: HTTPRequest.Method, url: URI, headers: HTTPFields, body: ByteBuffer, contentConfiguration: ContentConfiguration) {
+    public init(
+        method: HTTPRequest.Method,
+        url: URI,
+        headers: HTTPFields,
+        body: ByteBuffer,
+        contentConfiguration: ContentConfiguration,
+        responseBodyCollection: ResponseBodyCollection = .collect
+    ) {
         self.method = method
         self.url = url
         self.headers = headers
         self.body = body
         self.contentConfiguration = contentConfiguration
+        self.responseBodyCollection = responseBodyCollection
     }
 
     private struct _ContentContainer: ContentContainer {
