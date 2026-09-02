@@ -94,6 +94,7 @@ public func withRunningApp<T: Sendable>(
     logger.logLevel = .debug
 
     app.serverConfiguration.address = .hostname(hostname, port: portToUse)
+    defer { app.serverConfiguration.address = nil }
     try await app.boot()
 
     return try await withThrowingTaskGroup(of: T?.self) { group in
