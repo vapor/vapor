@@ -151,13 +151,14 @@ public struct FileIO: Sendable {
             return Response(status: .notModified, headersNoUpdate: headers, body: .empty)
         }
 
-        // Create the HTTP response.
+        // Advertise range support
+        headers[.acceptRanges] = "bytes"
+
         let responseStatus: HTTPResponse.Status
         let offset: Int64
         let byteCount: Int
         if let contentRange = contentRange {
             responseStatus = .partialContent
-            headers[.accept] = contentRange.unit.serialize()
             if let firstRange = contentRange.ranges.first {
                 let resolved = try firstRange.resolve(againstSize: Int(fileInfo.size))
                 headers.contentRange = HTTPFields.ContentRange(
@@ -191,11 +192,7 @@ public struct FileIO: Sendable {
         let fileSystem = self.fileSystem
         var response = Response(status: responseStatus, headers: headers)
         response.body = try .init(stream: { writer in
-            // The scoped `withFileHandle` API would close the handle for us, but its `execute`
-            // parameter is `@concurrent` from here (Vapor builds with `NonisolatedNonsendingByDefault`,
-            // NIO doesn't), so the closure would have to be sent — and it captures the non-Sendable
-            // `writer`. So we open by hand, and write each chunk with `await` so the transport
-            // backpressures the read.
+            // We can't use `withFileHandle` here because it's inferred as `@concurrent`
             let handle: ReadFileHandle
             do {
                 handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
