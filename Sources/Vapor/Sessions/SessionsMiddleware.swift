@@ -34,7 +34,7 @@ public final class SessionsMiddleware: Middleware {
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         // Signal middleware has been added.
-        request._sessionCache.middlewareFlag.withLockedValue { $0 = true }
+        request.sessionCache.middlewareFlag.withLockedValue { $0 = true }
 
         // Check for an existing session
         if let cookieValue = request.cookies[self.configuration.cookieName] {
@@ -42,10 +42,10 @@ public final class SessionsMiddleware: Middleware {
             let id = SessionID(string: cookieValue.string)
             if let data = try await self.session.readSession(id, for: request) {
                 // Session found, restore data and id.
-                request._sessionCache.session.withLockedValue { $0 = .init(id: id, data: data) }
+                request.sessionCache.session.withLockedValue { $0 = .init(id: id, data: data) }
             } else {
                 // Session id not found, create new session.
-                request._sessionCache.session.withLockedValue { $0 = .init() }
+                request.sessionCache.session.withLockedValue { $0 = .init() }
             }
         }
 
@@ -56,7 +56,7 @@ public final class SessionsMiddleware: Middleware {
     /// Adds session cookie to response or clears if session was deleted.
     private func addCookies(to response: Response, for request: Request) async throws -> Response {
         var response = response
-        if let session = request._sessionCache.session.withLockedValue({ $0 }), session.isValid.withLockedValue({ $0 }) {
+        if let session = request.sessionCache.session.withLockedValue({ $0 }), session.isValid.withLockedValue({ $0 }) {
             // A session exists or has been created. we must
             // set a cookie value on the response
             let sessionID: SessionID

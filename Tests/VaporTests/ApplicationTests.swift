@@ -229,7 +229,7 @@ struct ApplicationTests {
             }
 
             app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: req.application.sharedAddress.withLockedValue({ $0 })?.hostname, port: req.application.sharedAddress.withLockedValue({ $0 })?.port)
+                let config = AddressConfig(hostname: app.sharedAddress.withLockedValue({ $0 })?.hostname, port: app.sharedAddress.withLockedValue({ $0 })?.port)
                 return config
             }
 
@@ -274,7 +274,7 @@ struct ApplicationTests {
             }
 
             app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: req.application.serverConfiguration.hostname, port: req.application.serverConfiguration.port)
+                let config = AddressConfig(hostname: app.serverConfiguration.hostname, port: app.serverConfiguration.port)
                 return config
             }
 

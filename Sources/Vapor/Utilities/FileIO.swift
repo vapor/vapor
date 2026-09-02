@@ -12,47 +12,26 @@ import NIOConcurrencyHelpers
 import _NIOFileSystemFoundationCompat
 import NIOHTTP1
 
-extension Request {
+extension Application {
     public var fileio: FileIO {
         return .init(
-            request: self
+            fileETagHashCache: self.fileETagHashCache,
         )
     }
 }
 
 // MARK: FileIO
 
-/// `FileIO` is a convenience wrapper around SwiftNIO's `FileSystem`.
-///
-/// It can read files, both in their entirety and chunked.
-///
-///     try await req.fileio.readFile(at: "/path/to/file.txt") { chunks in
-///         for try await chunk in chunks {
-///             print(chunk) // part of file
-///         }
-///     }
-///
-///     let file = try await req.fileio.collectFile(at: "/path/to/file.txt")
-///     print(file) // entire file
-///
-/// It can also create streaming HTTP responses.
-///
-///     app.get("file-stream") { req -> Response in
-///         return try await req.fileio.streamFile(at: "/path/to/file.txt")
-///     }
-///
-/// Streaming file responses respect `E-Tag` headers present in the request.
+/// `FileIO` is a convenience wrapper around SwiftNIO's `FileSystem` for streaming files with a ``Request``
+/// to a ``Response``. It handles streaming file chunks to the response body, ETag support and caching and request ranges.
 public struct FileIO: Sendable {
-    /// HTTP request context.
-    let request: Request
-
+    /// Cache for eTag hashes for each file
+    let fileETagHashCache: FileETagHashCache
     let fileSystem: FileSystem = .shared
 
     /// Creates a new ``FileIO``.
-    ///
-    /// Use ``Request/fileio`` to get one.
-    internal init(request: Request) {
-        self.request = request
+    internal init(fileETagHashCache: FileETagHashCache) {
+        self.fileETagHashCache = fileETagHashCache
     }
 
     /// Generates a fresh ETag for a file or returns its currently cached one.
@@ -61,7 +40,7 @@ public struct FileIO: Sendable {
     ///   - lastModified: When the file was last modified.
     /// - Returns: A `String` which holds the ETag.
     private func generateETagHash(path: String, lastModified: Date, size: Int64) async throws -> String {
-        try await self.request.application.fileETagHashCache.digestHex(
+        try await self.fileETagHashCache.digestHex(
             forFileAt: path,
             lastModified: lastModified,
             size: size
@@ -97,6 +76,7 @@ public struct FileIO: Sendable {
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
     public func streamFile(
         at path: String,
+        for request: Request,
         chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool = false,
@@ -192,7 +172,7 @@ public struct FileIO: Sendable {
         let fileSystem = self.fileSystem
         var response = Response(status: responseStatus, headers: headers)
         response.body = try .init(stream: { writer in
-            // We can't use `withFileHandle` here because it's inferred as `@concurrent`
+            // We can't use `withFileHandle` here because it's inferred as `@concurrent` and we're NonisolatedNonSending
             let handle: ReadFileHandle
             do {
                 handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())

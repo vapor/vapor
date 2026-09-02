@@ -40,7 +40,7 @@ app.get("bench", "stream") { _ -> Response in
 }
 
 app.get("bench", "file") { req in
-    try await req.fileio.streamFile(at: filePath)
+    try await app.fileio.streamFile(at: filePath, for: req)
 }
 
 print("performance server listening on http://\(host):\(port)")
