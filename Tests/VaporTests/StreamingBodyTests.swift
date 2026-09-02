@@ -481,6 +481,65 @@ struct StreamingBodyTests {
         }
     }
 
+    @Test("A middleware that reads the request body does not break a streaming response",
+          .bug("https://github.com/vapor/vapor/issues/2933"))
+    func testMiddlewareReadingBodyWithStreamingResponse() async throws {
+        // The repro from the issue: a middleware peeks at the request body, and the route echoes
+        // that body back as a streaming response. The old response-body stream signalled its own
+        // completion, so the two readers racing over the request stream left `.end` unsent and
+        // tripped "Response body stream writer deinitialized before .end or .error was sent."
+        // A `ResponseBodyWriter` has no way to end the stream — the server concludes the response
+        // once the closure returns — so there is no longer an end to miss.
+        struct PeekingMiddleware: Middleware {
+            let seen: NIOLockedValueBox<Int>
+
+            func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+                // Exactly what the issue did: read the body from a middleware, then chain on.
+                let collected = try await request.body.collect(max: nil).get()
+                self.seen.withLockedValue { $0 = collected?.readableBytes ?? 0 }
+                return try await next.respond(to: request)
+            }
+        }
+
+        let seen = NIOLockedValueBox(0)
+        try await withApp { app in
+            app.middleware.use(PeekingMiddleware(seen: seen), at: .beginning)
+
+            app.on(.post, "echo", body: .stream) { request -> Response in
+                // The route reads the same body the middleware already read, and streams it back.
+                let payload = request.body.data.map { Data($0.readableBytesView) } ?? Data()
+                var response = Response(body: try .init(stream: { writer in
+                    // Several chunks, so the response really is streamed rather than written once.
+                    for start in stride(from: 0, to: payload.count, by: 4096) {
+                        try await writer.write(payload[start..<min(start + 4096, payload.count)])
+                    }
+                }, count: payload.count))
+                response.headers.contentType = .binary
+                return response
+            }
+
+            // Larger than the ~2000 bytes the issue said was enough to trigger the crash.
+            let sent = Data(String(repeating: "x", count: 100_000).utf8)
+
+            try await app.test(method: .running) { runner in
+                var headers = HTTPFields()
+                headers.contentType = .plainText
+                let res = try await runner.sendRequest(
+                    .post, "/echo", headers: headers, body: ByteBuffer(bytes: sent))
+
+                #expect(res.status == .ok)
+                #expect(seen.withLockedValue { $0 } == sent.count, "middleware did not see the whole body")
+                #expect(try await res.body.data() == sent)
+
+                // The connection survives: a second request over it is served normally.
+                let again = try await runner.sendRequest(
+                    .post, "/echo", headers: headers, body: ByteBuffer(bytes: sent))
+                #expect(again.status == .ok)
+                #expect(try await again.body.data() == sent)
+            }
+        }
+    }
+
     @Test("collect() gathers a streaming body into a single buffer")
     func testCollectStreamingBody() async throws {
         var body = Response.Body(stream: { writer in

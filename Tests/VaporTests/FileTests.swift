@@ -338,6 +338,86 @@ struct FileTests {
         }
     }
 
+    // MARK: Byte ranges
+
+    /// The file the range tests below are served from, and its contents for comparison. Big enough
+    /// that a range spans several of `streamFile`'s 128 KB chunks.
+    private static var rangeTestFile: String {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("Utilities/long-test-file.txt")
+            .path
+    }
+
+    /// Serves ``rangeTestFile`` at `/file-stream` and hands the block a live server plus the file's
+    /// bytes, so a response can be compared against exactly the slice that was asked for.
+    private func withRangeServer(
+        _ body: (any VaporTestingRunner, Data) async throws -> Void
+    ) async throws {
+        let path = Self.rangeTestFile
+        let contents = try Data(contentsOf: URL(fileURLWithPath: path))
+        try await withApp { app in
+            app.get("file-stream") { req in
+                try await req.fileio.streamFile(at: path)
+            }
+            try await app.test(method: .running) { runner in
+                try await body(runner, contents)
+            }
+        }
+    }
+
+    @Test("A byte range serves exactly the bytes it asked for",
+          .bug("https://github.com/vapor/vapor/issues/2566"))
+    func testByteRangeServesExactlyTheRequestedBytes() async throws {
+        try await withRangeServer { runner, contents in
+            // The three ranges from the issue, which each came back with `end + 1` bytes (the range
+            // start was ignored) rather than `end - start + 1`.
+            for (start, end) in [(1024, 24601), (24602, 68000), (0, 0), (168_000, 168_502)] {
+                var headers = HTTPFields()
+                headers.range = .init(unit: .bytes, ranges: [.within(start: start, end: end)])
+                let res = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+
+                let expected = contents[start...end]
+                #expect(res.status == .partialContent, "bytes=\(start)-\(end)")
+                #expect(
+                    res.headers[.contentRange] == "bytes \(start)-\(end)/\(contents.count)",
+                    "bytes=\(start)-\(end)")
+                #expect(
+                    res.headers[.contentLength] == "\(expected.count)",
+                    "bytes=\(start)-\(end)")
+
+                let body = try await res.body.data() ?? Data()
+                #expect(body.count == expected.count, "bytes=\(start)-\(end)")
+                #expect(body == Data(expected), "bytes=\(start)-\(end) served the wrong bytes")
+            }
+        }
+    }
+
+    @Test("An open-ended and a suffix range serve exactly the bytes they asked for",
+          .bug("https://github.com/vapor/vapor/issues/2566"))
+    func testOpenEndedAndSuffixRangesServeExactBytes() async throws {
+        try await withRangeServer { runner, contents in
+            let size = contents.count
+
+            // `bytes=1024-` is everything from 1024 to the last byte.
+            var headers = HTTPFields()
+            headers.range = .init(unit: .bytes, ranges: [.start(value: 1024)])
+            let open = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+            #expect(open.status == .partialContent)
+            #expect(open.headers[.contentRange] == "bytes 1024-\(size - 1)/\(size)")
+            #expect(open.headers[.contentLength] == "\(size - 1024)")
+            #expect(try await open.body.data() == Data(contents[1024...]))
+
+            // `bytes=-500` is the last 500 bytes.
+            headers.range = .init(unit: .bytes, ranges: [.tail(value: 500)])
+            let suffix = try await runner.sendRequest(.get, "/file-stream", headers: headers)
+            #expect(suffix.status == .partialContent)
+            #expect(suffix.headers[.contentRange] == "bytes \(size - 500)-\(size - 1)/\(size)")
+            #expect(suffix.headers[.contentLength] == "500")
+            #expect(try await suffix.body.data() == Data(contents[(size - 500)...]))
+        }
+    }
+
     @Test("Test Percent Decoded File Path")
     func testPercentDecodedFilePath() async throws {
         try await withApp { app in
