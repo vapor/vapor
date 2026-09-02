@@ -1401,7 +1401,7 @@ struct ServerTests {
                 tg.addTask { try await group.run() }
                 let port = try #require(try await app.server.listeningAddress.port)
 
-                var request = HTTPClientRequest(url: "http://localhost:\(port)/hello")
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/hello")
                 request.headers.add(name: "connection", value: "keep-alive")
                 let response = try await HTTPClient.shared.execute(request, timeout: .seconds(15))
                 #expect(response.status == .ok)
