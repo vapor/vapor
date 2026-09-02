@@ -15,6 +15,10 @@ enum NIOHTTPServerAdapterError: Error {
 
     /// No HTTP versions were configured. ``ServerConfiguration/httpVersions`` must contain at least one version.
     case noHTTPVersionsSpecified
+
+    /// The in-memory TLS credentials carried an empty certificate chain. A server has nothing to present
+    /// during the handshake without at least a leaf certificate.
+    case emptyCertificateChain
 }
 
 /// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
@@ -74,9 +78,14 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             let credentials: NIOHTTPServerConfiguration.TransportSecurity.TLSCredentials
             switch tls.source {
             case .inMemory(let chain, let key):
+                guard !chain.isEmpty else {
+                    throw NIOHTTPServerAdapterError.emptyCertificateChain
+                }
                 credentials = .x509(.certificates(chain: chain, privateKey: key))
             case .pemFile(let certPath, let keyPath):
                 credentials = .x509(.pemFile(certificateChainPath: certPath, privateKeyPath: keyPath))
+            case .reloading(let reloader):
+                credentials = .x509(.reloading(reloader))
             }
             transportSecurity = .tls(credentials: credentials)
         } else {

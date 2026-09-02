@@ -24,7 +24,7 @@ extension Response {
     struct BodyStream: Sendable {
         /// The number of bytes the stream will produce, or `nil` if that is not known in advance.
         let count: Int?
-        let callback: @Sendable (any ResponseBodyWriter) async throws -> ()
+        let callback: @Sendable (borrowing any ResponseBodyWriter & ~Escapable) async throws -> ()
         let state = BodyStreamState()
     }
 
@@ -69,7 +69,8 @@ extension Response {
                 if let collected = stream.state.collected {
                     try await body(collected.span.bytes)
                 } else {
-                    try await stream.callback(ForwardingBodyWriter(body))
+                    let scope = ResponseBodyWriterScope()
+                    try await stream.callback(ForwardingBodyWriter(ForwardingStorage(body), scope: scope))
                 }
             case .none:
                 return
@@ -220,11 +221,12 @@ extension Response {
                     throw Abort(.contentTooLarge)
                 }
                 let initialCapacity = stream.count ?? 0
-                let writer = CollectingBodyWriter(capacity: initialCapacity, max: max)
-                try await stream.callback(writer)
-                stream.state.store(writer.data)
-                self.storage = .data(writer.data)
-                return writer.data
+                let collected = CollectingStorage(capacity: initialCapacity, max: max)
+                let scope = ResponseBodyWriterScope()
+                try await stream.callback(CollectingBodyWriter(collected, scope: scope))
+                stream.state.store(collected.data)
+                self.storage = .data(collected.data)
+                return collected.data
             default:
                 return self.data
             }
@@ -274,7 +276,7 @@ extension Response {
         ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly
         ///     `count` bytes. `nil` means the length is not known in advance, and the response is chunked.
         /// - Throws: ``Response/Body/NegativeCountError`` if `count` is negative.
-        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> (), count: Int?) throws {
+        public init(stream: @escaping @Sendable (borrowing any ResponseBodyWriter & ~Escapable) async throws -> (), count: Int?) throws {
             // A negative length is not a shorter body, it is an impossible one. Left unchecked it
             // reaches the wire as a malformed `Content-Length`, so it is rejected at the one point a
             // bad value can enter. Thrown rather than trapped: a mistake in one handler must not
@@ -310,7 +312,7 @@ extension Response {
         ///
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
-        public init(stream: @escaping @Sendable (any ResponseBodyWriter) async throws -> ()) {
+        public init(stream: @escaping @Sendable (borrowing any ResponseBodyWriter & ~Escapable) async throws -> ()) {
             // `nil` can never be rejected, so this stays non-throwing.
             self.storage = .stream(.init(count: nil, callback: stream))
         }
@@ -335,23 +337,34 @@ private final class ReduceBox<R> {
     init(_ value: R) { self.value = value }
 }
 
-/// A ``ResponseBodyWriter`` that forwards each chunk straight to a closure, used to drive a
-/// streaming body incrementally instead of collecting it.
-private final class ForwardingBodyWriter: ResponseBodyWriter {
+/// Backing storage for ``ForwardingBodyWriter``. The writer itself is non-escapable and so cannot
+/// hold anything that outlives the lend; the closure lives here instead.
+private final class ForwardingStorage {
     let onChunk: (RawSpan) async throws -> Void
 
     init(_ onChunk: @escaping (RawSpan) async throws -> Void) {
         self.onChunk = onChunk
     }
+}
+
+/// A ``ResponseBodyWriter`` that forwards each chunk straight to a closure, used to drive a
+/// streaming body incrementally instead of collecting it.
+private struct ForwardingBodyWriter: ResponseBodyWriter, ~Escapable {
+    private let storage: ForwardingStorage
+
+    @_lifetime(borrow scope)
+    init(_ storage: ForwardingStorage, scope: borrowing ResponseBodyWriterScope) {
+        self.storage = storage
+    }
 
     func write(_ bytes: RawSpan) async throws {
-        try await self.onChunk(bytes)
+        try await self.storage.onChunk(bytes)
     }
 }
 
-/// A ``ResponseBodyWriter`` that accumulates everything written into `Data`, used to
-/// eagerly collect a streaming body instead of forwarding it to the connection.
-private final class CollectingBodyWriter: ResponseBodyWriter {
+/// Backing storage for ``CollectingBodyWriter``: the bytes accumulate here, so the caller can read
+/// them back after the lend has ended and the writer itself is gone.
+private final class CollectingStorage {
     var data: Data
     let max: Int?
 
@@ -360,15 +373,21 @@ private final class CollectingBodyWriter: ResponseBodyWriter {
         self.max = max
     }
 
-    func write(_ bytes: RawSpan) async throws {
+    func append(_ bytes: RawSpan) throws {
         try self.checkLimit(adding: bytes.byteCount)
         bytes.withUnsafeBytes { unsafe self.data.append(contentsOf: $0) }
     }
 
-    /// Appending is synchronous, so the sequence's own storage can be borrowed instead of copying
-    /// it into a `ContiguousArray` first, as the protocol's default implementation must.
-    func write(_ bytes: some Sequence<UInt8>) async throws {
-        self.data.append(contentsOf: bytes)
+    func append(_ bytes: some Sequence<UInt8>) throws {
+        // `Data.append(contentsOf:)` cannot reach a contiguous fast path here: the generic context
+        // has erased the concrete type, so it appends element by element. Recovering the buffer
+        // explicitly is what makes this cheaper than the protocol's default implementation.
+        let borrowed: Void? = bytes.withContiguousStorageIfAvailable { buffer in
+            unsafe self.data.append(contentsOf: buffer)
+        }
+        if borrowed == nil {
+            self.data.append(contentsOf: bytes)
+        }
         try self.checkLimit(adding: 0)
     }
 
@@ -377,5 +396,26 @@ private final class CollectingBodyWriter: ResponseBodyWriter {
         guard self.data.count + count <= max else {
             throw Abort(.contentTooLarge)
         }
+    }
+}
+
+/// A ``ResponseBodyWriter`` that accumulates everything written into `Data`, used to
+/// eagerly collect a streaming body instead of forwarding it to the connection.
+private struct CollectingBodyWriter: ResponseBodyWriter, ~Escapable {
+    private let storage: CollectingStorage
+
+    @_lifetime(borrow scope)
+    init(_ storage: CollectingStorage, scope: borrowing ResponseBodyWriterScope) {
+        self.storage = storage
+    }
+
+    func write(_ bytes: RawSpan) async throws {
+        try self.storage.append(bytes)
+    }
+
+    /// Appending is synchronous, so the sequence's own storage can be borrowed instead of copying
+    /// it into a `ContiguousArray` first, as the protocol's default implementation must.
+    func write(_ bytes: some Sequence<UInt8>) async throws {
+        try self.storage.append(bytes)
     }
 }
