@@ -27,7 +27,7 @@ extension ServerConfiguration {
         /// The caller is responsible for running the reloader. Vapor wires it into the HTTP server
         /// but does not start its task. The reloader must already hold valid credentials when the
         /// server starts or startup fails; for `TimedCertificateReloader`, create it with
-        /// `makeReloaderValidatingSources(...)` and call `run()`.
+        /// `makeReloaderValidatingSources(...)` and call `run()` or use `app.addService(reloader)`
         ///
         /// - Parameter reloader: The reloader that supplies and refreshes the credentials.
         public static func reloading(_ reloader: any CertificateReloader) -> Self {
