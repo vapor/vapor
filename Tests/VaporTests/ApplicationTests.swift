@@ -186,7 +186,7 @@ struct ApplicationTests {
             }
 
             try await withRunningApp(app: app) { port in
-                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 13)
                 #expect(body.string == "Hello, world!")
             }
@@ -211,7 +211,7 @@ struct ApplicationTests {
                 #expect(port > 0)
                 #expect(port != 8080)
 
-                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 13)
                 #expect(body.string == "Hello, world!")
             }
@@ -251,7 +251,7 @@ struct ApplicationTests {
 
                 let port = try #require(address.port)
                 #expect(port > 0)
-                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
                 let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
@@ -284,7 +284,7 @@ struct ApplicationTests {
                 #expect(app.serverConfiguration.port == 3000)
                 #expect(port == 3000)
 
-                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
                 let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
