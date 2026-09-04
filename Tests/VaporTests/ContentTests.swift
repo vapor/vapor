@@ -921,9 +921,7 @@ struct ContentTests {
             }
 
             try await app.testing(.running) { client in
-                let res = try await client.post("/json") { req in
-                    try req.content.encode(Message(name: "Vapor"))
-                }
+                let res = try await client.post("/json", content: Message(name: "Vapor"))
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
             }

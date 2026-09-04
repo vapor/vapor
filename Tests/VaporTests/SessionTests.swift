@@ -24,26 +24,26 @@ struct SessionTests {
                 return "del"
             }
 
-            try await app.testing().test(.get, "/set") { res in
-                try #expect(await res.body.requireString() == "set")
-                cookie = res.headers.setCookie?["vapor-session"]
+            try await app.testing { client in
+                let setRes = try await client.get("/set")
+                try #expect(await setRes.body.requireString() == "set")
+                cookie = setRes.headers.setCookie?["vapor-session"]
                 #expect(cookie != nil)
-                let ops = await cache.ops
+                var ops = await cache.ops
                 #expect(ops == [
                     #"create SessionData(storage: ["foo": "bar"])"#,
                 ])
                 await cache.resetOps()
-            }
+                #expect(cookie?.string == "a")
 
-            #expect(cookie?.string == "a")
+                var headers = HTTPFields()
+                var cookies = HTTPCookies()
+                cookies["vapor-session"] = cookie
+                headers.cookie = cookies
 
-            var headers = HTTPFields()
-            var cookies = HTTPCookies()
-            cookies["vapor-session"] = cookie
-            headers.cookie = cookies
-            try await app.testing().test(.get, "/del", headers: headers) { res in
-                try #expect(await res.body.requireString() == "del")
-                let ops = await cache.ops
+                let delRes = try await client.get("/del", headers: headers)
+                try #expect(await delRes.body.requireString() == "del")
+                ops = await cache.ops
                 #expect(ops == [
                     #"read SessionID(string: "a")"#,
                     #"delete SessionID(string: "a")"#
@@ -73,34 +73,31 @@ struct SessionTests {
                 return foo
             }
 
+            try await app.testing { client in
+                // Test accessing session with no cookie.
+                let getRes = try await client.get("get")
+                #expect(getRes.status == .badRequest)
 
-            // Test accessing session with no cookie.
-            try await app.testing().test(.get, "get") { res in
-                #expect(res.status == .badRequest)
-            }
-
-            // Test setting session with invalid cookie.
-            var newCookie: HTTPCookies.Value?
-            try await app.testing().test(.get, "set", beforeRequest: { req in
-                req.headers.cookie = ["vapor-session": "foo"]
-            }, afterResponse: { res in
+                // Test setting session with invalid cookie.
+                var newCookie: HTTPCookies.Value?
+                let setRes = try await client.get("set") { req in
+                    req.headers.cookie = ["vapor-session": "foo"]
+                }
                 // We should get a new cookie back.
-                newCookie = res.headers.setCookie?["vapor-session"]
+                newCookie = setRes.headers.setCookie?["vapor-session"]
                 #expect(newCookie != nil)
                 // That is not the same as the invalid cookie we sent.
                 #expect(newCookie?.string != "foo")
-                #expect(res.status == .ok)
-            })
+                #expect(setRes.status == .ok)
 
-            // Test accessing newly created session.
-            try await app.testing().test(.get, "get", beforeRequest: { req in
-                // Pass cookie from previous request.
-                req.headers.cookie = ["vapor-session": newCookie!]
-            }, afterResponse: { res in
+                // Test accessing newly created session.
+                let get2Res = try await client.get("get") { req in
+                    req.headers.cookie = ["vapor-session": newCookie!]
+                }
                 // Session access should be successful.
-                try #expect(await res.body.requireString() == "bar")
-                #expect(res.status == .ok)
-            })
+                try #expect(await get2Res.body.requireString() == "bar")
+                #expect(get2Res.status == .ok)
+            }
         }
     }
 

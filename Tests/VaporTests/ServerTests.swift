@@ -1319,7 +1319,8 @@ struct ServerTests {
                 return "123"
             }
 
-            try await app.testing().test(.get, "/ping") { res in
+            try await app.testing { client in
+                let res = try await client.get("/ping")
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "123")
             }
@@ -1379,7 +1380,8 @@ struct ServerTests {
                 return try await req.content.decode(User.self)
             }
 
-            try await app.testing().test(.get, "/user") { res in
+            try await app.testing { client in
+                let res = try await client.get("/user")
                 #expect(res.status == .unsupportedMediaType)
             }
         }
