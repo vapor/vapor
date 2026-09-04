@@ -80,4 +80,60 @@ struct VaporTestingTests {
             }
         }
     }
+
+    @Test("Live client resolves a bare path against the running server")
+    func liveClientResolvesPaths() async throws {
+        try await withApp { app in
+            // Echoes what the server actually received, so the assertions are on the resolved
+            // request rather than on whatever the client thought it sent.
+            app.get("echo") { req -> String in
+                "\(req.url.path)|\(req.url.query ?? "")"
+            }
+
+            try await app.testing(.running()) { client in
+                let base = try #require(client.baseURL)
+                #expect(base.scheme == "http")
+                #expect(base.host == "127.0.0.1")
+                let port = try #require(base.port)
+                #expect(port > 0)
+
+                let leadingSlash = try await client.get("/echo")
+                #expect(leadingSlash.status == .ok)
+                try #expect(await leadingSlash.content.decode(String.self) == "/echo|")
+
+                let noLeadingSlash = try await client.get("echo")
+                #expect(noLeadingSlash.status == .ok)
+                try #expect(await noLeadingSlash.content.decode(String.self) == "/echo|")
+
+                let withQuery = try await client.get("/echo?name=vapor&n=1")
+                #expect(withQuery.status == .ok)
+                try #expect(await withQuery.content.decode(String.self) == "/echo|name=vapor&n=1")
+
+                // A full URL is left alone, so a test can point the same client somewhere else.
+                let absolute = try await client.get(URI(string: "http://127.0.0.1:\(port)/echo?absolute=1"))
+                #expect(absolute.status == .ok)
+                try #expect(await absolute.content.decode(String.self) == "/echo|absolute=1")
+
+                let missing = try await client.get("/nope")
+                #expect(missing.status == .notFound)
+            }
+        }
+    }
+
+    @Test("In-memory client has no base URL and passes the path straight through")
+    func inMemoryClientPassesPathThrough() async throws {
+        try await withApp { app in
+            app.get("echo") { req -> String in
+                "\(req.url.path)|\(req.url.query ?? "")"
+            }
+
+            try await app.testing { client in
+                #expect(client.baseURL == nil)
+
+                let response = try await client.get("/echo?name=vapor")
+                #expect(response.status == .ok)
+                try #expect(await response.content.decode(String.self) == "/echo|name=vapor")
+            }
+        }
+    }
 }

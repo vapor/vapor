@@ -795,8 +795,9 @@ struct FileTests {
                 }
             }
 
-            try await app.test(method: .running()) { runner in
-                let res = try await runner.sendRequest(.head, "/file-stream")
+            try await app.testing(.running) { client in
+                let res = try await client.send(ClientRequest(method: .head, url: "/file-stream"))
+
                 #expect(res.status == .ok)
                 // The length is advertised even though no body follows it.
                 #expect(res.headers[.contentLength] != nil)
@@ -816,13 +817,14 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
-            try await app.test(method: .running()) { runner in
-                let get = try await runner.sendRequest(.get, "/Utilities/foo.txt")
+            try await app.testing(.running) { client in
+                let get = try await client.get("/Utilities/foo.txt")
                 #expect(get.status == .ok)
                 try #expect(await (get.body.data()?.count ?? 0) > 0)
 
                 // HEAD gets the headers a GET would have returned, with no body.
-                let head = try await runner.sendRequest(.head, "/Utilities/foo.txt")
+                let headRequest = ClientRequest(method: .head, url: "/Utilities/foo.txt")
+                let head = try await client.send(headRequest)
                 #expect(head.status == .ok)
                 #expect(head.headers[.contentLength] == get.headers[.contentLength])
                 try #expect(await head.body.data()?.count == 0)
@@ -830,7 +832,8 @@ struct FileTests {
                 // Everything else falls through the middleware; nothing else is registered here,
                 // so it 404s rather than being answered with the file.
                 for method in [HTTPRequest.Method.options, .post, .delete] {
-                    let res = try await runner.sendRequest(method, "/Utilities/foo.txt")
+                    let request = ClientRequest(method: method, url: "/Utilities/foo.txt")
+                    let res = try await client.send(request)
                     #expect(res.status == .notFound, "\(method) was served by FileMiddleware")
                 }
             }

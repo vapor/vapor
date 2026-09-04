@@ -20,6 +20,8 @@ extension Application {
         /// Runs a real server and binds to the specified port and address
         #warning("These can be removed")
         case running(hostname: String = "127.0.0.1", port: Int = 0)
+
+        public static var running: Self { .running(hostname: "127.0.0.1", port: 0) }
     }
 
     package struct Live: Sendable {

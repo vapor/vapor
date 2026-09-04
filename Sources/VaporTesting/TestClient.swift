@@ -55,7 +55,7 @@ struct LiveTestClient: TestClient {
 
     func send(_ clientRequest: ClientRequest) async throws -> ClientResponse {
         var request = clientRequest
-        request.url = clientRequest.url
+        request.url = self.resolve(clientRequest.url)
         request.timeout = self.options.timeout
 
         return try await VaporHTTPClient(http: self.http, contentConfiguration: self.contentConfiguration)
@@ -63,12 +63,21 @@ struct LiveTestClient: TestClient {
     }
 }
 
-//extension TestClient {
-//    /// A bare path resolves against the app; a full URL is left alone so a test can
-//    /// deliberately point at somewhere else (a stub, a second app).
-//    package func resolve(_ url: URI) -> URI {
-//        guard url.host == nil, let base = self.baseURL else { return url }
-//        return URI(scheme: base.scheme, host: base.host, port: base.port,
-//                   path: url.path, query: url.query, fragment: url.fragment)
-//    }
-//}
+extension TestClient {
+    /// A bare path resolves against the app; a full URL is left alone so a test can
+    /// deliberately point at somewhere else (a stub, a second app).
+    ///
+    /// In memory there is no base URL, so the path goes through untouched: the responder
+    /// only routes on the path anyway.
+    package func resolve(_ url: URI) -> URI {
+        guard url.host == nil, let base = self.baseURL else { return url }
+        return URI(
+            scheme: base.scheme,
+            host: base.host,
+            port: base.port,
+            path: url.path,
+            query: url.query,
+            fragment: url.fragment
+        )
+    }
+}
