@@ -125,7 +125,6 @@ public protocol CredentialsAuthenticator: RequestAuthenticator {
 extension CredentialsAuthenticator {
     /// Default implementation of ``RequestAuthenticator/authenticate(request:)`` that checks for a credentials type in the request body and calls ``CredentialsAuthenticator/authenticate(credentials:for:)`` if it exists.
     public func authenticate(request: Request) async throws {
-        _ = try await request.body.collect(max: nil).get()
         if let credentials = try? await request.content.decode(Credentials.self) {
             try await self.authenticate(credentials: credentials, for: request)
         }

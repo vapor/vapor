@@ -92,6 +92,9 @@ public struct Request: CustomStringConvertible, Sendable {
         var body: ByteBuffer?
         var headers: HTTPFields
         let contentConfiguration: ContentConfiguration
+        /// Collects a not-yet-buffered (streamed) body on demand. `nil` when there's nothing to
+        /// collect. Lets `decode` work on a `.stream` route by pulling the body when it's first needed.
+        let collectBody: (@Sendable () async throws -> ByteBuffer?)?
 
         var contentType: HTTPMediaType? {
             self.headers.contentType
@@ -104,8 +107,15 @@ public struct Request: CustomStringConvertible, Sendable {
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
-            guard let body = self.body else {
-                // This shouldn't be an issue when we support streaming bodies, we should just be able to collect the body
+            // Prefer the already-buffered body; otherwise collect a streamed body on demand so
+            // `content.decode` works on a `.stream` route.
+            let resolved: ByteBuffer?
+            if let buffered = self.body {
+                resolved = buffered
+            } else {
+                resolved = try await self.collectBody?()
+            }
+            guard let body = resolved else {
                 throw Abort(.unprocessableContent)
             }
             let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
@@ -133,6 +143,9 @@ public struct Request: CustomStringConvertible, Sendable {
                 body: self.body.data,
                 headers: self.headers,
                 contentConfiguration: self.contentConfiguration,
+                collectBody: { [self] in
+                    try await self.body.collect(max: self.defaultMaxBodySize.value)
+                }
             )
         }
         set {
@@ -148,10 +161,12 @@ public struct Request: CustomStringConvertible, Sendable {
         Body(self)
     }
 
+    /// How the request body is held: absent, fully buffered in memory, or a lazy pull-based stream.
+    /// `collect` promotes `.stream` to `.collected` so a body is only drained once.
     internal enum BodyStorage: Sendable {
         case none
         case collected(ByteBuffer)
-        case stream(BodyStream)
+        case stream(RequestBodyStream)
     }
 
     /// Get and set `HTTPCookies` for this `Request`
@@ -221,15 +236,19 @@ public struct Request: CustomStringConvertible, Sendable {
         version: HTTPVersion = .init(major: 1, minor: 1),
         headersNoUpdate headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
+        bodyStream: RequestBodyStream? = nil,
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
         requestID: String = UUID().uuidString,
         contentConfiguration: ContentConfiguration = .default(),
         defaultMaxBodySize: ByteCount = "16kb",
     ) {
+        // A pre-collected body wins over a stream; with neither, the request has no body.
         let bodyStorage: BodyStorage
         if let body = collectedBody {
             bodyStorage = .collected(body)
+        } else if let bodyStream {
+            bodyStorage = .stream(bodyStream)
         } else {
             bodyStorage = .none
         }

@@ -383,7 +383,7 @@ struct RouteTests {
         }
     }
 
-    @Test("Test Configurable Max Body Size", .disabled())
+    @Test("Test Configurable Max Body Size")
     func testConfigurableMaxBodySize() async throws {
         try await withApp { app in
             #expect(app.routes.defaultMaxBodySize == 16384)
@@ -403,22 +403,24 @@ struct RouteTests {
                 HTTPResponse.Status.ok
             }
 
+            // Small enough that the rejected (413) requests' unread remainder stays within the
+            // keep-alive drain cap, so the connection is reused and the 413 is delivered rather than
+            // racing a connection close; still over the 1-byte and 1kb limits and under 1mb/1gb.
             var buffer = ByteBufferAllocator().buffer(capacity: 0)
-            buffer.writeBytes(Array(repeating: 0, count: 500_000))
-            try await app.testing(method: .running).test(.post, "/default", body: buffer) { res in
-                #expect(res.status == .contentTooLarge)
-            }
+            buffer.writeBytes(Array(repeating: 0, count: 2048))
 
-            try await app.testing(method: .running).test(.post, "/1kb", body: buffer) { res in
-                #expect(res.status == .contentTooLarge)
-            }
+            try await app.test(method: .running) { testApp in
+                let defaultRes = try await testApp.sendRequest(.post, "/default", body: buffer)
+                #expect(defaultRes.status == .contentTooLarge)
 
-            try await app.testing(method: .running).test(.post, "/1mb", body: buffer) { res in
-                #expect(res.status == .ok)
-            }
+                let kbRes = try await testApp.sendRequest(.post, "/1kb", body: buffer)
+                #expect(kbRes.status == .contentTooLarge)
 
-            try await app.testing(method: .running).test(.post, "/1gb", body: buffer) { res in
-                #expect(res.status == .ok)
+                let mbRes = try await testApp.sendRequest(.post, "/1mb", body: buffer)
+                #expect(mbRes.status == .ok)
+
+                let gbRes = try await testApp.sendRequest(.post, "/1gb", body: buffer)
+                #expect(gbRes.status == .ok)
             }
         }
     }

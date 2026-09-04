@@ -165,11 +165,10 @@ extension RoutesBuilder {
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         let responder = BasicResponder { request in
+            // `.collect` routes buffer the body (enforcing the max size) before the handler runs, so
+            // handlers see a materialized body. `.stream` routes skip this and read lazily.
             if case .collect(let max) = body, request.body.data == nil {
-                _ = try await MultiThreadedEventLoopGroup.singleton.any().flatSubmit {
-                    request.body.collect(max: max?.value ?? request.defaultMaxBodySize.value)
-                }.get()
-
+                _ = try await request.body.collect(max: max?.value ?? request.defaultMaxBodySize.value)
             }
             return try await closure(request).encodeResponse(for: request)
         }
