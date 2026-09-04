@@ -28,9 +28,9 @@ func routes(_ app: Application) async throws {
         // reads keeps memory flat because the server stops pulling more of the body until
         // this loop asks for the next chunk.
         var total = 0
-        for try await buffer in req.body {
+        try await req.body.forEachChunk { buffer in
             try await Task.sleep(nanoseconds: 1_000_000_000)
-            total += buffer.readableBytes
+            total += buffer.byteCount
         }
         return total.description
     }
@@ -70,8 +70,8 @@ func routes(_ app: Application) async throws {
 //    }
 
     app.on(.post, "file", body: .stream) { req in
-        for try await part in req.body {
-            debugPrint(part)
+        try await req.body.forEachChunk { part in
+            debugPrint(part.byteCount)
         }
         return "Done"
     }
@@ -224,8 +224,8 @@ func routes(_ app: Application) async throws {
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
             options: .newFile(replaceExisting: true)) { handle in
                 var writer = handle.bufferedWriter()
-                for try await part in req.body {
-                    try await writer.write(contentsOf: part)
+                try await req.body.forEachChunk { part in
+                    try await writer.write(contentsOf: part.withUnsafeBytes { unsafe Array($0) })
                 }
                 return .ok
             }

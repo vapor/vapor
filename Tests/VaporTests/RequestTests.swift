@@ -61,9 +61,8 @@ struct RequestTests {
 
             app.on(.post, "stream", body: .stream) { req in
                 var receivedBuffer = ByteBuffer()
-                for try await part in req.body {
-                    var part = part
-                    receivedBuffer.writeBuffer(&part)
+                try await req.body.forEachChunk { part in
+                    part.withUnsafeBytes { receivedBuffer.writeBytes($0) }
                 }
                 let string = String(buffer: receivedBuffer)
                 return string
@@ -92,8 +91,8 @@ struct RequestTests {
             // streaming together in a single round-trip.
             app.on(.post, "echo", body: .stream) { req -> Response in
                 Response(body: .init(stream: { writer in
-                    for try await chunk in req.body {
-                        try await writer.write(chunk.readableBytesView)
+                    try await req.body.forEachChunk { chunk in
+                        try await writer.write(chunk)
                     }
                 }))
             }
@@ -153,9 +152,10 @@ struct RequestTests {
             let bytesTheServerRead = ManagedAtomic<Int>(0)
 
             app.on(.post, "hello", body: .stream) { req async throws -> Response in
-                var bodyIterator = req.body.makeAsyncIterator()
-                let firstChunk = try await bodyIterator.next()
-                bytesTheServerRead.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .relaxed)
+                let firstChunkBytes = try await req.body.withReader { reader in
+                    try await reader.read { span, _ in span.byteCount }
+                }
+                bytesTheServerRead.wrappingIncrement(by: firstChunkBytes, ordering: .relaxed)
                 throw Abort(.internalServerError)
             }
 
@@ -190,14 +190,14 @@ struct RequestTests {
                 requestHandlerTask.withLockedValue {
                     $0 = Task {
                         #expect(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged == true)
-                        var bodyIterator = req.body.makeAsyncIterator()
-                        let firstChunk = try await bodyIterator.next() // read only first chunk
-                        numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .sequentiallyConsistent)
-                        bytesTheServerSaw.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .sequentiallyConsistent)
-                        defer {
-                            _ = bodyIterator // make sure to not prematurely cancelling the sequence
+                        try await req.body.withReader { reader in
+                            // Read only the first chunk, then hold the reader open: the server stops
+                            // pulling more of the body (backpressure) while we "wait forever".
+                            let firstChunkBytes = try await reader.read { span, _ in span.byteCount }
+                            numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .sequentiallyConsistent)
+                            bytesTheServerSaw.wrappingIncrement(by: firstChunkBytes, ordering: .sequentiallyConsistent)
+                            try await Task.sleep(nanoseconds: 10_000_000_000) // wait "forever"
                         }
-                        try await Task.sleep(nanoseconds: 10_000_000_000) // wait "forever"
                         serverSawEnd.store(true, ordering: .sequentiallyConsistent)
                         return Response(status: .ok)
                     }
@@ -288,8 +288,8 @@ struct RequestTests {
             // Streaming a request with no body must simply produce zero chunks, not hang or fail.
             app.on(.post, "count", body: .stream) { req -> String in
                 var total = 0
-                for try await chunk in req.body {
-                    total += chunk.readableBytes
+                try await req.body.forEachChunk { chunk in
+                    total += chunk.byteCount
                 }
                 return "\(total)"
             }
@@ -314,8 +314,8 @@ struct RequestTests {
             // test fails if any chunk is dropped or the reassembly across reads is wrong.
             app.on(.post, "count", body: .stream) { req -> String in
                 var total = 0
-                for try await chunk in req.body {
-                    total += chunk.readableBytes
+                try await req.body.forEachChunk { chunk in
+                    total += chunk.byteCount
                 }
                 return "\(total)"
             }
@@ -506,37 +506,33 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Collecting Rejects When The Declared Content-Length Exceeds The Max")
-    func testCollectRejectsWhenDeclaredContentLengthExceedsMax() async throws {
+    @Test("Test Collecting An Already-Buffered Body Ignores A Smaller Max")
+    func testCollectOnBufferedBodyIgnoresSmallerMax() async throws {
         try await withApp { app in
-            // A collected body sets Content-Length to its own size. Declaring 2048 while collecting
-            // with a 1024 limit must be rejected up front with 413.
+            // An already-buffered body was accepted under its original limit. Re-collecting it with a
+            // smaller max must return it as-is rather than spuriously 413: the declared-Content-Length
+            // reject only guards an unread `.stream`, before it is read off the socket. (That stream
+            // reject is exercised end-to-end by testStreamingBodyExceedingCollectMaxReturns413.)
             let request = Request(
                 method: .post,
                 collectedBody: ByteBuffer(repeating: 0x41, count: 2048))
 
-            await #expect(performing: {
-                _ = try await request.body.collect(max: 1024)
-            }, throws: { error in
-                (error as? any AbortError)?.status.code == 413
-            })
+            let collected = try await request.body.collect(max: 1024)
+            #expect(collected?.readableBytes == 2048)
         }
     }
 
-    @Test("Test Collecting Rejects On The Declared Content-Length Before Reading The Body")
-    func testCollectRejectsOnDeclaredContentLengthBeforeReadingBody() async throws {
+    @Test("Test Collecting A Body-less Request With A Large Declared Length Returns Nil")
+    func testCollectBodylessRequestWithLargeDeclaredLengthReturnsNil() async throws {
         try await withApp { app in
-            // No body is attached (storage is `.none`, which would normally collect to `nil`), but the
-            // request claims a huge Content-Length. The reject must fire from the header check *before*
-            // the storage switch — proving it's the declared length, not the bytes, that drives it.
+            // No body is attached (storage is `.none`) though the request claims a huge Content-Length.
+            // With nothing to read there is no DoS to guard against, so collect returns nil rather than
+            // 413 — the declared-length reject fires only when there is an actual stream to read.
             var request = Request(method: .post)
             request.headers[.contentLength] = "1000000"
 
-            await #expect(performing: {
-                _ = try await request.body.collect(max: 1024)
-            }, throws: { error in
-                (error as? any AbortError)?.status.code == 413
-            })
+            let collected = try await request.body.collect(max: 1024)
+            #expect(collected == nil)
         }
     }
 
@@ -564,6 +560,35 @@ struct RequestTests {
 
             let collected = try await request.body.collect(max: nil)
             #expect(collected?.readableBytes == 2048)
+        }
+    }
+
+    @Test("Test forEachChunk On An Empty Buffered Body Delivers No Chunks")
+    func testForEachChunkOnEmptyBufferedBodyDeliversNoChunks() async throws {
+        try await withApp { app in
+            // A buffered-but-empty body must deliver zero chunks — exactly like a raw empty stream or
+            // a body-less request — not one spurious empty chunk.
+            let request = Request(method: .post, collectedBody: ByteBuffer())
+
+            var chunks = 0
+            try await request.body.forEachChunk { _ in chunks += 1 }
+            #expect(chunks == 0)
+        }
+    }
+
+    @Test("Test forEachChunk Replays A Buffered Body As A Single Chunk")
+    func testForEachChunkReplaysBufferedBody() async throws {
+        try await withApp { app in
+            let request = Request(method: .post, collectedBody: ByteBuffer(string: "hello"))
+
+            var chunks = 0
+            var received = ByteBuffer()
+            try await request.body.forEachChunk { span in
+                chunks += 1
+                span.withUnsafeBytes { received.writeBytes($0) }
+            }
+            #expect(chunks == 1)
+            #expect(String(buffer: received) == "hello")
         }
     }
 

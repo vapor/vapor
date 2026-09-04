@@ -15,11 +15,14 @@ public struct ServerConfiguration: Sendable {
     /// cached, so lowering it doesn't discard entries already held.
     public var eTagHashCacheCapacity: UInt
 
-    /// How many bytes of an unread request body the server will drain to keep the connection alive.
-    /// Past this it stops and closes the connection instead of reading on — a DoS guard. Defaults to 16 KB.
+    /// How many bytes of an *unread* request body the server will drain to keep the connection alive.
+    /// Past this the drain stops and the connection is closed instead of reading on — a DoS guard.
+    /// Defaults to 16 KB.
     ///
-    /// The budget covers the body's *total* consumption (whatever the handler already read plus the
-    /// drain), not just the drain, so a handler that read past it and left a remainder also closes.
+    /// The budget applies only to the bytes this drain reads, not to what the handler already
+    /// consumed: a handler that deliberately read a large body and left a small remainder still gets
+    /// its connection reused, while an unconsumed body larger than this is drained up to the budget
+    /// and then the connection is closed.
     public var maxDrainBytes: Int
 
     public init(

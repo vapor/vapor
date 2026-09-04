@@ -2,7 +2,7 @@ import NIOHTTPServer
 import BasicContainers
 import HTTPTypes
 import HTTPAPIs
-package import NIOCore
+import NIOCore
 import NIOHTTP1
 import NIOConcurrencyHelpers
 import Logging
@@ -189,98 +189,148 @@ final class NIOResponseBodyWriterStorage {
     }
 }
 
-/// Lazily exposes the server's request body as an `AsyncSequence` of `ByteBuffer`s.
+/// Holds the server's move-only request `Reader` and ferries the body to user code — the request-side
+/// mirror of ``NIOResponseBodyWriterStorage``. It pulls one part at a time (so backpressure reaches the
+/// producer) and hands the bytes out as a borrowed ``RawSpan``, copying nothing until user code keeps it.
 ///
-/// This is the request-side mirror of ``NIOResponseBodyWriter``: it wraps the server's move-only,
-/// non-Sendable `Reader` and pulls one part at a time, so backpressure propagates to the producer
-/// (the server stops reading until the handler asks for the next chunk).
-///
-/// It is `@unchecked Sendable` (not checked): the stored `Reader` is a move-only, non-Sendable type
-/// that can't live behind a lock, so the compiler can't verify safety. Safety rests on a contract —
-/// **a request body is consumed by a single task**: iterated or collected once, never concurrently.
-/// `Request` is `Sendable` so it can cross tasks, but its body must not be read from two of them.
-package final class RequestBodyStream: AsyncSequence, @unchecked Sendable {
-    package typealias Element = ByteBuffer
-
-    package struct AsyncIterator: AsyncIteratorProtocol {
-        let stream: RequestBodyStream
-
-        fileprivate init(stream: RequestBodyStream) {
-            self.stream = stream
-        }
-
-        package mutating func next() async throws -> ByteBuffer? {
-            try await stream.readChunk()
-        }
-    }
-
+/// `@unchecked Sendable` because the move-only, non-Sendable `Reader` can't sit behind a lock: safety
+/// rests on the contract that **a body is read by a single task, once** — never concurrently. `Request`
+/// is `Sendable` and may cross tasks, but its body must not be read from two of them.
+package final class RequestBodyStream: @unchecked Sendable {
     private var reader: NIOHTTPServer.Reader?
     /// Latches once the body ends so further reads short-circuit instead of touching a spent reader.
     private var finished = false
-    /// Total bytes handed out over the body's whole lifetime (iterate + collect + drain), so limits
-    /// account for what the handler already read, not just what a later drain reads.
-    private var bytesRead = 0
 
     init(reader: consuming NIOHTTPServer.Reader) {
         self.reader = consume reader
     }
 
-    package func makeAsyncIterator() -> AsyncIterator {
-        AsyncIterator(stream: self)
+    /// Reads one part of the body, handing its bytes to `body` as a borrowed ``RawSpan`` plus a flag
+    /// that is `true` at end-of-body (the span is then empty). The single primitive behind
+    /// ``collect(max:)``, ``drain(max:)`` and ``RequestBodyReader``. The span borrows the server's
+    /// reusable buffer, so it is valid only for the call — copy out what you keep.
+    func read<R>(_ body: (RawSpan, Bool) async throws -> R) async throws -> R {
+        guard !self.finished else {
+            return try await signalEndOfBody(to: body)
+        }
+        // The server delivers body and end as separate reads: a body part always has `nil`
+        // trailers and carries the bytes, while the end read carries a non-nil `trailers` and an
+        // empty buffer. So a non-nil `trailers` means end-of-body with nothing to hand back.
+        var didEnd = false
+        let result: R? = try await self.reader?.read { chunk, trailers in
+            guard trailers == nil else {
+                didEnd = true
+                return try await signalEndOfBody(to: body)
+            }
+            return try await body(chunk.span.bytes, false)
+        }
+        if didEnd {
+            self.finished = true
+        }
+        guard let result else {
+            // The reader was already spent: treat as ended.
+            self.finished = true
+            return try await signalEndOfBody(to: body)
+        }
+        return result
     }
 
     /// Reads the whole body into one buffer, aborting with 413 if it exceeds `max`.
     func collect(max: Int) async throws -> ByteBuffer {
         var collected = ByteBuffer()
-        while let chunk = try await readChunk() {
-            // Check before appending so an over-limit chunk is never buffered. Subtracting
-            // (rather than adding) keeps the bound exact and can't overflow when `max` is `.max`.
-            guard chunk.readableBytes <= max - collected.readableBytes else {
-                throw Abort(.contentTooLarge)
+        while true {
+            let ended = try await self.read { span, isEnd -> Bool in
+                if isEnd {
+                    return true
+                }
+                // Check before appending so an over-limit chunk is never buffered. Subtracting
+                // (rather than adding) keeps the bound exact and can't overflow when `max` is `.max`.
+                guard span.byteCount <= max - collected.readableBytes else {
+                    throw Abort(.contentTooLarge)
+                }
+                _ = span.withUnsafeBytes { unsafe collected.writeBytes($0) }
+                return false
             }
-            collected.writeBytes(chunk.readableBytesView)
+            if ended {
+                break
+            }
         }
         return collected
     }
 
-    /// Discards any unread body until the end, or stops once *total* consumption (whatever the
-    /// handler already read, plus this drain) exceeds `max`.
+    /// Discards any unread body to its end, or stops once *this* drain has read more than `max` bytes.
     ///
-    /// Draining to the body's end lets the server reuse the keep-alive connection. Bounding it is a
-    /// DoS guard: a request the handler didn't consume (e.g. a 404) must not let a client force the
-    /// server to read an unbounded body. If we stop before reaching `.end`, the server closes the
-    /// connection with `Connection: close` rather than read on.
+    /// Draining to the end keeps the connection reusable; the bound is a DoS guard so an unconsumed
+    /// body (e.g. a 404) can't force an unbounded read. Only bytes this drain reads count — not what
+    /// the handler already consumed — so a large legitimate read that left a small tail still keeps
+    /// keep-alive. Stopping short of `.end` makes the server close with `Connection: close`.
     func drain(max: Int) async throws {
-        while try await readChunk() != nil {
-            if bytesRead > max {
+        var drained = 0
+        while true {
+            let (ended, count) = try await self.read { span, isEnd in (isEnd, span.byteCount) }
+            if ended {
+                return
+            }
+            drained += count
+            if drained > max {
                 return
             }
         }
     }
+}
 
-    private func readChunk() async throws -> ByteBuffer? {
-        guard !self.finished else {
-            return nil
-        }
-        // The server delivers body and end as separate reads: a body part always has `nil`
-        // trailers and carries the bytes, while the end read carries a non-nil `trailers` and an
-        // empty buffer. So a non-nil `trailers` means end-of-body with nothing to hand back, and
-        // no bytes are lost by returning nil here. The server reuses its buffer across calls, so
-        // the bytes are copied out.
-        let chunk: ByteBuffer? = try await self.reader?.read { chunk, trailers in
-            if trailers != nil {
-                return nil
+/// Calls `body` with an empty span and `isEnd == true` — the end-of-body signal shared by every
+/// read path, so the "empty span + ended" sentinel lives in exactly one place.
+private func signalEndOfBody<R>(to body: (RawSpan, Bool) async throws -> R) async throws -> R {
+    let empty = ByteBuffer()
+    return try await body(empty.readableBytesSpan, true)
+}
+
+/// Holds an already-buffered body until ``NIORequestBodyReader`` replays it, then latches to `nil` so a
+/// second read reports end-of-body. A reference type so `read` can stay non-mutating (`borrowing`): the
+/// "already replayed" state lives behind the reference, not in the borrowed reader.
+final class CollectedBodyReplay {
+    var buffer: ByteBuffer?
+    init(_ buffer: ByteBuffer?) {
+        self.buffer = buffer
+    }
+}
+
+/// The server's concrete ``RequestBodyReader`` — a borrowed, non-escapable view onto the request body,
+/// the mirror of ``NIOResponseBodyWriter``. Lent only for a ``Request/Body/withReader(_:)`` closure;
+/// being `~Escapable` it can't be stored, so "read the body twice" is a compile-time error. Each
+/// ``read(_:)`` hands the next part out as a borrowed ``RawSpan``, copying nothing until user code keeps it.
+struct NIORequestBodyReader: RequestBodyReader, ~Escapable {
+    /// Either the live server stream, or an already-buffered body replayed as a single chunk.
+    enum Source {
+        case stream(RequestBodyStream)
+        case collected(CollectedBodyReplay)
+    }
+    private let source: Source
+
+    @_lifetime(borrow scope)
+    init(_ source: consuming Source, scope: borrowing RequestBodyReaderScope) {
+        self.source = source
+    }
+
+    func read<R>(_ body: (RawSpan, Bool) async throws -> R) async throws -> R {
+        switch self.source {
+        case .stream(let stream):
+            return try await stream.read(body)
+        case .collected(let replay):
+            guard let buffer = replay.buffer, buffer.readableBytes > 0 else {
+                // Nothing to replay (already spent, or a buffered-but-empty body): signal end with no
+                // chunk, so an empty body delivers zero chunks whether it was pre-collected, a raw
+                // `.stream`, or `.none` — matching `Response.Body.withStreamingBytes`.
+                replay.buffer = nil
+                return try await signalEndOfBody(to: body)
             }
-            var byteBuffer = ByteBuffer()
-            byteBuffer.writeBytes(chunk.span.bytes)
-            return byteBuffer
+            // A pre-buffered body is replayed as one chunk, then ends on the next read. The buffer
+            // owns its bytes and is held for the duration of the call, so its span is handed over
+            // directly rather than copied into a fresh buffer.
+            replay.buffer = nil
+            return try await body(buffer.readableBytesSpan, false)
         }
-        if let chunk {
-            self.bytesRead += chunk.readableBytes
-        } else {
-            self.finished = true
-        }
-        return chunk
     }
 }
 
