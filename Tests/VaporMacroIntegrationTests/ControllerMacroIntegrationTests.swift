@@ -80,7 +80,7 @@ struct ControllerMacroIntegrationTests {
             try await app.register(collection: TestUserController())
 
             try await app.testing { client in
-                let res = try await client.get("/api/test/users/nonexistent")
+                let res = try await client.get("/api/test/nonexistent")
                 #expect(res.status == .notFound)
             }
         }
