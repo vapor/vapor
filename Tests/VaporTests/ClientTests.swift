@@ -269,24 +269,28 @@ struct ClientTests {
 
         var headers = HTTPFields()
         headers.contentType = .json
-        let response = ClientResponse(
-            status: .ok,
-            headers: headers,
-            body: .init(stream: { writer in
-                try await writer.write(#"{"value":""#)
-                try await writer.write(String(repeating: "x", count: 4096))
-                try await writer.write(#""}"#)
-            }),
-            maxBodySize: 512
-        )
+        // A stream runs once, so each attempt below gets its own response - a network body could
+        // not be re-read after a failed decode either.
+        func makeResponse() -> ClientResponse {
+            ClientResponse(
+                status: .ok,
+                headers: headers,
+                body: .init(stream: { writer in
+                    try await writer.write(#"{"value":""#)
+                    try await writer.write(String(repeating: "x", count: 4096))
+                    try await writer.write(#""}"#)
+                }),
+                maxBodySize: 512
+            )
+        }
 
         await #expect(throws: Abort.self) {
-            _ = try await response.content.decode(Payload.self)
+            _ = try await makeResponse().content.decode(Payload.self)
         }
 
         // Streaming is not bounded by it - the ceiling is on holding the whole body in memory.
         var seen = 0
-        try await response.body.withStreamingBytes { seen += $0.byteCount }
+        try await makeResponse().body.withStreamingBytes { seen += $0.byteCount }
         #expect(seen == 4108)
     }
 

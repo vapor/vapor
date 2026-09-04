@@ -2,15 +2,38 @@
 import Foundation
 #warning("Migrate to our own SocketAddress")
 import NIOCore
+import NIOConcurrencyHelpers
 import AsyncHTTPClient
 
 public protocol TestClient: Client {
     var baseURL: URI? { get }
 }
 
+/// We need a way to track the different response bodies from requests. If we don't drain them
+/// then AHC will see a disconnect and hang up so we need to drain before return them.
+/// This just helps us keep track and drain any that haven't been collected
+final class UnreadBodies: Sendable {
+    private let bodies = NIOLockedValueBox<[Response.Body]>([])
+
+    func track(_ body: Response.Body) {
+        self.bodies.withLockedValue { $0.append(body) }
+    }
+
+    func drain() async throws {
+        let bodies = self.bodies.withLockedValue { bodies in
+            defer { bodies.removeAll() }
+            return bodies
+        }
+        for var body in bodies where body.isUnconsumedStream {
+            _ = try await body.collect()
+        }
+    }
+}
+
 struct InMemoryTestClient: TestClient {
     let app: Application
     let responder: any Responder
+    let unreadBodies = UnreadBodies()
     let baseURL: URI? = nil
     var contentConfiguration: ContentConfiguration {
         self.app.contentConfiguration
@@ -35,11 +58,12 @@ struct InMemoryTestClient: TestClient {
             defaultMaxBodySize: self.app.routes.defaultMaxBodySize
         )
 
-        var response = try await self.responder.respond(to: request)
+        let response = try await self.responder.respond(to: request)
+        self.unreadBodies.track(response.body)
         return ClientResponse(
             status: response.status,
             headers: response.headers,
-            body: .init(data: try await response.body.collect() ?? Data()),
+            body: response.body,
             maxBodySize: clientRequest.maxResponseBodySize,
             contentConfiguration: self.app.contentConfiguration
         )
@@ -51,6 +75,7 @@ struct LiveTestClient: TestClient {
     let address: SocketAddress
     let options: LiveClientOptions
     let http: HTTPClient
+    let unreadBodies = UnreadBodies()
 
     var port: Int { self.address.port! }
     var baseURL: URI? {
@@ -68,18 +93,8 @@ struct LiveTestClient: TestClient {
 
         let response = try await VaporHTTPClient(http: self.http, contentConfiguration: self.contentConfiguration)
             .send(request)
-
-        // Collected before handing back, as the in-memory client does: a test that only asserts on
-        // headers would otherwise drop the body unread, which cancels the request mid-write and
-        // shows up as a spurious failure in a streaming handler. Built fresh rather than assigned
-        // through `body`'s `didSet`, so a HEAD response keeps the `Content-Length` it advertised.
-        return ClientResponse(
-            status: response.status,
-            headers: response.headers,
-            body: try await ResponseBodyCollection.collect.apply(to: response.body),
-            maxBodySize: clientRequest.maxResponseBodySize,
-            contentConfiguration: self.contentConfiguration
-        )
+        self.unreadBodies.track(response.body)
+        return response
     }
 }
 

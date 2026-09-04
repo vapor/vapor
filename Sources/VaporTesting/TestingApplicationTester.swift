@@ -40,7 +40,10 @@ extension Application: TestingApplicationTester {
 
     private func inMemoryTesting<T>(_ body: (any TestClient) async throws -> T) async throws -> T {
         let client = InMemoryTestClient(app: self, responder: self.makeResponder())
-        return try await body(client)
+        let result = try await body(client)
+        // Drain any unread bodies to avoid disconnects
+        try await client.unreadBodies.drain()
+        return result
     }
 
     private func liveTesting<T>(hostname: String, port: Int, options: LiveClientOptions, _ body: (any TestClient) async throws -> T) async throws -> T {
@@ -62,6 +65,8 @@ extension Application: TestingApplicationTester {
             let result: T
             do {
                 result = try await body(client)
+                // Drain any unread bodies to avoid disconnects
+                try await client.unreadBodies.drain()
             } catch {
                 group.cancelAll()
                 throw error
