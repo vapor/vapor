@@ -17,9 +17,17 @@ struct InMemoryTestClient: TestClient {
     }
 
     func send(_ clientRequest: ClientRequest) async throws -> ClientResponse {
+        // A request-target on the wire always starts with `/`, and the live client gets that for
+        // free from the HTTP client. Match it here so `client.get("users")` routes the same way in
+        // both modes instead of reaching the responder as a relative path.
+        var url = clientRequest.url
+        if !url.path.hasPrefix("/") {
+            url.path = "/" + url.path
+        }
+
         let request = Request(
             method: clientRequest.method,
-            url: clientRequest.url,
+            url: url,
             headers: clientRequest.headers,
             collectedBody: clientRequest.body,
             remoteAddress: nil,
@@ -58,8 +66,20 @@ struct LiveTestClient: TestClient {
         request.url = self.resolve(clientRequest.url)
         request.timeout = self.options.timeout
 
-        return try await VaporHTTPClient(http: self.http, contentConfiguration: self.contentConfiguration)
+        let response = try await VaporHTTPClient(http: self.http, contentConfiguration: self.contentConfiguration)
             .send(request)
+
+        // Collected before handing back, as the in-memory client does: a test that only asserts on
+        // headers would otherwise drop the body unread, which cancels the request mid-write and
+        // shows up as a spurious failure in a streaming handler. Built fresh rather than assigned
+        // through `body`'s `didSet`, so a HEAD response keeps the `Content-Length` it advertised.
+        return ClientResponse(
+            status: response.status,
+            headers: response.headers,
+            body: try await ResponseBodyCollection.collect.apply(to: response.body),
+            maxBodySize: clientRequest.maxResponseBodySize,
+            contentConfiguration: self.contentConfiguration
+        )
     }
 }
 

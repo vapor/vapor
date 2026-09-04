@@ -133,6 +133,11 @@ struct VaporTestingTests {
                 let response = try await client.get("/echo?name=vapor")
                 #expect(response.status == .ok)
                 try #expect(await response.content.decode(String.self) == "/echo|name=vapor")
+
+                // Same normalisation as the live client: a bare path is rooted before routing.
+                let noLeadingSlash = try await client.get("echo?name=vapor")
+                #expect(noLeadingSlash.status == .ok)
+                try #expect(await noLeadingSlash.content.decode(String.self) == "/echo|name=vapor")
             }
         }
     }
