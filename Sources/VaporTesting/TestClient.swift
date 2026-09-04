@@ -106,13 +106,14 @@ extension TestClient {
     /// only routes on the path anyway.
     package func resolve(_ url: URI) -> URI {
         guard url.host == nil, let base = self.baseURL else { return url }
-        return URI(
-            scheme: base.scheme,
-            host: base.host,
-            port: base.port,
-            path: url.path,
-            query: url.query,
-            fragment: url.fragment
-        )
+        // Update URL components so we can send a real request. The path is kept as parsed because it is already percent-encoded
+        var resolved = url
+        if !resolved.path.hasPrefix("/") {
+            resolved.path = "/" + resolved.path
+        }
+        resolved.scheme = base.scheme
+        resolved.host = base.host
+        resolved.port = base.port
+        return resolved
     }
 }
