@@ -37,41 +37,36 @@ extension Application {
                 var request = request
                 request.url.host = self.hostname
                 request.url.port = port
-                return try await makeRequest(request)
-            }
-        }
-
-        package func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
-            let client = HTTPClient.shared
-
-            do {
-                var path = request.url.path
-                path = path.hasPrefix("/") ? path : "/\(path)"
+                let client = HTTPClient.shared
+                do {
+                    var path = request.url.path
+                    path = path.hasPrefix("/") ? path : "/\(path)"
 #warning("This needs tidying up")
-                let portToUse = request.url.port ?? self.port
-                let hostnameToUse = request.url.host ?? self.hostname
-                var url = "http://\(hostnameToUse):\(portToUse)\(path)"
-                if let query = request.url.query {
-                    url += "?\(query)"
+                    let portToUse = request.url.port ?? self.port
+                    let hostnameToUse = request.url.host ?? self.hostname
+                    var url = "http://\(hostnameToUse):\(portToUse)\(path)"
+                    if let query = request.url.query {
+                        url += "?\(query)"
+                    }
+                    var clientRequest = HTTPClientRequest(url: url)
+                    clientRequest.method = .init(request.method)
+                    clientRequest.headers = .init(request.headers)
+                    clientRequest.body = .bytes(request.body)
+                    let response = try await client.execute(clientRequest, timeout: .seconds(30))
+                    return TestingHTTPResponse(
+                        status: .init(code: Int(response.status.code)),
+                        headers: .init(response.headers, splitCookie: false),
+                        body: try await request.responseBodyCollection.apply(to: .init(stream: { writer in
+                            for try await chunk in response.body {
+                                try await writer.write(chunk.readableBytesView)
+                            }
+                        })),
+                        contentConfiguration: self.app.contentConfiguration
+                    )
+                } catch {
+                    Logger.current.info("Caught error in test", metadata: ["error": "\(String(describing: error))"])
+                    throw error
                 }
-                var clientRequest = HTTPClientRequest(url: url)
-                clientRequest.method = .init(request.method)
-                clientRequest.headers = .init(request.headers)
-                clientRequest.body = .bytes(request.body)
-                let response = try await client.execute(clientRequest, timeout: .seconds(30))
-                return TestingHTTPResponse(
-                    status: .init(code: Int(response.status.code)),
-                    headers: .init(response.headers, splitCookie: false),
-                    body: try await request.responseBodyCollection.apply(to: .init(stream: { writer in
-                        for try await chunk in response.body {
-                            try await writer.write(chunk.readableBytesView)
-                        }
-                    })),
-                    contentConfiguration: self.app.contentConfiguration
-                )
-            } catch {
-                Logger.current.info("Caught error in test", metadata: ["error": "\(String(describing: error))"])
-                throw error
             }
         }
     }
@@ -86,10 +81,6 @@ extension Application {
         package func performTest(
             request: TestingHTTPRequest
         ) async throws -> TestingHTTPResponse {
-            try await makeRequest(request)
-        }
-
-        package func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
             // Captured before `request` is shadowed by the `Request` built below.
             let collection = request.responseBodyCollection
             var headers = request.headers

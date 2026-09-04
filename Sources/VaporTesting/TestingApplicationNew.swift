@@ -46,7 +46,7 @@ extension VaporTestingRunner {
         )
         try await beforeRequest(&request)
         do {
-            return try await self.tester.makeRequest(request)
+            return try await self.tester.performTest(request: request)
         } catch {
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error

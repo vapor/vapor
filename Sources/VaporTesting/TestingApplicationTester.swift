@@ -6,7 +6,6 @@ public import HTTPTypes
 
 public protocol TestingApplicationTester: Sendable {
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
-    func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse
 }
 
 extension Application.Live: TestingApplicationTester {}
@@ -25,10 +24,6 @@ extension Application: TestingApplicationTester {
 
     public func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
         try await self.testing().performTest(request: request)
-    }
-
-    public func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
-        try await self.testing().makeRequest(request)
     }
 
     public func testing<T>(_ method: Method = .inMemory, _ body: (any TestClient) async throws -> T) async throws -> T {
@@ -118,7 +113,7 @@ extension TestingApplicationTester {
         )
         try await beforeRequest(&request)
         do {
-            return try await self.makeRequest(request)
+            return try await self.performTest(request: request)
         } catch {
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
             throw error
