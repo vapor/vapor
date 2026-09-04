@@ -41,7 +41,7 @@ struct InMemoryTestClient: TestClient {
 struct LiveTestClient: TestClient {
     let app: Application
     let address: SocketAddress
-//    let options: LiveClientOptions
+    let options: LiveClientOptions
     let http: HTTPClient
 
     var port: Int { self.address.port! }
@@ -56,9 +56,19 @@ struct LiveTestClient: TestClient {
     func send(_ clientRequest: ClientRequest) async throws -> ClientResponse {
         var request = clientRequest
         request.url = clientRequest.url
-//        request.timeout = self.options.timeout
+        request.timeout = self.options.timeout
 
         return try await VaporHTTPClient(http: self.http, contentConfiguration: self.contentConfiguration)
             .send(request)
     }
 }
+
+//extension TestClient {
+//    /// A bare path resolves against the app; a full URL is left alone so a test can
+//    /// deliberately point at somewhere else (a stub, a second app).
+//    package func resolve(_ url: URI) -> URI {
+//        guard url.host == nil, let base = self.baseURL else { return url }
+//        return URI(scheme: base.scheme, host: base.host, port: base.port,
+//                   path: url.path, query: url.query, fragment: url.fragment)
+//    }
+//}

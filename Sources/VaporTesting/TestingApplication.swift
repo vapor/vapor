@@ -18,6 +18,7 @@ extension Application {
         /// Default option without a socket. Calls the responder directly
         case inMemory
         /// Runs a real server and binds to the specified port and address
+        #warning("These can be removed")
         case running(hostname: String = "127.0.0.1", port: Int = 0)
     }
 
