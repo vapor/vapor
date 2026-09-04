@@ -30,6 +30,21 @@ extension Application: TestingApplicationTester {
     public func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
         try await self.testing().makeRequest(request)
     }
+
+    public func testing<T>(_ method: Method = .inMemory, _ body: (any TestClient) async throws -> T) async throws -> T {
+        try await self.boot()
+        switch method {
+        case .inMemory:
+            return try await inMemoryTesting(body)
+        case .running(let hostname, let port):
+            fatalError()
+        }
+    }
+
+    private func inMemoryTesting<T>(_ body: (any TestClient) async throws -> T) async throws -> T {
+        let client = InMemoryTestClient(app: self, responder: self.makeResponder())
+        return try await body(client)
+    }
 }
 
 extension TestingApplicationTester {

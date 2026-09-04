@@ -40,20 +40,20 @@ struct AuthenticationTests {
                 return try req.auth.require(Test.self).name
             }
 
-            try await app.testing().test(.get, "/test") { res in
-                #expect(res.status == .unauthorized)
-                #expect(res.headers[.wwwAuthenticate] == #"Bearer realm="Vapor""#)
-            }
+            try await app.testing { client in
+                let unauthorisedResponse = try await client.get("/test")
+                #expect(unauthorisedResponse.status == .unauthorized)
+                #expect(unauthorisedResponse.headers[.wwwAuthenticate] == #"Bearer realm="Vapor""#)
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "Bearer test"]) { res in
-                #expect(res.status == .ok)
-                try #expect(await res.body.requireString() == "Vapor")
-                #expect(res.headers[.wwwAuthenticate] == nil)
-            }
+                let authorisedResponse = try await client.get("/test", headers: [.authorization: "Bearer test"])
+                #expect(authorisedResponse.status == .ok)
+                try #expect(await authorisedResponse.content.decode(String.self) == "Vapor")
+                #expect(authorisedResponse.headers[.wwwAuthenticate] == nil)
 
-            try await app.testing().test(.get, "/test", headers: [.authorization: "bearer test"]) { res in
-                #expect(res.status == .ok)
-                try #expect(await res.body.requireString() == "Vapor")
+                let lowerCaseAuthorisedResponse = try await client.get("/test", headers: [.authorization: "bearer test"])
+                #expect(lowerCaseAuthorisedResponse.status == .ok)
+                try #expect(await lowerCaseAuthorisedResponse.content.decode(String.self) == "Vapor")
+                #expect(lowerCaseAuthorisedResponse.headers[.wwwAuthenticate] == nil)
             }
         }
     }
