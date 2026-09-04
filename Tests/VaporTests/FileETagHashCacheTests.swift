@@ -103,7 +103,7 @@ struct FileETagHashCacheTests {
                 try await app.fileio.streamFile(at: otherFile, for: req, advancedETagComparison: true)
             }
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 let first = try await runner.sendRequest(.get, "/file-stream")
                 #expect(first.status == .ok)
                 #expect(await app.fileETagHashCache.count == 1)

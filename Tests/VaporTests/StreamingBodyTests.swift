@@ -521,7 +521,7 @@ struct StreamingBodyTests {
             // Larger than the ~2000 bytes the issue said was enough to trigger the crash.
             let sent = Data(String(repeating: "x", count: 100_000).utf8)
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 var headers = HTTPFields()
                 headers.contentType = .plainText
                 let res = try await runner.sendRequest(
@@ -816,7 +816,7 @@ struct StreamingBodyTests {
                 return response
             }
 
-            try await app.testing(method: .running).test(.get, "/proxied") { res in
+            try await app.testing(method: .running()).test(.get, "/proxied") { res in
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "hello world")
             }
@@ -880,7 +880,7 @@ struct StreamingBodyTests {
                 }))
             }
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 // Default: collected. A test that only asserts on headers still drains the request,
                 // so the server is never left writing into a cancelled response.
                 let collected = try await runner.sendRequest(.get, "/stream")

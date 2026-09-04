@@ -122,7 +122,7 @@ struct ClientTests {
                 return response.description
             }
 
-            try await app.testing(method: .running).test(.get, "/client") { res in
+            try await app.testing(method: .running()).test(.get, "/client") { res in
                 #expect(res.status.code == 500)
             }
         }
@@ -207,7 +207,7 @@ struct ClientTests {
                 )
             }
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 let res = try await runner.sendRequest(.get, "/proxied")
                 #expect(res.status == .created)
                 try #expect(await res.body.requireString() == "hello world")
@@ -226,7 +226,7 @@ struct ClientTests {
                 }))
             }
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 let res = try await runner.sendRequest(.get, "/proxied")
                 try #expect(await res.body.requireString() == "streamed")
                 #expect(res.headers[.contentLength] == nil)
@@ -249,7 +249,7 @@ struct ClientTests {
                 return ClientResponse(status: .ok, headers: headers, body: .init(string: "body"))
             }
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 let res = try await runner.sendRequest(.get, "/proxied")
                 try #expect(await res.body.requireString() == "body")
 

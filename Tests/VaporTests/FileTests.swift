@@ -31,7 +31,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.get, "/file-stream") { res in
+            try await app.testing(method: .running()).test(.get, "/file-stream") { res in
                 let test = "the quick brown fox"
                 #expect(res.headers[.eTag] != nil)
                 try #expect(await res.body.requireString().contains(test))
@@ -48,7 +48,7 @@ struct FileTests {
 
             var headers = HTTPFields()
             headers[.connection] = "close"
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res in
+            try await app.testing(method: .running()).test(.get, "/file-stream", headers: headers) { res in
                 let test = "the quick brown fox"
                 #expect(res.headers[.eTag] != nil)
                 try #expect(await res.body.requireString().contains(test))
@@ -74,7 +74,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.get, "/file-stream") { res in
+            try await app.testing(method: .running()).test(.get, "/file-stream") { res in
                 #expect(res.status == .internalServerError)
             }
         }
@@ -93,7 +93,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.get, "/file-stream") { res async throws in
+            try await app.testing(method: .running()).test(.get, "/file-stream") { res async throws in
                 let fileData = try Data(contentsOf: URL(fileURLWithPath: #filePath))
                 let digest = SHA256.hash(data: fileData)
                 let eTag = res.headers[.eTag]
@@ -111,7 +111,7 @@ struct FileTests {
 
             #expect(await app.fileETagHashCache.entry(forFileAt: #filePath) == nil)
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 let first = try await runner.sendRequest(.get, "/file-stream")
                 let firstETag = try #require(first.headers[.eTag])
 
@@ -138,7 +138,7 @@ struct FileTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.get, "/file-stream") { res in
+            try await app.testing(method: .running()).test(.get, "/file-stream") { res in
                 guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(#filePath)) else {
                     Issue.record("Missing File Info")
                     return
@@ -164,7 +164,7 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res in
+            try await app.testing(method: .running()).test(.get, "/file-stream", headers: headerRequest) { res in
                 let contentRange = res.headers[.contentRange]
                 let contentLength = res.headers[.contentLength]
 
@@ -194,7 +194,7 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res in
+            try await app.testing(method: .running()).test(.get, "/file-stream", headers: headerRequest) { res in
 
                 let contentRange = res.headers[.contentRange]
                 let contentLength = res.headers[.contentLength]
@@ -223,7 +223,7 @@ struct FileTests {
 
             var headerRequest = HTTPFields()
             headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headerRequest) { res in
+            try await app.testing(method: .running()).test(.get, "/file-stream", headers: headerRequest) { res in
 
                 let contentRange = res.headers[.contentRange]
                 let contentLength = res.headers[.contentLength]
@@ -252,7 +252,7 @@ struct FileTests {
 
             var headers = HTTPFields()
             headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
-            try await app.testing(method: .running).test(.get, "/file-stream", headers: headers) { res in
+            try await app.testing(method: .running()).test(.get, "/file-stream", headers: headers) { res in
                 #expect(res.status == .partialContent)
 
                 #expect(res.headers[.contentLength] == "1")
@@ -286,7 +286,7 @@ struct FileTests {
             app.get("file-stream") { req in
                 try await app.fileio.streamFile(at: path, for: req)
             }
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 try await body(runner, contents)
             }
         }
@@ -466,7 +466,7 @@ struct FileTests {
             app.get("file-stream") { req in
                 try await app.fileio.streamFile(at: path, for: req)
             }
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 for range in [HTTPFields.Range.Value.start(value: 0), .within(start: 0, end: 0), .tail(value: 10)] {
                     var headers = HTTPFields()
                     headers.range = .init(unit: .bytes, ranges: [range])
@@ -490,7 +490,7 @@ struct FileTests {
         try await withApp { app in
             app.middleware.use(FileMiddleware(publicDirectory: directory.path, etagCache: app.fileETagHashCache))
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 var headers = HTTPFields()
                 headers.range = .init(unit: .bytes, ranges: [.within(start: 64, end: size * 2)])
                 let clamped = try await runner.sendRequest(.get, "/Utilities/long-test-file.txt", headers: headers)
@@ -701,7 +701,7 @@ struct FileTests {
 
             let size = try Data(contentsOf: URL(fileURLWithPath: #filePath)).count
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 // An end of `Int.max` must not overflow when the served length is worked out. Since
                 // vapor#2991 it is clamped to the last byte rather than rejected, so what this pins
                 // is that the arithmetic stays safe on the lenient path too.
@@ -795,7 +795,7 @@ struct FileTests {
                 }
             }
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 let res = try await runner.sendRequest(.head, "/file-stream")
                 #expect(res.status == .ok)
                 // The length is advertised even though no body follows it.
@@ -816,7 +816,7 @@ struct FileTests {
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
 
-            try await app.test(method: .running) { runner in
+            try await app.test(method: .running()) { runner in
                 let get = try await runner.sendRequest(.get, "/Utilities/foo.txt")
                 #expect(get.status == .ok)
                 try #expect(await (get.body.data()?.count ?? 0) > 0)

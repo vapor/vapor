@@ -894,7 +894,7 @@ struct ContentTests {
                 return body.name
             }
 
-            try await app.testing(method: .running).test(.post, "/json", beforeRequest: { req in
+            try await app.testing(method: .running()).test(.post, "/json", beforeRequest: { req in
                 try req.content.encode(Message(name: "Vapor"))
             }) { res in
                 #expect(res.status == .ok)

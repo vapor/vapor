@@ -15,19 +15,10 @@ import Foundation
 
 extension Application {
     public enum Method {
+        /// Default option without a socket. Calls the responder directly
         case inMemory
-        /// Runs the app on an ephemeral port.
-        ///
-        /// Bound by IP rather than by name: `localhost` resolves to `::1` before `127.0.0.1`, so a
-        /// name here makes every test that uses it depend on the host's IPv6 loopback. Use
-        /// ``running(hostname:port:)`` to bind something else.
-        public static var running: Method {
-            return .running(hostname: "127.0.0.1", port: 0)
-        }
-        public static func running(port: Int) -> Self {
-            .running(hostname: "127.0.0.1", port: port)
-        }
-        case running(hostname: String, port: Int)
+        /// Runs a real server and binds to the specified port and address
+        case running(hostname: String = "127.0.0.1", port: Int = 0)
     }
 
     package struct Live: Sendable {

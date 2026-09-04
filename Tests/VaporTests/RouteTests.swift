@@ -266,7 +266,7 @@ struct RouteTests {
                 return "hi"
             }
 
-            try await app.testing(method: .running).test(.head, "/hello") { res in
+            try await app.testing(method: .running()).test(.head, "/hello") { res in
                 #expect(res.status == .ok)
                 #expect(res.headers[.contentLength] == "2")
                 // The body has to be collected before it can be counted: an uncollected stream
@@ -287,7 +287,7 @@ struct RouteTests {
                 return Response(status: .found)
             }
 
-            try await app.testing(method: .running).test(.head, "/hello") { res in
+            try await app.testing(method: .running()).test(.head, "/hello") { res in
                 #expect(res.status == .found)
                 #expect(res.headers[.contentLength] == "0")
                 try #expect(await res.body.data()?.count == 0)
@@ -322,7 +322,7 @@ struct RouteTests {
                 throw Abort(.noContent)
             }
 
-            try await app.testing(method: .running).test(.get, "/no-content") { res in
+            try await app.testing(method: .running()).test(.get, "/no-content") { res in
                 #expect(res.status.code == 204)
                 try #expect(await res.body.data()?.count == 0)
             }
@@ -339,7 +339,7 @@ struct RouteTests {
                 "b"
             }
 
-            try await app.test(method: .running) { testApp in
+            try await app.test(method: .running()) { testApp in
                 let rootResponse = try await testApp.sendRequest(.get, "/api/addresses")
                 try #expect(await rootResponse.body.requireString() == "a")
 
@@ -405,19 +405,19 @@ struct RouteTests {
 
             var buffer = ByteBufferAllocator().buffer(capacity: 0)
             buffer.writeBytes(Array(repeating: 0, count: 500_000))
-            try await app.testing(method: .running).test(.post, "/default", body: buffer) { res in
+            try await app.testing(method: .running()).test(.post, "/default", body: buffer) { res in
                 #expect(res.status == .contentTooLarge)
             }
 
-            try await app.testing(method: .running).test(.post, "/1kb", body: buffer) { res in
+            try await app.testing(method: .running()).test(.post, "/1kb", body: buffer) { res in
                 #expect(res.status == .contentTooLarge)
             }
 
-            try await app.testing(method: .running).test(.post, "/1mb", body: buffer) { res in
+            try await app.testing(method: .running()).test(.post, "/1mb", body: buffer) { res in
                 #expect(res.status == .ok)
             }
 
-            try await app.testing(method: .running).test(.post, "/1gb", body: buffer) { res in
+            try await app.testing(method: .running()).test(.post, "/1gb", body: buffer) { res in
                 #expect(res.status == .ok)
             }
         }
@@ -434,7 +434,7 @@ struct RouteTests {
 //                [testMarkerHeaderKey: testMarkerHeaderValue]
 //            }, onUpgrade: { _, _ in })
 //
-//            try await app.testing(method: .running).test(.get, "customshouldupgrade", beforeRequest: { req async in
+//            try await app.testing(method: .running()).test(.get, "customshouldupgrade", beforeRequest: { req async in
 //                req.headers[.secWebSocketVersion] = "13"
 //                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
 //                req.headers[.connection] = "Upgrade"
@@ -453,7 +453,7 @@ struct RouteTests {
                 "\(try req.parameters.require("foo"))\(try req.parameters.require("bar"))"
             }
 
-            try await app.test(method: .running) { testApp in
+            try await app.test(method: .running()) { testApp in
                 let happyPath = try await testApp.sendRequest(.get, "/foop/barp/buz")
                 try #expect(await happyPath.body.requireString() == "foopbarp")
                 #expect(happyPath.status == .ok)
@@ -516,7 +516,7 @@ struct RouteTests {
                 return "おめでとう"
             }
 
-            try await app.test(method: .running) { testApp in
+            try await app.test(method: .running()) { testApp in
                 let emoticon = try await testApp.sendRequest(.get, "/Good👍")
                 try #expect(await emoticon.body.requireString() == "👍")
                 #expect(emoticon.status == .ok)
