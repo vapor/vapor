@@ -25,13 +25,6 @@ struct VaporTestingTests {
                 return "decoded!"
             }
 
-            try await app.testing().test(.post, "/decode") { req in
-                try req.content.encode(FooContent())
-            } afterResponse: { res in
-                #expect(res.status == .ok)
-                try #expect(await res.body.string()?.contains("decoded!") ?? false)
-            }
-
             app.routes.post("decode-bad-header") { req async throws -> String in
                 #expect(req.headers.contentType == .audio)
                 await #expect(
@@ -50,12 +43,19 @@ struct VaporTestingTests {
                 return "decoded!"
             }
 
-            try await app.testing().test(.post, "/decode-bad-header") { req in
-                try req.content.encode(FooContent())
-                req.headers.contentType = .audio
-            } afterResponse: { res in
-                #expect(res.status == .ok)
-                try #expect(await res.body.string()?.contains("decoded!") ?? false)
+            try await app.testing { client in
+                let decoded = try await client.post("/decode", content: FooContent())
+                #expect(decoded.status == .ok)
+                try #expect(await decoded.body.requireString().contains("decoded!"))
+
+                // The content type is overridden after encoding, so the handler sees a body it
+                // can only decode by naming the format explicitly.
+                let badHeader = try await client.post("/decode-bad-header") { req in
+                    try req.content.encode(FooContent())
+                    req.headers.contentType = .audio
+                }
+                #expect(badHeader.status == .ok)
+                try #expect(await badHeader.body.requireString().contains("decoded!"))
             }
         }
     }
@@ -63,7 +63,8 @@ struct VaporTestingTests {
     @Test
     func withAppConfiguration() async throws {
         try await withApp { app in
-            try await app.testing().test(.get, "hello") { res in
+            try await app.testing { client in
+                let res = try await client.get("/hello")
                 #expect(res.status == .notFound)
             }
         }
@@ -75,7 +76,8 @@ struct VaporTestingTests {
         }
 
         try await withApp(configure: configure) { app in
-            try await app.testing().test(.get, "hello") { res in
+            try await app.testing { client in
+                let res = try await client.get("/hello")
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Hello, world!")
             }
