@@ -28,7 +28,7 @@ public import Logging
 ///   - test: A closure which performs your actual test with the configured application.
 @discardableResult
 public func withApp<T>(
-    address: BindAddress? = nil,
+    environment: Environment = .testing,
     configuration: ServerConfiguration = .init(),
     configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
     logger: Logger = Logger.current,
@@ -39,10 +39,7 @@ public func withApp<T>(
     MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
     InstrumentationSystem.bootstrapInternal(TaskLocalTracingSystemWrapper())
     return try await withLogger(logger) { _ in
-        let app = try await Application(.testing, configuration: configuration, configReader: configReader, services: services)
-        if let address {
-            app.serverConfiguration.address = address
-        }
+        let app = try await Application(environment, configuration: configuration, configReader: configReader, services: services)
         let result: T
         do {
             try await configure?(app)
