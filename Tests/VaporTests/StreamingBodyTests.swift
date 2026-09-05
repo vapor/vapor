@@ -521,19 +521,21 @@ struct StreamingBodyTests {
             // Larger than the ~2000 bytes the issue said was enough to trigger the crash.
             let sent = Data(String(repeating: "x", count: 100_000).utf8)
 
-            try await app.test(method: .running()) { runner in
+            try await app.testing(.running) { client in
                 var headers = HTTPFields()
                 headers.contentType = .plainText
-                let res = try await runner.sendRequest(
-                    .post, "/echo", headers: headers, body: ByteBuffer(bytes: sent))
+                let res = try await client.post("/echo", headers: headers) { req in
+                    req.body = ByteBuffer(bytes: sent)
+                }
 
                 #expect(res.status == .ok)
                 #expect(seen.withLockedValue { $0 } == sent.count, "middleware did not see the whole body")
                 #expect(try await res.body.data() == sent)
 
                 // The connection survives: a second request over it is served normally.
-                let again = try await runner.sendRequest(
-                    .post, "/echo", headers: headers, body: ByteBuffer(bytes: sent))
+                let again = try await client.post("/echo", headers: headers) { req in
+                    req.body = ByteBuffer(bytes: sent)
+                }
                 #expect(again.status == .ok)
                 #expect(try await again.body.data() == sent)
             }

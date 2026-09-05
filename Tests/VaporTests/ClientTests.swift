@@ -208,8 +208,8 @@ struct ClientTests {
                 )
             }
 
-            try await app.test(method: .running()) { runner in
-                let res = try await runner.sendRequest(.get, "/proxied")
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
                 #expect(res.status == .created)
                 try #expect(await res.body.requireString() == "hello world")
                 // A declared length survives the proxy instead of being re-framed as chunked.
@@ -227,8 +227,8 @@ struct ClientTests {
                 }))
             }
 
-            try await app.test(method: .running()) { runner in
-                let res = try await runner.sendRequest(.get, "/proxied")
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
                 try #expect(await res.body.requireString() == "streamed")
                 #expect(res.headers[.contentLength] == nil)
             }
@@ -250,8 +250,8 @@ struct ClientTests {
                 return ClientResponse(status: .ok, headers: headers, body: .init(string: "body"))
             }
 
-            try await app.test(method: .running()) { runner in
-                let res = try await runner.sendRequest(.get, "/proxied")
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
                 try #expect(await res.body.requireString() == "body")
 
                 #expect(res.headers[.upgrade] == nil)
