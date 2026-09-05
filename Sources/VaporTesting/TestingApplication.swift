@@ -1,12 +1,4 @@
-import AsyncHTTPClient
 public import Vapor
-import NIOPosix
-import NIOCore
-import NIOFoundationEssentialsCompat
-import NIOHTTPTypesHTTP1
-import Logging
-import NIOHTTP1
-import HTTPTypes
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else

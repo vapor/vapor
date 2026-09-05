@@ -1,8 +1,6 @@
-#warning("This should be internal")
-public import NIOCore
+import NIOCore
 public import Testing
 public import Vapor
-public import HTTPTypes
 import ServiceLifecycle
 import AsyncHTTPClient
 
