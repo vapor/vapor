@@ -14,11 +14,11 @@ struct AuthMiddlewareIntegrationTests {
         try await withApp { app in
             try await app.register(collection: AuthTestController())
 
-            try await app.testing().test(
-                .get,
-                "/api/auth/me",
-                headers: [.authorization: "Bearer test-token"]
-            ) { res in
+            try await app.testing { client in
+                let res = try await client.get(
+                    "/api/auth/me",
+                    headers: [.authorization: "Bearer test-token"]
+                )
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
             }
@@ -30,7 +30,8 @@ struct AuthMiddlewareIntegrationTests {
         try await withApp { app in
             try await app.register(collection: AuthTestController())
 
-            try await app.testing().test(.get, "/api/auth/me") { res in
+            try await app.testing { client in
+                let res = try await client.get("/api/auth/me")
                 #expect(res.status == .unauthorized)
             }
         }
@@ -41,11 +42,11 @@ struct AuthMiddlewareIntegrationTests {
         try await withApp { app in
             try await app.register(collection: AuthTestController())
 
-            try await app.testing().test(
-                .post,
-                "/api/auth/users/42/promote",
-                headers: [.authorization: "Bearer test-token"]
-            ) { res in
+            try await app.testing { client in
+                let res = try await client.post(
+                    "/api/auth/users/42/promote",
+                    headers: [.authorization: "Bearer test-token"]
+                )
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor promoted 42")
             }
@@ -57,7 +58,8 @@ struct AuthMiddlewareIntegrationTests {
         try await withApp { app in
             try await app.register(collection: AuthTestController())
 
-            try await app.testing().test(.get, "/api/auth/feed") { res in
+            try await app.testing { client in
+                let res = try await client.get("/api/auth/feed")
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "anonymous")
             }
@@ -69,11 +71,11 @@ struct AuthMiddlewareIntegrationTests {
         try await withApp { app in
             try await app.register(collection: AuthTestController())
 
-            try await app.testing().test(
-                .get,
-                "/api/auth/feed",
-                headers: [.authorization: "Bearer test-token"]
-            ) { res in
+            try await app.testing { client in
+                let res = try await client.get(
+                    "/api/auth/feed",
+                    headers: [.authorization: "Bearer test-token"]
+                )
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "Vapor")
             }
@@ -85,21 +87,19 @@ struct AuthMiddlewareIntegrationTests {
         try await withApp { app in
             try await app.register(collection: AuthTestController())
 
-            try await app.testing().test(
-                .get,
-                "/api/auth/admin",
-                headers: [.authorization: "Bearer test-token"]
-            ) { res in
-                #expect(res.status == .forbidden)
-            }
+            try await app.testing { client in
+                let forbidden = try await client.get(
+                    "/api/auth/admin",
+                    headers: [.authorization: "Bearer test-token"]
+                )
+                #expect(forbidden.status == .forbidden)
 
-            try await app.testing().test(
-                .get,
-                "/api/auth/admin",
-                headers: [.authorization: "Bearer admin-token"]
-            ) { res in
-                #expect(res.status == .ok)
-                try #expect(await res.body.requireString() == "Admin")
+                let allowed = try await client.get(
+                    "/api/auth/admin",
+                    headers: [.authorization: "Bearer admin-token"]
+                )
+                #expect(allowed.status == .ok)
+                try #expect(await allowed.body.requireString() == "Admin")
             }
         }
     }

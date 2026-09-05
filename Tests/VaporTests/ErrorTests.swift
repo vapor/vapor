@@ -95,19 +95,17 @@ struct ErrorTests {
                 var reason: String
             }
 
-            try await app.testing().test(.get, "foo") { res in
-                #expect(res.status == .internalServerError)
-                let abort = try await res.content.decode(AbortResponse.self)
+            try await app.testing { client in
+                let getRes = try await client.get("foo")
+                #expect(getRes.status == .internalServerError)
+                let abort = try await getRes.content.decode(AbortResponse.self)
                 #expect(abort.reason == "Foo")
-            }
 
-            try await app.testing().test(.post, "foo", beforeRequest: { req in
-                try req.content.encode(Foo(bar: 42))
-            }, afterResponse: { res in
-                #expect(res.status == .internalServerError)
-                let abort = try await res.content.decode(AbortResponse.self)
-                #expect(abort.reason == "After decode")
-            })
+                let postRes = try await client.post("foo", content: Foo(bar: 42))
+                #expect(postRes.status == .internalServerError)
+                let postAbort = try await postRes.content.decode(AbortResponse.self)
+                #expect(postAbort.reason == "After decode")
+            }
         }
     }
 
@@ -120,7 +118,8 @@ struct ErrorTests {
                 throw Abort(.internalServerError, reason: "Foo")
             }
 
-            try await app.testing().test(.get, "foo") { res in
+            try await app.testing { client in
+                let res = try await client.get("/foo")
                 #expect(res.status == HTTPResponse.Status.internalServerError)
                 let option1 = "error=true&reason=Foo"
                 let option2 = "reason=Foo&error=true"

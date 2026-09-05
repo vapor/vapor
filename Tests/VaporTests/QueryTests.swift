@@ -117,7 +117,8 @@ struct QueryTests {
                 return "hi"
             }
 
-            try await app.testing().test(.get, "/todos?a=b") { res in
+            try await app.testing { client in
+                let res = try await client.get("/todos?a=b")
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "hi")
             }
@@ -150,7 +151,8 @@ struct QueryTests {
             }
 
             let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3"
-            try await app.testing().test(.get, "/urlencodedform?\(data)") { res in
+            try await app.testing { client in
+                let res = try await client.get("/urlencodedform?\(data)")
                 #expect(res.status.code == 200)
             }
         }
@@ -182,7 +184,8 @@ struct QueryTests {
             }
 
             let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-            try await app.testing().test(.get, "/urlencodedform?\(data)") { res in
+            try await app.testing { client in
+                let res = try await client.get("/urlencodedform?\(data)")
                 #expect(res.status.code == 200)
             }
         }
@@ -199,7 +202,8 @@ struct QueryTests {
                 return res
             }
 
-            try await app.testing().test(.get, "/custom-encode") { res in
+            try await app.testing { client in
+                let res = try await client.get("/custom-encode")
                 try #expect(await res.body.requireString() == """
             {
               "hello" : "world"
@@ -228,7 +232,10 @@ struct QueryTests {
             headers[.contentLength] = body.readableBytes.description
             headers.contentType = .json
 
-            try await app.testing().test(.post, "/decode-fail", headers: headers, body: body) { res in
+            try await app.testing { client in
+                let res = try await client.post("/decode-fail", headers: headers) { req in
+                    req.body = body
+                }
                 #expect(res.status == .badRequest)
                 try #expect(await res.body.requireString().contains("missing"))
             }

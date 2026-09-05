@@ -9,15 +9,50 @@ import Synchronization
 extension Response {
     /// Shared consumption state for a streaming body, this ensures it's only called once and can be shared amongst copies
     final class BodyStreamState: Sendable {
-        private let cache = Mutex<Data?>(nil)
+        /// Current state of the stream to ensure that any copies are shared and to stop multiple reads and callbacks
+        private enum State {
+            /// Nothing has run the callback yet.
+            case pending
+            /// The callback ran through ``Body/withStreamingBytes(_:)``; the bytes went to that
+            /// caller and were not kept.
+            case streamed
+            /// The callback ran through ``Body/collect(max:)``; the bytes are here.
+            case collected(Data)
+        }
 
-        /// The bytes this stream produced, or `nil` if it has not been collected yet.
+        private let state = Mutex<State>(.pending)
+
+        /// The bytes this stream produced, or `nil` if it has not been collected.
         var collected: Data? {
-            self.cache.withLock { $0 }
+            self.state.withLock { state in
+                if case .collected(let data) = state { return data }
+                return nil
+            }
+        }
+
+        /// Whether the callback is still waiting to be run.
+        var isPending: Bool {
+            self.state.withLock { state in
+                if case .pending = state { return true }
+                return false
+            }
+        }
+
+        /// Claims the callback for the caller about to run it.
+        ///
+        /// - Throws: ``Body/AlreadyConsumedError`` if the stream was already read without being
+        ///   collected. Callers check ``collected`` first, so a collected stream never gets here.
+        func beginConsuming() throws {
+            try self.state.withLock { state in
+                guard case .pending = state else {
+                    throw Body.AlreadyConsumedError()
+                }
+                state = .streamed
+            }
         }
 
         func store(_ data: Data) {
-            self.cache.withLock { $0 = data }
+            self.state.withLock { $0 = .collected(data) }
         }
     }
 
@@ -65,10 +100,13 @@ extension Response {
         public func withStreamingBytes(_ body: @escaping (RawSpan) async throws -> Void) async throws {
             switch self.storage {
             case .stream(let stream):
-                // See if we're already collection so we don't run again
+                // Already collected: replay the bytes rather than running the callback again.
                 if let collected = stream.state.collected {
                     try await body(collected.span.bytes)
                 } else {
+                    // Streamed away, not kept: the callback can only run once, and a source like
+                    // a network body can't be iterated twice anyway.
+                    try stream.state.beginConsuming()
                     let scope = ResponseBodyWriterScope()
                     try await stream.callback(ForwardingBodyWriter(ForwardingStorage(body), scope: scope))
                 }
@@ -143,6 +181,18 @@ extension Response {
             case .none: return 0
             case .stream(let stream): return stream.state.collected?.count ?? stream.count
             }
+        }
+
+        /// Whether this is a stream nothing has run yet.
+        ///
+        /// `false` for every non-streaming body, and for a stream that has been collected or
+        /// streamed away. Lets a caller holding on to bodies finish off the ones nobody read
+        /// without touching the ones somebody did.
+        package var isUnconsumedStream: Bool {
+            if case .stream(let stream) = self.storage {
+                return stream.state.isPending
+            }
+            return false
         }
 
         /// The body's bytes, or `nil` if it is empty or is a stream nothing has collected.
@@ -220,6 +270,7 @@ extension Response {
                 if let max, let declared = stream.count, declared > max {
                     throw Abort(.contentTooLarge)
                 }
+                try stream.state.beginConsuming()
                 let initialCapacity = stream.count ?? 0
                 let collected = CollectingStorage(capacity: initialCapacity, max: max)
                 let scope = ResponseBodyWriterScope()
@@ -302,6 +353,25 @@ extension Response {
             public var status: HTTPResponse.Status { .internalServerError }
             public var reason: String {
                 "A streaming response body cannot declare a negative length (got \(count)). Pass `nil` when the length is not known in advance."
+            }
+            public var description: String { self.reason }
+        }
+
+        /// Thrown when a streaming body is read a second time after being streamed away.
+        ///
+        /// A stream's callback runs once. ``collect(max:)`` keeps the bytes, so every later read
+        /// replays them; ``withStreamingBytes(_:)`` hands them to its caller and keeps nothing,
+        /// so there is nothing left to read - and a source like a network body cannot be iterated
+        /// again. Collect first if the bytes are needed more than once.
+        ///
+        /// Conforms to ``AbortError`` so a handler that lets it propagate fails that one request
+        /// rather than the process.
+        public struct AlreadyConsumedError: Error, Equatable, AbortError, CustomStringConvertible {
+            public init() {}
+
+            public var status: HTTPResponse.Status { .internalServerError }
+            public var reason: String {
+                "A streaming response body was already read with `withStreamingBytes` and cannot be read again. Use `collect()` first if the bytes are needed more than once."
             }
             public var description: String { self.reason }
         }
