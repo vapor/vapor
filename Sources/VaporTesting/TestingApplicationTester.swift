@@ -6,17 +6,7 @@ public import HTTPTypes
 import ServiceLifecycle
 import AsyncHTTPClient
 
-public protocol TestingApplicationTester: Sendable {
-
-}
-
-extension Application.Live: TestingApplicationTester {}
-extension Application.InMemory: TestingApplicationTester {}
-
-extension Application: TestingApplicationTester {
-
-
-
+extension Application {
     public func testing<T>(_ method: Method = .inMemory, options: LiveTestOptions = .live, _ body: (any TestClient) async throws -> T) async throws -> T {
         try await self.boot()
         switch method {
