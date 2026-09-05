@@ -19,21 +19,3 @@ package enum TestErrors: Error {
     case missingPort
     case missingHostname
 }
-
-
-extension ResponseBodyCollection {
-    /// Resolves a response body according to this policy.
-    ///
-    /// `.collect` reads it up front, so the body handed to a test is an ordinary in-memory one and
-    /// the request completes rather than being cancelled when nothing reads it. `.stream` hands it
-    /// over untouched.
-    func apply(to body: Response.Body) async throws -> Response.Body {
-        switch self {
-        case .stream:
-            return body
-        case .collect(let max):
-            var body = body
-            return .init(data: try await body.collect(max: max) ?? Data())
-        }
-    }
-}
