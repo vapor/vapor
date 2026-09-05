@@ -107,7 +107,6 @@ public func withRunningApp<T: Sendable>(
             group.cancelAll()
             throw TestErrors.portNotSet
         }
-        logger.notice("server bound", metadata: ["test": "\(test)", "port": "\(port)"])
 
         // Run the test block
         let blockStart = ContinuousClock.now
@@ -125,14 +124,10 @@ public func withRunningApp<T: Sendable>(
             group.cancelAll()
             throw error
         }
-        logger.notice(
-            "test block finished, shutting down server",
-            metadata: ["test": "\(test)", "duration": "\(ContinuousClock.now - blockStart)"])
 
         // Cancel the server task (triggers graceful shutdown). The implicit await on the child
         // task at the end of this scope is where a server that won't stop shows up as a hang, so
         // bracket it: a "shutting down" with no matching "shut down" line names the culprit.
-        let shutdownStart = ContinuousClock.now
         group.cancelAll()
         do {
             for try await _ in group {}
@@ -140,9 +135,6 @@ public func withRunningApp<T: Sendable>(
             // The server task finishing in `CancellationError` is the expected shutdown path, not
             // a test failure.
         }
-        logger.notice(
-            "server shut down",
-            metadata: ["test": "\(test)", "duration": "\(ContinuousClock.now - shutdownStart)"])
         return result
     }!
 }

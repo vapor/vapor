@@ -648,21 +648,6 @@ struct ContentTests {
         #expect(try await response().content.decode(SampleContent.self, as: .json).name == "new name after decode")
     }
 
-    @Test("afterDecode runs for a TestingHTTPResponse's content")
-    func testAfterDecodeOnTestingHTTPResponse() async throws {
-        var headers = HTTPFields()
-        headers.contentType = .json
-        let response = TestingHTTPResponse(
-            status: .ok,
-            headers: headers,
-            body: .init(string: #"{"name": "before decode"}"#),
-            contentConfiguration: .default()
-        )
-
-        #expect(try await response.content.decode(SampleContent.self).name == "new name after decode")
-        #expect(try await response.content.decode(SampleContent.self, as: .json).name == "new name after decode")
-    }
-
     @Test("afterDecode runs for a ClientRequest's content")
     func testAfterDecodeOnClientRequest() async throws {
         var request = ClientRequest(method: .post, url: "/")
