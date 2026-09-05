@@ -122,7 +122,8 @@ struct ClientTests {
                 return response.description
             }
 
-            try await app.testing(method: .running()).test(.get, "/client") { res in
+            try await app.testing(.running) { client in
+                let res = try await client.get("/client")
                 #expect(res.status.code == 500)
             }
         }

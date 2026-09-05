@@ -491,9 +491,10 @@ struct MiddlewareTests {
                 return "done"
             }
 
-            try await app.testing(method: .running()).test(.get, "/testTracing?foo=bar", beforeRequest: {
-                $0.headers[.userAgent] = "test"
-            }) { response in
+            try await app.testing(.running) { client in
+                let response = try await client.get("/testTracing?foo=bar") {
+                    $0.headers[.userAgent] = "test"
+                }
                 #expect(response.status == .ok)
                 try #expect(await response.body.requireString() == "done")
 

@@ -1365,7 +1365,10 @@ struct ServerTests {
 
             var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
             buffer.writeBytes(payload)
-            try await app.testing(method: .running()).test(.post, "payload", body: buffer) { res in
+            try await app.testing(.running) { client in
+                let res = try await client.post("payload") { req in
+                    req.body = buffer
+                }
                 #expect(res.status == .ok)
             }
         }
