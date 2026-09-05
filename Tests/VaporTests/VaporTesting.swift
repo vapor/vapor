@@ -93,7 +93,7 @@ struct VaporTestingTests {
                 "\(req.url.path)|\(req.url.query ?? "")"
             }
 
-            try await app.testing(.running()) { client in
+            try await app.testing(.running) { client in
                 let base = try #require(client.baseURL)
                 #expect(base.scheme == "http")
                 #expect(base.host == "127.0.0.1")
