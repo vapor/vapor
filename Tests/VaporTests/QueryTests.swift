@@ -71,7 +71,7 @@ struct QueryTests {
     @Test("Test Query Get")
     func testQueryGet() async throws {
         try await withApp { app throws in
-            var request1 = Request(
+            let request1 = Request(
                 method: .get,
                 url: .init(string: "/path?foo=a")
             )

@@ -5,13 +5,13 @@ import ServiceLifecycle
 import AsyncHTTPClient
 
 extension Application {
-    public func testing<T>(_ method: Method = .inMemory, options: LiveTestOptions = .live, _ body: (any TestClient) async throws -> T) async throws -> T {
+    public func testing<T>(_ method: Method = .inMemory, options: LiveTestOptions = .live, sourceLocation: SourceLocation = #_sourceLocation, _ body: (any TestClient) async throws -> T) async throws -> T {
         try await self.boot()
         switch method {
         case .inMemory:
             return try await inMemoryTesting(body)
         case .running:
-            return try await liveTesting(hostname: options.hostname, port: options.port, options: options.clientOptions, body)
+            return try await liveTesting(hostname: options.hostname, port: options.port, options: options.clientOptions, sourceLocation: sourceLocation, body)
         }
     }
 
@@ -23,7 +23,13 @@ extension Application {
         return result
     }
 
-    private func liveTesting<T>(hostname: String, port: Int, options: LiveClientOptions, _ body: (any TestClient) async throws -> T) async throws -> T {
+    private func liveTesting<T>(
+        hostname: String,
+        port: Int,
+        options: LiveClientOptions,
+        sourceLocation: SourceLocation = #_sourceLocation,
+        _ body: (any TestClient) async throws -> T
+    ) async throws -> T {
         self.serverConfiguration.hostname = hostname
         self.serverConfiguration.port = port
         return try await withThrowingTaskGroup(of: Void.self) { group in
@@ -33,8 +39,7 @@ extension Application {
             let address = try await self.server.listeningAddress
             guard address.port != nil else {
                 group.cancelAll()
-#warning("Pass location")
-                Issue.record(TestErrors.missingPort, "Port was not acquired")
+                Issue.record(TestErrors.missingPort, "Port was not acquired", sourceLocation: sourceLocation)
                 throw TestErrors.missingPort
             }
             let client = LiveTestClient(app: self, address: address, options: options, http: HTTPClient.shared)
