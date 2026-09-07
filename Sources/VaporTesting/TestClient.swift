@@ -91,7 +91,9 @@ struct LiveTestClient: TestClient {
         request.url = self.resolve(clientRequest.url)
         request.timeout = self.options.timeout
 
-        let response = try await VaporHTTPClient(http: self.http, contentConfiguration: self.contentConfiguration)
+        // Don't use VaporHTTPClient here - that doesn't work if the `HTTPClient` trait is
+        // disabled
+        let response = try await AHCClient(http: self.http, contentConfiguration: self.contentConfiguration)
             .send(request)
         self.unreadBodies.track(response.body)
         return response
