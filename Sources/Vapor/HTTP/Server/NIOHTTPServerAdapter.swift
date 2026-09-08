@@ -134,20 +134,9 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             configuration: configuration
         )
 
-        let responder: any Responder
-        switch self.application.responder {
-        case .default:
-            responder = DefaultResponder(
-                routes: self.application.routes,
-                middleware: self.application.middleware.resolve(),
-            )
-        case .provided(let provided):
-            responder = provided
-        }
-
         let handler = VaporHTTPServerHandler(
             application: self.application,
-            responder: responder
+            responder: self.application.makeResponder()
         )
 
         // Run serve() in a child task so we can await listeningAddress

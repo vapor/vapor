@@ -600,7 +600,8 @@ struct RequestTests {
             }
 
             let ipV4Hostname = "127.0.0.1"
-            try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.get, "vapor/is/fun") { res in
+            try await app.testing(.running, options: .live(hostname: ipV4Hostname, port: 0)) { client in
+                let res = try await client.get("vapor/is/fun")
                 try #expect(await res.body.requireString() == ipV4Hostname)
             }
         }
@@ -628,7 +629,8 @@ struct RequestTests {
                 return req.id
             }
 
-            try await app.testing(method: .running).test(.get, "remote") { res in
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote")
                 #expect(res.status == .ok)
             }
         }
@@ -646,7 +648,8 @@ struct RequestTests {
                 return peerAddress.description
             }
 
-            try await app.testing(method: .running).test(.get, "remote") { res in
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote")
                 try #expect(await res.body.requireString() == "[IPv4]192.0.2.60:80")
             }
         }
@@ -664,7 +667,8 @@ struct RequestTests {
                 return peerAddress.description
             }
 
-            try await app.testing(method: .running).test(.get, "remote") { res in
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote")
                 try #expect(await res.body.requireString() == "[IPv4]5.6.7.8:80")
             }
         }
@@ -681,7 +685,8 @@ struct RequestTests {
             }
 
             let ipV4Hostname = "127.0.0.1"
-            try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.get, "remote") { res in
+            try await app.testing(.running, options: .live(hostname: ipV4Hostname, port: 0)) { client in
+                let res = try await client.get("remote")
                 try #expect(await res.body.requireString().contains("[IPv4]\(ipV4Hostname)"))
             }
         }
@@ -701,7 +706,8 @@ struct RequestTests {
             }
 
             let ipV4Hostname = "127.0.0.1"
-            try await app.testing(method: .running(hostname: ipV4Hostname, port: 0)).test(.get, "remote") { res in
+            try await app.testing(.running, options: .live(hostname: ipV4Hostname, port: 0)) { client in
+                let res = try await client.get("remote")
                 try #expect(await res.body.requireString() == "[IPv4]192.0.2.60:80")
             }
         }
@@ -718,11 +724,12 @@ struct RequestTests {
                 }
             }
 
-            try await app.testing(method: .running).test(.get, "remote", beforeRequest: { req in
-                req.headers[.xRequestId] = "test"
-            }, afterResponse: { res in
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote") { req in
+                    req.headers[.xRequestId] = "test"
+                }
                 try #expect(await res.body.requireString() == "test")
-            })
+            }
         }
     }
 
@@ -733,7 +740,8 @@ struct RequestTests {
                 $0.remoteAddress?.description ?? "n/a"
             }
 
-            try await app.testing(method: .running).test(.get, "remote") { res in
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote")
                 try #expect(await res.body.requireString().contains("IP"))
             }
         }

@@ -514,7 +514,7 @@ struct ServerTests {
         //                return HTTPResponse.Status.ok
         //            }
         //
-        //            try await app.testing(method: .running).test(.post, "drain", beforeRequest: { req in
+        //            try await app.testing(method: .running()).test(.post, "drain", beforeRequest: { req in
         //                try req.content.encode(["hello": "world"])
         //            }, afterResponse: { res in
         //                #expect(res.status == .ok)
@@ -550,13 +550,13 @@ struct ServerTests {
         //            var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)
         //            buffer.writeString(String(repeating: "a", count: 10_000_000))
         //
-        //            try await app.testing(method: .running).test(.post, "upload", beforeRequest: { req in
+        //            try await app.testing(method: .running()).test(.post, "upload", beforeRequest: { req in
         //                req.body = buffer
         //            }, afterResponse: { res in
         //                #expect(res.status == .badRequest)
         //            })
         //
-        //            try await app.testing(method: .running).test(.post, "upload", beforeRequest: { req in
+        //            try await app.testing(method: .running()).test(.post, "upload", beforeRequest: { req in
         //                req.body = buffer
         //                req.headers[.init("test")!] = "a"
         //            }, afterResponse: { res in
@@ -1319,7 +1319,8 @@ struct ServerTests {
                 return "123"
             }
 
-            try await app.testing().test(.get, "/ping") { res in
+            try await app.testing { client in
+                let res = try await client.get("/ping")
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "123")
             }
@@ -1364,7 +1365,10 @@ struct ServerTests {
 
             var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
             buffer.writeBytes(payload)
-            try await app.testing(method: .running).test(.post, "payload", body: buffer) { res in
+            try await app.testing(.running) { client in
+                let res = try await client.post("payload") { req in
+                    req.body = buffer
+                }
                 #expect(res.status == .ok)
             }
         }
@@ -1379,7 +1383,8 @@ struct ServerTests {
                 return try await req.content.decode(User.self)
             }
 
-            try await app.testing().test(.get, "/user") { res in
+            try await app.testing { client in
+                let res = try await client.get("/user")
                 #expect(res.status == .unsupportedMediaType)
             }
         }

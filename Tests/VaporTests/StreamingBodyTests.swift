@@ -521,19 +521,21 @@ struct StreamingBodyTests {
             // Larger than the ~2000 bytes the issue said was enough to trigger the crash.
             let sent = Data(String(repeating: "x", count: 100_000).utf8)
 
-            try await app.test(method: .running) { runner in
+            try await app.testing(.running) { client in
                 var headers = HTTPFields()
                 headers.contentType = .plainText
-                let res = try await runner.sendRequest(
-                    .post, "/echo", headers: headers, body: ByteBuffer(bytes: sent))
+                let res = try await client.post("/echo", headers: headers) { req in
+                    req.body = ByteBuffer(bytes: sent)
+                }
 
                 #expect(res.status == .ok)
                 #expect(seen.withLockedValue { $0 } == sent.count, "middleware did not see the whole body")
                 #expect(try await res.body.data() == sent)
 
                 // The connection survives: a second request over it is served normally.
-                let again = try await runner.sendRequest(
-                    .post, "/echo", headers: headers, body: ByteBuffer(bytes: sent))
+                let again = try await client.post("/echo", headers: headers) { req in
+                    req.body = ByteBuffer(bytes: sent)
+                }
                 #expect(again.status == .ok)
                 #expect(try await again.body.data() == sent)
             }
@@ -707,6 +709,38 @@ struct StreamingBodyTests {
         try #expect(await again.collect().map { String(decoding: $0, as: UTF8.self) } == "alphabeta")
     }
 
+    @Test("A stream read with withStreamingBytes cannot be read a second time")
+    func testStreamedBodyCannotBeReadTwice() async throws {
+        let runs = NIOLockedValueBox(0)
+        let body = Response.Body(stream: { writer in
+            runs.withLockedValue { $0 += 1 }
+            try await writer.write("once")
+        })
+        #expect(body.isUnconsumedStream)
+
+        // Streaming hands the bytes to the caller and keeps nothing.
+        let seen = NIOLockedValueBox(0)
+        try await body.withStreamingBytes { span in
+            let count = span.byteCount
+            seen.withLockedValue { $0 += count }
+        }
+        #expect(seen.withLockedValue { $0 } == 4)
+        #expect(!body.isUnconsumedStream)
+        #expect(body.string == nil)
+
+        // So there is nothing left for a second reader, streaming or collecting, through any copy.
+        // A clear error, not a second run of the callback: a network-backed source can't be
+        // iterated twice, and a generator running again would hide that it had.
+        await #expect(throws: Response.Body.AlreadyConsumedError.self) {
+            try await body.withStreamingBytes { _ in }
+        }
+        var copy = body
+        await #expect(throws: Response.Body.AlreadyConsumedError.self) {
+            _ = try await copy.collect()
+        }
+        #expect(runs.withLockedValue { $0 } == 1)
+    }
+
     @Test("Collecting through one copy of a body is visible from the others")
     func testCollectSharesBytesAcrossCopies() async throws {
         // A `ContentContainer` reached through a computed `content` property holds a *copy* of the
@@ -816,7 +850,8 @@ struct StreamingBodyTests {
                 return response
             }
 
-            try await app.testing(method: .running).test(.get, "/proxied") { res in
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "hello world")
             }
@@ -854,11 +889,14 @@ struct StreamingBodyTests {
 
     @Test("The collecting accessors honour their limit")
     func testCollectingAccessorsHonourMax() async throws {
-        let body = Response.Body(stream: { writer in
-            try await writer.write(String(repeating: "x", count: 1000))
-        })
-        await #expect(throws: Abort.self) { try await body.string(max: 256) }
-        await #expect(throws: Abort.self) { try await body.data(max: 256) }
+        // A failed collect still consumes the stream, so each accessor is tried on a fresh body.
+        func makeBody() -> Response.Body {
+            Response.Body(stream: { writer in
+                try await writer.write(String(repeating: "x", count: 1000))
+            })
+        }
+        await #expect(throws: Abort.self) { try await makeBody().string(max: 256) }
+        await #expect(throws: Abort.self) { try await makeBody().data(max: 256) }
     }
 
     @Test("The collecting accessors pass a buffered body straight through")
@@ -870,8 +908,8 @@ struct StreamingBodyTests {
         try #expect(await Response.Body.empty.data() == nil)
     }
 
-    @Test("Testers collect the response body by default, and can be asked not to", .timeLimit(.minutes(1)))
-    func testTesterResponseBodyCollection() async throws {
+    @Test("The test client hands back a streaming body and reads it on demand", .timeLimit(.minutes(1)))
+    func testTesterResponseBodyIsLazy() async throws {
         try await withApp { app in
             app.get("stream") { _ in
                 Response(body: .init(stream: { writer in
@@ -880,17 +918,17 @@ struct StreamingBodyTests {
                 }))
             }
 
-            try await app.test(method: .running) { runner in
-                // Default: collected. A test that only asserts on headers still drains the request,
-                // so the server is never left writing into a cancelled response.
-                let collected = try await runner.sendRequest(.get, "/stream")
-                #expect(collected.body.string == "alphabeta")
-                #expect(collected.body.count == 9)
+            try await app.testing(.running) { client in
+                // Nothing is buffered until something asks for it.
+                let response = try await client.get("/stream")
+                #expect(response.body.string == nil)
+                #expect(response.body.count == nil)
 
-                // Opted in: handed over still streaming, so the test owns consuming it.
-                let streaming = try await runner.sendRequest(.get, "/stream", responseBodyCollection: .stream)
-                #expect(streaming.body.string == nil)
-                try #expect(await streaming.body.requireString() == "alphabeta")
+                // Asking collects, and every copy of the body then sees the same bytes.
+                let copy = response.body
+                try #expect(await response.body.requireString() == "alphabeta")
+                #expect(copy.string == "alphabeta")
+                #expect(copy.count == 9)
             }
         }
     }
