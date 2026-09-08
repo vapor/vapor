@@ -477,7 +477,7 @@ struct MiddlewareTests {
             }
 
             app.grouped(
-                TracingMiddleware(serverAddress: { app.sharedAddress.withLockedValue({ $0 }) }) { attributes, _ in
+                TracingMiddleware { attributes, _ in
                     attributes["custom"] = "custom"
                 }
             ).grouped(

@@ -174,6 +174,9 @@ public struct Request: CustomStringConvertible, Sendable {
     /// This address may not represent the original address of the peer, especially if Vapor receives its requests through a reverse-proxy such as nginx.
     public let remoteAddress: SocketAddress?
 
+    /// The address the request was received on
+    public let localAddress: SocketAddress?
+
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public let parameters: Parameters
@@ -193,6 +196,7 @@ public struct Request: CustomStringConvertible, Sendable {
         headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        localAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
         requestID: String = UUID().uuidString,
         contentConfiguration: ContentConfiguration = .default(),
@@ -205,6 +209,7 @@ public struct Request: CustomStringConvertible, Sendable {
             headersNoUpdate: headers,
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
+            localAddress: localAddress,
             peerCertificateChain: peerCertificateChain,
             requestID: requestID,
             contentConfiguration: contentConfiguration,
@@ -222,6 +227,7 @@ public struct Request: CustomStringConvertible, Sendable {
         headersNoUpdate headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        localAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
         requestID: String = UUID().uuidString,
         contentConfiguration: ContentConfiguration = .default(),
@@ -248,6 +254,7 @@ public struct Request: CustomStringConvertible, Sendable {
         self.headers = headers
         self.contentConfiguration = contentConfiguration
         self.defaultMaxBodySize = defaultMaxBodySize
+        self.localAddress = localAddress
     }
 
     package init(_ other: Request, route: Route?, parameters: Parameters) {
@@ -265,5 +272,6 @@ public struct Request: CustomStringConvertible, Sendable {
         self.headers = other.headers
         self.contentConfiguration = other.contentConfiguration
         self.defaultMaxBodySize = other.defaultMaxBodySize
+        self.localAddress = other.localAddress
     }
 }
