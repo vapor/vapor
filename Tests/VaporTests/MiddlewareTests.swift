@@ -25,7 +25,8 @@ struct MiddlewareTests {
                 return "done"
             }
 
-            try await app.testing().test(.get, "/order") { res in
+            try await app.testing { client in
+                let res = try await client.get("/order")
                 let order = await store.getOrder()
                 #expect(res.status == .ok)
                 #expect(order == ["a", "b", "c"])
@@ -47,7 +48,8 @@ struct MiddlewareTests {
                 return "done"
             }
 
-            try await app.testing().test(.get, "/order") { res in
+            try await app.testing { client in
+                let res = try await client.get("/order")
                 let order = await store.getOrder()
                 #expect(res.status == .ok)
                 #expect(order == ["a", "b", "c", "d"])
@@ -65,7 +67,8 @@ struct MiddlewareTests {
                 return "done"
             }
 
-            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
+            try await app.testing { client in
+                let res = try await client.get("/order", headers: [.origin: "foo"])
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "done")
                 #expect(res.headers[values: .vary] == ["origin"])
@@ -90,7 +93,8 @@ struct MiddlewareTests {
             // A preflight is answered by the middleware itself rather than the route, so it carries
             // the CORS headers and no body — the route's "done" must not leak into the response.
             let headers: HTTPFields = [.origin: "foo", .accessControlRequestMethod: "GET"]
-            try await app.testing().test(.options, "/order", headers: headers) { res in
+            try await app.testing { client in
+                let res = try await client.send(.options, headers: headers, to: "/order")
                 #expect(res.status == .ok)
                 #expect(res.body.count == 0)
                 #expect(res.headers[values: .accessControlAllowOrigin] == ["foo"])
@@ -108,7 +112,8 @@ struct MiddlewareTests {
                 return "done"
             }
 
-            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
+            try await app.testing { client in
+                let res = try await client.get("/order", headers: [.origin: "foo"])
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "done")
                 #expect(res.headers[values: .vary] == ["origin"])
@@ -127,7 +132,8 @@ struct MiddlewareTests {
                 return "done"
             }
 
-            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
+            try await app.testing { client in
+                let res = try await client.get("/order", headers: [.origin: "foo"])
                 #expect(res.status == .ok)
                 try #expect(await res.body.requireString() == "done")
                 #expect(res.headers[values: .vary] == [])
@@ -165,20 +171,20 @@ struct MiddlewareTests {
                 return "done"
             }
 
-            try await app.testing().test(.get, "/order", headers: [.origin: "http://example-123.com"]) { res in
-                #expect(res.status == .ok)
-                try #expect(await res.body.requireString() == "done")
-                #expect(res.headers[values: .vary] == ["origin"])
-                #expect(res.headers[values: .accessControlAllowOrigin] == ["http://example-123.com"])
-                #expect(res.headers[values: .accessControlAllowHeaders] == [""])
-            }
+            try await app.testing { client in
+                let allowed = try await client.get("/order", headers: [.origin: "http://example-123.com"])
+                #expect(allowed.status == .ok)
+                try #expect(await allowed.body.requireString() == "done")
+                #expect(allowed.headers[values: .vary] == ["origin"])
+                #expect(allowed.headers[values: .accessControlAllowOrigin] == ["http://example-123.com"])
+                #expect(allowed.headers[values: .accessControlAllowHeaders] == [""])
 
-            try await app.testing().test(.get, "/order", headers: [.origin: "foo"]) { res in
-                #expect(res.status == .ok)
-                try #expect(await res.body.requireString() == "done")
-                #expect(res.headers[values: .vary] == [])
-                #expect(res.headers[values: .accessControlAllowOrigin] == [])
-                #expect(res.headers[values: .accessControlAllowHeaders] == [""])
+                let disallowed = try await client.get("/order", headers: [.origin: "foo"])
+                #expect(disallowed.status == .ok)
+                try #expect(await disallowed.body.requireString() == "done")
+                #expect(disallowed.headers[values: .vary] == [])
+                #expect(disallowed.headers[values: .accessControlAllowOrigin] == [])
+                #expect(disallowed.headers[values: .accessControlAllowHeaders] == [""])
             }
         }
     }
@@ -190,7 +196,8 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result in
+            try await app.testing { client in
+                let result = try await client.get("/foo.txt")
                 #expect(result.status == .ok)
                 try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == nil)
@@ -205,7 +212,8 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .browserDefault, etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result in
+            try await app.testing { client in
+                let result = try await client.get("/foo.txt")
                 #expect(result.status == .ok)
                 try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == nil)
@@ -221,7 +229,8 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .noCache, etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result in
+            try await app.testing { client in
+                let result = try await client.get("/foo.txt")
                 #expect(result.status == .ok)
                 try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == "no-cache")
@@ -237,7 +246,8 @@ struct MiddlewareTests {
                     .seconds(300)), etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result in
+            try await app.testing { client in
+                let result = try await client.get("/foo.txt")
                 #expect(result.status == .ok)
                 try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == "max-age=300")
@@ -252,7 +262,8 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .custom(cacheControlHeader: .init(isPublic: true), ageHeader: 10), etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/foo.txt") { result in
+            try await app.testing { client in
+                let result = try await client.get("/foo.txt")
                 #expect(result.status == .ok)
                 try #expect(await result.body.requireString() == "bar\n")
                 #expect(result.headers[.cacheControl] == "public")
@@ -267,7 +278,8 @@ struct MiddlewareTests {
             let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities", etagCache: app.fileETagHashCache)
             app.middleware.use(fileMiddleware)
 
-            try await app.testing().test(.get, "/index.html") { result in
+            try await app.testing { client in
+                let result = try await client.get("/index.html")
                 #expect(result.status == .ok)
                 try #expect(await result.body.requireString() == "<h1>Subdirectory Default</h1>\n")
             }
@@ -289,11 +301,15 @@ struct MiddlewareTests {
             app.get("testMetrics") { req -> String in
                 return "done"
             }
-            let response = try await app.testing().sendRequest(.get, "/testMetrics")
-            
+            let (response, notFoundResponse) = try await app.testing { client in
+                let response = try await client.get("http://127.0.0.1/testMetrics")
+                let notFoundResponse = try await client.get("http://127.0.0.1/not/found")
+                return (response, notFoundResponse)
+            }
+
             #expect(response.status == .ok)
             #expect(response.body.string == "done")
-            
+
             let httpServerActiveRequests = try metrics.expectMeter(
                 "http.server.active_requests",
                 [
@@ -302,7 +318,7 @@ struct MiddlewareTests {
                 ]
             )
             #expect(httpServerActiveRequests.lastValue == 0.0)
-            
+
             let httpServerRequestBodySize =  try metrics.expectRecorder(
                 "http.server.request.body.size",
                 [
@@ -316,7 +332,7 @@ struct MiddlewareTests {
                 ]
             )
             #expect(httpServerRequestBodySize.lastValue == 0.0)
-            
+
             #expect(throws: Never.self) {
                 try metrics.expectTimer(
                     "http.server.request.duration",
@@ -331,7 +347,7 @@ struct MiddlewareTests {
                     ]
                 )
             }
-            
+
             let httpServerResponseBodySize =  try metrics.expectRecorder(
                 "http.server.response.body.size",
                 [
@@ -345,9 +361,8 @@ struct MiddlewareTests {
                 ]
             )
             #expect(httpServerResponseBodySize.lastValue == 4.0)
-            
+
             // Test 404 Rewrites Path for Metrics to Avoid DOS Attack
-            let notFoundResponse = try await app.testing().sendRequest(.get, "/not/found")
             #expect(notFoundResponse.status == .notFound)
             let httpServerRequestDuration = try metrics.expectTimer(
                 "http.server.request.duration",
@@ -377,8 +392,10 @@ struct MiddlewareTests {
                 }, count: 9))
             }
 
-            let response = try await app.testing().sendRequest(.get, "/streamMetrics")
-            #expect(response.status == .ok)
+            let status = try await app.testing { client in
+                try await client.get("http://127.0.0.1/streamMetrics").status
+            }
+            #expect(status == .ok)
 
             let recorder = try metrics.expectRecorder(
                 "http.server.response.body.size",
@@ -409,9 +426,12 @@ struct MiddlewareTests {
                 }))
             }
 
-            let response = try await app.testing().sendRequest(.get, "/streamMetrics")
-            #expect(response.status == .ok)
-            try #expect(await response.body.requireString() == "alphabeta")
+            let (status, body) = try await app.testing { client in
+                let response = try await client.get("http://127.0.0.1/streamMetrics")
+                return (response.status, try await response.body.requireString())
+            }
+            #expect(status == .ok)
+            #expect(body == "alphabeta")
 
             // The request itself is still measured; only the body size is absent.
             #expect(throws: Never.self) {
@@ -471,9 +491,10 @@ struct MiddlewareTests {
                 return "done"
             }
 
-            try await app.testing(method: .running).test(.get, "/testTracing?foo=bar", beforeRequest: {
-                $0.headers[.userAgent] = "test"
-            }) { response in
+            try await app.testing(.running) { client in
+                let response = try await client.get("/testTracing?foo=bar") {
+                    $0.headers[.userAgent] = "test"
+                }
                 #expect(response.status == .ok)
                 try #expect(await response.body.requireString() == "done")
 

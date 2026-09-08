@@ -172,7 +172,8 @@ struct ApplicationTests {
                 throw Foo()
             }
 
-            try await app.testing().test(.get, "/error") { res in
+            try await app.testing { client in
+                let res = try await client.get("/error")
                 #expect(res.status == .internalServerError)
             }
         }

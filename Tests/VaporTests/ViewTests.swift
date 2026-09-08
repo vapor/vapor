@@ -16,7 +16,8 @@ struct ViewTests {
                 return View(data: data)
             }
 
-            try await app.testing().test(.get, "/view") { res in
+            try await app.testing { client in
+                let res = try await client.get("/view")
                 #expect(res.status.code == 200)
                 #expect(res.headers.contentType == .html)
                 try #expect(await res.body.requireString() == "<h1>hello</h1>")
