@@ -206,7 +206,7 @@ struct ApplicationTests {
             try await withRunningApp(app: app, portToUse: 0) { port in
                 let address = try #require(app.sharedAddress.withLockedValue({ $0 }))
 
-                let ip = try #require(address.ipAddress)
+                let ip = try #require(address.host)
                 #expect(port == address.port)
                 #expect("127.0.0.1" == ip || "::1" == ip)
                 #expect(port > 0)
@@ -230,7 +230,7 @@ struct ApplicationTests {
             }
 
             app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: app.sharedAddress.withLockedValue({ $0 })?.hostname, port: app.sharedAddress.withLockedValue({ $0 })?.port)
+                let config = AddressConfig(hostname: app.sharedAddress.withLockedValue({ $0 })?.host, port: app.sharedAddress.withLockedValue({ $0 })?.port)
                 return config
             }
 
@@ -241,7 +241,7 @@ struct ApplicationTests {
 
                 let address = try await app.server.listeningAddress
                 #expect(app.sharedAddress.withLockedValue({ $0 }) != nil)
-                #expect(app.sharedAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
+                #expect(app.sharedAddress.withLockedValue({ $0 })?.host == "0.0.0.0")
                 if case let .hostname(_, port) = app.serverConfiguration.address {
                     #expect(0 == port)
                 } else {

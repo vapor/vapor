@@ -1466,9 +1466,9 @@ final class CustomServer: Server, Sendable {
         }
     }
 
-    var listeningAddress: SocketAddress {
+    var listeningAddress: Vapor.SocketAddress {
         get async throws {
-            try SocketAddress.makeAddressResolvingHost("127.0.0.1", port: 0)
+            Vapor.SocketAddress(ipAddress: "127.0.0.1", port: 0)!
         }
     }
 }
