@@ -1,7 +1,5 @@
 public import Configuration
 import Logging
-#warning("Make this internal")
-public import NIOCore
 public import NIOConcurrencyHelpers
 import NIOPosix
 public import ServiceLifecycle

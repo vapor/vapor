@@ -1,8 +1,5 @@
 import HTTPTypes
 public import Tracing
-#warning("Make this internal")
-public import NIOCore
-import NIOConcurrencyHelpers
 
 /// Creates a trace and metadata for every request
 ///

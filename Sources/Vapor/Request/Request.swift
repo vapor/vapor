@@ -52,9 +52,9 @@ public struct Request: CustomStringConvertible, Sendable {
     /// in 1. and 2. will use port 80 as default port, and  3. will have port number provided by NIO if any
     public var peerAddress: SocketAddress? {
         if let clientAddress = headers.forwarded.first?.for {
-            try? SocketAddress.init(ipAddress: clientAddress, port: 80)
+            SocketAddress.init(ipAddress: clientAddress, port: 80)
         } else if let xForwardedFor = headers[.xForwardedFor] {
-            try? SocketAddress.init(ipAddress: xForwardedFor, port: 80)
+            SocketAddress.init(ipAddress: xForwardedFor, port: 80)
         } else {
             self.remoteAddress
         }
