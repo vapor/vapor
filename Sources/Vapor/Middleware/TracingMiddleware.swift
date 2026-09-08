@@ -53,22 +53,23 @@ public final class TracingMiddleware: Middleware {
                 }
 
                 attributes["network.protocol.name"] = "http"
-                switch serverAddress {
-                case .v4:
-                    fallthrough
-                case .v6:
-                    attributes["server.address"] = serverAddress?.ipAddress
-                    attributes["server.port"] = serverAddress?.port
-                case .unixDomainSocket:
-                    attributes["server.address"] = serverAddress?.description
+                switch serverAddress?.base {
+                case .ipv4(let host, let port):
+                    attributes["server.address"] = host
+                    attributes["server.port"] = port
+                case .ipv6(let host, let port):
+                    attributes["server.address"] = host
+                    attributes["server.port"] = port
+                case .unixDomainSocket(let path):
+                    attributes["server.address"] = path
                 case .none:
                     break
                 }
                 attributes["url.query"] = request.url.query
 
                 // Recommended
-                attributes["client.address"] = request.peerAddress?.ipAddress
-                attributes["network.peer.address"] = request.remoteAddress?.ipAddress
+                attributes["client.address"] = request.peerAddress?.host
+                attributes["network.peer.address"] = request.remoteAddress?.host
                 attributes["network.peer.port"] = request.remoteAddress?.port
                 attributes["network.protocol.version"] = "\(request.version.major).\(request.version.minor)"
                 attributes["user_agent.original"] = request.headers[.userAgent]

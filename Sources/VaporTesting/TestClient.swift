@@ -1,8 +1,6 @@
 @testable public import Vapor
 import Foundation
-#warning("Migrate to our own SocketAddress")
-import NIOCore
-import NIOConcurrencyHelpers
+import Synchronization
 import AsyncHTTPClient
 
 public protocol TestClient: Client {
@@ -13,14 +11,14 @@ public protocol TestClient: Client {
 /// then AHC will see a disconnect and hang up so we need to drain before return them.
 /// This just helps us keep track and drain any that haven't been collected
 final class UnreadBodies: Sendable {
-    private let bodies = NIOLockedValueBox<[Response.Body]>([])
+    private let bodies = Mutex<[Response.Body]>([])
 
     func track(_ body: Response.Body) {
-        self.bodies.withLockedValue { $0.append(body) }
+        self.bodies.withLock { $0.append(body) }
     }
 
     func drain() async throws {
-        let bodies = self.bodies.withLockedValue { bodies in
+        let bodies = self.bodies.withLock { bodies in
             defer { bodies.removeAll() }
             return bodies
         }
@@ -80,7 +78,7 @@ struct LiveTestClient: TestClient {
     var port: Int { self.address.port! }
     var baseURL: URI? {
         URI(scheme: self.app.serverConfiguration.isTLSEnabled ? "https" : "http",
-            host: self.address.ipAddress, port: self.port, path: "/")
+            host: self.address.host ?? "localhost", port: self.port, path: "/")
     }
     var contentConfiguration: ContentConfiguration {
         self.app.contentConfiguration

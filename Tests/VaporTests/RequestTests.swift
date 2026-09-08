@@ -258,7 +258,7 @@ struct RequestTests {
     func testCustomHostAddress() async throws {
         try await withApp { app in
             app.get("vapor", "is", "fun") {
-                return $0.remoteAddress?.hostname ?? "n/a"
+                return $0.remoteAddress?.host ?? "n/a"
             }
 
             let ipV4Hostname = "127.0.0.1"

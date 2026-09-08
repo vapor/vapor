@@ -148,16 +148,15 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
             // Wait for the server to bind, then publish the address
             let addresses = try await nioServer.listeningAddresses
-            guard let address = addresses.first else {
+            guard let address = addresses.first, let socketAddress = SocketAddress(ipAddress: address.host, port: address.port) else {
                 throw NIOHTTPServerAdapterError.noListeningAddress
             }
-            let nioAddress = try NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
 
             // Atomically set the address and resume any waiting continuation
-            self.application.sharedAddress.withLockedValue { $0 = nioAddress }
+            self.application.sharedAddress.withLockedValue { $0 = socketAddress }
             let waiting = self.addressWaiters.withLockedValue { $0.takeContinuations() }
             for continuation in waiting {
-                continuation.resume(returning: nioAddress)
+                continuation.resume(returning: socketAddress)
             }
 
             Logger.current.notice("Server started on \(address.host):\(address.port)")
