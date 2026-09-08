@@ -148,7 +148,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
             // Wait for the server to bind, then publish the address
             let addresses = try await nioServer.listeningAddresses
-            guard let address = addresses.first, let socketAddress = SocketAddress(ipAddress: address.host, port: address.port) else {
+            guard let address = addresses.first, let socketAddress = SocketAddress(address) else {
                 throw NIOHTTPServerAdapterError.noListeningAddress
             }
 

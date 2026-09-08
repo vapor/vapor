@@ -45,10 +45,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
 
         // 2. Build Vapor request
         let peerCerts = try? await requestContext.peerCertificateChain
-        #warning("Need to handle UNIX sockets when HTTP server supports it")
-        let remoteAddress = requestContext.remoteAddress.flatMap {
-            SocketAddress(ipAddress: $0.host, port: $0.port)
-        }
+        let remoteAddress = requestContext.remoteAddress.flatMap { SocketAddress($0) }
 
         // HTTPRequest.path is the raw request target, already percent-encoded,
         // and includes the query string (e.g. "/foo%20bar?baz=1").
