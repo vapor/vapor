@@ -8,9 +8,7 @@ import _NIOFileSystem
 import HTTPTypes
 import Logging
 import Crypto
-import NIOConcurrencyHelpers
 import _NIOFileSystemFoundationCompat
-import NIOHTTP1
 
 extension Application {
     public var fileio: FileIO {

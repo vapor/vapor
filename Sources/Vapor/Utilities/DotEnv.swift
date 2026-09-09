@@ -9,7 +9,6 @@ import Darwin
 #endif
 import Logging
 import NIOCore
-import NIOPosix
 import _NIOFileSystem
 #if canImport(FoundationEssentials)
 import FoundationEssentials
