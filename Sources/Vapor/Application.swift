@@ -31,6 +31,7 @@ public final class Application: Sendable, Service {
     package let fileETagHashCache: FileETagHashCache
     private let _services: FreezableType<[any Service]>
     public let routes: Routes
+    private let _middlewares: FreezableType<Middlewares>
     private let _serverConfiguration: FreezableType<ServerConfiguration>
     public var serverConfiguration: ServerConfiguration {
         get {
@@ -152,6 +153,7 @@ public final class Application: Sendable, Service {
 
         self.sessionsConfiguration = services.sessionsConfiguration
         self.responder = services.responder
+        self._middlewares = .init(Self.defaultMiddlewares(environment: environment), name: "Middlewares")
         self.routes = Routes()
         self.servers.initialize()
         self.servers.use(.http)
@@ -216,6 +218,7 @@ public final class Application: Sendable, Service {
     private func freezeApplication() {
         self._lifecycleHandlers.freeze()
         self._services.freeze()
+        self._middlewares.freeze()
     }
 
     /// Starts the application as a standalone process with signal handling.
@@ -288,5 +291,16 @@ public final class Application: Sendable, Service {
     deinit {
         Logger.current.trace("Application deinitialized, goodbye!")
         assert(self.didShutdown, "Application.shutdown() was not called before Application deinitialized.")
+    }
+}
+
+extension Application {
+    public var middleware: Middlewares {
+        get {
+            self._middlewares.value
+        }
+        set {
+            self._middlewares.withValue { $0 = newValue }
+        }
     }
 }
