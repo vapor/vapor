@@ -12,6 +12,18 @@ import NIOCore
 
 @Suite("Route Tests")
 struct RouteTests {
+    @Test("Registering a route after the application has started traps")
+    func testRouteCannotBeRegisteredAfterStart() async {
+        // The router is built once at startup, so a route added later never matches.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.get("registered-too-late") { _ in "never reachable" } }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
     @Test("Test Parameter")
     func testParameter() async throws {
         try await withApp { app in

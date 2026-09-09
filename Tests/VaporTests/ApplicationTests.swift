@@ -12,6 +12,30 @@ import NIOFoundationEssentialsCompat
 
 @Suite("Application Tests")
 struct ApplicationTests {
+    @Test("Registering a service after the application has started traps")
+    func testServiceCannotBeRegisteredAfterStart() async {
+        // The service group is built once at startup, so a service added later never runs.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.addService(CustomServer()) }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
+    @Test("Registering a lifecycle handler after the application has started traps")
+    func testLifecycleHandlerCannotBeRegisteredAfterStart() async {
+        // Boot has already run, so a handler added later never gets willBoot or didBoot.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.lifecycle.use(ApplicationLifecycleTests.RecordingHandler()) }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
     @Test("Test stopping the application")
     func testApplicationStop() async throws {
         let app = try await Application(.testing, configReader: testConfigReader)
