@@ -1,13 +1,9 @@
 public import ServiceLifecycle
 
 /// A server that can handle HTTP requests.
-///
-/// Conforms to `Service` from swift-service-lifecycle. Implementations
-/// provide a `run()` method that blocks for the server's lifetime and
-/// responds to graceful shutdown via task cancellation.
 public protocol Server: Service, Sendable {
-    /// The address the server is listening on.
-    /// Awaits until the server has successfully bound.
+    /// The address the server is listening on. Suspends until the server has bound or throws an error
+    /// if the server failed to start, or if stopped
     var listeningAddress: SocketAddress { get async throws }
 }
 

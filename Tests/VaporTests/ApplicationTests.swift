@@ -24,10 +24,9 @@ struct ApplicationTests {
             group.addTask {
                 try await app.server.run()
             }
-            // Poll for address (run() publishes it before blocking on serve)
-            while app.sharedAddress.withLockedValue({ $0 }) == nil {
-                try await Task.sleep(for: .milliseconds(10))
-            }
+            // Wait for the server to bind. This throws if startup fails, where polling for a
+            // published address would simply spin until the test timed out.
+            _ = try await app.server.listeningAddress
             // Cancel to trigger shutdown
             group.cancelAll()
         }
@@ -201,10 +200,8 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            #expect(app.sharedAddress.withLockedValue({ $0 }) == nil)
-
             try await withRunningApp(app: app, portToUse: 0) { port in
-                let address = try #require(app.sharedAddress.withLockedValue({ $0 }))
+                let address = try await app.server.listeningAddress
 
                 let ip = try #require(address.host)
                 #expect(port == address.port)
@@ -230,8 +227,8 @@ struct ApplicationTests {
             }
 
             app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: app.sharedAddress.withLockedValue({ $0 })?.host, port: app.sharedAddress.withLockedValue({ $0 })?.port)
-                return config
+                let address = try await app.server.listeningAddress
+                return AddressConfig(hostname: address.host, port: address.port)
             }
 
             try await withThrowingTaskGroup(of: Void.self) { group in
@@ -240,8 +237,7 @@ struct ApplicationTests {
                 }
 
                 let address = try await app.server.listeningAddress
-                #expect(app.sharedAddress.withLockedValue({ $0 }) != nil)
-                #expect(app.sharedAddress.withLockedValue({ $0 })?.host == "0.0.0.0")
+                #expect(address.host == "0.0.0.0")
                 if case let .hostname(_, port) = app.serverConfiguration.address {
                     #expect(0 == port)
                 } else {

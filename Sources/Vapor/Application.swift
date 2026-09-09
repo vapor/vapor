@@ -1,7 +1,6 @@
 public import Configuration
 import Logging
-public import NIOConcurrencyHelpers
-import NIOPosix
+import NIOConcurrencyHelpers
 public import ServiceLifecycle
 import UnixSignals
 #if HTTPClient
@@ -48,7 +47,6 @@ public final class Application: Sendable, Service {
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
-    public let sharedAddress: NIOLockedValueBox<SocketAddress?>
     /// Content hashes for advanced ETag comparison, shared by every request.
     package let fileETagHashCache: FileETagHashCache
     private let _services: NIOLockedValueBox<[any Service]>
@@ -127,7 +125,6 @@ public final class Application: Sendable, Service {
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
-        self.sharedAddress = .init(nil)
         self.fileETagHashCache = .init(capacity: configuration.eTagHashCacheCapacity)
         self._services = .init([])
         self._serverConfiguration = .init(configuration)

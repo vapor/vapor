@@ -242,6 +242,7 @@ public struct Request: CustomStringConvertible, Sendable {
 
         self.id = requestID
         self.remoteAddress = remoteAddress
+        self.localAddress = localAddress
         self.bodyStorage = .init(bodyStorage)
         self.auth = Authentication()
         self.sessionCache = SessionCache()
@@ -254,7 +255,6 @@ public struct Request: CustomStringConvertible, Sendable {
         self.headers = headers
         self.contentConfiguration = contentConfiguration
         self.defaultMaxBodySize = defaultMaxBodySize
-        self.localAddress = localAddress
     }
 
     package init(_ other: Request, route: Route?, parameters: Parameters) {
