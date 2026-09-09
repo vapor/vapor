@@ -26,9 +26,6 @@ public final class Application: Sendable, Service {
     /// The environment the application is running in
     public let environment: Environment
 
-    /// The routes registered to the application
-    let _routes: FreezableType<RouteStorage>
-
     /// The routes registered on this application.
     public var routes: Routes { Routes(application: self) }
 
@@ -58,6 +55,7 @@ public final class Application: Sendable, Service {
     private let _serverConfiguration: FreezableType<ServerConfiguration>
     private let _services: FreezableType<[any Service]>
     private let _lifecycleHandlers: FreezableType<[ any LifecycleHandler]>
+    let _routes: FreezableType<RouteStorage>
 
     // MARK: - Other Types
 
