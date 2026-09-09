@@ -258,9 +258,6 @@ struct AuthenticationTests {
             var source: ErrorSource?
         }
 
-        /// A class rather than a struct so it can hold the `Mutex` itself: `Mutex` is non-copyable
-        /// and cannot be stored in a `Copyable` struct. `Middleware` refines `Sendable`, which a
-        /// final class with only lock-protected storage satisfies.
         final class ErrorCapturingMiddleware: Middleware {
             let captured = Mutex<CapturedError?>(nil)
 

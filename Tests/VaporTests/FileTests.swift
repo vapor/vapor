@@ -1,6 +1,6 @@
 import Vapor
 import NIOCore
-import NIOConcurrencyHelpers
+import Synchronization
 import HTTPTypes
 import _NIOFileSystem
 import Crypto
@@ -793,10 +793,10 @@ struct FileTests {
     @Test("HEAD request does not read the file")
     func testHeadRequestDoesNotReadFile() async throws {
         try await withApp { app in
-            let fileWasRead = NIOLockedValueBox(false)
+            let fileWasRead = Mutex(false)
             app.get("file-stream") { req -> Response in
                 try await app.fileio.streamFile(at: #filePath, for: req, advancedETagComparison: false) { _ in
-                    fileWasRead.withLockedValue { $0 = true }
+                    fileWasRead.withLock { $0 = true }
                 }
             }
 
@@ -812,7 +812,7 @@ struct FileTests {
             // A HEAD response carries no body, so opening and reading the file would be wasted
             // work: the transport discards every byte before it reaches the client. The server
             // handler concludes HEAD responses without running the body stream at all.
-            #expect(fileWasRead.withLockedValue { $0 } == false)
+            #expect(fileWasRead.withLock { $0 } == false)
         }
     }
 

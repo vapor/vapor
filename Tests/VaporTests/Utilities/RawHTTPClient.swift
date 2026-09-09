@@ -1,6 +1,6 @@
 import NIOCore
 import NIOPosix
-import NIOConcurrencyHelpers
+import Synchronization
 
 /// Sends a raw request over a plain TCP socket and returns every byte the server sends back
 /// within `grace`, along with whether the server closed the connection.
@@ -52,17 +52,17 @@ func rawExchange(
         }
     return try await channel.executeThenClose { inbound, outbound in
         try await outbound.write(ByteBuffer(string: rawRequest))
-        let received = NIOLockedValueBox("")
-        let lastActivity = NIOLockedValueBox(ContinuousClock.now)
-        let reachedEnd = NIOLockedValueBox(false)
+        let received = Mutex("")
+        let lastActivity = Mutex(ContinuousClock.now)
+        let reachedEnd = Mutex(false)
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
                 do {
                     for try await buffer in inbound {
-                        received.withLockedValue { $0 += String(buffer: buffer) }
-                        lastActivity.withLockedValue { $0 = ContinuousClock.now }
+                        received.withLock { $0 += String(buffer: buffer) }
+                        lastActivity.withLock { $0 = ContinuousClock.now }
                     }
-                    reachedEnd.withLockedValue { $0 = true }
+                    reachedEnd.withLock { $0 = true }
                 } catch {
                     // Cancelled below, or the connection failed. Either way whatever arrived is
                     // what we assert on.
@@ -76,12 +76,12 @@ func rawExchange(
                 let start = ContinuousClock.now
                 while true {
                     try? await Task.sleep(for: .milliseconds(25))
-                    if reachedEnd.withLockedValue({ $0 }) { return }
+                    if reachedEnd.withLock({ $0 }) { return }
                     if let isComplete {
-                        if isComplete(received.withLockedValue { $0 }) { return }
+                        if isComplete(received.withLock { $0 }) { return }
                     } else {
-                        let idle = ContinuousClock.now - lastActivity.withLockedValue { $0 }
-                        if !received.withLockedValue({ $0.isEmpty }), idle >= quiet { return }
+                        let idle = ContinuousClock.now - lastActivity.withLock { $0 }
+                        if !received.withLock({ $0.isEmpty }), idle >= quiet { return }
                     }
                     if ContinuousClock.now - start >= deadline { return }
                 }
@@ -89,6 +89,6 @@ func rawExchange(
             await group.next()
             group.cancelAll()
         }
-        return (received.withLockedValue { $0 }, reachedEnd.withLockedValue { $0 })
+        return (received.withLock { $0 }, reachedEnd.withLock { $0 })
     }
 }

@@ -193,7 +193,6 @@ let package = Package(
         .testTarget(
             name: "VaporTests",
             dependencies: [
-                .product(name: "NIOTestUtils", package: "swift-nio"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
                 .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
