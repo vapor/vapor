@@ -64,7 +64,7 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
             : self.viewsDirectory + name
         return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
             let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
-            let data = buffer.getData(at: 0, length: buffer.readableBytes) ?? Data()
+            let data = Data(buffer: buffer)
             return View(data: data)
         }
     }
