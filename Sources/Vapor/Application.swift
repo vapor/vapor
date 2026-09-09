@@ -50,6 +50,12 @@ public final class Application: Sendable, Service {
     /// The ``SessionDriver`` configured in the application
     public let sessionDriver: any SessionDriver
 
+    /// The application's HTTP server.
+    ///
+    /// Built once, during `init`, so everyone awaiting ``Server/listeningAddress`` and whoever calls
+    /// `run()` are talking to the same instance by construction.
+    public let server: any Server
+
     // MARK: - Freezable Types
     private let _middlewares: FreezableType<Middlewares>
     private let _serverConfiguration: FreezableType<ServerConfiguration>
@@ -67,6 +73,7 @@ public final class Application: Sendable, Service {
     package let contentConfiguration: ContentConfiguration
     package let responder: ServiceOptionType<any Responder>
     let sessionsConfiguration: SessionsConfiguration
+    package let serverContext: ServerContext
 
     // MARK: - Services
 
@@ -75,6 +82,7 @@ public final class Application: Sendable, Service {
         let viewRenderer: ServiceOptionType<any ViewRenderer>
         let cache: ServiceOptionType<any Cache>
         let responder: ServiceOptionType<any Responder>
+        let server: ServiceOptionType<any Server>
         let client: ServiceOptionType<any Client>
         let sessionDriver: ServiceOptionType<any SessionDriver>
         let sessionsConfiguration: SessionsConfiguration
@@ -84,6 +92,7 @@ public final class Application: Sendable, Service {
             viewRenderer: ServiceOptionType<any ViewRenderer> = .default,
             cache: ServiceOptionType<any Cache> = .default,
             responder: ServiceOptionType<any Responder> = .default,
+            server: ServiceOptionType<any Server> = .default,
             client: ServiceOptionType<any Client> = .default,
             sessionDriver: ServiceOptionType<any SessionDriver> = .default,
             sessionsConfiguration: SessionsConfiguration = .default()
@@ -92,6 +101,7 @@ public final class Application: Sendable, Service {
             self.viewRenderer = viewRenderer
             self.cache = cache
             self.responder = responder
+            self.server = server
             self.client = client
             self.sessionDriver = sessionDriver
             self.sessionsConfiguration = sessionsConfiguration
@@ -160,8 +170,20 @@ public final class Application: Sendable, Service {
         self.responder = services.responder
         self._middlewares = .init(Self.defaultMiddlewares(environment: environment), name: "Middlewares")
         self._routes = .init(RouteStorage(), name: "Routes")
-        self.servers.initialize()
-        self.servers.use(.http)
+        let serverContext = ServerContext(
+            configuration: self._serverConfiguration,
+            routes: self._routes,
+            middlewares: self._middlewares,
+            responder: services.responder,
+            contentConfiguration: services.contentConfiguration
+        )
+        self.serverContext = serverContext
+        switch services.server {
+        case .default:
+            self.server = NIOHTTPServerAdapter(context: serverContext)
+        case .provided(let server):
+            self.server = server
+        }
 
         #warning("Can we remove all this?")
         await DotEnvFile.load(for: self.environment)

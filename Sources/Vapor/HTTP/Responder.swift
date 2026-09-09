@@ -4,14 +4,6 @@ public protocol Responder: Sendable {
 
 extension Application {
     package func makeResponder() -> any Responder {
-        switch self.responder {
-        case .default:
-            return DefaultResponder(
-                routes: self._routes.value,
-                middleware: self.middleware.resolve(),
-            )
-        case .provided(let provided):
-            return provided
-        }
+        self.serverContext.makeResponder()
     }
 }

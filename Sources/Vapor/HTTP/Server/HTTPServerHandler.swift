@@ -18,7 +18,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
     typealias Reader = NIOHTTPServer.Reader
     typealias ResponseSender = NIOHTTPServer.ResponseSender
 
-    let application: Application
+    let context: ServerContext
     let responder: any Responder
 
     func handle(
@@ -67,8 +67,8 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 localAddress: localAddress,
                 peerCertificateChain: peerCerts,
                 requestID: requestID,
-                contentConfiguration: application.contentConfiguration,
-                defaultMaxBodySize: application.routes.defaultMaxBodySize
+                contentConfiguration: context.contentConfiguration,
+                defaultMaxBodySize: context.defaultMaxBodySize
             )
 
             // 3. Run responder chain

@@ -66,11 +66,11 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         }
     }
 
-    let application: Application
+    let context: ServerContext
     private let addressState = Mutex<AddressStateMachine>(.init())
 
-    init(application: Application) {
-        self.application = application
+    init(context: ServerContext) {
+        self.context = context
     }
 
     func run() async throws {
@@ -97,7 +97,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
     private func runServer() async throws {
         let transportSecurity: NIOHTTPServerConfiguration.TransportSecurity
-        if let tls = self.application.serverConfiguration.tlsConfiguration {
+        if let tls = self.context.configuration.value.tlsConfiguration {
             let credentials: NIOHTTPServerConfiguration.TransportSecurity.TLSCredentials
             switch tls.source {
             case .inMemory(let chain, let key):
@@ -116,7 +116,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         }
 
         var supportedHTTPVersions = Set<NIOHTTPServerConfiguration.HTTPVersion>()
-        for httpVersion in self.application.serverConfiguration.httpVersions {
+        for httpVersion in self.context.configuration.value.httpVersions {
             switch httpVersion.version {
             case .http1_1:
                 supportedHTTPVersions.insert(.http1_1)
@@ -134,13 +134,13 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             }
         }
 
-        guard !self.application.serverConfiguration.httpVersions.isEmpty else {
+        guard !self.context.configuration.value.httpVersions.isEmpty else {
             throw NIOHTTPServerAdapterError.noHTTPVersionsSpecified
         }
 
         // HTTP/2 is negotiated via ALPN, which requires TLS. Over plaintext, only HTTP/1.1 is allowed.
-        guard self.application.serverConfiguration.isTLSEnabled
-            || self.application.serverConfiguration.httpVersions == [.http1_1]
+        guard self.context.configuration.value.isTLSEnabled
+            || self.context.configuration.value.httpVersions == [.http1_1]
         else {
             throw NIOHTTPServerAdapterError.http2RequiresTLS
         }
@@ -158,8 +158,8 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         )
 
         let handler = VaporHTTPServerHandler(
-            application: self.application,
-            responder: self.application.makeResponder()
+            context: self.context,
+            responder: self.context.makeResponder()
         )
 
         // Run serve() in a child task so we can await listeningAddress
@@ -208,7 +208,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
     }
 
     private func resolveBindAddress() -> (String, Int) {
-        switch self.application.serverConfiguration.address {
+        switch self.context.configuration.value.address {
         case .hostname(let hostname, let port):
             return (hostname, port)
         case .unixDomainSocket:
