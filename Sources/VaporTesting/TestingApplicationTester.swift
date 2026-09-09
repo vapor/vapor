@@ -1,4 +1,3 @@
-import NIOCore
 public import Testing
 public import Vapor
 import ServiceLifecycle

@@ -1,6 +1,4 @@
 import NIOConcurrencyHelpers
-import NIOCore
-import NIOPosix
 import Vapor
 import VaporTesting
 import Testing

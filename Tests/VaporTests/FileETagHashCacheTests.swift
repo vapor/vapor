@@ -2,7 +2,7 @@ import Vapor
 import VaporTesting
 import RoutingKit
 import HTTPTypes
-import NIOConcurrencyHelpers
+import Synchronization
 import Testing
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -17,22 +17,22 @@ struct FileETagHashCacheTests {
     @Test("A hash is computed once and then served from the cache")
     func testSecondLookupIsCached() async throws {
         let cache = FileETagHashCache(capacity: 8)
-        let computations = NIOLockedValueBox(0)
+        let computations = Mutex(0)
 
         for _ in 0..<3 {
             let digest = try await cache.digestHex(forFileAt: "/a", lastModified: modified, size: 10) {
-                computations.withLockedValue { $0 += 1 }
+                computations.withLock { $0 += 1 }
                 return "digest"
             }
             #expect(digest == "digest")
         }
-        #expect(computations.withLockedValue { $0 } == 1)
+        #expect(computations.withLock { $0 } == 1)
     }
 
     @Test("Concurrent misses share a single computation")
     func testConcurrentMissesShareOneComputation() async throws {
         let cache = FileETagHashCache(capacity: 8)
-        let computations = NIOLockedValueBox(0)
+        let computations = Mutex(0)
 
         // Every caller arrives before the first finishes, so a cache that only dedupes on
         // *completed* work would read the file once per caller.
@@ -40,7 +40,7 @@ struct FileETagHashCacheTests {
             for _ in 0..<20 {
                 group.addTask {
                     try await cache.digestHex(forFileAt: "/a", lastModified: self.modified, size: 10) {
-                        computations.withLockedValue { $0 += 1 }
+                        computations.withLock { $0 += 1 }
                         try await Task.sleep(for: .milliseconds(50))
                         return "digest"
                     }
@@ -51,7 +51,7 @@ struct FileETagHashCacheTests {
 
         #expect(digests.count == 20)
         #expect(digests.allSatisfy { $0 == "digest" })
-        #expect(computations.withLockedValue { $0 } == 1)
+        #expect(computations.withLock { $0 } == 1)
     }
 
     @Test("A failed computation isn't cached and doesn't strand later callers")

@@ -1,5 +1,4 @@
 import Vapor
-import NIOCore
 import VaporTesting
 import Testing
 import HTTPTypes

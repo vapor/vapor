@@ -1,7 +1,6 @@
 import HTTPTypes
 import Metrics
 import NIOCore
-import NIOHTTP1
 
 /// Creates metrics for every request
 ///

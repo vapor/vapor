@@ -2,7 +2,6 @@
 import VaporTesting
 import Testing
 import Vapor
-import NIOCore
 import RoutingKit
 
 @Suite("Endpoint Cache Tests")

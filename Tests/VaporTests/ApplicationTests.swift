@@ -1,9 +1,6 @@
 import Vapor
 import AsyncHTTPClient
-import NIOCore
 import NIOHTTP1
-import NIOEmbedded
-import NIOConcurrencyHelpers
 import ServiceLifecycle
 import Testing
 import VaporTesting

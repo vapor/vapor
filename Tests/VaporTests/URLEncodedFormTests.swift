@@ -1,4 +1,3 @@
-import NIOPosix
 @testable import Vapor
 import Testing
 import Foundation

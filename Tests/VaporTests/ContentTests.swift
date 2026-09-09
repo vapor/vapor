@@ -1,4 +1,3 @@
-import NIOCore
 import HTTPTypes
 import Vapor
 import Testing
@@ -9,6 +8,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import RoutingKit
+import NIOCore
 
 @Suite("Content Tests")
 struct ContentTests {
@@ -482,7 +482,7 @@ struct ContentTests {
 
             var headers = HTTPFields()
             headers.contentType = .urlEncodedForm
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = ByteBuffer()
             body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
 
             try await app.testing { client in

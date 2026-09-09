@@ -5,13 +5,11 @@ import ServiceLifecycle
 import Metrics
 @testable import CoreMetrics
 import MetricsTestKit
-import NIOCore
 import Tracing
 import Testing
 import VaporTesting
 import RegexBuilder
 import RoutingKit
-import NIOConcurrencyHelpers
 import InMemoryTracing
 import Foundation
 
