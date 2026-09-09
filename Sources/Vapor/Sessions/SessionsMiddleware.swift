@@ -1,4 +1,3 @@
-import NIOConcurrencyHelpers
 import Synchronization
 
 /// Uses HTTP cookies to save and restore sessions for connecting clients.
@@ -57,7 +56,7 @@ public final class SessionsMiddleware: Middleware {
     /// Adds session cookie to response or clears if session was deleted.
     private func addCookies(to response: Response, for request: Request) async throws -> Response {
         var response = response
-        if let session = request.sessionCache.storage.withLock({ $0.session }), session.isValid.withLockedValue({ $0 }) {
+        if let session = request.sessionCache.storage.withLock({ $0.session }), session.isValid {
             // A session exists or has been created. we must
             // set a cookie value on the response
             let sessionID: SessionID
