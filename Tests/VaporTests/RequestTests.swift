@@ -3,7 +3,7 @@ import Vapor
 import NIOCore
 import AsyncHTTPClient
 import Atomics
-import NIOConcurrencyHelpers
+import Synchronization
 import Testing
 import VaporTesting
 #if canImport(FoundationEssentials)
@@ -184,10 +184,10 @@ struct RequestTests {
             let serverSawEnd = ManagedAtomic<Bool>(false)
             let serverSawRequest = ManagedAtomic<Bool>(false)
 
-            let requestHandlerTask: NIOLockedValueBox<Task<Response, any Error>?> = .init(nil)
+            let requestHandlerTask: Mutex<Task<Response, any Error>?> = .init(nil)
 
             app.on(.post, "hello", body: .stream) { req async throws -> Response in
-                requestHandlerTask.withLockedValue {
+                requestHandlerTask.withLock {
                     $0 = Task {
                         #expect(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged == true)
                         try await req.body.withReader { reader in
@@ -204,7 +204,7 @@ struct RequestTests {
                 }
 
                 do {
-                    let task = requestHandlerTask.withLockedValue { $0 }
+                    let task = requestHandlerTask.withLock { $0 }
                     return try await task!.value
                 } catch {
                     throw Abort(.internalServerError)
@@ -252,7 +252,7 @@ struct RequestTests {
                 #expect(serverSawEnd.load(ordering: .sequentiallyConsistent) == false)
                 #expect(serverSawRequest.load(ordering: .sequentiallyConsistent) == true)
 
-                requestHandlerTask.withLockedValue { $0?.cancel() }
+                requestHandlerTask.withLock { $0?.cancel() }
                 try await httpClient.shutdown()
             }
         }
@@ -596,7 +596,7 @@ struct RequestTests {
     func testCustomHostAddress() async throws {
         try await withApp { app in
             app.get("vapor", "is", "fun") {
-                return $0.remoteAddress?.hostname ?? "n/a"
+                return $0.remoteAddress?.host ?? "n/a"
             }
 
             let ipV4Hostname = "127.0.0.1"

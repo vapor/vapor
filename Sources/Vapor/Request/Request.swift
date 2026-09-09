@@ -52,9 +52,9 @@ public struct Request: CustomStringConvertible, Sendable {
     /// in 1. and 2. will use port 80 as default port, and  3. will have port number provided by NIO if any
     public var peerAddress: SocketAddress? {
         if let clientAddress = headers.forwarded.first?.for {
-            try? SocketAddress.init(ipAddress: clientAddress, port: 80)
+            SocketAddress.init(ipAddress: clientAddress, port: 80)
         } else if let xForwardedFor = headers[.xForwardedFor] {
-            try? SocketAddress.init(ipAddress: xForwardedFor, port: 80)
+            SocketAddress.init(ipAddress: xForwardedFor, port: 80)
         } else {
             self.remoteAddress
         }
@@ -118,7 +118,7 @@ public struct Request: CustomStringConvertible, Sendable {
             guard let body = resolved else {
                 throw Abort(.unprocessableContent)
             }
-            let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+            let bodyData = Data(buffer: body)
             return try decoder.decode(D.self, from: bodyData, headers: self.headers, userInfo: [:])
         }
 
@@ -189,6 +189,9 @@ public struct Request: CustomStringConvertible, Sendable {
     /// This address may not represent the original address of the peer, especially if Vapor receives its requests through a reverse-proxy such as nginx.
     public let remoteAddress: SocketAddress?
 
+    /// The address the request was received on
+    public let localAddress: SocketAddress?
+
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public let parameters: Parameters
@@ -208,6 +211,7 @@ public struct Request: CustomStringConvertible, Sendable {
         headers: HTTPFields = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        localAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
         requestID: String = UUID().uuidString,
         contentConfiguration: ContentConfiguration = .default(),
@@ -220,6 +224,7 @@ public struct Request: CustomStringConvertible, Sendable {
             headersNoUpdate: headers,
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
+            localAddress: localAddress,
             peerCertificateChain: peerCertificateChain,
             requestID: requestID,
             contentConfiguration: contentConfiguration,
@@ -238,6 +243,7 @@ public struct Request: CustomStringConvertible, Sendable {
         collectedBody: ByteBuffer? = nil,
         bodyStream: RequestBodyStream? = nil,
         remoteAddress: SocketAddress? = nil,
+        localAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
         requestID: String = UUID().uuidString,
         contentConfiguration: ContentConfiguration = .default(),
@@ -255,6 +261,7 @@ public struct Request: CustomStringConvertible, Sendable {
 
         self.id = requestID
         self.remoteAddress = remoteAddress
+        self.localAddress = localAddress
         self.bodyStorage = .init(bodyStorage)
         self.auth = Authentication()
         self.sessionCache = SessionCache()
@@ -284,5 +291,6 @@ public struct Request: CustomStringConvertible, Sendable {
         self.headers = other.headers
         self.contentConfiguration = other.contentConfiguration
         self.defaultMaxBodySize = other.defaultMaxBodySize
+        self.localAddress = other.localAddress
     }
 }

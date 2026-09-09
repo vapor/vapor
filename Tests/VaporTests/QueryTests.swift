@@ -1,10 +1,10 @@
 import Vapor
-import NIOCore
 import HTTPTypes
 import Testing
 import VaporTesting
 import Foundation
 import RoutingKit
+import NIOCore
 
 @Suite("Query Tests")
 struct QueryTests {
@@ -226,8 +226,7 @@ struct QueryTests {
                 return "ok"
             }
 
-            var body = ByteBufferAllocator().buffer(capacity: 0)
-            body.writeString(#"{"here":"hi"}"#)
+            let body = ByteBuffer(string: #"{"here":"hi"}"#)
             var headers = HTTPFields()
             headers[.contentLength] = body.readableBytes.description
             headers.contentType = .json

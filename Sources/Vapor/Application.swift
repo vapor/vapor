@@ -1,9 +1,6 @@
 public import Configuration
 import Logging
-#warning("Make this internal")
-public import NIOCore
-public import NIOConcurrencyHelpers
-import NIOPosix
+import NIOConcurrencyHelpers
 public import ServiceLifecycle
 import UnixSignals
 #if HTTPClient
@@ -50,7 +47,6 @@ public final class Application: Sendable, Service {
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
-    public let sharedAddress: NIOLockedValueBox<SocketAddress?>
     /// Content hashes for advanced ETag comparison, shared by every request.
     package let fileETagHashCache: FileETagHashCache
     private let _services: NIOLockedValueBox<[any Service]>
@@ -79,6 +75,8 @@ public final class Application: Sendable, Service {
     public let directoryConfiguration: DirectoryConfiguration
     public let cache: any Cache
     public let client: any Client
+    public let sessionDriver: any SessionDriver
+    public let sessionsConfiguration: SessionsConfiguration
 
     public struct ServiceConfiguration: Sendable {
         let contentConfiguration: ContentConfiguration
@@ -86,6 +84,8 @@ public final class Application: Sendable, Service {
         let cache: ServiceOptionType<any Cache>
         let responder: ServiceOptionType<any Responder>
         let client: ServiceOptionType<any Client>
+        let sessionDriver: ServiceOptionType<any SessionDriver>
+        let sessionsConfiguration: SessionsConfiguration
 
         public init(
             contentConfiguration: ContentConfiguration = .default(),
@@ -93,12 +93,16 @@ public final class Application: Sendable, Service {
             cache: ServiceOptionType<any Cache> = .default,
             responder: ServiceOptionType<any Responder> = .default,
             client: ServiceOptionType<any Client> = .default,
+            sessionDriver: ServiceOptionType<any SessionDriver> = .default,
+            sessionsConfiguration: SessionsConfiguration = .default()
         ) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
             self.cache = cache
             self.responder = responder
             self.client = client
+            self.sessionDriver = sessionDriver
+            self.sessionsConfiguration = sessionsConfiguration
         }
     }
 
@@ -129,7 +133,6 @@ public final class Application: Sendable, Service {
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
-        self.sharedAddress = .init(nil)
         self.fileETagHashCache = .init(capacity: configuration.eTagHashCacheCapacity)
         self._services = .init([])
         self._serverConfiguration = .init(configuration)
@@ -161,10 +164,16 @@ public final class Application: Sendable, Service {
             self.client = client
         }
 
+        switch services.sessionDriver {
+        case .default:
+            self.sessionDriver = MemorySessions(storage: .init())
+        case .provided(let service):
+            self.sessionDriver = service
+        }
+
+        self.sessionsConfiguration = services.sessionsConfiguration
         self.responder = services.responder
         self.routes = Routes()
-        self.sessions.initialize()
-        self.sessions.use(.memory)
         self.servers.initialize()
         self.servers.use(.http)
     }
@@ -193,10 +202,7 @@ public final class Application: Sendable, Service {
     /// Blocks until all services (including the HTTP server) have stopped.
     /// Graceful shutdown is triggered by the parent task or `ServiceGroup`.
     public func run() async throws {
-        try await self.boot()
-        self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
-
-        do {
+        try await self.withLifecycle {
             try await withThrowingDiscardingTaskGroup { group in
                 group.addTask { [server = self.server] in
                     try await server.run()
@@ -205,8 +211,17 @@ public final class Application: Sendable, Service {
                     group.addTask { try await service.run() }
                 }
             }
+        }
+    }
+
+    private func withLifecycle(_ runServices: () async throws -> Void) async throws {
+        do {
+            try await self.boot()
+            self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
+            try await runServices()
         } catch {
             Logger.current.report(error: error)
+            try? await self.shutdown()
             throw error
         }
         try await self.shutdown()
@@ -222,33 +237,25 @@ public final class Application: Sendable, Service {
     /// try await app.start()
     /// ```
     public func start() async throws {
-        try await self.boot()
-        self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
+        try await self.withLifecycle {
+            var services: [ServiceGroupConfiguration.ServiceConfiguration] = []
+            services.append(.init(
+                service: self.server,
+                successTerminationBehavior: .gracefullyShutdownGroup
+            ))
+            for service in self._services.withLockedValue({ $0 }) {
+                services.append(.init(service: service))
+            }
 
-        var services: [ServiceGroupConfiguration.ServiceConfiguration] = []
-        services.append(.init(
-            service: self.server,
-            successTerminationBehavior: .gracefullyShutdownGroup
-        ))
-        for service in self._services.withLockedValue({ $0 }) {
-            services.append(.init(service: service))
-        }
-
-        let serviceGroup = ServiceGroup(
-            configuration: .init(
-                services: services,
-                gracefulShutdownSignals: [.sigterm, .sigint],
-                logger: Logger.current
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: services,
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: Logger.current
+                )
             )
-        )
-
-        do {
             try await serviceGroup.run()
-        } catch {
-            Logger.current.report(error: error)
-            throw error
         }
-        try await self.shutdown()
     }
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``

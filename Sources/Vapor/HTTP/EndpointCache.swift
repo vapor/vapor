@@ -58,7 +58,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
             return try await request.value
         }
 
-        Logger.current.debug("Requesting data from \(self.uri)")
+        Logger.current.debug("Requesting data", metadata: ["uri": "\(self.uri)"])
 
         let newRequest = Task {
             try await self.download(using: client)

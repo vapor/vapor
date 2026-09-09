@@ -1,6 +1,4 @@
-import NIOConcurrencyHelpers
-import NIOCore
-import NIOPosix
+import Synchronization
 import Vapor
 import VaporTesting
 import Testing
@@ -260,14 +258,14 @@ struct AuthenticationTests {
             var source: ErrorSource?
         }
 
-        struct ErrorCapturingMiddleware: Middleware {
-            let captured: NIOLockedValueBox<CapturedError?>
+        final class ErrorCapturingMiddleware: Middleware {
+            let captured = Mutex<CapturedError?>(nil)
 
             func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
                 do {
                     return try await next.respond(to: request)
                 } catch {
-                    self.captured.withLockedValue {
+                    self.captured.withLock {
                         $0 = CapturedError(
                             reason: (error as? any AbortError)?.reason,
                             challenge: (error as? any AbortError)?.headers[.wwwAuthenticate],
@@ -280,11 +278,11 @@ struct AuthenticationTests {
             }
         }
 
-        let captured = NIOLockedValueBox<CapturedError?>(nil)
+        let middleware = ErrorCapturingMiddleware()
 
         try await withApp { app in
             app.routes.grouped([
-                ErrorCapturingMiddleware(captured: captured), TestAuthenticator()
+                middleware, TestAuthenticator()
             ]).get("test") { _ in
                 Response(status: .ok)
             }
@@ -297,7 +295,7 @@ struct AuthenticationTests {
                 try #expect(await response.body.requireString().contains("The credentials have expired."))
             }
 
-            let error = try #require(captured.withLockedValue { $0 })
+            let error = try #require(middleware.captured.withLock { $0 })
             #expect(error.reason == "The credentials have expired.")
             #expect(error.challenge == #"Basic realm="Vapor", charset="UTF-8""#)
             // The details of the error that actually rejected the request survive the challenge being added.
@@ -523,7 +521,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                app.sessions.middleware,
+                app.sessionsMiddleware,
                 Test.sessionAuthenticator(),
                 Test.bearerAuthenticator(),
                 Test.guardMiddleware(),
@@ -575,7 +573,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                app.sessions.middleware,
+                app.sessionsMiddleware,
                 TestSessionAuthenticator()
             ]).get("test") { req -> UserInfo in
                 UserInfo(name: req.auth.get(Test.self)?.sessionID ?? "none")
@@ -726,7 +724,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             let routes = app.routes.grouped([
-                app.sessions.middleware,
+                app.sessionsMiddleware,
                 TestSessionAuthenticator(),
             ])
 

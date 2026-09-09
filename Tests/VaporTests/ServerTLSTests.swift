@@ -3,7 +3,7 @@ import VaporTesting
 import AsyncHTTPClient
 import Crypto
 import NIOCertificateReloading
-import NIOConcurrencyHelpers
+import Synchronization
 import NIOCore
 import NIOHTTP1
 import NIOPosix
@@ -468,6 +468,60 @@ struct ServerTLSTests {
         }
     }
 
+    @Test("Waiting on the listening address fails once the server has shut down", .timeLimit(.minutes(1)))
+    func testListeningAddressFailsAfterGracefulShutdown() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+
+            let serviceGroup = ServiceGroup(configuration: .init(
+                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                logger: Logger.current))
+
+            let bound: Vapor.SocketAddress = try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try await serviceGroup.run() }
+                let address = try await app.server.listeningAddress
+                await serviceGroup.triggerGracefulShutdown()
+                try await group.waitForAll()
+                return address
+            }
+
+            // The address the server used to have is no longer any good: handing it back would point
+            // callers at a server that has stopped serving.
+            do {
+                let address = try await app.server.listeningAddress
+                Issue.record("Expected serverStopped, got \(address) — stale, the server was on \(bound).")
+            } catch NIOHTTPServerAdapterError.serverStopped {
+                // Expected.
+            } catch {
+                Issue.record("Expected serverStopped but got \(error).")
+            }
+        }
+    }
+
+    @Test("Waiting on the listening address fails once the server has been cancelled", .timeLimit(.minutes(1)))
+    func testListeningAddressFailsAfterCancellation() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+                _ = try? await app.server.listeningAddress
+                group.cancelAll()
+                await group.waitForAll()
+            }
+
+            // Cancellation currently surfaces as a cancellation error rather than `serverStopped`,
+            // because the underlying `serve()` throws rather than returning. Which error it is
+            // depends on that, so it is deliberately not pinned here — what must hold either way is
+            // that the caller is not handed the address of a server that has gone.
+            await #expect(throws: (any Error).self) {
+                try await app.server.listeningAddress
+            }
+        }
+    }
+
     @Test("HTTP/1.1 client is served when the server also offers HTTP/2", .timeLimit(.minutes(1)))
     func testHTTP1ClientAgainstHTTP2EnabledServer() async throws {
         try await withApp { app in
@@ -595,8 +649,8 @@ private struct EmptyCertificateReloader: CertificateReloader {
     var sslContextConfigurationOverride: NIOSSLContextConfigurationOverride { .noChanges }
 }
 
-private struct MutableCertificateReloader: CertificateReloader {
-    private let override: NIOLockedValueBox<NIOSSLContextConfigurationOverride>
+private final class MutableCertificateReloader: CertificateReloader {
+    private let override: Mutex<NIOSSLContextConfigurationOverride>
 
     init(certificate: NIOSSLCertificate, privateKey: NIOSSLPrivateKey) {
         var override = NIOSSLContextConfigurationOverride()
@@ -606,11 +660,11 @@ private struct MutableCertificateReloader: CertificateReloader {
     }
 
     var sslContextConfigurationOverride: NIOSSLContextConfigurationOverride {
-        self.override.withLockedValue { $0 }
+        self.override.withLock { $0 }
     }
 
     func update(certificate: NIOSSLCertificate, privateKey: NIOSSLPrivateKey) {
-        self.override.withLockedValue {
+        self.override.withLock {
             $0.certificateChain = [.certificate(certificate)]
             $0.privateKey = .privateKey(privateKey)
         }

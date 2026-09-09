@@ -24,12 +24,14 @@ extension Parameters {
         where T: LosslessStringConvertible
     {
         guard let stringValue: String = get(name) else {
-            self.logger.debug("The parameter \(name) does not exist")
+            self.logger.debug("The parameter does not exist", metadata: ["parameter": "\(name)"])
             throw Abort(.internalServerError, reason: "The parameter provided does not exist")
         }
 
         guard let value = T.init(stringValue) else {
-            self.logger.debug("The parameter \(stringValue) could not be converted to \(T.Type.self)")
+            self.logger.debug(
+                "The parameter could not be converted to the required type",
+                metadata: ["parameter": "\(name)", "value": "\(stringValue)", "type": "\(T.Type.self)"])
             throw Abort(.unprocessableContent, reason: "The parameter value could not be converted to the required type")
         }
 

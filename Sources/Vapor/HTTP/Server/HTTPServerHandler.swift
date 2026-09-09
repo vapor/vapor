@@ -40,10 +40,8 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
 
         // 2. Build Vapor request
         let peerCerts = try? await requestContext.peerCertificateChain
-        #warning("Need to handle UNIX sockets when HTTP server supports it")
-        let remoteAddress = requestContext.remoteAddress.flatMap {
-            try? SocketAddress(ipAddress: $0.host, port: $0.port)
-        }
+        let remoteAddress = requestContext.remoteAddress.flatMap { SocketAddress($0) }
+        let localAddress = requestContext.localAddress.flatMap { SocketAddress($0) }
 
         // HTTPRequest.path is the raw request target, already percent-encoded,
         // and includes the query string (e.g. "/foo%20bar?baz=1").
@@ -61,6 +59,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 headersNoUpdate: request.headerFields,
                 bodyStream: bodyStream,
                 remoteAddress: remoteAddress,
+                localAddress: localAddress,
                 peerCertificateChain: peerCerts,
                 requestID: requestID,
                 contentConfiguration: application.contentConfiguration,
@@ -171,7 +170,7 @@ final class NIOResponseBodyWriterStorage {
         // Staging is synchronous, so the sequence's own storage can be borrowed rather than copied
         // element by element; only the transport write is awaited, after the borrow has ended.
         let borrowed: Void? = bytes.withContiguousStorageIfAvailable { buffer in
-            out.append(copying: buffer)
+            unsafe out.append(copying: buffer)
         }
         if borrowed == nil {
             out.append(copying: bytes)

@@ -1,4 +1,3 @@
-import NIOCore
 import Testing
 import VaporTesting
 import Vapor
@@ -9,6 +8,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
+import NIOCore
 
 @Suite("Route Tests")
 struct RouteTests {
@@ -296,7 +296,7 @@ struct RouteTests {
     @Test("Test Invalid Cookie")
     func testInvalidCookie() async throws {
         try await withApp { app in
-            app.grouped(SessionsMiddleware(session: app.sessions.driver))
+            app.grouped(SessionsMiddleware(session: app.sessionDriver))
                 .get("get") { req -> String in
                     return req.session.data["name"] ?? "n/a"
                 }
@@ -407,7 +407,7 @@ struct RouteTests {
             // Small enough that the rejected (413) requests' unread remainder stays within the
             // keep-alive drain cap, so the connection is reused and the 413 is delivered rather than
             // racing a connection close; still over the 1-byte and 1kb limits and under 1mb/1gb.
-            var buffer = ByteBufferAllocator().buffer(capacity: 0)
+            var buffer = ByteBuffer()
             buffer.writeBytes(Array(repeating: 0, count: 500_000))
             try await app.testing(.running) { client in
                 let defaultLimit = try await client.post("/default") { $0.body = buffer }

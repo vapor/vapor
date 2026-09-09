@@ -40,7 +40,9 @@ public struct DirectoryConfiguration: Sendable {
         #if Xcode
         if workingDirectory.contains("DerivedData") {
             Logger(label: "codes.vapor.directory-config")
-                .warning("No custom working directory set for this scheme, using \(workingDirectory)")
+                .warning(
+                    "No custom working directory set for this scheme, using the process working directory",
+                    metadata: ["workingDirectory": "\(workingDirectory)"])
         }
         #endif
         

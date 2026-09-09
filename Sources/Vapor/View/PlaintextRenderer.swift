@@ -1,6 +1,12 @@
 import NIOCore
 import Logging
 import _NIOFileSystem
+import NIOFoundationEssentialsCompat
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// A ``ViewRenderer`` that serves views from files on disk, without any templating.
 ///
@@ -52,13 +58,16 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     /// - Returns: A ``View`` containing the raw file contents.
     /// - Throws: An error if the file cannot be read, or if its size exceeds 32 megabytes.
     public func render<E>(_ name: String, _ context: E) async throws -> View where E : Encodable {
-        Logger.current.trace("Rendering plaintext view \(name) with \(context)")
+        Logger.current.trace(
+            "Rendering plaintext view",
+            metadata: ["name": "\(name)", "context": "\(context)"])
         let path = name.hasPrefix("/")
             ? name
             : self.viewsDirectory + name
         return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
             let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
-            return View(data: buffer)
+            let data = Data(buffer: buffer)
+            return View(data: data)
         }
     }
 }

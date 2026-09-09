@@ -3,7 +3,7 @@ import Crypto
 import VaporTesting
 import AsyncHTTPClient
 import NIOCore
-import NIOConcurrencyHelpers
+import Synchronization
 import NIOPosix
 import NIOHTTP1
 import HTTPTypes
@@ -354,7 +354,7 @@ struct StreamingBodyTests {
         // the channel's watermark, which varies with how promptly the event loop is scheduled,
         // so the cap is set well clear of that; all it does is bound what a broken run buffers.
         let maxChunks = 8192 // 128 MiB
-        let produced = NIOLockedValueBox(0)
+        let produced = Mutex(0)
 
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -363,7 +363,7 @@ struct StreamingBodyTests {
                     let chunk = [UInt8](repeating: 0x41, count: chunkSize)
                     for _ in 0..<maxChunks {
                         try await writer.write(chunk)
-                        produced.withLockedValue { $0 += 1 }
+                        produced.withLock { $0 += 1 }
                     }
                 }))
             }
@@ -405,9 +405,9 @@ struct StreamingBodyTests {
                     // mean a slow producer, which would pass on a loaded machine whether or not
                     // backpressure works at all.
                     try await Task.sleep(for: .milliseconds(500))
-                    let firstSample = produced.withLockedValue { $0 }
+                    let firstSample = produced.withLock { $0 }
                     try await Task.sleep(for: .milliseconds(500))
-                    let stalledAt = produced.withLockedValue { $0 }
+                    let stalledAt = produced.withLock { $0 }
                     #expect(
                         stalledAt == firstSample,
                         """
@@ -490,20 +490,20 @@ struct StreamingBodyTests {
         // tripped "Response body stream writer deinitialized before .end or .error was sent."
         // A `ResponseBodyWriter` has no way to end the stream — the server concludes the response
         // once the closure returns — so there is no longer an end to miss.
-        struct PeekingMiddleware: Middleware {
-            let seen: NIOLockedValueBox<Int>
+        final class PeekingMiddleware: Middleware {
+            let seen = Mutex(0)
 
             func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
                 // Exactly what the issue did: read the body from a middleware, then chain on.
                 let collected = try await request.body.collect(max: nil)
-                self.seen.withLockedValue { $0 = collected?.readableBytes ?? 0 }
+                self.seen.withLock { $0 = collected?.readableBytes ?? 0 }
                 return try await next.respond(to: request)
             }
         }
 
-        let seen = NIOLockedValueBox(0)
+        let middleware = PeekingMiddleware()
         try await withApp { app in
-            app.middleware.use(PeekingMiddleware(seen: seen), at: .beginning)
+            app.middleware.use(middleware, at: .beginning)
 
             app.on(.post, "echo", body: .stream) { request -> Response in
                 // The route reads the same body the middleware already read, and streams it back.
@@ -529,7 +529,7 @@ struct StreamingBodyTests {
                 }
 
                 #expect(res.status == .ok)
-                #expect(seen.withLockedValue { $0 } == sent.count, "middleware did not see the whole body")
+                #expect(middleware.seen.withLock { $0 } == sent.count, "middleware did not see the whole body")
                 #expect(try await res.body.data() == sent)
 
                 // The connection survives: a second request over it is served normally.
@@ -576,7 +576,7 @@ struct StreamingBodyTests {
 
     @Test("withStreamingBytes delivers a streaming body chunk by chunk")
     func testWithStreamingBytesOnStream() async throws {
-        let chunks = NIOLockedValueBox([String]())
+        let chunks = Mutex([String]())
         let body = Response.Body(stream: { writer in
             try await writer.write("alpha")
             try await writer.write("beta")
@@ -585,48 +585,48 @@ struct StreamingBodyTests {
         try await body.withStreamingBytes { span in
             var bytes = [UInt8]()
             for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
-            chunks.withLockedValue { $0.append(String(decoding: bytes, as: UTF8.self)) }
+            chunks.withLock { $0.append(String(decoding: bytes, as: UTF8.self)) }
         }
         // Delivered separately and in order - not collected into one blob.
-        #expect(chunks.withLockedValue { $0 } == ["alpha", "beta", "gamma"])
+        #expect(chunks.withLock { $0 } == ["alpha", "beta", "gamma"])
     }
 
     @Test("withStreamingBytes hands a buffered body over as a single chunk")
     func testWithStreamingBytesOnBuffered() async throws {
         for body in [Response.Body(string: "hello"), Response.Body(data: Data("hello".utf8))] {
-            let chunks = NIOLockedValueBox([String]())
+            let chunks = Mutex([String]())
             try await body.withStreamingBytes { span in
                 var bytes = [UInt8]()
                 for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
-                chunks.withLockedValue { $0.append(String(decoding: bytes, as: UTF8.self)) }
+                chunks.withLock { $0.append(String(decoding: bytes, as: UTF8.self)) }
             }
-            #expect(chunks.withLockedValue { $0 } == ["hello"])
+            #expect(chunks.withLock { $0 } == ["hello"])
         }
     }
 
     @Test("withStreamingBytes does not call the closure for an empty body")
     func testWithStreamingBytesOnEmpty() async throws {
-        let calls = NIOLockedValueBox(0)
+        let calls = Mutex(0)
         try await Response.Body().withStreamingBytes { _ in
-            calls.withLockedValue { $0 += 1 }
+            calls.withLock { $0 += 1 }
         }
-        #expect(calls.withLockedValue { $0 } == 0)
+        #expect(calls.withLock { $0 } == 0)
     }
 
     @Test("withStreamingBytes propagates an error thrown mid-stream")
     func testWithStreamingBytesPropagatesError() async throws {
-        let seen = NIOLockedValueBox(0)
+        let seen = Mutex(0)
         let body = Response.Body(stream: { writer in
             try await writer.write("first")
             throw MidStreamError()
         })
         await #expect(throws: MidStreamError.self) {
             try await body.withStreamingBytes { _ in
-                seen.withLockedValue { $0 += 1 }
+                seen.withLock { $0 += 1 }
             }
         }
         // The closure saw the chunk that was written before the throw.
-        #expect(seen.withLockedValue { $0 } == 1)
+        #expect(seen.withLock { $0 } == 1)
     }
 
     @Test("reduceBytes folds a streaming body chunk by chunk")
@@ -675,16 +675,16 @@ struct StreamingBodyTests {
 
     @Test("collect() caches, so the stream closure runs only once")
     func testCollectCachesStream() async throws {
-        let runs = NIOLockedValueBox(0)
+        let runs = Mutex(0)
         var body = Response.Body(stream: { writer in
-            runs.withLockedValue { $0 += 1 }
+            runs.withLock { $0 += 1 }
             try await writer.write("payload")
         })
         let first = try await body.collect()
         let second = try await body.collect()
         #expect(first.map { String(decoding: $0, as: UTF8.self) } == "payload")
         #expect(second.map { String(decoding: $0, as: UTF8.self) } == "payload")
-        #expect(runs.withLockedValue { $0 } == 1)
+        #expect(runs.withLock { $0 } == 1)
     }
 
     @Test("collect() replaces a stream with an in-memory body for anything downstream")
@@ -711,20 +711,20 @@ struct StreamingBodyTests {
 
     @Test("A stream read with withStreamingBytes cannot be read a second time")
     func testStreamedBodyCannotBeReadTwice() async throws {
-        let runs = NIOLockedValueBox(0)
+        let runs = Mutex(0)
         let body = Response.Body(stream: { writer in
-            runs.withLockedValue { $0 += 1 }
+            runs.withLock { $0 += 1 }
             try await writer.write("once")
         })
         #expect(body.isUnconsumedStream)
 
         // Streaming hands the bytes to the caller and keeps nothing.
-        let seen = NIOLockedValueBox(0)
+        let seen = Mutex(0)
         try await body.withStreamingBytes { span in
             let count = span.byteCount
-            seen.withLockedValue { $0 += count }
+            seen.withLock { $0 += count }
         }
-        #expect(seen.withLockedValue { $0 } == 4)
+        #expect(seen.withLock { $0 } == 4)
         #expect(!body.isUnconsumedStream)
         #expect(body.string == nil)
 
@@ -738,7 +738,7 @@ struct StreamingBodyTests {
         await #expect(throws: Response.Body.AlreadyConsumedError.self) {
             _ = try await copy.collect()
         }
-        #expect(runs.withLockedValue { $0 } == 1)
+        #expect(runs.withLock { $0 } == 1)
     }
 
     @Test("Collecting through one copy of a body is visible from the others")
@@ -746,9 +746,9 @@ struct StreamingBodyTests {
         // A `ContentContainer` reached through a computed `content` property holds a *copy* of the
         // body, so its collection cannot be written back. Without state shared between copies that
         // would drain the stream and leave the original pointing at a spent source.
-        let runs = NIOLockedValueBox(0)
+        let runs = Mutex(0)
         let original = Response.Body(stream: { writer in
-            runs.withLockedValue { $0 += 1 }
+            runs.withLock { $0 += 1 }
             try await writer.write("shared")
         })
 
@@ -762,7 +762,7 @@ struct StreamingBodyTests {
 
         var second = original
         try #expect(await second.collect().map { String(decoding: $0, as: UTF8.self) } == "shared")
-        #expect(runs.withLockedValue { $0 } == 1)
+        #expect(runs.withLock { $0 } == 1)
     }
 
     @Test("An unknown-length stream reports its real count once collected")
@@ -791,13 +791,13 @@ struct StreamingBodyTests {
 
     @Test("collect(max:) rejects a declared length over the limit without running the stream")
     func testCollectMaxRejectsDeclaredLengthBeforeRunning() async throws {
-        let ran = NIOLockedValueBox(false)
+        let ran = Mutex(false)
         var body = try Response.Body(stream: { writer in
-            ran.withLockedValue { $0 = true }
+            ran.withLock { $0 = true }
             try await writer.write(String(repeating: "x", count: 1000))
         }, count: 1000)
         await #expect(throws: Abort.self) { try await body.collect(max: 256) }
-        #expect(ran.withLockedValue { $0 } == false)
+        #expect(ran.withLock { $0 } == false)
     }
 
     @Test("Streaming a body a copy already collected replays the bytes instead of re-running it")
@@ -805,13 +805,13 @@ struct StreamingBodyTests {
         // A one-shot source - an `AsyncStream`, a file handle, a client response's iterator - yields
         // nothing on a second run, so re-running the callback here would silently produce an empty
         // body rather than an error.
-        let runs = NIOLockedValueBox(0)
+        let runs = Mutex(0)
         let (chunks, continuation) = AsyncStream<String>.makeStream()
         continuation.yield("payload")
         continuation.finish()
 
         let original = Response.Body(stream: { writer in
-            runs.withLockedValue { $0 += 1 }
+            runs.withLock { $0 += 1 }
             for await chunk in chunks { try await writer.write(chunk) }
         })
 
@@ -823,12 +823,12 @@ struct StreamingBodyTests {
             seen += String(decoding: span.withUnsafeBytes { unsafe Array($0) }, as: UTF8.self)
         }
         #expect(seen == "payload")
-        #expect(runs.withLockedValue { $0 } == 1)
+        #expect(runs.withLock { $0 } == 1)
 
         // `reduceBytes` is built on `withStreamingBytes`, so it replays too.
         let count = try await original.reduceBytes(into: 0) { total, span in total += span.byteCount }
         #expect(count == 7)
-        #expect(runs.withLockedValue { $0 } == 1)
+        #expect(runs.withLock { $0 } == 1)
     }
 
     @Test("The server writes the collected bytes for a body drained through a copy", .timeLimit(.minutes(1)))
@@ -860,7 +860,7 @@ struct StreamingBodyTests {
 
     @Test("data(max:) and string(max:) collect a stream without needing a var")
     func testCollectingAccessorsWorkOnALet() async throws {
-        let runs = NIOLockedValueBox(0)
+        let runs = Mutex(0)
         let (chunks, continuation) = AsyncStream<String>.makeStream()
         continuation.yield("hello ")
         continuation.yield("world")
@@ -868,7 +868,7 @@ struct StreamingBodyTests {
 
         // `let`, deliberately: the plain properties cannot collect, so these have to.
         let body = Response.Body(stream: { writer in
-            runs.withLockedValue { $0 += 1 }
+            runs.withLock { $0 += 1 }
             for await chunk in chunks { try await writer.write(chunk) }
         })
 
@@ -884,7 +884,7 @@ struct StreamingBodyTests {
         #expect(body.data.map { String(decoding: $0, as: UTF8.self) } == "hello world")
         #expect(body.count == 11)
         try #expect(await body.data().map { String(decoding: $0, as: UTF8.self) } == "hello world")
-        #expect(runs.withLockedValue { $0 } == 1)
+        #expect(runs.withLock { $0 } == 1)
     }
 
     @Test("The collecting accessors honour their limit")
@@ -1134,13 +1134,13 @@ struct StreamingBodyTests {
         // race has nowhere to happen, and this pins that down.
         let filePath = try await makeTemporaryFile(size: 8 << 20)
 
-        let completions = NIOLockedValueBox(0)
+        let completions = Mutex(0)
 
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("file") { req -> Response in
                 try await app.fileio.streamFile(at: filePath, for: req, advancedETagComparison: false) { _ in
-                    completions.withLockedValue { $0 += 1 }
+                    completions.withLock { $0 += 1 }
                 }
             }
 
@@ -1164,12 +1164,12 @@ struct StreamingBodyTests {
 
                 // The server unwinds the aborted response on its own schedule, so wait for the
                 // completion rather than assuming it has already run...
-                for _ in 0..<200 where completions.withLockedValue({ $0 }) == 0 {
+                for _ in 0..<200 where completions.withLock({ $0 }) == 0 {
                     try await Task.sleep(for: .milliseconds(10))
                 }
                 // ...then give a second call a chance to land before declaring there wasn't one.
                 try await Task.sleep(for: .milliseconds(200))
-                #expect(completions.withLockedValue { $0 } == 1)
+                #expect(completions.withLock { $0 } == 1)
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
