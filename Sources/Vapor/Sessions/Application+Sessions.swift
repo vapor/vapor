@@ -8,10 +8,8 @@ extension Application {
     public struct Sessions: Sendable {
         final class Storage: Sendable {
             let memory: MemorySessions.Storage
-            let configuration: NIOLockedValueBox<SessionsConfiguration>
             init() {
                 self.memory = .init()
-                self.configuration = .init(.default())
             }
         }
 
@@ -21,19 +19,10 @@ extension Application {
 
         let application: Application
 
-        public var configuration: SessionsConfiguration {
-            get {
-                self.storage.configuration.withLockedValue { $0 }
-            }
-            nonmutating set {
-                self.storage.configuration.withLockedValue { $0 = newValue }
-            }
-        }
-
         public var middleware: SessionsMiddleware {
             .init(
                 session: self.application.sessionDriver,
-                configuration: self.configuration
+                configuration: self.application.sessionsConfiguration
             )
         }
 
