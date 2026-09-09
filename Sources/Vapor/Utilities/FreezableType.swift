@@ -27,7 +27,7 @@ final class FreezableType<Value: Sendable>: Sendable {
     ///
     /// The check and the change happen under one lock, so a value cannot be written on the strength
     /// of a freeze state that has since moved on.
-    func withValue<Result>(_ body: (inout Value) throws -> Result) rethrows -> Result {
+    func withValue(_ body: (inout Value) throws -> Void) rethrows {
         try self.state.withLock { state in
             precondition(
                 !state.isFrozen,
@@ -36,7 +36,7 @@ final class FreezableType<Value: Sendable>: Sendable {
                 Configure it before calling run() or start().
                 """
             )
-            return try body(&state.value)
+            try body(&state.value)
         }
     }
 
