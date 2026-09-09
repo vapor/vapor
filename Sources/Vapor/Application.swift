@@ -300,7 +300,14 @@ public final class Application: Sendable, Service {
 
     deinit {
         Logger.current.trace("Application deinitialized, goodbye!")
-        assert(self.didShutdown, "Application.shutdown() was not called before Application deinitialized.")
+        switch self.state {
+        case .configuring, .shutdown:
+            break
+        case .booting, .booted, .starting, .started, .shuttingDown:
+            assertionFailure(
+                "Application.shutdown() was not called before deinit. It was \(self.state), so its lifecycle handlers were never told to shut down."
+            )
+        }
     }
 }
 
