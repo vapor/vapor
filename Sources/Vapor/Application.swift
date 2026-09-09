@@ -22,31 +22,28 @@ public final class Application: Sendable, Service {
         self._didShutdown.withLockedValue { $0 }
     }
 
-    internal let isBooted: NIOLockedValueBox<Bool>
+    // MARK: - Public Properties
     public let environment: Environment
-    private let _storage: NIOLockedValueBox<Storage>
-    private let _didShutdown: NIOLockedValueBox<Bool>
-    private let _lifecycleHandlers: FreezableType<[ any LifecycleHandler]>
-    /// Content hashes for advanced ETag comparison, shared by every request.
-    package let fileETagHashCache: FileETagHashCache
-    private let _services: FreezableType<[any Service]>
     public let routes: Routes
-    private let _middlewares: FreezableType<Middlewares>
-    private let _serverConfiguration: FreezableType<ServerConfiguration>
-    public var serverConfiguration: ServerConfiguration {
-        get {
-            self._serverConfiguration.value
-        }
-        set {
-            self._serverConfiguration.withValue { $0 = newValue }
-        }
-    }
 
     /// Configuration reader used to read configuration values.
     ///
     /// You can configure this `ConfigReader` when initializing your ``Application``
     /// to read configuration values from different sources, such as files, environment variables or command line arguments.
     public let configReader: ConfigReader
+
+    // MARK: - Freezable Types
+    private let _middlewares: FreezableType<Middlewares>
+    private let _serverConfiguration: FreezableType<ServerConfiguration>
+    private let _services: FreezableType<[any Service]>
+    private let _lifecycleHandlers: FreezableType<[ any LifecycleHandler]>
+
+    // MARK: - Other Types
+    /// Content hashes for advanced ETag comparison, shared by every request.
+    package let fileETagHashCache: FileETagHashCache
+    internal let isBooted: NIOLockedValueBox<Bool>
+    private let _storage: NIOLockedValueBox<Storage>
+    private let _didShutdown: NIOLockedValueBox<Bool>
 
     // MARK: - Services
     package let contentConfiguration: ContentConfiguration
@@ -99,13 +96,13 @@ public final class Application: Sendable, Service {
         configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
         services: ServiceConfiguration = .init()
     ) async throws {
-        let env = try environment ?? Environment.detect(from: configReader)
-        self.init(env, configuration: configuration, configReader: configReader, services: services, internal: true)
+        try self.init(environment, configuration: configuration, configReader: configReader, services: services, internal: true)
         await DotEnvFile.load(for: self.environment)
     }
 
     // internal flag here is just to stop the compiler from complaining about duplicates
-    package init(_ environment: Environment = .development, configuration: ServerConfiguration, configReader: ConfigReader, services: ServiceConfiguration, internal: Bool) {
+    package init(_ environment: Environment? = nil, configuration: ServerConfiguration, configReader: ConfigReader, services: ServiceConfiguration, internal: Bool) throws {
+        let environment = try environment ?? Environment.detect(from: configReader)
         self.environment = environment
         self._didShutdown = .init(false)
         self._storage = .init(.init())
@@ -294,6 +291,7 @@ public final class Application: Sendable, Service {
     }
 }
 
+// MARK: - Freezable types
 extension Application {
     public var middleware: Middlewares {
         get {
@@ -301,6 +299,15 @@ extension Application {
         }
         set {
             self._middlewares.withValue { $0 = newValue }
+        }
+    }
+
+    public var serverConfiguration: ServerConfiguration {
+        get {
+            self._serverConfiguration.value
+        }
+        set {
+            self._serverConfiguration.withValue { $0 = newValue }
         }
     }
 }
