@@ -27,7 +27,10 @@ public final class Application: Sendable, Service {
     public let environment: Environment
 
     /// The routes registered to the application
-    public let routes: Routes
+    let _routes: FreezableType<RouteStorage>
+
+    /// The routes registered on this application.
+    public var routes: Routes { Routes(application: self) }
 
     /// Configuration reader used to read configuration values.
     ///
@@ -158,7 +161,7 @@ public final class Application: Sendable, Service {
         self.sessionsConfiguration = services.sessionsConfiguration
         self.responder = services.responder
         self._middlewares = .init(Self.defaultMiddlewares(environment: environment), name: "Middlewares")
-        self.routes = Routes()
+        self._routes = .init(RouteStorage(), name: "Routes")
         self.servers.initialize()
         self.servers.use(.http)
 
@@ -296,7 +299,7 @@ public final class Application: Sendable, Service {
         self._lifecycleHandlers.freeze()
         self._services.freeze()
         self._middlewares.freeze()
-        self.routes.freeze()
+        self._routes.freeze()
     }
 
     deinit {

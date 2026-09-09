@@ -7,7 +7,7 @@ extension Application {
         switch self.responder {
         case .default:
             return DefaultResponder(
-                routes: self.routes,
+                routes: self._routes.value,
                 middleware: self.middleware.resolve(),
             )
         case .provided(let provided):

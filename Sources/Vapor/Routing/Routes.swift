@@ -1,92 +1,62 @@
-import NIOConcurrencyHelpers
+/// The routes registered on an ``Application``, along with the settings the router is built from.
+package struct RouteStorage: Sendable {
+    package var all: [Route] = []
 
-public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
-    public var all: [Route] {
-        get {
-            self.sendableBox.withLockedValue { box in
-                box.all
-            }
-        }
-        set {
-            self.sendableBox.withLockedValue { box in
-                precondition(!box.isFrozen, Self.frozenMessage("Routes"))
-                box.all = newValue
-            }
-        }
-    }
-    
     /// Default value used by `HTTPBodyStreamStrategy.collect` when `maxSize` is `nil`.
-    public var defaultMaxBodySize: ByteCount {
-        get {
-            self.sendableBox.withLockedValue { $0.defaultMaxBodySize }
-        }
-        set {
-            self.sendableBox.withLockedValue { $0.defaultMaxBodySize = newValue }
-        }
+    package var defaultMaxBodySize: ByteCount = "16kb"
+
+    /// Routing is case-sensitive by default; set to `true` to match constant path components
+    /// without regard to case.
+    package var caseInsensitive: Bool = false
+
+    package init() {}
+
+    package mutating func add(_ route: Route) {
+        self.all.append(route)
     }
-    
+}
+
+/// The routes registered on an ``Application``.
+///
+/// A view onto the application's route storage rather than a container of its own, so that building
+/// routes through it — `app.routes.grouped(...)`, `app.routes.get(...)` — registers them on the
+/// application itself. Every change goes through the application's freeze, so routes and routing
+/// settings can only be configured before it starts.
+public struct Routes: RoutesBuilder, CustomStringConvertible, Sendable {
+    let application: Application
+
+    public var all: [Route] {
+        get { self.application._routes.value.all }
+        nonmutating set { self.application._routes.withValue { $0.all = newValue } }
+    }
+
+    /// Default value used by `HTTPBodyStreamStrategy.collect` when `maxSize` is `nil`.
+    ///
+    /// Applies to every route registered with the default `.collect` strategy. A route can override
+    /// it with `.collect(maxSize:)`, or opt out of collection entirely with `.stream`.
+    public var defaultMaxBodySize: ByteCount {
+        get { self.application._routes.value.defaultMaxBodySize }
+        nonmutating set { self.application._routes.withValue { $0.defaultMaxBodySize = newValue } }
+    }
+
     /// Default routing behavior of `DefaultResponder` is case-sensitive; configure to `true` prior to
     /// Application start handle `Constant` `PathComponents` in a case-insensitive manner.
     public var caseInsensitive: Bool {
-        get {
-            self.sendableBox.withLockedValue { $0.caseInsensitive }
-        }
-        set {
-            self.sendableBox.withLockedValue {
-                precondition(!$0.isFrozen, Self.frozenMessage("Case sensitivity"))
-                $0.caseInsensitive = newValue
-            }
-        }
+        get { self.application._routes.value.caseInsensitive }
+        nonmutating set { self.application._routes.withValue { $0.caseInsensitive = newValue } }
     }
 
     public var description: String {
         self.all.description
     }
-    
-    struct SendableBox: Sendable {
-        var all: [Route]
-        var defaultMaxBodySize: ByteCount
-        var caseInsensitive: Bool
-        /// Set as the application starts, once the router has been built from these routes.
-        var isFrozen: Bool = false
-    }
-
-    private static func frozenMessage(_ what: String) -> String {
-        """
-        \(what) cannot be changed after the application has started. \
-        Configure it before calling run() or start().
-        """
-    }
-    
-    let sendableBox: NIOLockedValueBox<SendableBox>
-
-    public init() {
-        let box = SendableBox(all: [], defaultMaxBodySize: "16kb", caseInsensitive: false)
-        self.sendableBox = .init(box)
-    }
 
     public func add(_ route: Route) {
-        self.sendableBox.withLockedValue {
-            precondition(!$0.isFrozen, Self.frozenMessage("Routes"))
-            $0.all.append(route)
-        }
-    }
-
-    /// Refuses further changes to the routes and to case sensitivity.
-    ///
-    /// Both are baked into the router when it is built at startup, so changing either afterwards
-    /// would be accepted and then never used. ``defaultMaxBodySize`` is deliberately not covered:
-    /// it is read afresh on every request rather than baked in, so changing it after start does
-    /// take effect.
-    ///
-    /// Freezing twice is harmless, so a server that restarts is fine.
-    func freeze() {
-        self.sendableBox.withLockedValue { $0.isFrozen = true }
+        self.application._routes.withValue { $0.add(route) }
     }
 }
 
 extension Application: RoutesBuilder {
     public func add(_ route: Route) {
-        self.routes.add(route)
+        self._routes.withValue { $0.add(route) }
     }
 }
