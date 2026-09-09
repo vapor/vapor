@@ -9,10 +9,6 @@ import AsyncHTTPClient
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable, Service {
-    public var didShutdown: Bool {
-        self._didShutdown.withLockedValue { $0 }
-    }
-
     // MARK: - Public Properties
     /// The environment the application is running in
     public let environment: Environment
@@ -58,8 +54,7 @@ public final class Application: Sendable, Service {
 
     /// Content hashes for advanced ETag comparison, shared by every request.
     package let fileETagHashCache: FileETagHashCache
-    internal let isBooted: NIOLockedValueBox<Bool>
-    private let _didShutdown: NIOLockedValueBox<Bool>
+    let lifecycleState: ApplicationStateMachine
     package let contentConfiguration: ContentConfiguration
     package let responder: ServiceOptionType<any Responder>
     let sessionsConfiguration: SessionsConfiguration
@@ -112,9 +107,8 @@ public final class Application: Sendable, Service {
     ) async throws {
         let environment = try environment ?? Environment.detect(from: configReader)
         self.environment = environment
-        self._didShutdown = .init(false)
+        self.lifecycleState = .init()
         self._lifecycleHandlers = .init([], name: "Lifecycle Handlers")
-        self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
         self.fileETagHashCache = .init(capacity: configuration.eTagHashCacheCapacity)
@@ -239,25 +233,28 @@ public final class Application: Sendable, Service {
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
     public func boot() async throws {
-        /// Skip the boot process if already booted
-        guard !self.isBooted.withLockedValue({
-            var result = true
-            swap(&$0, &result)
-            return result
-        }) else {
-            return
+        // Idempotent: `withLifecycle` boots unconditionally, and the testing helpers may already
+        // have. A caller arriving during a concurrent boot returns rather than booting again.
+        guard try self.lifecycleState.beginBoot() else { return }
+        do {
+            for handler in self._lifecycleHandlers.value {
+                try await handler.willBoot(self)
+            }
+            for handler in self._lifecycleHandlers.value {
+                try await handler.didBoot(self)
+            }
+        } catch {
+            // Hand the application back so it can be shut down or booted again. Marking it booted
+            // before the handlers ran was what previously made a failed boot unretryable.
+            self.lifecycleState.abandonBoot()
+            throw error
         }
-
-        for handler in self._lifecycleHandlers.value {
-            try await handler.willBoot(self)
-        }
-        for handler in self._lifecycleHandlers.value {
-            try await handler.didBoot(self)
-        }
+        self.lifecycleState.finishBoot()
     }
 
     public func shutdown() async throws {
-        guard !self.didShutdown else { return }
+        // Returns immediately if a shutdown has already happened or is in flight.
+        guard self.lifecycleState.beginShutdown() else { return }
         Logger.current.debug("Application shutting down")
 
         Logger.current.trace("Shutting down providers")
@@ -265,7 +262,7 @@ public final class Application: Sendable, Service {
             await handler.shutdown(self)
         }
 
-        self._didShutdown.withLockedValue { $0 = true }
+        self.lifecycleState.finishShutdown()
         Logger.current.trace("Application shutdown complete")
     }
 
@@ -273,7 +270,9 @@ public final class Application: Sendable, Service {
         do {
             try await self.boot()
             self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
+            try self.lifecycleState.beginStart()
             freezeApplication()
+            self.lifecycleState.finishStart()
             try await runServices()
         } catch {
             Logger.current.report(error: error)
@@ -310,6 +309,18 @@ public final class Application: Sendable, Service {
     deinit {
         Logger.current.trace("Application deinitialized, goodbye!")
         assert(self.didShutdown, "Application.shutdown() was not called before Application deinitialized.")
+    }
+}
+
+// MARK: - State
+extension Application {
+    /// Where the application is in its lifecycle.
+    public var state: State {
+        self.lifecycleState.current
+    }
+
+    public var didShutdown: Bool {
+        self.state == .shutdown
     }
 }
 
