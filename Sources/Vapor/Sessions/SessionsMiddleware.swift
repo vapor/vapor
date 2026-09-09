@@ -78,3 +78,12 @@ public final class SessionsMiddleware: Middleware {
         return response
     }
 }
+
+extension Application {
+    public var sessionsMiddleware: SessionsMiddleware {
+        .init(
+            session: self.sessionDriver,
+            configuration: self.sessionsConfiguration
+        )
+    }
+}
