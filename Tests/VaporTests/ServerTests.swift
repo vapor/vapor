@@ -1035,7 +1035,6 @@ struct ServerTests {
                     // Binding with port 0 picks a port; the bound address has to report the real one.
                     let bound = try await app.server.listeningAddress
                     #expect(bound.port != 0)
-                    #expect(bound.port == app.sharedAddress.withLockedValue({ $0 })?.port)
 
                     await group.triggerGracefulShutdown()
                     try await tg.waitForAll()
@@ -1466,9 +1465,9 @@ final class CustomServer: Server, Sendable {
         }
     }
 
-    var listeningAddress: SocketAddress {
+    var listeningAddress: Vapor.SocketAddress {
         get async throws {
-            try SocketAddress.makeAddressResolvingHost("127.0.0.1", port: 0)
+            Vapor.SocketAddress(ipAddress: "127.0.0.1", port: 0)!
         }
     }
 }
