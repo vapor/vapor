@@ -181,7 +181,7 @@ func routes(_ app: Application) async throws {
     }
 
     let sessions = app.grouped("sessions")
-        .grouped(app.sessions.middleware)
+        .grouped(app.sessionsMiddleware)
     sessions.get("set", ":value") { req -> HTTPResponse.Status in
         req.session.data["name"] = req.parameters.get("value")
         return .ok
@@ -359,9 +359,9 @@ struct TestMiddleware: Middleware {
     let number: Int
 
     func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
-        Logger.current.debug("In async middleware - \(number)")
+        Logger.current.debug("In async middleware", metadata: ["number": "\(number)"])
         let response = try await next.respond(to: request)
-        Logger.current.debug("In async middleware way out - \(number)")
+        Logger.current.debug("In async middleware way out", metadata: ["number": "\(number)"])
         return response
     }
 }

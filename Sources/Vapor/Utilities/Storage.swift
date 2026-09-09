@@ -16,7 +16,9 @@ public struct Storage: Sendable {
             do {
                 try self.onShutdown?(self.value)
             } catch {
-                Logger.current.warning("Could not shutdown \(T.self): \(error)")
+                Logger.current.warning(
+                    "Could not shut down stored value",
+                    metadata: ["type": "\(T.self)", "error": "\(error)"])
             }
         }
         func asyncShutdown() async {
@@ -27,7 +29,9 @@ public struct Storage: Sendable {
                     try self.onShutdown?(self.value)
                 }
             } catch {
-                Logger.current.warning("Could not shutdown \(T.self): \(error)")
+                Logger.current.warning(
+                    "Could not shut down stored value",
+                    metadata: ["type": "\(T.self)", "error": "\(error)"])
             }
         }
     }

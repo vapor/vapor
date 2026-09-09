@@ -178,7 +178,9 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             // Publish the address and resume anyone already waiting on it.
             self.transition(to: .bound(socketAddress))
 
-            Logger.current.notice("Server started on \(address.host):\(address.port)")
+            Logger.current.notice(
+                "Server started",
+                metadata: ["host": "\(address.host)", "port": "\(address.port)"])
 
             // Wait for serve() to complete (blocks until shutdown/cancellation)
             try await group.next()

@@ -18,7 +18,7 @@ internal struct VaporHTTPClient: Client {
     func send(_ clientRequest: ClientRequest) async throws -> ClientResponse {
         let urlString = clientRequest.url.string
         guard let url = URL(string: urlString) else {
-            Logger.current.debug("\(urlString) is an invalid URL")
+            Logger.current.debug("Invalid URL", metadata: ["urlString": "\(urlString)"])
             throw Abort(.internalServerError, reason: "\(urlString) is an invalid URL")
         }
         var request = HTTPClientRequest(url: url.absoluteString)

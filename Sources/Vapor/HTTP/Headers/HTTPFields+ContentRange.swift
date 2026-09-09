@@ -281,7 +281,7 @@ extension HTTPFields.Range.Value {
         switch self {
         case .start(let start):
             guard start >= 0 else {
-                Logger.current.debug("Requested range start was invalid: \(start)")
+                Logger.current.debug("Requested range start was invalid", metadata: ["start": "\(start)"])
                 throw Abort(.badRequest)
             }
             // `start == size` selects nothing: the last byte is at `size - 1`.
@@ -292,7 +292,9 @@ extension HTTPFields.Range.Value {
 
         case .tail(let suffixLength):
             guard suffixLength >= 0 else {
-                Logger.current.debug("Requested range suffix length was invalid: \(suffixLength)")
+                Logger.current.debug(
+                    "Requested range suffix length was invalid",
+                    metadata: ["suffixLength": "\(suffixLength)"])
                 throw Abort(.badRequest)
             }
             // A suffix longer than the representation selects all of it.
@@ -304,7 +306,9 @@ extension HTTPFields.Range.Value {
 
         case .within(let start, let end):
             guard start >= 0, end >= 0, start <= end else {
-                Logger.current.debug("Requested range was invalid: \(start)-\(end)")
+                Logger.current.debug(
+                    "Requested range was invalid",
+                    metadata: ["start": "\(start)", "end": "\(end)"])
                 throw Abort(.badRequest)
             }
             guard start < size else {

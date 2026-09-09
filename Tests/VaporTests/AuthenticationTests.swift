@@ -523,7 +523,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                app.sessions.middleware,
+                app.sessionsMiddleware,
                 Test.sessionAuthenticator(),
                 Test.bearerAuthenticator(),
                 Test.guardMiddleware(),
@@ -575,7 +575,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                app.sessions.middleware,
+                app.sessionsMiddleware,
                 TestSessionAuthenticator()
             ]).get("test") { req -> UserInfo in
                 UserInfo(name: req.auth.get(Test.self)?.sessionID ?? "none")
@@ -726,7 +726,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             let routes = app.routes.grouped([
-                app.sessions.middleware,
+                app.sessionsMiddleware,
                 TestSessionAuthenticator(),
             ])
 
