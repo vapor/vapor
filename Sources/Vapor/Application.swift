@@ -35,10 +35,10 @@ public final class Application: Sendable, Service {
 
     public var lifecycle: Lifecycle {
         get {
-            self._lifecycle.withLockedValue { $0 }
+            self._lifecycle.withValue { $0 }
         }
         set {
-            self._lifecycle.withLockedValue { $0 = newValue }
+            self._lifecycle.withValue { $0 = newValue }
         }
     }
 
@@ -46,10 +46,10 @@ public final class Application: Sendable, Service {
     public let environment: Environment
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
-    private let _lifecycle: NIOLockedValueBox<Lifecycle>
+    private let _lifecycle: FreezableType<Lifecycle>
     /// Content hashes for advanced ETag comparison, shared by every request.
     package let fileETagHashCache: FileETagHashCache
-    private let _services: NIOLockedValueBox<[any Service]>
+    private let _services: FreezableType<[any Service]>
     public let routes: Routes
     // TODO: inline this when application is a struct
     private let _serverConfiguration: NIOLockedValueBox<ServerConfiguration>
@@ -129,12 +129,12 @@ public final class Application: Sendable, Service {
         self.environment = environment
         self._didShutdown = .init(false)
         self._storage = .init(.init())
-        self._lifecycle = .init(.init())
+        self._lifecycle = .init(.init(), name: "Lifecycle Handlers")
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
         self.fileETagHashCache = .init(capacity: configuration.eTagHashCacheCapacity)
-        self._services = .init([])
+        self._services = .init([], name: "Services")
         self._serverConfiguration = .init(configuration)
         self.configReader = configReader
 
@@ -183,7 +183,7 @@ public final class Application: Sendable, Service {
     /// Services are started when `run()` or `start()` is called and shut down
     /// when the application receives a shutdown signal.
     public func addService(_ service: any Service) {
-        self._services.withLockedValue { $0.append(service) }
+        self._services.withValue { $0.append(service) }
     }
 
     /// Runs the application as a `Service` (no signal handling).
@@ -207,7 +207,7 @@ public final class Application: Sendable, Service {
                 group.addTask { [server = self.server] in
                     try await server.run()
                 }
-                for service in self._services.withLockedValue({ $0 }) {
+                for service in self._services.withValue({ $0 }) {
                     group.addTask { try await service.run() }
                 }
             }
@@ -243,7 +243,7 @@ public final class Application: Sendable, Service {
                 service: self.server,
                 successTerminationBehavior: .gracefullyShutdownGroup
             ))
-            for service in self._services.withLockedValue({ $0 }) {
+            for service in self._services.withValue({ $0 }) {
                 services.append(.init(service: service))
             }
 
