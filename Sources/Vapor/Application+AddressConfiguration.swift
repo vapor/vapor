@@ -1,4 +1,5 @@
 import Configuration
+import Logging
 
 extension Application {
     struct AddressConfiguration: Sendable {
@@ -51,11 +52,28 @@ extension Application {
             let port = address.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
             if let hostname, let port {
                 self.serverConfiguration.address = .hostname(hostname, port: port)
+            } else {
+                Logger.current.warning(
+                    "Ignoring malformed bind address, expected \"hostname:port\".",
+                    metadata: ["bind": "\(address)"]
+                )
             }
-        case (.some(let hostname), .some(let port), .none, .none):
-            self.serverConfiguration.address = .hostname(hostname, port: port)
+        case (let hostname, let port, .none, .none):
+            // Hostname and port are independent: either may be given on its own, and each replaces
+            // only its own half of the address already configured. Matching on both being present
+            // meant a lone `--port` fell through to `default` and was silently discarded.
+            if let hostname {
+                self.serverConfiguration.hostname = hostname
+            }
+            if let port {
+                self.serverConfiguration.port = port
+            }
         default:
-            break // incompatible flags — logged elsewhere
+            // A combination that cannot be honoured at once, such as `--bind` alongside `--port`,
+            // or a socket path alongside either. Previously dropped without a word.
+            Logger.current.warning(
+                "Ignoring incompatible address options. Use --bind, or --unix-socket, or --hostname/--port."
+            )
         }
     }
 }
