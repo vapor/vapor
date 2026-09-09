@@ -296,7 +296,7 @@ struct RouteTests {
     @Test("Test Invalid Cookie")
     func testInvalidCookie() async throws {
         try await withApp { app in
-            app.grouped(SessionsMiddleware(session: app.sessions.driver))
+            app.grouped(SessionsMiddleware(session: app.sessionDriver))
                 .get("get") { req -> String in
                     return req.session.data["name"] ?? "n/a"
                 }
