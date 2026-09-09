@@ -23,7 +23,10 @@ public final class Application: Sendable, Service {
     }
 
     // MARK: - Public Properties
+    /// The environment the application is running in
     public let environment: Environment
+
+    /// The routes registered to the application
     public let routes: Routes
 
     /// Configuration reader used to read configuration values.
@@ -32,6 +35,21 @@ public final class Application: Sendable, Service {
     /// to read configuration values from different sources, such as files, environment variables or command line arguments.
     public let configReader: ConfigReader
 
+    /// The ``ViewRenderer`` configured in the application
+    public let viewRenderer: any ViewRenderer
+
+    /// The directory information the app is running in
+    public let directoryConfiguration: DirectoryConfiguration
+
+    /// The ``Cache`` configured in the application
+    public let cache: any Cache
+
+    /// The ``Client`` configured in the application
+    public let client: any Client
+
+    /// The ``SessionDriver`` configured in the application
+    public let sessionDriver: any SessionDriver
+
     // MARK: - Freezable Types
     private let _middlewares: FreezableType<Middlewares>
     private let _serverConfiguration: FreezableType<ServerConfiguration>
@@ -39,21 +57,17 @@ public final class Application: Sendable, Service {
     private let _lifecycleHandlers: FreezableType<[ any LifecycleHandler]>
 
     // MARK: - Other Types
+
     /// Content hashes for advanced ETag comparison, shared by every request.
     package let fileETagHashCache: FileETagHashCache
     internal let isBooted: NIOLockedValueBox<Bool>
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
-
-    // MARK: - Services
     package let contentConfiguration: ContentConfiguration
     package let responder: ServiceOptionType<any Responder>
-    public let viewRenderer: any ViewRenderer
-    public let directoryConfiguration: DirectoryConfiguration
-    public let cache: any Cache
-    public let client: any Client
-    public let sessionDriver: any SessionDriver
     let sessionsConfiguration: SessionsConfiguration
+
+    // MARK: - Services
 
     public struct ServiceConfiguration: Sendable {
         let contentConfiguration: ContentConfiguration
@@ -156,20 +170,7 @@ public final class Application: Sendable, Service {
         self.servers.use(.http)
     }
 
-    /// Register an additional `Service` to run alongside the HTTP server.
-    ///
-    /// Services are started when `run()` or `start()` is called and shut down
-    /// when the application receives a shutdown signal.
-    public func addService(_ service: any Service) {
-        self._services.withValue { $0.append(service) }
-    }
-
-    /// Register a ``LifecycleHandler`` with the application. Vapor will call the
-    /// different lifecycle events when they are reached
-    public func addLifecycleHandler(_ lifecycleHander: any LifecycleHandler) {
-        self._lifecycleHandlers.withValue { $0.append(lifecycleHander) }
-    }
-
+    // MARK: - Execution
     /// Runs the application as a `Service` (no signal handling).
     ///
     /// Use this when embedding the application in your own `ServiceGroup`:
@@ -196,26 +197,6 @@ public final class Application: Sendable, Service {
                 }
             }
         }
-    }
-
-    private func withLifecycle(_ runServices: () async throws -> Void) async throws {
-        do {
-            try await self.boot()
-            freezeApplication()
-            self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
-            try await runServices()
-        } catch {
-            Logger.current.report(error: error)
-            try? await self.shutdown()
-            throw error
-        }
-        try await self.shutdown()
-    }
-
-    private func freezeApplication() {
-        self._lifecycleHandlers.freeze()
-        self._services.freeze()
-        self._middlewares.freeze()
     }
 
     /// Starts the application as a standalone process with signal handling.
@@ -283,6 +264,42 @@ public final class Application: Sendable, Service {
 
         self._didShutdown.withLockedValue { $0 = true }
         Logger.current.trace("Application shutdown complete")
+    }
+
+    private func withLifecycle(_ runServices: () async throws -> Void) async throws {
+        do {
+            try await self.boot()
+            freezeApplication()
+            self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
+            try await runServices()
+        } catch {
+            Logger.current.report(error: error)
+            try? await self.shutdown()
+            throw error
+        }
+        try await self.shutdown()
+    }
+
+    // MARK: - Freezable Type Configuration
+
+    /// Register an additional `Service` to run alongside the HTTP server.
+    ///
+    /// Services are started when `run()` or `start()` is called and shut down
+    /// when the application receives a shutdown signal.
+    public func addService(_ service: any Service) {
+        self._services.withValue { $0.append(service) }
+    }
+
+    /// Register a ``LifecycleHandler`` with the application. Vapor will call the
+    /// different lifecycle events when they are reached
+    public func addLifecycleHandler(_ lifecycleHander: any LifecycleHandler) {
+        self._lifecycleHandlers.withValue { $0.append(lifecycleHander) }
+    }
+
+    private func freezeApplication() {
+        self._lifecycleHandlers.freeze()
+        self._services.freeze()
+        self._middlewares.freeze()
     }
 
     deinit {
