@@ -873,6 +873,21 @@ struct ServerTests {
             #expect(configuration.address == .hostname("1.2.3.4", port: 123))
         }
 
+        @Test("Changing the server configuration after the application has started traps")
+        func testServerConfigurationCannotBeChangedAfterStart() async {
+            // TLS, HTTP versions and the bind address are all read once as the server comes up, so
+            // a later change would be accepted and never used. This is the value that spent several
+            // commits wrapped in a `FreezableType` without being frozen, which is why the freeze is
+            // now asked of the application's lifecycle rather than tracked per value.
+            await #expect(processExitsWith: .failure) {
+                do {
+                    try await whileServing { $0.serverConfiguration.port = 8099 }
+                } catch {
+                    print("setup failed rather than trapping: \(error)")
+                }
+            }
+        }
+
         @Test("Test Port Override")
         func testPortOverride() async throws {
             try await withApp { app in

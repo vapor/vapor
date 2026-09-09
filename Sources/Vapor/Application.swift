@@ -108,12 +108,12 @@ public final class Application: Sendable, Service {
         let environment = try environment ?? Environment.detect(from: configReader)
         self.environment = environment
         self.lifecycleState = .init()
-        self._lifecycleHandlers = .init([], name: "Lifecycle Handlers")
+        self._lifecycleHandlers = .init([], name: "Lifecycle Handlers", lifecycle: self.lifecycleState)
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
         self.fileETagHashCache = .init(capacity: configuration.eTagHashCacheCapacity)
-        self._services = .init([], name: "Services")
-        self._serverConfiguration = .init(configuration, name: "Configuration")
+        self._services = .init([], name: "Services", lifecycle: self.lifecycleState)
+        self._serverConfiguration = .init(configuration, name: "Configuration", lifecycle: self.lifecycleState)
         self.configReader = configReader
 
         // Service Setup
@@ -151,8 +151,8 @@ public final class Application: Sendable, Service {
 
         self.sessionsConfiguration = services.sessionsConfiguration
         self.responder = services.responder
-        self._middlewares = .init(Self.defaultMiddlewares(environment: environment), name: "Middlewares")
-        self._routes = .init(RouteStorage(), name: "Routes")
+        self._middlewares = .init(Self.defaultMiddlewares(environment: environment), name: "Middlewares", lifecycle: self.lifecycleState)
+        self._routes = .init(RouteStorage(), name: "Routes", lifecycle: self.lifecycleState)
         let serverContext = ServerContext(
             configuration: self._serverConfiguration,
             routes: self._routes,
@@ -271,7 +271,6 @@ public final class Application: Sendable, Service {
             try await self.boot()
             self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
             try self.lifecycleState.beginStart()
-            freezeApplication()
             self.lifecycleState.finishStart()
             try await runServices()
         } catch {
@@ -298,13 +297,6 @@ public final class Application: Sendable, Service {
         self._lifecycleHandlers.withValue { $0.append(lifecycleHander) }
     }
 
-    private func freezeApplication() {
-        self._lifecycleHandlers.freeze()
-        self._services.freeze()
-        self._middlewares.freeze()
-        self._routes.freeze()
-        self._serverConfiguration.freeze()
-    }
 
     deinit {
         Logger.current.trace("Application deinitialized, goodbye!")

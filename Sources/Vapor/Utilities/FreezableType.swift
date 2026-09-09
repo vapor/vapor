@@ -1,53 +1,43 @@
 import Synchronization
 
-/// Type to hold other types that can be mutated until the server starts, at which point
-/// we'll trigger a precondition
+/// A value that may be configured until the application starts, and is read-only afterwards.
+///
+/// Uses the ``Application/State`` to determine if writes are allowed. If the application is
+/// in a state where writes are not allowed, such as being started already. If this is the case
+/// then a precondition is triggered. Reads are always allowed.
 final class FreezableType<Value: Sendable>: Sendable {
-    private struct State {
-        var value: Value
-        var isFrozen: Bool = false
-    }
+    private let storage: Mutex<Value>
 
-    private let state: Mutex<State>
+    /// The lifecycle that decides whether changes are still allowed.
+    private let lifecycle: ApplicationStateMachine
 
-    /// Names this configuration in the precondition message, e.g. "Middleware".
+    /// Names this configuration in the precondition message, e.g. "Middlewares".
     private let name: StaticString
 
-    init(_ value: Value, name: StaticString) {
-        self.state = .init(.init(value: value))
+    init(_ value: Value, name: StaticString, lifecycle: ApplicationStateMachine) {
+        self.storage = .init(value)
         self.name = name
+        self.lifecycle = lifecycle
     }
 
     /// The current value, readable whether or not the application has started.
     var value: Value {
-        self.state.withLock { $0.value }
+        self.storage.withLock { $0 }
     }
 
-    /// Changes the value, trapping if the application has already started.
-    ///
-    /// The check and the change happen under one lock, so a value cannot be written on the strength
-    /// of a freeze state that has since moved on.
+    /// Changes the value, trapping if the application has already started. Prevents being used for reading
+    /// to avoid accessing when you shouldn't be. Uses the lifecycle of the application to ensure values
+    /// can be mutated
     func withValue(_ body: (inout Value) throws -> Void) rethrows {
-        try self.state.withLock { state in
+        try self.storage.withLock { value in
             precondition(
-                !state.isFrozen,
+                self.lifecycle.isConfigurable,
                 """
-                \(self.name) cannot be changed after the application has started. \
+                \(self.name) cannot be changed once the application is \(self.lifecycle.current). \
                 Configure it before calling run() or start().
                 """
             )
-            try body(&state.value)
-        }
-    }
-
-    /// Refuses further changes and hands back the final value.
-    ///
-    /// Freezing twice is harmless: a server that restarts freezes what is already frozen.
-    @discardableResult
-    func freeze() -> Value {
-        self.state.withLock {
-            $0.isFrozen = true
-            return $0.value
+            try body(&value)
         }
     }
 }
