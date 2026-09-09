@@ -1,6 +1,5 @@
 import NIOHTTPServer
-import NIOCore
-import NIOConcurrencyHelpers
+import Synchronization
 import Logging
 
 /// Errors thrown by ``NIOHTTPServerAdapter``.
@@ -19,6 +18,9 @@ enum NIOHTTPServerAdapterError: Error {
     /// The in-memory TLS credentials carried an empty certificate chain. A server has nothing to present
     /// during the handshake without at least a leaf certificate.
     case emptyCertificateChain
+
+    /// The address was asked for after the server had stopped serving.
+    case serverStopped
 }
 
 /// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
@@ -27,48 +29,69 @@ enum NIOHTTPServerAdapterError: Error {
 /// parent task (via `ServiceGroup` or task cancellation) through to
 /// `NIOHTTPServer.serve()`'s built-in `withGracefulShutdownHandler`.
 final class NIOHTTPServerAdapter: Server, Sendable {
-    /// Tracks everyone waiting on ``listeningAddress`` along with a startup failure, if one occurred.
-    ///
-    /// `startupError` is retained so that a waiter arriving *after* `run()` has already failed
-    /// throws instead of waiting on an address that will never be published.
-    ///
-    /// Waiters are held in an array rather than a single slot: nothing stops two tasks awaiting the
-    /// address at once, and with one slot the second would overwrite the first, leaving it parked
-    /// forever on a continuation nobody resumes.
-    private struct AddressWaiters {
-        var continuations: [CheckedContinuation<SocketAddress, any Error>] = []
-        var startupError: (any Error)?
+    // Handles queries to the server's address
+    private struct AddressStateMachine {
+        enum State {
+            /// `run()` has not bound yet. The outcome is still unknown, so waiters park.
+            case notStarted
+            /// Bound and serving.
+            case bound(SocketAddress)
+            /// Startup failed, or the server died after binding. Retained so that a waiter arriving
+            /// afterwards throws instead of parking on an address that will never be published.
+            case failed(any Error)
+            /// `run()` returned. Distinct from `notStarted` so a late waiter is told the server has
+            /// gone rather than waiting for it to start.
+            case stopped
 
-        /// Removes the parked waiters, for resuming outside the lock.
-        mutating func takeContinuations() -> [CheckedContinuation<SocketAddress, any Error>] {
+            /// What a waiter should be handed in this state, or `nil` while the outcome is still
+            /// unknown and the waiter has to park.
+            var result: Result<SocketAddress, any Error>? {
+                switch self {
+                case .notStarted: nil
+                case .bound(let address): .success(address)
+                case .failed(let error): .failure(error)
+                case .stopped: .failure(NIOHTTPServerAdapterError.serverStopped)
+                }
+            }
+        }
+
+        var state: State = .notStarted
+        var continuations: [CheckedContinuation<SocketAddress, any Error>] = []
+
+        /// Moves to `state`, handing back the parked waiters so they can be resumed outside the lock.
+        mutating func transition(to state: State) -> [CheckedContinuation<SocketAddress, any Error>] {
+            self.state = state
             defer { self.continuations = [] }
             return self.continuations
         }
     }
 
     let application: Application
-    private let addressWaiters: NIOLockedValueBox<AddressWaiters>
+    private let addressState = Mutex<AddressStateMachine>(.init())
 
     init(application: Application) {
         self.application = application
-        self.addressWaiters = .init(.init())
     }
 
     func run() async throws {
         do {
             try await self.runServer()
+            self.transition(to: .stopped)
         } catch {
-            // If we failed before publishing the listening address — bad TLS credentials, the port
-            // already being in use, a bind failure — anyone awaiting `listeningAddress` would wait
-            // forever, because only the success path below ever resumes them. Hand them the error.
-            let waiting = self.addressWaiters.withLockedValue { waiters in
-                waiters.startupError = error
-                return waiters.takeContinuations()
-            }
-            for continuation in waiting {
-                continuation.resume(throwing: error)
-            }
+            self.transition(to: .failed(error))
             throw error
+        }
+    }
+
+    /// Moves the address state on and resumes everyone parked on ``listeningAddress``.
+    ///
+    /// Continuations are resumed outside the lock: resuming wakes another task, which is not
+    /// something to do while holding one.
+    private func transition(to state: AddressStateMachine.State) {
+        let waiting = self.addressState.withLock { $0.transition(to: state) }
+        guard let result = state.result else { return }
+        for continuation in waiting {
+            continuation.resume(with: result)
         }
     }
 
@@ -148,17 +171,12 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
             // Wait for the server to bind, then publish the address
             let addresses = try await nioServer.listeningAddresses
-            guard let address = addresses.first else {
+            guard let address = addresses.first, let socketAddress = SocketAddress(address) else {
                 throw NIOHTTPServerAdapterError.noListeningAddress
             }
-            let nioAddress = try NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
 
-            // Atomically set the address and resume any waiting continuation
-            self.application.sharedAddress.withLockedValue { $0 = nioAddress }
-            let waiting = self.addressWaiters.withLockedValue { $0.takeContinuations() }
-            for continuation in waiting {
-                continuation.resume(returning: nioAddress)
-            }
+            // Publish the address and resume anyone already waiting on it.
+            self.transition(to: .bound(socketAddress))
 
             Logger.current.notice(
                 "Server started",
@@ -171,39 +189,19 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
     var listeningAddress: SocketAddress {
         get async throws {
-            // Check atomically: if address is already set, return it;
-            // otherwise register a continuation to be fulfilled by run()
-            let needsWait: Bool = self.application.sharedAddress.withLockedValue { address in
-                address != nil ? false : true
-            }
-            if !needsWait {
-                return self.application.sharedAddress.withLockedValue { $0! }
-            }
-            enum Resolution {
-                case address(SocketAddress)
-                case failure(any Error)
-                case waiting
+            if let result = self.addressState.withLock({ $0.state.result }) {
+                return try result.get()
             }
             return try await withCheckedThrowingContinuation { continuation in
-                // Double-check under lock: the address may have been published, or startup may have
-                // failed outright, between our check above and here.
-                let resolution: Resolution = self.addressWaiters.withLockedValue { waiters in
-                    if let address = self.application.sharedAddress.withLockedValue({ $0 }) {
-                        return .address(address)
+                let result: Result<SocketAddress, any Error>? = self.addressState.withLock { state in
+                    if let result = state.state.result {
+                        return result
                     }
-                    if let error = waiters.startupError {
-                        return .failure(error)
-                    }
-                    waiters.continuations.append(continuation)
-                    return .waiting
+                    state.continuations.append(continuation)
+                    return nil
                 }
-                switch resolution {
-                case .address(let address):
-                    continuation.resume(returning: address)
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                case .waiting:
-                    break
+                if let result {
+                    continuation.resume(with: result)
                 }
             }
         }

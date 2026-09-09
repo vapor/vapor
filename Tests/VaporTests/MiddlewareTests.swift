@@ -1,5 +1,7 @@
 import HTTPTypes
 import Vapor
+import AsyncHTTPClient
+import ServiceLifecycle
 import Metrics
 @testable import CoreMetrics
 import MetricsTestKit
@@ -477,7 +479,7 @@ struct MiddlewareTests {
             }
 
             app.grouped(
-                TracingMiddleware(serverAddress: { app.sharedAddress.withLockedValue({ $0 }) }) { attributes, _ in
+                TracingMiddleware { attributes, _ in
                     attributes["custom"] = "custom"
                 }
             ).grouped(
@@ -509,7 +511,7 @@ struct MiddlewareTests {
                 #expect(span.attributes["network.protocol.name"]?.toSpanAttribute() == "http")
                 let serverAddress = span.attributes["server.address"]?.toSpanAttribute()
                 #expect(serverAddress == "127.0.0.1" || serverAddress == "::1")
-                let port = try #require(app.sharedAddress.withLockedValue({ $0 })?.port, "Failed to get port")
+                let port = try #require(await app.server.listeningAddress.port, "Failed to get port")
                 #expect(span.attributes["server.port"]?.toSpanAttribute() == port.toSpanAttribute())
                 #expect(span.attributes["url.query"]?.toSpanAttribute() == "foo=bar")
 
@@ -524,6 +526,37 @@ struct MiddlewareTests {
                 #expect(span.attributes["custom"]?.toSpanAttribute() == "custom")
 
                 #expect(span.attributes["http.response.status_code"]?.toSpanAttribute() == 200)
+            }
+        }
+    }
+
+    @Test("Tracing reports the address the client reached, not the wildcard bind", .withTracer(InMemoryTracer()), .timeLimit(.minutes(1)))
+    func testTracingMiddlewareServerAddressOnWildcardBind() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("0.0.0.0", port: 0)
+            app.grouped(TracingMiddleware()).get("testTracing") { _ in "done" }
+
+            try await app.boot()
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try await app.server.run() }
+
+                let address = try await app.server.listeningAddress
+                // Without this the test would still pass on a loopback bind, where the bound address
+                // and the connection's local address are the same and prove nothing.
+                #expect(address.host == "0.0.0.0", "the server has to be on the wildcard for this test to mean anything")
+                let port = try #require(address.port)
+
+                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/testTracing")
+                _ = try await response.body.collect(upTo: 64)
+
+                // `server.address` is taken from the connection, so it names the interface the client
+                // actually reached. The bound address is `0.0.0.0`, which is a wildcard rather than
+                // somewhere anything connects to, and must not show up in the span.
+                let span = try #require(tracer.finishedSpans.first)
+                #expect(span.attributes["server.address"]?.toSpanAttribute() == "127.0.0.1")
+                #expect(span.attributes["server.port"]?.toSpanAttribute() == port.toSpanAttribute())
+
+                group.cancelAll()
             }
         }
     }
