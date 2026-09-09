@@ -103,19 +103,12 @@ public final class Application: Sendable, Service {
     }
 
     // MARK: - Initialization
-
-    public convenience init(
+    public init(
         _ environment: Environment? = nil,
         configuration: ServerConfiguration = .init(),
         configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
         services: ServiceConfiguration = .init()
     ) async throws {
-        try self.init(environment, configuration: configuration, configReader: configReader, services: services, internal: true)
-        await DotEnvFile.load(for: self.environment)
-    }
-
-    // internal flag here is just to stop the compiler from complaining about duplicates
-    package init(_ environment: Environment? = nil, configuration: ServerConfiguration, configReader: ConfigReader, services: ServiceConfiguration, internal: Bool) throws {
         let environment = try environment ?? Environment.detect(from: configReader)
         self.environment = environment
         self._didShutdown = .init(false)
@@ -168,6 +161,8 @@ public final class Application: Sendable, Service {
         self.routes = Routes()
         self.servers.initialize()
         self.servers.use(.http)
+
+        await DotEnvFile.load(for: self.environment)
     }
 
     // MARK: - Execution
