@@ -531,16 +531,16 @@ struct ServerTests {
         //                }
         //
         //#warning("Migrate")
-        //                let countBox = NIOLockedValueBox<Int>(0)
+        //                let countBox = Mutex<Int>(0)
         //                let promise = req.eventLoop.makePromise(of: Int.self)
         //                req.body.drain { part in
         //                    switch part {
         //                    case .buffer(let buffer):
-        //                        countBox.withLockedValue { $0 += buffer.readableBytes }
+        //                        countBox.withLock { $0 += buffer.readableBytes }
         //                    case .error(let error):
         //                        promise.fail(error)
         //                    case .end:
-        //                        promise.succeed(countBox.withLockedValue({ $0 }))
+        //                        promise.succeed(countBox.withLock({ $0 }))
         //                    }
         //                    return req.eventLoop.makeSucceededFuture(())
         //                }
@@ -568,8 +568,8 @@ struct ServerTests {
         //    @Test("Test Echo Server")
         //    func testEchoServer() async throws {
         //        final class Context: Sendable {
-        //            let server: NIOLockedValueBox<[String]>
-        //            let client: NIOLockedValueBox<[String]>
+        //            let server: Mutex<[String]>
+        //            let client: Mutex<[String]>
         //            init() {
         //                self.server = .init([])
         //                self.client = .init([])
@@ -583,7 +583,7 @@ struct ServerTests {
         //                    request.body.drain { body in
         //                        switch body {
         //                        case .buffer(let buffer):
-        //                            context.server.withLockedValue { $0.append(buffer.string) }
+        //                            context.server.withLock { $0.append(buffer.string) }
         //                            return writer.write(.buffer(buffer))
         //                        case .error(let error):
         //                            return writer.write(.error(error))
@@ -629,7 +629,7 @@ struct ServerTests {
         //                    task: HTTPClient.Task<HTTPClient.Response>,
         //                    _ buffer: ByteBuffer
         //                ) -> EventLoopFuture<Void> {
-        //                    self.context.client.withLockedValue { $0.append(buffer.string) }
+        //                    self.context.client.withLock { $0.append(buffer.string) }
         //                    return task.eventLoop.makeSucceededFuture(())
         //                }
         //
@@ -643,8 +643,8 @@ struct ServerTests {
         //                delegate: response
         //            ).get()
         //
-        //            let server = context.server.withLockedValue { $0 }
-        //            let client = context.client.withLockedValue { $0 }
+        //            let server = context.server.withLock { $0 }
+        //            let client = context.client.withLock { $0 }
         //            #expect(server == ["foo", "bar", "baz"])
         //            #expect(client == ["foo", "bar", "baz"])
         //        }

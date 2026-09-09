@@ -3,7 +3,7 @@ import VaporTesting
 import AsyncHTTPClient
 import Crypto
 import NIOCertificateReloading
-import NIOConcurrencyHelpers
+import Synchronization
 import NIOCore
 import NIOHTTP1
 import NIOPosix
@@ -649,8 +649,8 @@ private struct EmptyCertificateReloader: CertificateReloader {
     var sslContextConfigurationOverride: NIOSSLContextConfigurationOverride { .noChanges }
 }
 
-private struct MutableCertificateReloader: CertificateReloader {
-    private let override: NIOLockedValueBox<NIOSSLContextConfigurationOverride>
+private final class MutableCertificateReloader: CertificateReloader {
+    private let override: Mutex<NIOSSLContextConfigurationOverride>
 
     init(certificate: NIOSSLCertificate, privateKey: NIOSSLPrivateKey) {
         var override = NIOSSLContextConfigurationOverride()
@@ -660,11 +660,11 @@ private struct MutableCertificateReloader: CertificateReloader {
     }
 
     var sslContextConfigurationOverride: NIOSSLContextConfigurationOverride {
-        self.override.withLockedValue { $0 }
+        self.override.withLock { $0 }
     }
 
     func update(certificate: NIOSSLCertificate, privateKey: NIOSSLPrivateKey) {
-        self.override.withLockedValue {
+        self.override.withLock {
             $0.certificateChain = [.certificate(certificate)]
             $0.privateKey = .privateKey(privateKey)
         }

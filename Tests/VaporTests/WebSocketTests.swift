@@ -6,7 +6,6 @@ import Testing
 //import WebSocketKit
 import NIOCore
 import NIOPosix
-import NIOConcurrencyHelpers
 import RoutingKit
 
 @Suite("Websocket Tests", .disabled())
