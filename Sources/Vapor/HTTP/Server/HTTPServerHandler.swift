@@ -176,7 +176,7 @@ final class NIOResponseBodyWriterStorage {
         // Staging is synchronous, so the sequence's own storage can be borrowed rather than copied
         // element by element; only the transport write is awaited, after the borrow has ended.
         let borrowed: Void? = bytes.withContiguousStorageIfAvailable { buffer in
-            out.append(copying: buffer)
+            unsafe out.append(copying: buffer)
         }
         if borrowed == nil {
             out.append(copying: bytes)
