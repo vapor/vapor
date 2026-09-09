@@ -29,7 +29,7 @@ struct ApplicationTests {
         // Boot has already run, so a handler added later never gets willBoot or didBoot.
         await #expect(processExitsWith: .failure) {
             do {
-                try await whileServing { $0.lifecycle.use(ApplicationLifecycleTests.RecordingHandler()) }
+                try await whileServing { $0.addLifecycleHandler(ApplicationLifecycleTests.RecordingHandler()) }
             } catch {
                 print("setup failed rather than trapping: \(error)")
             }
@@ -143,7 +143,7 @@ struct ApplicationTests {
             let app = try await Application(.testing, configReader: testConfigReader)
 
             let foo = Foo()
-            app.lifecycle.use(foo)
+            app.addLifecycleHandler(foo)
 
             #expect(await foo.willBootFlag == false)
             #expect(await foo.didBootFlag == false)
@@ -174,7 +174,7 @@ struct ApplicationTests {
             }
 
             let handler = Handler()
-            app.lifecycle.use(handler)
+            app.addLifecycleHandler(handler)
 
             try await app.boot()
             try await app.boot()

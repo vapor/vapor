@@ -36,7 +36,7 @@ struct ApplicationLifecycleTests {
     func testShutsDownWhenServerFailsToStart() async throws {
         let app = try await Application(.testing)
         let handler = RecordingHandler()
-        app.lifecycle.use(handler)
+        app.addLifecycleHandler(handler)
         app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
         // Certificate paths that do not resolve fail the server after boot, inside the services.
         app.serverConfiguration.tlsConfiguration = .pemFile(
@@ -56,7 +56,7 @@ struct ApplicationLifecycleTests {
     func testShutsDownWhenBootFails() async throws {
         let app = try await Application(.testing)
         let handler = RecordingHandler(failBoot: true)
-        app.lifecycle.use(handler)
+        app.addLifecycleHandler(handler)
 
         await #expect(throws: (any Error).self) {
             try await app.run()
