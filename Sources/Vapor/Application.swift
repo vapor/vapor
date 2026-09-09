@@ -162,6 +162,7 @@ public final class Application: Sendable, Service {
         self.servers.initialize()
         self.servers.use(.http)
 
+        #warning("Can we remove all this?")
         await DotEnvFile.load(for: self.environment)
     }
 
