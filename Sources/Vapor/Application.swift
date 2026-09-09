@@ -22,31 +22,11 @@ public final class Application: Sendable, Service {
         self._didShutdown.withLockedValue { $0 }
     }
 
-    public struct Lifecycle: Sendable {
-        var handlers: [any LifecycleHandler]
-        init() {
-            self.handlers = []
-        }
-
-        public mutating func use(_ handler: any LifecycleHandler) {
-            self.handlers.append(handler)
-        }
-    }
-
-    public var lifecycle: Lifecycle {
-        get {
-            self._lifecycle.withValue { $0 }
-        }
-        set {
-            self._lifecycle.withValue { $0 = newValue }
-        }
-    }
-
     internal let isBooted: NIOLockedValueBox<Bool>
     public let environment: Environment
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
-    private let _lifecycle: FreezableType<Lifecycle>
+    private let _lifecycleHandlers: FreezableType<[ any LifecycleHandler]>
     /// Content hashes for advanced ETag comparison, shared by every request.
     package let fileETagHashCache: FileETagHashCache
     private let _services: FreezableType<[any Service]>
@@ -129,7 +109,7 @@ public final class Application: Sendable, Service {
         self.environment = environment
         self._didShutdown = .init(false)
         self._storage = .init(.init())
-        self._lifecycle = .init(.init(), name: "Lifecycle Handlers")
+        self._lifecycleHandlers = .init([], name: "Lifecycle Handlers")
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
         self.directoryConfiguration = .detect()
@@ -184,6 +164,12 @@ public final class Application: Sendable, Service {
     /// when the application receives a shutdown signal.
     public func addService(_ service: any Service) {
         self._services.withValue { $0.append(service) }
+    }
+
+    /// Register a ``LifecycleHandler`` with the application. Vapor will call the
+    /// different lifecycle events when they are reached
+    public func addLifecycleHandler(_ lifecycleHander: any LifecycleHandler) {
+        self._lifecycleHandlers.withValue { $0.append(lifecycleHander) }
     }
 
     /// Runs the application as a `Service` (no signal handling).
@@ -269,10 +255,10 @@ public final class Application: Sendable, Service {
             return
         }
 
-        for handler in self.lifecycle.handlers {
+        for handler in self._lifecycleHandlers.value {
             try await handler.willBoot(self)
         }
-        for handler in self.lifecycle.handlers {
+        for handler in self._lifecycleHandlers.value {
             try await handler.didBoot(self)
         }
     }
@@ -282,10 +268,9 @@ public final class Application: Sendable, Service {
         Logger.current.debug("Application shutting down")
 
         Logger.current.trace("Shutting down providers")
-        for handler in self.lifecycle.handlers.reversed()  {
+        for handler in self._lifecycleHandlers.value.reversed()  {
             await handler.shutdown(self)
         }
-        self.lifecycle.handlers = []
 
         Logger.current.trace("Clearing Application storage")
         await self.storage.shutdown()
@@ -298,18 +283,5 @@ public final class Application: Sendable, Service {
     deinit {
         Logger.current.trace("Application deinitialized, goodbye!")
         assert(self.didShutdown, "Application.shutdown() was not called before Application deinitialized.")
-    }
-}
-
-public protocol LockKey {}
-
-extension Dictionary {
-    fileprivate mutating func insertOrReturn(_ value: @autoclosure () -> Value, at key: Key) -> Value {
-        if let existing = self[key] {
-            return existing
-        }
-        let newValue = value()
-        self[key] = newValue
-        return newValue
     }
 }
