@@ -1,6 +1,5 @@
 import NIOCore
 import _NIOFileSystem
-import NIOPosix
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
