@@ -16,7 +16,7 @@ struct SessionTests {
         let cache = MockKeyedCache()
         try await withApp(services: .init(sessionDriver: .provided(cache))) { app in
             var cookie: HTTPCookies.Value?
-            let sessions = app.routes.grouped(app.sessions.middleware)
+            let sessions = app.routes.grouped(app.sessionsMiddleware)
             sessions.get("set") { req -> String in
                 req.session.data["foo"] = "bar"
                 return "set"
@@ -58,7 +58,7 @@ struct SessionTests {
     func testInvalidCookie() async throws {
         try await withApp { app in
             // Configure sessions.
-            app.middleware.use(app.sessions.middleware)
+            app.middleware.use(app.sessionsMiddleware)
 
             // Adds data to the request session.
             app.get("set") { req -> HTTPResponse.Status in
@@ -105,7 +105,7 @@ struct SessionTests {
     @Test("hasSession is false until the session is used")
     func testHasSessionIsFalseUntilUsed() async throws {
         try await withApp { app in
-            let sessions = app.routes.grouped(app.sessions.middleware)
+            let sessions = app.routes.grouped(app.sessionsMiddleware)
             // Reported before the session is touched, so reading it here must not create one.
             sessions.get("untouched") { req -> String in "\(req.hasSession)" }
             sessions.get("touched") { req -> String in
@@ -123,7 +123,7 @@ struct SessionTests {
     @Test("hasSession is true when a stored session is restored from a cookie")
     func testHasSessionWithExistingCookie() async throws {
         try await withApp { app in
-            let sessions = app.routes.grouped(app.sessions.middleware)
+            let sessions = app.routes.grouped(app.sessionsMiddleware)
             sessions.get("set") { req -> String in
                 req.session.data["foo"] = "bar"
                 return "set"
@@ -147,7 +147,7 @@ struct SessionTests {
     @Test("Session data survives a round trip")
     func testSessionDataRoundTrip() async throws {
         try await withApp { app in
-            let sessions = app.routes.grouped(app.sessions.middleware)
+            let sessions = app.routes.grouped(app.sessionsMiddleware)
             sessions.get("set") { req -> String in
                 req.session.data["name"] = "Vapor"
                 req.session.data["colour"] = "blue"
@@ -174,7 +174,7 @@ struct SessionTests {
     @Test("Destroying a session expires the client's cookie")
     func testDestroyExpiresCookie() async throws {
         try await withApp { app in
-            let sessions = app.routes.grouped(app.sessions.middleware)
+            let sessions = app.routes.grouped(app.sessionsMiddleware)
             sessions.get("set") { req -> String in
                 req.session.data["foo"] = "bar"
                 return "set"

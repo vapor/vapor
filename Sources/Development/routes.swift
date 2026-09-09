@@ -181,7 +181,7 @@ func routes(_ app: Application) async throws {
     }
 
     let sessions = app.grouped("sessions")
-        .grouped(app.sessions.middleware)
+        .grouped(app.sessionsMiddleware)
     sessions.get("set", ":value") { req -> HTTPResponse.Status in
         req.session.data["name"] = req.parameters.get("value")
         return .ok

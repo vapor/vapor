@@ -179,7 +179,6 @@ public final class Application: Sendable, Service {
         self.sessionsConfiguration = services.sessionsConfiguration
         self.responder = services.responder
         self.routes = Routes()
-        self.sessions.initialize()
         self.servers.initialize()
         self.servers.use(.http)
     }
