@@ -31,14 +31,13 @@ public final class Application: Sendable, Service {
     package let fileETagHashCache: FileETagHashCache
     private let _services: FreezableType<[any Service]>
     public let routes: Routes
-    // TODO: inline this when application is a struct
-    private let _serverConfiguration: NIOLockedValueBox<ServerConfiguration>
+    private let _serverConfiguration: FreezableType<ServerConfiguration>
     public var serverConfiguration: ServerConfiguration {
         get {
-            self._serverConfiguration.withLockedValue { $0 }
+            self._serverConfiguration.value
         }
         set {
-            self._serverConfiguration.withLockedValue { $0 = newValue }
+            self._serverConfiguration.withValue { $0 = newValue }
         }
     }
 
@@ -56,7 +55,7 @@ public final class Application: Sendable, Service {
     public let cache: any Cache
     public let client: any Client
     public let sessionDriver: any SessionDriver
-    public let sessionsConfiguration: SessionsConfiguration
+    let sessionsConfiguration: SessionsConfiguration
 
     public struct ServiceConfiguration: Sendable {
         let contentConfiguration: ContentConfiguration
@@ -115,7 +114,7 @@ public final class Application: Sendable, Service {
         self.directoryConfiguration = .detect()
         self.fileETagHashCache = .init(capacity: configuration.eTagHashCacheCapacity)
         self._services = .init([], name: "Services")
-        self._serverConfiguration = .init(configuration)
+        self._serverConfiguration = .init(configuration, name: "Configuration")
         self.configReader = configReader
 
         // Service Setup
