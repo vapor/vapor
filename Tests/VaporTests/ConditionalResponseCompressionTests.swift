@@ -5,9 +5,6 @@ import Foundation
 #endif
 import Vapor
 import AsyncHTTPClient
-import NIOCore
-import NIOPosix
-import NIOConcurrencyHelpers
 import Atomics
 import Testing
 import VaporTesting

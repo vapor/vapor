@@ -1,4 +1,3 @@
-import NIOCore
 import Testing
 import VaporTesting
 import Vapor
@@ -9,6 +8,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
+import NIOCore
 
 @Suite("Route Tests")
 struct RouteTests {
@@ -404,7 +404,7 @@ struct RouteTests {
                 HTTPResponse.Status.ok
             }
 
-            var buffer = ByteBufferAllocator().buffer(capacity: 0)
+            var buffer =  ByteBuffer()
             buffer.writeBytes(Array(repeating: 0, count: 500_000))
             try await app.testing(.running) { client in
                 let defaultLimit = try await client.post("/default") { $0.body = buffer }

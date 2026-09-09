@@ -2,7 +2,7 @@ import Vapor
 import VaporTesting
 import Testing
 import HTTPTypes
-import NIOConcurrencyHelpers
+import Synchronization
 import RoutingKit
 
 /// Tests to make sure Vapor's swift-testing integration works.
@@ -129,12 +129,12 @@ struct VaporTestingTests {
             try await withApp { app in
                 // Set only once the handler has written everything: proof the stream ran to the
                 // end rather than being cancelled or never started.
-                let streamsCompleted = NIOLockedValueBox(0)
+                let streamsCompleted = Mutex(0)
                 app.get("stream") { _ in
                     Response(body: .init(stream: { writer in
                         try await writer.write("alpha")
                         try await writer.write("beta")
-                        streamsCompleted.withLockedValue { $0 += 1 }
+                        streamsCompleted.withLock { $0 += 1 }
                     }))
                 }
 
@@ -144,12 +144,12 @@ struct VaporTestingTests {
                     #expect(read.status == .ok, "\(method)")
                     #expect(read.body.string == nil, "\(method)")
 
-                    let seen = NIOLockedValueBox("")
+                    let seen = Mutex("")
                     try await read.body.withStreamingBytes { span in
                         let chunk = String(decoding: span.withUnsafeBytes { unsafe Array($0) }, as: UTF8.self)
-                        seen.withLockedValue { $0 += chunk }
+                        seen.withLock { $0 += chunk }
                     }
-                    #expect(seen.withLockedValue { $0 } == "alphabeta", "\(method)")
+                    #expect(seen.withLock { $0 } == "alphabeta", "\(method)")
 
                     // Ignored: a test that only looks at the status leaves the body alone.
                     let ignored = try await client.get("/stream")
@@ -158,7 +158,7 @@ struct VaporTestingTests {
 
                 // Both streams ran to completion - the ignored one was drained on the way out
                 // instead of being dropped, which would have cancelled it mid-write.
-                #expect(streamsCompleted.withLockedValue { $0 } == 2, "\(method)")
+                #expect(streamsCompleted.withLock { $0 } == 2, "\(method)")
             }
         }
     }

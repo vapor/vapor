@@ -9,7 +9,7 @@ import AsyncHTTPClient
 import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOPosix
-import NIOConcurrencyHelpers
+import Synchronization
 import HTTPTypes
 import NIOSSL
 import Atomics
@@ -531,16 +531,16 @@ struct ServerTests {
         //                }
         //
         //#warning("Migrate")
-        //                let countBox = NIOLockedValueBox<Int>(0)
+        //                let countBox = Mutex<Int>(0)
         //                let promise = req.eventLoop.makePromise(of: Int.self)
         //                req.body.drain { part in
         //                    switch part {
         //                    case .buffer(let buffer):
-        //                        countBox.withLockedValue { $0 += buffer.readableBytes }
+        //                        countBox.withLock { $0 += buffer.readableBytes }
         //                    case .error(let error):
         //                        promise.fail(error)
         //                    case .end:
-        //                        promise.succeed(countBox.withLockedValue({ $0 }))
+        //                        promise.succeed(countBox.withLock({ $0 }))
         //                    }
         //                    return req.eventLoop.makeSucceededFuture(())
         //                }
@@ -568,8 +568,8 @@ struct ServerTests {
         //    @Test("Test Echo Server")
         //    func testEchoServer() async throws {
         //        final class Context: Sendable {
-        //            let server: NIOLockedValueBox<[String]>
-        //            let client: NIOLockedValueBox<[String]>
+        //            let server: Mutex<[String]>
+        //            let client: Mutex<[String]>
         //            init() {
         //                self.server = .init([])
         //                self.client = .init([])
@@ -583,7 +583,7 @@ struct ServerTests {
         //                    request.body.drain { body in
         //                        switch body {
         //                        case .buffer(let buffer):
-        //                            context.server.withLockedValue { $0.append(buffer.string) }
+        //                            context.server.withLock { $0.append(buffer.string) }
         //                            return writer.write(.buffer(buffer))
         //                        case .error(let error):
         //                            return writer.write(.error(error))
@@ -629,7 +629,7 @@ struct ServerTests {
         //                    task: HTTPClient.Task<HTTPClient.Response>,
         //                    _ buffer: ByteBuffer
         //                ) -> EventLoopFuture<Void> {
-        //                    self.context.client.withLockedValue { $0.append(buffer.string) }
+        //                    self.context.client.withLock { $0.append(buffer.string) }
         //                    return task.eventLoop.makeSucceededFuture(())
         //                }
         //
@@ -643,8 +643,8 @@ struct ServerTests {
         //                delegate: response
         //            ).get()
         //
-        //            let server = context.server.withLockedValue { $0 }
-        //            let client = context.client.withLockedValue { $0 }
+        //            let server = context.server.withLock { $0 }
+        //            let client = context.client.withLock { $0 }
         //            #expect(server == ["foo", "bar", "baz"])
         //            #expect(client == ["foo", "bar", "baz"])
         //        }
@@ -1330,21 +1330,21 @@ struct ServerTests {
     func testCustomServer() async throws {
         try await withApp { app in
             app.servers.use(.custom)
-            #expect(app.customServer.didStart.withLockedValue({ $0 }) == false)
-            #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == false)
+            #expect(app.customServer.didStart.withLock({ $0 }) == false)
+            #expect(app.customServer.didShutdown.withLock({ $0 }) == false)
 
             // `Server` is a ServiceLifecycle `Service`: it runs until cancelled rather than
             // offering start/shutdown.
             await withTaskGroup(of: Void.self) { group in
                 group.addTask { try? await app.server.run() }
-                for _ in 0..<200 where app.customServer.didStart.withLockedValue({ $0 }) == false {
+                for _ in 0..<200 where app.customServer.didStart.withLock({ $0 }) == false {
                     try? await Task.sleep(for: .milliseconds(10))
                 }
-                #expect(app.customServer.didStart.withLockedValue({ $0 }) == true)
-                #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == false)
+                #expect(app.customServer.didStart.withLock({ $0 }) == true)
+                #expect(app.customServer.didShutdown.withLock({ $0 }) == false)
                 group.cancelAll()
             }
-            #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == true)
+            #expect(app.customServer.didShutdown.withLock({ $0 }) == true)
         }
     }
 
@@ -1447,8 +1447,8 @@ extension Application {
 }
 
 final class CustomServer: Server, Sendable {
-    let didStart: NIOLockedValueBox<Bool>
-    let didShutdown: NIOLockedValueBox<Bool>
+    let didStart: Mutex<Bool>
+    let didShutdown: Mutex<Bool>
 
     init() {
         self.didStart = .init(false)
@@ -1456,12 +1456,12 @@ final class CustomServer: Server, Sendable {
     }
 
     func run() async throws {
-        self.didStart.withLockedValue { $0 = true }
+        self.didStart.withLock { $0 = true }
         // Block until cancelled
         try await withTaskCancellationHandler {
             try await Task.sleep(for: .seconds(3600))
         } onCancel: {
-            self.didShutdown.withLockedValue { $0 = true }
+            self.didShutdown.withLock { $0 = true }
         }
     }
 

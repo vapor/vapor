@@ -1,6 +1,5 @@
 public import Configuration
 public import Vapor
-import NIOCore
 import ServiceLifecycle
 @testable import CoreMetrics
 @testable import Instrumentation
