@@ -193,7 +193,7 @@ public final class Application: Sendable, Service {
                 group.addTask { [server = self.server] in
                     try await server.run()
                 }
-                for service in self._services.withValue({ $0 }) {
+                for service in self._services.value {
                     group.addTask { try await service.run() }
                 }
             }
@@ -203,6 +203,7 @@ public final class Application: Sendable, Service {
     private func withLifecycle(_ runServices: () async throws -> Void) async throws {
         do {
             try await self.boot()
+            freezeApplication()
             self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
             try await runServices()
         } catch {
@@ -211,6 +212,11 @@ public final class Application: Sendable, Service {
             throw error
         }
         try await self.shutdown()
+    }
+
+    private func freezeApplication() {
+        self._lifecycleHandlers.freeze()
+        self._services.freeze()
     }
 
     /// Starts the application as a standalone process with signal handling.
@@ -229,7 +235,7 @@ public final class Application: Sendable, Service {
                 service: self.server,
                 successTerminationBehavior: .gracefullyShutdownGroup
             ))
-            for service in self._services.withValue({ $0 }) {
+            for service in self._services.value {
                 services.append(.init(service: service))
             }
 
