@@ -79,6 +79,7 @@ public final class Application: Sendable, Service {
     public let directoryConfiguration: DirectoryConfiguration
     public let cache: any Cache
     public let client: any Client
+    public let sessionDriver: any SessionDriver
 
     public struct ServiceConfiguration: Sendable {
         let contentConfiguration: ContentConfiguration
@@ -86,6 +87,7 @@ public final class Application: Sendable, Service {
         let cache: ServiceOptionType<any Cache>
         let responder: ServiceOptionType<any Responder>
         let client: ServiceOptionType<any Client>
+        let sessionDriver: ServiceOptionType<any SessionDriver>
 
         public init(
             contentConfiguration: ContentConfiguration = .default(),
@@ -93,12 +95,14 @@ public final class Application: Sendable, Service {
             cache: ServiceOptionType<any Cache> = .default,
             responder: ServiceOptionType<any Responder> = .default,
             client: ServiceOptionType<any Client> = .default,
+            sessionDriver: ServiceOptionType<any SessionDriver> = .default
         ) {
             self.contentConfiguration = contentConfiguration
             self.viewRenderer = viewRenderer
             self.cache = cache
             self.responder = responder
             self.client = client
+            self.sessionDriver = sessionDriver
         }
     }
 
@@ -161,10 +165,16 @@ public final class Application: Sendable, Service {
             self.client = client
         }
 
+        switch services.sessionDriver {
+        case .default:
+            self.sessionDriver = MemorySessions(storage: .init())
+        case .provided(let service):
+            self.sessionDriver = service
+        }
+
         self.responder = services.responder
         self.routes = Routes()
         self.sessions.initialize()
-        self.sessions.use(.memory)
         self.servers.initialize()
         self.servers.use(.http)
     }

@@ -6,31 +6,12 @@ extension Application {
     }
 
     public struct Sessions: Sendable {
-        public struct Provider: Sendable {
-            public static var memory: Self {
-                .init {
-                    $0.sessions.use { $0.sessions.memory }
-                }
-            }
-
-            let run: @Sendable (Application) -> ()
-
-            public init(_ run: @Sendable @escaping (Application) -> ()) {
-                self.run = run
-            }
-        }
-
         final class Storage: Sendable {
-            struct SessionDriverFactory {
-                let factory: (@Sendable (Application) -> any SessionDriver)?
-            }
             let memory: MemorySessions.Storage
-            let makeDriver: NIOLockedValueBox<SessionDriverFactory>
             let configuration: NIOLockedValueBox<SessionsConfiguration>
             init() {
                 self.memory = .init()
                 self.configuration = .init(.default())
-                self.makeDriver = .init(.init(factory: nil))
             }
         }
 
@@ -51,28 +32,9 @@ extension Application {
 
         public var middleware: SessionsMiddleware {
             .init(
-                session: self.driver,
+                session: self.application.sessionDriver,
                 configuration: self.configuration
             )
-        }
-
-        public var driver: any SessionDriver {
-            guard let makeDriver = self.storage.makeDriver.withLockedValue({ $0.factory }) else {
-                fatalError("No driver configured. Configure with app.sessions.use(...)")
-            }
-            return makeDriver(self.application)
-        }
-
-        public var memory: MemorySessions {
-            .init(storage: self.storage.memory)
-        }
-
-        public func use(_ provider: Provider) {
-            provider.run(self.application)
-        }
-
-        public func use(_ makeDriver: @Sendable @escaping (Application) -> (any SessionDriver)) {
-            self.storage.makeDriver.withLockedValue { $0 = .init(factory: makeDriver) }
         }
 
         var storage: Storage {
