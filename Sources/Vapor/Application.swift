@@ -273,8 +273,8 @@ public final class Application: Sendable, Service {
     private func withLifecycle(_ runServices: () async throws -> Void) async throws {
         do {
             try await self.boot()
-            freezeApplication()
             self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
+            freezeApplication()
             try await runServices()
         } catch {
             Logger.current.report(error: error)
@@ -305,6 +305,7 @@ public final class Application: Sendable, Service {
         self._services.freeze()
         self._middlewares.freeze()
         self._routes.freeze()
+        self._serverConfiguration.freeze()
     }
 
     deinit {
