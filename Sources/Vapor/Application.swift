@@ -206,13 +206,13 @@ public final class Application: Sendable, Service {
     }
 
     private func withLifecycle(_ runServices: () async throws -> Void) async throws {
-        try await self.boot()
-        self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
-
         do {
+            try await self.boot()
+            self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
             try await runServices()
         } catch {
             Logger.current.report(error: error)
+            try? await self.shutdown()
             throw error
         }
         try await self.shutdown()
