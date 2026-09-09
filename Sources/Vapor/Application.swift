@@ -9,15 +9,6 @@ import AsyncHTTPClient
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable, Service {
-    public var storage: Storage {
-        get {
-            self._storage.withLockedValue { $0 }
-        }
-        set {
-            self._storage.withLockedValue { $0 = newValue }
-        }
-    }
-
     public var didShutdown: Bool {
         self._didShutdown.withLockedValue { $0 }
     }
@@ -68,7 +59,6 @@ public final class Application: Sendable, Service {
     /// Content hashes for advanced ETag comparison, shared by every request.
     package let fileETagHashCache: FileETagHashCache
     internal let isBooted: NIOLockedValueBox<Bool>
-    private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
     package let contentConfiguration: ContentConfiguration
     package let responder: ServiceOptionType<any Responder>
@@ -123,7 +113,6 @@ public final class Application: Sendable, Service {
         let environment = try environment ?? Environment.detect(from: configReader)
         self.environment = environment
         self._didShutdown = .init(false)
-        self._storage = .init(.init())
         self._lifecycleHandlers = .init([], name: "Lifecycle Handlers")
         self.isBooted = .init(false)
         self.contentConfiguration = services.contentConfiguration
@@ -276,10 +265,6 @@ public final class Application: Sendable, Service {
         for handler in self._lifecycleHandlers.value.reversed()  {
             await handler.shutdown(self)
         }
-
-        Logger.current.trace("Clearing Application storage")
-        await self.storage.shutdown()
-        self.storage.clear()
 
         self._didShutdown.withLockedValue { $0 = true }
         Logger.current.trace("Application shutdown complete")
