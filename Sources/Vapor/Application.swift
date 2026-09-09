@@ -193,10 +193,7 @@ public final class Application: Sendable, Service {
     /// Blocks until all services (including the HTTP server) have stopped.
     /// Graceful shutdown is triggered by the parent task or `ServiceGroup`.
     public func run() async throws {
-        try await self.boot()
-        self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
-
-        do {
+        try await self.withLifecycle {
             try await withThrowingDiscardingTaskGroup { group in
                 group.addTask { [server = self.server] in
                     try await server.run()
@@ -205,6 +202,15 @@ public final class Application: Sendable, Service {
                     group.addTask { try await service.run() }
                 }
             }
+        }
+    }
+
+    private func withLifecycle(_ runServices: () async throws -> Void) async throws {
+        try await self.boot()
+        self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
+
+        do {
+            try await runServices()
         } catch {
             Logger.current.report(error: error)
             throw error
@@ -222,33 +228,25 @@ public final class Application: Sendable, Service {
     /// try await app.start()
     /// ```
     public func start() async throws {
-        try await self.boot()
-        self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
+        try await self.withLifecycle {
+            var services: [ServiceGroupConfiguration.ServiceConfiguration] = []
+            services.append(.init(
+                service: self.server,
+                successTerminationBehavior: .gracefullyShutdownGroup
+            ))
+            for service in self._services.withLockedValue({ $0 }) {
+                services.append(.init(service: service))
+            }
 
-        var services: [ServiceGroupConfiguration.ServiceConfiguration] = []
-        services.append(.init(
-            service: self.server,
-            successTerminationBehavior: .gracefullyShutdownGroup
-        ))
-        for service in self._services.withLockedValue({ $0 }) {
-            services.append(.init(service: service))
-        }
-
-        let serviceGroup = ServiceGroup(
-            configuration: .init(
-                services: services,
-                gracefulShutdownSignals: [.sigterm, .sigint],
-                logger: Logger.current
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: services,
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: Logger.current
+                )
             )
-        )
-
-        do {
             try await serviceGroup.run()
-        } catch {
-            Logger.current.report(error: error)
-            throw error
         }
-        try await self.shutdown()
     }
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
