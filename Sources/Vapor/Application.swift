@@ -173,8 +173,7 @@ public final class Application: Sendable, Service {
         case .provided(let server):
             self.server = server
         }
-
-        #warning("Can we remove all this?")
+        
         await DotEnvFile.load(for: self.environment)
     }
 
