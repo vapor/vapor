@@ -50,7 +50,7 @@ public struct File: Codable, Equatable, Sendable {
     /// `Encodable` conformance.
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        let data = self.data.getData(at: self.data.readerIndex, length: self.data.readableBytes)
+        let data = Data(buffer: self.data)
         try container.encode(data, forKey: .data)
         try container.encode(self.filename, forKey: .filename)
         if let contentType {

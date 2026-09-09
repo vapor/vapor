@@ -254,7 +254,7 @@ struct ApplicationTests {
                 #expect(port > 0)
                 let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
-                let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+                let bodyData = Data(buffer: body)
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
                     .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
 
@@ -287,7 +287,7 @@ struct ApplicationTests {
 
                 let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
-                let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+                let bodyData = Data(buffer: body)
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
                     .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
                 #expect(returnedConfig.hostname == "0.0.0.0")

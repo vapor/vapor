@@ -14,7 +14,7 @@ extension File: MultipartPartConvertible {
     public typealias Body = Data
 
     public var multipart: MultipartPart<Data> {
-        var part = MultipartPart(headerFields: [:], body: self.data.getData(at: 0, length: self.data.readableBytes) ?? Data())
+        var part = MultipartPart(headerFields: [:], body: Data(buffer: self.data))
         part.contentType = self.contentType?.serialize()
         part.filename = self.filename
         return part

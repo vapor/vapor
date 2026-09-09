@@ -108,7 +108,7 @@ public struct Request: CustomStringConvertible, Sendable {
                 // This shouldn't be an issue when we support streaming bodies, we should just be able to collect the body
                 throw Abort(.unprocessableContent)
             }
-            let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+            let bodyData = Data(buffer: body)
             return try decoder.decode(D.self, from: bodyData, headers: self.headers, userInfo: [:])
         }
 
