@@ -9,6 +9,7 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
         }
         set {
             self.sendableBox.withLockedValue { box in
+                precondition(!box.isFrozen, Self.frozenMessage("Routes"))
                 box.all = newValue
             }
         }
@@ -31,7 +32,10 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
             self.sendableBox.withLockedValue { $0.caseInsensitive }
         }
         set {
-            self.sendableBox.withLockedValue { $0.caseInsensitive = newValue }
+            self.sendableBox.withLockedValue {
+                precondition(!$0.isFrozen, Self.frozenMessage("Case sensitivity"))
+                $0.caseInsensitive = newValue
+            }
         }
     }
 
@@ -43,6 +47,15 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
         var all: [Route]
         var defaultMaxBodySize: ByteCount
         var caseInsensitive: Bool
+        /// Set as the application starts, once the router has been built from these routes.
+        var isFrozen: Bool = false
+    }
+
+    private static func frozenMessage(_ what: String) -> String {
+        """
+        \(what) cannot be changed after the application has started. \
+        Configure it before calling run() or start().
+        """
     }
     
     let sendableBox: NIOLockedValueBox<SendableBox>
@@ -54,8 +67,21 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
 
     public func add(_ route: Route) {
         self.sendableBox.withLockedValue {
+            precondition(!$0.isFrozen, Self.frozenMessage("Routes"))
             $0.all.append(route)
         }
+    }
+
+    /// Refuses further changes to the routes and to case sensitivity.
+    ///
+    /// Both are baked into the router when it is built at startup, so changing either afterwards
+    /// would be accepted and then never used. ``defaultMaxBodySize`` is deliberately not covered:
+    /// it is read afresh on every request rather than baked in, so changing it after start does
+    /// take effect.
+    ///
+    /// Freezing twice is harmless, so a server that restarts is fine.
+    func freeze() {
+        self.sendableBox.withLockedValue { $0.isFrozen = true }
     }
 }
 

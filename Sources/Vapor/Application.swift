@@ -296,6 +296,7 @@ public final class Application: Sendable, Service {
         self._lifecycleHandlers.freeze()
         self._services.freeze()
         self._middlewares.freeze()
+        self.routes.freeze()
     }
 
     deinit {
