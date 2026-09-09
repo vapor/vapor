@@ -1,5 +1,5 @@
 import Vapor
-import NIOConcurrencyHelpers
+import Synchronization
 import NIOFoundationEssentialsCompat
 import Logging
 import Testing
@@ -296,11 +296,11 @@ struct ClientTests {
 }
 
 final class CustomClient: Client, Sendable {
-    let _requests: NIOLockedValueBox<[ClientRequest]>
+    let _requests: Mutex<[ClientRequest]>
     let contentConfiguration: ContentConfiguration = .default()
     var requests: [ClientRequest] {
         get {
-            self._requests.withLockedValue { $0 }
+            self._requests.withLock { $0 }
         }
     }
 
@@ -309,7 +309,7 @@ final class CustomClient: Client, Sendable {
     }
 
     func send(_ request: ClientRequest) async throws -> ClientResponse {
-        self._requests.withLockedValue { $0.append(request) }
+        self._requests.withLock { $0.append(request) }
         return ClientResponse()
     }
 }
