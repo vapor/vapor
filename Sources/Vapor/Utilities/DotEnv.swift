@@ -125,7 +125,9 @@ public struct DotEnvFile: Sendable {
         do {
             try await load(path: path, overwrite: false)
         } catch {
-            Logger.current.debug("Could not load \(path) file: \(error)")
+            Logger.current.debug(
+                "Could not load environment file",
+                metadata: ["path": "\(path)", "error": "\(error)"])
         }
     }
 

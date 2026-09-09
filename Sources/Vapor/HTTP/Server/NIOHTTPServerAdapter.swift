@@ -160,7 +160,9 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 continuation.resume(returning: nioAddress)
             }
 
-            Logger.current.notice("Server started on \(address.host):\(address.port)")
+            Logger.current.notice(
+                "Server started",
+                metadata: ["host": "\(address.host)", "port": "\(address.port)"])
 
             // Wait for serve() to complete (blocks until shutdown/cancellation)
             try await group.next()
