@@ -1,7 +1,5 @@
 public import Configuration
 public import Vapor
-import NIOCore
-import NIOConcurrencyHelpers
 import ServiceLifecycle
 @testable import CoreMetrics
 @testable import Instrumentation
@@ -15,9 +13,10 @@ public import Logging
 /// @Test
 /// func helloWorld() async throws {
 ///     try await withApp(configure: configure) { app in
-///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
+///         try await app.testing { client in
+///             let res = try await client.get("hello")
 ///             #expect(res.status == .ok)
-///             #expect(res.body.string == "Hello, world!")
+///             try #expect(await res.body.requireString() == "Hello, world!")
 ///         })
 ///     }
 /// }
@@ -28,7 +27,7 @@ public import Logging
 ///   - test: A closure which performs your actual test with the configured application.
 @discardableResult
 public func withApp<T>(
-    address: BindAddress? = nil,
+    environment: Environment = .testing,
     configuration: ServerConfiguration = .init(),
     configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
     logger: Logger = Logger.current,
@@ -39,10 +38,7 @@ public func withApp<T>(
     MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
     InstrumentationSystem.bootstrapInternal(TaskLocalTracingSystemWrapper())
     return try await withLogger(logger) { _ in
-        let app = try await Application(.testing, configuration: configuration, configReader: configReader, services: services)
-        if let address {
-            app.serverConfiguration.address = address
-        }
+        let app = try await Application(environment, configuration: configuration, configReader: configReader, services: services)
         let result: T
         do {
             try await configure?(app)
@@ -71,7 +67,7 @@ public func withApp<T>(
 ///        try await withRunningApp(app: app) { port in
 ///            let res = try await app.client.get("http://localhost:\(port)/hello")
 ///            #expect(res.status == .ok)
-///            #expect(res.body.string == "Hello, world!")
+///            try #expect(await res.body.requireString() == "Hello, world!")
 ///        }
 ///    }
 /// }
@@ -109,7 +105,6 @@ public func withRunningApp<T: Sendable>(
             group.cancelAll()
             throw TestErrors.portNotSet
         }
-        logger.notice("server bound", metadata: ["test": "\(test)", "port": "\(port)"])
 
         // Run the test block
         let blockStart = ContinuousClock.now
@@ -127,14 +122,10 @@ public func withRunningApp<T: Sendable>(
             group.cancelAll()
             throw error
         }
-        logger.notice(
-            "test block finished, shutting down server",
-            metadata: ["test": "\(test)", "duration": "\(ContinuousClock.now - blockStart)"])
 
         // Cancel the server task (triggers graceful shutdown). The implicit await on the child
         // task at the end of this scope is where a server that won't stop shows up as a hang, so
         // bracket it: a "shutting down" with no matching "shut down" line names the culprit.
-        let shutdownStart = ContinuousClock.now
         group.cancelAll()
         do {
             for try await _ in group {}
@@ -142,9 +133,6 @@ public func withRunningApp<T: Sendable>(
             // The server task finishing in `CancellationError` is the expected shutdown path, not
             // a test failure.
         }
-        logger.notice(
-            "server shut down",
-            metadata: ["test": "\(test)", "duration": "\(ContinuousClock.now - shutdownStart)"])
         return result
     }!
 }

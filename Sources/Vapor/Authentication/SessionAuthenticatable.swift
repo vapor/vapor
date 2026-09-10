@@ -1,5 +1,3 @@
-import NIOCore
-
 /// Helper for creating authentication middleware in conjunction with `SessionsMiddleware`.
 public protocol SessionAuthenticator: RequestAuthenticator {
     associatedtype User: SessionAuthenticatable

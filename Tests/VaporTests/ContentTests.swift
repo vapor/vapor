@@ -1,4 +1,3 @@
-import NIOCore
 import HTTPTypes
 import Vapor
 import Testing
@@ -9,6 +8,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import RoutingKit
+import NIOCore
 
 @Suite("Content Tests")
 struct ContentTests {
@@ -16,8 +16,7 @@ struct ContentTests {
     @Test("Test Content")
     func testContent() async throws {
         try await withApp { app throws in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: .init(string: #"{"hello": "world"}"#)
             )
             request.headers.contentType = .json
@@ -58,8 +57,7 @@ struct ContentTests {
         """
 
         try await withApp { app throws in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: .init(string: complexJSON)
             )
             request.headers.contentType = .json
@@ -83,9 +81,10 @@ struct ContentTests {
                 return foo.name
             }
 
-            try await app.testing().test(.get, "/decode_error") { res in
+            try await app.testing { client in
+                let res = try await client.get("/decode_error")
                 #expect(res.status == .badRequest)
-                #expect(res.body.string.contains(#"Value was not of type 'Int' at path 'bar'. Expected to decode Int but found a string"#))
+                try #expect(await res.body.requireString().contains(#"Value was not of type 'Int' at path 'bar'. Expected to decode Int but found a string"#))
             }
         }
     }
@@ -108,9 +107,62 @@ struct ContentTests {
                 return res
             }
 
-            try await app.testing().test(.get, "/encode") { res in
+            try await app.testing { client in
+                let res = try await client.get("/encode")
                 #expect(res.status == .ok)
-                #expect(res.body.string.contains("hi"))
+                try #expect(await res.body.requireString().contains("hi"))
+            }
+        }
+    }
+
+    @Test("Encoding a Request's content writes back both the body and the content type")
+    func testRequestContentContainerEncodeWritesBack() async throws {
+        struct FooContent: Content, Equatable {
+            var message: String = "hi"
+        }
+
+        try await withApp { app in
+            // `content` vends a value, so `encode` mutates a copy and the setter on
+            // ``Request/content`` is what puts the result back on the request. Both halves are
+            // asserted deliberately: a container that reached the body through a reference but the
+            // headers through a copy would still land the body while silently dropping the content
+            // type the encoder sets, leaving the request undecodable for a non-obvious reason.
+            var request = Request()
+            try request.content.encode(FooContent())
+
+            #expect(request.headers.contentType == .json)
+            #expect(request.body.string == #"{"message":"hi"}"#)
+            #expect(try await request.content.decode(FooContent.self) == FooContent())
+
+            // Same again for the overload taking an explicit content type.
+            var explicit = Request()
+            try explicit.content.encode(FooContent(), as: .json)
+
+            #expect(explicit.headers.contentType == .json)
+            #expect(explicit.body.string == #"{"message":"hi"}"#)
+            #expect(try await explicit.content.decode(FooContent.self) == FooContent())
+        }
+    }
+
+    @Test("Encoding a Request's content updates Content-Length")
+    func testRequestContentContainerEncodeUpdatesContentLength() async throws {
+        struct FooContent: Content, Equatable {
+            var message: String = "hi"
+        }
+
+        try await withApp { app in
+            var request = Request(collectedBody: .init(string: "xx"))
+            #expect(request.headers[.contentLength] == "2")
+
+            try request.content.encode(FooContent())
+
+            // The body really is replaced...
+            #expect(request.body.string == #"{"message":"hi"}"#)
+
+            // ...but the header is left describing the old one.
+            #warning("`Request.body` is computed, so unlike `Response` there is no `didSet` to refresh Content-Length when the body changes. Fix in the body overhaul and drop this `withKnownIssue`")
+            withKnownIssue("Content-Length still describes the previous body") {
+                #expect(request.headers[.contentLength] == "16")
             }
         }
     }
@@ -131,11 +183,10 @@ struct ContentTests {
                 return "decoded!"
             }
 
-            try await app.testing().test(.post, "/decode") { req in
-                try req.content.encode(FooContent())
-            } afterResponse: { res in
+            try await app.testing { client in
+                let res = try await client.post("/decode", content: FooContent())
                 #expect(res.status == .ok)
-                #expect(res.body.string.contains("decoded!"))
+                try #expect(await res.body.requireString().contains("decoded!"))
             }
 
             app.routes.post("decode-bad-header") { req async throws -> String in
@@ -149,12 +200,13 @@ struct ContentTests {
                 return "decoded!"
             }
 
-            try await app.testing().test(.post, "/decode-bad-header") { req in
-                try req.content.encode(FooContent())
-                req.headers.contentType = .audio
-            } afterResponse: { res in
+            try await app.testing { client in
+                let res = try await client.post("/decode-bad-header") { req in
+                    try req.content.encode(FooContent())
+                    req.headers.contentType = .audio
+                }
                 #expect(res.status == .ok)
-                #expect(res.body.string.contains("decoded!"))
+                try #expect(await res.body.requireString().contains("decoded!"))
             }
         }
     }
@@ -197,9 +249,12 @@ struct ContentTests {
                 return decoded
             }
 
-            try await app.testing().test(.get, "/multipart", headers: [
-                .contentType: "multipart/form-data; boundary=123"
-            ], body: .init(string: data)) { res in
+            try await app.testing { client in
+                let res = try await client.get("/multipart", headers: [
+                    .contentType: "multipart/form-data; boundary=123"
+                ]) { req in
+                    req.body = .init(string: data)
+                }
                 #expect(res.status == .ok)
                 expectJSONEquals(res.body.string, expected)
             }
@@ -227,9 +282,12 @@ struct ContentTests {
                 return decoded
             }
 
-            try await app.testing().test(.get, "/multipart", headers: [
-                .contentType: "multipart/form-data; boundary=123"
-            ], body: .init(string: data)) { res in
+            try await app.testing { client in
+                let res = try await client.get("/multipart", headers: [
+                    .contentType: "multipart/form-data; boundary=123"
+                ]) { req in
+                    req.body = .init(string: data)
+                }
                 #expect(res.status == .unprocessableContent)
             }
         }
@@ -237,7 +295,6 @@ struct ContentTests {
 
     @Test("Test Multipart Decoded Empty Body")
     func testMultipartDecodedEmptyBody() async throws {
-        let data = ""
         let expected = User(
             name: "Vapor"
         )
@@ -253,9 +310,10 @@ struct ContentTests {
                 return decoded
             }
 
-            try await app.testing().test(.get, "/multipart", headers: [
-                .contentType: "multipart/form-data; boundary=123"
-            ], body: .init(string: data)) { res in
+            try await app.testing { client in
+                let res = try await client.get("/multipart", headers: [
+                    .contentType: "multipart/form-data; boundary=123"
+                ])
                 #expect(res.status == .unprocessableContent)
             }
         }
@@ -298,9 +356,12 @@ struct ContentTests {
                 return decoded
             }
 
-            try await app.testing().test(.get, "/multipart", headers: [
-                .contentType: "multipart/form-data; boundary=123"
-            ], body: .init(string: data)) { res in
+            try await app.testing { client in
+                let res = try await client.get("/multipart", headers: [
+                    .contentType: "multipart/form-data; boundary=123"
+                ]) { req in
+                    req.body = .init(string: data)
+                }
                 #expect(res.status == .ok)
                 expectJSONEquals(res.body.string, expected)
             }
@@ -324,13 +385,14 @@ struct ContentTests {
                     image: File(data: "<contents of image>", filename: "droplet.png")
                 )
             }
-            try await app.testing().test(.get, "/multipart") { res in
+            try await app.testing { client in
+                let res = try await client.get("/multipart")
                 #expect(res.status == .ok)
                 let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
-                #expect(res.body.string.contains("Content-Disposition: form-data; name=\"name\""))
-                #expect(res.body.string.contains("--\(boundary)"))
-                #expect(res.body.string.contains("filename=\"droplet.png\""))
-                #expect(res.body.string.contains("name=\"image\""))
+                try #expect(await res.body.requireString().contains("Content-Disposition: form-data; name=\"name\""))
+                try #expect(await res.body.requireString().contains("--\(boundary)"))
+                try #expect(await res.body.requireString().contains("filename=\"droplet.png\""))
+                try #expect(await res.body.requireString().contains("name=\"image\""))
             }
         }
     }
@@ -352,13 +414,14 @@ struct ContentTests {
                     image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
                 )
             }
-            try await app.testing().test(.get, "/multipart") { res in
+            try await app.testing { client in
+                let res = try await client.get("/multipart")
                 #expect(res.status == .ok)
                 let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
-                #expect(res.body.string.contains("Content-Disposition: form-data; name=\"name\""))
-                #expect(res.body.string.contains("--\(boundary)"))
-                #expect(res.body.string.contains("filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\""))
-                #expect(res.body.string.contains("name=\"image\""))
+                try #expect(await res.body.requireString().contains("Content-Disposition: form-data; name=\"name\""))
+                try #expect(await res.body.requireString().contains("--\(boundary)"))
+                try #expect(await res.body.requireString().contains("filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\""))
+                try #expect(await res.body.requireString().contains("name=\"image\""))
             }
         }
     }
@@ -388,9 +451,12 @@ struct ContentTests {
                 return "ok"
             }
 
-            try await app.testing().test(.get, "/multipart", headers: [
-                .contentType: "multipart/form-data; boundary=123"
-            ], body: .init(string: data)) { res in
+            try await app.testing { client in
+                let res = try await client.get("/multipart", headers: [
+                    .contentType: "multipart/form-data; boundary=123"
+                ]) { req in
+                    req.body = .init(string: data)
+                }
                 #expect(res.status == .ok)
             }
         }
@@ -416,10 +482,13 @@ struct ContentTests {
 
             var headers = HTTPFields()
             headers.contentType = .urlEncodedForm
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = ByteBuffer()
             body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
 
-            try await app.testing().test(.get, "/urlencodedform", headers: headers, body: body) { res in
+            try await app.testing { client in
+                let res = try await client.get("/urlencodedform", headers: headers) { req in
+                    req.body = body
+                }
                 #expect(res.status.code == 200)
             }
         }
@@ -438,13 +507,14 @@ struct ContentTests {
             app.get("urlencodedform") { _ -> User in
                 User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
             }
-            try await app.testing().test(.get, "/urlencodedform") { res in
+            try await app.testing { client in
+                let res = try await client.get("/urlencodedform")
                 #expect(res.status.code == 200)
                 #expect(res.headers.contentType == .urlEncodedForm)
-                #expect(res.body.string.contains("luckyNumbers[]=5"))
-                #expect(res.body.string.contains("luckyNumbers[]=7"))
-                #expect(res.body.string.contains("age=3"))
-                #expect(res.body.string.contains("name=Vapor"))
+                try #expect(await res.body.requireString().contains("luckyNumbers[]=5"))
+                try #expect(await res.body.requireString().contains("luckyNumbers[]=7"))
+                try #expect(await res.body.requireString().contains("age=3"))
+                try #expect(await res.body.requireString().contains("name=Vapor"))
             }
         }
     }
@@ -456,10 +526,11 @@ struct ContentTests {
                 "\(req.headers[.init("X-Test-Value")!] ?? "MISSING").\(req.headers[.contentType] ?? "?")"
             }
 
-            try await app.testing().test(.get, "/check", headers: [.init("X-Test-Value")!: "PRESENT"], beforeRequest: { req in
-                try req.content.encode(["foo": "bar"], as: .json)
-            }) { res in
-                #expect(res.body.string == "PRESENT.application/json; charset=utf-8")
+            try await app.testing { client in
+                let res = try await client.get("/check", headers: [.init("X-Test-Value")!: "PRESENT"]) { req in
+                    try req.content.encode(["foo": "bar"], as: .json)
+                }
+                try #expect(await res.body.requireString() == "PRESENT.application/json; charset=utf-8")
             }
         }
     }
@@ -474,13 +545,14 @@ struct ContentTests {
                 "\(req.headers[.init("X-Test-Value")!] ?? "MISSING").\(req.headers[.contentType] ?? "?")"
             }
 
-            try await app.testing().test(.get, "/check", headers: [
-                .init("X-Test-Value")!: "PRESENT"
-            ], beforeRequest: { req in
-                try req.content.encode(["foo": "bar"], as: .json)
-                req.headers.contentType = .xml
-            }) { res in
-                #expect(res.body.string == "PRESENT.application/xml; charset=utf-8")
+            try await app.testing { client in
+                let res = try await client.get("/check", headers: [
+                    .init("X-Test-Value")!: "PRESENT"
+                ]) { req in
+                    try req.content.encode(["foo": "bar"], as: .json)
+                    req.headers.contentType = .xml
+                }
+                try #expect(await res.body.requireString() == "PRESENT.application/xml; charset=utf-8")
             }
         }
     }
@@ -518,14 +590,13 @@ struct ContentTests {
         #expect(body == #"{"name":"new name"}"#)
     }
 
-    @Test("Test After Content Encode")
-    func testAfterContentEncode() async throws {
+    @Test("afterDecode runs for a Request's content")
+    func testAfterDecodeOnRequest() async throws {
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString(#"{"name": "before decode"}"#)
 
         try await withApp { app in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: body
             )
 
@@ -536,14 +607,63 @@ struct ContentTests {
         }
     }
 
+    @Test("afterDecode runs when decoding with an explicit content type")
+    func testAfterDecodeWithExplicitContentType() async throws {
+        // `decode(_:as:)` used to bind a `Content` type to the `Decodable` overload, which has no
+        // way to know about the hook, so the value came back unprocessed.
+        try await withApp { app in
+            var request = Request(
+                collectedBody: .init(string: #"{"name": "before decode"}"#)
+            )
+            request.headers.contentType = .json
+
+            let content = try await request.content.decode(SampleContent.self, as: .json)
+            #expect(content.name == "new name after decode")
+        }
+    }
+
+    @Test("afterDecode runs for a Response's content")
+    func testAfterDecodeOnResponse() async throws {
+        var response = Response(status: .ok)
+        response.headers.contentType = .json
+        response.body = .init(string: #"{"name": "before decode"}"#)
+
+        #expect(try await response.content.decode(SampleContent.self).name == "new name after decode")
+        #expect(try await response.content.decode(SampleContent.self, as: .json).name == "new name after decode")
+    }
+
+    @Test("afterDecode runs for a ClientResponse's content, including a streaming body")
+    func testAfterDecodeOnClientResponse() async throws {
+        var headers = HTTPFields()
+        headers.contentType = .json
+        func response() -> ClientResponse {
+            ClientResponse(
+                status: .ok,
+                headers: headers,
+                body: .init(stream: { writer in try await writer.write(#"{"name": "before decode"}"#) })
+            )
+        }
+
+        #expect(try await response().content.decode(SampleContent.self).name == "new name after decode")
+        #expect(try await response().content.decode(SampleContent.self, as: .json).name == "new name after decode")
+    }
+
+    @Test("afterDecode runs for a ClientRequest's content")
+    func testAfterDecodeOnClientRequest() async throws {
+        var request = ClientRequest(method: .post, url: "/")
+        try request.content.encode(SampleContent(), as: .json)
+
+        #expect(try await request.content.decode(SampleContent.self).name == "new name after decode")
+        #expect(try await request.content.decode(SampleContent.self, as: .json).name == "new name after decode")
+    }
+
     @Test("Test Supports JSON API")
     func testSupportsJsonApi() async throws {
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString(#"{"data": ["entity0", "entity1"], "meta": {}}"#)
 
         try await withApp { app in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: body
             )
 
@@ -557,8 +677,7 @@ struct ContentTests {
     @Test("Test Query Hooks")
     func testQueryHooks() async throws {
         try await withApp { app in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: .init(string: "")
             )
             request.url.query = "name=before+decode"
@@ -574,8 +693,7 @@ struct ContentTests {
     @Test("Test Decode Percent Encoded Query", .bug("https://github.com/vapor/vapor/issues/3135"))
     func testDecodePercentEncodedQuery() async throws {
         try await withApp { app throws in
-            let request = Request(
-                application: app,
+            var request = Request(
                 collectedBody: .init(string: "")
             )
             request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
@@ -602,7 +720,7 @@ struct ContentTests {
     @Test("Test Snake Case Coding Key Error")
     func testSnakeCaseCodingKeyError() async throws {
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request()
             try req.content.encode([
                 "title": "The title"
             ], as: .json)
@@ -628,13 +746,12 @@ struct ContentTests {
     @Test("Test Data Corruption Error")
     func testDataCorruptionError() async throws {
         try await withApp { app in
-            let req = Request(
-                application: app,
+            var req = Request(
                 method: .get,
                 url: URI(string: "https://vapor.codes"),
-                headersNoUpdate: [.contentType: "application/json"],
                 collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#)
             )
+            req.headers.contentType = .json
 
             struct DecodeModel: Content {
                 let badJson: String
@@ -650,7 +767,7 @@ struct ContentTests {
     @Test("Test ValueNotFoundError")
     func testValueNotFoundError() async throws {
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request()
             try req.content.encode([
                 "items": ["1"]
             ], as: .json)
@@ -679,7 +796,7 @@ struct ContentTests {
     @Test("Test Type Mismatch Error")
     func testTypeMismatchError() async throws {
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request()
             try req.content.encode([
                 "item": [
                     "title": "The title"
@@ -717,15 +834,15 @@ struct ContentTests {
                 return res
             }
 
-            try await app.testing().test(.get, "/plaintext") { res throws in
-                #expect(res.status == .ok)
-                #expect(try await res.content.decode(UInt8.self) == 255)
-                #expect(try await res.content.decode(String.self) == "255")
-            }
+            try await app.testing { client in
+                let plaintext = try await client.get("/plaintext")
+                #expect(plaintext.status == .ok)
+                #expect(try await plaintext.content.decode(UInt8.self) == 255)
+                #expect(try await plaintext.content.decode(String.self) == "255")
 
-            try await app.testing().test(.get, "/empty-plaintext") { res throws in
-                #expect(res.status == .ok)
-                #expect(try await res.content.decode(String.self) == "")
+                let empty = try await client.get("/empty-plaintext")
+                #expect(empty.status == .ok)
+                #expect(try await empty.content.decode(String.self) == "")
             }
         }
     }
@@ -752,7 +869,10 @@ struct ContentTests {
             var headers = HTTPFields()
             headers[.contentType] = "text/plain"
 
-            try await app.testing().test(.post, "/plaintext", headers: headers, body: byteBuffer) { res in
+            try await app.testing { client in
+                let res = try await client.post("/plaintext", headers: headers) { req in
+                    req.body = byteBuffer
+                }
                 // This should return a 400 Bad Request and not crash
                 #expect(res.status == .badRequest)
             }
@@ -766,7 +886,8 @@ struct ContentTests {
                 true
             }
 
-            try await app.testing().test(.get, "/success") { res throws in
+            try await app.testing { client in
+                let res = try await client.get("/success")
                 #expect(try await res.content.decode(Bool.self) == true)
             }
         }
@@ -784,11 +905,10 @@ struct ContentTests {
                 return body.name
             }
 
-            try await app.testing(method: .running).test(.post, "/json", beforeRequest: { req in
-                try req.content.encode(Message(name: "Vapor"))
-            }) { res in
+            try await app.testing(.running) { client in
+                let res = try await client.post("/json", content: Message(name: "Vapor"))
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Vapor")
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }

@@ -5,9 +5,6 @@ import Foundation
 #endif
 import Vapor
 import AsyncHTTPClient
-import NIOCore
-import NIOPosix
-import NIOConcurrencyHelpers
 import Atomics
 import Testing
 import VaporTesting
@@ -131,7 +128,7 @@ struct ConditionalCompressionTests {
 
             app.http.server.configuration.responseCompression = configuration
 
-            let response = try await app.client.get("http://localhost:\(port)/resource") { request in
+            let response = try await app.client.get("http://127.0.0.1:\(port)/resource") { request in
                 request.headers[.acceptEncoding] = "gzip"
             }
             #expect(response.headers[.contentEncoding] == "gzip", sourceLocation: sourceLocation)
@@ -148,7 +145,7 @@ struct ConditionalCompressionTests {
 
             app.http.server.configuration.responseCompression = configuration
 
-            let response = try await app.client.get("http://localhost:\(port)/resource") { request in
+            let response = try await app.client.get("http://127.0.0.1:\(port)/resource") { request in
                 request.headers[.acceptEncoding] = "gzip"
             }
             #expect(response.headers[.contentEncoding] != "gzip", sourceLocation: sourceLocation)
@@ -783,7 +780,7 @@ struct ConditionalCompressionTests {
             on app: Application,
             sourceLocation: SourceLocation = #_sourceLocation
         ) async throws {
-            let response = try await middleware.respond(to: Request(application: app), chainingTo: responder)
+            let response = try await middleware.respond(to: Request(), chainingTo: responder)
             let header = response.headers[values: .xVaporResponseCompression]
 
             #expect(header == compressionValue.map { $0.components(separatedBy: ", ") }?.map { String($0[...]) } ?? [], sourceLocation: sourceLocation)

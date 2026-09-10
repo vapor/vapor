@@ -1,10 +1,6 @@
 @testable import Vapor
 import enum NIOHTTP1.HTTPParserError
 import AsyncHTTPClient
-import NIOEmbedded
-import NIOCore
-import NIOConcurrencyHelpers
-import class NIOPosix.ClientBootstrap
 import Testing
 import VaporTesting
 

@@ -776,16 +776,17 @@ struct ValidationTests {
             }
 
             // Test that the custom validation error middleware is working.
-            try await app.testing().test(.post, "users", beforeRequest: { req async throws in
-                try req.content.encode([
-                    "name": "Vapor",
-                    "age": "asdf"
-                ])
-            }, afterResponse: { res in
+            try await app.testing { client in
+                let res = try await client.post("users") { req in
+                    try req.content.encode([
+                        "name": "Vapor",
+                        "age": "asdf"
+                    ])
+                }
                 #expect(res.status == .badRequest)
                 let content = try await res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
                 #expect(content.errors.count == 1)
-            })
+            }
         }
     }
 

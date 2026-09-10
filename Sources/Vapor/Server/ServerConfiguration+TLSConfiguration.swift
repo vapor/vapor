@@ -1,3 +1,4 @@
+public import NIOCertificateReloading
 public import X509
 
 extension ServerConfiguration {
@@ -6,6 +7,7 @@ extension ServerConfiguration {
         enum Source {
             case inMemory(certificateChain: [Certificate], privateKey: Certificate.PrivateKey)
             case pemFile(certificateChainPath: String, privateKeyPath: String)
+            case reloading(any CertificateReloader)
         }
 
         let source: Source
@@ -18,6 +20,18 @@ extension ServerConfiguration {
         /// TLS credentials loaded from PEM files on disk.
         public static func pemFile(certificateChainPath: String, privateKeyPath: String) -> Self {
             Self.init(source: .pemFile(certificateChainPath: certificateChainPath, privateKeyPath: privateKeyPath))
+        }
+
+        /// TLS credentials supplied by a `CertificateReloader`.
+        ///
+        /// The caller is responsible for running the reloader. Vapor wires it into the HTTP server
+        /// but does not start its task. The reloader must already hold valid credentials when the
+        /// server starts or startup fails; for `TimedCertificateReloader`, create it with
+        /// `makeReloaderValidatingSources(...)` and call `run()` or use `app.addService(reloader)`
+        ///
+        /// - Parameter reloader: The reloader that supplies and refreshes the credentials.
+        public static func reloading(_ reloader: any CertificateReloader) -> Self {
+            Self.init(source: .reloading(reloader))
         }
     }
 }

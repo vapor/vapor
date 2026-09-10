@@ -1,4 +1,3 @@
-import NIOCore
 import HTTPTypes
 
 /// Type that conforms to `Client` but does nothing and throws an error when used. Can be useful for testing

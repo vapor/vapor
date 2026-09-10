@@ -114,10 +114,10 @@ let package = Package(
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(name: "ServiceContextModule", package: "swift-service-context"),
-                .product(name: "NIO", package: "swift-nio"),
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
+                .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
@@ -192,8 +192,8 @@ let package = Package(
         .testTarget(
             name: "VaporTests",
             dependencies: [
-                .product(name: "NIOTestUtils", package: "swift-nio"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .target(name: "VaporTesting"),
                 .target(name: "Vapor"),
@@ -241,6 +241,7 @@ let package = Package(
 
 var swiftSettings: [SwiftSetting] { [
     .strictMemorySafety(),
+//    .treatAllWarnings(as: .error),
     .enableUpcomingFeature("ExistentialAny"),
     .enableUpcomingFeature("InternalImportsByDefault"),
     .enableUpcomingFeature("MemberImportVisibility"),

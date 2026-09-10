@@ -3,11 +3,9 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOCore
-import NIOConcurrencyHelpers
 
-private actor MemoryCacheStorage: Sendable {
-    struct CacheEntryBox<T> {
+private actor MemoryCacheStorage {
+    struct CacheEntryBox<T: Sendable>: Sendable {
         var expiresAt: Date?
         var value: T
 
@@ -17,20 +15,15 @@ private actor MemoryCacheStorage: Sendable {
         }
     }
 
-    private var storage: [String: Any]
-    private var lock: NIOLock
+    private var storage: [String: any Sendable]
 
     init() {
         self.storage = [:]
-        self.lock = .init()
     }
 
     func get<T>(_ key: String) -> T?
-        where T: Decodable
+        where T: Decodable & Sendable
     {
-        self.lock.lock()
-        defer { self.lock.unlock() }
-
         guard let box = self.storage[key] as? CacheEntryBox<T> else { return nil }
         if let expiresAt = box.expiresAt, expiresAt < Date() {
             self.storage.removeValue(forKey: key)
@@ -41,10 +34,8 @@ private actor MemoryCacheStorage: Sendable {
     }
 
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
-        where T: Encodable
+        where T: Encodable & Sendable
     {
-        self.lock.lock()
-        defer { self.lock.unlock() }
         if let value = value {
             var box = CacheEntryBox(value)
             if let expirationTime = expirationTime {

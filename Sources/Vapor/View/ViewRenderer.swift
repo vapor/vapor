@@ -1,5 +1,3 @@
-import NIOCore
-
 public protocol ViewRenderer: Sendable {
     func `for`(_ request: Request) -> any ViewRenderer
     func render(_ name: String, _ context: some Encodable) async throws -> View

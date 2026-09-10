@@ -1,10 +1,10 @@
 import Vapor
-import NIOCore
 import HTTPTypes
 import Testing
 import VaporTesting
 import Foundation
 import RoutingKit
+import NIOCore
 
 @Suite("Query Tests")
 struct QueryTests {
@@ -12,7 +12,7 @@ struct QueryTests {
     @Test("Test Query")
     func testQuery() async throws {
         try await withApp { app throws in
-            let request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = "hello=world"
@@ -23,7 +23,7 @@ struct QueryTests {
     @Test("Test Query as Array")
     func testQueryAsArray() async throws {
         try await withApp { app throws in
-            let request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = "hello=world&hello[]=you"
@@ -35,7 +35,7 @@ struct QueryTests {
     @Test("Test Wrapped Single Value Query Decoding", .bug("https://github.com/vapor/vapor/pull/2163"))
     func testWrappedSingleValueQueryDecoding() async throws {
         try await withApp { app throws in
-            let request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/foo"
             request.url.query = ""
@@ -59,7 +59,7 @@ struct QueryTests {
     @Test("Test Does Not Crash with an Array with Percent Encoding")
     func testNotCrashingArrayWithPercentEncoding() async throws {
         try await withApp { app throws in
-            let request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/"
             request.url.query = "emailsToSearch%5B%5D=xyz"
@@ -72,7 +72,6 @@ struct QueryTests {
     func testQueryGet() async throws {
         try await withApp { app throws in
             let request1 = Request(
-                application: app,
                 method: .get,
                 url: .init(string: "/path?foo=a")
             )
@@ -100,7 +99,6 @@ struct QueryTests {
             #expect(request1.query[String.self, at: "bar"] == nil)
 
             let request2 = Request(
-                application: app,
                 method: .get,
                 url: .init(string: "/path")
             )
@@ -119,9 +117,10 @@ struct QueryTests {
                 return "hi"
             }
 
-            try await app.testing().test(.get, "/todos?a=b") { res in
+            try await app.testing { client in
+                let res = try await client.get("/todos?a=b")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "hi")
+                try #expect(await res.body.requireString() == "hi")
             }
         }
     }
@@ -152,7 +151,8 @@ struct QueryTests {
             }
 
             let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3"
-            try await app.testing().test(.get, "/urlencodedform?\(data)") { res in
+            try await app.testing { client in
+                let res = try await client.get("/urlencodedform?\(data)")
                 #expect(res.status.code == 200)
             }
         }
@@ -184,7 +184,8 @@ struct QueryTests {
             }
 
             let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-            try await app.testing().test(.get, "/urlencodedform?\(data)") { res in
+            try await app.testing { client in
+                let res = try await client.get("/urlencodedform?\(data)")
                 #expect(res.status.code == 200)
             }
         }
@@ -201,8 +202,9 @@ struct QueryTests {
                 return res
             }
 
-            try await app.testing().test(.get, "/custom-encode") { res in
-                #expect(res.body.string == """
+            try await app.testing { client in
+                let res = try await client.get("/custom-encode")
+                try #expect(await res.body.requireString() == """
             {
               "hello" : "world"
             }
@@ -224,15 +226,17 @@ struct QueryTests {
                 return "ok"
             }
 
-            var body = ByteBufferAllocator().buffer(capacity: 0)
-            body.writeString(#"{"here":"hi"}"#)
+            let body = ByteBuffer(string: #"{"here":"hi"}"#)
             var headers = HTTPFields()
             headers[.contentLength] = body.readableBytes.description
             headers.contentType = .json
 
-            try await app.testing().test(.post, "/decode-fail", headers: headers, body: body) { res in
+            try await app.testing { client in
+                let res = try await client.post("/decode-fail", headers: headers) { req in
+                    req.body = body
+                }
                 #expect(res.status == .badRequest)
-                #expect(res.body.string.contains("missing"))
+                try #expect(await res.body.requireString().contains("missing"))
             }
         }
     }
@@ -243,7 +247,7 @@ struct QueryTests {
             var name: String
         }
         try await withApp { app in
-            let req = Request(application: app)
+            var req = Request()
             try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
             #expect(req.url.query == "name=Vapor%20Test")
         }
@@ -277,8 +281,7 @@ struct QueryTests {
     @Test("Test Optional Get")
     func testOptionalGet() async throws {
         try await withApp { app in
-            let req = Request(
-                application: app,
+            var req = Request(
                 method: .get,
                 url: URI(string: "/")
             )
@@ -298,8 +301,7 @@ struct QueryTests {
     @Test("Test Valueluss Param Get")
     func testValuelessParamGet() async throws {
         try await withApp { app throws in
-            let req = Request(
-                application: app,
+            var req = Request(
                 method: .get,
                 url: URI(string: "/")
             )
@@ -340,7 +342,7 @@ struct QueryTests {
         }
 
         try await withApp { app in
-            let request = Request(application: app)
+            var request = Request()
             request.headers.contentType = .json
             request.url.path = "/"
             request.url.query = "closedRange=1"

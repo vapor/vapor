@@ -9,7 +9,7 @@ import AsyncHTTPClient
 import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOPosix
-import NIOConcurrencyHelpers
+import Synchronization
 import HTTPTypes
 import NIOSSL
 import Atomics
@@ -514,7 +514,7 @@ struct ServerTests {
         //                return HTTPResponse.Status.ok
         //            }
         //
-        //            try await app.testing(method: .running).test(.post, "drain", beforeRequest: { req in
+        //            try await app.testing(method: .running()).test(.post, "drain", beforeRequest: { req in
         //                try req.content.encode(["hello": "world"])
         //            }, afterResponse: { res in
         //                #expect(res.status == .ok)
@@ -531,16 +531,16 @@ struct ServerTests {
         //                }
         //
         //#warning("Migrate")
-        //                let countBox = NIOLockedValueBox<Int>(0)
+        //                let countBox = Mutex<Int>(0)
         //                let promise = req.eventLoop.makePromise(of: Int.self)
         //                req.body.drain { part in
         //                    switch part {
         //                    case .buffer(let buffer):
-        //                        countBox.withLockedValue { $0 += buffer.readableBytes }
+        //                        countBox.withLock { $0 += buffer.readableBytes }
         //                    case .error(let error):
         //                        promise.fail(error)
         //                    case .end:
-        //                        promise.succeed(countBox.withLockedValue({ $0 }))
+        //                        promise.succeed(countBox.withLock({ $0 }))
         //                    }
         //                    return req.eventLoop.makeSucceededFuture(())
         //                }
@@ -550,13 +550,13 @@ struct ServerTests {
         //            var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)
         //            buffer.writeString(String(repeating: "a", count: 10_000_000))
         //
-        //            try await app.testing(method: .running).test(.post, "upload", beforeRequest: { req in
+        //            try await app.testing(method: .running()).test(.post, "upload", beforeRequest: { req in
         //                req.body = buffer
         //            }, afterResponse: { res in
         //                #expect(res.status == .badRequest)
         //            })
         //
-        //            try await app.testing(method: .running).test(.post, "upload", beforeRequest: { req in
+        //            try await app.testing(method: .running()).test(.post, "upload", beforeRequest: { req in
         //                req.body = buffer
         //                req.headers[.init("test")!] = "a"
         //            }, afterResponse: { res in
@@ -568,8 +568,8 @@ struct ServerTests {
         //    @Test("Test Echo Server")
         //    func testEchoServer() async throws {
         //        final class Context: Sendable {
-        //            let server: NIOLockedValueBox<[String]>
-        //            let client: NIOLockedValueBox<[String]>
+        //            let server: Mutex<[String]>
+        //            let client: Mutex<[String]>
         //            init() {
         //                self.server = .init([])
         //                self.client = .init([])
@@ -583,7 +583,7 @@ struct ServerTests {
         //                    request.body.drain { body in
         //                        switch body {
         //                        case .buffer(let buffer):
-        //                            context.server.withLockedValue { $0.append(buffer.string) }
+        //                            context.server.withLock { $0.append(buffer.string) }
         //                            return writer.write(.buffer(buffer))
         //                        case .error(let error):
         //                            return writer.write(.error(error))
@@ -629,7 +629,7 @@ struct ServerTests {
         //                    task: HTTPClient.Task<HTTPClient.Response>,
         //                    _ buffer: ByteBuffer
         //                ) -> EventLoopFuture<Void> {
-        //                    self.context.client.withLockedValue { $0.append(buffer.string) }
+        //                    self.context.client.withLock { $0.append(buffer.string) }
         //                    return task.eventLoop.makeSucceededFuture(())
         //                }
         //
@@ -643,8 +643,8 @@ struct ServerTests {
         //                delegate: response
         //            ).get()
         //
-        //            let server = context.server.withLockedValue { $0 }
-        //            let client = context.client.withLockedValue { $0 }
+        //            let server = context.server.withLock { $0 }
+        //            let client = context.client.withLock { $0 }
         //            #expect(server == ["foo", "bar", "baz"])
         //            #expect(client == ["foo", "bar", "baz"])
         //        }
@@ -873,6 +873,21 @@ struct ServerTests {
             #expect(configuration.address == .hostname("1.2.3.4", port: 123))
         }
 
+        @Test("Changing the server configuration after the application has started traps")
+        func testServerConfigurationCannotBeChangedAfterStart() async {
+            // TLS, HTTP versions and the bind address are all read once as the server comes up, so
+            // a later change would be accepted and never used. This is the value that spent several
+            // commits wrapped in a `FreezableType` without being frozen, which is why the freeze is
+            // now asked of the application's lifecycle rather than tracked per value.
+            await #expect(processExitsWith: .failure) {
+                do {
+                    try await whileServing { $0.serverConfiguration.port = 8099 }
+                } catch {
+                    print("setup failed rather than trapping: \(error)")
+                }
+            }
+        }
+
         @Test("Test Port Override")
         func testPortOverride() async throws {
             try await withApp { app in
@@ -1035,7 +1050,6 @@ struct ServerTests {
                     // Binding with port 0 picks a port; the bound address has to report the real one.
                     let bound = try await app.server.listeningAddress
                     #expect(bound.port != 0)
-                    #expect(bound.port == app.sharedAddress.withLockedValue({ $0 })?.port)
 
                     await group.triggerGracefulShutdown()
                     try await tg.waitForAll()
@@ -1319,32 +1333,31 @@ struct ServerTests {
                 return "123"
             }
 
-            try await app.testing().test(.get, "/ping") { res in
+            try await app.testing { client in
+                let res = try await client.get("/ping")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "123")
+                try #expect(await res.body.requireString() == "123")
             }
         }
     }
 
     @Test("Test Custom Server")
     func testCustomServer() async throws {
-        try await withApp { app in
-            app.servers.use(.custom)
-            #expect(app.customServer.didStart.withLockedValue({ $0 }) == false)
-            #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == false)
+        let customServer = CustomServer()
+        try await withApp(services: .init(server: .provided(customServer))) { app in
+            #expect(customServer.didStart.withLock({ $0 }) == false)
+            #expect(customServer.didShutdown.withLock({ $0 }) == false)
 
-            // `Server` is a ServiceLifecycle `Service`: it runs until cancelled rather than
-            // offering start/shutdown.
             await withTaskGroup(of: Void.self) { group in
                 group.addTask { try? await app.server.run() }
-                for _ in 0..<200 where app.customServer.didStart.withLockedValue({ $0 }) == false {
+                for _ in 0..<200 where customServer.didStart.withLock({ $0 }) == false {
                     try? await Task.sleep(for: .milliseconds(10))
                 }
-                #expect(app.customServer.didStart.withLockedValue({ $0 }) == true)
-                #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == false)
+                #expect(customServer.didStart.withLock({ $0 }) == true)
+                #expect(customServer.didShutdown.withLock({ $0 }) == false)
                 group.cancelAll()
             }
-            #expect(app.customServer.didShutdown.withLockedValue({ $0 }) == true)
+            #expect(customServer.didShutdown.withLock({ $0 }) == true)
         }
     }
 
@@ -1364,7 +1377,10 @@ struct ServerTests {
 
             var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
             buffer.writeBytes(payload)
-            try await app.testing(method: .running).test(.post, "payload", body: buffer) { res in
+            try await app.testing(.running) { client in
+                let res = try await client.post("payload") { req in
+                    req.body = buffer
+                }
                 #expect(res.status == .ok)
             }
         }
@@ -1379,7 +1395,8 @@ struct ServerTests {
                 return try await req.content.decode(User.self)
             }
 
-            try await app.testing().test(.get, "/user") { res in
+            try await app.testing { client in
+                let res = try await client.get("/user")
                 #expect(res.status == .unsupportedMediaType)
             }
         }
@@ -1401,7 +1418,7 @@ struct ServerTests {
                 tg.addTask { try await group.run() }
                 let port = try #require(try await app.server.listeningAddress.port)
 
-                var request = HTTPClientRequest(url: "http://localhost:\(port)/hello")
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/hello")
                 request.headers.add(name: "connection", value: "keep-alive")
                 let response = try await HTTPClient.shared.execute(request, timeout: .seconds(15))
                 #expect(response.status == .ok)
@@ -1418,33 +1435,9 @@ struct ServerTests {
     }
 }
 
-extension Application.Servers.Provider {
-    static var custom: Self {
-        .init {
-            $0.servers.use { $0.customServer }
-        }
-    }
-}
-
-extension Application {
-    struct Key: StorageKey {
-        typealias Value = CustomServer
-    }
-
-    var customServer: CustomServer {
-        if let existing = self.storage[Key.self] {
-            return existing
-        } else {
-            let new = CustomServer()
-            self.storage[Key.self] = new
-            return new
-        }
-    }
-}
-
 final class CustomServer: Server, Sendable {
-    let didStart: NIOLockedValueBox<Bool>
-    let didShutdown: NIOLockedValueBox<Bool>
+    let didStart: Mutex<Bool>
+    let didShutdown: Mutex<Bool>
 
     init() {
         self.didStart = .init(false)
@@ -1452,18 +1445,18 @@ final class CustomServer: Server, Sendable {
     }
 
     func run() async throws {
-        self.didStart.withLockedValue { $0 = true }
+        self.didStart.withLock { $0 = true }
         // Block until cancelled
         try await withTaskCancellationHandler {
             try await Task.sleep(for: .seconds(3600))
         } onCancel: {
-            self.didShutdown.withLockedValue { $0 = true }
+            self.didShutdown.withLock { $0 = true }
         }
     }
 
-    var listeningAddress: SocketAddress {
+    var listeningAddress: Vapor.SocketAddress {
         get async throws {
-            try SocketAddress.makeAddressResolvingHost("127.0.0.1", port: 0)
+            Vapor.SocketAddress(ipAddress: "127.0.0.1", port: 0)!
         }
     }
 }

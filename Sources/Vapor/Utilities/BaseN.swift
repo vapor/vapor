@@ -39,28 +39,26 @@ public struct BaseNEncoding: Sendable {
     /// by a count of bits per input values and mapping table relating input bytes to output values. Each element
     /// of the output type describes N bits of input.
     @inlinable
-    internal static func encode<C>(
-        _ decoded: C, base bits: Int, pad: UInt8?, using table: [UInt8]
-    ) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+    internal static func encode(
+        _ decoded: Span<UInt8>, base bits: Int, pad: UInt8?, using table: [UInt8]
+    ) -> [UInt8] {
         assert(table.count == (1 << bits), "Mapping table must have exactly \(1 << bits) elements.")
         guard !decoded.isEmpty else { return [] }
-        
+
         let mask = (1 << bits) - 1, outlen = self.sizeEnc(for: bits, count: decoded.count), padding = self.padding(for: bits, count: outlen)
-        
-        return .init(unsafeUninitializedCapacity: outlen + padding) { p, n in
+
+        return .init(capacity: outlen + padding) { span in
             var bufBits = 0, buf = 0
-            
-            for next in decoded {
-                (buf, bufBits) = ((buf &<< 8) | Int(next), bufBits &+ 8)
-                while bufBits >= bits { bufBits &-= bits; p[n] = table[(buf &>> bufBits) & mask]; n &+= 1 }
+
+            for idx in decoded.indices {
+                (buf, bufBits) = ((buf &<< 8) | Int(decoded[idx]), bufBits &+ 8)
+                while bufBits >= bits { bufBits &-= bits; span.append(table[(buf &>> bufBits) & mask]) }
             }
             if padding > 0 {
                 assert((1..<bits).contains(bufBits))
-                p[n] = table[(buf &<< (bits &- bufBits)) & mask]; n &+= 1
+                span.append(table[(buf &<< (bits &- bufBits)) & mask])
                 if let pad = pad {
-                    let pn = p.baseAddress!.advanced(by: n)
-                    pn.update(repeating: pad, count: padding)
-                    n &+= padding
+                    span.append(repeating: pad, count: padding)
                 }
             }
         }
@@ -72,27 +70,27 @@ public struct BaseNEncoding: Sendable {
     /// mapped nor ignored cause decoding to fail. If a pad is specified, the input must be correctly padded
     /// decoding will fail.
     @inlinable
-    internal static func decode<C>(
-        _ encoded: C, base bits: Int, using mapping: [UInt8], checkPad: Bool
-    ) -> [UInt8]? where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+    internal static func decode(
+        _ encoded: Span<UInt8>, base bits: Int, using mapping: [UInt8], checkPad: Bool
+    ) -> [UInt8]? {
         guard !encoded.isEmpty else { return [] }
         let outlen = self.sizeDec(for: bits, count: encoded.count)
-        
-        return try? [UInt8].init(unsafeUninitializedCapacity: outlen) { p, n in // N.B.: throwing is the only correct way to signal failure
+
+        return try? [UInt8].init(capacity: outlen) { span in // N.B.: throwing is the only correct way to signal failure
             var buf = 0, bufBits = 0, seenPad = 0
-            
-            for next in encoded {
-                switch mapping[numericCast(next)] {
+
+            for idx in encoded.indices {
+                switch mapping[numericCast(encoded[idx])] {
                     case BaseNEncoding.ignoredByte: break
                     case BaseNEncoding.paddingByte: seenPad &+= 1
                     case BaseNEncoding.invalidByte,
                         _ where seenPad > 0: throw BreakLoopError()
                     case let moreBits:
                         (buf, bufBits) = ((buf &<< bits) | Int(truncatingIfNeeded: moreBits), bufBits &+ bits)
-                        while bufBits >= 8 { bufBits &-= 8; (p[n], n) = (UInt8(truncatingIfNeeded: buf &>> bufBits), n &+ 1) }
+                        while bufBits >= 8 { bufBits &-= 8; span.append(UInt8(truncatingIfNeeded: buf &>> bufBits)) }
                 }
             }
-            guard !checkPad || seenPad == self.padding(for: bits, count: self.sizeEnc(for: bits, count: n)) else { throw BreakLoopError() } // require exact padding
+            guard !checkPad || seenPad == self.padding(for: bits, count: self.sizeEnc(for: bits, count: span.count)) else { throw BreakLoopError() } // require exact padding
             guard bufBits == 0 || (buf & ((1 &<< bufBits) &- 1)) == 0 else { throw BreakLoopError() } // require pad bits to be zero per spec
         }
     }
@@ -161,22 +159,36 @@ public struct BaseNEncoding: Sendable {
         )
     }
     
-    // Generic byte collection interfaces
-    
+    // Span interfaces
+
     @inlinable
-    public func encode<C>(_ decoded: C) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+    public func encode(_ decoded: Span<UInt8>) -> [UInt8] {
         switch self.bits {
         case 5: return BaseNEncoding.encode32(decoded, pad: self.pad, using: self.lookupTable)
         case 6: return BaseNEncoding.encode64(decoded, pad: self.pad, using: self.lookupTable)
         case let n: return BaseNEncoding.encode(decoded, base: n, pad: self.pad, using: self.lookupTable)
         }
     }
-    
+
     @inlinable
-    public func decode<C>(_ encoded: C) -> [UInt8]? where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+    public func decode(_ encoded: Span<UInt8>) -> [UInt8]? {
         switch self.bits {
         case 6 where encoded.count > 512 && self.ignores.isEmpty: return BaseNEncoding.decode64(encoded, using: self.reverseTable)
         case let n: return BaseNEncoding.decode(encoded, base: n, using: self.reverseTable, checkPad: self.pad != nil)
         }
+    }
+
+    // Generic byte collection interfaces
+
+    @inlinable
+    public func encode<C>(_ decoded: C) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+        let contiguous = Array(decoded) // no-op for `[UInt8]`, one copy for anything else
+        return self.encode(contiguous.span)
+    }
+
+    @inlinable
+    public func decode<C>(_ encoded: C) -> [UInt8]? where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+        let contiguous = Array(encoded) // no-op for `[UInt8]`, one copy for anything else
+        return self.decode(contiguous.span)
     }
 }

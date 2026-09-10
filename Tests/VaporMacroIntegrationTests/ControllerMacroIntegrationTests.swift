@@ -14,9 +14,10 @@ struct ControllerMacroIntegrationTests {
         try await withApp { app in
             try await app.register(collection: TestUserController())
 
-            try await app.testing().test(.get, "/api/test/users") { res in
+            try await app.testing { client in
+                let res = try await client.get("/api/test/users")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "users")
+                try #expect(await res.body.string() == "users")
             }
         }
     }
@@ -26,9 +27,10 @@ struct ControllerMacroIntegrationTests {
         try await withApp { app in
             try await app.register(collection: TestUserController())
 
-            try await app.testing().test(.get, "/api/test/users/42") { res in
+            try await app.testing { client in
+                let res = try await client.get("/api/test/users/42")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "user with id: 42")
+                try #expect(await res.body.string() == "user with id: 42")
             }
         }
     }
@@ -38,9 +40,10 @@ struct ControllerMacroIntegrationTests {
         try await withApp { app in
             try await app.register(collection: TestUserController())
 
-            try await app.testing().test(.post, "/api/test/sync") { res in
+            try await app.testing { client in
+                let res = try await client.post("/api/test/sync")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "Sync")
+                try #expect(await res.body.string() == "Sync")
             }
         }
     }
@@ -50,9 +53,10 @@ struct ControllerMacroIntegrationTests {
         try await withApp { app in
             try await app.register(collection: TestUserController())
 
-            try await app.testing().test(.patch, "/api/test/users/custom") { res in
+            try await app.testing { client in
+                let res = try await client.patch("/api/test/users/custom")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "custom HTTP method")
+                try #expect(await res.body.requireString() == "custom HTTP method")
             }
         }
     }
@@ -62,9 +66,10 @@ struct ControllerMacroIntegrationTests {
         try await withApp { app in
             try await app.register(collection: TestUserController())
 
-            try await app.testing().test(.patch, "/api/test/users/custom/7") { res in
+            try await app.testing { client in
+                let res = try await client.patch("/api/test/users/custom/7")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "custom HTTP method with id: 7")
+                try #expect(await res.body.requireString() == "custom HTTP method with id: 7")
             }
         }
     }
@@ -74,7 +79,8 @@ struct ControllerMacroIntegrationTests {
         try await withApp { app in
             try await app.register(collection: TestUserController())
 
-            try await app.testing().test(.get, "/api/test/nonexistent") { res in
+            try await app.testing { client in
+                let res = try await client.get("/api/test/nonexistent")
                 #expect(res.status == .notFound)
             }
         }

@@ -1,4 +1,4 @@
-import NIOConcurrencyHelpers
+import Synchronization
 
 extension Request {
     /// Returns the current `Session` or creates one.
@@ -11,39 +11,26 @@ extension Request {
     /// - note: `SessionsMiddleware` must be added and enabled.
     /// - returns: `Session` for this `Request`.
     public var session: Session {
-        if !self._sessionCache.middlewareFlag.withLockedValue({ $0 }) {
-            // No `SessionsMiddleware` was detected on your app.
-            // Suggested solutions:
-            // - Add the `SessionsMiddleware` globally to your app using `app.middleware.use`
-            // - Add the `SessionsMiddleware` to a route group.
-            assertionFailure("No `SessionsMiddleware` detected.")
-        }
-        return self._sessionCache.session.withLockedValue { storedSession in
-            if let existing = storedSession {
-                return existing
-            } else {
-                let new = Session()
-                storedSession = new
-                return new
+        // Checking the flag and creating the session share one lock: two separate locks meant the
+        // check and the create could not be relied on to see the same state.
+        return self.sessionCache.storage.withLock { storage in
+            if !storage.middlewareFlag {
+                // No `SessionsMiddleware` was detected on your app.
+                // Suggested solutions:
+                // - Add the `SessionsMiddleware` globally to your app using `app.middleware.use`
+                // - Add the `SessionsMiddleware` to a route group.
+                assertionFailure("No `SessionsMiddleware` detected.")
             }
+            if let existing = storage.session {
+                return existing
+            }
+            let new = Session()
+            storage.session = new
+            return new
         }
     }
 
     public var hasSession: Bool {
-        self._sessionCache.session.withLockedValue { $0 != nil }
-    }
-
-    private struct SessionCacheKey: StorageKey {
-        typealias Value = SessionCache
-    }
-
-    internal var _sessionCache: SessionCache {
-        if let existing = self.storage[SessionCacheKey.self] {
-            return existing
-        } else {
-            let new = SessionCache()
-            self.storage[SessionCacheKey.self] = new
-            return new
-        }
+        self.sessionCache.storage.withLock { $0.session != nil }
     }
 }

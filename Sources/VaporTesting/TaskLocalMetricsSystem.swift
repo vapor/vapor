@@ -4,7 +4,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOConcurrencyHelpers
 public import MetricsTestKit
 public import Testing
 

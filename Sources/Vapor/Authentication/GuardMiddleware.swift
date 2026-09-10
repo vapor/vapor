@@ -1,4 +1,3 @@
-import NIOCore
 public import HTTPTypes
 
 extension Authenticatable {

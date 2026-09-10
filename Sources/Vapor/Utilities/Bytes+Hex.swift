@@ -23,13 +23,12 @@ extension Collection where Element == UInt8 {
     public func hexEncodedBytes(uppercase: Bool = false) -> [UInt8] {
         let table: [UInt8] = uppercase ? radix16table_uppercase : radix16table_lowercase
         
-        return .init(unsafeUninitializedCapacity: self.count * 2) { buffer, outCount in
+        return .init(capacity: self.count * 2) { span in
             for byte in self {
                 let nibs = byte.quotientAndRemainder(dividingBy: 16)
-                
-                buffer[outCount + 0] = table[numericCast(nibs.quotient)]
-                buffer[outCount + 1] = table[numericCast(nibs.remainder)]
-                outCount += 2
+
+                span.append(table[numericCast(nibs.quotient)])
+                span.append(table[numericCast(nibs.remainder)])
             }
         }
     }

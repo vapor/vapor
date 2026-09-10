@@ -3,8 +3,7 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-#warning("Make this internal")
-public import NIOCore
+import NIOCore
 import _NIOFileSystem
 public import HTTPTypes
 
@@ -18,6 +17,7 @@ public final class FileMiddleware: Middleware {
     private let directoryAction: DirectoryAction
     private let advancedETagComparison: Bool
     private let cachePolicy: CachePolicy
+    private let fileIO: FileIO
 
     public struct BundleSetupError: Equatable, Error {
 
@@ -46,13 +46,15 @@ public final class FileMiddleware: Middleware {
         defaultFile: String? = nil,
         directoryAction: DirectoryAction = .none,
         advancedETagComparison: Bool = false,
-        cachePolicy: CachePolicy = .browserDefault
+        cachePolicy: CachePolicy = .browserDefault,
+        etagCache: FileETagHashCache
     ) {
         self.publicDirectory = publicDirectory.addTrailingSlash()
         self.defaultFile = defaultFile
         self.directoryAction = directoryAction
         self.advancedETagComparison = advancedETagComparison
         self.cachePolicy = cachePolicy
+        self.fileIO = FileIO(fileETagHashCache: etagCache)
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
@@ -94,9 +96,8 @@ public final class FileMiddleware: Middleware {
 
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
-                            return try await request
-                                .fileio
-                                .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                            return try await fileIO
+                                .streamFile(at: absPath, for: request, advancedETagComparison: advancedETagComparison)
                                 .applyingCachePolicy(cachePolicy)
                         }
                     }
@@ -109,9 +110,8 @@ public final class FileMiddleware: Middleware {
                 }
             } else {
                 // file exists, stream it
-                return try await request
-                    .fileio
-                    .streamFile(at: absPath, advancedETagComparison: advancedETagComparison)
+                return try await fileIO
+                    .streamFile(at: absPath, for: request, advancedETagComparison: advancedETagComparison)
                     .applyingCachePolicy(cachePolicy)
             }
         }
@@ -136,7 +136,8 @@ public final class FileMiddleware: Middleware {
         publicDirectory: String = "Public",
         defaultFile: String? = nil,
         directoryAction: DirectoryAction = .none,
-        cachePolicy: CachePolicy = .browserDefault
+        cachePolicy: CachePolicy = .browserDefault,
+        etagCache: FileETagHashCache
     ) throws {
         guard let bundleResourceURL = bundle.resourceURL else {
             throw BundleSetupError.bundleResourceURLIsNil
@@ -150,7 +151,8 @@ public final class FileMiddleware: Middleware {
             publicDirectory: publicDirectoryURL.path,
             defaultFile: defaultFile,
             directoryAction: directoryAction,
-            cachePolicy: cachePolicy
+            cachePolicy: cachePolicy,
+            etagCache: etagCache
         )
     }
     #endif
@@ -219,9 +221,9 @@ extension FileMiddleware {
 
         /// The browser will cache the file for the specified duration.
         ///
-        /// A typical cache duration may be 5 minutes, for instance: `.cacheUpToDuration(.minutes(5))`
-        public static func cacheUpToDuration(_ duration: TimeAmount) -> CachePolicy {
-            CachePolicy(cacheControlHeader: .init(maxAge: Int(duration.nanoseconds/1_000_000_000)), ageHeader: 0)
+        /// A typical cache duration may be 5 minutes, for instance: `.cache(upTo: .seconds(300))`
+        public static func cache(upTo duration: Duration) -> CachePolicy {
+            CachePolicy(cacheControlHeader: .init(maxAge: Int(duration.components.seconds)), ageHeader: 0)
         }
 
         /// A custom cache control policy that should be used for all files.

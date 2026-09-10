@@ -1,9 +1,7 @@
 import Vapor
-import NIOConcurrencyHelpers
-import NIOCore
+import Synchronization
 import NIOFoundationEssentialsCompat
 import Logging
-import NIOEmbedded
 import Testing
 import VaporTesting
 #if canImport(FoundationEssentials)
@@ -81,7 +79,7 @@ struct ClientTests {
 
                 app.get("foo") { req async throws -> String in
                     do {
-                        let response = try await req.application.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
+                        let response = try await app.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
                         #expect(response.status.code == 201)
                         // Server shutdown handled by task cancellation
                         return "bar"
@@ -93,7 +91,7 @@ struct ClientTests {
 
                 try await withRunningApp(app: app) { port in
                     let res = try await app.client.get("http://127.0.0.1:\(port)/foo")
-                    #expect(res.body?.string == "bar")
+                    try #expect(await res.body.string() == "bar")
                 }
             }
         }
@@ -118,11 +116,12 @@ struct ClientTests {
     func testGH2716() async throws {
         try await withApp { app in
             app.get("client") { req in
-                let response = try await req.application.client.get("htp://localhost/status/2 1")
+                let response = try await app.client.get("htp://localhost/status/2 1")
                 return response.description
             }
 
-            try await app.testing(method: .running).test(.get, "/client") { res in
+            try await app.testing(.running) { client in
+                let res = try await client.get("/client")
                 #expect(res.status.code == 500)
             }
         }
@@ -188,15 +187,120 @@ struct ClientTests {
             throw error
         }
     }
+
+    @Test("Returning a ClientResponse forwards its body", .timeLimit(.minutes(1)))
+    func testClientResponseEncodesItsBody() async throws {
+        try await withApp { app in
+            // Proxy shape: a handler returning a ClientResponse whose body is a live stream. The body
+            // used to be dropped entirely, so this answered 200 with nothing in it.
+            app.get("proxied") { _ -> ClientResponse in
+                var headers = HTTPFields()
+                headers.contentType = .plainText
+                return ClientResponse(
+                    status: .created,
+                    headers: headers,
+                    body: try .init(stream: { writer in
+                        try await writer.write("hello ")
+                        try await writer.write("world")
+                    }, count: 11)
+                )
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
+                #expect(res.status == .created)
+                try #expect(await res.body.requireString() == "hello world")
+                // A declared length survives the proxy instead of being re-framed as chunked.
+                #expect(res.headers[.contentLength] == "11")
+            }
+        }
+    }
+
+    @Test("Returning a ClientResponse of unknown length is chunked", .timeLimit(.minutes(1)))
+    func testClientResponseWithUnknownLengthIsChunked() async throws {
+        try await withApp { app in
+            app.get("proxied") { _ -> ClientResponse in
+                ClientResponse(status: .ok, body: .init(stream: { writer in
+                    try await writer.write("streamed")
+                }))
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
+                try #expect(await res.body.requireString() == "streamed")
+                #expect(res.headers[.contentLength] == nil)
+            }
+        }
+    }
+
+    @Test("Returning a ClientResponse strips the origin's hop-by-hop headers", .timeLimit(.minutes(1)))
+    func testClientResponseStripsHopByHopHeaders() async throws {
+        try await withApp { app in
+            app.get("proxied") { _ -> ClientResponse in
+                var headers = HTTPFields()
+                // What an origin server might have sent us. None of it describes the hop between this
+                // server and its own client.
+                headers[.connection] = "close, X-Origin-Only"
+                headers[.upgrade] = "websocket"
+                headers[HTTPField.Name("Keep-Alive")!] = "timeout=5"
+                headers[HTTPField.Name("X-Origin-Only")!] = "should not be forwarded"
+                headers[HTTPField.Name("X-Kept")!] = "end-to-end"
+                return ClientResponse(status: .ok, headers: headers, body: .init(string: "body"))
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
+                try #expect(await res.body.requireString() == "body")
+
+                #expect(res.headers[.upgrade] == nil)
+                #expect(res.headers[HTTPField.Name("Keep-Alive")!] == nil)
+                // Named by `Connection`, so hop-by-hop for that hop too.
+                #expect(res.headers[HTTPField.Name("X-Origin-Only")!] == nil)
+                // End-to-end fields are untouched.
+                #expect(res.headers[HTTPField.Name("X-Kept")!] == "end-to-end")
+            }
+        }
+    }
+
+    @Test("A client response bounds how much it will buffer")
+    func testClientResponseMaxBodySize() async throws {
+        struct Payload: Content { var value: String }
+
+        var headers = HTTPFields()
+        headers.contentType = .json
+        // A stream runs once, so each attempt below gets its own response - a network body could
+        // not be re-read after a failed decode either.
+        func makeResponse() -> ClientResponse {
+            ClientResponse(
+                status: .ok,
+                headers: headers,
+                body: .init(stream: { writer in
+                    try await writer.write(#"{"value":""#)
+                    try await writer.write(String(repeating: "x", count: 4096))
+                    try await writer.write(#""}"#)
+                }),
+                maxBodySize: 512
+            )
+        }
+
+        await #expect(throws: Abort.self) {
+            _ = try await makeResponse().content.decode(Payload.self)
+        }
+
+        // Streaming is not bounded by it - the ceiling is on holding the whole body in memory.
+        var seen = 0
+        try await makeResponse().body.withStreamingBytes { seen += $0.byteCount }
+        #expect(seen == 4108)
+    }
+
 }
 
 final class CustomClient: Client, Sendable {
-    let _requests: NIOLockedValueBox<[ClientRequest]>
+    let _requests: Mutex<[ClientRequest]>
     let contentConfiguration: ContentConfiguration = .default()
-    let byteBufferAllocator: ByteBufferAllocator = .init()
     var requests: [ClientRequest] {
         get {
-            self._requests.withLockedValue { $0 }
+            self._requests.withLock { $0 }
         }
     }
 
@@ -205,7 +309,7 @@ final class CustomClient: Client, Sendable {
     }
 
     func send(_ request: ClientRequest) async throws -> ClientResponse {
-        self._requests.withLockedValue { $0.append(request) }
+        self._requests.withLock { $0.append(request) }
         return ClientResponse()
     }
 }

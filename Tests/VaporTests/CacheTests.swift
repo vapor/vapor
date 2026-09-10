@@ -1,7 +1,6 @@
 import Testing
 import VaporTesting
 import Vapor
-import NIOCore
 
 @Suite("Cache Tests")
 struct CacheTests {

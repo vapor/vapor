@@ -1,3 +1,5 @@
+import Logging
+
 /// Configures an application's active `Middleware`.
 /// Middleware will be used in the order they are added.
 public struct Middlewares: Sendable {
@@ -34,5 +36,14 @@ public struct Middlewares: Sendable {
     /// Resolves the configured middleware for a given container
     public func resolve() -> [any Middleware] {
         return self.storage
+    }
+}
+
+extension Application {
+    static func defaultMiddlewares(environment: Environment) -> Middlewares {
+        var middlewares = Middlewares()
+        middlewares.use(RouteLoggingMiddleware(logLevel: .info))
+        middlewares.use(ErrorMiddleware.default(environment: environment))
+        return middlewares
     }
 }

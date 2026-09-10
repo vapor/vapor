@@ -1,9 +1,6 @@
 import Vapor
 import AsyncHTTPClient
-import NIOCore
 import NIOHTTP1
-import NIOEmbedded
-import NIOConcurrencyHelpers
 import ServiceLifecycle
 import Testing
 import VaporTesting
@@ -15,6 +12,30 @@ import NIOFoundationEssentialsCompat
 
 @Suite("Application Tests")
 struct ApplicationTests {
+    @Test("Registering a service after the application has started traps")
+    func testServiceCannotBeRegisteredAfterStart() async {
+        // The service group is built once at startup, so a service added later never runs.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.addService(CustomServer()) }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
+    @Test("Registering a lifecycle handler after the application has started traps")
+    func testLifecycleHandlerCannotBeRegisteredAfterStart() async {
+        // Boot has already run, so a handler added later never gets willBoot or didBoot.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.addLifecycleHandler(ApplicationLifecycleTests.RecordingHandler()) }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
     @Test("Test stopping the application")
     func testApplicationStop() async throws {
         let app = try await Application(.testing, configReader: testConfigReader)
@@ -24,10 +45,9 @@ struct ApplicationTests {
             group.addTask {
                 try await app.server.run()
             }
-            // Poll for address (run() publishes it before blocking on serve)
-            while app.sharedAddress.withLockedValue({ $0 }) == nil {
-                try await Task.sleep(for: .milliseconds(10))
-            }
+            // Wait for the server to bind. This throws if startup fails, where polling for a
+            // published address would simply spin until the test timed out.
+            _ = try await app.server.listeningAddress
             // Cancel to trigger shutdown
             group.cancelAll()
         }
@@ -123,7 +143,7 @@ struct ApplicationTests {
             let app = try await Application(.testing, configReader: testConfigReader)
 
             let foo = Foo()
-            app.lifecycle.use(foo)
+            app.addLifecycleHandler(foo)
 
             #expect(await foo.willBootFlag == false)
             #expect(await foo.didBootFlag == false)
@@ -154,7 +174,7 @@ struct ApplicationTests {
             }
 
             let handler = Handler()
-            app.lifecycle.use(handler)
+            app.addLifecycleHandler(handler)
 
             try await app.boot()
             try await app.boot()
@@ -172,7 +192,8 @@ struct ApplicationTests {
                 throw Foo()
             }
 
-            try await app.testing().test(.get, "/error") { res in
+            try await app.testing { client in
+                let res = try await client.get("/error")
                 #expect(res.status == .internalServerError)
             }
         }
@@ -186,7 +207,7 @@ struct ApplicationTests {
             }
 
             try await withRunningApp(app: app) { port in
-                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 13)
                 #expect(body.string == "Hello, world!")
             }
@@ -200,18 +221,16 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            #expect(app.sharedAddress.withLockedValue({ $0 }) == nil)
-
             try await withRunningApp(app: app, portToUse: 0) { port in
-                let address = try #require(app.sharedAddress.withLockedValue({ $0 }))
+                let address = try await app.server.listeningAddress
 
-                let ip = try #require(address.ipAddress)
+                let ip = try #require(address.host)
                 #expect(port == address.port)
                 #expect("127.0.0.1" == ip || "::1" == ip)
                 #expect(port > 0)
                 #expect(port != 8080)
 
-                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 13)
                 #expect(body.string == "Hello, world!")
             }
@@ -229,8 +248,8 @@ struct ApplicationTests {
             }
 
             app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: req.application.sharedAddress.withLockedValue({ $0 })?.hostname, port: req.application.sharedAddress.withLockedValue({ $0 })?.port)
-                return config
+                let address = try await app.server.listeningAddress
+                return AddressConfig(hostname: address.host, port: address.port)
             }
 
             try await withThrowingTaskGroup(of: Void.self) { group in
@@ -239,8 +258,7 @@ struct ApplicationTests {
                 }
 
                 let address = try await app.server.listeningAddress
-                #expect(app.sharedAddress.withLockedValue({ $0 }) != nil)
-                #expect(app.sharedAddress.withLockedValue({ $0 })?.ipAddress == "0.0.0.0")
+                #expect(address.host == "0.0.0.0")
                 if case let .hostname(_, port) = app.serverConfiguration.address {
                     #expect(0 == port)
                 } else {
@@ -251,9 +269,9 @@ struct ApplicationTests {
 
                 let port = try #require(address.port)
                 #expect(port > 0)
-                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
-                let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+                let bodyData = Data(buffer: body)
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
                     .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
 
@@ -274,7 +292,7 @@ struct ApplicationTests {
             }
 
             app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: req.application.serverConfiguration.hostname, port: req.application.serverConfiguration.port)
+                let config = AddressConfig(hostname: app.serverConfiguration.hostname, port: app.serverConfiguration.port)
                 return config
             }
 
@@ -284,9 +302,9 @@ struct ApplicationTests {
                 #expect(app.serverConfiguration.port == 3000)
                 #expect(port == 3000)
 
-                let response = try await HTTPClient.shared.get("http://localhost:\(port)/hello")
+                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
                 let body = try await response.body.collect(upTo: 64)
-                let bodyData = body.getData(at: 0, length: body.readableBytes) ?? Data()
+                let bodyData = Data(buffer: body)
                 let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
                     .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
                 #expect(returnedConfig.hostname == "0.0.0.0")

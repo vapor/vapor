@@ -47,6 +47,20 @@ extension ContentContainer {
         try await self.decode(D.self, using: self.configuredDecoder(for: contentType))
     }
 
+    /// Use the default configured decoder for the ``contentType`` parameter to read a value
+    /// of type `C` from the container.
+    ///
+    /// This overload exists so that passing an explicit content type still runs
+    /// ``Content/afterDecode()``. Without it a ``Content`` type binds to the `Decodable` overload
+    /// above, which cannot know to call the hook, and the type is silently returned unprocessed.
+    ///
+    /// - Note: The ``Content/defaultContentType-9sljl`` of `C` is ignored.
+    public func decode<C: Content>(_: C.Type, as contentType: HTTPMediaType) async throws -> C {
+        var content = try await self.decode(C.self, using: self.configuredDecoder(for: contentType))
+        try content.afterDecode()
+        return content
+    }
+
     // MARK: - Encoding helpers
 
     /// Serialize a ``Content`` object to the container as its default content type.

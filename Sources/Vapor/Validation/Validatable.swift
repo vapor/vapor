@@ -18,7 +18,7 @@ extension Validatable {
     }
     
     public static func validate(query request: Request) throws {
-        try self.validations().validate(query: request.url, contentConfiguration: request.application.contentConfiguration).assert()
+        try self.validations().validate(query: request.url, contentConfiguration: request.contentConfiguration).assert()
     }
     
     public static func validate(json: String, contentConfiguration: ContentConfiguration = .default()) throws {

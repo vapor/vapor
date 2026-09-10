@@ -14,9 +14,10 @@ struct StandaloneMacroIntegrationTests {
         try await withApp { app in
             registerStandaloneRoutes(app)
 
-            try await app.testing().test(.get, "/standalone/hello") { res in
+            try await app.testing { client in
+                let res = try await client.get("/standalone/hello")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "hello from standalone")
+                try #expect(await res.body.requireString() == "hello from standalone")
             }
         }
     }
@@ -26,9 +27,10 @@ struct StandaloneMacroIntegrationTests {
         try await withApp { app in
             registerStandaloneRoutes(app)
 
-            try await app.testing().test(.get, "/standalone/users/99") { res in
+            try await app.testing { client in
+                let res = try await client.get("/standalone/users/99")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "standalone user with id: 99")
+                try #expect(await res.body.requireString() == "standalone user with id: 99")
             }
         }
     }
@@ -38,9 +40,10 @@ struct StandaloneMacroIntegrationTests {
         try await withApp { app in
             registerStandaloneRoutes(app)
 
-            try await app.testing().test(.post, "/standalone/create") { res in
+            try await app.testing { client in
+                let res = try await client.post("/standalone/create")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "created")
+                try #expect(await res.body.requireString() == "created")
             }
         }
     }
@@ -50,9 +53,10 @@ struct StandaloneMacroIntegrationTests {
         try await withApp { app in
             registerStandaloneRoutes(app)
 
-            try await app.testing().test(.delete, "/standalone/remove/5") { res in
+            try await app.testing { client in
+                let res = try await client.delete("/standalone/remove/5")
                 #expect(res.status == .ok)
-                #expect(res.body.string == "deleted 5")
+                try #expect(await res.body.requireString() == "deleted 5")
             }
         }
     }
