@@ -3,6 +3,7 @@ import Testing
 import VaporTesting
 import HTTPTypes
 import Logging
+import RoutingKit
 
 /// Covers what `run()` does to the application when it fails.
 ///
@@ -32,11 +33,41 @@ struct ApplicationLifecycleTests {
         }
     }
 
+    @Test("Dropping a booted application without shutting it down is a programmer error")
+    func testDroppingABootedApplicationAsserts() async {
+        // Its lifecycle handlers were told to boot and never told to shut down, so whatever they
+        // opened is never closed.
+        await #expect(processExitsWith: .failure) {
+            do {
+                let app = try await Application(.testing)
+                try await app.boot()
+                // Deliberately dropped without `shutdown()`.
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
+    @Test("Dropping an application that never started is allowed")
+    func testDroppingAConfiguringApplicationIsAllowed() async throws {
+        // Nothing booted, nothing ran, nothing to release — so no assertion. Previously any
+        // application dropped without `shutdown()` tripped one, whether or not it had done anything.
+        await #expect(processExitsWith: .success) {
+            do {
+                let app = try await Application(.testing)
+                app.get("hello") { _ in "world" }
+                // Deliberately dropped without `shutdown()`.
+            } catch {
+                print("setup failed: \(error)")
+            }
+        }
+    }
+
     @Test("A server that fails to start still shuts the application down", .timeLimit(.minutes(1)))
     func testShutsDownWhenServerFailsToStart() async throws {
         let app = try await Application(.testing)
         let handler = RecordingHandler()
-        app.lifecycle.use(handler)
+        app.addLifecycleHandler(handler)
         app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
         // Certificate paths that do not resolve fail the server after boot, inside the services.
         app.serverConfiguration.tlsConfiguration = .pemFile(
@@ -56,7 +87,7 @@ struct ApplicationLifecycleTests {
     func testShutsDownWhenBootFails() async throws {
         let app = try await Application(.testing)
         let handler = RecordingHandler(failBoot: true)
-        app.lifecycle.use(handler)
+        app.addLifecycleHandler(handler)
 
         await #expect(throws: (any Error).self) {
             try await app.run()

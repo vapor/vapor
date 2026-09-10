@@ -12,6 +12,43 @@ import NIOCore
 
 @Suite("Route Tests")
 struct RouteTests {
+    @Test("Setting the default max body size after the application has started traps")
+    func testDefaultMaxBodySizeCannotBeSetAfterStart() async {
+        // Applies to every route registered with the default `.collect` strategy, so it is
+        // configuration rather than a runtime dial — routes vary it with `.collect(maxSize:)`.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.routes.defaultMaxBodySize = "1mb" }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
+    @Test("Setting case insensitivity after the application has started traps")
+    func testCaseInsensitivityCannotBeSetAfterStart() async {
+        // Baked into the router's configuration when it is built at startup.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.routes.caseInsensitive = true }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
+    @Test("Registering a route after the application has started traps")
+    func testRouteCannotBeRegisteredAfterStart() async {
+        // The router is built once at startup, so a route added later never matches.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.get("registered-too-late") { _ in "never reachable" } }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
     @Test("Test Parameter")
     func testParameter() async throws {
         try await withApp { app in

@@ -21,7 +21,7 @@ package struct DefaultResponder: Responder {
     }
 
     /// Creates a new ``DefaultResponder``.
-    package init(routes: Routes, middleware: [any Middleware] = []) {
+    package init(routes: RouteStorage, middleware: [any Middleware] = []) {
         let config = TrieRouter<CachedRoute>.Configuration(
             isCaseInsensitive: routes.caseInsensitive
         )
