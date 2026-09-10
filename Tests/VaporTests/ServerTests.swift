@@ -873,6 +873,21 @@ struct ServerTests {
             #expect(configuration.address == .hostname("1.2.3.4", port: 123))
         }
 
+        @Test("Changing the server configuration after the application has started traps")
+        func testServerConfigurationCannotBeChangedAfterStart() async {
+            // TLS, HTTP versions and the bind address are all read once as the server comes up, so
+            // a later change would be accepted and never used. This is the value that spent several
+            // commits wrapped in a `FreezableType` without being frozen, which is why the freeze is
+            // now asked of the application's lifecycle rather than tracked per value.
+            await #expect(processExitsWith: .failure) {
+                do {
+                    try await whileServing { $0.serverConfiguration.port = 8099 }
+                } catch {
+                    print("setup failed rather than trapping: \(error)")
+                }
+            }
+        }
+
         @Test("Test Port Override")
         func testPortOverride() async throws {
             try await withApp { app in
@@ -1328,23 +1343,21 @@ struct ServerTests {
 
     @Test("Test Custom Server")
     func testCustomServer() async throws {
-        try await withApp { app in
-            app.servers.use(.custom)
-            #expect(app.customServer.didStart.withLock({ $0 }) == false)
-            #expect(app.customServer.didShutdown.withLock({ $0 }) == false)
+        let customServer = CustomServer()
+        try await withApp(services: .init(server: .provided(customServer))) { app in
+            #expect(customServer.didStart.withLock({ $0 }) == false)
+            #expect(customServer.didShutdown.withLock({ $0 }) == false)
 
-            // `Server` is a ServiceLifecycle `Service`: it runs until cancelled rather than
-            // offering start/shutdown.
             await withTaskGroup(of: Void.self) { group in
                 group.addTask { try? await app.server.run() }
-                for _ in 0..<200 where app.customServer.didStart.withLock({ $0 }) == false {
+                for _ in 0..<200 where customServer.didStart.withLock({ $0 }) == false {
                     try? await Task.sleep(for: .milliseconds(10))
                 }
-                #expect(app.customServer.didStart.withLock({ $0 }) == true)
-                #expect(app.customServer.didShutdown.withLock({ $0 }) == false)
+                #expect(customServer.didStart.withLock({ $0 }) == true)
+                #expect(customServer.didShutdown.withLock({ $0 }) == false)
                 group.cancelAll()
             }
-            #expect(app.customServer.didShutdown.withLock({ $0 }) == true)
+            #expect(customServer.didShutdown.withLock({ $0 }) == true)
         }
     }
 
@@ -1418,30 +1431,6 @@ struct ServerTests {
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
             }
-        }
-    }
-}
-
-extension Application.Servers.Provider {
-    static var custom: Self {
-        .init {
-            $0.servers.use { $0.customServer }
-        }
-    }
-}
-
-extension Application {
-    struct Key: StorageKey {
-        typealias Value = CustomServer
-    }
-
-    var customServer: CustomServer {
-        if let existing = self.storage[Key.self] {
-            return existing
-        } else {
-            let new = CustomServer()
-            self.storage[Key.self] = new
-            return new
         }
     }
 }

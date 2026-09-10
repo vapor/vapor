@@ -15,6 +15,20 @@ import Foundation
 
 @Suite("Middleware Tests")
 struct MiddlewareTests {
+    @Test("Registering middleware after the application has started traps")
+    func testMiddlewareCannotBeRegisteredAfterStart() async {
+        // The responder chain is resolved once at startup, so middleware added later never runs.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.middleware.use(OrderMiddleware("late", store: OrderStore())) }
+            } catch {
+                // A setup failure must not be mistaken for the trap, or this would pass for the
+                // wrong reason. Exit cleanly and let the expectation fail instead.
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
     @Test("Test Middleware Order")
     func testMiddlewareOrder() async throws {
         try await withApp { app in

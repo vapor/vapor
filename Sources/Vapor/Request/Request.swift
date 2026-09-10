@@ -13,8 +13,6 @@ public import X509
 
 /// Represents an HTTP request in an application.
 public struct Request: CustomStringConvertible, Sendable {
-//    public let application: Application
-
     /// The HTTP method for this request.
     public let method: HTTPRequest.Method
 
