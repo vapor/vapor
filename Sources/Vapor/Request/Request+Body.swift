@@ -52,11 +52,10 @@ extension Request {
             return try await body(reader)
         }
 
-        /// Drives the read loop for you, calling `body` with each chunk of the request body as a
-        /// borrowed ``RawSpan``. This is what most streaming handlers want.
-        ///
-        /// The span is only valid for the duration of each `body` call; copy out anything you need
-        /// to keep beyond it.
+        /// Drives the read loop for you, calling `body` with each chunk of the request body. This is
+        /// what most streaming handlers want; it is a convenience over ``withReader(_:)`` and shares
+        /// its semantics with ``RequestBodyReader/forEachChunk(_:)`` (borrowed span, valid only for the
+        /// call — copy out anything you keep).
         public func forEachChunk(_ body: (RawSpan) async throws -> Void) async throws {
             try await self.withReader { reader in
                 try await reader.forEachChunk(body)

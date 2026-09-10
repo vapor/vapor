@@ -592,6 +592,157 @@ struct RequestTests {
         }
     }
 
+    @Test("Test Concurrent Reads Of The Request Body Are Rejected")
+    func testConcurrentBodyReadIsRejected() async throws {
+        try await withApp { app in
+            // A request body is a single-consumer stream. If a second task reads it while the first
+            // still holds the reader, that must surface as `RequestBodyAlreadyBeingRead` — not a
+            // silently truncated empty end-of-body.
+            app.on(.post, "concurrent-read", body: .stream) { req -> String in
+                let (held, heldContinuation) = AsyncStream.makeStream(of: Void.self)
+
+                // Task A takes the reader and holds it open inside `read` while B races it.
+                let holder = Task {
+                    try await req.body.withReader { reader in
+                        try await reader.read { _, _ in
+                            heldContinuation.yield(())
+                            try await Task.sleep(for: .milliseconds(500))
+                        }
+                    }
+                }
+
+                // Wait until A is actually mid-read (the reader is checked out). The buffered stream
+                // means the yield is never lost even if A gets there first.
+                var iterator = held.makeAsyncIterator()
+                _ = await iterator.next()
+
+                // Task B's concurrent read must be rejected, not handed a fake end-of-body.
+                var rejected = false
+                do {
+                    try await req.body.withReader { reader in
+                        _ = try await reader.read { _, _ in }
+                    }
+                } catch is RequestBodyAlreadyBeingRead {
+                    rejected = true
+                }
+
+                _ = try? await holder.value
+                return rejected ? "rejected" : "not-rejected"
+            }
+
+            try await withRunningApp(app: app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/concurrent-read")
+                request.method = .POST
+                request.body = .stream(String.randomDigits().utf8.async, length: .unknown)
+
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(10))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == "rejected")
+            }
+        }
+    }
+
+    @Test("Test A Partially-Read Streamed Body Leaves The Connection Reusable")
+    func testPartialReadKeepsConnectionAlive() async throws {
+        try await withApp { app in
+            // The handler reads a single chunk and returns normally; the server drains whatever is
+            // left (within the drain budget) so the keep-alive connection stays open. Distinct from
+            // `testServerSurvivesHandlerIgnoringStreamedBody`, which reads nothing at all.
+            app.on(.post, "partial", body: .stream) { req -> String in
+                _ = try await req.body.withReader { reader in
+                    try await reader.read { span, _ in span.byteCount }
+                }
+                return "read"
+            }
+
+            try await withRunningApp(app: app) { port in
+                let body = String(repeating: "A", count: 128)
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /partial HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                #expect(exchange.bytes.contains("200"))
+                #expect(!exchange.serverClosed)
+            }
+        }
+    }
+
+    @Test("Test A Handler That Throws Mid-Read Leaves The Connection Reusable")
+    func testThrowMidReadKeepsConnectionAlive() async throws {
+        try await withApp { app in
+            // The handler reads one chunk then throws. The error becomes a 500, the remaining body is
+            // drained (within budget), and the connection must remain usable — the `read` catch path
+            // returns the reader to the stream so a later drain doesn't see it lost.
+            app.on(.post, "throw-mid-read", body: .stream) { req -> String in
+                _ = try await req.body.withReader { reader in
+                    try await reader.read { span, _ in span.byteCount }
+                }
+                throw Abort(.internalServerError)
+            }
+
+            try await withRunningApp(app: app) { port in
+                let body = String(repeating: "A", count: 128)
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /throw-mid-read HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                #expect(exchange.bytes.contains("500"))
+                #expect(!exchange.serverClosed)
+            }
+        }
+    }
+
+    @Test("Test An Over-Limit Declared Content-Length Is Rejected Before Any Body Is Read")
+    func testDeclaredContentLengthRejectedBeforeReadingBody() async throws {
+        try await withApp { app in
+            // `collect(max:)` rejects an over-limit *declared* Content-Length before reading a single
+            // byte. Sending only the headers (no body) isolates that early reject from the chunk-size
+            // guard: with no body bytes to read, only the declared-length check can produce the 413.
+            app.on(.post, "collect-limited", body: .stream) { req -> String in
+                _ = try await req.body.collect(max: 1024)
+                return "ok"
+            }
+
+            try await withRunningApp(app: app) { port in
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /collect-limited HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100000\r\n\r\n",
+                    until: { $0.contains(" 413 ") })
+                #expect(exchange.bytes.contains("413"))
+            }
+        }
+    }
+
+    @Test("Test Collecting Via content.decode Caches The Body For Later Reads", .timeLimit(.minutes(1)))
+    func testStreamCachesBodyAfterContentDecode() async throws {
+        struct Payload: Content, Equatable { var message: String }
+
+        try await withApp { app in
+            app.on(.post, "decode-cache", body: .stream) { req async throws -> String in
+                let first = try await req.content.decode(Payload.self)
+                // Decoding a streamed body collects it once and caches it as `.collected`, so the raw
+                // body is now readable and a second decode sees the same bytes, not a drained stream.
+                #expect(req.body.data != nil)
+                let again = try await req.content.decode(Payload.self)
+                #expect(first == again)
+                return first.message
+            }
+
+            try await withRunningApp(app: app) { port in
+                let testValue = String.randomDigits()
+                let json = #"{"message":"\#(testValue)"}"#
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/decode-cache")
+                request.method = .POST
+                request.headers.add(name: "content-type", value: "application/json")
+                request.body = .stream(json.utf8.async, length: .unknown)
+
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
+            }
+        }
+    }
+
     @Test("Test Custom Host Address")
     func testCustomHostAddress() async throws {
         try await withApp { app in
