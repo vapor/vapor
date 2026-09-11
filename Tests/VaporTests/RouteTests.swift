@@ -542,7 +542,7 @@ struct RouteTests {
                 req.method.rawValue
             }
 
-            let methods: [HTTPRequest.Method] = [.get, .post, .put, .patch, .delete, .head, .options]
+            let methods: [HTTPRequest.Method] = [.get, .post, .put, .patch, .delete, .query, .head, .options]
             try await app.testing { client in
                 for method in methods {
                     let res = try await client.send(method, to: "/universal")
