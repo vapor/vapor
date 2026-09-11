@@ -1,5 +1,6 @@
 import Vapor
 import VaporTesting
+import AsyncHTTPClient
 import Testing
 import HTTPTypes
 import Synchronization
@@ -172,6 +173,7 @@ struct VaporTestingTests {
 
             try await app.testing { client in
                 #expect(client.baseURL == nil)
+                #expect(client.port == nil)
 
                 let response = try await client.get("/echo?name=vapor")
                 #expect(response.status == .ok)
@@ -181,6 +183,72 @@ struct VaporTestingTests {
                 let noLeadingSlash = try await client.get("echo?name=vapor")
                 #expect(noLeadingSlash.status == .ok)
                 try #expect(await noLeadingSlash.content.decode(String.self) == "/echo|name=vapor")
+
+                // Client options only shape a connection, and in memory there isn't one.
+                try await client.withOptions(.init(timeout: .milliseconds(1))) { client in
+                    #expect(client.baseURL == nil)
+                    try #expect(await client.get("/echo").status == .ok)
+                }
+            }
+        }
+    }
+
+    @Test("Live client options configure the HTTP client, and withOptions adds another against the same server")
+    func liveClientOptions() async throws {
+        try await withApp { app in
+            app.get("redirect") { $0.redirect(to: "target", redirectType: .normal) }
+            app.get("target") { _ in "target" }
+
+            var noRedirects = HTTPClient.Configuration.singletonConfiguration
+            noRedirects.redirectConfiguration = .disallow
+
+            try await app.testing(.running, options: .live(clientOptions: .init(configuration: noRedirects))) { client in
+                let port = try #require(client.port)
+                #expect(port == client.baseURL?.port)
+
+                try #expect(await client.get("redirect").status == .seeOther)
+
+                // Default options mean `HTTPClient.shared`, which follows redirects.
+                try await client.withOptions(.init()) { following in
+                    #expect(following.port == port)
+                    let response = try await following.get("redirect")
+                    #expect(response.status == .ok)
+                    try #expect(await response.body.requireString() == "target")
+                }
+
+                // The outer client kept its own configuration.
+                try #expect(await client.get("redirect").status == .seeOther)
+            }
+        }
+    }
+
+    @Test("Live client timeout caps a request's timeout without overriding a shorter one", .timeLimit(.minutes(1)))
+    func liveClientTimeoutIsACeiling() async throws {
+        func slow(_ app: Application) {
+            app.get("slow") { _ -> String in
+                try await Task.sleep(for: .seconds(2))
+                return "done"
+            }
+        }
+
+        // Separate apps, because a server that has been run and stopped can't be run again.
+
+        // A request asking for less than the client's 30 seconds gets less. Overwriting it
+        // would wait the handler out and succeed.
+        try await withApp(configure: slow) { app in
+            try await app.testing(.running) { client in
+                _ = await #expect(throws: (any Error).self) {
+                    try await client.get("slow") { $0.timeout = .milliseconds(200) }
+                }
+            }
+        }
+
+        // And a request left at its default can't outlast the client's.
+        try await withApp(configure: slow) { app in
+            try await app.testing(.running, options: .live(clientOptions: .init(timeout: .milliseconds(200)))) { client in
+                _ = await #expect(throws: (any Error).self) {
+                    try await client.get("slow")
+                }
             }
         }
     }
