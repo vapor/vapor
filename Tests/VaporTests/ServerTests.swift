@@ -1313,7 +1313,6 @@ struct ServerTests {
                 let garbage = try await rawExchange(
                     port: port, rawRequest: "TOTALLY not a valid HTTP request\r\n\r\n")
                 // Rejecting outright or hanging up are both fine; carrying on as if it parsed is not.
-                print("=== garbage: closed=\(garbage.serverClosed) bytes=\(garbage.bytes.debugDescription)")
                 #expect(garbage.serverClosed || garbage.bytes.contains("400"))
 
                 // And the listener is still healthy for everyone else.
@@ -1322,6 +1321,64 @@ struct ServerTests {
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
+            }
+        }
+    }
+
+    @Test("Server chunk-frames a streamed response of unknown length")
+    func testUnknownLengthStreamedResponseIsChunkFramed() async throws {
+        try await withApp { app in
+            // A real HTTP client hides framing — it parses the response by the rules the server is
+            // supposed to be following — so asserting the wire format needs a socket. Vapor sets
+            // `Transfer-Encoding: chunked` for a body with no declared count; the server writes the
+            // chunk sizes and the terminating chunk. Covers what `PipelineTests.testEchoHandlers`
+            // checked against an `EmbeddedChannel` pipeline that no longer exists.
+            app.post("echo") { req -> Response in
+                let body = req.body.data ?? ByteBuffer()
+                return Response(body: .init(stream: { writer in
+                    try await writer.write(body.readableBytesView)
+                }))
+            }
+
+            try await withRunningServer(app) { port in
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /echo HTTP/1.1\r\nHost: localhost\r\nContent-Length: 3\r\n\r\nabc",
+                    until: { $0.contains("0\r\n\r\n") })
+
+                #expect(exchange.bytes.contains("HTTP/1.1 200 OK"))
+                // Unknown length, so chunked rather than a Content-Length.
+                #expect(exchange.bytes.lowercased().contains("transfer-encoding: chunked"))
+                #expect(!exchange.bytes.lowercased().contains("content-length:"))
+                // The body, chunk-framed, then the terminating zero-length chunk.
+                #expect(exchange.bytes.contains("3\r\nabc\r\n"))
+                #expect(exchange.bytes.hasSuffix("0\r\n\r\n"))
+                // Framing was valid, so the connection stays up.
+                #expect(!exchange.serverClosed)
+            }
+        }
+    }
+
+    @Test("Server treats a request with no framing headers as having an empty body")
+    func testRequestWithNoFramingHeadersHasEmptyBody() async throws {
+        try await withApp { app in
+            // Neither `Content-Length` nor `Transfer-Encoding`, so the request has no body. The server
+            // must treat it as empty and answer rather than wait for bytes that are never coming.
+            // AsyncHTTPClient always sends `Content-Length: 0` for a body-less POST, so a client-based
+            // test never exercises this. Covers `PipelineTests.testEOFFraming`.
+            app.post("count") { req -> String in
+                "\(req.body.data?.readableBytes ?? 0)"
+            }
+
+            try await withRunningServer(app) { port in
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /count HTTP/1.1\r\nHost: localhost\r\n\r\n",
+                    until: { $0.contains("\r\n\r\n0") })
+
+                #expect(exchange.bytes.contains("HTTP/1.1 200 OK"))
+                #expect(exchange.bytes.hasSuffix("0"))
+                #expect(!exchange.serverClosed)
             }
         }
     }
