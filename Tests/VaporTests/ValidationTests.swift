@@ -664,6 +664,71 @@ struct ValidationTests {
         #expect(error?.description == "key custom description")
     }
 
+    @Test("Validation for multiple properties", .bug("https://github.com/vapor/vapor/issues/1819"))
+    func testGH1819() throws {
+        struct Item: Codable, Sendable, Validatable {
+            var locationDescription: String?
+            var locationPhotoURL: String?
+
+            static func validations(_ validations: inout Validations) {
+                validations.add(
+                    "location",
+                    validating: Self.self,
+                    is: .custom("contains a location description or photo URL") { item in
+                        item.locationDescription != nil || item.locationPhotoURL != nil
+                    },
+                    customFailureDescription: "Must provide either a photo or a description of the location"
+                )
+                validations.add(
+                    "locationDescription",
+                    as: String.self,
+                    is: .count(10...),
+                    required: false
+                )
+            }
+        }
+
+        let missingLocationError = #expect(throws: ValidationsError.self) {
+            try Item.validate(json: "{}")
+        }
+        #expect(missingLocationError?.failures.count == 1)
+        #expect(missingLocationError?.failures.first?.key == "location")
+        #expect(
+            missingLocationError?.description == "Must provide either a photo or a description of the location"
+        )
+
+        #expect(throws: ValidationsError.self) {
+            try Item.validate(json: #"{"locationDescription":null,"locationPhotoURL":null}"#)
+        }
+
+        #expect(throws: Never.self) {
+            try Item.validate(json: #"{"locationDescription":"At the town square"}"#)
+        }
+        #expect(throws: Never.self) {
+            try Item.validate(
+                json: #"{"locationDescription":null,"locationPhotoURL":"https://example.com/location.jpg"}"#
+            )
+        }
+        #expect(throws: Never.self) {
+            try Item.validate(
+                json: #"{"locationDescription":"At the town square","locationPhotoURL":"https://example.com/location.jpg"}"#
+            )
+        }
+
+        let propertyError = #expect(throws: ValidationsError.self) {
+            try Item.validate(json: #"{"locationDescription":"Short"}"#)
+        }
+        #expect(propertyError?.failures.count == 1)
+        #expect(propertyError?.failures.first?.key == "locationDescription")
+
+        #expect(throws: Never.self) {
+            try Item.validate(query: "https://example.com/items?locationDescription=At%20the%20town%20square")
+        }
+        #expect(throws: ValidationsError.self) {
+            try Item.validate(query: "https://example.com/items")
+        }
+    }
+
     @Test("Test Double Negation Is Avoided")
     func testDoubleNegationIsAvoided() throws {
         var validations = Validations()
