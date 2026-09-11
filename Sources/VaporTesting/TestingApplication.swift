@@ -15,7 +15,6 @@ extension Application {
 }
 
 package enum TestErrors: Error {
-    case portNotSet
     case missingPort
     case missingHostname
 }

@@ -1,7 +1,6 @@
 public import Testing
 public import Vapor
 import ServiceLifecycle
-import AsyncHTTPClient
 
 extension Application {
     public func testing<T>(_ method: Method = .inMemory, options: LiveTestOptions = .live, sourceLocation: SourceLocation = #_sourceLocation, _ body: (any TestClient) async throws -> T) async throws -> T {
@@ -41,13 +40,10 @@ extension Application {
                 Issue.record(TestErrors.missingPort, "Port was not acquired", sourceLocation: sourceLocation)
                 throw TestErrors.missingPort
             }
-            let client = LiveTestClient(app: self, address: address, options: options, http: HTTPClient.shared)
-
             let result: T
             do {
-                result = try await body(client)
-                // Drain any unread bodies to avoid disconnects
-                try await client.unreadBodies.drain()
+                // Shutdown the client before the server so we're not holding onto open connections
+                result = try await LiveTestClient.withClient(app: self, address: address, options: options, body)
             } catch {
                 group.cancelAll()
                 throw error

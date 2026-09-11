@@ -115,16 +115,30 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // final chunk via `finish` once the closure returns.
                 let writer = NIOResponseBodyWriterStorage(inner: try await sender.send(httpResponse))
                 let scope = ResponseBodyWriterScope()
-                try await bodyStream.callback(NIOResponseBodyWriter(writer, scope: scope))
-                guard bodyStream.count == nil || writer.bytesWritten == bodyStream.count else {
-                    // Stream length differs from what was declared: an error state, so close the connection
+                do {
+                    try await bodyStream.callback(NIOResponseBodyWriter(writer, scope: scope))
+                } catch {
+                    // Throwing out of the handler is how the server is told to abort: it closes the
+                    // connection without a terminating chunk, so the client sees a truncated body.
+                    // Finishing here would send one and present a partial body as a whole one.
+                    writer.abandon()
+                    throw error
+                }
+                if let declared = bodyStream.count, writer.bytesWritten != declared {
+                    // The body did not match the length the head promised. Throw rather than return:
+                    // a handler that returns with its response unfinished only has its connection torn
+                    // down as inconsistent, whereas a thrown error drives the server's abort.
+                    //
+                    // Logged here as well as by the server, because the server's log line does not
+                    // carry this request's ID.
                     Logger.current.debug(
                         "Response body stream wrote a different number of bytes than it declared, closing the connection",
                         metadata: [
                             "written": "\(writer.bytesWritten)",
-                            "declared": "\(bodyStream.count.map(String.init) ?? "unknown")",
+                            "declared": "\(declared)",
                         ])
-                    return
+                    writer.abandon()
+                    throw ResponseBodyLengthMismatch(declared: declared, written: writer.bytesWritten)
                 }
                 try await writer.finish(nil)
             default:
@@ -141,6 +155,19 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
     }
 }
 
+/// A streaming response body that wrote a different number of bytes than it declared.
+///
+/// Thrown out of the request handler only to make the server abort the response. The server logs it
+/// but never hands it on to a caller, so it carries nothing beyond what that log line needs.
+struct ResponseBodyLengthMismatch: Error, CustomStringConvertible {
+    let declared: Int
+    let written: Int
+
+    var description: String {
+        "Response body stream declared \(self.declared) bytes but wrote \(self.written)"
+    }
+}
+
 /// Holds the server's move-only response writer for the duration of one response.
 ///
 /// The NIO writer is `~Copyable` and ``finish(_:)`` consumes it, so it lives in an `Optional`: a
@@ -153,11 +180,28 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
 final class NIOResponseBodyWriterStorage {
     private var inner: NIOHTTPServer.ResponseSender.Writer?
 
+    /// Whether the response was deliberately left unfinished.
+    ///
+    /// Once the head is flushed it cannot be retracted, so a body that fails part-way is reported by
+    /// *not* sending a terminating chunk: the client sees a truncated response rather than a
+    /// well-formed short one. `NIOHTTPServer.ResponseSender.Writer` has no `fail` of its own — the
+    /// supported way to abort is to throw out of the request handler, which makes the server close
+    /// the connection without that chunk. So an abandoned writer is always about to be followed by a
+    /// throw, but `deinit` cannot see a throw, which is why abandoning has to be recorded here to be
+    /// told apart from simply forgetting to finish.
+    private var wasAbandoned = false
+
     /// The number of body bytes written so far, used to check a stream against its declared length.
     private(set) var bytesWritten = 0
 
     init(inner: consuming NIOHTTPServer.ResponseSender.Writer) {
         self.inner = consume inner
+    }
+
+    /// Records that this response is being left unfinished on purpose, just before the handler
+    /// throws to have the server abort it.
+    func abandon() {
+        self.wasAbandoned = true
     }
 
     func write(_ bytes: RawSpan) async throws {
@@ -189,6 +233,18 @@ final class NIOResponseBodyWriterStorage {
         guard let writer = self.inner.take() else { return }
         var empty = UniqueArray<UInt8>()
         try await writer.finish(buffer: &empty, finalElement: trailingHeaders)
+    }
+
+    deinit {
+        // Finishing is async and cannot be done from here, so this only reports the mistake.
+        // A writer released still holding the server's, without anyone having said the response was
+        // being abandoned, is one that nobody finished. That surfaces later as `NIOAsyncWriter`'s
+        // own `deinit` precondition, which names neither the response nor the layer responsible.
+        // This is likely a race condition in here in HTTPServer - this should help us track it down
+        assert(
+            self.inner == nil || self.wasAbandoned,
+            "Response body writer was released without being finished or abandoned. Every path out of a streaming response must call finish(_:) or abandon()."
+        )
     }
 }
 

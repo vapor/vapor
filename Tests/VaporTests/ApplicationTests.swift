@@ -206,10 +206,9 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            try await withRunningApp(app: app) { port in
-                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
-                let body = try await response.body.collect(upTo: 13)
-                #expect(body.string == "Hello, world!")
+            try await app.testing(.running) { client in
+                let response = try await client.get("hello")
+                try #expect(await response.body.requireString() == "Hello, world!")
             }
         }
     }
@@ -221,18 +220,18 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            try await withRunningApp(app: app, portToUse: 0) { port in
+            try await app.testing(.running, options: .live(port: 0)) { client in
                 let address = try await app.server.listeningAddress
 
                 let ip = try #require(address.host)
+                let port = try #require(client.port)
                 #expect(port == address.port)
                 #expect("127.0.0.1" == ip || "::1" == ip)
                 #expect(port > 0)
                 #expect(port != 8080)
 
-                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
-                let body = try await response.body.collect(upTo: 13)
-                #expect(body.string == "Hello, world!")
+                let response = try await client.get("hello")
+                try #expect(await response.body.requireString() == "Hello, world!")
             }
         }
     }
@@ -279,36 +278,6 @@ struct ApplicationTests {
                 #expect(returnedConfig.port == port)
 
                 group.cancelAll()
-            }
-        }
-    }
-
-    @Test("Test Configuration Address Details Reflected When Provided Through Serve Command", .disabled())
-    func testConfigurationAddressDetailsReflectedWhenProvidedThroughServeCommand() async throws {
-        try await withApp { app in
-            struct AddressConfig: Content {
-                let hostname: String?
-                let port: Int?
-            }
-
-            app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: app.serverConfiguration.hostname, port: app.serverConfiguration.port)
-                return config
-            }
-
-            //app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
-            try await withRunningApp(app: app) { port in
-                #expect(app.serverConfiguration.hostname == "0.0.0.0")
-                #expect(app.serverConfiguration.port == 3000)
-                #expect(port == 3000)
-
-                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
-                let body = try await response.body.collect(upTo: 64)
-                let bodyData = Data(buffer: body)
-                let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
-                    .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
-                #expect(returnedConfig.hostname == "0.0.0.0")
-                #expect(returnedConfig.port == 3000)
             }
         }
     }

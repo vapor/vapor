@@ -1,4 +1,3 @@
-#if HTTPClient
 import VaporTesting
 import Testing
 import Vapor
@@ -32,18 +31,14 @@ struct EndpointCacheTests {
                 return Test(number: current)
             }
 
-            try await withRunningApp(app: app) { port in
-                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number", client: app.client)
+            try await app.testing(.running) { client in
+                let cache = EndpointCache<Test>(uri: "number", client: client)
                 do {
-                    let test = try await cache.get(
-                        using: app.client
-                    )
+                    let test = try await cache.get(using: client)
                     #expect(test.number == 0)
                 }
                 do {
-                    let test = try await cache.get(
-                        using: app.client
-                    )
+                    let test = try await cache.get(using: client)
                     #expect(test.number == 1)
                 }
             }
@@ -77,21 +72,21 @@ struct EndpointCacheTests {
             app.get("cached", use: number(maxAge: 3600))
             app.get("expiring", use: number(maxAge: shortMaxAge))
 
-            try await withRunningApp(app: app) { port in
+            try await app.testing(.running) { client in
                 // Two reads inside a lifetime nothing can outlast must return the same value.
-                let cached = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/cached", client: app.client)
-                let first = try await cached.get(using: app.client).number
-                let second = try await cached.get(using: app.client).number
+                let cached = EndpointCache<Test>(uri: "cached", client: client)
+                let first = try await cached.get(using: client).number
+                let second = try await cached.get(using: client).number
                 #expect(first == second, "cached value changed inside its lifetime")
 
                 // Past the lifetime, the next read must go back to the server. Only elapsed
                 // time can break this one, and a slow machine only ever adds more of it. The
                 // new value is whatever the counter has reached, so assert that it moved
                 // rather than pinning a number the timing above could legitimately change.
-                let expiring = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/expiring", client: app.client)
-                let before = try await expiring.get(using: app.client).number
+                let expiring = EndpointCache<Test>(uri: "expiring", client: client)
+                let before = try await expiring.get(using: client).number
                 try await Task.sleep(for: .seconds(shortMaxAge + 1))
-                let refreshed = try await expiring.get(using: app.client).number
+                let refreshed = try await expiring.get(using: client).number
                 #expect(refreshed > before, "cache did not refresh after its lifetime expired")
             }
         }
@@ -115,10 +110,10 @@ struct EndpointCacheTests {
                 return res
             }
 
-            try await withRunningApp(app: app) { port in
-                let cache = EndpointCache<Test>(uri: "http://127.0.0.1:\(port)/number", client: app.client)
-                async let request1 = cache.get(using: app.client)
-                async let request2 = cache.get(using: app.client)
+            try await app.testing(.running) { client in
+                let cache = EndpointCache<Test>(uri: "number", client: client)
+                async let request1 = cache.get(using: client)
+                async let request2 = cache.get(using: client)
                 try await Task.sleep(for: .milliseconds(100))
                 #expect(try await request1 == request2)
                 let current = await currentActor.current
@@ -127,4 +122,3 @@ struct EndpointCacheTests {
         }
     }
 }
-#endif

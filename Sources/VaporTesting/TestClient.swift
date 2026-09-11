@@ -2,9 +2,26 @@
 import Foundation
 import Synchronization
 import AsyncHTTPClient
+import Logging
+import NIOPosix
 
 public protocol TestClient: Client {
     var baseURL: URI? { get }
+
+    /// Runs `body` with another client for the same application, set up with `options`.
+    ///
+    /// For a test that needs more than one kind of client against one running server - one that
+    /// trusts the server's certificate and one that doesn't, say. The new client gets its own
+    /// connections, so it never reuses one this client opened. In memory there are no connections
+    /// to configure, and `body` is handed this client.
+    func withOptions<T>(_ options: LiveClientOptions, _ body: (any TestClient) async throws -> T) async throws -> T
+}
+
+extension TestClient {
+    /// The port the running server is bound to, or `nil` in memory.
+    public var port: Int? {
+        self.baseURL?.port
+    }
 }
 
 /// We need a way to track the different response bodies from requests. If we don't drain them
@@ -66,6 +83,10 @@ struct InMemoryTestClient: TestClient {
             contentConfiguration: self.app.contentConfiguration
         )
     }
+
+    func withOptions<T>(_ options: LiveClientOptions, _ body: (any TestClient) async throws -> T) async throws -> T {
+        try await body(self)
+    }
 }
 
 struct LiveTestClient: TestClient {
@@ -75,10 +96,9 @@ struct LiveTestClient: TestClient {
     let http: HTTPClient
     let unreadBodies = UnreadBodies()
 
-    var port: Int { self.address.port! }
     var baseURL: URI? {
         URI(scheme: self.app.serverConfiguration.isTLSEnabled ? "https" : "http",
-            host: self.address.host ?? "localhost", port: self.port, path: "/")
+            host: self.address.host ?? "localhost", port: self.address.port, path: "/")
     }
     var contentConfiguration: ContentConfiguration {
         self.app.contentConfiguration
@@ -87,7 +107,7 @@ struct LiveTestClient: TestClient {
     func send(_ clientRequest: ClientRequest) async throws -> ClientResponse {
         var request = clientRequest
         request.url = self.resolve(clientRequest.url)
-        request.timeout = self.options.timeout
+        request.timeout = min(clientRequest.timeout, self.options.timeout)
 
         // Don't use VaporHTTPClient here - that doesn't work if the `HTTPClient` trait is
         // disabled
@@ -95,6 +115,41 @@ struct LiveTestClient: TestClient {
             .send(request)
         self.unreadBodies.track(response.body)
         return response
+    }
+
+    func withOptions<T>(_ options: LiveClientOptions, _ body: (any TestClient) async throws -> T) async throws -> T {
+        try await Self.withClient(app: self.app, address: self.address, options: options, body)
+    }
+
+    /// Runs `body` with a client for the server at `address`, owning the `HTTPClient` it needs.
+    static func withClient<T>(
+        app: Application,
+        address: SocketAddress,
+        options: LiveClientOptions,
+        _ body: (LiveTestClient) async throws -> T
+    ) async throws -> T {
+        guard let configuration = options.httpClientConfiguration else {
+            let client = LiveTestClient(app: app, address: address, options: options, http: .shared)
+            let result = try await body(client)
+            try await client.unreadBodies.drain()
+            return result
+        }
+
+        let http = HTTPClient(
+            eventLoopGroup: MultiThreadedEventLoopGroup.singleton,
+            configuration: configuration,
+            backgroundActivityLogger: Logger.current
+        )
+        let client = LiveTestClient(app: app, address: address, options: options, http: http)
+        do {
+            let result = try await body(client)
+            try await client.unreadBodies.drain()
+            try await http.shutdown()
+            return result
+        } catch {
+            try? await http.shutdown()
+            throw error
+        }
     }
 }
 

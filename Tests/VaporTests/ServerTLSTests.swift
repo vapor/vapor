@@ -11,6 +11,7 @@ import NIOSSL
 import ServiceLifecycle
 import Logging
 import Testing
+import HTTPTypes
 import Foundation
 import X509
 import SwiftASN1
@@ -82,18 +83,12 @@ struct ServerTLSTests {
             )
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
-                // Pinning the server's certificate as the client's only trust root means the
-                // handshake succeeds *only* if the server presents exactly this certificate. That
-                // makes this a test of which certificate we serve, not merely that TLS is enabled.
-                try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
-                    let response = try await client.execute(
-                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
-                    )
-                    #expect(response.status == .ok)
-                    #expect(try await response.body.collect(upTo: 1024).string == "world")
-                }
+            // Make sure only our cert is trusted
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: credentials.nioCertificate))) { client in
+                #expect(client.baseURL?.scheme == "https")
+                let response = try await client.get("hello")
+                #expect(response.status == .ok)
+                try #expect(await response.body.requireString() == "world")
             }
         }
     }
@@ -108,15 +103,10 @@ struct ServerTLSTests {
             )
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
-                try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
-                    let response = try await client.execute(
-                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
-                    )
-                    #expect(response.status == .ok)
-                    #expect(try await response.body.collect(upTo: 1024).string == "world")
-                }
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: credentials.nioCertificate))) { client in
+                let response = try await client.get("hello")
+                #expect(response.status == .ok)
+                try #expect(await response.body.requireString() == "world")
             }
         }
     }
@@ -134,31 +124,20 @@ struct ServerTLSTests {
             app.serverConfiguration.tlsConfiguration = .reloading(reloader)
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
-                try await withTLSClient(trustingOnly: first.nioCertificate) { client in
-                    let response = try await client.execute(
-                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
-                    )
-                    #expect(response.status == .ok)
-                }
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: first.nioCertificate))) { client in
+                try #expect(await client.get("hello").status == .ok)
 
                 reloader.update(certificate: second.nioCertificate, privateKey: second.nioPrivateKey)
 
-                try await withTLSClient(trustingOnly: second.nioCertificate) { client in
-                    let response = try await client.execute(
-                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
-                    )
-                    #expect(response.status == .ok)
+                try await client.withOptions(.tls(trustingOnly: second.nioCertificate)) { client in
+                    try #expect(await client.get("hello").status == .ok)
                 }
 
+                // A fresh client rather than `client`, which can still hold a connection
+                // handshaken with the first certificate and would succeed over it.
                 await #expect(throws: (any Error).self) {
-                    try await withTLSClient(trustingOnly: first.nioCertificate) { client in
-                        try await client.execute(
-                            HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                            timeout: .seconds(2)
-                        )
+                    try await client.withOptions(.tls(trustingOnly: first.nioCertificate)) { client in
+                        try await client.get("hello") { $0.timeout = .seconds(2) }
                     }
                 }
             }
@@ -191,14 +170,8 @@ struct ServerTLSTests {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask { try await reloader.run() }
 
-                try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
-                    try await withTLSClient(trustingOnly: first.nioCertificate) { client in
-                        let response = try await client.execute(
-                            HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                            timeout: .seconds(10)
-                        )
-                        #expect(response.status == .ok)
-                    }
+                try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: first.nioCertificate))) { client in
+                    try #expect(await client.get("hello").status == .ok)
 
                     try second.certificatePEM.write(toFile: certificatePath, atomically: true, encoding: .utf8)
                     try second.privateKeyPEM.write(toFile: privateKeyPath, atomically: true, encoding: .utf8)
@@ -206,11 +179,8 @@ struct ServerTLSTests {
                     var rotated = false
                     for _ in 0..<50 {
                         do {
-                            try await withTLSClient(trustingOnly: second.nioCertificate) { client in
-                                _ = try await client.execute(
-                                    HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                                    timeout: .milliseconds(500)
-                                )
+                            try await client.withOptions(.tls(trustingOnly: second.nioCertificate)) { client in
+                                _ = try await client.get("hello") { $0.timeout = .milliseconds(500) }
                             }
                             rotated = true
                             break
@@ -231,13 +201,11 @@ struct ServerTLSTests {
         try await withApp { app in
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
-                let response = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/hello"),
-                    timeout: .seconds(10)
-                )
+            try await app.testing(.running) { client in
+                #expect(client.baseURL?.scheme == "http")
+                let response = try await client.get("hello")
                 #expect(response.status == .ok)
-                #expect(try await response.body.collect(upTo: 1024).string == "world")
+                try #expect(await response.body.requireString() == "world")
             }
         }
     }
@@ -254,29 +222,22 @@ struct ServerTLSTests {
             )
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: credentials.nioCertificate))) { client in
                 // Happy path first
-                try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
-                    let response = try await client.execute(
-                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
-                    )
-                    #expect(try await response.body.collect(upTo: 1024).string == "world")
-                }
+                let response = try await client.get("hello")
+                try #expect(await response.body.requireString() == "world")
 
                 // The server cannot parse plaintext HTTP bytes as a TLS handshake, so it drops the
                 // connection rather than answering. Timed and logged: this request has hung in CI
                 // past the test's time limit, and without this there's no way to tell whether it
                 // was the request or the shutdown that stalled.
+                let port = try #require(client.port)
                 var logger = Logger(label: "tls-test")
                 logger.logLevel = .debug
                 let plaintextStart = ContinuousClock.now
                 logger.notice("plaintext request to TLS port starting", metadata: ["port": "\(port)"])
                 await #expect(throws: (any Error).self) {
-                    try await HTTPClient.shared.execute(
-                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(5)
-                    )
+                    try await client.get(URI(string: "http://127.0.0.1:\(port)/hello")) { $0.timeout = .seconds(5) }
                 }
                 logger.notice(
                     "plaintext request to TLS port finished",
@@ -295,29 +256,21 @@ struct ServerTLSTests {
             )
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: credentials.nioCertificate))) { client in
                 // Without setting the trust store this will fail. The deadline is generous
                 // because it isn't what's under test: a rejected handshake fails in milliseconds,
                 // and a tight deadline just races it, turning a TLS error into a timeout on a
                 // loaded machine — which is what the assertion below then trips over.
                 let error = await #expect(throws: (any Error).self) {
-                    try await withTLSClient { client in
-                        try await client.execute(
-                            HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                            timeout: .seconds(15)
-                        )
+                    try await client.withOptions(.tls()) { client in
+                        try await client.get("hello") { $0.timeout = .seconds(15) }
                     }
                 }
                 #expect(error is NIOSSLError || error is NIOSSLExtraError, "expected a TLS failure, got \(String(describing: error))")
 
                 // Check it actually works
-                try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
-                    let response = try await client.execute(
-                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
-                    )
-                    #expect(response.status == .ok)
-                }
+                let response = try await client.get("hello")
+                #expect(response.status == .ok)
             }
         }
     }
@@ -533,12 +486,12 @@ struct ServerTLSTests {
             app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+            try await withRunningServer(app) { port in
                 // Force the client to HTTP/1.1: enabling HTTP/2 on the server must not break H1 clients.
                 try await withTLSClient(trustingOnly: credentials.nioCertificate, httpVersion: .http1Only) { client in
                     let response = try await client.execute(
                         HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
+                        timeout: .seconds(30)
                     )
                     #expect(response.status == .ok)
                     #expect(response.version == .http1_1)
@@ -559,13 +512,13 @@ struct ServerTLSTests {
             app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+            try await withRunningServer(app) { port in
                 // The client defaults to `.automatic`, advertising both h2 and http/1.1 over ALPN.
                 // The server offers h2, so the negotiated response should come back over HTTP/2.
                 try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
                     let response = try await client.execute(
                         HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
+                        timeout: .seconds(30)
                     )
                     #expect(response.status == .ok)
                     #expect(response.version == .http2)
@@ -671,7 +624,28 @@ private final class MutableCertificateReloader: CertificateReloader {
     }
 }
 
+extension LiveClientOptions {
+    /// A client that trusts `trustedCertificate` and nothing else, or the system roots when `nil`.
+    fileprivate static func tls(trustingOnly trustedCertificate: NIOSSLCertificate? = nil) -> Self {
+        var tlsConfiguration = TLSConfiguration.makeClientConfiguration()
+        if let trustedCertificate {
+            tlsConfiguration.trustRoots = .certificates([trustedCertificate])
+        }
+
+        var configuration = HTTPClient.Configuration()
+        configuration.tlsConfiguration = tlsConfiguration
+
+        // Required because of https://github.com/swift-server/async-http-client/issues/919, otherwise AHC
+        // will keep retrying then return a `deadlineExceeded` error instead of NIOSSLError one
+        configuration.connectionPool.retryConnectionEstablishment = false
+        return .init(configuration: configuration)
+    }
+}
+
 /// Runs `body` with an HTTP client configured to trust `trustedCertificate` and nothing else.
+///
+/// Only for the tests that assert on the negotiated HTTP version, which `ClientResponse` doesn't
+/// carry. Everything else goes through ``LiveClientOptions/tls(trustingOnly:)``.
 ///
 /// Every exchange is logged with the calling test's name and how long it took. These tests run
 /// alongside a couple of hundred others, so a failure in CI is otherwise a bare error with no way
