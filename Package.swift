@@ -49,8 +49,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.101.3"),
 
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO.
-        // Test-only: `HTTPClient.Configuration.tlsConfiguration` is a `NIOSSL.TLSConfiguration`, so the
-        // server TLS tests need it to pin trust roots. Vapor itself does not depend on NIOSSL.
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2"),
 
         // Useful code around SwiftNIO.
@@ -182,6 +180,8 @@ let package = Package(
                 .target(name: "Vapor"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
                 .product(name: "Instrumentation", package: "swift-distributed-tracing"),
