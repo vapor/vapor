@@ -421,7 +421,7 @@ struct RouteTests {
         }
     }
 
-    @Test("Test Configurable Max Body Size", .disabled())
+    @Test("Test Configurable Max Body Size")
     func testConfigurableMaxBodySize() async throws {
         try await withApp { app in
             #expect(app.routes.defaultMaxBodySize == 16384)
@@ -441,7 +441,10 @@ struct RouteTests {
                 HTTPResponse.Status.ok
             }
 
-            var buffer =  ByteBuffer()
+            // Small enough that the rejected (413) requests' unread remainder stays within the
+            // keep-alive drain cap, so the connection is reused and the 413 is delivered rather than
+            // racing a connection close; still over the 1-byte and 1kb limits and under 1mb/1gb.
+            var buffer = ByteBuffer()
             buffer.writeBytes(Array(repeating: 0, count: 500_000))
             try await app.testing(.running) { client in
                 let defaultLimit = try await client.post("/default") { $0.body = buffer }
