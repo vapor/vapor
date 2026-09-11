@@ -282,36 +282,6 @@ struct ApplicationTests {
         }
     }
 
-    @Test("Test Configuration Address Details Reflected When Provided Through Serve Command", .disabled())
-    func testConfigurationAddressDetailsReflectedWhenProvidedThroughServeCommand() async throws {
-        try await withApp { app in
-            struct AddressConfig: Content {
-                let hostname: String?
-                let port: Int?
-            }
-
-            app.get("hello") { req -> AddressConfig in
-                let config = AddressConfig(hostname: app.serverConfiguration.hostname, port: app.serverConfiguration.port)
-                return config
-            }
-
-            //app.environment.arguments = ["vapor", "serve", "--hostname", "0.0.0.0", "--port", "3000"]
-            try await withRunningApp(app: app) { port in
-                #expect(app.serverConfiguration.hostname == "0.0.0.0")
-                #expect(app.serverConfiguration.port == 3000)
-                #expect(port == 3000)
-
-                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
-                let body = try await response.body.collect(upTo: 64)
-                let bodyData = Data(buffer: body)
-                let returnedConfig = try app.contentConfiguration.requireDecoder(for: .json)
-                    .decode(AddressConfig.self, from: bodyData, headers: [:], userInfo: [:])
-                #expect(returnedConfig.hostname == "0.0.0.0")
-                #expect(returnedConfig.port == 3000)
-            }
-        }
-    }
-
     @Test("Routes ASCII Table")
     func routesASCIITable() async throws {
         try await withApp { app in
