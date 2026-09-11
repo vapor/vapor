@@ -9,6 +9,7 @@ import NIOHTTP1
 import HTTPTypes
 import ServiceLifecycle
 import Logging
+import InMemoryLogging
 import Testing
 import RoutingKit
 #if canImport(FoundationEssentials)
@@ -20,6 +21,64 @@ import Foundation
 
 @Suite("Streaming Body Tests")
 struct StreamingBodyTests {
+
+    @Test("A body stream shorter than it declared aborts the response", .timeLimit(.minutes(1)))
+    func testShortBodyStreamAbortsTheResponse() async throws {
+        // Companion to "Server survives an error thrown mid-stream", for the other way a stream can
+        // go wrong: it returns cleanly having written fewer bytes than its declared `count`. The
+        // head is already on the wire with that length, so the client must see truncation rather
+        // than a well-formed short body.
+        //
+        // Truncation alone doesn't show *how* the response ended. Returning with it unfinished also
+        // truncates it, but only by having the server tear down a connection it considers
+        // inconsistent; throwing is what drives the server's abort. The two are identical on the
+        // wire, so the test tells them apart by what the server was handed: the length mismatch
+        // has to arrive as the error the handler threw.
+        let logHandler = InMemoryLogHandler()
+        var logger = Logger(label: "codes.vapor.test", factory: { _ in logHandler })
+        // The server logs a thrown handler error at debug, and picks up this logger from the task
+        // it is started in.
+        logger.logLevel = .debug
+
+        try await withApp(logger: logger) { app in
+            app.get("short-stream") { _ -> Response in
+                Response(body: try .init(stream: { writer in
+                    try await writer.write(Array("short".utf8))
+                }, count: 1000))
+            }
+            app.get("ok") { _ in "ok" }
+
+            try await withRunningServer(app) { port in
+                var sawFailureSignal = false
+                do {
+                    let response = try await HTTPClient.shared.execute(
+                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/short-stream"), timeout: .seconds(10)
+                    )
+                    do {
+                        _ = try await response.body.collect(upTo: 1 << 20)
+                    } catch {
+                        sawFailureSignal = true
+                    }
+                } catch {
+                    sawFailureSignal = true
+                }
+                #expect(sawFailureSignal, "client must observe truncation when a stream is shorter than declared")
+
+                // The server keeps serving: the connection was torn down, not the process.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                )
+                #expect(ok.status == .ok)
+            }
+
+            // `withRunningApp` waits for the server to shut down, so everything it logged is in.
+            let thrown = logHandler.entries.compactMap(\.error).map { "\($0)" }
+            #expect(
+                thrown.contains("Response body stream declared 1000 bytes but wrote 5"),
+                "the length mismatch must be thrown to the server so that it aborts the response"
+            )
+        }
+    }
 
     @Test("Server writes a buffered response body")
     func testBufferedResponse() async throws {
