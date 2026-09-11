@@ -364,7 +364,7 @@ package final class RequestBodyStream: Sendable {
                 // Check before appending so an over-limit chunk is never buffered. Subtracting
                 // (rather than adding) keeps the bound exact and can't overflow when `max` is `.max`.
                 guard span.byteCount <= max - collected.readableBytes else {
-                    throw Abort(.contentTooLarge)
+                    throw Abort(.contentTooLarge, headers: .connectionClose)
                 }
                 _ = span.withUnsafeBytes { unsafe collected.writeBytes($0) }
                 return false
@@ -395,6 +395,22 @@ package final class RequestBodyStream: Sendable {
             }
         }
     }
+}
+
+extension HTTPFields {
+    /// `Connection: close`, for the response to a request whose body we have decided not to finish
+    /// reading — a 413, in practice.
+    ///
+    /// The rest of that body is still on the wire, and the drain that runs once the handler returns is
+    /// bounded by `maxDrainBytes`: anything larger leaves the request unread, and the server then hangs
+    /// up. The response head is long gone by that point, so the decision has to be made here, when the
+    /// error is thrown. Without it the client is handed keep-alive framing and then cut off, and fails
+    /// the upload it has already been answered rather than reading the answer.
+    static let connectionClose: HTTPFields = {
+        var fields = HTTPFields()
+        fields.connection = .close
+        return fields
+    }()
 }
 
 /// Thrown when the request body is read from two tasks at once. It is a single-consumer stream, so this

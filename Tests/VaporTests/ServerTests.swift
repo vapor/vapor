@@ -1383,6 +1383,42 @@ struct ServerTests {
         }
     }
 
+    @Test("Server closes with Connection: close when it can't drain the request body")
+    func testUndrainableRequestBodyIsAnsweredWithConnectionClose() async throws {
+        try await withApp { app in
+            // A request rejected without being read leaves its body on the wire. If more is left than
+            // `maxDrainBytes`, the connection can't be reused — and the client has to learn that from
+            // the response, not from a socket that dies under its still-in-flight upload. Answering
+            // with keep-alive framing and then hanging up makes the client fail the request it has
+            // already been answered.
+            app.routes.defaultMaxBodySize = 1
+            app.on(.post, "reject") { _ -> HTTPResponse.Status in .ok }
+
+            try await withRunningServer(app) { port in
+                let oversized = String(repeating: "a", count: 500_000)
+                #expect(oversized.utf8.count > app.serverConfiguration.maxDrainBytes)
+
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: """
+                        POST /reject HTTP/1.1\r
+                        Host: localhost\r
+                        Content-Length: \(oversized.utf8.count)\r
+                        \r
+                        \(oversized)
+                        """,
+                    until: { $0.contains("\r\n\r\n") })
+
+                #expect(exchange.bytes.contains("HTTP/1.1 413 Payload Too Large"))
+                #expect(exchange.bytes.lowercased().contains("connection: close"))
+                // Deliberately no assertion on *how* the connection ends. With this much of the body
+                // left unread the server's close races the client's remaining writes, so it lands as
+                // either a clean FIN or an RST depending on timing — asserting either one is a flake.
+                // The header is the contract: the client is told not to reuse the connection.
+            }
+        }
+    }
+
     @Test("Test Live Server")
     func testLiveServer() async throws {
         try await withApp { app in

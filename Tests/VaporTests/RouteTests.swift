@@ -441,11 +441,15 @@ struct RouteTests {
                 HTTPResponse.Status.ok
             }
 
-            // Small enough that the rejected (413) requests' unread remainder stays within the
-            // keep-alive drain cap, so the connection is reused and the 413 is delivered rather than
-            // racing a connection close; still over the 1-byte and 1kb limits and under 1mb/1gb.
+            // Over the 1-byte and 1kb limits and under 1mb/1gb, and — the part that matters for the
+            // two rejected requests — inside `maxDrainBytes` (16kb). A 413 stops reading the body, so
+            // the remainder is only discarded if it fits that budget. Past it the server closes on a
+            // client that is still uploading, which RSTs the connection and destroys the 413 before it
+            // is read. Sizing around that is deliberate: `testUndrainableRequestBodyIsAnsweredWith`
+            // `ConnectionClose` covers the over-budget case, where all the client is promised is the
+            // `Connection: close` header.
             var buffer = ByteBuffer()
-            buffer.writeBytes(Array(repeating: 0, count: 500_000))
+            buffer.writeBytes(Array(repeating: 0, count: 8_192))
             try await app.testing(.running) { client in
                 let defaultLimit = try await client.post("/default") { $0.body = buffer }
                 #expect(defaultLimit.status == .contentTooLarge)

@@ -77,7 +77,7 @@ extension Request {
                 // it is re-collected with a smaller `max`.
                 let declaredLength = self.request.headers[.contentLength].flatMap { Int($0) }
                 if let max, let declaredLength, declaredLength > max {
-                    throw Abort(.contentTooLarge)
+                    throw Abort(.contentTooLarge, headers: .connectionClose)
                 }
                 // A stream drains once, so cache the result as `.collected` for later `data`/`collect`/`decode`.
                 let buffer = try await stream.collect(max: max ?? .max)
