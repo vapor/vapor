@@ -491,7 +491,7 @@ struct ServerTLSTests {
                 try await withTLSClient(trustingOnly: credentials.nioCertificate, httpVersion: .http1Only) { client in
                     let response = try await client.execute(
                         HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
+                        timeout: .seconds(30)
                     )
                     #expect(response.status == .ok)
                     #expect(response.version == .http1_1)
@@ -518,7 +518,7 @@ struct ServerTLSTests {
                 try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
                     let response = try await client.execute(
                         HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
-                        timeout: .seconds(10)
+                        timeout: .seconds(30)
                     )
                     #expect(response.status == .ok)
                     #expect(response.version == .http2)

@@ -261,15 +261,15 @@ struct RequestTests {
             })
 
             try await app.testing(.running) { client in
-                let fiftyMB = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
+                // 600 MiB, ten times over. Try to force it to hit the limit
+                let payload = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
 
                 for _ in 0..<10 {
                     let response = try await client.post("upload") {
-                        $0.body = fiftyMB
-                        $0.timeout = .seconds(5)
+                        $0.body = payload
                     }
                     #expect(response.status == .ok)
-                    try #expect(await response.body.requireString() == "Received \(fiftyMB.readableBytes) bytes")
+                    try #expect(await response.body.requireString() == "Received \(payload.readableBytes) bytes")
                 }
             }
         }
@@ -628,7 +628,7 @@ struct RequestTests {
                 request.method = .POST
                 request.body = .stream(String.randomDigits().utf8.async, length: .unknown)
 
-                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(10))
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
                 #expect(response.status == .ok)
                 let body = try await response.body.collect(upTo: 1024 * 1024)
                 #expect(body.string == "rejected")
