@@ -112,9 +112,6 @@ struct RequestTests {
 
         try await withApp { app in
             app.on(.post, "stream-decode", body: .stream) { req async throws -> String in
-                // NOTE: dropped an upstream `#expect(req.body.data != nil)` here — with lazy request
-                // streaming the body isn't buffered until `content.decode` collects it. Flagged for
-                // @0xTim (test added in #3552). See PR description.
                 return try await req.content.decode(Payload.self).message
             }
 
