@@ -260,17 +260,16 @@ struct RequestTests {
                 return "Received \(buffer.readableBytes) bytes"
             })
 
-            try await withRunningApp(app: app) { port in
+            try await app.testing(.running) { client in
                 let fiftyMB = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
-                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/upload")
-                request.method = .POST
-                request.body = .bytes(fiftyMB)
 
                 for _ in 0..<10 {
-                    let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
+                    let response = try await client.post("upload") {
+                        $0.body = fiftyMB
+                        $0.timeout = .seconds(5)
+                    }
                     #expect(response.status == .ok)
-                    let body = try await response.body.collect(upTo: 1024 * 1024)
-                    #expect(body.string == "Received \(fiftyMB.readableBytes) bytes")
+                    try #expect(await response.body.requireString() == "Received \(fiftyMB.readableBytes) bytes")
                 }
             }
         }

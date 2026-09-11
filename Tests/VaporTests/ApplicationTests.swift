@@ -206,10 +206,9 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            try await withRunningApp(app: app) { port in
-                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
-                let body = try await response.body.collect(upTo: 13)
-                #expect(body.string == "Hello, world!")
+            try await app.testing(.running) { client in
+                let response = try await client.get("hello")
+                try #expect(await response.body.requireString() == "Hello, world!")
             }
         }
     }
@@ -221,18 +220,18 @@ struct ApplicationTests {
                 "Hello, world!"
             }
 
-            try await withRunningApp(app: app, portToUse: 0) { port in
+            try await app.testing(.running, options: .live(port: 0)) { client in
                 let address = try await app.server.listeningAddress
 
                 let ip = try #require(address.host)
+                let port = try #require(client.port)
                 #expect(port == address.port)
                 #expect("127.0.0.1" == ip || "::1" == ip)
                 #expect(port > 0)
                 #expect(port != 8080)
 
-                let response = try await HTTPClient.shared.get("http://127.0.0.1:\(port)/hello")
-                let body = try await response.body.collect(upTo: 13)
-                #expect(body.string == "Hello, world!")
+                let response = try await client.get("hello")
+                try #expect(await response.body.requireString() == "Hello, world!")
             }
         }
     }

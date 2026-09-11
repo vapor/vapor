@@ -75,8 +75,6 @@ struct ClientTests {
     func testBoilerplateClient() async throws {
         try await withRemoteApp { remoteApp, remoteAppPort in
             try await withApp { app in
-                app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-
                 app.get("foo") { req async throws -> String in
                     do {
                         let response = try await app.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
@@ -89,9 +87,9 @@ struct ClientTests {
                     }
                 }
 
-                try await withRunningApp(app: app) { port in
-                    let res = try await app.client.get("http://127.0.0.1:\(port)/foo")
-                    try #expect(await res.body.string() == "bar")
+                try await app.testing(.running) { client in
+                    let res = try await client.get("foo")
+                    try #expect(await res.body.requireString() == "bar")
                 }
             }
         }
@@ -144,7 +142,6 @@ struct ClientTests {
     // MARK: - Helpers
     func withRemoteApp<T: Sendable>(_ block: @Sendable (Application, Int) async throws -> T) async throws -> T {
         let remoteApp = try await Application(.testing, configReader: testConfigReader)
-        remoteApp.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
         remoteApp.get("json") { _ in
             SomeJSON()
@@ -175,9 +172,8 @@ struct ClientTests {
         }
 
         do {
-            let result = try await withRunningApp(app: remoteApp) { port in
-                let result = try await block(remoteApp, port)
-                return result
+            let result = try await remoteApp.testing(.running) { client in
+                try await block(remoteApp, #require(client.port))
             }
 
             try await remoteApp.shutdown()
