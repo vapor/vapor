@@ -23,8 +23,6 @@ struct RequestTests {
     @Test("Test Redirect", .timeLimit(.minutes(1)))
     func testRedirect() async throws {
         try await withApp { app in
-            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: .init(redirectConfiguration: .disallow))
-
             app.get("redirect_normal") {
                 $0.redirect(to: "foo", redirectType: .normal)
             }
@@ -38,19 +36,15 @@ struct RequestTests {
                 $0.redirect(to: "foo", redirectType: .permanentPost)
             }
 
-            do {
-                try await withRunningApp(app: app) { port throws in
-                    #expect(try await httpClient.get("http://127.0.0.1:\(port)/redirect_normal").status == .seeOther)
-                    #expect(try await httpClient.get("http://127.0.0.1:\(port)/redirect_permanent").status == .movedPermanently)
-                    #expect(try await httpClient.post("http://127.0.0.1:\(port)/redirect_temporary").status == .temporaryRedirect)
-                    #expect(try await httpClient.post("http://127.0.0.1:\(port)/redirect_permanentPost").status == .permanentRedirect)
-                }
-            } catch {
-                try await httpClient.shutdown()
-                throw error
-            }
+            var configuration = HTTPClient.Configuration.singletonConfiguration
+            configuration.redirectConfiguration = .disallow
 
-            try await httpClient.shutdown()
+            try await app.testing(.running, options: .live(clientOptions: .init(configuration: configuration))) { client in
+                try #expect(await client.get("redirect_normal").status == .seeOther)
+                try #expect(await client.get("redirect_permanent").status == .movedPermanently)
+                try #expect(await client.post("redirect_temporary").status == .temporaryRedirect)
+                try #expect(await client.post("redirect_permanentPost").status == .permanentRedirect)
+            }
         }
     }
 
