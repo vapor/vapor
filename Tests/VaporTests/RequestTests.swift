@@ -62,7 +62,7 @@ struct RequestTests {
                 return string
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/stream")
                 request.method = .POST
                 request.body = .stream(testValue.utf8.async, length: .unknown)
@@ -91,7 +91,7 @@ struct RequestTests {
                 }))
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/echo")
                 request.method = .POST
                 request.body = .stream(testValue.utf8.async, length: .unknown)
@@ -118,7 +118,7 @@ struct RequestTests {
                 return try await req.content.decode(Payload.self).message
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 let testValue = String.randomDigits()
                 let json = #"{"message":"\#(testValue)"}"#
 
@@ -153,7 +153,7 @@ struct RequestTests {
                 throw Abort(.internalServerError)
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var oneMBBB = ByteBuffer(repeating: 0x41, count: 1024 * 1024)
                 let oneMB = try #require(oneMBBB.readData(length: oneMBBB.readableBytes) as Data?)
                 var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/hello")
@@ -205,7 +205,7 @@ struct RequestTests {
                 }
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 final class ResponseDelegate: HTTPClientResponseDelegate {
                     typealias Response = Void
 
@@ -287,7 +287,7 @@ struct RequestTests {
                 return "\(total)"
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var request = HTTPClientRequest(url: "http://localhost:\(port)/count")
                 request.method = .POST
 
@@ -313,7 +313,7 @@ struct RequestTests {
                 return "\(total)"
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var request = HTTPClientRequest(url: "http://localhost:\(port)/count")
                 request.method = .POST
                 request.body = .bytes(ByteBuffer(repeating: 0x41, count: bodySize))
@@ -336,7 +336,7 @@ struct RequestTests {
             app.on(.post, "ignore", body: .stream) { _ in "ignored" }
             app.get("ok") { _ in "ok" }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var request = HTTPClientRequest(url: "http://localhost:\(port)/ignore")
                 request.method = .POST
                 request.body = .bytes(ByteBuffer(repeating: 0x41, count: 4 * 1024))
@@ -367,7 +367,7 @@ struct RequestTests {
             }
             app.get("ok") { _ in "ok" }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var request = HTTPClientRequest(url: "http://localhost:\(port)/limited")
                 request.method = .POST
                 request.body = .bytes(ByteBuffer(repeating: 0x41, count: 2048))
@@ -395,7 +395,7 @@ struct RequestTests {
                 return "\(buffer.readableBytes)"
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var atLimit = HTTPClientRequest(url: "http://localhost:\(port)/limited")
                 atLimit.method = .POST
                 atLimit.body = .bytes(ByteBuffer(repeating: 0x41, count: maxSize))
@@ -420,7 +420,7 @@ struct RequestTests {
             // unknown route would be a trivial DoS vector.
             app.get("known") { _ in "ok" }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var unknown = HTTPClientRequest(url: "http://localhost:\(port)/unknown")
                 unknown.method = .POST
                 unknown.body = .bytes(ByteBuffer(repeating: 0x41, count: 50 * 1024 * 1024))
@@ -446,7 +446,7 @@ struct RequestTests {
             // Unknown paths (404) so no `.collect` gate consumes the body first — the unread body
             // reaches the handler's `defer` drain, which is what we're exercising. A raw socket lets
             // us see whether the server kept the connection alive or closed it.
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 let body = String(repeating: "A", count: 128)
 
                 // GET/HEAD → drain budget 0: any body is left unread, so the server closes the connection.
@@ -481,7 +481,7 @@ struct RequestTests {
         try await withApp { app in
             app.serverConfiguration.maxDrainBytes = 8
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 // Over the 8-byte budget → the server stops draining and closes the connection.
                 let big = String(repeating: "A", count: 128)
                 let over = try await rawExchange(
@@ -623,7 +623,7 @@ struct RequestTests {
                 return rejected ? "rejected" : "not-rejected"
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/concurrent-read")
                 request.method = .POST
                 request.body = .stream(String.randomDigits().utf8.async, length: .unknown)
@@ -649,7 +649,7 @@ struct RequestTests {
                 return "read"
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 let body = String(repeating: "A", count: 128)
                 let exchange = try await rawExchange(
                     port: port,
@@ -673,7 +673,7 @@ struct RequestTests {
                 throw Abort(.internalServerError)
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 let body = String(repeating: "A", count: 128)
                 let exchange = try await rawExchange(
                     port: port,
@@ -695,7 +695,7 @@ struct RequestTests {
                 return "ok"
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 let exchange = try await rawExchange(
                     port: port,
                     rawRequest: "POST /collect-limited HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100000\r\n\r\n",
@@ -720,7 +720,7 @@ struct RequestTests {
                 return first.message
             }
 
-            try await withRunningApp(app: app) { port in
+            try await withRunningServer(app) { port in
                 let testValue = String.randomDigits()
                 let json = #"{"message":"\#(testValue)"}"#
                 var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/decode-cache")

@@ -486,7 +486,7 @@ struct ServerTLSTests {
             app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+            try await withRunningServer(app) { port in
                 // Force the client to HTTP/1.1: enabling HTTP/2 on the server must not break H1 clients.
                 try await withTLSClient(trustingOnly: credentials.nioCertificate, httpVersion: .http1Only) { client in
                     let response = try await client.execute(
@@ -512,7 +512,7 @@ struct ServerTLSTests {
             app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
             app.get("hello") { _ in "world" }
 
-            try await withRunningApp(app: app, hostname: "127.0.0.1") { port in
+            try await withRunningServer(app) { port in
                 // The client defaults to `.automatic`, advertising both h2 and http/1.1 over ALPN.
                 // The server offers h2, so the negotiated response should come back over HTTP/2.
                 try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
