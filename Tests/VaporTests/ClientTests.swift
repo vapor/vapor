@@ -285,7 +285,7 @@ struct ClientTests {
 
         // Streaming is not bounded by it - the ceiling is on holding the whole body in memory.
         var seen = 0
-        try await makeResponse().body.withStreamingBytes { seen += $0.byteCount }
+        try await makeResponse().body.withStreamingBytes { seen += $0.count }
         #expect(seen == 4108)
     }
 

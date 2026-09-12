@@ -623,9 +623,9 @@ struct StreamingBodyTests {
             // Span<UInt8>
             let d: [UInt8] = [0x64]
             try await writer.write(d.span)
-            // RawSpan - the protocol requirement itself
+            // Span<UInt8> - the protocol requirement itself
             let e: [UInt8] = [0x65]
-            try await writer.write(e.span.bytes)
+            try await writer.write(e.span)
             // A sequence of chunks
             try await writer.write(contentsOf: [[UInt8]([0x66]), [UInt8]([0x67])])
         })
@@ -643,7 +643,7 @@ struct StreamingBodyTests {
         })
         try await body.withStreamingBytes { span in
             var bytes = [UInt8]()
-            for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
+            for i in 0..<span.count { bytes.append(span[i]) }
             chunks.withLock { $0.append(String(decoding: bytes, as: UTF8.self)) }
         }
         // Delivered separately and in order - not collected into one blob.
@@ -656,7 +656,7 @@ struct StreamingBodyTests {
             let chunks = Mutex([String]())
             try await body.withStreamingBytes { span in
                 var bytes = [UInt8]()
-                for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
+                for i in 0..<span.count { bytes.append(span[i]) }
                 chunks.withLock { $0.append(String(decoding: bytes, as: UTF8.self)) }
             }
             #expect(chunks.withLock { $0 } == ["hello"])
@@ -697,7 +697,7 @@ struct StreamingBodyTests {
         })
         // Chunk sizes prove the fold sees each chunk separately rather than one blob.
         let sizes = try await body.reduceBytes(into: [Int]()) { acc, span in
-            acc.append(span.byteCount)
+            acc.append(span.count)
         }
         #expect(sizes == [5, 4, 5])
     }
@@ -705,7 +705,7 @@ struct StreamingBodyTests {
     @Test("reduceBytes folds a buffered body in a single step")
     func testReduceBytesOnBuffered() async throws {
         let total = try await Response.Body(string: "hello").reduceBytes(into: 0) { acc, span in
-            acc += span.byteCount
+            acc += span.count
         }
         #expect(total == 5)
     }
@@ -713,7 +713,7 @@ struct StreamingBodyTests {
     @Test("reduceBytes returns the initial value for an empty body")
     func testReduceBytesOnEmpty() async throws {
         let total = try await Response.Body().reduceBytes(into: 42) { acc, span in
-            acc += span.byteCount
+            acc += span.count
         }
         #expect(total == 42)
     }
@@ -780,7 +780,7 @@ struct StreamingBodyTests {
         // Streaming hands the bytes to the caller and keeps nothing.
         let seen = Mutex(0)
         try await body.withStreamingBytes { span in
-            let count = span.byteCount
+            let count = span.count
             seen.withLock { $0 += count }
         }
         #expect(seen.withLock { $0 } == 4)
@@ -885,7 +885,7 @@ struct StreamingBodyTests {
         #expect(runs.withLock { $0 } == 1)
 
         // `reduceBytes` is built on `withStreamingBytes`, so it replays too.
-        let count = try await original.reduceBytes(into: 0) { total, span in total += span.byteCount }
+        let count = try await original.reduceBytes(into: 0) { total, span in total += span.count }
         #expect(count == 7)
         #expect(runs.withLock { $0 } == 1)
     }

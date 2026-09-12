@@ -56,7 +56,7 @@ struct AHCClient: Client {
             // being re-framed as chunked. `nil` when the origin did not say.
             body: try .init(stream: { writer in
                 for try await chunk in response.body {
-                    try await writer.write(chunk.readableBytesSpan)
+                    try await writer.write(chunk.readableBytesUInt8Span)
                 }
             }, count: declaredLength),
             maxBodySize: clientRequest.maxResponseBodySize,

@@ -23,7 +23,7 @@ struct ResponseBodyWriterScope: ~Copyable {
 /// See https://github.com/vapor/vapor/issues/2976.
 public protocol ResponseBodyWriter: ~Escapable {
     /// Write a single chunk of bytes
-    func write(_ bytes: RawSpan) async throws
+    func write(_ bytes: Span<UInt8>) async throws
 
     /// Write a sequence of bytes.
     /// This is required on the protocol to ensure it gets used when ``ResponseBodyWriter`` is an existential.
@@ -32,27 +32,21 @@ public protocol ResponseBodyWriter: ~Escapable {
 }
 
 extension ResponseBodyWriter where Self: ~Escapable {
-    /// Write a single chunk of bytes
-    @inlinable
-    public func write(_ bytes: Span<UInt8>) async throws {
-        try await self.write(bytes.bytes)
-    }
-
     /// Write the UTF-8 Representation of a `String`
     @inlinable
     public func write(_ string: String) async throws {
-        try await self.write(string.utf8Span.span.bytes)
+        try await self.write(string.utf8Span.span)
     }
 
     /// Write a sequence of bytes.
     ///
-    /// Copies into contiguous storage so the bytes can be handed over as a `RawSpan`.
+    /// Copies into contiguous storage so the bytes can be handed over as a `Span<UInt8>`.
     /// `withContiguousStorageIfAvailable` is unusable here: its closure is synchronous, and
-    /// `write(_ bytes: RawSpan)` must be awaited. Writers that copy synchronously should override.
+    /// `write(_ bytes: Span<UInt8>)` must be awaited. Writers that copy synchronously should override.
     @inlinable
     public func write(_ bytes: some Sequence<UInt8>) async throws {
         let contiguous = ContiguousArray(bytes)
-        try await self.write(contiguous.span.bytes)
+        try await self.write(contiguous.span)
     }
 
     /// Write a sequence of byte chunks, in order

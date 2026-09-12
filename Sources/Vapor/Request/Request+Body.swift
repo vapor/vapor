@@ -72,7 +72,7 @@ extension Request {
         /// what most streaming handlers want; it is a convenience over ``withReader(_:)`` and shares
         /// its semantics with ``RequestBodyReader/forEachChunk(_:)`` (borrowed span, valid only for the
         /// call — copy out anything you keep).
-        public func forEachChunk(_ body: (RawSpan) async throws -> Void) async throws {
+        public func forEachChunk(_ body: (Span<UInt8>) async throws -> Void) async throws {
             try await self.withReader { reader in
                 try await reader.forEachChunk(body)
             }

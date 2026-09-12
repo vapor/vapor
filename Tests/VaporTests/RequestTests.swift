@@ -144,7 +144,7 @@ struct RequestTests {
 
             app.on(.post, "hello") { req async throws -> Response in
                 let firstChunkBytes = try await req.body.withReader { reader in
-                    try await reader.read { span, _ in span.byteCount }
+                    try await reader.read { span, _ in span.count }
                 }
                 bytesTheServerRead.wrappingIncrement(by: firstChunkBytes, ordering: .relaxed)
                 throw Abort(.internalServerError)
@@ -184,7 +184,7 @@ struct RequestTests {
                         try await req.body.withReader { reader in
                             // Read only the first chunk, then hold the reader open: the server stops
                             // pulling more of the body (backpressure) while we "wait forever".
-                            let firstChunkBytes = try await reader.read { span, _ in span.byteCount }
+                            let firstChunkBytes = try await reader.read { span, _ in span.count }
                             numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .sequentiallyConsistent)
                             bytesTheServerSaw.wrappingIncrement(by: firstChunkBytes, ordering: .sequentiallyConsistent)
                             try await Task.sleep(nanoseconds: 10_000_000_000) // wait "forever"
@@ -279,7 +279,7 @@ struct RequestTests {
             app.on(.post, "count") { req -> String in
                 var total = 0
                 try await req.body.forEachChunk { chunk in
-                    total += chunk.byteCount
+                    total += chunk.count
                 }
                 return "\(total)"
             }
@@ -305,7 +305,7 @@ struct RequestTests {
             app.on(.post, "count") { req -> String in
                 var total = 0
                 try await req.body.forEachChunk { chunk in
-                    total += chunk.byteCount
+                    total += chunk.count
                 }
                 return "\(total)"
             }
@@ -641,7 +641,7 @@ struct RequestTests {
             // `testServerSurvivesHandlerIgnoringStreamedBody`, which reads nothing at all.
             app.on(.post, "partial") { req -> String in
                 _ = try await req.body.withReader { reader in
-                    try await reader.read { span, _ in span.byteCount }
+                    try await reader.read { span, _ in span.count }
                 }
                 return "read"
             }
@@ -665,7 +665,7 @@ struct RequestTests {
             // returns the reader to the stream so a later drain doesn't see it lost.
             app.on(.post, "throw-mid-read") { req -> String in
                 _ = try await req.body.withReader { reader in
-                    try await reader.read { span, _ in span.byteCount }
+                    try await reader.read { span, _ in span.count }
                 }
                 throw Abort(.internalServerError)
             }
@@ -976,7 +976,7 @@ struct RequestTests {
             // short body and a 200 downstream.
             app.on(.post, "partial") { req -> String in
                 _ = try await req.body.withReader { reader in
-                    try await reader.read { span, _ in span.byteCount }
+                    try await reader.read { span, _ in span.count }
                 }
                 do {
                     _ = try await req.body.collect(max: .max)

@@ -97,12 +97,12 @@ extension Response {
         /// A streaming body can also throw part-way, after the closure has already seen chunks.
         ///
         /// Use ``collect()`` instead when the whole body is genuinely needed in memory.
-        public func withStreamingBytes(_ body: @escaping (RawSpan) async throws -> Void) async throws {
+        public func withStreamingBytes(_ body: @escaping (Span<UInt8>) async throws -> Void) async throws {
             switch self.storage {
             case .stream(let stream):
                 // Already collected: replay the bytes rather than running the callback again.
                 if let collected = stream.state.collected {
-                    try await body(collected.span.bytes)
+                    try await body(collected.span)
                 } else {
                     // Streamed away, not kept: the callback can only run once, and a source like
                     // a network body can't be iterated twice anyway.
@@ -113,12 +113,12 @@ extension Response {
             case .none:
                 return
             case .data(let data):
-                try await body(data.span.bytes)
+                try await body(data.span)
             case .string(let string):
-                try await body(string.utf8Span.span.bytes)
+                try await body(string.utf8Span.span)
             case .staticString(let staticString):
                 try await unsafe body(
-                    RawSpan(_unsafeStart: staticString.utf8Start, byteCount: staticString.utf8CodeUnitCount)
+                    Span(_unsafeStart: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
                 )
             }
         }
@@ -142,7 +142,7 @@ extension Response {
         /// - Returns: The accumulated value. An empty body returns `initialResult` untouched.
         public func reduceBytes<R>(
             into initialResult: R,
-            _ updateAccumulatingResult: @escaping (inout R, RawSpan) async throws -> Void
+            _ updateAccumulatingResult: @escaping (inout R, Span<UInt8>) async throws -> Void
         ) async throws -> R {
             // `inout` can't cross into an escaping closure, so the accumulator is boxed for the
             // duration. That is an implementation detail: callers still write plain `inout`.
@@ -410,9 +410,9 @@ private final class ReduceBox<R> {
 /// Backing storage for ``ForwardingBodyWriter``. The writer itself is non-escapable and so cannot
 /// hold anything that outlives the lend; the closure lives here instead.
 private final class ForwardingStorage {
-    let onChunk: (RawSpan) async throws -> Void
+    let onChunk: (Span<UInt8>) async throws -> Void
 
-    init(_ onChunk: @escaping (RawSpan) async throws -> Void) {
+    init(_ onChunk: @escaping (Span<UInt8>) async throws -> Void) {
         self.onChunk = onChunk
     }
 }
@@ -427,7 +427,7 @@ private struct ForwardingBodyWriter: ResponseBodyWriter, ~Escapable {
         self.storage = storage
     }
 
-    func write(_ bytes: RawSpan) async throws {
+    func write(_ bytes: Span<UInt8>) async throws {
         try await self.storage.onChunk(bytes)
     }
 }
@@ -443,9 +443,11 @@ private final class CollectingStorage {
         self.max = max
     }
 
-    func append(_ bytes: RawSpan) throws {
-        try self.checkLimit(adding: bytes.byteCount)
-        bytes.withUnsafeBytes { unsafe self.data.append(contentsOf: $0) }
+    func append(_ bytes: Span<UInt8>) throws {
+        try self.checkLimit(adding: bytes.count)
+        // `Data` still has no safe bulk append from a span on this SDK, so this stays `unsafe` — but
+        // the typed span at least lets it borrow a typed buffer rather than raw bytes.
+        bytes.withUnsafeBufferPointer { unsafe self.data.append(contentsOf: $0) }
     }
 
     func append(_ bytes: some Sequence<UInt8>) throws {
@@ -479,7 +481,7 @@ private struct CollectingBodyWriter: ResponseBodyWriter, ~Escapable {
         self.storage = storage
     }
 
-    func write(_ bytes: RawSpan) async throws {
+    func write(_ bytes: Span<UInt8>) async throws {
         try self.storage.append(bytes)
     }
 

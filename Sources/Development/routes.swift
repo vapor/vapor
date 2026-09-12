@@ -30,7 +30,7 @@ func routes(_ app: Application) async throws {
         var total = 0
         try await req.body.forEachChunk { buffer in
             try await Task.sleep(nanoseconds: 1_000_000_000)
-            total += buffer.byteCount
+            total += buffer.count
         }
         return total.description
     }
@@ -71,7 +71,7 @@ func routes(_ app: Application) async throws {
 
     app.on(.post, "file") { req in
         try await req.body.forEachChunk { part in
-            debugPrint(part.byteCount)
+            debugPrint(part.count)
         }
         return "Done"
     }
@@ -125,7 +125,7 @@ func routes(_ app: Application) async throws {
             let handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
             defer { try? await handle.close() }
             for try await chunk in handle.readChunks(chunkLength: .bytes(64 * 1024)) {
-                try await writer.write(chunk.readableBytesSpan)
+                try await writer.write(chunk.readableBytesUInt8Span)
             }
         }))
     }

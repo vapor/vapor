@@ -147,7 +147,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // longer materialised into an intermediate `ByteBuffer` first.
                 var responseBody = UniqueArray<UInt8>(minimumCapacity: vaporResponse.body.count ?? 0)
                 try await vaporResponse.body.withStreamingBytes { bytes in
-                    bytes.withUnsafeBytes { unsafe responseBody.append(copying: $0) }
+                    responseBody.append(copying: bytes)
                 }
                 try await sender.sendAndFinish(httpResponse, buffer: &responseBody)
             }
@@ -204,13 +204,13 @@ final class NIOResponseBodyWriterStorage {
         self.wasAbandoned = true
     }
 
-    func write(_ bytes: RawSpan) async throws {
+    func write(_ bytes: Span<UInt8>) async throws {
         // We need to copy here so the writer takes ownership of the data
         // TODO: This should be fixed in HTTP Server to avoid the copy
-        var out = UniqueArray<UInt8>(minimumCapacity: bytes.byteCount)
-        bytes.withUnsafeBytes { unsafe out.append(copying: $0) }
+        var out = UniqueArray<UInt8>(minimumCapacity: bytes.count)
+        out.append(copying: bytes)
         try await self.inner?.write(buffer: &out)
-        self.bytesWritten += bytes.byteCount
+        self.bytesWritten += bytes.count
     }
 
     func write(_ bytes: some Sequence<UInt8>) async throws {
@@ -310,11 +310,11 @@ package final class RequestBodyStream: Sendable {
         self.state = Mutex(State(reader: Mutex(reader), chunk: UniqueArray()))
     }
 
-    /// Reads one part of the body, handing its bytes to `body` as a borrowed ``RawSpan`` plus a flag
+    /// Reads one part of the body, handing its bytes to `body` as a borrowed `Span<UInt8>` plus a flag
     /// that is `true` at end-of-body (the span is then empty). The single primitive behind
     /// ``collect(max:)``, ``drain(max:)`` and ``RequestBodyReader``. The span borrows this stream's
     /// chunk buffer, so it is valid only for the call — copy out what you keep.
-    func read<R>(_ body: (RawSpan, Bool) async throws -> R) async throws -> R {
+    func read<R>(_ body: (Span<UInt8>, Bool) async throws -> R) async throws -> R {
         // Check the reader out of the lock (synchronously); the `await`s below happen outside it.
         let checkout = self.state.withLock { state -> sending Checkout in
             if state.failed { return .failed }
@@ -356,7 +356,7 @@ package final class RequestBodyStream: Sendable {
             let delivered = chunk.count
             let result: R
             do {
-                result = try await body(chunk.span.bytes, didEnd)
+                result = try await body(chunk.span, didEnd)
             } catch {
                 // A consumer that throws has not broken the stream, only stopped reading it, so the
                 // bytes it was handed still count as consumed and the stream stays usable.
@@ -418,13 +418,13 @@ package final class RequestBodyStream: Sendable {
             let ended = try await self.read { span, isEnd -> Bool in
                 // Take the bytes *before* checking the flag: a terminal read is allowed to carry a
                 // final batch, and `AsyncReader`'s contract says the caller must process both.
-                if span.byteCount > 0 {
+                if !span.isEmpty {
                     // Check before appending so an over-limit chunk is never buffered. Subtracting
                     // (rather than adding) keeps the bound exact and can't overflow when `max` is `.max`.
-                    guard span.byteCount <= max - collected.count else {
+                    guard span.count <= max - collected.count else {
                         throw Abort(.contentTooLarge, headers: .connectionClose)
                     }
-                    span.withUnsafeBytes { unsafe collected.append(contentsOf: $0) }
+                    span.withUnsafeBufferPointer { unsafe collected.append(contentsOf: $0) }
                 }
                 return isEnd
             }
@@ -444,7 +444,7 @@ package final class RequestBodyStream: Sendable {
     func drain(max: Int) async throws {
         var drained = 0
         while true {
-            let (ended, count) = try await self.read { span, isEnd in (isEnd, span.byteCount) }
+            let (ended, count) = try await self.read { span, isEnd in (isEnd, span.count) }
             // Count first: a terminal read may carry bytes, and they are part of what was drained.
             drained += count
             if ended {
@@ -511,8 +511,8 @@ private let emptyRequestBody = ByteBuffer()
 
 /// Calls `body` with an empty span and `isEnd == true` — the end-of-body signal shared by every
 /// read path, so the "empty span + ended" sentinel lives in exactly one place.
-private func signalEndOfBody<R>(to body: (RawSpan, Bool) async throws -> R) async throws -> R {
-    try await body(emptyRequestBody.readableBytesSpan, true)
+private func signalEndOfBody<R>(to body: (Span<UInt8>, Bool) async throws -> R) async throws -> R {
+    try await body(emptyRequestBody.readableBytesUInt8Span, true)
 }
 
 /// Holds an already-buffered body until ``NIORequestBodyReader`` replays it, then latches to `nil` so a
@@ -528,7 +528,7 @@ final class CollectedBodyReplay {
 /// The server's concrete ``RequestBodyReader`` — a borrowed, non-escapable view onto the request body,
 /// the mirror of ``NIOResponseBodyWriter``. Lent only for a ``Request/Body/withReader(_:)`` closure;
 /// being `~Escapable` it can't be stored, so "read the body twice" is a compile-time error. Each
-/// ``read(_:)`` hands the next part out as a borrowed ``RawSpan``, copying nothing until user code keeps it.
+/// ``read(_:)`` hands the next part out as a borrowed `Span<UInt8>`, copying nothing until user code keeps it.
 struct NIORequestBodyReader: RequestBodyReader, ~Escapable {
     /// Either the live server stream, or an already-buffered body replayed as a single chunk.
     enum Source {
@@ -542,7 +542,7 @@ struct NIORequestBodyReader: RequestBodyReader, ~Escapable {
         self.source = source
     }
 
-    func read<R>(_ body: (RawSpan, Bool) async throws -> R) async throws -> R {
+    func read<R>(_ body: (Span<UInt8>, Bool) async throws -> R) async throws -> R {
         switch self.source {
         case .stream(let stream):
             return try await stream.read(body)
@@ -558,7 +558,7 @@ struct NIORequestBodyReader: RequestBodyReader, ~Escapable {
             // owns its bytes and is held for the duration of the call, so its span is handed over
             // directly rather than copied into a fresh buffer.
             replay.data = nil
-            return try await body(data.span.bytes, false)
+            return try await body(data.span, false)
         }
     }
 }
@@ -579,7 +579,7 @@ struct NIOResponseBodyWriter: ResponseBodyWriter, ~Escapable {
         self.storage = storage
     }
 
-    func write(_ bytes: RawSpan) async throws {
+    func write(_ bytes: Span<UInt8>) async throws {
         try await self.storage.write(bytes)
     }
 
