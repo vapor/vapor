@@ -26,11 +26,10 @@ extension RequestBodyReader where Self: ~Escapable {
     public func forEachChunk(_ body: (RawSpan) async throws -> Void) async throws {
         while true {
             let ended = try await self.read { span, isEnd -> Bool in
-                guard !isEnd else {
-                    return true
+                if span.byteCount > 0 {
+                    try await body(span)
                 }
-                try await body(span)
-                return false
+                return isEnd
             }
             if ended {
                 return

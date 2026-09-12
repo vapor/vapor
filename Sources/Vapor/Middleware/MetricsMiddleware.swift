@@ -73,7 +73,7 @@ public final class MetricsMiddleware: Middleware {
                 // Recommended
                 ("network.protocol.version", networkProtocolVersion),
             ]
-        ).record(request.body.data?.count ?? 0)
+        ).record(request.body.bytesRead)
         
         // http.server.request.duration
         // https://opentelemetry.io/docs/specs/semconv/http/http-metrics/#metric-httpserverrequestduration

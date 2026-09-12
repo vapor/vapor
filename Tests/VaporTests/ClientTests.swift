@@ -157,7 +157,7 @@ struct ClientTests {
                 $0[$1.name.canonicalName] = $1.value
             }
 
-            let json = try JSONDecoder().decode([String: String].self, from: req.body.data!)
+            let json = try await req.content.decode([String: String].self)
 
             let jsonResponse = json.mapValues {
                 return "\($0)"

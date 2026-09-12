@@ -242,7 +242,7 @@ struct RouteTests {
 
         try await withApp { app in
             app.post("users") { req -> User in
-                try User.validate(content: req)
+                try await User.validate(content: req)
                 return try await req.content.decode(User.self)
             }
 
@@ -428,17 +428,23 @@ struct RouteTests {
             app.routes.defaultMaxBodySize = 1
             #expect(app.routes.defaultMaxBodySize == 1)
 
+            // Each handler collects, because that is where the ceiling is enforced now: a route that
+            // never asks for the body is never rejected for its size.
             app.on(.post, "default") { request in
-                HTTPResponse.Status.ok
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
             }
-            app.on(.post, "1kb", body: .collect(maxSize: "1kb")) { request in
-                HTTPResponse.Status.ok
+            app.on(.post, "1kb", maxBodySize: "1kb") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
             }
-            app.on(.post, "1mb", body: .collect(maxSize: "1mb")) { request in
-                HTTPResponse.Status.ok
+            app.on(.post, "1mb", maxBodySize: "1mb") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
             }
-            app.on(.post, "1gb", body: .collect(maxSize: "1gb")) { request in
-                HTTPResponse.Status.ok
+            app.on(.post, "1gb", maxBodySize: "1gb") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
             }
 
             // Over the 1-byte and 1kb limits and under 1mb/1gb, and — the part that matters for the

@@ -53,7 +53,7 @@ struct RequestTests {
         try await withApp { app in
             let testValue = String.randomDigits()
 
-            app.on(.post, "stream", body: .stream) { req in
+            app.on(.post, "stream") { req in
                 var receivedBuffer = ByteBuffer()
                 try await req.body.forEachChunk { part in
                     part.withUnsafeBytes { receivedBuffer.writeBytes($0) }
@@ -83,7 +83,7 @@ struct RequestTests {
             // Read the streamed request body chunk by chunk and write each chunk straight back
             // out as the streamed response body, exercising request streaming and response
             // streaming together in a single round-trip.
-            app.on(.post, "echo", body: .stream) { req -> Response in
+            app.on(.post, "echo") { req -> Response in
                 Response(body: .init(stream: { writer in
                     try await req.body.forEachChunk { chunk in
                         try await writer.write(chunk)
@@ -111,7 +111,7 @@ struct RequestTests {
         }
 
         try await withApp { app in
-            app.on(.post, "stream-decode", body: .stream) { req async throws -> String in
+            app.on(.post, "stream-decode") { req async throws -> String in
                 return try await req.content.decode(Payload.self).message
             }
 
@@ -142,7 +142,7 @@ struct RequestTests {
 
             let bytesTheServerRead = ManagedAtomic<Int>(0)
 
-            app.on(.post, "hello", body: .stream) { req async throws -> Response in
+            app.on(.post, "hello") { req async throws -> Response in
                 let firstChunkBytes = try await req.body.withReader { reader in
                     try await reader.read { span, _ in span.byteCount }
                 }
@@ -177,7 +177,7 @@ struct RequestTests {
 
             let requestHandlerTask: Mutex<Task<Response, any Error>?> = .init(nil)
 
-            app.on(.post, "hello", body: .stream) { req async throws -> Response in
+            app.on(.post, "hello") { req async throws -> Response in
                 requestHandlerTask.withLock {
                     $0 = Task {
                         #expect(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged == true)
@@ -252,7 +252,7 @@ struct RequestTests {
     @Test("Test Large Body Collection Doesn't Crash", .bug("https://github.com/vapor/vapor/issues/2985"))
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
-            app.on(.post, "upload", body: .stream, use: { request async throws -> String  in
+            app.on(.post, "upload", use: { request async throws -> String  in
                 let collected = try await request.body.collect(max: Int.max) ?? Data()
                 return "Received \(collected.count) bytes"
             })
@@ -276,7 +276,7 @@ struct RequestTests {
     func testEmptyStreamingRequestBody() async throws {
         try await withApp { app in
             // Streaming a request with no body must simply produce zero chunks, not hang or fail.
-            app.on(.post, "count", body: .stream) { req -> String in
+            app.on(.post, "count") { req -> String in
                 var total = 0
                 try await req.body.forEachChunk { chunk in
                     total += chunk.byteCount
@@ -302,7 +302,7 @@ struct RequestTests {
         try await withApp { app in
             // Read a multi-megabyte streamed body chunk by chunk and report the total size, so the
             // test fails if any chunk is dropped or the reassembly across reads is wrong.
-            app.on(.post, "count", body: .stream) { req -> String in
+            app.on(.post, "count") { req -> String in
                 var total = 0
                 try await req.body.forEachChunk { chunk in
                     total += chunk.byteCount
@@ -330,7 +330,7 @@ struct RequestTests {
             // limit the server drains it so the keep-alive connection stays usable for the next
             // request. (An oversized unread body is handled by closing the connection instead —
             // see `testUnknownRouteWithLargeBodyDoesNotHang`.)
-            app.on(.post, "ignore", body: .stream) { _ in "ignored" }
+            app.on(.post, "ignore") { _ in "ignored" }
             app.get("ok") { _ in "ok" }
 
             try await withRunningServer(app) { port in
@@ -358,7 +358,7 @@ struct RequestTests {
             // exceeds it, and the server must stay alive for later requests. The body is kept small
             // (over the collect limit but within the drain limit) so the unread remainder is drained
             // and the 413 is delivered on a reusable connection rather than racing a close.
-            app.on(.post, "limited", body: .stream) { req -> String in
+            app.on(.post, "limited") { req -> String in
                 _ = try await req.body.collect(max: 1024)
                 return "ok"
             }
@@ -387,7 +387,7 @@ struct RequestTests {
         try await withApp { app in
             // Collect with an explicit limit and report the byte count so we can assert the exact
             // boundary: a body of exactly `maxSize` is accepted, one byte more is rejected with 413.
-            app.on(.post, "limited", body: .stream) { req -> String in
+            app.on(.post, "limited") { req -> String in
                 let collected = try await req.body.collect(max: maxSize) ?? Data()
                 return "\(collected.count)"
             }
@@ -548,7 +548,7 @@ struct RequestTests {
                 method: .post,
                 collectedBody: Data(repeating: 0x41, count: 2048))
 
-            let collected = try await request.body.collect(max: nil)
+            let collected = try await request.body.collect(max: .max)
             #expect(collected?.count == 2048)
         }
     }
@@ -588,7 +588,7 @@ struct RequestTests {
             // A request body is a single-consumer stream. If a second task reads it while the first
             // still holds the reader, that must surface as `RequestBodyAlreadyBeingRead` — not a
             // silently truncated empty end-of-body.
-            app.on(.post, "concurrent-read", body: .stream) { req -> String in
+            app.on(.post, "concurrent-read") { req -> String in
                 let (held, heldContinuation) = AsyncStream.makeStream(of: Void.self)
 
                 // Task A takes the reader and holds it open inside `read` while B races it.
@@ -639,7 +639,7 @@ struct RequestTests {
             // The handler reads a single chunk and returns normally; the server drains whatever is
             // left (within the drain budget) so the keep-alive connection stays open. Distinct from
             // `testServerSurvivesHandlerIgnoringStreamedBody`, which reads nothing at all.
-            app.on(.post, "partial", body: .stream) { req -> String in
+            app.on(.post, "partial") { req -> String in
                 _ = try await req.body.withReader { reader in
                     try await reader.read { span, _ in span.byteCount }
                 }
@@ -663,7 +663,7 @@ struct RequestTests {
             // The handler reads one chunk then throws. The error becomes a 500, the remaining body is
             // drained (within budget), and the connection must remain usable — the `read` catch path
             // returns the reader to the stream so a later drain doesn't see it lost.
-            app.on(.post, "throw-mid-read", body: .stream) { req -> String in
+            app.on(.post, "throw-mid-read") { req -> String in
                 _ = try await req.body.withReader { reader in
                     try await reader.read { span, _ in span.byteCount }
                 }
@@ -687,7 +687,7 @@ struct RequestTests {
             // `collect(max:)` rejects an over-limit *declared* Content-Length before reading a single
             // byte. Sending only the headers (no body) isolates that early reject from the chunk-size
             // guard: with no body bytes to read, only the declared-length check can produce the 413.
-            app.on(.post, "collect-limited", body: .stream) { req -> String in
+            app.on(.post, "collect-limited") { req -> String in
                 _ = try await req.body.collect(max: 1024)
                 return "ok"
             }
@@ -707,7 +707,7 @@ struct RequestTests {
         struct Payload: Content, Equatable { var message: String }
 
         try await withApp { app in
-            app.on(.post, "decode-cache", body: .stream) { req async throws -> String in
+            app.on(.post, "decode-cache") { req async throws -> String in
                 let first = try await req.content.decode(Payload.self)
                 // Decoding a streamed body collects it once and caches it as `.collected`, so the raw
                 // body is now readable and a second decode sees the same bytes, not a drained stream.
@@ -918,6 +918,83 @@ struct RequestTests {
 //            self.wait(for: [handleBufferExpectation, endDrainExpectation], timeout: 1.0, enforceOrder: true)
 //        }
 //    }
+
+    @Test("An error thrown inside a body-read closure reaches the route as itself")
+    func testClosureErrorIsNotWrapped() async throws {
+        struct Marker: Error {}
+        try await withApp { app in
+            // The consumer's closure used to run *inside* the server's read, so anything it threw
+            // came back wrapped in the server's `EitherError` and `ErrorMiddleware` saw no
+            // `AbortError`. The chunk is moved out of the read now, so the closure runs outside it.
+            app.on(.post, "probe") { req -> String in
+                do {
+                    _ = try await req.body.withReader { reader in
+                        try await reader.read { _, _ in throw Marker() }
+                    }
+                } catch is Marker {
+                    return "unwrapped"
+                } catch {
+                    return "wrapped: \(type(of: error))"
+                }
+                return "no-throw"
+            }
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/probe")
+                request.method = .POST
+                request.body = .stream("hello".utf8.async, length: .unknown)
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                let body = try await response.body.collect(upTo: 1024)
+                #expect(String(buffer: body) == "unwrapped")
+            }
+        }
+    }
+
+    @Test("A chunked over-limit body is rejected with 413, not 500")
+    func testChunkedOverLimitIsRejectedWith413() async throws {
+        try await withApp { app in
+            // With no `Content-Length` the declared-length check can't fire, so the in-closure chunk
+            // guard is what rejects this. That guard's `Abort` used to arrive wrapped, making it a 500.
+            app.on(.post, "limited") { req -> String in
+                _ = try await req.body.collect(max: 16)
+                return "ok"
+            }
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/limited")
+                request.method = .POST
+                request.body = .stream(String(repeating: "A", count: 4096).utf8.async, length: .unknown)
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status.code == 413)
+            }
+        }
+    }
+
+    @Test("Collecting a body somebody else partly read fails instead of truncating")
+    func testCollectAfterPartialReadIsRejected() async throws {
+        try await withApp { app in
+            // A body is single-consumer. Once a chunk has gone to someone else, what is left is not
+            // the whole body — returning it silently is how a swallowed 413 upstream turned into a
+            // short body and a 200 downstream.
+            app.on(.post, "partial") { req -> String in
+                _ = try await req.body.withReader { reader in
+                    try await reader.read { span, _ in span.byteCount }
+                }
+                do {
+                    _ = try await req.body.collect(max: .max)
+                    return "collected"
+                } catch is RequestBodyPartiallyConsumed {
+                    return "rejected"
+                }
+            }
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/partial")
+                request.method = .POST
+                request.body = .stream(String(repeating: "A", count: 4096).utf8.async, length: .unknown)
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                let body = try await response.body.collect(upTo: 1024)
+                #expect(String(buffer: body) == "rejected")
+            }
+        }
+    }
 }
 
 // This was taken from AsyncHTTPClients's AsyncRequestTests.swift code.

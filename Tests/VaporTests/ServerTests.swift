@@ -125,7 +125,7 @@ struct ServerTests {
         //                var contentLength: Int
         //            }
         //
-        //            app.on(.post, "compressed", body: .collect(maxSize: "1mb")) { request async throws in
+        //            app.on(.post, "compressed", maxBodySize: "1mb") { request async throws in
         //                let contentLength = request.headers[.contentLength].flatMap { Int($0) }
         //                let contents = try await request.body.collect().get()
         //                return TestResponse(
@@ -525,7 +525,7 @@ struct ServerTests {
         //    @Test("Test Early Exit Streaming Request")
         //    func testEarlyExitStreamingRequest() async throws {
         //        try await withApp { app in
-        //            app.on(.post, "upload", body: .stream) { req -> Int in
+        //            app.on(.post, "upload") { req -> Int in
         //                guard req.headers[.init("test")!] != nil else {
         //                    throw Abort(.badRequest)
         //                }
@@ -578,7 +578,7 @@ struct ServerTests {
         //        let context = Context()
         //
         //        try await withApp { app in
-        //            app.on(.post, "echo", body: .stream) { request -> Response in
+        //            app.on(.post, "echo") { request -> Response in
         //                Response(body: .init(stream: { writer in
         //                    request.body.drain { body in
         //                        switch body {
@@ -655,7 +655,7 @@ struct ServerTests {
         //        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         //        let app = try await Application(.testing, .shared(eventLoopGroup))
         //
-        //        app.on(.post, "echo", body: .stream) { request in
+        //        app.on(.post, "echo") { request in
         //            "hello, world"
         //        }
         //
@@ -698,7 +698,7 @@ struct ServerTests {
         //            let serverIsFinalisedPromise = app.eventLoopGroup.any().makePromise(of: Void.self)
         //            let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
         //
-        //            app.on(.post, "hello", body: .stream) { req -> Response in
+        //            app.on(.post, "hello") { req -> Response in
         //                return Response(body: .init(stream: { writer in
         //                    req.body.drain { stream in
         //                        switch stream {
@@ -750,7 +750,7 @@ struct ServerTests {
         //            let serverSawRequest = ManagedAtomic<Bool>(false)
         //            let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
         //
-        //            app.on(.post, "hello", body: .stream) { req -> Response in
+        //            app.on(.post, "hello") { req -> Response in
         //                #expect(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged == true)
         //
         //                return Response(body: .init(stream: { writer in
@@ -1334,7 +1334,8 @@ struct ServerTests {
             // chunk sizes and the terminating chunk. Covers what `PipelineTests.testEchoHandlers`
             // checked against an `EmbeddedChannel` pipeline that no longer exists.
             app.post("echo") { req -> Response in
-                let body = req.body.data ?? Data()
+                // Bodies are lazy, so ask for it.
+                let body = try await req.body.collect() ?? Data()
                 return Response(body: .init(stream: { writer in
                     try await writer.write(body)
                 }))
@@ -1392,7 +1393,12 @@ struct ServerTests {
             // with keep-alive framing and then hanging up makes the client fail the request it has
             // already been answered.
             app.routes.defaultMaxBodySize = 1
-            app.on(.post, "reject") { _ -> HTTPResponse.Status in .ok }
+            // The handler has to *ask* for the body for the limit to bite — that is what lazy
+            // collection means. A route that never reads an oversized body now answers normally.
+            app.on(.post, "reject") { req -> HTTPResponse.Status in
+                _ = try await req.body.collect()
+                return .ok
+            }
 
             try await withRunningServer(app) { port in
                 let oversized = String(repeating: "a", count: 500_000)
@@ -1459,8 +1465,8 @@ struct ServerTests {
         try await withApp { app in
             let payload = [UInt8].random(count: 1 << 20)
 
-            app.on(.post, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPResponse.Status in
-                guard let data = req.body.data else {
+            app.on(.post, "payload", maxBodySize: "1gb") { req -> HTTPResponse.Status in
+                guard let data = try await req.body.collect() else {
                     throw Abort(.internalServerError)
                 }
                 #expect(payload.count == data.count)

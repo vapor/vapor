@@ -23,7 +23,7 @@ func routes(_ app: Application) async throws {
     }
 
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
-    app.on(.post, "slow-stream", body: .stream) { req -> String in
+    app.on(.post, "slow-stream") { req -> String in
         // Consume the streamed body slowly to demonstrate backpressure: sleeping between
         // reads keeps memory flat because the server stops pulling more of the body until
         // this loop asks for the next chunk.
@@ -48,7 +48,7 @@ func routes(_ app: Application) async throws {
         return "\(creds)"
     }
 
-    app.on(.post, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
+    app.on(.post, "large-file", maxBodySize: 1_000_000_000) { req -> String in
         return req.body.data?.count.description  ?? "none"
     }
 
@@ -69,7 +69,7 @@ func routes(_ app: Application) async throws {
 //        ws.send("Hello 👋 \(ip)")
 //    }
 
-    app.on(.post, "file", body: .stream) { req in
+    app.on(.post, "file") { req in
         try await req.body.forEachChunk { part in
             debugPrint(part.byteCount)
         }
@@ -213,13 +213,13 @@ func routes(_ app: Application) async throws {
         return secret
     }
 
-    app.on(.post, "max-256", body: .collect(maxSize: 256)) { req -> HTTPResponse.Status in
+    app.on(.post, "max-256", maxBodySize: 256) { req -> HTTPResponse.Status in
         print("in route")
         return .ok
     }
 
     #if !canImport(FoundationEssentials)
-    app.on(.post, "upload", body: .stream) { req -> HTTPResponse.Status in
+    app.on(.post, "upload") { req -> HTTPResponse.Status in
         return try await FileSystem.shared.withFileHandle(
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
             options: .newFile(replaceExisting: true)) { handle in

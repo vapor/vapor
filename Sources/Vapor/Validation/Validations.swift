@@ -52,11 +52,15 @@ public struct Validations: Sendable {
         self.storage.append(.init(nested: key, required: required, unkeyed: handler, customFailureDescription: customFailureDescription))
     }
 
-    public func validate(request: Request) throws -> ValidationsResult {
+    /// Validates a request's body.
+    ///
+    /// `async` because bodies are collected lazily: nothing is buffered until something asks, and
+    /// this is one of the things that asks. It collects under the request's ``Request/maxBodySize``.
+    public func validate(request: Request) async throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
             throw Abort(.unprocessableContent, reason: "Missing \"Content-Type\" header")
         }
-        guard let body = request.body.data else {
+        guard let body = try await request.body.collect(), !body.isEmpty else {
             throw Abort(.unprocessableContent, reason: "Empty Body")
         }
         let contentDecoder = try request.contentConfiguration.requireDecoder(for: contentType)
