@@ -226,9 +226,9 @@ struct QueryTests {
                 return "ok"
             }
 
-            let body = ByteBuffer(string: #"{"here":"hi"}"#)
+            let body = Data(#"{"here":"hi"}"#.utf8)
             var headers = HTTPFields()
-            headers[.contentLength] = body.readableBytes.description
+            headers[.contentLength] = body.count.description
             headers.contentType = .json
 
             try await app.testing { client in

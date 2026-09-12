@@ -253,20 +253,20 @@ struct RequestTests {
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
             app.on(.post, "upload", body: .stream, use: { request async throws -> String  in
-                let buffer = try await request.body.collect(max: Int.max) ?? ByteBuffer()
-                return "Received \(buffer.readableBytes) bytes"
+                let collected = try await request.body.collect(max: Int.max) ?? Data()
+                return "Received \(collected.count) bytes"
             })
 
             try await app.testing(.running) { client in
                 // 600 MiB, ten times over. Try to force it to hit the limit
-                let payload = ByteBuffer(repeating: 0x41, count: 600 * 1024 * 1024)
+                let payload = Data(repeating: 0x41, count: 600 * 1024 * 1024)
 
                 for _ in 0..<10 {
                     let response = try await client.post("upload") {
                         $0.body = payload
                     }
                     #expect(response.status == .ok)
-                    try #expect(await response.body.requireString() == "Received \(payload.readableBytes) bytes")
+                    try #expect(await response.body.requireString() == "Received \(payload.count) bytes")
                 }
             }
         }
@@ -388,8 +388,8 @@ struct RequestTests {
             // Collect with an explicit limit and report the byte count so we can assert the exact
             // boundary: a body of exactly `maxSize` is accepted, one byte more is rejected with 413.
             app.on(.post, "limited", body: .stream) { req -> String in
-                let buffer = try await req.body.collect(max: maxSize) ?? ByteBuffer()
-                return "\(buffer.readableBytes)"
+                let collected = try await req.body.collect(max: maxSize) ?? Data()
+                return "\(collected.count)"
             }
 
             try await withRunningServer(app) { port in
@@ -505,10 +505,10 @@ struct RequestTests {
             // reject is exercised end-to-end by testStreamingBodyExceedingCollectMaxReturns413.)
             let request = Request(
                 method: .post,
-                collectedBody: ByteBuffer(repeating: 0x41, count: 2048))
+                collectedBody: Data(repeating: 0x41, count: 2048))
 
             let collected = try await request.body.collect(max: 1024)
-            #expect(collected?.readableBytes == 2048)
+            #expect(collected?.count == 2048)
         }
     }
 
@@ -532,10 +532,10 @@ struct RequestTests {
             // A declared length at or under the limit must not be rejected: the body collects normally.
             let request = Request(
                 method: .post,
-                collectedBody: ByteBuffer(repeating: 0x41, count: 512))
+                collectedBody: Data(repeating: 0x41, count: 512))
 
             let collected = try await request.body.collect(max: 1024)
-            #expect(collected?.readableBytes == 512)
+            #expect(collected?.count == 512)
         }
     }
 
@@ -546,10 +546,10 @@ struct RequestTests {
             // and collect the whole body.
             let request = Request(
                 method: .post,
-                collectedBody: ByteBuffer(repeating: 0x41, count: 2048))
+                collectedBody: Data(repeating: 0x41, count: 2048))
 
             let collected = try await request.body.collect(max: nil)
-            #expect(collected?.readableBytes == 2048)
+            #expect(collected?.count == 2048)
         }
     }
 
@@ -558,7 +558,7 @@ struct RequestTests {
         try await withApp { app in
             // A buffered-but-empty body must deliver zero chunks — exactly like a raw empty stream or
             // a body-less request — not one spurious empty chunk.
-            let request = Request(method: .post, collectedBody: ByteBuffer())
+            let request = Request(method: .post, collectedBody: Data())
 
             var chunks = 0
             try await request.body.forEachChunk { _ in chunks += 1 }
@@ -569,7 +569,7 @@ struct RequestTests {
     @Test("Test forEachChunk Replays A Buffered Body As A Single Chunk")
     func testForEachChunkReplaysBufferedBody() async throws {
         try await withApp { app in
-            let request = Request(method: .post, collectedBody: ByteBuffer(string: "hello"))
+            let request = Request(method: .post, collectedBody: Data("hello".utf8))
 
             var chunks = 0
             var received = ByteBuffer()

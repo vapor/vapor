@@ -1334,9 +1334,9 @@ struct ServerTests {
             // chunk sizes and the terminating chunk. Covers what `PipelineTests.testEchoHandlers`
             // checked against an `EmbeddedChannel` pipeline that no longer exists.
             app.post("echo") { req -> Response in
-                let body = req.body.data ?? ByteBuffer()
+                let body = req.body.data ?? Data()
                 return Response(body: .init(stream: { writer in
-                    try await writer.write(body.readableBytesView)
+                    try await writer.write(body)
                 }))
             }
 
@@ -1367,7 +1367,7 @@ struct ServerTests {
             // AsyncHTTPClient always sends `Content-Length: 0` for a body-less POST, so a client-based
             // test never exercises this. Covers `PipelineTests.testEOFFraming`.
             app.post("count") { req -> String in
-                "\(req.body.data?.readableBytes ?? 0)"
+                "\(req.body.data?.count ?? 0)"
             }
 
             try await withRunningServer(app) { port in
@@ -1463,16 +1463,14 @@ struct ServerTests {
                 guard let data = req.body.data else {
                     throw Abort(.internalServerError)
                 }
-                #expect(payload.count == data.readableBytes)
-                #expect([UInt8](data.readableBytesView) == payload)
+                #expect(payload.count == data.count)
+                #expect([UInt8](data) == payload)
                 return .ok
             }
 
-            var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
-            buffer.writeBytes(payload)
             try await app.testing(.running) { client in
                 let res = try await client.post("payload") { req in
-                    req.body = buffer
+                    req.body = Data(payload)
                 }
                 #expect(res.status == .ok)
             }

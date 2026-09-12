@@ -555,7 +555,7 @@ struct StreamingBodyTests {
             func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
                 // Exactly what the issue did: read the body from a middleware, then chain on.
                 let collected = try await request.body.collect(max: nil)
-                self.seen.withLock { $0 = collected?.readableBytes ?? 0 }
+                self.seen.withLock { $0 = collected?.count ?? 0 }
                 return try await next.respond(to: request)
             }
         }
@@ -566,7 +566,7 @@ struct StreamingBodyTests {
 
             app.on(.post, "echo", body: .stream) { request -> Response in
                 // The route reads the same body the middleware already read, and streams it back.
-                let payload = request.body.data.map { Data($0.readableBytesView) } ?? Data()
+                let payload = request.body.data ?? Data()
                 var response = Response(body: try .init(stream: { writer in
                     // Several chunks, so the response really is streamed rather than written once.
                     for start in stride(from: 0, to: payload.count, by: 4096) {
@@ -584,7 +584,7 @@ struct StreamingBodyTests {
                 var headers = HTTPFields()
                 headers.contentType = .plainText
                 let res = try await client.post("/echo", headers: headers) { req in
-                    req.body = ByteBuffer(bytes: sent)
+                    req.body = sent
                 }
 
                 #expect(res.status == .ok)
@@ -593,7 +593,7 @@ struct StreamingBodyTests {
 
                 // The connection survives: a second request over it is served normally.
                 let again = try await client.post("/echo", headers: headers) { req in
-                    req.body = ByteBuffer(bytes: sent)
+                    req.body = sent
                 }
                 #expect(again.status == .ok)
                 #expect(try await again.body.data() == sent)

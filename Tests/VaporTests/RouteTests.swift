@@ -448,8 +448,7 @@ struct RouteTests {
             // is read. Sizing around that is deliberate: `testUndrainableRequestBodyIsAnsweredWith`
             // `ConnectionClose` covers the over-budget case, where all the client is promised is the
             // `Connection: close` header.
-            var buffer = ByteBuffer()
-            buffer.writeBytes(Array(repeating: 0, count: 8_192))
+            let buffer = Data(repeating: 0, count: 8_192)
             try await app.testing(.running) { client in
                 let defaultLimit = try await client.post("/default") { $0.body = buffer }
                 #expect(defaultLimit.status == .contentTooLarge)
