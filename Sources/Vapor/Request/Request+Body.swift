@@ -95,7 +95,7 @@ extension Request {
         }
 
         public var description: String {
-            if var data = self.data {
+            if let data = self.data {
                return String(decoding: data, as: UTF8.self)
             } else {
                 return ""
