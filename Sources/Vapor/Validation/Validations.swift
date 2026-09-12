@@ -59,9 +59,8 @@ public struct Validations: Sendable {
         guard let body = request.body.data else {
             throw Abort(.unprocessableContent, reason: "Empty Body")
         }
-        let bodyData = Data(buffer: body)
         let contentDecoder = try request.contentConfiguration.requireDecoder(for: contentType)
-        return try contentDecoder.decode(ValidationsExecutor.self, from: bodyData, headers: request.headers, userInfo: [.pendingValidations: self]).results
+        return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
 
     public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {

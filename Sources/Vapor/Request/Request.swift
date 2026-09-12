@@ -3,9 +3,6 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-#warning("Make this internal")
-public import NIOCore
-import NIOFoundationEssentialsCompat
 public import RoutingKit
 import NIOConcurrencyHelpers
 public import HTTPTypes
@@ -87,12 +84,12 @@ public struct Request: CustomStringConvertible, Sendable {
     }
 
     private struct _ContentContainer: ContentContainer, Sendable {
-        var body: ByteBuffer?
+        var body: Data?
         var headers: HTTPFields
         let contentConfiguration: ContentConfiguration
         /// Collects a not-yet-buffered (streamed) body on demand. `nil` when there's nothing to
         /// collect. Lets `decode` work on a `.stream` route by pulling the body when it's first needed.
-        let collectBody: (@Sendable () async throws -> ByteBuffer?)?
+        let collectBody: (@Sendable () async throws -> Data?)?
 
         var contentType: HTTPMediaType? {
             self.headers.contentType
@@ -101,13 +98,13 @@ public struct Request: CustomStringConvertible, Sendable {
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = Data()
             try encoder.encode(encodable, to: &body, headers: &self.headers, userInfo: [:])
-            self.body = ByteBuffer(data: body)
+            self.body = body
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
             // Prefer the already-buffered body; otherwise collect a streamed body on demand so
             // `content.decode` works on a `.stream` route.
-            let resolved: ByteBuffer?
+            let resolved: Data?
             if let buffered = self.body {
                 resolved = buffered
             } else {
@@ -116,8 +113,7 @@ public struct Request: CustomStringConvertible, Sendable {
             guard let body = resolved else {
                 throw Abort(.unprocessableContent)
             }
-            let bodyData = Data(buffer: body)
-            return try decoder.decode(D.self, from: bodyData, headers: self.headers, userInfo: [:])
+            return try decoder.decode(D.self, from: body, headers: self.headers, userInfo: [:])
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
@@ -125,7 +121,7 @@ public struct Request: CustomStringConvertible, Sendable {
             try content.beforeEncode()
             var body = Data()
             try encoder.encode(content, to: &body, headers: &self.headers, userInfo: [:])
-            self.body = ByteBuffer(data: body)
+            self.body = body
         }
     }
 
@@ -163,7 +159,7 @@ public struct Request: CustomStringConvertible, Sendable {
     /// `collect` promotes `.stream` to `.collected` so a body is only drained once.
     internal enum BodyStorage: Sendable {
         case none
-        case collected(ByteBuffer)
+        case collected(Data)
         case stream(RequestBodyStream)
     }
 
@@ -207,7 +203,7 @@ public struct Request: CustomStringConvertible, Sendable {
         url: URI = "/",
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPFields = .init(),
-        collectedBody: ByteBuffer? = nil,
+        collectedBody: Data? = nil,
         remoteAddress: SocketAddress? = nil,
         localAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
@@ -229,7 +225,7 @@ public struct Request: CustomStringConvertible, Sendable {
             defaultMaxBodySize: defaultMaxBodySize,
         )
         if let body = collectedBody {
-            self.headers.updateContentLength(body.readableBytes)
+            self.headers.updateContentLength(body.count)
         }
     }
 
@@ -238,7 +234,7 @@ public struct Request: CustomStringConvertible, Sendable {
         url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
         headersNoUpdate headers: HTTPFields = .init(),
-        collectedBody: ByteBuffer? = nil,
+        collectedBody: Data? = nil,
         bodyStream: RequestBodyStream? = nil,
         remoteAddress: SocketAddress? = nil,
         localAddress: SocketAddress? = nil,

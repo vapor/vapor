@@ -354,8 +354,8 @@ package final class RequestBodyStream: Sendable {
     }
 
     /// Reads the whole body into one buffer, aborting with 413 if it exceeds `max`.
-    func collect(max: Int) async throws -> ByteBuffer {
-        var collected = ByteBuffer()
+    func collect(max: Int) async throws -> Data {
+        var collected = Data()
         while true {
             let ended = try await self.read { span, isEnd -> Bool in
                 if isEnd {
@@ -363,10 +363,10 @@ package final class RequestBodyStream: Sendable {
                 }
                 // Check before appending so an over-limit chunk is never buffered. Subtracting
                 // (rather than adding) keeps the bound exact and can't overflow when `max` is `.max`.
-                guard span.byteCount <= max - collected.readableBytes else {
+                guard span.byteCount <= max - collected.count else {
                     throw Abort(.contentTooLarge, headers: .connectionClose)
                 }
-                _ = span.withUnsafeBytes { unsafe collected.writeBytes($0) }
+                span.withUnsafeBytes { unsafe collected.append(contentsOf: $0) }
                 return false
             }
             if ended {
@@ -435,9 +435,9 @@ private func signalEndOfBody<R>(to body: (RawSpan, Bool) async throws -> R) asyn
 /// second read reports end-of-body. A reference type so `read` can stay non-mutating (`borrowing`): the
 /// "already replayed" state lives behind the reference, not in the borrowed reader.
 final class CollectedBodyReplay {
-    var buffer: ByteBuffer?
-    init(_ buffer: ByteBuffer?) {
-        self.buffer = buffer
+    var data: Data?
+    init(_ data: Data?) {
+        self.data = data
     }
 }
 
@@ -463,18 +463,18 @@ struct NIORequestBodyReader: RequestBodyReader, ~Escapable {
         case .stream(let stream):
             return try await stream.read(body)
         case .collected(let replay):
-            guard let buffer = replay.buffer, buffer.readableBytes > 0 else {
+            guard let data = replay.data, data.count > 0 else {
                 // Nothing to replay (already spent, or a buffered-but-empty body): signal end with no
                 // chunk, so an empty body delivers zero chunks whether it was pre-collected, a raw
                 // `.stream`, or `.none` — matching `Response.Body.withStreamingBytes`.
-                replay.buffer = nil
+                replay.data = nil
                 return try await signalEndOfBody(to: body)
             }
             // A pre-buffered body is replayed as one chunk, then ends on the next read. The buffer
             // owns its bytes and is held for the duration of the call, so its span is handed over
             // directly rather than copied into a fresh buffer.
-            replay.buffer = nil
-            return try await body(buffer.readableBytesSpan, false)
+            replay.data = nil
+            return try await body(data.span.bytes, false)
         }
     }
 }

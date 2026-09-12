@@ -1,7 +1,11 @@
-#warning("Make this internal")
-public import NIOCore
-import NIOConcurrencyHelpers
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 import HTTPTypes
+#warning("Remove")
+import NIOConcurrencyHelpers
 
 extension Request {
     public struct Body: CustomStringConvertible, Sendable {
@@ -13,16 +17,16 @@ extension Request {
 
         /// The buffered body, or `nil` if there is none or it is still an unread stream.
         /// Call ``collect(max:)`` first to buffer a streamed body.
-        public var data: ByteBuffer? {
+        public var data: Data? {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
-            case .collected(let buffer): return buffer
+            case .collected(let data): return data
             case .none, .stream: return nil
             }
         }
 
         public var string: String? {
-            if var data = self.data {
-                return data.readString(length: data.readableBytes)
+            if let data = self.data {
+                return String(decoding: data, as: UTF8.self)
             } else {
                 return nil
             }
@@ -42,8 +46,8 @@ extension Request {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
                 source = .stream(stream)
-            case .collected(let buffer):
-                source = .collected(CollectedBodyReplay(buffer))
+            case .collected(let data):
+                source = .collected(CollectedBodyReplay(data))
             case .none:
                 source = .collected(CollectedBodyReplay(nil))
             }
@@ -68,7 +72,7 @@ extension Request {
         /// before reading anything; an under-declaring client is still caught while collecting. An
         /// already-buffered (or absent) body is returned as is — it was accepted under its original
         /// limit, so a smaller `max` on a later call doesn't re-reject it.
-        public func collect(max: Int? = 1 << 14) async throws -> ByteBuffer? {
+        public func collect(max: Int? = 1 << 14) async throws -> Data? {
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
                 // Reject early on an over-limit declared length, before reading any body. This lives
@@ -83,17 +87,16 @@ extension Request {
                 let buffer = try await stream.collect(max: max ?? .max)
                 self.request.bodyStorage.withLockedValue { $0 = .collected(buffer) }
                 return buffer
-            case .collected(let buffer):
-                return buffer
+            case .collected(let data):
+                return data
             case .none:
                 return nil
             }
         }
 
         public var description: String {
-            if var data = self.data,
-                let description = data.readString(length: data.readableBytes) {
-                return description
+            if var data = self.data {
+               return String(decoding: data, as: UTF8.self)
             } else {
                 return ""
             }
