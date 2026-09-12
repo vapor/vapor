@@ -54,17 +54,19 @@ extension Request {
         public func withReader<R>(
             _ body: (borrowing any RequestBodyReader & ~Escapable) async throws -> R
         ) async throws -> R {
-            let source: NIORequestBodyReader.Source
+            let stream: RequestBodyStream
             switch self.request.bodyStorage.storage.withLock({ $0 }) {
-            case .stream(let stream):
-                source = .stream(stream)
+            case .stream(let live):
+                stream = live
             case .collected(let data):
-                source = .collected(CollectedBodyReplay(data))
+                // A body already in memory replays through the same stream type, so reading is the
+                // same whether it arrived on a socket or not. Each lend gets its own replay.
+                stream = RequestBodyStream(collected: data)
             case .none:
-                source = .collected(CollectedBodyReplay(nil))
+                stream = RequestBodyStream(collected: nil)
             }
             let scope = RequestBodyReaderScope()
-            let reader = NIORequestBodyReader(source, scope: scope)
+            let reader = NIORequestBodyReader(stream, scope: scope)
             return try await body(reader)
         }
 

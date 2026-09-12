@@ -280,6 +280,10 @@ package final class RequestBodyStream: Sendable {
         /// The spare chunk buffer, ping-ponged with the server's reusable one on every read so neither
         /// side allocates per chunk. `nil` while a read has it checked out.
         var chunk: UniqueArray<UInt8>?
+        /// An already-materialised body waiting to be handed over once, for a stream built with
+        /// ``init(collected:)``. A request whose body never came off a socket — one the in-memory
+        /// test client made, or one built by hand — still has to read like any other.
+        var replay: Data?
         var finished = false
         /// Latched when a *transport* read fails. The stream's position is then unknown, so every
         /// later read throws rather than reporting a clean end-of-body on a truncated body. A failing
@@ -298,6 +302,8 @@ package final class RequestBodyStream: Sendable {
     private enum Checkout: ~Copyable {
         /// The reader and the spare chunk buffer are ours for this read.
         case reader(NIOHTTPServer.Reader, UniqueArray<UInt8>)
+        /// A pre-collected body, handed over whole on this read.
+        case replay(Data)
         /// The body already ended; signal end-of-body.
         case ended
         /// Another task holds the reader (single-consumer contract violated).
@@ -310,6 +316,17 @@ package final class RequestBodyStream: Sendable {
         self.state = Mutex(State(reader: Mutex(reader), chunk: UniqueArray()))
     }
 
+    /// A stream over a body that is already in memory, which replays it as a single chunk.
+    ///
+    /// There is no reader and nothing to drain: reading one of these is pure book-keeping. It exists
+    /// so that ``Request/Body/withReader(_:)`` and ``Request/Body/forEachChunk(_:)`` behave the same
+    /// whether the body arrived on a socket, was collected earlier, or was never streamed at all.
+    /// An empty or absent body delivers no chunks, matching ``Response/Body/withStreamingBytes(_:)``.
+    init(collected: Data?) {
+        let pending = (collected?.isEmpty == false) ? collected : nil
+        self.state = Mutex(State(reader: nil, chunk: nil, replay: pending, finished: pending == nil))
+    }
+
     /// Reads one part of the body, handing its bytes to `body` as a borrowed `Span<UInt8>` plus a flag
     /// that is `true` at end-of-body (the span is then empty). The single primitive behind
     /// ``collect(max:)``, ``drain(max:)`` and ``RequestBodyReader``. The span borrows this stream's
@@ -319,6 +336,12 @@ package final class RequestBodyStream: Sendable {
         let checkout = self.state.withLock { state -> sending Checkout in
             if state.failed { return .failed }
             if state.finished { return .ended }
+            if let pending = state.replay.take() {
+                // One chunk, then end on the next read — the same two-step shape a socket body has.
+                state.finished = true
+                state.consumed += pending.count
+                return .replay(pending)
+            }
             guard let box = state.reader.take(), let reader = box.withLock({ $0.take() }) else {
                 // Not finished, yet the reader is gone: another task is mid-read.
                 return .busy
@@ -332,6 +355,10 @@ package final class RequestBodyStream: Sendable {
             throw RequestBodyAlreadyBeingRead()
         case .failed:
             throw RequestBodyReadFailed()
+        case .replay(let pending):
+            // The `Data` owns its bytes and lives for the duration of the call, so its span goes
+            // straight over rather than through the chunk buffer.
+            return try await body(pending.span, false)
         case .reader(var reader, var chunk):
             // The server delivers body and end as separate reads: a body part always has `nil` trailers
             // and carries the bytes, while the end read carries a non-nil `trailers` and an empty buffer.
@@ -515,51 +542,20 @@ private func signalEndOfBody<R>(to body: (Span<UInt8>, Bool) async throws -> R) 
     try await body(emptyRequestBody.readableBytesUInt8Span, true)
 }
 
-/// Holds an already-buffered body until ``NIORequestBodyReader`` replays it, then latches to `nil` so a
-/// second read reports end-of-body. A reference type so `read` can stay non-mutating (`borrowing`): the
-/// "already replayed" state lives behind the reference, not in the borrowed reader.
-final class CollectedBodyReplay {
-    var data: Data?
-    init(_ data: Data?) {
-        self.data = data
-    }
-}
-
 /// The server's concrete ``RequestBodyReader`` — a borrowed, non-escapable view onto the request body,
 /// the mirror of ``NIOResponseBodyWriter``. Lent only for a ``Request/Body/withReader(_:)`` closure;
 /// being `~Escapable` it can't be stored, so "read the body twice" is a compile-time error. Each
 /// ``read(_:)`` hands the next part out as a borrowed `Span<UInt8>`, copying nothing until user code keeps it.
 struct NIORequestBodyReader: RequestBodyReader, ~Escapable {
-    /// Either the live server stream, or an already-buffered body replayed as a single chunk.
-    enum Source {
-        case stream(RequestBodyStream)
-        case collected(CollectedBodyReplay)
-    }
-    private let source: Source
+    private let stream: RequestBodyStream
 
     @_lifetime(borrow scope)
-    init(_ source: consuming Source, scope: borrowing RequestBodyReaderScope) {
-        self.source = source
+    init(_ stream: RequestBodyStream, scope: borrowing RequestBodyReaderScope) {
+        self.stream = stream
     }
 
     func read<R>(_ body: (Span<UInt8>, Bool) async throws -> R) async throws -> R {
-        switch self.source {
-        case .stream(let stream):
-            return try await stream.read(body)
-        case .collected(let replay):
-            guard let data = replay.data, data.count > 0 else {
-                // Nothing to replay (already spent, or a buffered-but-empty body): signal end with no
-                // chunk, so an empty body delivers zero chunks whether it was pre-collected, a raw
-                // `.stream`, or `.none` — matching `Response.Body.withStreamingBytes`.
-                replay.data = nil
-                return try await signalEndOfBody(to: body)
-            }
-            // A pre-buffered body is replayed as one chunk, then ends on the next read. The buffer
-            // owns its bytes and is held for the duration of the call, so its span is handed over
-            // directly rather than copied into a fresh buffer.
-            replay.data = nil
-            return try await body(data.span, false)
-        }
+        try await self.stream.read(body)
     }
 }
 
