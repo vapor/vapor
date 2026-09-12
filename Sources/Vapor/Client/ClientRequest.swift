@@ -1,9 +1,7 @@
-#warning("Make this internal")
-public import NIOCore
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 import NIOFoundationEssentialsCompat
 public import HTTPTypes
@@ -12,7 +10,7 @@ public struct ClientRequest: Sendable {
     public var method: HTTPRequest.Method
     public var url: URI
     public var headers: HTTPFields
-    public var body: ByteBuffer?
+    public var body: Data?
     public var timeout: Duration
     public var maxResponseBodySize: Int
     private let contentConfiguration: ContentConfiguration
@@ -21,7 +19,7 @@ public struct ClientRequest: Sendable {
         method: HTTPRequest.Method = .get,
         url: URI = "/",
         headers: HTTPFields = [:],
-        body: ByteBuffer? = nil,
+        body: Data? = nil,
         timeout: Duration? = nil,
         maxResponseBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB
         contentConfiguration: ContentConfiguration = .default()
@@ -90,10 +88,10 @@ extension ClientRequest {
 
     public var content: any ContentContainer {
         get {
-            return _ContentContainer(body: Data(buffer: body ?? ByteBuffer()), headers: self.headers, contentConfiguration: self.contentConfiguration) }
+            return _ContentContainer(body: body, headers: self.headers, contentConfiguration: self.contentConfiguration) }
         set {
             let container = (newValue as! _ContentContainer)
-            self.body = ByteBuffer(data: container.body ?? Data())
+            self.body = container.body ?? Data()
             self.headers = container.headers
         }
     }

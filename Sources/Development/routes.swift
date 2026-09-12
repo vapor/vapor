@@ -49,7 +49,7 @@ func routes(_ app: Application) async throws {
     }
 
     app.on(.post, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
-        return req.body.data?.readableBytes.description  ?? "none"
+        return req.body.data?.count.description  ?? "none"
     }
 
     app.get("json", routeDescription: "Returns Some Test JSON") { req -> [String: String] in
