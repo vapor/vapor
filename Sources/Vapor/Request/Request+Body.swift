@@ -95,7 +95,7 @@ extension Request {
         /// An already-buffered (or absent) body is returned as is — it was accepted under its original
         /// limit, so a smaller `max` on a later call doesn't re-reject it.
         public func collect(max: BodySizeLimit = .default) async throws -> Data? {
-            let limit = max.bytes(for: self.request)
+            let limit = max.bytes(default: self.request.maxBodySize.value)
             switch self.request.bodyStorage.storage.withLock({ $0 }) {
             case .stream(let stream):
                 // Reject early on an over-limit declared length, before reading any body. This lives

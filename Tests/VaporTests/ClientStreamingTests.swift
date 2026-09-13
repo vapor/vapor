@@ -104,10 +104,16 @@ struct ClientStreamingTests {
         }
     }
 
-    @Test("An error thrown by the body closure fails the request")
+    @Test("An error thrown by the body closure fails the request", .timeLimit(.minutes(1)))
     func testProducerErrorFailsRequest() async throws {
         try await withApp { app in
-            app.on(.post, "upload") { _ -> String in "ok" }
+            // The route has to *read* the body, otherwise it can answer before the producer's error
+            // has anywhere to go and the request succeeds — which is legitimate HTTP, but not what
+            // this test is about.
+            app.on(.post, "upload", maxBodySize: "1mb") { req -> String in
+                _ = try await req.body.data()
+                return "ok"
+            }
             try await app.testing(.running) { client in
                 await #expect(throws: (any Error).self) {
                     _ = try await client.post("upload") { req in

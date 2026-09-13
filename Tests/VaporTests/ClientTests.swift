@@ -283,6 +283,21 @@ struct ClientTests {
             _ = try await makeResponse().content.decode(Payload.self)
         }
 
+        // The ceiling rides on the body, so collecting it directly is bounded too — not just the
+        // path through `content`, which is where forgetting the number used to turn into an
+        // unbounded read.
+        await #expect(throws: Abort.self) {
+            var body = makeResponse().body
+            _ = try await body.collect()
+        }
+        await #expect(throws: Abort.self) {
+            _ = try await makeResponse().body.data()
+        }
+
+        // An explicit ceiling still overrides it, in either direction.
+        var raised = makeResponse().body
+        #expect(try await raised.collect(max: "1mb")?.count == 4108)
+
         // Streaming is not bounded by it - the ceiling is on holding the whole body in memory.
         var seen = 0
         try await makeResponse().body.withStreamingBytes { seen += $0.count }

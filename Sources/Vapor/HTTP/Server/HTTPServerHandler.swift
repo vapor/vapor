@@ -113,10 +113,10 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // move-only response writer), so it stays in this task; each `write` awaits the
                 // transport, so backpressure propagates to the closure. The server appends the
                 // final chunk via `finish` once the closure returns.
-                let writer = NIOResponseBodyWriterStorage(inner: try await sender.send(httpResponse))
-                let scope = ResponseBodyWriterScope()
+                let writer = NIOHTTPBodyWriterStorage(inner: try await sender.send(httpResponse))
+                let scope = HTTPBodyWriterScope()
                 do {
-                    try await bodyStream.callback(NIOResponseBodyWriter(writer, scope: scope))
+                    try await bodyStream.callback(NIOHTTPBodyWriter(writer, scope: scope))
                 } catch {
                     // Throwing out of the handler is how the server is told to abort: it closes the
                     // connection without a terminating chunk, so the client sees a truncated body.
@@ -173,11 +173,11 @@ struct ResponseBodyLengthMismatch: Error, CustomStringConvertible {
 /// The NIO writer is `~Copyable` and ``finish(_:)`` consumes it, so it lives in an `Optional`: a
 /// class can't move a stored property out in place, and `Optional.take()` is how it is moved out.
 /// This stays a class because the server mutates it across `await` points; the *lent* view handed
-/// to user code is the non-escapable ``NIOResponseBodyWriter`` below.
+/// to user code is the non-escapable ``NIOHTTPBodyWriter`` below.
 ///
 /// Needs no `Mutex` (unlike ``RequestBodyStream``): it lives only within the handler task and is never
 /// stored in the `Sendable` `Response`, so it is never shared across isolation regions. Don't add a lock.
-final class NIOResponseBodyWriterStorage {
+final class NIOHTTPBodyWriterStorage {
     private var inner: NIOHTTPServer.ResponseSender.Writer?
 
     /// Whether the response was deliberately left unfinished.
@@ -543,7 +543,7 @@ private func signalEndOfBody<R>(to body: (Span<UInt8>, Bool) async throws -> R) 
 }
 
 /// The server's concrete ``RequestBodyReader`` — a borrowed, non-escapable view onto the request body,
-/// the mirror of ``NIOResponseBodyWriter``. Lent only for a ``Request/Body/withReader(_:)`` closure;
+/// the mirror of ``NIOHTTPBodyWriter``. Lent only for a ``Request/Body/withReader(_:)`` closure;
 /// being `~Escapable` it can't be stored, so "read the body twice" is a compile-time error. Each
 /// ``read(_:)`` hands the next part out as a borrowed `Span<UInt8>`, copying nothing until user code keeps it.
 struct NIORequestBodyReader: RequestBodyReader, ~Escapable {
@@ -559,7 +559,7 @@ struct NIORequestBodyReader: RequestBodyReader, ~Escapable {
     }
 }
 
-/// Bridges Vapor's ``ResponseBodyWriter`` onto the server's move-only response writer.
+/// Bridges Vapor's ``HTTPBodyWriter`` onto the server's move-only response writer.
 ///
 /// Each chunk is copied into a `UniqueArray<UInt8>` and forwarded with `await`, so the transport's
 /// backpressure (the socket/HTTP-2 flow-control window) propagates straight to the body-stream
@@ -567,11 +567,11 @@ struct NIORequestBodyReader: RequestBodyReader, ~Escapable {
 ///
 /// Non-escapable, so it cannot outlive the lend: this is what carries the server's move-only
 /// guarantee through to user code. See https://github.com/vapor/vapor/issues/2976.
-struct NIOResponseBodyWriter: ResponseBodyWriter, ~Escapable {
-    private let storage: NIOResponseBodyWriterStorage
+struct NIOHTTPBodyWriter: HTTPBodyWriter, ~Escapable {
+    private let storage: NIOHTTPBodyWriterStorage
 
     @_lifetime(borrow scope)
-    init(_ storage: NIOResponseBodyWriterStorage, scope: borrowing ResponseBodyWriterScope) {
+    init(_ storage: NIOHTTPBodyWriterStorage, scope: borrowing HTTPBodyWriterScope) {
         self.storage = storage
     }
 

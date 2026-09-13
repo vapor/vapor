@@ -547,7 +547,7 @@ struct StreamingBodyTests {
         // that body back as a streaming response. The old response-body stream signalled its own
         // completion, so the two readers racing over the request stream left `.end` unsent and
         // tripped "Response body stream writer deinitialized before .end or .error was sent."
-        // A `ResponseBodyWriter` has no way to end the stream — the server concludes the response
+        // A `HTTPBodyWriter` has no way to end the stream — the server concludes the response
         // once the closure returns — so there is no longer an end to miss.
         final class PeekingMiddleware: Middleware {
             let seen = Mutex(0)
@@ -611,7 +611,7 @@ struct StreamingBodyTests {
         #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "Hello, collected!")
     }
 
-    @Test("Every ResponseBodyWriter overload reaches the stream")
+    @Test("Every HTTPBodyWriter overload reaches the stream")
     func testWriterOverloads() async throws {
         var body = Response.Body(stream: { writer in
             // String
@@ -1189,7 +1189,7 @@ struct StreamingBodyTests {
     func testStreamCompletionRunsOnceOnClientDisconnect() async throws {
         // The Vapor 4 shape of this bug: the body-stream closure wrote `.end`/`.error` itself while
         // the server concluded the same response, so a connection failure ran the completion twice.
-        // `ResponseBodyWriter` can only write buffers now — concluding is the server's job — so the
+        // `HTTPBodyWriter` can only write buffers now — concluding is the server's job — so the
         // race has nowhere to happen, and this pins that down.
         let filePath = try await makeTemporaryFile(size: 8 << 20)
 

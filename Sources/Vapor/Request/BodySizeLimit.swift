@@ -8,11 +8,12 @@
 ///     try await req.body.collect(max: "1mb")      // .specified
 ///     try await req.body.collect(max: 4096)       // .specified
 public enum BodySizeLimit: Sendable, Equatable {
-    /// The request's ``Request/maxBodySize``.
+    /// Whatever ceiling is configured for the body being read.
     ///
-    /// That starts at the application's ``Routes/defaultMaxBodySize`` and is whatever the route or
-    /// an earlier middleware last set it to, so this is the limit the application configured for
-    /// this request rather than a fixed number.
+    /// For a request body that is ``Request/maxBodySize``: the application's
+    /// ``Routes/defaultMaxBodySize`` unless the route or a middleware changed it. For a response the
+    /// client received it is ``ClientResponse/maxBodySize``. A body this process built itself has no
+    /// configured ceiling, so there this means no ceiling.
     case `default`
 
     /// No ceiling: buffer the body however large it turns out to be.
@@ -41,10 +42,14 @@ extension BodySizeLimit: ExpressibleByStringLiteral {
 }
 
 extension BodySizeLimit {
-    /// The ceiling in bytes, resolving ``default`` against the request it applies to.
-    func bytes(for request: Request) -> Int {
+    /// The ceiling in bytes, resolving ``default`` to `fallback`.
+    ///
+    /// Each kind of body supplies its own: a request resolves it to ``Request/maxBodySize``, and a
+    /// response the client received resolves it to ``ClientResponse/maxBodySize``. A body this
+    /// process built itself has no configured ceiling, so there it resolves to none.
+    func bytes(default fallback: Int) -> Int {
         switch self {
-        case .default: request.maxBodySize.value
+        case .default: fallback
         case .unlimited: .max
         case .specified(let count): count.value
         }
