@@ -227,6 +227,13 @@ struct RequestBodyRegressionTests {
                     // The server has nothing to say — it is waiting for 90 bytes that never come —
                     // so the exchange ends on the deadline. Keep it short.
                     deadline: .milliseconds(400))
+                // The handler notices the hang-up on its own schedule, and on a loaded machine it may
+                // not even have been dispatched by the time the client gives up. Wait for it to reach
+                // a verdict while the server is still up, or the assertion below races it.
+                let deadline = ContinuousClock.now + .seconds(5)
+                while verdict.withLock({ $0 }) == "never ran", ContinuousClock.now < deadline {
+                    try await Task.sleep(for: .milliseconds(10))
+                }
             }
         }
         #expect(verdict.withLock { $0 } == "sticky")

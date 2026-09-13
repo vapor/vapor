@@ -69,6 +69,24 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
 
                 // 3. Run responder chain
                 let vaporResponse = try await responder.respond(to: vaporRequest)
+
+                // A body read that failed at the transport surfaces in the responder chain as an error,
+                // and the error middleware answers it with a response of its own. The connection that
+                // response would go out on is already being torn down, though: NIO answered the parser
+                // error with its own 400, below the server's keep-alive handler, and closed the channel.
+                // Writing now races NIO's deferred handler removal, and if the write lands first the
+                // keep-alive handler pushes a second response head into a pipeline that has already sent
+                // one, which NIO asserts on. Return without responding instead: the server logs an
+                // unconcluded response and closes the connection, which is where it was going anyway.
+                // The `catch` below does the same for a handler that rethrows the failure rather than
+                // answering it.
+                guard !bodyStream.transportFailed else {
+                    Logger.current.debug(
+                        "Request ended without a response because its connection is gone",
+                        metadata: ["request-id": "\(requestID)", "status": "\(vaporResponse.status.code)"])
+                    return
+                }
+
                 let httpResponse = HTTPResponse(
                     status: vaporResponse.status,
                     headerFields: vaporResponse.headers
