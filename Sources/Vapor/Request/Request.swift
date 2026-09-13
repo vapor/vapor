@@ -58,8 +58,7 @@ public struct Request: CustomStringConvertible, Sendable {
         }
     }
 
-    /// The validated certificate chain. This returns nil if the peer did not authenticate with a certificate. Requires
-    /// configuring a `customCertificateVerifyCallbackWithMetadata` that performs the verification.
+    /// The client's verified certificate chain, or `nil` if it presented none.
     public let peerCertificateChain: ValidatedCertificateChain?
 
     // MARK: Content

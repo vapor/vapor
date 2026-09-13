@@ -110,7 +110,13 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             case .reloading(let reloader):
                 credentials = .x509(.reloading(reloader))
             }
-            transportSecurity = .tls(credentials: credentials)
+            if let clientVerification = tls.clientCertificateVerification {
+                transportSecurity = .mTLS(
+                    credentials: credentials,
+                    trustConfiguration: .init(clientVerification))
+            } else {
+                transportSecurity = .tls(credentials: credentials)
+            }
         } else {
             transportSecurity = .plaintext
         }
@@ -215,5 +221,45 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             Logger.current.warning("Unix domain sockets are not supported by NIOHTTPServer. Falling back to default address.")
             return ("127.0.0.1", 8080)
         }
+    }
+}
+
+extension NIOHTTPServerConfiguration.TransportSecurity.MTLSTrustConfiguration {
+    /// Maps Vapor's client-certificate verification onto the server's own mTLS trust configuration.
+    init(_ verification: ServerConfiguration.TLSConfiguration.ClientCertificateVerification) {
+        let source: TrustSource
+        switch verification.trust.backing {
+        case .systemDefaults:
+            source = .systemDefaults
+        case .certificates(let trustRoots):
+            source = .certificates(trustRoots: trustRoots)
+        case .pemFile(let path):
+            source = .pemFile(trustRootsPath: path)
+        case .pemBytes(let trustRoots):
+            source = .pemBytes(trustRoots: trustRoots)
+        case .derFile(let path):
+            source = .derFile(trustRootPath: path)
+        case .derBytes(let trustRoot):
+            source = .derBytes(trustRoot: trustRoot)
+        case .custom(let verify):
+            source = .customCertificateVerificationCallback { chain in
+                switch try await verify(chain) {
+                case .verified(let validatedChain):
+                    return .certificateVerified(.init(validatedChain))
+                case .rejected(let reason):
+                    return .failed(.init(reason: reason))
+                }
+            }
+        }
+
+        let mode: CertificateVerificationMode
+        switch verification.mode.backing {
+        case .required:
+            mode = .noHostnameVerification
+        case .optional:
+            mode = .optionalVerification
+        }
+
+        self.init(source, certificateVerification: mode)
     }
 }
