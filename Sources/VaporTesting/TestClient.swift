@@ -34,13 +34,21 @@ final class UnreadBodies: Sendable {
         self.bodies.withLock { $0.append(body) }
     }
 
-    func drain() async throws {
+    /// Reads the bodies a test left unread, so the routes producing them run to completion and the
+    /// connections they arrived on are left reusable.
+    ///
+    /// Best effort: a body whose connection is already gone cannot be drained, and there is nothing
+    /// left to tidy on it either. That happens legitimately - a route answers 413 with
+    /// `Connection: close` while the test is still uploading, and the server resets the connection
+    /// under the unread response. Throwing that out of the testing scope would fail a test whose own
+    /// assertions have already passed, so a failed drain is dropped.
+    func drain() async {
         let bodies = self.bodies.withLock { bodies in
             defer { bodies.removeAll() }
             return bodies
         }
         for var body in bodies where body.isUnconsumedStream {
-            _ = try await body.collect()
+            _ = try? await body.collect()
         }
     }
 }
@@ -140,7 +148,7 @@ struct LiveTestClient: TestClient {
             let client = LiveTestClient(
                 app: app, address: address, options: options, http: .shared, decodesCompressedBodies: true)
             let result = try await body(client)
-            try await client.unreadBodies.drain()
+            await client.unreadBodies.drain()
             return result
         }
 
@@ -159,7 +167,7 @@ struct LiveTestClient: TestClient {
             app: app, address: address, options: options, http: http, decodesCompressedBodies: decodesCompressedBodies)
         do {
             let result = try await body(client)
-            try await client.unreadBodies.drain()
+            await client.unreadBodies.drain()
             try await http.shutdown()
             return result
         } catch {

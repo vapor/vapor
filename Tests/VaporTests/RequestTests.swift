@@ -221,11 +221,18 @@ struct RequestTests {
                     }
                 }
 
-                let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
+                // More than the kernel can hold on its own. The body goes over as one part, and the
+                // client counts it as sent only once the whole part has been written to the socket.
+                // With the server holding the first chunk and reading no further, that write can
+                // only complete if the kernel buffers the rest: Linux's loopback defaults allow about
+                // 10 MB in flight (a 6 MB receive window plus a 4 MB send buffer), so a 10 MB body was
+                // sometimes reported sent in full and the assertion below flaked. 64 MB is beyond any
+                // default on either platform.
+                let upload = ByteBuffer(repeating: 0x41, count: 64 * 1024 * 1024)
                 let request = try! HTTPClient.Request(url: "http://127.0.0.1:\(port)/hello",
                                                       method: .POST,
                                                       headers: [:],
-                                                      body: .byteBuffer(tenMB))
+                                                      body: .byteBuffer(upload))
                 let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
                 let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
                 await #expect(performing: {
@@ -237,9 +244,9 @@ struct RequestTests {
                 })
 
                 #expect(numberOfTimesTheServerGotOfferedBytes.load(ordering: .sequentiallyConsistent) == 1)
-                #expect(tenMB.readableBytes >= bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
-                #expect(tenMB.readableBytes >= bytesTheClientSent.load(ordering: .sequentiallyConsistent))
-                #expect(bytesTheClientSent.load(ordering: .sequentiallyConsistent) == 0) // We'd only see this if we sent the full 10 MB.
+                #expect(upload.readableBytes >= bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
+                #expect(upload.readableBytes >= bytesTheClientSent.load(ordering: .sequentiallyConsistent))
+                #expect(bytesTheClientSent.load(ordering: .sequentiallyConsistent) == 0) // Non-zero only if the whole body was written.
                 #expect(serverSawEnd.load(ordering: .sequentiallyConsistent) == false)
                 #expect(serverSawRequest.load(ordering: .sequentiallyConsistent) == true)
 
