@@ -123,6 +123,33 @@ struct ClientTests {
             }
         }
     }
+    @Test("A decoded gzip response carries headers that describe the decoded body", .timeLimit(.minutes(1)))
+    func testDecodedResponseHeadersAgreeWithBody() async throws {
+        try await withRemoteApp { _, remoteAppPort in
+            try await withApp { app in
+                // The shared client asks for gzip and decodes it. Before the headers were corrected,
+                // `Content-Encoding: gzip` and the encoded `Content-Length` came through in front of
+                // the decoded bytes, so relaying the response as a proxy declared 40 bytes, wrote 20,
+                // and had the server abort it.
+                app.get("via") { _ -> ClientResponse in
+                    try await app.client.get("http://127.0.0.1:\(remoteAppPort)/gzip")
+                }
+
+                let direct = try await app.client.get("http://127.0.0.1:\(remoteAppPort)/gzip")
+                #expect(direct.status == .ok)
+                #expect(direct.headers[.contentEncoding] == nil)
+                #expect(direct.headers[.contentLength] == nil)
+                try #expect(await direct.body.requireString() == "hello, decoded world")
+
+                try await app.testing(.running) { client in
+                    let via = try await client.get("via")
+                    #expect(via.status == .ok)
+                    #expect(via.headers[.contentEncoding] == nil)
+                    try #expect(await via.body.requireString() == "hello, decoded world")
+                }
+            }
+        }
+    }
     #endif
 
     @Test("Test Custom Client")
@@ -168,6 +195,16 @@ struct ClientTests {
         remoteApp.get("stalling") { _ in
             try await Task.sleep(for: .seconds(1))
             return SomeJSON()
+        }
+
+        // gzip of "hello, decoded world": 40 bytes on the wire for 20 decoded, so the declared
+        // length is not the size of the body a decoding client ends up holding.
+        remoteApp.get("gzip") { _ -> Response in
+            let gzipped: [UInt8] = [
+                31, 139, 8, 0, 0, 0, 0, 0, 2, 255, 203, 72, 205, 201, 201, 215, 81, 72, 73, 77,
+                206, 79, 73, 77, 81, 40, 207, 47, 202, 73, 1, 0, 67, 208, 217, 200, 20, 0, 0, 0,
+            ]
+            return Response(headers: [.contentEncoding: "gzip"], body: .init(data: Data(gzipped)))
         }
 
         do {

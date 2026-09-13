@@ -14,6 +14,7 @@ import NIOHTTP1
 internal struct VaporHTTPClient: Client {
     let http: HTTPClient
     let contentConfiguration: ContentConfiguration
+    let decodesCompressedBodies: Bool
 
     func send(_ clientRequest: ClientRequest) async throws -> ClientResponse {
         let urlString = clientRequest.url.string
@@ -40,9 +41,18 @@ internal struct VaporHTTPClient: Client {
             producer?.finish(throwing: error)
             throw error
         }
+        var headers = HTTPFields(response.headers, splitCookie: false)
+        // Handle AHC automatically decoding gzip and deflate
+        let decoded = self.decodesCompressedBodies
+            && ["gzip", "deflate"].contains(headers[values: .contentEncoding].first?.lowercased() ?? "")
+        if decoded {
+            headers[.contentEncoding] = nil
+            headers[.contentLength] = nil
+        }
         // Wrapping AHC's body ourselves means losing its `collect(upTo:)` size check, so the declared
-        // length is rejected here instead - before a byte is read, as AHC did.
-        let declaredLength = response.headers.first(name: "content-length").flatMap(Int.init)
+        // length is rejected here instead - before a byte is read, as AHC did. A decoded body has no
+        // length to check up front; `collect` still enforces the ceiling as it reads.
+        let declaredLength = decoded ? nil : headers[.contentLength].flatMap(Int.init)
         if let declaredLength, declaredLength > clientRequest.maxResponseBodySize {
             Logger.current.debug(
                 "Response body is larger than the configured maximum",
@@ -54,7 +64,7 @@ internal struct VaporHTTPClient: Client {
         }
         return ClientResponse(
             status: .init(code: Int(response.status.code)),
-            headers: .init(response.headers, splitCookie: false),
+            headers: headers,
             // Declaring the length lets a proxied response keep its `Content-Length` instead of
             // being re-framed as chunked. `nil` when the origin did not say.
             body: try .init(stream: { writer in

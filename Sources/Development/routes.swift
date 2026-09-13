@@ -190,6 +190,33 @@ func routes(_ app: Application) async throws {
         return data.slideshow.title
     }
 
+    // MARK: - Proxying
+
+    //   curl -i localhost:8080/proxy/                       -> https://www.vapor.codes/
+    //   curl -i localhost:8080/proxy/docs?x=1               -> https://www.vapor.codes/docs?x=1
+    //   curl -i --compressed localhost:8080/proxy/          (arrives plain: the client decodes gzip for us)
+    //   curl --limit-rate 20k localhost:8080/proxy/         (a slow reader slows the upstream pull)
+    @Sendable func proxyToVaporCodes(_ req: Request) async throws -> ClientResponse {
+        // Keep the caller's path and query as they arrived, minus our own prefix. `req.url.path` is
+        // still percent-encoded, so nothing is decoded and re-encoded on the way through.
+        let path = String(req.url.path.dropFirst("/proxy".count))
+        var target = URI(string: "https://www.vapor.codes")
+        target.path = path.isEmpty ? "/" : path
+        target.query = req.url.query
+        return try await proxy(req, to: target, using: app.client)
+    }
+    // A catch-all needs at least one component after it, so the bare prefix is registered too.
+    app.get("proxy", use: proxyToVaporCodes)
+    app.get("proxy", "**", use: proxyToVaporCodes)
+
+    // Request direction. vapor.codes has nothing to receive a body, so the POST goes to an echo
+    // endpoint that sends the body back, which makes the streamed upload visible on the way out:
+    //   curl -i -X POST --data-binary @Package.swift localhost:8080/proxy/echo
+    //   curl -i -X POST -H "Transfer-Encoding: chunked" --data-binary @Package.swift localhost:8080/proxy/echo
+    app.post("proxy", "echo") { req -> ClientResponse in
+        try await proxy(req, to: "https://httpbin.org/anything", using: app.client)
+    }
+
     let users = app.grouped("users")
     users.get { req in
         return "users"
@@ -304,6 +331,33 @@ func routes(_ app: Application) async throws {
         return "macro route with id: \(id)"
     }
     #endif
+}
+
+func proxy(_ req: Request, to upstream: URI, using client: any Client) async throws -> ClientResponse {
+    var headers = req.headers
+    headers.removeHopByHopFields()
+    // Tell the upstream who we are relaying for.
+    headers.forwarded.append(.init(for: req.remoteAddress?.host))
+
+    let declaredLength = req.headers[.contentLength].flatMap(Int.init)
+    let hasBody = (declaredLength ?? 0) > 0 || req.headers[.transferEncoding] != nil
+
+    do {
+        return try await client.send(req.method, headers: headers, to: upstream) { outgoing in
+            if hasBody {
+                outgoing.body = try .init(stream: { writer in
+                    try await req.body.forEachChunk { chunk in
+                        try await writer.write(chunk)
+                    }
+                }, count: declaredLength)
+            }
+            outgoing.maxResponseBodySize = .max
+            outgoing.timeout = .seconds(300)
+        }
+    } catch {
+        Logger.current.warning("Upstream request failed", metadata: ["upstream": "\(upstream)", "error": "\(error)"])
+        throw Abort(.badGateway)
+    }
 }
 
 struct TestError: AbortError, DebuggableError {
