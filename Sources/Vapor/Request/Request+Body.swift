@@ -3,7 +3,7 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-import HTTPTypes
+public import HTTPTypes
 import Synchronization
 
 extension Request {
@@ -159,4 +159,37 @@ extension Request {
             }
         }
     }
+}
+
+/// Thrown by a read on a stream whose earlier read failed at the transport.
+///
+/// Once a transport read has failed the stream's position is unknown, so the alternative would be to
+/// report a clean end-of-body on a body that was actually cut short.
+public struct RequestBodyReadFailed: Error {}
+
+extension RequestBodyReadFailed: AbortError {
+    public var status: HTTPResponse.Status { .internalServerError }
+    public var reason: String { "The request body stream failed and cannot be read again." }
+}
+
+/// Thrown by ``Request/Body/collect(max:)`` when something already took bytes off the stream.
+///
+/// A body is single-consumer, so what remains is not the whole body. Collecting it anyway would hand
+/// back a silently truncated body — the failure mode this replaces.
+public struct RequestBodyPartiallyConsumed: Error {}
+
+extension RequestBodyPartiallyConsumed: AbortError {
+    public var status: HTTPResponse.Status { .internalServerError }
+    public var reason: String {
+        "The request body was already partially read, so it can no longer be collected in full."
+    }
+}
+
+/// Thrown when the request body is read from two tasks at once. It is a single-consumer stream, so this
+/// is a programmer error, surfaced as a 500 rather than silently reporting an empty end-of-body.
+public struct RequestBodyAlreadyBeingRead: Error {}
+
+extension RequestBodyAlreadyBeingRead: AbortError {
+    public var status: HTTPResponse.Status { .internalServerError }
+    public var reason: String { "The request body is already being read by another task." }
 }
