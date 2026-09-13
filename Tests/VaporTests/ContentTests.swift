@@ -250,7 +250,7 @@ struct ContentTests {
                 let res = try await client.get("/multipart", headers: [
                     .contentType: "multipart/form-data; boundary=123"
                 ]) { req in
-                    req.body = Data(data.utf8)
+                    req.body = .init(data: Data(data.utf8))
                 }
                 #expect(res.status == .ok)
                 expectJSONEquals(res.body.string, expected)
@@ -283,7 +283,7 @@ struct ContentTests {
                 let res = try await client.get("/multipart", headers: [
                     .contentType: "multipart/form-data; boundary=123"
                 ]) { req in
-                    req.body = Data(data.utf8)
+                    req.body = .init(data: Data(data.utf8))
                 }
                 #expect(res.status == .unprocessableContent)
             }
@@ -357,7 +357,7 @@ struct ContentTests {
                 let res = try await client.get("/multipart", headers: [
                     .contentType: "multipart/form-data; boundary=123"
                 ]) { req in
-                    req.body = Data(data.utf8)
+                    req.body = .init(data: Data(data.utf8))
                 }
                 #expect(res.status == .ok)
                 expectJSONEquals(res.body.string, expected)
@@ -452,7 +452,7 @@ struct ContentTests {
                 let res = try await client.get("/multipart", headers: [
                     .contentType: "multipart/form-data; boundary=123"
                 ]) { req in
-                    req.body = Data(data.utf8)
+                    req.body = .init(data: Data(data.utf8))
                 }
                 #expect(res.status == .ok)
             }
@@ -483,7 +483,7 @@ struct ContentTests {
 
             try await app.testing { client in
                 let res = try await client.get("/urlencodedform", headers: headers) { req in
-                    req.body = body
+                    req.body = .init(data: body)
                 }
                 #expect(res.status.code == 200)
             }
@@ -864,7 +864,7 @@ struct ContentTests {
 
             try await app.testing { client in
                 let res = try await client.post("/plaintext", headers: headers) { req in
-                    req.body = Data(body.utf8)
+                    req.body = .init(data: Data(body.utf8))
                 }
                 // This should return a 400 Bad Request and not crash
                 #expect(res.status == .badRequest)

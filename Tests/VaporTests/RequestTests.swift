@@ -263,7 +263,7 @@ struct RequestTests {
 
                 for _ in 0..<10 {
                     let response = try await client.post("upload") {
-                        $0.body = payload
+                        $0.body = .init(data: payload)
                     }
                     #expect(response.status == .ok)
                     try #expect(await response.body.requireString() == "Received \(payload.count) bytes")
@@ -931,7 +931,7 @@ struct RequestTests {
                 return "\(peekedBefore)|\(collected)|\(peekedAfter)"
             }
             try await app.testing(.running) { client in
-                let res = try await client.post("accessors") { $0.body = Data("hello".utf8) }
+                let res = try await client.post("accessors") { $0.body = .init(data: Data("hello".utf8)) }
                 try #expect(await res.body.requireString() == "true|hello|true")
             }
         }
@@ -959,13 +959,13 @@ struct RequestTests {
 
             try await app.testing(.running) { client in
                 let payload = Data(repeating: 0x41, count: 64)
-                let overDefault = try await client.post("default") { $0.body = payload }
+                let overDefault = try await client.post("default") { $0.body = .init(data: payload) }
                 #expect(overDefault.status == .contentTooLarge)
 
-                let underLiteral = try await client.post("literal") { $0.body = payload }
+                let underLiteral = try await client.post("literal") { $0.body = .init(data: payload) }
                 #expect(underLiteral.status == .ok)
 
-                let unlimited = try await client.post("unlimited") { $0.body = payload }
+                let unlimited = try await client.post("unlimited") { $0.body = .init(data: payload) }
                 try #expect(await unlimited.body.requireString() == "64")
             }
         }
@@ -979,7 +979,7 @@ struct RequestTests {
                 "\(try await req.body.data()?.count ?? 0)"
             }
             try await app.testing(.running) { client in
-                let res = try await client.post("raised") { $0.body = Data(repeating: 0x41, count: 64) }
+                let res = try await client.post("raised") { $0.body = .init(data: Data(repeating: 0x41, count: 64)) }
                 try #expect(await res.body.requireString() == "64")
             }
         }

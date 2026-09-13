@@ -63,11 +63,18 @@ struct InMemoryTestClient: TestClient {
             url.path = "/" + url.path
         }
 
+        // `Request` only takes a buffered body: its streaming case wraps the server's move-only
+        // reader, which there is no in-process equivalent of. So a streamed client body is collected
+        // here and the route sees a `.collected` body. Tests that need a route to observe a real
+        // stream — backpressure, chunk boundaries — need the live client.
+        var clientBody = clientRequest.body
+        let collectedBody = try await clientBody.collect()
+
         let request = Request(
             method: clientRequest.method,
             url: url,
             headers: clientRequest.headers,
-            collectedBody: clientRequest.body,
+            collectedBody: collectedBody,
             remoteAddress: nil,
             contentConfiguration: self.app.contentConfiguration,
             defaultMaxBodySize: self.app.routes.defaultMaxBodySize

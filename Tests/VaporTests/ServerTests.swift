@@ -551,13 +551,13 @@ struct ServerTests {
         //            buffer.writeString(String(repeating: "a", count: 10_000_000))
         //
         //            try await app.testing(method: .running()).test(.post, "upload", beforeRequest: { req in
-        //                req.body = buffer
+        //                req.body = .init(data: buffer)
         //            }, afterResponse: { res in
         //                #expect(res.status == .badRequest)
         //            })
         //
         //            try await app.testing(method: .running()).test(.post, "upload", beforeRequest: { req in
-        //                req.body = buffer
+        //                req.body = .init(data: buffer)
         //                req.headers[.init("test")!] = "a"
         //            }, afterResponse: { res in
         //                #expect(res.status == .ok)
@@ -1476,7 +1476,7 @@ struct ServerTests {
 
             try await app.testing(.running) { client in
                 let res = try await client.post("payload") { req in
-                    req.body = Data(payload)
+                    req.body = .init(data: Data(payload))
                 }
                 #expect(res.status == .ok)
             }

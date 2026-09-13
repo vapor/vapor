@@ -584,7 +584,7 @@ struct StreamingBodyTests {
                 var headers = HTTPFields()
                 headers.contentType = .plainText
                 let res = try await client.post("/echo", headers: headers) { req in
-                    req.body = sent
+                    req.body = .init(data: sent)
                 }
 
                 #expect(res.status == .ok)
@@ -593,7 +593,7 @@ struct StreamingBodyTests {
 
                 // The connection survives: a second request over it is served normally.
                 let again = try await client.post("/echo", headers: headers) { req in
-                    req.body = sent
+                    req.body = .init(data: sent)
                 }
                 #expect(again.status == .ok)
                 #expect(try await again.body.data() == sent)

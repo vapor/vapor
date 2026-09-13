@@ -456,16 +456,16 @@ struct RouteTests {
             // `Connection: close` header.
             let buffer = Data(repeating: 0, count: 8_192)
             try await app.testing(.running) { client in
-                let defaultLimit = try await client.post("/default") { $0.body = buffer }
+                let defaultLimit = try await client.post("/default") { $0.body = .init(data: buffer) }
                 #expect(defaultLimit.status == .contentTooLarge)
 
-                let oneKB = try await client.post("/1kb") { $0.body = buffer }
+                let oneKB = try await client.post("/1kb") { $0.body = .init(data: buffer) }
                 #expect(oneKB.status == .contentTooLarge)
 
-                let oneMB = try await client.post("/1mb") { $0.body = buffer }
+                let oneMB = try await client.post("/1mb") { $0.body = .init(data: buffer) }
                 #expect(oneMB.status == .ok)
 
-                let oneGB = try await client.post("/1gb") { $0.body = buffer }
+                let oneGB = try await client.post("/1gb") { $0.body = .init(data: buffer) }
                 #expect(oneGB.status == .ok)
             }
         }

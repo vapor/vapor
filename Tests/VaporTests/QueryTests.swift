@@ -233,7 +233,7 @@ struct QueryTests {
 
             try await app.testing { client in
                 let res = try await client.post("/decode-fail", headers: headers) { req in
-                    req.body = body
+                    req.body = .init(data: body)
                 }
                 #expect(res.status == .badRequest)
                 try #expect(await res.body.requireString().contains("missing"))
