@@ -1,7 +1,6 @@
 import Vapor
 import VaporTesting
 import Testing
-import NIOCore
 import HTTPTypes
 import RoutingKit
 import Synchronization
@@ -19,12 +18,12 @@ struct ClientStreamingTests {
 
     @Test("send does not return until the consumer takes the chunk")
     func testHandoffIsBackpressured() async throws {
-        let handoff = ChunkHandoff()
+        let handoff = ChunkHandoff<String>()
         let sent = Mutex(false)
 
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
-                try? await handoff.send(ByteBuffer(string: "one"))
+                try? await handoff.send("one")
                 sent.withLock { $0 = true }
             }
             // Give the producer every chance to run ahead. With a buffer it would; with a handoff
@@ -34,7 +33,7 @@ struct ClientStreamingTests {
 
             var iterator = ChunkHandoffSequence(handoff: handoff).makeAsyncIterator()
             let chunk = try? await iterator.next()
-            #expect(chunk.map { String(buffer: $0) } == "one")
+            #expect(chunk == "one")
             handoff.finish()
             await group.waitForAll()
         }
@@ -43,7 +42,7 @@ struct ClientStreamingTests {
 
     @Test("A producer error surfaces on the consuming side")
     func testHandoffPropagatesFailure() async throws {
-        let handoff = ChunkHandoff()
+        let handoff = ChunkHandoff<String>()
         handoff.finish(throwing: Boom())
         var iterator = ChunkHandoffSequence(handoff: handoff).makeAsyncIterator()
         await #expect(throws: Boom.self) { try await iterator.next() }
@@ -51,8 +50,8 @@ struct ClientStreamingTests {
 
     @Test("Cancelling the producing task unparks a waiting send")
     func testHandoffCancellationUnparksProducer() async throws {
-        let handoff = ChunkHandoff()
-        let task = Task { try await handoff.send(ByteBuffer(string: "stuck")) }
+        let handoff = ChunkHandoff<String>()
+        let task = Task { try await handoff.send("stuck") }
         for _ in 0..<50 { await Task.yield() }
         task.cancel()
         await #expect(throws: (any Error).self) { try await task.value }

@@ -82,7 +82,7 @@ struct AHCClient: Client {
 /// pushes them in, each `write` returning only once the transport has taken the bytes.
 private func ahcRequestBody(
     _ body: Response.Body
-) -> (body: HTTPClientRequest.Body?, producer: ChunkHandoff?) {
+) -> (body: HTTPClientRequest.Body?, producer: ChunkHandoff<ByteBuffer>?) {
     // No body at all, as distinct from a body that happens to be empty. This is what a `nil`
     // `ByteBuffer` used to mean, and AHC frames it the same way — `Content-Length: 0` on a method
     // that expects a body — rather than as a zero-length chunked upload.
@@ -93,14 +93,14 @@ private func ahcRequestBody(
     if let data = body.data {
         return (.bytes(data, length: .known(Int64(data.count))), nil)
     }
-    let handoff = ChunkHandoff()
+    let handoff = ChunkHandoff<ByteBuffer>()
     let length: HTTPClientRequest.Body.Length = body.count.map { .known(Int64($0)) } ?? .unknown
     return (.stream(ChunkHandoffSequence(handoff: handoff), length: length), handoff)
 }
 
 /// Runs a streaming body's closure, feeding each chunk into the handoff, and ends the handoff either
 /// way so the consumer is never left waiting.
-private func pumpRequestBody(_ body: Response.Body, into handoff: ChunkHandoff) -> Task<Void, Never> {
+private func pumpRequestBody(_ body: Response.Body, into handoff: ChunkHandoff<ByteBuffer>) -> Task<Void, Never> {
     Task {
         do {
             var chunk = ByteBuffer()

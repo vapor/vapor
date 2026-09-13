@@ -6,7 +6,6 @@ import Foundation
 import Synchronization
 import BasicContainers
 import NIOHTTPServer
-import NIOCore
 
 /// Holds the server's move-only, non-`Sendable` request `Reader` behind a `Mutex`, so it can live in `Request
 ///
@@ -242,10 +241,8 @@ package final class RequestBodyStream: Sendable {
 }
 
 /// Calls `body` with an empty span and `isEnd == true` — the end-of-body signal shared by every
-/// read path, so the "empty span + ended" sentinel lives in exactly one place.
+/// read path, so the "empty span + ended" sentinel lives in exactly one place. An empty `Span` has
+/// an immortal lifetime and owns nothing, so signalling the end allocates nothing.
 private func signalEndOfBody<R>(to body: (Span<UInt8>, Bool) async throws -> R) async throws -> R {
-    try await body(emptyRequestBody.readableBytesUInt8Span, true)
+    try await body(Span<UInt8>(), true)
 }
-
-/// Shared empty body, so the end-of-body signal doesn't allocate a `ByteBuffer` on every terminal read.
-private let emptyRequestBody = ByteBuffer()
