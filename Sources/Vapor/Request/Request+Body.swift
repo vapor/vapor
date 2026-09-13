@@ -7,11 +7,18 @@ import HTTPTypes
 import Synchronization
 
 extension Request {
-    public struct Body: CustomStringConvertible, Sendable {
+    /// A view onto this request's body.
+    ///
+    /// Non-escapable, and bound to the `Request` it was read from: it can be used for as long as that
+    /// request value is in scope, but it cannot be stored in a property, returned without a lifetime,
+    /// or captured by an escaping closure, a `Task`, or an `async let`. Capture the `Request` instead
+    /// and take `.body` from it where it is needed.
+    public struct Body: ~Copyable, ~Escapable, Sendable {
         let request: Request
 
-        init(_ request: Request) {
-            self.request = request
+        @_lifetime(borrow request)
+        init(_ request: borrowing Request) {
+            self.request = copy request
         }
 
         /// The buffered body, or `nil` if there is none or nothing has collected it yet.
@@ -56,7 +63,7 @@ extension Request {
         ///   ``collect(max:)`` enforces. A handler driving the read loop itself is choosing to take
         ///   the body in unbounded pieces, so bounding it is that handler's job — count the bytes it
         ///   keeps, or call ``collect(max:)`` instead.
-        public func withReader<R>(
+        public consuming func withReader<R>(
             _ body: (borrowing any RequestBodyReader & ~Escapable) async throws -> R
         ) async throws -> R {
             let stream: RequestBodyStream
@@ -79,7 +86,7 @@ extension Request {
         /// what most streaming handlers want; it is a convenience over ``withReader(_:)`` and shares
         /// its semantics with ``RequestBodyReader/forEachChunk(_:)`` (borrowed span, valid only for the
         /// call — copy out anything you keep).
-        public func forEachChunk(_ body: (Span<UInt8>) async throws -> Void) async throws {
+        public consuming func forEachChunk(_ body: (Span<UInt8>) async throws -> Void) async throws {
             try await self.withReader { reader in
                 try await reader.forEachChunk(body)
             }
@@ -142,6 +149,8 @@ extension Request {
             try await self.data(max: max).map { String(decoding: $0, as: UTF8.self) }
         }
 
+        /// The buffered body as UTF-8, or empty if nothing has collected it. Not
+        /// `CustomStringConvertible`, because that protocol requires an escapable conformer.
         public var description: String {
             if let data = self.data {
                return String(decoding: data, as: UTF8.self)

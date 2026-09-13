@@ -155,8 +155,10 @@ public struct Request: CustomStringConvertible, Sendable {
         }
     }
 
+    /// The request body, as a non-escapable view bound to this request value (see ``Body``).
     public var body: Body {
-        Body(self)
+        @_lifetime(borrow self)
+        get { Body(self) }
     }
 
     /// Shared, mutable home for ``BodyStorage``, so that collecting the body through one copy of a
