@@ -290,6 +290,11 @@ package final class RequestBodyStream: Sendable {
         /// *consumer* closure does not latch this: the read itself completed, the consumer merely
         /// stopped, and the stream is still positioned for whoever reads next.
         var failed = false
+        /// Set while a ``collect(max:)`` owns the whole stream. Checked in the same lock acquisition
+        /// that sets it, because "has anything been consumed yet?" asked on its own is a race: two
+        /// collectors both see nothing consumed, both proceed, and the loser silently gets an empty
+        /// body instead of an error.
+        var collecting = false
         /// Body bytes handed to a consumer so far. Serves two callers: ``collect(max:)`` refuses a
         /// stream somebody else already took bytes from, and metrics can report a body size for a
         /// request nothing ever collected.
@@ -431,12 +436,17 @@ package final class RequestBodyStream: Sendable {
     /// clamped to `max` so an over-declaring client can't make us reserve more than we would accept.
     /// Reserving is worth doing: on a 16 MiB body it is the difference between ~1.7 ms and ~0.3 ms.
     func collect(max: Int, expecting declaredLength: Int? = nil) async throws -> Data {
-        // Somebody else already took bytes off this stream, so what is left is not the whole body.
-        // Returning it would hand back a silently truncated body, which is how a swallowed 413
-        // upstream used to turn into a short body and a 200 downstream.
-        guard self.bytesConsumed == 0 else {
-            throw RequestBodyPartiallyConsumed()
+        // Claim the whole stream before reading a byte of it. Somebody else having taken bytes means
+        // what is left is not the whole body, and returning that would hand back a silently truncated
+        // one — which is how a swallowed 413 upstream used to turn into a short body and a 200
+        // downstream, and how two concurrent collects used to leave one of them with nothing.
+        try self.state.withLock { state in
+            if state.failed { throw RequestBodyReadFailed() }
+            guard !state.collecting else { throw RequestBodyAlreadyBeingRead() }
+            guard state.consumed == 0 else { throw RequestBodyPartiallyConsumed() }
+            state.collecting = true
         }
+        defer { self.state.withLock { $0.collecting = false } }
         var collected = Data()
         if let declaredLength {
             collected.reserveCapacity(min(declaredLength, max))
