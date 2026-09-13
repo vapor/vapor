@@ -14,8 +14,10 @@ extension Request {
             self.request = request
         }
 
-        /// The buffered body, or `nil` if there is none or it is still an unread stream.
-        /// Call ``collect(max:)`` first to buffer a streamed body.
+        /// The buffered body, or `nil` if there is none or nothing has collected it yet.
+        ///
+        /// Bodies are lazy, so this is `nil` until something asks for the bytes. Use ``data(max:)``
+        /// to collect the body and always get what is there.
         public var data: Data? {
             switch self.request.bodyStorage.storage.withLock({ $0 }) {
             case .collected(let data): return data
@@ -35,6 +37,9 @@ extension Request {
             }
         }
 
+        /// The buffered body as UTF-8, or `nil` if there is none or nothing has collected it yet.
+        ///
+        /// Use ``string(max:)`` to collect the body and always get what is there.
         public var string: String? {
             if let data = self.data {
                 return String(decoding: data, as: UTF8.self)
@@ -82,16 +87,15 @@ extension Request {
 
         /// Buffers the body into memory, aborting with 413 if it exceeds the ceiling.
         ///
-        /// - Parameter max: The ceiling in bytes, or `nil` for this request's
-        ///   ``Request/maxBodySize`` — which is the application default unless the route or a
-        ///   middleware changed it. Pass `Int.max` for no ceiling at all.
+        /// - Parameter max: The ceiling. Defaults to ``BodySizeLimit/default``, this request's
+        ///   ``Request/maxBodySize``.
         ///
         /// For an unread stream, aborts with 413 if the declared `Content-Length` already exceeds the
         /// ceiling before reading anything; an under-declaring client is still caught while collecting.
         /// An already-buffered (or absent) body is returned as is — it was accepted under its original
         /// limit, so a smaller `max` on a later call doesn't re-reject it.
-        public func collect(max: Int? = nil) async throws -> Data? {
-            let limit = max ?? self.request.maxBodySize.value
+        public func collect(max: BodySizeLimit = .default) async throws -> Data? {
+            let limit = max.bytes(for: self.request)
             switch self.request.bodyStorage.storage.withLock({ $0 }) {
             case .stream(let stream):
                 // Reject early on an over-limit declared length, before reading any body. This lives
@@ -111,6 +115,31 @@ extension Request {
             case .none:
                 return nil
             }
+        }
+
+        /// The body's bytes, collecting the stream first if nothing has collected it yet.
+        ///
+        /// The collecting counterpart to ``data``, and what most handlers want: it does not care
+        /// whether the body arrived on a socket or was already materialised, and an
+        /// already-collected body is returned without re-reading anything.
+        ///
+        /// - Parameter max: The ceiling, as ``collect(max:)``.
+        /// - Returns: The body's bytes, or `nil` if the request has no body.
+        /// - Throws: ``Abort`` with `.contentTooLarge` if the body exceeds `max`.
+        public func data(max: BodySizeLimit = .default) async throws -> Data? {
+            try await self.collect(max: max)
+        }
+
+        /// The body decoded as UTF-8, collecting the stream first if nothing has collected it yet.
+        ///
+        /// The collecting counterpart to ``string``. See ``data(max:)`` for the semantics; this
+        /// decodes the result, substituting U+FFFD for any invalid UTF-8 rather than failing.
+        ///
+        /// - Parameter max: The ceiling, as ``collect(max:)``.
+        /// - Returns: The body decoded as UTF-8, or `nil` if the request has no body.
+        /// - Throws: ``Abort`` with `.contentTooLarge` if the body exceeds `max`.
+        public func string(max: BodySizeLimit = .default) async throws -> String? {
+            try await self.data(max: max).map { String(decoding: $0, as: UTF8.self) }
         }
 
         public var description: String {

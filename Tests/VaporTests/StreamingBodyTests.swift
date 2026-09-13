@@ -554,7 +554,7 @@ struct StreamingBodyTests {
 
             func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
                 // Exactly what the issue did: read the body from a middleware, then chain on.
-                let collected = try await request.body.collect(max: .max)
+                let collected = try await request.body.collect(max: .unlimited)
                 self.seen.withLock { $0 = collected?.count ?? 0 }
                 return try await next.respond(to: request)
             }

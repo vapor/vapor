@@ -138,7 +138,7 @@ public struct Request: CustomStringConvertible, Sendable {
                 headers: self.headers,
                 contentConfiguration: self.contentConfiguration,
                 collectBody: { [self] in
-                    try await self.body.collect(max: self.maxBodySize.value)
+                    try await self.body.collect()
                 }
             )
         }
@@ -148,6 +148,10 @@ public struct Request: CustomStringConvertible, Sendable {
             self.bodyStorage.storage.withLock { storage in
                 storage = container.body.map { .collected($0) } ?? .none
             }
+            // `body` is computed, so there is no `didSet` to do this the way `Response` does. Encoding
+            // replaces the body, so the header that describes its length has to be replaced with it —
+            // otherwise the request goes out claiming the length of whatever it held before.
+            self.headers.updateContentLength(container.body?.count ?? 0)
         }
     }
 

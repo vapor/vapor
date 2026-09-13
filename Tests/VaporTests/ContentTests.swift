@@ -159,11 +159,8 @@ struct ContentTests {
             // The body really is replaced...
             #expect(request.body.string == #"{"message":"hi"}"#)
 
-            // ...but the header is left describing the old one.
-            #warning("`Request.body` is computed, so unlike `Response` there is no `didSet` to refresh Content-Length when the body changes. Fix in the body overhaul and drop this `withKnownIssue`")
-            withKnownIssue("Content-Length still describes the previous body") {
-                #expect(request.headers[.contentLength] == "16")
-            }
+            // ...and the header follows it.
+            #expect(request.headers[.contentLength] == "16")
         }
     }
 

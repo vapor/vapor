@@ -253,7 +253,7 @@ struct RequestTests {
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
             app.on(.post, "upload", use: { request async throws -> String  in
-                let collected = try await request.body.collect(max: Int.max) ?? Data()
+                let collected = try await request.body.collect(max: .unlimited) ?? Data()
                 return "Received \(collected.count) bytes"
             })
 
@@ -388,7 +388,7 @@ struct RequestTests {
             // Collect with an explicit limit and report the byte count so we can assert the exact
             // boundary: a body of exactly `maxSize` is accepted, one byte more is rejected with 413.
             app.on(.post, "limited") { req -> String in
-                let collected = try await req.body.collect(max: maxSize) ?? Data()
+                let collected = try await req.body.collect(max: .specified(ByteCount(value: maxSize))) ?? Data()
                 return "\(collected.count)"
             }
 
@@ -548,7 +548,7 @@ struct RequestTests {
                 method: .post,
                 collectedBody: Data(repeating: 0x41, count: 2048))
 
-            let collected = try await request.body.collect(max: .max)
+            let collected = try await request.body.collect(max: .unlimited)
             #expect(collected?.count == 2048)
         }
     }
@@ -919,6 +919,72 @@ struct RequestTests {
 //        }
 //    }
 
+    @Test("data(max:) and string(max:) collect a lazy body; the peeks stay nil until they do")
+    func testCollectingAccessors() async throws {
+        try await withApp { app in
+            app.post("accessors") { req -> String in
+                // Bodies are lazy, so the peeks see nothing yet.
+                let peekedBefore = req.body.data == nil && req.body.string == nil
+                let collected = try await req.body.string() ?? ""
+                // Collecting caches, so now the peeks see it.
+                let peekedAfter = req.body.data != nil && req.body.string == collected
+                return "\(peekedBefore)|\(collected)|\(peekedAfter)"
+            }
+            try await app.testing(.running) { client in
+                let res = try await client.post("accessors") { $0.body = Data("hello".utf8) }
+                try #expect(await res.body.requireString() == "true|hello|true")
+            }
+        }
+    }
+
+    @Test("A body size limit can be a default, a literal, or unlimited")
+    func testBodySizeLimitCases() async throws {
+        try await withApp { app in
+            app.routes.defaultMaxBodySize = 8
+
+            // `.default` follows the application's ceiling...
+            app.post("default") { req -> String in
+                _ = try await req.body.data()
+                return "ok"
+            }
+            // ...a literal overrides it, in either of `ByteCount`'s spellings...
+            app.post("literal") { req -> String in
+                _ = try await req.body.data(max: "1mb")
+                return "ok"
+            }
+            // ...and `.unlimited` opts out entirely.
+            app.post("unlimited") { req -> String in
+                "\(try await req.body.data(max: .unlimited)?.count ?? 0)"
+            }
+
+            try await app.testing(.running) { client in
+                let payload = Data(repeating: 0x41, count: 64)
+                let overDefault = try await client.post("default") { $0.body = payload }
+                #expect(overDefault.status == .contentTooLarge)
+
+                let underLiteral = try await client.post("literal") { $0.body = payload }
+                #expect(underLiteral.status == .ok)
+
+                let unlimited = try await client.post("unlimited") { $0.body = payload }
+                try #expect(await unlimited.body.requireString() == "64")
+            }
+        }
+    }
+
+    @Test("A route's maxBodySize overrides the application default")
+    func testRouteMaxBodySizeOverride() async throws {
+        try await withApp { app in
+            app.routes.defaultMaxBodySize = 8
+            app.on(.post, "raised", maxBodySize: "1mb") { req -> String in
+                "\(try await req.body.data()?.count ?? 0)"
+            }
+            try await app.testing(.running) { client in
+                let res = try await client.post("raised") { $0.body = Data(repeating: 0x41, count: 64) }
+                try #expect(await res.body.requireString() == "64")
+            }
+        }
+    }
+
     @Test("An error thrown inside a body-read closure reaches the route as itself")
     func testClosureErrorIsNotWrapped() async throws {
         struct Marker: Error {}
@@ -979,7 +1045,7 @@ struct RequestTests {
                     try await reader.read { span, _ in span.count }
                 }
                 do {
-                    _ = try await req.body.collect(max: .max)
+                    _ = try await req.body.collect(max: .unlimited)
                     return "collected"
                 } catch is RequestBodyPartiallyConsumed {
                     return "rejected"
