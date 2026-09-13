@@ -1,10 +1,9 @@
 import NIOHTTPServer
 import BasicContainers
-public import HTTPTypes
+import HTTPTypes
 import HTTPAPIs
 import NIOCore
 import NIOHTTP1
-import NIOConcurrencyHelpers
 import Synchronization
 import Logging
 #if canImport(FoundationEssentials)
