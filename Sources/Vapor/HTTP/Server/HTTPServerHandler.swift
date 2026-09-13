@@ -52,105 +52,123 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
 
         let requestID = request.headerFields[.xRequestId] ?? UUID().uuidString
         var responseSender = Optional(consume responseSender)
-        try await withLogger(mergingMetadata: ["request-id": "\(requestID)"]) { _ in
-            let vaporRequest = Request(
-                method: request.method,
-                url: URI(path: rawPath),
-                version: .init(major: 1, minor: 1),
-                headersNoUpdate: request.headerFields,
-                bodyStream: bodyStream,
-                remoteAddress: remoteAddress,
-                localAddress: localAddress,
-                peerCertificateChain: peerCerts,
-                requestID: requestID,
-                contentConfiguration: context.contentConfiguration,
-                defaultMaxBodySize: context.defaultMaxBodySize
-            )
+        do {
+            try await withLogger(mergingMetadata: ["request-id": "\(requestID)"]) { _ in
+                let vaporRequest = Request(
+                    method: request.method,
+                    url: URI(path: rawPath),
+                    version: .init(major: 1, minor: 1),
+                    headersNoUpdate: request.headerFields,
+                    bodyStream: bodyStream,
+                    remoteAddress: remoteAddress,
+                    localAddress: localAddress,
+                    peerCertificateChain: peerCerts,
+                    requestID: requestID,
+                    contentConfiguration: context.contentConfiguration,
+                    defaultMaxBodySize: context.defaultMaxBodySize
+                )
 
-            // 3. Run responder chain
-            let vaporResponse = try await responder.respond(to: vaporRequest)
-            let httpResponse = HTTPResponse(
-                status: vaporResponse.status,
-                headerFields: vaporResponse.headers
-            )
+                // 3. Run responder chain
+                let vaporResponse = try await responder.respond(to: vaporRequest)
+                let httpResponse = HTTPResponse(
+                    status: vaporResponse.status,
+                    headerFields: vaporResponse.headers
+                )
 
-            // 4. Send the response head and body
-            guard let sender = responseSender.take() else {
-                Logger.current.critical("Invalid server state - no response sender")
-                throw Abort(.internalServerError)
+                // 4. Send the response head and body
+                guard let sender = responseSender.take() else {
+                    Logger.current.critical("Invalid server state - no response sender")
+                    throw Abort(.internalServerError)
+                }
+                // Vapor currently doesn't have an API for informational responses, trying to return one would
+                // result in a crash, so bypass that here
+                guard vaporResponse.status.kind != .informational else {
+                    Logger.current.error(
+                        "Handler returned an informational status, which cannot be sent as a final response",
+                        metadata: ["status": "\(vaporResponse.status.code)"])
+                    var empty = UniqueArray<UInt8>()
+                    try await sender.sendAndFinish(HTTPResponse(status: .internalServerError), buffer: &empty)
+                    return
+                }
+
+                // If this is a HEAD request we don't need a body, so write an empty body out and don't
+                // waste time going through the response body. `204` and `304` are defined as bodyless
+                // too: writing one anyway breaks framing, and the client reads it as the start of the
+                // next response.
+                let bodyIsForbidden = request.method == .head
+                    || vaporResponse.status == .noContent
+                    || vaporResponse.status == .notModified
+                guard !bodyIsForbidden else {
+                    var empty = UniqueArray<UInt8>()
+                    try await sender.sendAndFinish(httpResponse, buffer: &empty)
+                    return
+                }
+
+                switch vaporResponse.body.storage {
+                // A stream some copy of this body already collected is spent: its bytes live in the
+                // body's shared cache, so it is serialised down the buffered path below instead of by
+                // re-running a callback that would now write nothing.
+                case .stream(let bodyStream) where bodyStream.state.collected == nil:
+                    // Streaming body: send the head, then let the body closure write chunks straight
+                    // into the server's writer. The writer is non-Sendable (it wraps the server's
+                    // move-only response writer), so it stays in this task; each `write` awaits the
+                    // transport, so backpressure propagates to the closure. The server appends the
+                    // final chunk via `finish` once the closure returns.
+                    let writer = NIOHTTPBodyWriterStorage(inner: try await sender.send(httpResponse))
+                    let scope = HTTPBodyWriterScope()
+                    do {
+                        try await bodyStream.callback(NIOHTTPBodyWriter(writer, scope: scope))
+                    } catch {
+                        // Throwing out of the handler is how the server is told to abort: it closes the
+                        // connection without a terminating chunk, so the client sees a truncated body.
+                        // Finishing here would send one and present a partial body as a whole one.
+                        writer.abandon()
+                        throw error
+                    }
+                    if let declared = bodyStream.count, writer.bytesWritten != declared {
+                        // The body did not match the length the head promised. Throw rather than return:
+                        // a handler that returns with its response unfinished only has its connection torn
+                        // down as inconsistent, whereas a thrown error drives the server's abort.
+                        //
+                        // Logged here as well as by the server, because the server's log line does not
+                        // carry this request's ID.
+                        Logger.current.debug(
+                            "Response body stream wrote a different number of bytes than it declared, closing the connection",
+                            metadata: [
+                                "written": "\(writer.bytesWritten)",
+                                "declared": "\(declared)",
+                            ])
+                        writer.abandon()
+                        throw ResponseBodyLengthMismatch(declared: declared, written: writer.bytesWritten)
+                    }
+                    try await writer.finish(nil)
+                default:
+                    // Buffered body: single-shot write. Borrowing the body's bytes copies them straight
+                    // into the server's container - a `.string`/`.data`/`.staticString` body is no
+                    // longer materialised into an intermediate `ByteBuffer` first.
+                    var responseBody = UniqueArray<UInt8>(minimumCapacity: vaporResponse.body.count ?? 0)
+                    try await vaporResponse.body.withStreamingBytes { bytes in
+                        responseBody.append(copying: bytes)
+                    }
+                    try await sender.sendAndFinish(httpResponse, buffer: &responseBody)
+                }
             }
-            // Vapor currently doesn't have an API for informational responses, trying to return one would
-            // result in a crash, so bypass that here
-            guard vaporResponse.status.kind != .informational else {
-                Logger.current.error(
-                    "Handler returned an informational status, which cannot be sent as a final response",
-                    metadata: ["status": "\(vaporResponse.status.code)"])
-                var empty = UniqueArray<UInt8>()
-                try await sender.sendAndFinish(HTTPResponse(status: .internalServerError), buffer: &empty)
+        } catch {
+            // A throw out of here tells the server to abort the exchange, and for HTTP/1.1 that means writing
+            // a response head if it believes none was written. Once the request body's transport has failed
+            // the connection is already being torn down: NIO answered the parser error with its own 400,
+            // below the server's keep-alive handler, and closed the channel. Nothing is left to abort, and
+            // asking for one races NIO's deferred handler removal; if the abort lands first, the keep-alive
+            // handler writes a second response head into a pipeline that already sent one, which NIO
+            // asserts on. A cancelled task is in the same position. Return instead: the server logs an
+            // unconcluded response and closes the connection, which is where it was going anyway.
+            guard !bodyStream.transportFailed, !Task.isCancelled else {
+                Logger.current.debug(
+                    "Request ended without a response because its connection is gone",
+                    metadata: ["request-id": "\(requestID)", "error": "\(error)"])
                 return
             }
-
-            // If this is a HEAD request we don't need a body, so write an empty body out and don't
-            // waste time going through the response body. `204` and `304` are defined as bodyless
-            // too: writing one anyway breaks framing, and the client reads it as the start of the
-            // next response.
-            let bodyIsForbidden = request.method == .head
-                || vaporResponse.status == .noContent
-                || vaporResponse.status == .notModified
-            guard !bodyIsForbidden else {
-                var empty = UniqueArray<UInt8>()
-                try await sender.sendAndFinish(httpResponse, buffer: &empty)
-                return
-            }
-
-            switch vaporResponse.body.storage {
-            // A stream some copy of this body already collected is spent: its bytes live in the
-            // body's shared cache, so it is serialised down the buffered path below instead of by
-            // re-running a callback that would now write nothing.
-            case .stream(let bodyStream) where bodyStream.state.collected == nil:
-                // Streaming body: send the head, then let the body closure write chunks straight
-                // into the server's writer. The writer is non-Sendable (it wraps the server's
-                // move-only response writer), so it stays in this task; each `write` awaits the
-                // transport, so backpressure propagates to the closure. The server appends the
-                // final chunk via `finish` once the closure returns.
-                let writer = NIOHTTPBodyWriterStorage(inner: try await sender.send(httpResponse))
-                let scope = HTTPBodyWriterScope()
-                do {
-                    try await bodyStream.callback(NIOHTTPBodyWriter(writer, scope: scope))
-                } catch {
-                    // Throwing out of the handler is how the server is told to abort: it closes the
-                    // connection without a terminating chunk, so the client sees a truncated body.
-                    // Finishing here would send one and present a partial body as a whole one.
-                    writer.abandon()
-                    throw error
-                }
-                if let declared = bodyStream.count, writer.bytesWritten != declared {
-                    // The body did not match the length the head promised. Throw rather than return:
-                    // a handler that returns with its response unfinished only has its connection torn
-                    // down as inconsistent, whereas a thrown error drives the server's abort.
-                    //
-                    // Logged here as well as by the server, because the server's log line does not
-                    // carry this request's ID.
-                    Logger.current.debug(
-                        "Response body stream wrote a different number of bytes than it declared, closing the connection",
-                        metadata: [
-                            "written": "\(writer.bytesWritten)",
-                            "declared": "\(declared)",
-                        ])
-                    writer.abandon()
-                    throw ResponseBodyLengthMismatch(declared: declared, written: writer.bytesWritten)
-                }
-                try await writer.finish(nil)
-            default:
-                // Buffered body: single-shot write. Borrowing the body's bytes copies them straight
-                // into the server's container - a `.string`/`.data`/`.staticString` body is no
-                // longer materialised into an intermediate `ByteBuffer` first.
-                var responseBody = UniqueArray<UInt8>(minimumCapacity: vaporResponse.body.count ?? 0)
-                try await vaporResponse.body.withStreamingBytes { bytes in
-                    responseBody.append(copying: bytes)
-                }
-                try await sender.sendAndFinish(httpResponse, buffer: &responseBody)
-            }
+            throw error
         }
     }
 }
@@ -428,6 +446,11 @@ package final class RequestBodyStream: Sendable {
     /// Body bytes handed to a consumer so far, for a caller that wants a size without collecting.
     package var bytesConsumed: Int {
         self.state.withLock { $0.consumed }
+    }
+
+    /// Whether a *transport* read has failed, after which the connection is being torn down.
+    package var transportFailed: Bool {
+        self.state.withLock { $0.failed }
     }
 
     /// Reads the whole body into one buffer, aborting with 413 if it exceeds `max`.
