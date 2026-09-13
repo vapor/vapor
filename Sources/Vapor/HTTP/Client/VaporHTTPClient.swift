@@ -102,7 +102,10 @@ private func pumpRequestBody(_ body: Response.Body, into handoff: ChunkHandoff) 
                 // The span is only valid for this call, so the bytes are copied into a buffer the
                 // handoff can own. The buffer is reused across chunks.
                 chunk.clear()
-                span.withUnsafeBufferPointer { unsafe chunk.writeBytes($0) }
+                let count = span.withUnsafeBufferPointer { unsafe chunk.writeBytes($0) }
+                guard count == span.count else {
+                    throw Abort(.internalServerError)
+                }
                 try await handoff.send(chunk)
             }
             handoff.finish()
