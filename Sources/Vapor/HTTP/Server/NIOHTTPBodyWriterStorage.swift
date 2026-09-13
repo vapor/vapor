@@ -65,7 +65,9 @@ final class NIOHTTPBodyWriterStorage {
         // A writer released still holding the server's, without anyone having said the response was
         // being abandoned, is one that nobody finished. That surfaces later as `NIOAsyncWriter`'s
         // own `deinit` precondition, which names neither the response nor the layer responsible.
-        // This is likely a race condition in here in HTTPServer - this should help us track it down
+        // (The trap the test suite used to hit was not this layer: it was swift-http-server's accept
+        // loop dropping buffered connections when the serve task is cancelled. The assert stays so
+        // that if this layer ever is the culprit, the failure says so.)
         assert(
             self.inner == nil || self.wasAbandoned,
             "Response body writer was released without being finished or abandoned. Every path out of a streaming response must call finish(_:) or abandon()."

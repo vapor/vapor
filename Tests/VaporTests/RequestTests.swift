@@ -888,37 +888,6 @@ struct RequestTests {
         }
     }
 
-//    @Test("Test Collected Body Drain")
-//    func testCollectedBodyDrain() throws {
-//        try await withApp { app in
-//            let request = Request(
-//                application: app,
-//                collectedBody: .init(string: ""),
-//                on: app.eventLoopGroup.any()
-//            )
-//
-//            let handleBufferExpectation = XCTestExpectation()
-//            let endDrainExpectation = XCTestExpectation()
-//
-//            request.body.drain { part in
-//                switch part {
-//                case .buffer:
-//                    return request.eventLoop.makeFutureWithTask {
-//                        handleBufferExpectation.fulfill()
-//                    }
-//                case .error:
-//                    XCTAssertTrue(false)
-//                    return request.eventLoop.makeSucceededVoidFuture()
-//                case .end:
-//                    endDrainExpectation.fulfill()
-//                    return request.eventLoop.makeSucceededVoidFuture()
-//                }
-//            }
-//
-//            self.wait(for: [handleBufferExpectation, endDrainExpectation], timeout: 1.0, enforceOrder: true)
-//        }
-//    }
-
     @Test("data(max:) and string(max:) collect a lazy body; the peeks stay nil until they do")
     func testCollectingAccessors() async throws {
         try await withApp { app in

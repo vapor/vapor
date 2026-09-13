@@ -71,7 +71,7 @@ struct StreamingBodyTests {
                 #expect(ok.status == .ok)
             }
 
-            // `withRunningApp` waits for the server to shut down, so everything it logged is in.
+            // `withRunningServer` waits for the server to shut down, so everything it logged is in.
             let thrown = logHandler.entries.compactMap(\.error).map { "\($0)" }
             #expect(
                 thrown.contains("Response body stream declared 1000 bytes but wrote 5"),
@@ -401,6 +401,63 @@ struct StreamingBodyTests {
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
+            }
+        }
+    }
+
+    @Test("Handlers whose client hung up before the response complete, and the server keeps serving",
+          .timeLimit(.minutes(1)), .bug("https://github.com/vapor/vapor/pull/2905"))
+    func testAbandonedRequestsStillCompleteTheirHandlers() async throws {
+        // The Vapor 4 shape of this: a client sends a request and closes the connection before the
+        // handler has built its `Response`. The response was discarded, and its body-stream callback
+        // with it, so anything the callback was going to release never was. A `HTTPBodyWriter` can't
+        // be left dangling that way — the server drives the closure and concludes the response — so
+        // what is left to pin down is that every such handler still runs to completion, returning or
+        // throwing rather than hanging, and that the server goes on serving afterwards.
+        let numberOfClients = 100
+        let entered = Mutex(0)
+        let completed = Mutex(0)
+
+        try await withApp { app in
+            app.get("abandon") { _ -> Response in
+                entered.withLock { $0 += 1 }
+                defer { completed.withLock { $0 += 1 } }
+                // Long enough for the client's close to reach the server before the response exists,
+                // which is the ordering the original bug needed.
+                try await Task.sleep(for: .milliseconds(10))
+                return Response(status: .ok, body: .init(stream: { writer in
+                    try await writer.write("gone")
+                }))
+            }
+            app.get("ok") { _ in "ok" }
+
+            try await withRunningServer(app) { port in
+                for _ in 0..<numberOfClients {
+                    let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                        .connect(host: "127.0.0.1", port: port) { channel in
+                            channel.eventLoop.makeCompletedFuture {
+                                try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
+                            }
+                        }
+                    // A complete request, then hang up without waiting for the answer.
+                    try await channel.executeThenClose { _, outbound in
+                        try await outbound.write(ByteBuffer(string: "GET /abandon HTTP/1.1\r\nHost: localhost\r\n\r\n"))
+                    }
+                }
+
+                // The server unwinds each abandoned request on its own schedule, so wait for the
+                // handlers rather than assuming they have all finished.
+                for _ in 0..<500 where completed.withLock({ $0 }) < numberOfClients {
+                    try await Task.sleep(for: .milliseconds(20))
+                }
+                #expect(entered.withLock { $0 } == numberOfClients)
+                #expect(completed.withLock { $0 } == numberOfClients)
+
+                // And none of it has broken the server.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10))
+                #expect(ok.status == .ok)
+                try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
             }
         }
     }
