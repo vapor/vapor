@@ -528,6 +528,156 @@ struct ServerTLSTests {
         }
     }
 
+    // MARK: - Client certificates
+
+    @Test("clientCertificateVerification defaults to nil and is settable")
+    func testClientCertificateVerificationProperty() {
+        var tls = ServerConfiguration.TLSConfiguration.pemFile(certificateChainPath: "/x", privateKeyPath: "/y")
+        #expect(tls.clientCertificateVerification == nil)
+        tls.clientCertificateVerification = .init(trust: .systemDefaults)
+        #expect(tls.clientCertificateVerification?.mode == .required)
+        tls.clientCertificateVerification?.mode = .optional
+        #expect(tls.clientCertificateVerification?.mode == .optional)
+    }
+
+    @Test("Server accepts a client certificate its trust roots cover", .timeLimit(.minutes(1)))
+    func testTrustedClientCertificateIsAccepted() async throws {
+        let identity = try SelfSignedCredentials.generate()
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(trust: .certificates([identity.certificate]))
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("whoami") { req -> String in
+                guard let chain = req.peerCertificateChain else { return "anonymous" }
+                return chain.leaf == identity.certificate ? "trusted" : "unexpected \(chain.leaf.subject)"
+            }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity))) { client in
+                let response = try await client.get("whoami")
+                #expect(response.status == .ok)
+                let body = try await response.body.requireString()
+                // The handshake verified the certificate, but the handler cannot see it: NIOSSL only
+                // records a validated chain when a custom verification callback hands one back, never
+                // from BoringSSL's own trust-root verification. `custom` is the way to get the chain
+                // until that changes; see testCustomVerifierAcceptsExpiredCertificate.
+                #warning("NIOSSL does not expose the chain BoringSSL verified against trust roots, so peerCertificateChain is nil there — drop this withKnownIssue (and the one in testOptionalClientCertificate) when swift-nio-ssl or swift-http-server hand it back")
+                withKnownIssue("trust-root verification does not expose the chain to the handler") {
+                    #expect(body == "trusted")
+                }
+            }
+        }
+    }
+
+    @Test("Server rejects a client certificate it does not trust, and a missing one when required", .timeLimit(.minutes(1)))
+    func testUntrustedClientCertificateIsRejected() async throws {
+        let trusted = try SelfSignedCredentials.generate()
+        let impostor = try SelfSignedCredentials.generate()
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(trust: .certificates([trusted.certificate]))
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("hello") { _ in "world" }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: trusted))) { client in
+                // No assertion on the error's type. The server rejects the client after its own
+                // handshake has completed, so what the client sees depends on whether its request
+                // was already in flight when the alert arrived: a TLS error or a closed connection.
+                await #expect(throws: (any Error).self) {
+                    try await client.withOptions(.tls(trustingOnly: server.nioCertificate, presenting: impostor)) { client in
+                        try await client.get("hello") { $0.timeout = .seconds(15) }
+                    }
+                }
+                await #expect(throws: (any Error).self) {
+                    try await client.withOptions(.tls(trustingOnly: server.nioCertificate)) { client in
+                        try await client.get("hello") { $0.timeout = .seconds(15) }
+                    }
+                }
+
+                // The trusted client is still served.
+                try #expect(await client.get("hello").status == .ok)
+            }
+        }
+    }
+
+    @Test("A client without a certificate is served when one is optional", .timeLimit(.minutes(1)))
+    func testOptionalClientCertificate() async throws {
+        let identity = try SelfSignedCredentials.generate()
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(trust: .certificates([identity.certificate]), mode: .optional)
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("whoami") { req -> String in
+                guard let chain = req.peerCertificateChain else { return "anonymous" }
+                return chain.leaf == identity.certificate ? "trusted" : "unexpected \(chain.leaf.subject)"
+            }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate))) { anonymous in
+                try #expect(await anonymous.get("whoami").body.requireString() == "anonymous")
+
+                try await anonymous.withOptions(.tls(trustingOnly: server.nioCertificate, presenting: identity)) { identified in
+                    let response = try await identified.get("whoami")
+                    #expect(response.status == .ok)
+                    let body = try await response.body.requireString()
+                    // The same upstream gap as testTrustedClientCertificateIsAccepted.
+                    withKnownIssue("trust-root verification does not expose the chain to the handler") {
+                        #expect(body == "trusted")
+                    }
+                }
+            }
+        }
+    }
+
+    @Test("A custom verifier can accept a certificate no trust store would", .timeLimit(.minutes(1)))
+    func testCustomVerifierAcceptsExpiredCertificate() async throws {
+        // The fixture expired in 2022, so trust roots are no use. A verifier of our own is handed
+        // the chain as presented and decides for itself; here it also records what it was shown.
+        let expired = try SelfSignedCredentials.expired()
+        let presented = Mutex<[Certificate]>([])
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(trust: .custom { chain in
+                presented.withLock { $0 = chain }
+                return .verified(ValidatedCertificateChain(uncheckedCertificateChain: chain))
+            })
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("whoami") { req -> String in
+                guard let chain = req.peerCertificateChain else { return "anonymous" }
+                return chain.leaf == expired.certificate ? "trusted" : "unexpected \(chain.leaf.subject)"
+            }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: expired))) { client in
+                try #expect(await client.get("whoami").body.requireString() == "trusted")
+            }
+        }
+        #expect(presented.withLock { $0 } == [expired.certificate])
+    }
+
+    @Test("A custom verifier can reject a certificate", .timeLimit(.minutes(1)))
+    func testCustomVerifierRejects() async throws {
+        let identity = try SelfSignedCredentials.generate()
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(trust: .custom { _ in .rejected(reason: "not on the list") })
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("hello") { _ in "world" }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity))) { client in
+                await #expect(throws: (any Error).self) {
+                    try await client.get("hello") { $0.timeout = .seconds(15) }
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Helpers
@@ -564,6 +714,7 @@ private struct TestCredentials {
 private struct SelfSignedCredentials {
     let certificatePEM: String
     let privateKeyPEM: String
+    let certificate: Certificate
     let nioCertificate: NIOSSLCertificate
     let nioPrivateKey: NIOSSLPrivateKey
 
@@ -592,6 +743,23 @@ private struct SelfSignedCredentials {
         return Self(
             certificatePEM: certificatePEM,
             privateKeyPEM: privateKeyPEM,
+            certificate: certificate,
+            nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem),
+            nioPrivateKey: try NIOSSLPrivateKey(bytes: Array(privateKeyPEM.utf8), format: .pem)
+        )
+    }
+
+    /// The expired fixture: self-signed CN=localhost, no SANs, expired in 2022. For tests that
+    /// need a certificate no trust store will accept.
+    static func expired() throws -> Self {
+        let certificateURL = try #require(Bundle.module.url(forResource: "expired", withExtension: "crt"))
+        let privateKeyURL = try #require(Bundle.module.url(forResource: "expired", withExtension: "key"))
+        let certificatePEM = try String(contentsOf: certificateURL, encoding: .utf8)
+        let privateKeyPEM = try String(contentsOf: privateKeyURL, encoding: .utf8)
+        return Self(
+            certificatePEM: certificatePEM,
+            privateKeyPEM: privateKeyPEM,
+            certificate: try Certificate(pemEncoded: certificatePEM),
             nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem),
             nioPrivateKey: try NIOSSLPrivateKey(bytes: Array(privateKeyPEM.utf8), format: .pem)
         )
@@ -625,11 +793,19 @@ private final class MutableCertificateReloader: CertificateReloader {
 }
 
 extension LiveClientOptions {
-    /// A client that trusts `trustedCertificate` and nothing else, or the system roots when `nil`.
-    fileprivate static func tls(trustingOnly trustedCertificate: NIOSSLCertificate? = nil) -> Self {
+    /// A client that trusts `trustedCertificate` and nothing else, or the system roots when `nil`,
+    /// and presents `identity` as its own certificate when given.
+    fileprivate static func tls(
+        trustingOnly trustedCertificate: NIOSSLCertificate? = nil,
+        presenting identity: SelfSignedCredentials? = nil
+    ) -> Self {
         var tlsConfiguration = TLSConfiguration.makeClientConfiguration()
         if let trustedCertificate {
             tlsConfiguration.trustRoots = .certificates([trustedCertificate])
+        }
+        if let identity {
+            tlsConfiguration.certificateChain = [.certificate(identity.nioCertificate)]
+            tlsConfiguration.privateKey = .privateKey(identity.nioPrivateKey)
         }
 
         var configuration = HTTPClient.Configuration()
