@@ -1,5 +1,4 @@
 import Vapor
-import NIOCore
 import Testing
 #if canImport(FoundationEssentials)
 import FoundationEssentials

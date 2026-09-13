@@ -1,7 +1,5 @@
 public import RoutingKit
 public import HTTPTypes
-import NIOPosix
-import NIOCore
 
 extension RoutesBuilder {
     @discardableResult

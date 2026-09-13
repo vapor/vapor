@@ -8,7 +8,6 @@ import FoundationEssentials
 import Foundation
 #endif
 import RoutingKit
-import NIOCore
 
 @Suite("Content Tests")
 struct ContentTests {

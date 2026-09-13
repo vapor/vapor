@@ -3,7 +3,6 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-import NIOFoundationEssentialsCompat
 public import HTTPTypes
 
 public struct ClientRequest: Sendable {

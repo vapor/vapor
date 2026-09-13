@@ -4,8 +4,6 @@ import FoundationEssentials
 import Foundation
 #endif
 import HTTPTypes
-import NIOCore
-import NIOFoundationEssentialsCompat
 
 public struct Validations: Sendable {
     var storage: [Validation]

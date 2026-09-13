@@ -7,20 +7,17 @@ import Foundation
 import Vapor
 import AsyncHTTPClient
 import NIOCore
-import NIOFoundationEssentialsCompat
-import NIOPosix
 import Synchronization
 import HTTPTypes
-import NIOSSL
 import Atomics
 import ServiceLifecycle
 import Logging
 import RoutingKit
 import Testing
 import VaporTesting
-import NIOHTTPTypesHTTP1
 import X509
 import SwiftASN1
+import NIOHTTPTypesHTTP1
 
 #warning("Bring back the commented-out tests below")
 @Suite("Server Tests")

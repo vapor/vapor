@@ -8,7 +8,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOCore
 
 @Suite("Route Tests")
 struct RouteTests {

@@ -4,7 +4,6 @@ import Testing
 import VaporTesting
 import Foundation
 import RoutingKit
-import NIOCore
 
 @Suite("Query Tests")
 struct QueryTests {

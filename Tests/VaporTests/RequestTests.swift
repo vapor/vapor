@@ -1,4 +1,3 @@
-import NIOPosix
 import Vapor
 import NIOCore
 import AsyncHTTPClient
@@ -13,10 +12,11 @@ import Foundation
 #endif
 import HTTPTypes
 import NIOHTTP1
-import NIOHTTPTypesHTTP1
 import RoutingKit
-import NIOFoundationEssentialsCompat
 import Logging
+import NIOFoundationEssentialsCompat
+import NIOPosix
+import NIOHTTPTypesHTTP1
 
 @Suite("Request Tests")
 struct RequestTests {

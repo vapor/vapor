@@ -1,6 +1,5 @@
 import Vapor
 import Synchronization
-import NIOFoundationEssentialsCompat
 import Logging
 import Testing
 import VaporTesting

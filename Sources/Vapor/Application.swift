@@ -1,6 +1,5 @@
 public import Configuration
 import Logging
-import NIOConcurrencyHelpers
 public import ServiceLifecycle
 import UnixSignals
 #if HTTPClient
