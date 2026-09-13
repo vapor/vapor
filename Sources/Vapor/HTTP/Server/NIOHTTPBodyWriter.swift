@@ -1,10 +1,6 @@
 import NIOHTTPServer
 
-/// Bridges Vapor's ``HTTPBodyWriter`` onto the server's move-only response writer.
-///
-/// Each chunk is copied into a `UniqueArray<UInt8>` and forwarded with `await`, so the transport's
-/// backpressure (the socket/HTTP-2 flow-control window) propagates straight to the body-stream
-/// closure — a fast producer suspends while a slow client catches up.
+/// Bridges Vapor's ``HTTPBodyWriter`` onto the server's move-only response writer with backpressure support
 struct NIOHTTPBodyWriter: HTTPBodyWriter, ~Escapable {
     private let storage: NIOHTTPBodyWriterStorage
 

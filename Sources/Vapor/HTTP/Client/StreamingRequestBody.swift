@@ -1,12 +1,6 @@
 import Synchronization
 
-/// A one-chunk handoff between a body-stream closure and an `AsyncSequence`.
-///
-/// Vapor's body streams *push*: the closure is handed a writer and calls `write` for each chunk.
-/// AsyncHTTPClient *pulls*: it asks an `AsyncSequence` for the next chunk when the connection has
-/// room. This is the join between the two, and the reason it is a handoff rather than a buffer is
-/// backpressure — ``send(_:)`` does not return until the consumer has taken the chunk, so a fast
-/// producer suspends against a slow connection instead of queueing into memory.
+/// A one-chunk handoff between a body-stream closure and an `AsyncSequence`. Bridge between AHC and Vapor's body streams to support backpressure
 ///
 /// Single-producer, single-consumer: the producer is the body-stream closure, the consumer is AHC.
 package final class ChunkHandoff<Chunk: Sendable>: Sendable {

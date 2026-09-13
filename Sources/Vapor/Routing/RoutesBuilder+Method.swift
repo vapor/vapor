@@ -154,9 +154,6 @@ extension RoutesBuilder {
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         let responder = BasicResponder { request in
-            // Bodies are lazy: nothing is buffered until the handler asks, by reading the body or by
-            // decoding `content`. A route that names a `maxBodySize` is raising or lowering the
-            // ceiling that collection will then enforce, not asking for the body up front.
             var request = request
             if let maxBodySize {
                 request.maxBodySize = maxBodySize

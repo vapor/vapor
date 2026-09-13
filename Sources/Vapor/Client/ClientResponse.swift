@@ -10,9 +10,6 @@ public struct ClientResponse: Sendable {
     public var headers: HTTPFields
     public var body: Response.Body {
         didSet {
-            // Stamp the ceiling onto the body so `response.body.collect()` is bounded too, not just
-            // `response.content`. A response from somewhere else is not bounded by anything this
-            // process controls, and forgetting the number is how that turns into an unbounded read.
             self.body.sizeLimit = self.maxBodySize
             self.headers.updateContentLength(body.count)
         }

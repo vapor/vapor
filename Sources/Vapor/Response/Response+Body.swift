@@ -454,8 +454,7 @@ private final class CollectingStorage {
 
     func append(_ bytes: Span<UInt8>) throws {
         try self.checkLimit(adding: bytes.count)
-        // `Data` still has no safe bulk append from a span on this SDK, so this stays `unsafe` — but
-        // the typed span at least lets it borrow a typed buffer rather than raw bytes.
+        // TODO: Use a safe API when Foundation eventually adds it
         bytes.withUnsafeBufferPointer { unsafe self.data.append(contentsOf: $0) }
     }
 

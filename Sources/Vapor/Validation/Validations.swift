@@ -51,9 +51,6 @@ public struct Validations: Sendable {
     }
 
     /// Validates a request's body.
-    ///
-    /// `async` because bodies are collected lazily: nothing is buffered until something asks, and
-    /// this is one of the things that asks. It collects under the request's ``Request/maxBodySize``.
     public func validate(request: Request) async throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
             throw Abort(.unprocessableContent, reason: "Missing \"Content-Type\" header")
