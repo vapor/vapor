@@ -160,4 +160,92 @@ struct RequestBodyRegressionTests {
             }
         }
     }
+
+    /// A terminal read is allowed to carry a final batch of bytes alongside the end flag —
+    /// `AsyncReader`'s contract says the caller must process both. `forEachChunk` used to check the
+    /// flag first and drop them. Vapor's own server never sends bytes that way, so this needs a
+    /// conformance that does; `RequestBodyReader` is public, so third-party ones can.
+    @Test("A terminal chunk's bytes are delivered, not dropped")
+    func terminalChunkBytesAreDelivered() async throws {
+        struct TerminalBytesReader: RequestBodyReader, ~Escapable {
+            final class State { var delivered = false }
+            let state: State
+
+            @_lifetime(immortal)
+            init(state: State) { self.state = state }
+
+            func read<R>(_ body: (Span<UInt8>, Bool) async throws -> R) async throws -> R {
+                // Bytes and the end flag together, on the same read.
+                let bytes: [UInt8] = self.state.delivered ? [] : Array("TAIL".utf8)
+                self.state.delivered = true
+                return try await body(bytes.span, true)
+            }
+        }
+
+        var seen = ""
+        let reader = TerminalBytesReader(state: .init())
+        try await reader.forEachChunk { span in
+            seen += String(decoding: span.withUnsafeBufferPointer { Array($0) }, as: UTF8.self)
+        }
+        #expect(seen == "TAIL")
+    }
+
+    /// A read that fails at the transport used to latch nothing, so the next read reported a clean
+    /// end-of-body on a body that was actually cut short. The failure is sticky now.
+    @Test("A transport failure is sticky, not reported as a clean end", .timeLimit(.minutes(1)))
+    func transportFailureIsSticky() async throws {
+        // The connection is gone by the time the handler notices, so the verdict comes back through
+        // a side channel rather than a response.
+        let verdict = Mutex("never ran")
+        try await withApp { app in
+            app.on(.post, "cut") { req -> String in
+                do {
+                    _ = try await req.body.data()
+                    verdict.withLock { $0 = "collected" }
+                } catch {
+                    // The transport failed part-way. Asking again must say so rather than hand back
+                    // an empty body as though the request had simply ended.
+                    do {
+                        let second = try await req.body.data()
+                        verdict.withLock { $0 = "second read returned \(second?.count ?? -1) bytes" }
+                    } catch is RequestBodyReadFailed {
+                        verdict.withLock { $0 = "sticky" }
+                    } catch {
+                        verdict.withLock { $0 = "second read threw \(type(of: error))" }
+                    }
+                    // Rethrow rather than answering. The peer is gone, so a response here races the
+                    // server's own teardown of a request whose body never completed.
+                    throw error
+                }
+                return "done"
+            }
+            try await withRunningServer(app) { port in
+                // Promise 100 bytes, send 10, then hang up.
+                _ = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /cut HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\n\r\n0123456789",
+                    // The server has nothing to say — it is waiting for 90 bytes that never come —
+                    // so the exchange ends on the deadline. Keep it short.
+                    deadline: .milliseconds(400))
+            }
+        }
+        #expect(verdict.withLock { $0 } == "sticky")
+    }
+
+    /// Metrics record the request body size after the responder chain has run. With lazy bodies the
+    /// size has to come from a counter on the stream, because nothing has necessarily cached it.
+    @Test("The recorded body size counts what was actually read")
+    func metricsCountBytesRead() async throws {
+        try await withApp { app in
+            app.on(.post, "sized", maxBodySize: "1mb") { req -> String in
+                "\(try await req.body.data()?.count ?? -1)"
+            }
+            try await app.testing(.running) { client in
+                let res = try await client.post("sized") {
+                    $0.body = .init(data: Data(repeating: 0x41, count: 2048))
+                }
+                try #expect(await res.body.requireString() == "2048")
+            }
+        }
+    }
 }
