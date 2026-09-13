@@ -31,7 +31,7 @@ struct ClientStreamingTests {
             for _ in 0..<50 { await Task.yield() }
             #expect(sent.withLock { $0 } == false, "send returned before the chunk was taken")
 
-            var iterator = ChunkHandoffSequence(handoff: handoff).makeAsyncIterator()
+            let iterator = ChunkHandoffSequence(handoff: handoff).makeAsyncIterator()
             let chunk = try? await iterator.next()
             #expect(chunk == "one")
             handoff.finish()
@@ -44,7 +44,7 @@ struct ClientStreamingTests {
     func testHandoffPropagatesFailure() async throws {
         let handoff = ChunkHandoff<String>()
         handoff.finish(throwing: Boom())
-        var iterator = ChunkHandoffSequence(handoff: handoff).makeAsyncIterator()
+        let iterator = ChunkHandoffSequence(handoff: handoff).makeAsyncIterator()
         await #expect(throws: Boom.self) { try await iterator.next() }
     }
 
@@ -113,7 +113,7 @@ struct ClientStreamingTests {
                 _ = try await req.body.data()
                 return "ok"
             }
-            try await app.testing(.running) { client in
+            try await app.testing(.running) { client -> Void in
                 await #expect(throws: (any Error).self) {
                     _ = try await client.post("upload") { req in
                         req.body = .init(stream: { writer in

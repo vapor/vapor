@@ -185,7 +185,7 @@ struct RequestBodyRegressionTests {
         var seen = ""
         let reader = TerminalBytesReader(state: .init())
         try await reader.forEachChunk { span in
-            seen += String(decoding: span.withUnsafeBufferPointer { Array($0) }, as: UTF8.self)
+            seen += String(decoding: span.withUnsafeBufferPointer { unsafe Array($0) }, as: UTF8.self)
         }
         #expect(seen == "TAIL")
     }

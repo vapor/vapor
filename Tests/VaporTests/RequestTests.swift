@@ -56,7 +56,7 @@ struct RequestTests {
             app.on(.post, "stream") { req in
                 var receivedBuffer = ByteBuffer()
                 try await req.body.forEachChunk { part in
-                    part.withUnsafeBytes { receivedBuffer.writeBytes($0) }
+                    _ = part.withUnsafeBytes { unsafe receivedBuffer.writeBytes($0) }
                 }
                 let string = String(buffer: receivedBuffer)
                 return string
@@ -575,7 +575,7 @@ struct RequestTests {
             var received = ByteBuffer()
             try await request.body.forEachChunk { span in
                 chunks += 1
-                span.withUnsafeBytes { received.writeBytes($0) }
+                _ = span.withUnsafeBytes { unsafe received.writeBytes($0) }
             }
             #expect(chunks == 1)
             #expect(String(buffer: received) == "hello")
