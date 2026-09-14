@@ -1,18 +1,3 @@
-#if canImport(Darwin)
-import Darwin
-#elseif os(Windows)
-import CRT
-#elseif canImport(Glibc)
-@preconcurrency import Glibc
-#elseif canImport(Android)
-@preconcurrency import Android
-#elseif canImport(Musl)
-import Musl
-#elseif canImport(WASILibc)
-import WASILibc
-#else
-#error("Unsupported runtime")
-#endif
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else
@@ -241,7 +226,7 @@ public struct TOTP: OTP, Sendable {
     public func generate(
         time: Date
     ) -> String {
-        let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
+        let counter = Int(time.timeIntervalSince1970.rounded(.down) / Double(self.interval))
         return self._generate(counter: UInt64(counter))
     }
 
@@ -257,7 +242,7 @@ public struct TOTP: OTP, Sendable {
         time: Date,
         range: Int
     ) -> [String] {
-        let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
+        let counter = Int(time.timeIntervalSince1970.rounded(.down) / Double(self.interval))
         return self._generate(counter: UInt64(counter), range: range)
     }
 

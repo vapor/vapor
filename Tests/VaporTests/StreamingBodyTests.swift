@@ -66,7 +66,7 @@ struct StreamingBodyTests {
 
                 // The server keeps serving: the connection was torn down, not the process.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(30)
                 )
                 #expect(ok.status == .ok)
             }
@@ -80,7 +80,7 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server writes a buffered response body")
+    @Test("Server writes a buffered response body", .timeLimit(.minutes(1)))
     func testBufferedResponse() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -98,7 +98,7 @@ struct StreamingBodyTests {
                 let port = try #require(address.port)
 
                 let resp = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/buffered"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/buffered"), timeout: .seconds(30)
                 )
                 #expect(resp.status == .ok)
                 let body = try await resp.body.collect(upTo: 1 << 20).string
@@ -110,7 +110,7 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server streams an async-stream response body in chunks")
+    @Test("Server streams an async-stream response body in chunks", .timeLimit(.minutes(1)))
     func testAsyncStreamResponse() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -134,7 +134,7 @@ struct StreamingBodyTests {
                 let port = try #require(address.port)
 
                 let resp = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/stream"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/stream"), timeout: .seconds(30)
                 )
                 #expect(resp.status == .ok)
                 let body = try await resp.body.collect(upTo: 1 << 20).string
@@ -146,7 +146,7 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server streams an empty async-stream response body")
+    @Test("Server streams an empty async-stream response body", .timeLimit(.minutes(1)))
     func testEmptyAsyncStreamResponse() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -166,7 +166,7 @@ struct StreamingBodyTests {
                 let port = try #require(address.port)
 
                 let resp = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/empty"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/empty"), timeout: .seconds(30)
                 )
                 #expect(resp.status == .ok)
                 let body = try await resp.body.collect(upTo: 1 << 20).string
@@ -210,7 +210,7 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server streams a large multi-chunk async-stream response body")
+    @Test("Server streams a large multi-chunk async-stream response body", .timeLimit(.minutes(1)))
     func testLargeMultiChunkAsyncStreamResponse() async throws {
         let chunkCount = 500
         try await withApp { app in
@@ -235,7 +235,7 @@ struct StreamingBodyTests {
                 let port = try #require(address.port)
 
                 let resp = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/many"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/many"), timeout: .seconds(30)
                 )
                 #expect(resp.status == .ok)
                 let body = try await resp.body.collect(upTo: 1 << 20).string
@@ -249,7 +249,7 @@ struct StreamingBodyTests {
 
     private struct MidStreamError: Error {}
 
-    @Test("Server survives an error thrown mid-stream")
+    @Test("Server survives an error thrown mid-stream", .timeLimit(.minutes(1)))
     func testServerErrorMidStreamDoesNotBreakServer() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -295,7 +295,7 @@ struct StreamingBodyTests {
 
                 // The server must keep serving subsequent requests.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(30)
                 )
                 #expect(ok.status == .ok)
                 try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
@@ -306,7 +306,7 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("An error thrown mid-stream aborts the response instead of completing it")
+    @Test("An error thrown mid-stream aborts the response instead of completing it", .timeLimit(.minutes(1)))
     func testMidStreamErrorWithDeclaredLengthAbortsResponse() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -348,7 +348,7 @@ struct StreamingBodyTests {
 
                 // The server must keep serving subsequent requests.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(30)
                 )
                 #expect(ok.status == .ok)
                 try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
@@ -359,7 +359,7 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server survives a client aborting mid-stream")
+    @Test("Server survives a client aborting mid-stream", .timeLimit(.minutes(1)))
     func testClientAbortMidStreamDoesNotBreakServer() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -394,7 +394,7 @@ struct StreamingBodyTests {
 
                 // The server must keep serving subsequent requests.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(30)
                 )
                 #expect(ok.status == .ok)
                 try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
@@ -458,7 +458,7 @@ struct StreamingBodyTests {
 
                 // And none of it has broken the server.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10))
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(30))
                 #expect(ok.status == .ok)
                 try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
             }
@@ -565,7 +565,7 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server survives a stream that writes fewer bytes than its declared length",
+    @Test("Server survives a stream that writes fewer bytes than its declared length", .timeLimit(.minutes(1)),
           .bug("https://github.com/swift-server/swift-http-server/issues/116"))
     func testBadStreamLengthDoesNotBreakServer() async throws {
         try await withApp { app in
@@ -604,7 +604,7 @@ struct StreamingBodyTests {
 
                 // The server must keep serving subsequent requests.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(30)
                 )
                 #expect(ok.status == .ok)
                 try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
@@ -1176,7 +1176,7 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server survives a client aborting mid-file-stream",
+    @Test("Server survives a client aborting mid-file-stream", .timeLimit(.minutes(1)),
           .bug("https://github.com/swift-server/swift-http-server/issues/53"))
     func testClientAbortMidFileStreamDoesNotBreakServer() async throws {
         // Big enough that the server is still reading when the client gives up: the transport
@@ -1214,7 +1214,7 @@ struct StreamingBodyTests {
 
                 // The server must still be alive and serving.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10)
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(30)
                 )
                 #expect(ok.status == .ok)
                 try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")

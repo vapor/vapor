@@ -266,10 +266,13 @@ struct RequestTests {
             })
 
             try await app.testing(.running) { client in
-                // 600 MiB, ten times over. Try to force it to hit the limit
-                let payload = Data(repeating: 0x41, count: 600 * 1024 * 1024)
+                // Large bodies, repeatedly. #2985 was a crash in the streaming body's handling of
+                // many chunks across requests: the reporter hit it at 600 MiB and also on repeated
+                // 100 MiB uploads. 600 MiB ten times over stalled the whole test process for seconds
+                // in CI and failed unrelated tests with timeouts, so this uses the smaller repro.
+                let payload = Data(repeating: 0x41, count: 100 * 1024 * 1024)
 
-                for _ in 0..<10 {
+                for _ in 0..<3 {
                     let response = try await client.post("upload") {
                         $0.body = .init(data: payload)
                     }
@@ -293,7 +296,7 @@ struct RequestTests {
             }
 
             try await withRunningServer(app) { port in
-                var request = HTTPClientRequest(url: "http://localhost:\(port)/count")
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/count")
                 request.method = .POST
 
                 let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
@@ -319,7 +322,7 @@ struct RequestTests {
             }
 
             try await withRunningServer(app) { port in
-                var request = HTTPClientRequest(url: "http://localhost:\(port)/count")
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/count")
                 request.method = .POST
                 request.body = .bytes(ByteBuffer(repeating: 0x41, count: bodySize))
 
@@ -342,7 +345,7 @@ struct RequestTests {
             app.get("ok") { _ in "ok" }
 
             try await withRunningServer(app) { port in
-                var request = HTTPClientRequest(url: "http://localhost:\(port)/ignore")
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/ignore")
                 request.method = .POST
                 request.body = .bytes(ByteBuffer(repeating: 0x41, count: 4 * 1024))
 
@@ -352,7 +355,7 @@ struct RequestTests {
 
                 // The server must keep serving subsequent requests.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://localhost:\(port)/ok"), timeout: .seconds(10))
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10))
                 #expect(ok.status == .ok)
                 #expect(try await ok.body.collect(upTo: 1024 * 1024).string == "ok")
             }
@@ -373,7 +376,7 @@ struct RequestTests {
             app.get("ok") { _ in "ok" }
 
             try await withRunningServer(app) { port in
-                var request = HTTPClientRequest(url: "http://localhost:\(port)/limited")
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/limited")
                 request.method = .POST
                 request.body = .bytes(ByteBuffer(repeating: 0x41, count: 2048))
 
@@ -382,7 +385,7 @@ struct RequestTests {
 
                 // The server must keep serving subsequent requests.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://localhost:\(port)/ok"), timeout: .seconds(10))
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10))
                 #expect(ok.status == .ok)
                 #expect(try await ok.body.collect(upTo: 1024 * 1024).string == "ok")
             }
@@ -401,14 +404,14 @@ struct RequestTests {
             }
 
             try await withRunningServer(app) { port in
-                var atLimit = HTTPClientRequest(url: "http://localhost:\(port)/limited")
+                var atLimit = HTTPClientRequest(url: "http://127.0.0.1:\(port)/limited")
                 atLimit.method = .POST
                 atLimit.body = .bytes(ByteBuffer(repeating: 0x41, count: maxSize))
                 let accepted = try await HTTPClient.shared.execute(atLimit, timeout: .seconds(30))
                 #expect(accepted.status == .ok)
                 #expect(try await accepted.body.collect(upTo: 1024 * 1024).string == "\(maxSize)")
 
-                var overLimit = HTTPClientRequest(url: "http://localhost:\(port)/limited")
+                var overLimit = HTTPClientRequest(url: "http://127.0.0.1:\(port)/limited")
                 overLimit.method = .POST
                 overLimit.body = .bytes(ByteBuffer(repeating: 0x41, count: maxSize + 1))
                 let rejected = try await HTTPClient.shared.execute(overLimit, timeout: .seconds(30))
@@ -426,7 +429,7 @@ struct RequestTests {
             app.get("known") { _ in "ok" }
 
             try await withRunningServer(app) { port in
-                var unknown = HTTPClientRequest(url: "http://localhost:\(port)/unknown")
+                var unknown = HTTPClientRequest(url: "http://127.0.0.1:\(port)/unknown")
                 unknown.method = .POST
                 unknown.body = .bytes(ByteBuffer(repeating: 0x41, count: 50 * 1024 * 1024))
 
@@ -438,7 +441,7 @@ struct RequestTests {
 
                 // The server must keep serving subsequent requests.
                 let ok = try await HTTPClient.shared.execute(
-                    HTTPClientRequest(url: "http://localhost:\(port)/known"), timeout: .seconds(10))
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/known"), timeout: .seconds(10))
                 #expect(ok.status == .ok)
                 #expect(try await ok.body.collect(upTo: 1024 * 1024).string == "ok")
             }

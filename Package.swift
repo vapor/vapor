@@ -94,6 +94,9 @@ let package = Package(
         // Work with certificate encoding schemes
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0"),
 
+        // Idiomatic Swift interfaces to system calls and low-level types
+        .package(url: "https://github.com/apple/swift-system.git", from: "1.8.0"),
+
         // Swift syntax parsing and generation
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
@@ -132,6 +135,7 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "NIOHTTPServer", package: "swift-http-server"),
+                .product(name: "SystemPackage", package: "swift-system"),
             ],
             swiftSettings: swiftSettings
         ),

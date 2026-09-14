@@ -530,13 +530,36 @@ struct ServerTests {
         func testTooLargePort() async throws {
             try await withApp { app in
                 app.serverConfiguration.address = .hostname("127.0.0.1", port: .max)
-                // This is a ListeningAddressError but not public so we can't assert on that
-                await #expect(throws: (any Error).self) {
+                await #expect(throws: SocketAddressError.UnknownHost.self) {
                     try await app.boot()
                     try await app.server.run()
                 }
             }
         }
+
+        @Test("Binding a port that is already in use throws addressInUse", .timeLimit(.minutes(1)))
+        func testAddressAlreadyInUse() async throws {
+            try await withApp { first in
+                try await withRunningServer(first) { port in
+                    try await withApp { second in
+                        second.serverConfiguration.address = .hostname("127.0.0.1", port: port)
+                        try await second.boot()
+                        await #expect(throws: ServerError.addressInUse(host: "127.0.0.1", port: port)) {
+                            try await second.server.run()
+                        }
+                    }
+                }
+            }
+        }
+
+        @Test("addressInUse names the address, bracketing IPv6 hosts")
+        func testAddressInUseDescription() {
+            #expect(ServerError.addressInUse(host: "127.0.0.1", port: 8080).description
+                == "Cannot start the server: 127.0.0.1:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it.")
+            #expect(ServerError.addressInUse(host: "::1", port: 8080).description
+                == "Cannot start the server: [::1]:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it.")
+        }
+
         /// NIOHTTPServer cannot bind a unix domain socket yet: `NIOHTTPServerAdapter` logs a warning and
         /// falls back to `127.0.0.1:8080` instead. Disabled until it can, so they neither run against the
         /// fallback nor get lost.
