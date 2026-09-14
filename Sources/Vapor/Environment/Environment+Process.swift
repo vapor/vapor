@@ -3,9 +3,9 @@ import Darwin
 #elseif os(Windows)
 import CRT
 #elseif canImport(Glibc)
-@preconcurrency import Glibc
+import Glibc
 #elseif canImport(Android)
-@preconcurrency import Android
+import Android
 #elseif canImport(Musl)
 import Musl
 #elseif canImport(WASILibc)
