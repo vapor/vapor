@@ -809,7 +809,7 @@ struct ServerTests {
         }
     }
 
-    @Test("Test Custom Server")
+    @Test("Test Custom Server", .timeLimit(.minutes(1)))
     func testCustomServer() async throws {
         let customServer = CustomServer()
         try await withApp(services: .init(server: .provided(customServer))) { app in
@@ -818,9 +818,7 @@ struct ServerTests {
 
             await withTaskGroup(of: Void.self) { group in
                 group.addTask { try? await app.server.run() }
-                for _ in 0..<200 where customServer.didStart.withLock({ $0 }) == false {
-                    try? await Task.sleep(for: .milliseconds(10))
-                }
+                await customServer.started.wait()
                 #expect(customServer.didStart.withLock({ $0 }) == true)
                 #expect(customServer.didShutdown.withLock({ $0 }) == false)
                 group.cancelAll()
@@ -904,6 +902,8 @@ struct ServerTests {
 final class CustomServer: Server, Sendable {
     let didStart: Mutex<Bool>
     let didShutdown: Mutex<Bool>
+    /// Reached once `run()` has been entered, for a test to wait on rather than poll.
+    let started = Checkpoint()
 
     init() {
         self.didStart = .init(false)
@@ -912,6 +912,7 @@ final class CustomServer: Server, Sendable {
 
     func run() async throws {
         self.didStart.withLock { $0 = true }
+        self.started.reach()
         // Block until cancelled
         try await withTaskCancellationHandler {
             try await Task.sleep(for: .seconds(3600))
