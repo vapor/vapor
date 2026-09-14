@@ -528,6 +528,34 @@ struct ServerTLSTests {
         }
     }
 
+    @Test("Server serves over HTTP/3", .timeLimit(.minutes(1)))
+    func servesOverHTTP3() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: credentials.certificatePath,
+                privateKeyPath: credentials.privateKeyPath
+            )
+            // Offer HTTP/3 only.
+            app.serverConfiguration.httpVersions = [.http3(config: .defaults)]
+            app.get("hello") { _ in "world" }
+
+            try await withRunningServer(app) { port in
+                // The client defaults to `.automatic`, advertising both (and only) h2 and http/1.1 over ALPN.
+                // The server offers only h3, so the client should fail to negotiate a compatible protocol and throw an error.
+                // We can't do better tests at the moment because AsyncHTTPClient does not yet support HTTP/3.
+                try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
+                    _ = await #expect(throws: (any Error).self) { 
+                        try await client.execute(
+                            HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                            timeout: .seconds(30)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Client certificates
 
     @Test("clientCertificateVerification defaults to nil and is settable")

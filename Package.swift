@@ -40,7 +40,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: ["CommandLineArguments"]),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", exact: "5.0.0-beta.2"), // TODO: Update to stable release when available
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "5.0.0-beta"),
@@ -98,7 +98,7 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "aa39e5c6c1934a2a06b26d2977c67bbc3846ab8b"),
+        .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "aa39e5c6c1934a2a06b26d2977c67bbc3846ab8b", traits: [.defaults, "HTTP3"]),
     ],
     targets: [
         // Vapor
