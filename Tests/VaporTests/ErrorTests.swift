@@ -110,8 +110,8 @@ struct ErrorTests {
         }
     }
 
-    @Test("Error middleware reports every error at debug", .bug("https://github.com/vapor/vapor/issues/3203"))
-    func errorMiddlewareReportsAtDebug() async throws {
+    @Test("Error middleware reports at the error's level, or debug", .bug("https://github.com/vapor/vapor/issues/3203"))
+    func errorMiddlewareReportLevels() async throws {
         let logHandler = InMemoryLogHandler()
         var logger = Logger(label: "codes.vapor.test", factory: { _ in logHandler })
         logger.logLevel = .trace
@@ -119,7 +119,6 @@ struct ErrorTests {
             app.get("server") { _ -> String in throw Abort(.internalServerError) }
             app.get("client") { _ -> String in throw Abort(.forbidden) }
             app.get("plain") { _ -> String in throw PlainError() }
-            // An error's own level is for callers of `report(error:)`; the middleware doesn't use it.
             app.get("loud") { _ -> String in throw LoudError() }
 
             try await app.testing { client in
@@ -129,16 +128,26 @@ struct ErrorTests {
             }
         }
         // The middleware's reports are the entries carrying the request's URL.
-        let reports = logHandler.entries.filter { $0.metadata["url"] != nil }
-        #expect(reports.count == 5)
-        #expect(reports.allSatisfy { $0.level == .debug }, "\(reports.map { "\($0.level): \($0.message)" })")
+        let levels = Dictionary(
+            logHandler.entries.compactMap { entry -> (String, Logger.Level)? in
+                guard case .string(let url) = entry.metadata["url"] else { return nil }
+                return (url, entry.level)
+            },
+            uniquingKeysWith: { first, _ in first })
+        #expect(levels == [
+            "/server": .debug,
+            "/client": .debug,
+            "/plain": .debug,
+            "/loud": .error,
+            "/missing": .debug,
+        ])
     }
 
-    @Test("Reporting an error uses its own level unless given one")
+    @Test("Reporting an error uses the given level, then the error's own")
     func reportUsesErrorLevel() {
         let cases: [(any Error, Logger.Level?, Logger.Level)] = [
             (LoudError(), nil, .error),
-            (Abort(.notFound), nil, .warning),
+            (Abort(.internalServerError), nil, .debug),
             (PlainError(), nil, .warning),
             (LoudError(), .debug, .debug),
             (PlainError(), .info, .info),
