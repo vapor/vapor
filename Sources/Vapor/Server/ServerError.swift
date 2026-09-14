@@ -8,7 +8,7 @@ public enum ServerError: Error, Equatable, CustomStringConvertible {
         switch self {
         case .addressInUse(let host, let port):
             let address = host.contains(":") ? "[\(host)]:\(port)" : "\(host):\(port)"
-            return "Cannot start the server: \(address) is already in use."
+            return "Cannot start the server: \(address) is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it."
         }
     }
 }
