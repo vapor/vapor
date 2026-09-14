@@ -34,13 +34,21 @@ final class UnreadBodies: Sendable {
         self.bodies.withLock { $0.append(body) }
     }
 
-    func drain() async throws {
+    /// Reads the bodies a test left unread, so the routes producing them run to completion and the
+    /// connections they arrived on are left reusable.
+    ///
+    /// Best effort: a body whose connection is already gone cannot be drained, and there is nothing
+    /// left to tidy on it either. That happens legitimately - a route answers 413 with
+    /// `Connection: close` while the test is still uploading, and the server resets the connection
+    /// under the unread response. Throwing that out of the testing scope would fail a test whose own
+    /// assertions have already passed, so a failed drain is dropped.
+    func drain() async {
         let bodies = self.bodies.withLock { bodies in
             defer { bodies.removeAll() }
             return bodies
         }
         for var body in bodies where body.isUnconsumedStream {
-            _ = try await body.collect()
+            _ = try? await body.collect()
         }
     }
 }
@@ -63,11 +71,14 @@ struct InMemoryTestClient: TestClient {
             url.path = "/" + url.path
         }
 
+        var clientBody = clientRequest.body
+        let collectedBody = try await clientBody.collect()
+
         let request = Request(
             method: clientRequest.method,
             url: url,
             headers: clientRequest.headers,
-            collectedBody: clientRequest.body,
+            collectedBody: collectedBody,
             remoteAddress: nil,
             contentConfiguration: self.app.contentConfiguration,
             defaultMaxBodySize: self.app.routes.defaultMaxBodySize
@@ -94,6 +105,8 @@ struct LiveTestClient: TestClient {
     let address: SocketAddress
     let options: LiveClientOptions
     let http: HTTPClient
+    /// Whether `http` decodes gzip and deflate bodies; see `AHCClient`.
+    let decodesCompressedBodies: Bool
     let unreadBodies = UnreadBodies()
 
     var baseURL: URI? {
@@ -111,8 +124,10 @@ struct LiveTestClient: TestClient {
 
         // Don't use VaporHTTPClient here - that doesn't work if the `HTTPClient` trait is
         // disabled
-        let response = try await AHCClient(http: self.http, contentConfiguration: self.contentConfiguration)
-            .send(request)
+        let response = try await AHCClient(
+            http: self.http, contentConfiguration: self.contentConfiguration,
+            decodesCompressedBodies: self.decodesCompressedBodies
+        ).send(request)
         self.unreadBodies.track(response.body)
         return response
     }
@@ -129,9 +144,11 @@ struct LiveTestClient: TestClient {
         _ body: (LiveTestClient) async throws -> T
     ) async throws -> T {
         guard let configuration = options.httpClientConfiguration else {
-            let client = LiveTestClient(app: app, address: address, options: options, http: .shared)
+            // The shared client is configured like a browser, which includes decoding gzip and deflate.
+            let client = LiveTestClient(
+                app: app, address: address, options: options, http: .shared, decodesCompressedBodies: true)
             let result = try await body(client)
-            try await client.unreadBodies.drain()
+            await client.unreadBodies.drain()
             return result
         }
 
@@ -140,10 +157,17 @@ struct LiveTestClient: TestClient {
             configuration: configuration,
             backgroundActivityLogger: Logger.current
         )
-        let client = LiveTestClient(app: app, address: address, options: options, http: http)
+        let decodesCompressedBodies: Bool
+        if case .enabled = configuration.decompression {
+            decodesCompressedBodies = true
+        } else {
+            decodesCompressedBodies = false
+        }
+        let client = LiveTestClient(
+            app: app, address: address, options: options, http: http, decodesCompressedBodies: decodesCompressedBodies)
         do {
             let result = try await body(client)
-            try await client.unreadBodies.drain()
+            await client.unreadBodies.drain()
             try await http.shutdown()
             return result
         } catch {

@@ -11,11 +11,11 @@ struct RequestBodyReaderScope: ~Copyable {
 /// **Non-escapable**: valid only for the duration of the ``Request/Body/withReader(_:)`` closure it was
 /// lent to, so the body can't be read after the request moved on and "read it twice" is a compile-time error.
 public protocol RequestBodyReader: ~Escapable {
-    /// Reads the next part of the body, handing its bytes to `body` as a borrowed ``RawSpan`` along
+    /// Reads the next part of the body, handing its bytes to `body` as a borrowed `Span<UInt8>` along
     /// with a flag that is `true` once the body has ended (in which case the span is empty).
     ///
     /// The span is only valid for the duration of `body`; copy out anything you need to keep.
-    func read<R>(_ body: (RawSpan, Bool) async throws -> R) async throws -> R
+    func read<R>(_ body: (Span<UInt8>, Bool) async throws -> R) async throws -> R
 }
 
 extension RequestBodyReader where Self: ~Escapable {
@@ -23,14 +23,13 @@ extension RequestBodyReader where Self: ~Escapable {
     ///
     /// The span handed to `body` is only valid for that call; copy out anything you need to keep.
     @inlinable
-    public func forEachChunk(_ body: (RawSpan) async throws -> Void) async throws {
+    public func forEachChunk(_ body: (Span<UInt8>) async throws -> Void) async throws {
         while true {
             let ended = try await self.read { span, isEnd -> Bool in
-                guard !isEnd else {
-                    return true
+                if !span.isEmpty {
+                    try await body(span)
                 }
-                try await body(span)
-                return false
+                return isEnd
             }
             if ended {
                 return

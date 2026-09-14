@@ -1,6 +1,5 @@
 public import Configuration
 import Logging
-import NIOConcurrencyHelpers
 public import ServiceLifecycle
 import UnixSignals
 #if HTTPClient
@@ -134,7 +133,9 @@ public final class Application: Sendable, Service {
         switch services.client {
         case .default:
             #if HTTPClient
-            self.client = VaporHTTPClient(http: HTTPClient.shared, contentConfiguration: self.contentConfiguration)
+            // `HTTPClient.shared` is configured like a browser, which includes decoding gzip and deflate.
+            self.client = VaporHTTPClient(
+                http: HTTPClient.shared, contentConfiguration: self.contentConfiguration, decodesCompressedBodies: true)
             #else
             self.client = BlackholeClient(contentConfiguration: self.contentConfiguration)
             #endif

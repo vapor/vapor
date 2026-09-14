@@ -23,14 +23,14 @@ func routes(_ app: Application) async throws {
     }
 
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
-    app.on(.post, "slow-stream", body: .stream) { req -> String in
+    app.on(.post, "slow-stream") { req -> String in
         // Consume the streamed body slowly to demonstrate backpressure: sleeping between
         // reads keeps memory flat because the server stops pulling more of the body until
         // this loop asks for the next chunk.
         var total = 0
         try await req.body.forEachChunk { buffer in
             try await Task.sleep(nanoseconds: 1_000_000_000)
-            total += buffer.byteCount
+            total += buffer.count
         }
         return total.description
     }
@@ -48,8 +48,8 @@ func routes(_ app: Application) async throws {
         return "\(creds)"
     }
 
-    app.on(.post, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
-        return req.body.data?.readableBytes.description  ?? "none"
+    app.on(.post, "large-file", maxBodySize: 1_000_000_000) { req -> String in
+        return req.body.data?.count.description  ?? "none"
     }
 
     app.get("json", routeDescription: "Returns Some Test JSON") { req -> [String: String] in
@@ -69,9 +69,9 @@ func routes(_ app: Application) async throws {
 //        ws.send("Hello 👋 \(ip)")
 //    }
 
-    app.on(.post, "file", body: .stream) { req in
+    app.on(.post, "file") { req in
         try await req.body.forEachChunk { part in
-            debugPrint(part.byteCount)
+            debugPrint(part.count)
         }
         return "Done"
     }
@@ -125,7 +125,7 @@ func routes(_ app: Application) async throws {
             let handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
             defer { try? await handle.close() }
             for try await chunk in handle.readChunks(chunkLength: .bytes(64 * 1024)) {
-                try await writer.write(chunk.readableBytesSpan)
+                try await writer.write(chunk.readableBytesUInt8Span)
             }
         }))
     }
@@ -190,6 +190,33 @@ func routes(_ app: Application) async throws {
         return data.slideshow.title
     }
 
+    // MARK: - Proxying
+
+    //   curl -i localhost:8080/proxy/                       -> https://www.vapor.codes/
+    //   curl -i localhost:8080/proxy/docs?x=1               -> https://www.vapor.codes/docs?x=1
+    //   curl -i --compressed localhost:8080/proxy/          (arrives plain: the client decodes gzip for us)
+    //   curl --limit-rate 20k localhost:8080/proxy/         (a slow reader slows the upstream pull)
+    @Sendable func proxyToVaporCodes(_ req: Request) async throws -> ClientResponse {
+        // Keep the caller's path and query as they arrived, minus our own prefix. `req.url.path` is
+        // still percent-encoded, so nothing is decoded and re-encoded on the way through.
+        let path = String(req.url.path.dropFirst("/proxy".count))
+        var target = URI(string: "https://www.vapor.codes")
+        target.path = path.isEmpty ? "/" : path
+        target.query = req.url.query
+        return try await proxy(req, to: target, using: app.client)
+    }
+    // A catch-all needs at least one component after it, so the bare prefix is registered too.
+    app.get("proxy", use: proxyToVaporCodes)
+    app.get("proxy", "**", use: proxyToVaporCodes)
+
+    // Request direction. vapor.codes has nothing to receive a body, so the POST goes to an echo
+    // endpoint that sends the body back, which makes the streamed upload visible on the way out:
+    //   curl -i -X POST --data-binary @Package.swift localhost:8080/proxy/echo
+    //   curl -i -X POST -H "Transfer-Encoding: chunked" --data-binary @Package.swift localhost:8080/proxy/echo
+    app.post("proxy", "echo") { req -> ClientResponse in
+        try await proxy(req, to: "https://httpbin.org/anything", using: app.client)
+    }
+
     let users = app.grouped("users")
     users.get { req in
         return "users"
@@ -213,13 +240,13 @@ func routes(_ app: Application) async throws {
         return secret
     }
 
-    app.on(.post, "max-256", body: .collect(maxSize: 256)) { req -> HTTPResponse.Status in
+    app.on(.post, "max-256", maxBodySize: 256) { req -> HTTPResponse.Status in
         print("in route")
         return .ok
     }
 
     #if !canImport(FoundationEssentials)
-    app.on(.post, "upload", body: .stream) { req -> HTTPResponse.Status in
+    app.on(.post, "upload") { req -> HTTPResponse.Status in
         return try await FileSystem.shared.withFileHandle(
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
             options: .newFile(replaceExisting: true)) { handle in
@@ -304,6 +331,33 @@ func routes(_ app: Application) async throws {
         return "macro route with id: \(id)"
     }
     #endif
+}
+
+func proxy(_ req: Request, to upstream: URI, using client: any Client) async throws -> ClientResponse {
+    var headers = req.headers
+    headers.removeHopByHopFields()
+    // Tell the upstream who we are relaying for.
+    headers.forwarded.append(.init(for: req.remoteAddress?.host))
+
+    let declaredLength = req.headers[.contentLength].flatMap(Int.init)
+    let hasBody = (declaredLength ?? 0) > 0 || req.headers[.transferEncoding] != nil
+
+    do {
+        return try await client.send(req.method, headers: headers, to: upstream) { outgoing in
+            if hasBody {
+                outgoing.body = try .init(stream: { writer in
+                    try await req.body.forEachChunk { chunk in
+                        try await writer.write(chunk)
+                    }
+                }, count: declaredLength)
+            }
+            outgoing.maxResponseBodySize = .max
+            outgoing.timeout = .seconds(300)
+        }
+    } catch {
+        Logger.current.warning("Upstream request failed", metadata: ["upstream": "\(upstream)", "error": "\(error)"])
+        throw Abort(.badGateway)
+    }
 }
 
 struct TestError: AbortError, DebuggableError {

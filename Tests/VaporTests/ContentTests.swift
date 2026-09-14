@@ -8,7 +8,6 @@ import FoundationEssentials
 import Foundation
 #endif
 import RoutingKit
-import NIOCore
 
 @Suite("Content Tests")
 struct ContentTests {
@@ -17,7 +16,7 @@ struct ContentTests {
     func testContent() async throws {
         try await withApp { app throws in
             var request = Request(
-                collectedBody: .init(string: #"{"hello": "world"}"#)
+                collectedBody: Data(#"{"hello": "world"}"#.utf8)
             )
             request.headers.contentType = .json
             #expect(try await request.content.get(at: "hello") == "world")
@@ -58,7 +57,7 @@ struct ContentTests {
 
         try await withApp { app throws in
             var request = Request(
-                collectedBody: .init(string: complexJSON)
+                collectedBody: Data(complexJSON.utf8)
             )
             request.headers.contentType = .json
             #expect(try await request.content.get(at: "batters", "batter", 1, "type") == "Chocolate")
@@ -151,7 +150,7 @@ struct ContentTests {
         }
 
         try await withApp { app in
-            var request = Request(collectedBody: .init(string: "xx"))
+            var request = Request(collectedBody: Data("xx".utf8))
             #expect(request.headers[.contentLength] == "2")
 
             try request.content.encode(FooContent())
@@ -159,11 +158,8 @@ struct ContentTests {
             // The body really is replaced...
             #expect(request.body.string == #"{"message":"hi"}"#)
 
-            // ...but the header is left describing the old one.
-            #warning("`Request.body` is computed, so unlike `Response` there is no `didSet` to refresh Content-Length when the body changes. Fix in the body overhaul and drop this `withKnownIssue`")
-            withKnownIssue("Content-Length still describes the previous body") {
-                #expect(request.headers[.contentLength] == "16")
-            }
+            // ...and the header follows it.
+            #expect(request.headers[.contentLength] == "16")
         }
     }
 
@@ -253,7 +249,7 @@ struct ContentTests {
                 let res = try await client.get("/multipart", headers: [
                     .contentType: "multipart/form-data; boundary=123"
                 ]) { req in
-                    req.body = .init(string: data)
+                    req.body = .init(data: Data(data.utf8))
                 }
                 #expect(res.status == .ok)
                 expectJSONEquals(res.body.string, expected)
@@ -286,7 +282,7 @@ struct ContentTests {
                 let res = try await client.get("/multipart", headers: [
                     .contentType: "multipart/form-data; boundary=123"
                 ]) { req in
-                    req.body = .init(string: data)
+                    req.body = .init(data: Data(data.utf8))
                 }
                 #expect(res.status == .unprocessableContent)
             }
@@ -360,7 +356,7 @@ struct ContentTests {
                 let res = try await client.get("/multipart", headers: [
                     .contentType: "multipart/form-data; boundary=123"
                 ]) { req in
-                    req.body = .init(string: data)
+                    req.body = .init(data: Data(data.utf8))
                 }
                 #expect(res.status == .ok)
                 expectJSONEquals(res.body.string, expected)
@@ -455,7 +451,7 @@ struct ContentTests {
                 let res = try await client.get("/multipart", headers: [
                     .contentType: "multipart/form-data; boundary=123"
                 ]) { req in
-                    req.body = .init(string: data)
+                    req.body = .init(data: Data(data.utf8))
                 }
                 #expect(res.status == .ok)
             }
@@ -482,12 +478,11 @@ struct ContentTests {
 
             var headers = HTTPFields()
             headers.contentType = .urlEncodedForm
-            var body = ByteBuffer()
-            body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
+            let body = Data("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7".utf8)
 
             try await app.testing { client in
                 let res = try await client.get("/urlencodedform", headers: headers) { req in
-                    req.body = body
+                    req.body = .init(data: body)
                 }
                 #expect(res.status.code == 200)
             }
@@ -592,8 +587,7 @@ struct ContentTests {
 
     @Test("afterDecode runs for a Request's content")
     func testAfterDecodeOnRequest() async throws {
-        var body = ByteBufferAllocator().buffer(capacity: 0)
-        body.writeString(#"{"name": "before decode"}"#)
+        let body = Data(#"{"name": "before decode"}"#.utf8)
 
         try await withApp { app in
             var request = Request(
@@ -613,7 +607,7 @@ struct ContentTests {
         // way to know about the hook, so the value came back unprocessed.
         try await withApp { app in
             var request = Request(
-                collectedBody: .init(string: #"{"name": "before decode"}"#)
+                collectedBody: Data(#"{"name": "before decode"}"#.utf8)
             )
             request.headers.contentType = .json
 
@@ -659,8 +653,7 @@ struct ContentTests {
 
     @Test("Test Supports JSON API")
     func testSupportsJsonApi() async throws {
-        var body = ByteBufferAllocator().buffer(capacity: 0)
-        body.writeString(#"{"data": ["entity0", "entity1"], "meta": {}}"#)
+        let body = Data(#"{"data": ["entity0", "entity1"], "meta": {}}"#.utf8)
 
         try await withApp { app in
             var request = Request(
@@ -678,7 +671,7 @@ struct ContentTests {
     func testQueryHooks() async throws {
         try await withApp { app in
             var request = Request(
-                collectedBody: .init(string: "")
+                collectedBody: Data()
             )
             request.url.query = "name=before+decode"
             request.headers.contentType = .json
@@ -694,7 +687,7 @@ struct ContentTests {
     func testDecodePercentEncodedQuery() async throws {
         try await withApp { app throws in
             var request = Request(
-                collectedBody: .init(string: "")
+                collectedBody: Data()
             )
             request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
             request.headers.contentType = .urlEncodedForm
@@ -749,7 +742,7 @@ struct ContentTests {
             var req = Request(
                 method: .get,
                 url: URI(string: "https://vapor.codes"),
-                collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#)
+                collectedBody: Data(#"{"badJson: "Key doesn't have a trailing quote"}"#.utf8)
             )
             req.headers.contentType = .json
 
@@ -865,13 +858,12 @@ struct ContentTests {
         }
         """
 
-            let byteBuffer = ByteBuffer(string: body)
             var headers = HTTPFields()
             headers[.contentType] = "text/plain"
 
             try await app.testing { client in
                 let res = try await client.post("/plaintext", headers: headers) { req in
-                    req.body = byteBuffer
+                    req.body = .init(data: Data(body.utf8))
                 }
                 // This should return a 400 Bad Request and not crash
                 #expect(res.status == .badRequest)

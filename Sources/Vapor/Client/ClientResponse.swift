@@ -10,6 +10,7 @@ public struct ClientResponse: Sendable {
     public var headers: HTTPFields
     public var body: Response.Body {
         didSet {
+            self.body.sizeLimit = self.maxBodySize
             self.headers.updateContentLength(body.count)
         }
     }
@@ -30,8 +31,9 @@ public struct ClientResponse: Sendable {
     ) {
         self.status = status
         self.headers = headers
-        self.body = body
         self.maxBodySize = maxBodySize
+        self.body = body
+        self.body.sizeLimit = maxBodySize
         self.contentConfiguration = contentConfiguration
     }
 }
@@ -55,7 +57,7 @@ extension ClientResponse {
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
             var body = self.body
-            guard let data = try await body.collect(max: self.maxBodySize) else {
+            guard let data = try await body.collect() else {
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: data, headers: self.headers, userInfo: [:])

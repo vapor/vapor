@@ -59,7 +59,7 @@ extension Response {
     struct BodyStream: Sendable {
         /// The number of bytes the stream will produce, or `nil` if that is not known in advance.
         let count: Int?
-        let callback: @Sendable (borrowing any ResponseBodyWriter & ~Escapable) async throws -> ()
+        let callback: @Sendable (borrowing any HTTPBodyWriter & ~Escapable) async throws -> ()
         let state = BodyStreamState()
     }
 
@@ -97,28 +97,28 @@ extension Response {
         /// A streaming body can also throw part-way, after the closure has already seen chunks.
         ///
         /// Use ``collect()`` instead when the whole body is genuinely needed in memory.
-        public func withStreamingBytes(_ body: @escaping (RawSpan) async throws -> Void) async throws {
+        public func withStreamingBytes(_ body: @escaping (Span<UInt8>) async throws -> Void) async throws {
             switch self.storage {
             case .stream(let stream):
                 // Already collected: replay the bytes rather than running the callback again.
                 if let collected = stream.state.collected {
-                    try await body(collected.span.bytes)
+                    try await body(collected.span)
                 } else {
                     // Streamed away, not kept: the callback can only run once, and a source like
                     // a network body can't be iterated twice anyway.
                     try stream.state.beginConsuming()
-                    let scope = ResponseBodyWriterScope()
+                    let scope = HTTPBodyWriterScope()
                     try await stream.callback(ForwardingBodyWriter(ForwardingStorage(body), scope: scope))
                 }
             case .none:
                 return
             case .data(let data):
-                try await body(data.span.bytes)
+                try await body(data.span)
             case .string(let string):
-                try await body(string.utf8Span.span.bytes)
+                try await body(string.utf8Span.span)
             case .staticString(let staticString):
                 try await unsafe body(
-                    RawSpan(_unsafeStart: staticString.utf8Start, byteCount: staticString.utf8CodeUnitCount)
+                    Span(_unsafeStart: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
                 )
             }
         }
@@ -142,7 +142,7 @@ extension Response {
         /// - Returns: The accumulated value. An empty body returns `initialResult` untouched.
         public func reduceBytes<R>(
             into initialResult: R,
-            _ updateAccumulatingResult: @escaping (inout R, RawSpan) async throws -> Void
+            _ updateAccumulatingResult: @escaping (inout R, Span<UInt8>) async throws -> Void
         ) async throws -> R {
             // `inout` can't cross into an escaping closure, so the accumulator is boxed for the
             // duration. That is an implementation detail: callers still write plain `inout`.
@@ -218,7 +218,7 @@ extension Response {
         ///   the body produces.
         /// - Returns: The body's bytes, or `nil` if the body is empty.
         /// - Throws: ``Abort`` with `.contentTooLarge` if a streaming body exceeds `max`.
-        public func data(max: Int? = nil) async throws -> Data? {
+        public func data(max: BodySizeLimit = .default) async throws -> Data? {
             // Collecting through a copy: `collect(max:)` is `mutating`, but the bytes it produces
             // land in the stream's shared state, so the caller's body sees them regardless.
             var body = self
@@ -234,7 +234,7 @@ extension Response {
         ///   the body produces.
         /// - Returns: The body decoded as UTF-8, or `nil` if the body is empty.
         /// - Throws: ``Abort`` with `.contentTooLarge` if a streaming body exceeds `max`.
-        public func string(max: Int? = nil) async throws -> String? {
+        public func string(max: BodySizeLimit = .default) async throws -> String? {
             try await self.data(max: max).map { String(decoding: $0, as: UTF8.self) }
         }
 
@@ -260,20 +260,21 @@ extension Response {
         ///   controls. `nil`, the default, buffers whatever the body produces.
         /// - Returns: The body's bytes, or `nil` if the body is empty.
         /// - Throws: ``Abort`` with `.contentTooLarge` if a streaming body exceeds `max`.
-        public mutating func collect(max: Int? = nil) async throws -> Data? {
+        public mutating func collect(max: BodySizeLimit = .default) async throws -> Data? {
+            let ceiling = max.bytes(default: self.sizeLimit ?? .max)
             switch self.storage {
             case .stream(let stream):
                 if let collected = stream.state.collected {
                     self.storage = .data(collected)
                     return collected
                 }
-                if let max, let declared = stream.count, declared > max {
+                if let declared = stream.count, declared > ceiling {
                     throw Abort(.contentTooLarge)
                 }
                 try stream.state.beginConsuming()
                 let initialCapacity = stream.count ?? 0
-                let collected = CollectingStorage(capacity: initialCapacity, max: max)
-                let scope = ResponseBodyWriterScope()
+                let collected = CollectingStorage(capacity: initialCapacity, max: ceiling)
+                let scope = HTTPBodyWriterScope()
                 try await stream.callback(CollectingBodyWriter(collected, scope: scope))
                 stream.state.store(collected.data)
                 self.storage = .data(collected.data)
@@ -295,6 +296,14 @@ extension Response {
         }
 
         internal var storage: Storage
+
+        /// The ceiling ``BodySizeLimit/default`` resolves to for this body, or `nil` for none.
+        ///
+        /// A body this process built has no ceiling — its size is its own doing. One that arrived
+        /// from somewhere else does: ``ClientResponse`` stamps its ``ClientResponse/maxBodySize``
+        /// here, so `collect()` on a client response is bounded whether it goes through `content` or
+        /// not.
+        internal var sizeLimit: Int?
 
         /// Creates an empty body. Useful for `GET` requests where HTTP bodies are forbidden.
         public init() {
@@ -318,7 +327,7 @@ extension Response {
 
         /// Creates a chunked, streaming HTTP ``Response`` body.
         ///
-        /// The closure receives a ``ResponseBodyWriter`` and writes chunks to it with `await`. Writes are
+        /// The closure receives a ``HTTPBodyWriter`` and writes chunks to it with `await`. Writes are
         /// backpressured by the transport, so the closure naturally throttles to the speed of the client.
         /// Throwing from the closure fails the response.
         ///
@@ -327,7 +336,7 @@ extension Response {
         ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly
         ///     `count` bytes. `nil` means the length is not known in advance, and the response is chunked.
         /// - Throws: ``Response/Body/NegativeCountError`` if `count` is negative.
-        public init(stream: @escaping @Sendable (borrowing any ResponseBodyWriter & ~Escapable) async throws -> (), count: Int?) throws {
+        public init(stream: @escaping @Sendable (borrowing any HTTPBodyWriter & ~Escapable) async throws -> (), count: Int?) throws {
             // A negative length is not a shorter body, it is an impossible one. Left unchecked it
             // reaches the wire as a malformed `Content-Length`, so it is rejected at the one point a
             // bad value can enter. Thrown rather than trapped: a mistake in one handler must not
@@ -382,7 +391,7 @@ extension Response {
         ///
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
-        public init(stream: @escaping @Sendable (borrowing any ResponseBodyWriter & ~Escapable) async throws -> ()) {
+        public init(stream: @escaping @Sendable (borrowing any HTTPBodyWriter & ~Escapable) async throws -> ()) {
             // `nil` can never be rejected, so this stays non-throwing.
             self.storage = .stream(.init(count: nil, callback: stream))
         }
@@ -410,24 +419,24 @@ private final class ReduceBox<R> {
 /// Backing storage for ``ForwardingBodyWriter``. The writer itself is non-escapable and so cannot
 /// hold anything that outlives the lend; the closure lives here instead.
 private final class ForwardingStorage {
-    let onChunk: (RawSpan) async throws -> Void
+    let onChunk: (Span<UInt8>) async throws -> Void
 
-    init(_ onChunk: @escaping (RawSpan) async throws -> Void) {
+    init(_ onChunk: @escaping (Span<UInt8>) async throws -> Void) {
         self.onChunk = onChunk
     }
 }
 
-/// A ``ResponseBodyWriter`` that forwards each chunk straight to a closure, used to drive a
+/// A ``HTTPBodyWriter`` that forwards each chunk straight to a closure, used to drive a
 /// streaming body incrementally instead of collecting it.
-private struct ForwardingBodyWriter: ResponseBodyWriter, ~Escapable {
+private struct ForwardingBodyWriter: HTTPBodyWriter, ~Escapable {
     private let storage: ForwardingStorage
 
     @_lifetime(borrow scope)
-    init(_ storage: ForwardingStorage, scope: borrowing ResponseBodyWriterScope) {
+    init(_ storage: ForwardingStorage, scope: borrowing HTTPBodyWriterScope) {
         self.storage = storage
     }
 
-    func write(_ bytes: RawSpan) async throws {
+    func write(_ bytes: Span<UInt8>) async throws {
         try await self.storage.onChunk(bytes)
     }
 }
@@ -443,9 +452,10 @@ private final class CollectingStorage {
         self.max = max
     }
 
-    func append(_ bytes: RawSpan) throws {
-        try self.checkLimit(adding: bytes.byteCount)
-        bytes.withUnsafeBytes { unsafe self.data.append(contentsOf: $0) }
+    func append(_ bytes: Span<UInt8>) throws {
+        try self.checkLimit(adding: bytes.count)
+        // TODO: Use a safe API when Foundation eventually adds it
+        bytes.withUnsafeBufferPointer { unsafe self.data.append(contentsOf: $0) }
     }
 
     func append(_ bytes: some Sequence<UInt8>) throws {
@@ -469,17 +479,17 @@ private final class CollectingStorage {
     }
 }
 
-/// A ``ResponseBodyWriter`` that accumulates everything written into `Data`, used to
+/// A ``HTTPBodyWriter`` that accumulates everything written into `Data`, used to
 /// eagerly collect a streaming body instead of forwarding it to the connection.
-private struct CollectingBodyWriter: ResponseBodyWriter, ~Escapable {
+private struct CollectingBodyWriter: HTTPBodyWriter, ~Escapable {
     private let storage: CollectingStorage
 
     @_lifetime(borrow scope)
-    init(_ storage: CollectingStorage, scope: borrowing ResponseBodyWriterScope) {
+    init(_ storage: CollectingStorage, scope: borrowing HTTPBodyWriterScope) {
         self.storage = storage
     }
 
-    func write(_ bytes: RawSpan) async throws {
+    func write(_ bytes: Span<UInt8>) async throws {
         try self.storage.append(bytes)
     }
 

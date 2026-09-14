@@ -4,8 +4,6 @@ import FoundationEssentials
 import Foundation
 #endif
 import HTTPTypes
-import NIOCore
-import NIOFoundationEssentialsCompat
 
 public struct Validations: Sendable {
     var storage: [Validation]
@@ -52,16 +50,16 @@ public struct Validations: Sendable {
         self.storage.append(.init(nested: key, required: required, unkeyed: handler, customFailureDescription: customFailureDescription))
     }
 
-    public func validate(request: Request) throws -> ValidationsResult {
+    /// Validates a request's body.
+    public func validate(request: Request) async throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
             throw Abort(.unprocessableContent, reason: "Missing \"Content-Type\" header")
         }
-        guard let body = request.body.data else {
+        guard let body = try await request.body.collect(), !body.isEmpty else {
             throw Abort(.unprocessableContent, reason: "Empty Body")
         }
-        let bodyData = Data(buffer: body)
         let contentDecoder = try request.contentConfiguration.requireDecoder(for: contentType)
-        return try contentDecoder.decode(ValidationsExecutor.self, from: bodyData, headers: request.headers, userInfo: [.pendingValidations: self]).results
+        return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
 
     public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {

@@ -4,8 +4,6 @@ import Vapor
 import Testing
 // Disable until we need it
 //import WebSocketKit
-import NIOCore
-import NIOPosix
 import RoutingKit
 
 @Suite("Websocket Tests", .disabled())

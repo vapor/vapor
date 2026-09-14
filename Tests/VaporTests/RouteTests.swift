@@ -8,7 +8,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIOCore
 
 @Suite("Route Tests")
 struct RouteTests {
@@ -242,7 +241,7 @@ struct RouteTests {
 
         try await withApp { app in
             app.post("users") { req -> User in
-                try User.validate(content: req)
+                try await User.validate(content: req)
                 return try await req.content.decode(User.self)
             }
 
@@ -428,35 +427,44 @@ struct RouteTests {
             app.routes.defaultMaxBodySize = 1
             #expect(app.routes.defaultMaxBodySize == 1)
 
+            // Each handler collects, because that is where the ceiling is enforced now: a route that
+            // never asks for the body is never rejected for its size.
             app.on(.post, "default") { request in
-                HTTPResponse.Status.ok
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
             }
-            app.on(.post, "1kb", body: .collect(maxSize: "1kb")) { request in
-                HTTPResponse.Status.ok
+            app.on(.post, "1kb", maxBodySize: "1kb") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
             }
-            app.on(.post, "1mb", body: .collect(maxSize: "1mb")) { request in
-                HTTPResponse.Status.ok
+            app.on(.post, "1mb", maxBodySize: "1mb") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
             }
-            app.on(.post, "1gb", body: .collect(maxSize: "1gb")) { request in
-                HTTPResponse.Status.ok
+            app.on(.post, "1gb", maxBodySize: "1gb") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
             }
 
-            // Small enough that the rejected (413) requests' unread remainder stays within the
-            // keep-alive drain cap, so the connection is reused and the 413 is delivered rather than
-            // racing a connection close; still over the 1-byte and 1kb limits and under 1mb/1gb.
-            var buffer = ByteBuffer()
-            buffer.writeBytes(Array(repeating: 0, count: 500_000))
+            // Over the 1-byte and 1kb limits and under 1mb/1gb, and — the part that matters for the
+            // two rejected requests — inside `maxDrainBytes` (16kb). A 413 stops reading the body, so
+            // the remainder is only discarded if it fits that budget. Past it the server closes on a
+            // client that is still uploading, which RSTs the connection and destroys the 413 before it
+            // is read. Sizing around that is deliberate: `testUndrainableRequestBodyIsAnsweredWith`
+            // `ConnectionClose` covers the over-budget case, where all the client is promised is the
+            // `Connection: close` header.
+            let buffer = Data(repeating: 0, count: 8_192)
             try await app.testing(.running) { client in
-                let defaultLimit = try await client.post("/default") { $0.body = buffer }
+                let defaultLimit = try await client.post("/default") { $0.body = .init(data: buffer) }
                 #expect(defaultLimit.status == .contentTooLarge)
 
-                let oneKB = try await client.post("/1kb") { $0.body = buffer }
+                let oneKB = try await client.post("/1kb") { $0.body = .init(data: buffer) }
                 #expect(oneKB.status == .contentTooLarge)
 
-                let oneMB = try await client.post("/1mb") { $0.body = buffer }
+                let oneMB = try await client.post("/1mb") { $0.body = .init(data: buffer) }
                 #expect(oneMB.status == .ok)
 
-                let oneGB = try await client.post("/1gb") { $0.body = buffer }
+                let oneGB = try await client.post("/1gb") { $0.body = .init(data: buffer) }
                 #expect(oneGB.status == .ok)
             }
         }

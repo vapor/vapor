@@ -1,18 +1,30 @@
-#warning("Make this internal")
-public import NIOCore
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
-import NIOFoundationEssentialsCompat
 public import HTTPTypes
 
 public struct ClientRequest: Sendable {
+    /// The body of a request the client is about to send.
+    ///
+    /// The same type ``ClientResponse`` carries, and the same one a ``Response`` is built from: it
+    /// holds either bytes or a closure that produces them. A streaming body is written the same way
+    /// in either direction:
+    ///
+    ///     request.body = .init(string: "hello")
+    ///     request.body = .init(stream: { writer in
+    ///         for chunk in chunks { try await writer.write(chunk) }
+    ///     })
+    ///
+    /// Streaming is backpressured end to end: each `write` returns once the transport has taken the
+    /// bytes, so a fast producer suspends against a slow connection rather than buffering.
+    public typealias Body = Response.Body
+
     public var method: HTTPRequest.Method
     public var url: URI
     public var headers: HTTPFields
-    public var body: ByteBuffer?
+    public var body: Body
     public var timeout: Duration
     public var maxResponseBodySize: Int
     private let contentConfiguration: ContentConfiguration
@@ -21,7 +33,7 @@ public struct ClientRequest: Sendable {
         method: HTTPRequest.Method = .get,
         url: URI = "/",
         headers: HTTPFields = [:],
-        body: ByteBuffer? = nil,
+        body: Body = .empty,
         timeout: Duration? = nil,
         maxResponseBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB
         contentConfiguration: ContentConfiguration = .default()
@@ -90,10 +102,12 @@ extension ClientRequest {
 
     public var content: any ContentContainer {
         get {
-            return _ContentContainer(body: Data(buffer: body ?? ByteBuffer()), headers: self.headers, contentConfiguration: self.contentConfiguration) }
+            // `data` is `nil` for a stream nothing has collected, which for a request being built
+            // means the caller supplied one; encoding replaces it either way.
+            return _ContentContainer(body: self.body.data, headers: self.headers, contentConfiguration: self.contentConfiguration) }
         set {
             let container = (newValue as! _ContentContainer)
-            self.body = ByteBuffer(data: container.body ?? Data())
+            self.body = container.body.map { Body(data: $0) } ?? .empty
             self.headers = container.headers
         }
     }

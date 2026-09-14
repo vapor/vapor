@@ -3,11 +3,8 @@ public import FoundationEssentials
 #else
 public import Foundation
 #endif
-#warning("Make this internal")
-public import NIOCore
-import NIOFoundationEssentialsCompat
 public import RoutingKit
-import NIOConcurrencyHelpers
+import Synchronization
 public import HTTPTypes
 public import X509
 
@@ -87,12 +84,12 @@ public struct Request: CustomStringConvertible, Sendable {
     }
 
     private struct _ContentContainer: ContentContainer, Sendable {
-        var body: ByteBuffer?
+        var body: Data?
         var headers: HTTPFields
         let contentConfiguration: ContentConfiguration
         /// Collects a not-yet-buffered (streamed) body on demand. `nil` when there's nothing to
-        /// collect. Lets `decode` work on a `.stream` route by pulling the body when it's first needed.
-        let collectBody: (@Sendable () async throws -> ByteBuffer?)?
+        /// collect. Bodies are lazy, so this is what pulls one in the first time `decode` needs it.
+        let collectBody: (@Sendable () async throws -> Data?)?
 
         var contentType: HTTPMediaType? {
             self.headers.contentType
@@ -101,13 +98,13 @@ public struct Request: CustomStringConvertible, Sendable {
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = Data()
             try encoder.encode(encodable, to: &body, headers: &self.headers, userInfo: [:])
-            self.body = ByteBuffer(data: body)
+            self.body = body
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
             // Prefer the already-buffered body; otherwise collect a streamed body on demand so
-            // `content.decode` works on a `.stream` route.
-            let resolved: ByteBuffer?
+            // Collect on first need: this is what makes `content.decode` work on a lazy body.
+            let resolved: Data?
             if let buffered = self.body {
                 resolved = buffered
             } else {
@@ -116,8 +113,7 @@ public struct Request: CustomStringConvertible, Sendable {
             guard let body = resolved else {
                 throw Abort(.unprocessableContent)
             }
-            let bodyData = Data(buffer: body)
-            return try decoder.decode(D.self, from: bodyData, headers: self.headers, userInfo: [:])
+            return try decoder.decode(D.self, from: body, headers: self.headers, userInfo: [:])
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
@@ -125,7 +121,7 @@ public struct Request: CustomStringConvertible, Sendable {
             try content.beforeEncode()
             var body = Data()
             try encoder.encode(content, to: &body, headers: &self.headers, userInfo: [:])
-            self.body = ByteBuffer(data: body)
+            self.body = body
         }
     }
 
@@ -142,28 +138,46 @@ public struct Request: CustomStringConvertible, Sendable {
                 headers: self.headers,
                 contentConfiguration: self.contentConfiguration,
                 collectBody: { [self] in
-                    try await self.body.collect(max: self.defaultMaxBodySize.value)
+                    try await self.body.collect()
                 }
             )
         }
         set {
             let container = newValue as! _ContentContainer
             self.headers = container.headers
-            self.bodyStorage.withLockedValue { storage in
+            self.bodyStorage.storage.withLock { storage in
                 storage = container.body.map { .collected($0) } ?? .none
             }
+            // `body` is computed, so there is no `didSet` to do this the way `Response` does. Encoding
+            // replaces the body, so the header that describes its length has to be replaced with it —
+            // otherwise the request goes out claiming the length of whatever it held before.
+            self.headers.updateContentLength(container.body?.count ?? 0)
         }
     }
 
+    /// The request body, as a non-escapable view bound to this request value (see ``Body``).
     public var body: Body {
-        Body(self)
+        @_lifetime(borrow self)
+        get { Body(self) }
+    }
+
+    /// Shared, mutable home for ``BodyStorage``, so that collecting the body through one copy of a
+    /// `Request` is visible through every other copy in the chain.
+    ///
+    /// A `final class` rather than a stored `Mutex` because `Mutex` is `~Copyable` and `Request` is a
+    /// copyable struct. `BodyStorage` is `Sendable`, so nothing here needs laundering.
+    internal final class BodyStorageBox: Sendable {
+        let storage: Mutex<BodyStorage>
+        init(_ initial: BodyStorage) {
+            self.storage = Mutex(initial)
+        }
     }
 
     /// How the request body is held: absent, fully buffered in memory, or a lazy pull-based stream.
     /// `collect` promotes `.stream` to `.collected` so a body is only drained once.
     internal enum BodyStorage: Sendable {
         case none
-        case collected(ByteBuffer)
+        case collected(Data)
         case stream(RequestBodyStream)
     }
 
@@ -197,17 +211,23 @@ public struct Request: CustomStringConvertible, Sendable {
     /// Authentication storage for the request
     public let auth: Authentication
 
-    internal let bodyStorage: NIOLockedValueBox<BodyStorage>
+    internal let bodyStorage: BodyStorageBox
     internal let sessionCache: SessionCache
     internal let contentConfiguration: ContentConfiguration
-    internal let defaultMaxBodySize: ByteCount
+    /// The most bytes this request's body may be buffered into by ``Request/Body/collect(max:)`` or
+    /// by decoding its ``content``.
+    ///
+    /// Starts at the application's ``Routes/defaultMaxBodySize``. A route raises or lowers it with
+    /// `on(..., maxBodySize:)`, and middleware can change it before the handler runs — an
+    /// authenticator that expects a large credentials payload, say.
+    public var maxBodySize: ByteCount
 
     public init(
         method: HTTPRequest.Method = .get,
         url: URI = "/",
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPFields = .init(),
-        collectedBody: ByteBuffer? = nil,
+        collectedBody: Data? = nil,
         remoteAddress: SocketAddress? = nil,
         localAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain? = nil,
@@ -229,7 +249,7 @@ public struct Request: CustomStringConvertible, Sendable {
             defaultMaxBodySize: defaultMaxBodySize,
         )
         if let body = collectedBody {
-            self.headers.updateContentLength(body.readableBytes)
+            self.headers.updateContentLength(body.count)
         }
     }
 
@@ -238,7 +258,7 @@ public struct Request: CustomStringConvertible, Sendable {
         url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
         headersNoUpdate headers: HTTPFields = .init(),
-        collectedBody: ByteBuffer? = nil,
+        collectedBody: Data? = nil,
         bodyStream: RequestBodyStream? = nil,
         remoteAddress: SocketAddress? = nil,
         localAddress: SocketAddress? = nil,
@@ -271,7 +291,7 @@ public struct Request: CustomStringConvertible, Sendable {
         self.url = url
         self.headers = headers
         self.contentConfiguration = contentConfiguration
-        self.defaultMaxBodySize = defaultMaxBodySize
+        self.maxBodySize = defaultMaxBodySize
     }
 
     package init(_ other: Request, route: Route?, parameters: Parameters) {
@@ -288,7 +308,7 @@ public struct Request: CustomStringConvertible, Sendable {
         self.url = other.url
         self.headers = other.headers
         self.contentConfiguration = other.contentConfiguration
-        self.defaultMaxBodySize = other.defaultMaxBodySize
+        self.maxBodySize = other.maxBodySize
         self.localAddress = other.localAddress
     }
 }

@@ -71,7 +71,7 @@ struct StreamingBodyTests {
                 #expect(ok.status == .ok)
             }
 
-            // `withRunningApp` waits for the server to shut down, so everything it logged is in.
+            // `withRunningServer` waits for the server to shut down, so everything it logged is in.
             let thrown = logHandler.entries.compactMap(\.error).map { "\($0)" }
             #expect(
                 thrown.contains("Response body stream declared 1000 bytes but wrote 5"),
@@ -405,6 +405,63 @@ struct StreamingBodyTests {
         }
     }
 
+    @Test("Handlers whose client hung up before the response complete, and the server keeps serving",
+          .timeLimit(.minutes(1)), .bug("https://github.com/vapor/vapor/pull/2905"))
+    func testAbandonedRequestsStillCompleteTheirHandlers() async throws {
+        // The Vapor 4 shape of this: a client sends a request and closes the connection before the
+        // handler has built its `Response`. The response was discarded, and its body-stream callback
+        // with it, so anything the callback was going to release never was. A `HTTPBodyWriter` can't
+        // be left dangling that way — the server drives the closure and concludes the response — so
+        // what is left to pin down is that every such handler still runs to completion, returning or
+        // throwing rather than hanging, and that the server goes on serving afterwards.
+        let numberOfClients = 100
+        let entered = Mutex(0)
+        let completed = Mutex(0)
+
+        try await withApp { app in
+            app.get("abandon") { _ -> Response in
+                entered.withLock { $0 += 1 }
+                defer { completed.withLock { $0 += 1 } }
+                // Long enough for the client's close to reach the server before the response exists,
+                // which is the ordering the original bug needed.
+                try await Task.sleep(for: .milliseconds(10))
+                return Response(status: .ok, body: .init(stream: { writer in
+                    try await writer.write("gone")
+                }))
+            }
+            app.get("ok") { _ in "ok" }
+
+            try await withRunningServer(app) { port in
+                for _ in 0..<numberOfClients {
+                    let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                        .connect(host: "127.0.0.1", port: port) { channel in
+                            channel.eventLoop.makeCompletedFuture {
+                                try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
+                            }
+                        }
+                    // A complete request, then hang up without waiting for the answer.
+                    try await channel.executeThenClose { _, outbound in
+                        try await outbound.write(ByteBuffer(string: "GET /abandon HTTP/1.1\r\nHost: localhost\r\n\r\n"))
+                    }
+                }
+
+                // The server unwinds each abandoned request on its own schedule, so wait for the
+                // handlers rather than assuming they have all finished.
+                for _ in 0..<500 where completed.withLock({ $0 }) < numberOfClients {
+                    try await Task.sleep(for: .milliseconds(20))
+                }
+                #expect(entered.withLock { $0 } == numberOfClients)
+                #expect(completed.withLock { $0 } == numberOfClients)
+
+                // And none of it has broken the server.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10))
+                #expect(ok.status == .ok)
+                try #expect(await ok.body.collect(upTo: 1 << 20).string == "ok")
+            }
+        }
+    }
+
     @Test("Server backpressures a fast producer against a stalled client")
     func testStreamingBodyBackpressure() async throws {
         let chunkSize = 16 * 1024
@@ -547,15 +604,15 @@ struct StreamingBodyTests {
         // that body back as a streaming response. The old response-body stream signalled its own
         // completion, so the two readers racing over the request stream left `.end` unsent and
         // tripped "Response body stream writer deinitialized before .end or .error was sent."
-        // A `ResponseBodyWriter` has no way to end the stream — the server concludes the response
+        // A `HTTPBodyWriter` has no way to end the stream — the server concludes the response
         // once the closure returns — so there is no longer an end to miss.
         final class PeekingMiddleware: Middleware {
             let seen = Mutex(0)
 
             func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
                 // Exactly what the issue did: read the body from a middleware, then chain on.
-                let collected = try await request.body.collect(max: nil)
-                self.seen.withLock { $0 = collected?.readableBytes ?? 0 }
+                let collected = try await request.body.collect(max: .unlimited)
+                self.seen.withLock { $0 = collected?.count ?? 0 }
                 return try await next.respond(to: request)
             }
         }
@@ -564,9 +621,9 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.middleware.use(middleware, at: .beginning)
 
-            app.on(.post, "echo", body: .stream) { request -> Response in
+            app.on(.post, "echo") { request -> Response in
                 // The route reads the same body the middleware already read, and streams it back.
-                let payload = request.body.data.map { Data($0.readableBytesView) } ?? Data()
+                let payload = request.body.data ?? Data()
                 var response = Response(body: try .init(stream: { writer in
                     // Several chunks, so the response really is streamed rather than written once.
                     for start in stride(from: 0, to: payload.count, by: 4096) {
@@ -584,7 +641,7 @@ struct StreamingBodyTests {
                 var headers = HTTPFields()
                 headers.contentType = .plainText
                 let res = try await client.post("/echo", headers: headers) { req in
-                    req.body = ByteBuffer(bytes: sent)
+                    req.body = .init(data: sent)
                 }
 
                 #expect(res.status == .ok)
@@ -593,7 +650,7 @@ struct StreamingBodyTests {
 
                 // The connection survives: a second request over it is served normally.
                 let again = try await client.post("/echo", headers: headers) { req in
-                    req.body = ByteBuffer(bytes: sent)
+                    req.body = .init(data: sent)
                 }
                 #expect(again.status == .ok)
                 #expect(try await again.body.data() == sent)
@@ -611,7 +668,7 @@ struct StreamingBodyTests {
         #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "Hello, collected!")
     }
 
-    @Test("Every ResponseBodyWriter overload reaches the stream")
+    @Test("Every HTTPBodyWriter overload reaches the stream")
     func testWriterOverloads() async throws {
         var body = Response.Body(stream: { writer in
             // String
@@ -623,9 +680,9 @@ struct StreamingBodyTests {
             // Span<UInt8>
             let d: [UInt8] = [0x64]
             try await writer.write(d.span)
-            // RawSpan - the protocol requirement itself
+            // Span<UInt8> - the protocol requirement itself
             let e: [UInt8] = [0x65]
-            try await writer.write(e.span.bytes)
+            try await writer.write(e.span)
             // A sequence of chunks
             try await writer.write(contentsOf: [[UInt8]([0x66]), [UInt8]([0x67])])
         })
@@ -643,7 +700,7 @@ struct StreamingBodyTests {
         })
         try await body.withStreamingBytes { span in
             var bytes = [UInt8]()
-            for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
+            for i in 0..<span.count { bytes.append(span[i]) }
             chunks.withLock { $0.append(String(decoding: bytes, as: UTF8.self)) }
         }
         // Delivered separately and in order - not collected into one blob.
@@ -656,7 +713,7 @@ struct StreamingBodyTests {
             let chunks = Mutex([String]())
             try await body.withStreamingBytes { span in
                 var bytes = [UInt8]()
-                for i in 0..<span.byteCount { bytes.append(unsafe span.unsafeLoad(fromByteOffset: i, as: UInt8.self)) }
+                for i in 0..<span.count { bytes.append(span[i]) }
                 chunks.withLock { $0.append(String(decoding: bytes, as: UTF8.self)) }
             }
             #expect(chunks.withLock { $0 } == ["hello"])
@@ -697,7 +754,7 @@ struct StreamingBodyTests {
         })
         // Chunk sizes prove the fold sees each chunk separately rather than one blob.
         let sizes = try await body.reduceBytes(into: [Int]()) { acc, span in
-            acc.append(span.byteCount)
+            acc.append(span.count)
         }
         #expect(sizes == [5, 4, 5])
     }
@@ -705,7 +762,7 @@ struct StreamingBodyTests {
     @Test("reduceBytes folds a buffered body in a single step")
     func testReduceBytesOnBuffered() async throws {
         let total = try await Response.Body(string: "hello").reduceBytes(into: 0) { acc, span in
-            acc += span.byteCount
+            acc += span.count
         }
         #expect(total == 5)
     }
@@ -713,7 +770,7 @@ struct StreamingBodyTests {
     @Test("reduceBytes returns the initial value for an empty body")
     func testReduceBytesOnEmpty() async throws {
         let total = try await Response.Body().reduceBytes(into: 42) { acc, span in
-            acc += span.byteCount
+            acc += span.count
         }
         #expect(total == 42)
     }
@@ -780,7 +837,7 @@ struct StreamingBodyTests {
         // Streaming hands the bytes to the caller and keeps nothing.
         let seen = Mutex(0)
         try await body.withStreamingBytes { span in
-            let count = span.byteCount
+            let count = span.count
             seen.withLock { $0 += count }
         }
         #expect(seen.withLock { $0 } == 4)
@@ -885,7 +942,7 @@ struct StreamingBodyTests {
         #expect(runs.withLock { $0 } == 1)
 
         // `reduceBytes` is built on `withStreamingBytes`, so it replays too.
-        let count = try await original.reduceBytes(into: 0) { total, span in total += span.byteCount }
+        let count = try await original.reduceBytes(into: 0) { total, span in total += span.count }
         #expect(count == 7)
         #expect(runs.withLock { $0 } == 1)
     }
@@ -1189,7 +1246,7 @@ struct StreamingBodyTests {
     func testStreamCompletionRunsOnceOnClientDisconnect() async throws {
         // The Vapor 4 shape of this bug: the body-stream closure wrote `.end`/`.error` itself while
         // the server concluded the same response, so a connection failure ran the completion twice.
-        // `ResponseBodyWriter` can only write buffers now — concluding is the server's job — so the
+        // `HTTPBodyWriter` can only write buffers now — concluding is the server's job — so the
         // race has nowhere to happen, and this pins that down.
         let filePath = try await makeTemporaryFile(size: 8 << 20)
 
