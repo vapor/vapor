@@ -1,5 +1,7 @@
+import NIOCore
 import NIOHTTPServer
 import Synchronization
+import SystemPackage
 import Logging
 
 /// Errors thrown by ``NIOHTTPServerAdapter``.
@@ -176,7 +178,17 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             }
 
             // Wait for the server to bind, then publish the address
-            let addresses = try await nioServer.listeningAddresses
+            let addresses: [NIOHTTPServer.SocketAddress]
+            do {
+                addresses = try await nioServer.listeningAddresses
+            } catch {
+                do {
+                    try await group.next()
+                } catch let bindError as IOError where Errno(rawValue: bindError.errnoCode) == .addressInUse {
+                    throw ServerError.addressInUse(host: hostname, port: port)
+                }
+                throw error
+            }
             guard let address = addresses.first, let socketAddress = SocketAddress(address) else {
                 throw NIOHTTPServerAdapterError.noListeningAddress
             }
