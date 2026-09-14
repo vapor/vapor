@@ -17,8 +17,10 @@ public final class ErrorMiddleware: Middleware {
         var reason: String
     }
 
-    /// Create a default `ErrorMiddleware`. Logs errors to a `Logger` based on `Environment`
-    /// and converts `Error` to `Response` based on conformance to `AbortError` and `Debuggable`.
+    /// Create a default `ErrorMiddleware`. Logs every error at `.debug`, and converts `Error` to `Response`
+    /// based on `Environment` and on conformance to `AbortError` and `Debuggable`.
+    ///
+    /// To report errors at a higher level, use your own `ErrorMiddleware` in place of this one.
     ///
     /// - parameters:
     ///     - environment: The environment to respect when presenting errors.
@@ -44,8 +46,11 @@ public final class ErrorMiddleware: Middleware {
                 (status, headers, source) = (.internalServerError, [:], .capture())
             }
 
-            // Report the error
+            // Report the error. Errors answered here are handled: most are the client's doing (a missing
+            // route, a bad credential, a truncated upload) and nothing the server needs to act on, so they
+            // only show up when debugging. An application that wants them louder uses its own middleware.
             Logger.current.report(error: error,
+                                  level: .debug,
                                   metadata: ["method" : "\(req.method.rawValue)",
                                              "url" : "\(req.url.string)",
                                              "userAgent" : .array(req.headers[values: .userAgent].map { "\($0)" })],

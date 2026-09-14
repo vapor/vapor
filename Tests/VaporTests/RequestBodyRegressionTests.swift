@@ -8,6 +8,8 @@ import AsyncHTTPClient
 import HTTPTypes
 import RoutingKit
 import Synchronization
+import Logging
+import InMemoryLogging
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -247,6 +249,63 @@ struct RequestBodyRegressionTests {
             }
         }
         #expect(verdict.withLock { $0 } == "sticky")
+    }
+
+    /// A client that promises a body and hangs up part-way surfaced NIO's parser error to the error
+    /// middleware, which reported it as a warning. Nothing the application can do about a truncated
+    /// upload, and any client can send one, so it now reports at debug.
+    @Test("A truncated upload reports at debug, not as a warning",
+          .bug("https://github.com/vapor/vapor/issues/3203"), .timeLimit(.minutes(1)))
+    func truncatedUploadReportsAtDebug() async throws {
+        /// Sits outside the error middleware, so reaching it means the error has been reported.
+        struct ReportedMiddleware: Middleware {
+            let reported: Checkpoint
+            func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+                defer { self.reported.reach() }
+                return try await next.respond(to: request)
+            }
+        }
+
+        let logHandler = InMemoryLogHandler()
+        var logger = Logger(label: "codes.vapor.test", factory: { _ in logHandler })
+        logger.logLevel = .debug
+        let thrown = Mutex("never ran")
+        // The handler is about to block on the body, so the client can hang up.
+        let reading = Checkpoint()
+        let reported = Checkpoint()
+        try await withApp(logger: logger) { app in
+            app.middleware.use(ReportedMiddleware(reported: reported), at: .beginning)
+            app.on(.post, "cut") { req -> String in
+                do {
+                    reading.reach()
+                    _ = try await req.body.data()
+                    thrown.withLock { $0 = "nothing" }
+                } catch {
+                    thrown.withLock { $0 = "\(type(of: error))" }
+                    throw error
+                }
+                return "done"
+            }
+            try await withRunningServer(app) { port in
+                let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                    .connect(host: "127.0.0.1", port: port) { channel in
+                        channel.eventLoop.makeCompletedFuture {
+                            try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
+                        }
+                    }
+                try await channel.executeThenClose { _, outbound in
+                    try await outbound.write(ByteBuffer(
+                        string: "POST /cut HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\n\r\nthis is just 21 bytes"))
+                    await reading.wait()
+                }
+                await reported.wait()
+            }
+        }
+        #expect(thrown.withLock { $0 } == "RequestBodyTransportFailed")
+        let reports = logHandler.entries.filter { "\($0.message)".contains("The request body could not be read") }
+        #expect(reports.map(\.level) == [.debug])
+        let loud = logHandler.entries.filter { $0.level >= .warning }.map { "\($0.level): \($0.message)" }
+        #expect(loud.isEmpty)
     }
 
     /// Metrics record the request body size after the responder chain has run. With lazy bodies the

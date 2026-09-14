@@ -10,8 +10,11 @@ extension Logger {
     ///
     /// - parameters:
     ///     - error: `Error` to log.
+    ///     - level: The level to log at. When `nil`, a ``DebuggableError`` logs at its ``DebuggableError/logLevel``
+    ///       and any other error at `.warning`.
     public func report(
         error: any Error,
+        level: Logger.Level? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         file: String = #fileID,
         function: String = #function,
@@ -19,7 +22,7 @@ extension Logger {
     ) {
         let source: ErrorSource?
         let reason: String
-        let level: Logger.Level
+        let errorLevel: Logger.Level
         switch error {
         case let debuggable as any DebuggableError:
             if self.logLevel <= .trace {
@@ -28,19 +31,19 @@ extension Logger {
                 reason = debuggable.debuggableHelp(format: .short)
             }
             source = debuggable.source
-            level = debuggable.logLevel
+            errorLevel = debuggable.logLevel
         case let abort as any AbortError:
             reason = abort.reason
             source = nil
-            level = .warning
+            errorLevel = .warning
         default:
             reason = String(reflecting: error)
             source = nil
-            level = .warning
+            errorLevel = .warning
         }
 
         self.log(
-            level: level,
+            level: level ?? errorLevel,
             .init(stringLiteral: reason),
             metadata: metadata(),
             file: source?.file ?? file,

@@ -121,9 +121,11 @@ package final class RequestBodyStream: Sendable {
                 // latch the failure: the stream's position is no longer known.
                 self.stow(reader, chunk: chunk, finished: didEnd, failed: true)
                 // The closure above cannot throw, so the server's `EitherError` has `Never` as its
-                // second case: unwrap it and surface the transport error as itself.
+                // second case: unwrap it. Cancellation stays itself, so callers can still recognise it;
+                // anything else is the client's doing, and is wrapped so it reads as a bad request.
                 switch error {
-                case .first(let readFailure): throw readFailure
+                case .first(let readFailure as CancellationError): throw readFailure
+                case .first(let readFailure): throw RequestBodyTransportFailed(underlying: readFailure)
                 }
             }
             let delivered = chunk.count
