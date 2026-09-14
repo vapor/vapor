@@ -164,7 +164,7 @@ struct RequestTests {
         }
     }
 
-    @Test("Test Request Body Backpressure Works with Async Streaming")
+    @Test("Test Request Body Backpressure Works with Async Streaming", .timeLimit(.minutes(1)))
     func testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -174,6 +174,8 @@ struct RequestTests {
             let bytesTheClientSent = ManagedAtomic<Int>(0)
             let serverSawEnd = ManagedAtomic<Bool>(false)
             let serverSawRequest = ManagedAtomic<Bool>(false)
+            // The handler has its first chunk and is reading no further.
+            let holdingFirstChunk = Checkpoint()
 
             let requestHandlerTask: Mutex<Task<Response, any Error>?> = .init(nil)
 
@@ -183,11 +185,12 @@ struct RequestTests {
                         #expect(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged == true)
                         try await req.body.withReader { reader in
                             // Read only the first chunk, then hold the reader open: the server stops
-                            // pulling more of the body (backpressure) while we "wait forever".
+                            // pulling more of the body (backpressure) until the test cancels this task.
                             let firstChunkBytes = try await reader.read { span, _ in span.count }
                             numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .sequentiallyConsistent)
                             bytesTheServerSaw.wrappingIncrement(by: firstChunkBytes, ordering: .sequentiallyConsistent)
-                            try await Task.sleep(nanoseconds: 10_000_000_000) // wait "forever"
+                            holdingFirstChunk.reach()
+                            try await Task.sleep(for: .seconds(3600)) // wait "forever"
                         }
                         serverSawEnd.store(true, ordering: .sequentiallyConsistent)
                         return Response(status: .ok)
@@ -203,6 +206,8 @@ struct RequestTests {
             }
 
             try await withRunningServer(app) { port in
+                defer { requestHandlerTask.withLock { $0?.cancel() } }
+
                 final class ResponseDelegate: HTTPClientResponseDelegate {
                     typealias Response = Void
 
@@ -229,19 +234,17 @@ struct RequestTests {
                 // sometimes reported sent in full and the assertion below flaked. 64 MB is beyond any
                 // default on either platform.
                 let upload = ByteBuffer(repeating: 0x41, count: 64 * 1024 * 1024)
-                let request = try! HTTPClient.Request(url: "http://127.0.0.1:\(port)/hello",
-                                                      method: .POST,
-                                                      headers: [:],
-                                                      body: .byteBuffer(upload))
+                let request = try HTTPClient.Request(url: "http://127.0.0.1:\(port)/hello",
+                                                     method: .POST,
+                                                     headers: [:],
+                                                     body: .byteBuffer(upload))
                 let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
                 let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
-                await #expect(performing: {
-                    try await httpClient.execute(request: request, delegate: delegate, deadline: .now() + .milliseconds(500)).get()
-
-                }, throws: { error in
-                    let httpClientError = try #require(error as? HTTPClientError)
-                    return httpClientError == HTTPClientError.readTimeout || httpClientError == HTTPClientError.deadlineExceeded
-                })
+                // No deadline: the request ends when the test cancels it, once the server has shown
+                // it is holding the first chunk. A deadline was a guess at how long the server takes
+                // to get there, and a loaded machine outlasted it before the handler had even run.
+                let task = httpClient.execute(request: request, delegate: delegate)
+                await holdingFirstChunk.wait()
 
                 #expect(numberOfTimesTheServerGotOfferedBytes.load(ordering: .sequentiallyConsistent) == 1)
                 #expect(upload.readableBytes >= bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
@@ -250,7 +253,8 @@ struct RequestTests {
                 #expect(serverSawEnd.load(ordering: .sequentiallyConsistent) == false)
                 #expect(serverSawRequest.load(ordering: .sequentiallyConsistent) == true)
 
-                requestHandlerTask.withLock { $0?.cancel() }
+                task.cancel()
+                await #expect(throws: HTTPClientError.cancelled) { try await task.get() }
                 try await httpClient.shutdown()
             }
         }
@@ -596,26 +600,30 @@ struct RequestTests {
             // still holds the reader, that must surface as `RequestBodyAlreadyBeingRead` — not a
             // silently truncated empty end-of-body.
             app.on(.post, "concurrent-read") { req -> String in
-                let (held, heldContinuation) = AsyncStream.makeStream(of: Void.self)
+                // A is mid-read, with the reader checked out.
+                let held = Checkpoint()
+                // B has made its attempt, so A can let go.
+                let tried = Checkpoint()
 
-                // Task A takes the reader and holds it open inside `read` while B races it.
+                // Task A takes the reader and holds it open inside `read` while B races it. It
+                // holds until B has tried, not for a fixed time: on a loaded machine B can take
+                // longer than any fixed hold to get here, find the reader free, and read the body
+                // instead of being rejected.
                 let holder = Task {
                     try await req.body.withReader { reader in
                         try await reader.read { _, _ in
-                            heldContinuation.yield(())
-                            try await Task.sleep(for: .milliseconds(500))
+                            held.reach()
+                            await tried.wait()
                         }
                     }
                 }
 
-                // Wait until A is actually mid-read (the reader is checked out). The buffered stream
-                // means the yield is never lost even if A gets there first.
-                var iterator = held.makeAsyncIterator()
-                _ = await iterator.next()
+                await held.wait()
 
                 // Task B's concurrent read must be rejected, not handed a fake end-of-body.
                 var rejected = false
                 do {
+                    defer { tried.reach() }
                     try await req.body.withReader { reader in
                         _ = try await reader.read { _, _ in }
                     }

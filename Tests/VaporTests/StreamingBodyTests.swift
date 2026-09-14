@@ -417,11 +417,16 @@ struct StreamingBodyTests {
         let numberOfClients = 100
         let entered = Mutex(0)
         let completed = Mutex(0)
+        let allCompleted = Checkpoint()
 
         try await withApp { app in
             app.get("abandon") { _ -> Response in
                 entered.withLock { $0 += 1 }
-                defer { completed.withLock { $0 += 1 } }
+                defer {
+                    if completed.withLock({ $0 += 1; return $0 }) == numberOfClients {
+                        allCompleted.reach()
+                    }
+                }
                 // Long enough for the client's close to reach the server before the response exists,
                 // which is the ordering the original bug needed.
                 try await Task.sleep(for: .milliseconds(10))
@@ -447,9 +452,7 @@ struct StreamingBodyTests {
 
                 // The server unwinds each abandoned request on its own schedule, so wait for the
                 // handlers rather than assuming they have all finished.
-                for _ in 0..<500 where completed.withLock({ $0 }) < numberOfClients {
-                    try await Task.sleep(for: .milliseconds(20))
-                }
+                await allCompleted.wait()
                 #expect(entered.withLock { $0 } == numberOfClients)
                 #expect(completed.withLock { $0 } == numberOfClients)
 
@@ -462,7 +465,7 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server backpressures a fast producer against a stalled client")
+    @Test("Server backpressures a fast producer against a stalled client", .timeLimit(.minutes(1)))
     func testStreamingBodyBackpressure() async throws {
         let chunkSize = 16 * 1024
         // A safety valve, not a target: a backpressured producer stalls a few hundred chunks in,
@@ -480,6 +483,15 @@ struct StreamingBodyTests {
                     for _ in 0..<maxChunks {
                         try await writer.write(chunk)
                         produced.withLock { $0 += 1 }
+                        // The writer hands each chunk to the connection's event loop and only
+                        // hears that the channel has filled up once that loop gets round to it.
+                        // Until then the chunks sit in the loop's queue, so a producer running
+                        // flat out while the loop is starved — the loops are shared with every
+                        // other test in the process — could push the whole cap into memory before
+                        // the first writability change was ever seen, which read as "produced
+                        // 8192/8192". Pacing the producer against the loops keeps it at most one
+                        // chunk ahead of what the channel has accounted for.
+                        try await eventLoopsCaughtUp()
                     }
                 }))
             }
@@ -516,20 +528,26 @@ struct StreamingBodyTests {
                         string: "GET /firehose HTTP/1.1\r\nHost: localhost\r\n\r\n"))
 
                     // Nothing reads the socket, so the kernel receive buffer fills, then the send
-                    // side, and the producer's writes must suspend. Two samples assert it is
-                    // *stalled* rather than merely unfinished: a count short of the cap can just
-                    // mean a slow producer, which would pass on a loaded machine whether or not
-                    // backpressure works at all.
-                    try await Task.sleep(for: .milliseconds(500))
-                    let firstSample = produced.withLock { $0 }
-                    try await Task.sleep(for: .milliseconds(500))
-                    let stalledAt = produced.withLock { $0 }
-                    #expect(
-                        stalledAt == firstSample,
-                        """
-                        producer kept writing while the client read nothing \
-                        (\(firstSample) → \(stalledAt) of \(maxChunks))
-                        """)
+                    // side, and the producer's writes must suspend. Sample until the count holds
+                    // still rather than at fixed times: a count short of the cap can just mean a
+                    // slow producer, which would pass on a loaded machine whether or not
+                    // backpressure works at all, and a sample on a timer can land before a slow
+                    // producer has even filled the buffers. Every sample follows a round trip
+                    // through the loops, so between two equal samples the channel had caught up
+                    // and the producer had every chance to write more, and did not.
+                    var stalledAt = produced.withLock { $0 }
+                    var unchangedSamples = 0
+                    while unchangedSamples < 10 {
+                        try await Task.sleep(for: .milliseconds(50))
+                        try await eventLoopsCaughtUp()
+                        let sample = produced.withLock { $0 }
+                        if sample == stalledAt, sample > 0 {
+                            unchangedSamples += 1
+                        } else {
+                            unchangedSamples = 0
+                            stalledAt = sample
+                        }
+                    }
                     #expect(
                         stalledAt < maxChunks,
                         "producer was not backpressured (produced \(stalledAt)/\(maxChunks))")
@@ -1242,7 +1260,7 @@ struct StreamingBodyTests {
     }
 
     @Test("Response body stream completion runs once when the client disconnects",
-          .bug("https://github.com/vapor/vapor/issues/3002"))
+          .timeLimit(.minutes(1)), .bug("https://github.com/vapor/vapor/issues/3002"))
     func testStreamCompletionRunsOnceOnClientDisconnect() async throws {
         // The Vapor 4 shape of this bug: the body-stream closure wrote `.end`/`.error` itself while
         // the server concluded the same response, so a connection failure ran the completion twice.
@@ -1251,12 +1269,14 @@ struct StreamingBodyTests {
         let filePath = try await makeTemporaryFile(size: 8 << 20)
 
         let completions = Mutex(0)
+        let completedOnce = Checkpoint()
 
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("file") { req -> Response in
                 try await app.fileio.streamFile(at: filePath, for: req, advancedETagComparison: false) { _ in
                     completions.withLock { $0 += 1 }
+                    completedOnce.reach()
                 }
             }
 
@@ -1280,9 +1300,7 @@ struct StreamingBodyTests {
 
                 // The server unwinds the aborted response on its own schedule, so wait for the
                 // completion rather than assuming it has already run...
-                for _ in 0..<200 where completions.withLock({ $0 }) == 0 {
-                    try await Task.sleep(for: .milliseconds(10))
-                }
+                await completedOnce.wait()
                 // ...then give a second call a chance to land before declaring there wasn't one.
                 try await Task.sleep(for: .milliseconds(200))
                 #expect(completions.withLock { $0 } == 1)
@@ -1291,5 +1309,16 @@ struct StreamingBodyTests {
                 try await tg.waitForAll()
             }
         }
+    }
+}
+
+/// Returns once every event loop the server runs on has drained the work queued ahead of this call.
+///
+/// The server's writer hands bytes to the connection's loop and learns of backpressure from it, so
+/// a count of what a producer has written only reflects what the channel has accepted after the
+/// loops have caught up. The server runs on the singleton group, as do the test clients.
+private func eventLoopsCaughtUp() async throws {
+    for loop in MultiThreadedEventLoopGroup.singleton.makeIterator() {
+        try await loop.submit {}.get()
     }
 }

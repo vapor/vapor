@@ -3,6 +3,7 @@ import VaporTesting
 import Testing
 import NIOCore
 import NIOHTTP1
+import NIOPosix
 import AsyncHTTPClient
 import HTTPTypes
 import RoutingKit
@@ -197,9 +198,15 @@ struct RequestBodyRegressionTests {
         // The connection is gone by the time the handler notices, so the verdict comes back through
         // a side channel rather than a response.
         let verdict = Mutex("never ran")
+        // The handler is about to block on the body, so the client can hang up.
+        let reading = Checkpoint()
+        // The handler has recorded its verdict.
+        let decided = Checkpoint()
         try await withApp { app in
             app.on(.post, "cut") { req -> String in
+                defer { decided.reach() }
                 do {
+                    reading.reach()
                     _ = try await req.body.data()
                     verdict.withLock { $0 = "collected" }
                 } catch {
@@ -220,20 +227,23 @@ struct RequestBodyRegressionTests {
                 return "done"
             }
             try await withRunningServer(app) { port in
-                // Promise 100 bytes, send 10, then hang up.
-                _ = try await rawExchange(
-                    port: port,
-                    rawRequest: "POST /cut HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\n\r\n0123456789",
-                    // The server has nothing to say — it is waiting for 90 bytes that never come —
-                    // so the exchange ends on the deadline. Keep it short.
-                    deadline: .milliseconds(400))
-                // The handler notices the hang-up on its own schedule, and on a loaded machine it may
-                // not even have been dispatched by the time the client gives up. Wait for it to reach
-                // a verdict while the server is still up, or the assertion below races it.
-                let deadline = ContinuousClock.now + .seconds(5)
-                while verdict.withLock({ $0 }) == "never ran", ContinuousClock.now < deadline {
-                    try await Task.sleep(for: .milliseconds(10))
+                // Promise 100 bytes, send 10, and hang up once the handler is waiting for the rest.
+                // Hanging up on a timer instead meant guessing how long dispatch takes, and a loaded
+                // machine outlasted the guess: the client gave up before the handler had even run.
+                let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                    .connect(host: "127.0.0.1", port: port) { channel in
+                        channel.eventLoop.makeCompletedFuture {
+                            try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
+                        }
+                    }
+                try await channel.executeThenClose { _, outbound in
+                    try await outbound.write(ByteBuffer(
+                        string: "POST /cut HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\n\r\n0123456789"))
+                    await reading.wait()
                 }
+                // The handler notices the hang-up on its own schedule. Wait for its verdict while
+                // the server is still up, or the assertion below races the teardown.
+                await decided.wait()
             }
         }
         #expect(verdict.withLock { $0 } == "sticky")
