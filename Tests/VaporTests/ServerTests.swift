@@ -555,9 +555,9 @@ struct ServerTests {
         @Test("addressInUse names the address, bracketing IPv6 hosts")
         func testAddressInUseDescription() {
             #expect(ServerError.addressInUse(host: "127.0.0.1", port: 8080).description
-                == "Cannot start the server: 127.0.0.1:8080 is already in use.")
+                == "Cannot start the server: 127.0.0.1:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it.")
             #expect(ServerError.addressInUse(host: "::1", port: 8080).description
-                == "Cannot start the server: [::1]:8080 is already in use.")
+                == "Cannot start the server: [::1]:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it.")
         }
 
         /// NIOHTTPServer cannot bind a unix domain socket yet: `NIOHTTPServerAdapter` logs a warning and
