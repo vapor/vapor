@@ -1,32 +1,5 @@
 public import RoutingKit
 public import HTTPTypes
-import NIOPosix
-import NIOCore
-
-/// Determines how an incoming HTTP request's body is collected.
-public enum HTTPBodyStreamStrategy: Sendable {
-    /// The HTTP request's body will be collected into memory up to a maximum size
-    /// before the route handler is called. The application's configured default max body
-    /// size will be used unless otherwise specified.
-    ///
-    /// See ``collect(maxSize:)`` to specify a custom max collection size.
-    public static var collect: HTTPBodyStreamStrategy {
-        return .collect(maxSize: nil)
-    }
-
-    /// The HTTP request's body will not be collected first before the route handler is called
-    /// and will arrive in zero or more chunks.
-    case stream
-
-    /// The HTTP request's body will be collected into memory before the route handler is
-    /// called.
-    ///
-    /// `maxSize` Limits the maximum amount of memory in bytes that will be used to
-    /// collect a streaming body. Streaming requests exceeding that size will result in an error.
-    /// Passing `nil` results in the application's default max body size being used. This
-    /// parameter does not affect non-streaming requests.
-    case collect(maxSize: ByteCount?)
-}
 
 extension RoutesBuilder {
     @discardableResult
@@ -163,11 +136,11 @@ extension RoutesBuilder {
     public func on(
         _ method: HTTPRequest.Method,
         _ path: PathComponent...,
-        body: HTTPBodyStreamStrategy = .collect,
+        maxBodySize: ByteCount? = nil,
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(method, path, body: body, routeDescription: routeDescription, use: { request in
+        self.on(method, path, maxBodySize: maxBodySize, routeDescription: routeDescription, use: { request in
             try await closure(request)
         })
     }
@@ -176,15 +149,14 @@ extension RoutesBuilder {
     public func on(
         _ method: HTTPRequest.Method,
         _ path: [PathComponent],
-        body: HTTPBodyStreamStrategy = .collect,
+        maxBodySize: ByteCount? = nil,
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         let responder = BasicResponder { request in
-            // `.collect` routes buffer the body (enforcing the max size) before the handler runs, so
-            // handlers see a materialized body. `.stream` routes skip this and read lazily.
-            if case .collect(let max) = body, request.body.data == nil {
-                _ = try await request.body.collect(max: max?.value ?? request.defaultMaxBodySize.value)
+            var request = request
+            if let maxBodySize {
+                request.maxBodySize = maxBodySize
             }
             return try await closure(request).encodeResponse(for: request)
         }

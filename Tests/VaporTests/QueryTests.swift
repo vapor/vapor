@@ -4,7 +4,6 @@ import Testing
 import VaporTesting
 import Foundation
 import RoutingKit
-import NIOCore
 
 @Suite("Query Tests")
 struct QueryTests {
@@ -226,14 +225,14 @@ struct QueryTests {
                 return "ok"
             }
 
-            let body = ByteBuffer(string: #"{"here":"hi"}"#)
+            let body = Data(#"{"here":"hi"}"#.utf8)
             var headers = HTTPFields()
-            headers[.contentLength] = body.readableBytes.description
+            headers[.contentLength] = body.count.description
             headers.contentType = .json
 
             try await app.testing { client in
                 let res = try await client.post("/decode-fail", headers: headers) { req in
-                    req.body = body
+                    req.body = .init(data: body)
                 }
                 #expect(res.status == .badRequest)
                 try #expect(await res.body.requireString().contains("missing"))

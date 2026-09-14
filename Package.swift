@@ -52,7 +52,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.37.2"),
 
         // Useful code around SwiftNIO.
-        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.34.3"),
+        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.35.1"),
 
         // Swift logging API
         .package(url: "https://github.com/apple/swift-log.git", from: "1.14.0"),
@@ -112,7 +112,6 @@ let package = Package(
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(name: "ServiceContextModule", package: "swift-service-context"),
-                .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
                 .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),

@@ -17,7 +17,7 @@ extension Application {
         let client = InMemoryTestClient(app: self, responder: self.makeResponder())
         let result = try await body(client)
         // Drain any unread bodies to avoid disconnects
-        try await client.unreadBodies.drain()
+        await client.unreadBodies.drain()
         return result
     }
 

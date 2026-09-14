@@ -8,7 +8,7 @@ import Foundation
 public import Testing
 
 extension Response.Body {
-    public func requireString(max: Int? = nil) async throws -> String {
+    public func requireString(max: BodySizeLimit = .default) async throws -> String {
         guard let string = try await self.string(max: max) else {
             throw Abort(.unprocessableContent)
         }

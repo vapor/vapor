@@ -2,7 +2,8 @@
 package struct RouteStorage: Sendable {
     package var all: [Route] = []
 
-    /// Default value used by `HTTPBodyStreamStrategy.collect` when `maxSize` is `nil`.
+    /// The starting value for every request's ``Request/maxBodySize``, unless a route or a
+    /// middleware changes it.
     package var defaultMaxBodySize: ByteCount = "16kb"
 
     /// Routing is case-sensitive by default; set to `true` to match constant path components
@@ -30,10 +31,11 @@ public struct Routes: RoutesBuilder, CustomStringConvertible, Sendable {
         nonmutating set { self.application._routes.withValue { $0.all = newValue } }
     }
 
-    /// Default value used by `HTTPBodyStreamStrategy.collect` when `maxSize` is `nil`.
+    /// The starting value for every request's ``Request/maxBodySize``, unless a route or a
+    /// middleware changes it.
     ///
     /// Applies to every route registered with the default `.collect` strategy. A route can override
-    /// it with `.collect(maxSize:)`, or opt out of collection entirely with `.stream`.
+    /// it per route with `on(..., maxBodySize:)`, or per request from a middleware.
     public var defaultMaxBodySize: ByteCount {
         get { self.application._routes.value.defaultMaxBodySize }
         nonmutating set { self.application._routes.withValue { $0.defaultMaxBodySize = newValue } }

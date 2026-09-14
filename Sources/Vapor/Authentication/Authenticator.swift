@@ -1,4 +1,3 @@
-import NIOCore
 import HTTPTypes
 
 /// A protocol to which a type may conform to enable use of that type for authentication.

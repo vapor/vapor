@@ -13,8 +13,8 @@ public protocol Validatable {
 }
 
 extension Validatable {
-    public static func validate(content request: Request) throws {
-        try self.validations().validate(request: request).assert()
+    public static func validate(content request: Request) async throws {
+        try await self.validations().validate(request: request).assert()
     }
     
     public static func validate(query request: Request) throws {

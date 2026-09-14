@@ -7,24 +7,21 @@ import Foundation
 import Vapor
 import AsyncHTTPClient
 import NIOCore
-import NIOFoundationEssentialsCompat
-import NIOPosix
 import Synchronization
 import HTTPTypes
-import NIOSSL
 import Atomics
 import ServiceLifecycle
 import Logging
 import RoutingKit
 import Testing
 import VaporTesting
-import NIOHTTPTypesHTTP1
 import X509
 import SwiftASN1
+import NIOHTTPTypesHTTP1
 
-#warning("Bring back the commented-out tests below")
 @Suite("Server Tests")
 struct ServerTests {
+    #warning("Bring back the commented-out compression tests below")
     @Suite("Compression Tests")
     struct CompressionTests {
         //    @Test("Test HTTP Large Decompression", .bug("http://github.com/vapor/vapor/issues/2766"))
@@ -125,7 +122,7 @@ struct ServerTests {
         //                var contentLength: Int
         //            }
         //
-        //            app.on(.post, "compressed", body: .collect(maxSize: "1mb")) { request async throws in
+        //            app.on(.post, "compressed", maxBodySize: "1mb") { request async throws in
         //                let contentLength = request.headers[.contentLength].flatMap { Int($0) }
         //                let contents = try await request.body.collect().get()
         //                return TestResponse(
@@ -433,394 +430,6 @@ struct ServerTests {
         //    }
     }
 
-    @Suite("Request Body Streaming Tests")
-    struct RequestBodyStreamingTests {
-        //    @Test("Test Request Body Stream Gets Finalised Even If Client Abandons Connection")
-        //    func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() async throws {
-        //        actor WritersCount {
-        //            enum WriterError: Error {
-        //                case timeout
-        //            }
-        //            var count: Int = 0
-        //
-        //            func signal() {
-        //                count += 1
-        //            }
-        //
-        //            func wait(timeout: UInt64) async throws {
-        //                var currentTimeout = timeout
-        //                while count <= 0 {
-        //                    try await Task.sleep(nanoseconds: 100)
-        //                    currentTimeout -= 100
-        //                    if currentTimeout <= 0 {
-        //                        throw WriterError.timeout
-        //                    }
-        //                }
-        //                count -= 1
-        //            }
-        //        }
-        //        try await withApp { app in
-        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-        //
-        //            let numRequests = ManagedAtomic<Int>(0)
-        //            let writersStarted = WritersCount()
-        //
-        //            app.get() { req  -> Response in
-        //                numRequests.wrappingIncrement(ordering: .relaxed)
-        //
-        //                #warning("Migrate")
-        //                return try await req.eventLoop.scheduleTask(in: .milliseconds(10)) {
-        //                    numRequests.wrappingIncrement(ordering: .relaxed)
-        //
-        //                    return Response(status: .ok, body: .init(asyncStream: { writer in
-        //                        await writersStarted.signal()
-        //                        _ = try await writer.write(.end)
-        //                    }))
-        //                }.futureResult.get()
-        //            }
-        //
-        //            app.environment.arguments = ["serve"]
-        //            await #expect(throws: Never.self) {
-        //                try await app.startup()
-        //            }
-        //
-        //            let localAddress = try #require(app.http.server.shared.localAddress)
-        //            let numberOfClients = 100
-        //
-        //            for _ in 0 ..< numberOfClients {
-        //                let client = try await ClientBootstrap(group: app.eventLoopGroup)
-        //                    .connect(to: localAddress)
-        //                    .get()
-        //                try await client.writeAndFlush(ByteBuffer(string: "GET / HTTP/1.1\r\nhost: foo\r\n\r\n"))
-        //                try await client.close()
-        //            }
-        //
-        //            for clientNumber in 0 ..< numberOfClients {
-        //                await #expect(throws: Never.self, "Client \(clientNumber) did not complete") {
-        //                    try await writersStarted.wait(timeout: 1_000_000)
-        //                }
-        //            }
-        //            #expect(numberOfClients * 2 == numRequests.load(ordering: .relaxed))
-        //        }
-        //    }
-
-        //    @Test("Test Collecting Request Body")
-        //    func testCollectedResponseBodyEnd() async throws {
-        //        try await withApp { app in
-        //            app.post("drain") { req in
-        //                for try await _ in req.body {
-        //                    // Ignore
-        //                }
-        //                return HTTPResponse.Status.ok
-        //            }
-        //
-        //            try await app.testing(method: .running()).test(.post, "drain", beforeRequest: { req in
-        //                try req.content.encode(["hello": "world"])
-        //            }, afterResponse: { res in
-        //                #expect(res.status == .ok)
-        //            })
-        //        }
-        //    }
-
-        //    @Test("Test Early Exit Streaming Request")
-        //    func testEarlyExitStreamingRequest() async throws {
-        //        try await withApp { app in
-        //            app.on(.post, "upload", body: .stream) { req -> Int in
-        //                guard req.headers[.init("test")!] != nil else {
-        //                    throw Abort(.badRequest)
-        //                }
-        //
-        //#warning("Migrate")
-        //                let countBox = Mutex<Int>(0)
-        //                let promise = req.eventLoop.makePromise(of: Int.self)
-        //                req.body.drain { part in
-        //                    switch part {
-        //                    case .buffer(let buffer):
-        //                        countBox.withLock { $0 += buffer.readableBytes }
-        //                    case .error(let error):
-        //                        promise.fail(error)
-        //                    case .end:
-        //                        promise.succeed(countBox.withLock({ $0 }))
-        //                    }
-        //                    return req.eventLoop.makeSucceededFuture(())
-        //                }
-        //                return try await promise.futureResult.get()
-        //            }
-        //
-        //            var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)
-        //            buffer.writeString(String(repeating: "a", count: 10_000_000))
-        //
-        //            try await app.testing(method: .running()).test(.post, "upload", beforeRequest: { req in
-        //                req.body = buffer
-        //            }, afterResponse: { res in
-        //                #expect(res.status == .badRequest)
-        //            })
-        //
-        //            try await app.testing(method: .running()).test(.post, "upload", beforeRequest: { req in
-        //                req.body = buffer
-        //                req.headers[.init("test")!] = "a"
-        //            }, afterResponse: { res in
-        //                #expect(res.status == .ok)
-        //            })
-        //        }
-        //    }
-        //
-        //    @Test("Test Echo Server")
-        //    func testEchoServer() async throws {
-        //        final class Context: Sendable {
-        //            let server: Mutex<[String]>
-        //            let client: Mutex<[String]>
-        //            init() {
-        //                self.server = .init([])
-        //                self.client = .init([])
-        //            }
-        //        }
-        //        let context = Context()
-        //
-        //        try await withApp { app in
-        //            app.on(.post, "echo", body: .stream) { request -> Response in
-        //                Response(body: .init(stream: { writer in
-        //                    request.body.drain { body in
-        //                        switch body {
-        //                        case .buffer(let buffer):
-        //                            context.server.withLock { $0.append(buffer.string) }
-        //                            return writer.write(.buffer(buffer))
-        //                        case .error(let error):
-        //                            return writer.write(.error(error))
-        //                        case .end:
-        //                            return writer.write(.end)
-        //                        }
-        //                    }
-        //                }))
-        //            }
-        //
-        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-        //            app.environment.arguments = ["serve"]
-        //            try await app.startup()
-        //
-        //            let port = try #require(app.http.server.shared.localAddress?.port, "Failed to get port")
-        //            let request = try HTTPClient.Request(
-        //                url: "http://localhost:\(port)/echo",
-        //                method: .POST,
-        //                headers: [
-        //                    "transfer-encoding": "chunked"
-        //                ],
-        //                body: .stream(length: nil, { stream in
-        //                    // We set the application to have a single event loop so we can use the same
-        //                    // event loop here
-        //                    let streamBox = NIOLoopBound(stream, eventLoop: app.eventLoopGroup.any())
-        //                    return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-        //                        streamBox.value.write(.byteBuffer(.init(string: "bar")))
-        //                    }.flatMap {
-        //                        streamBox.value.write(.byteBuffer(.init(string: "baz")))
-        //                    }
-        //                })
-        //            )
-        //
-        //            final class ResponseDelegate: HTTPClientResponseDelegate {
-        //                typealias Response = HTTPClient.Response
-        //
-        //                let context: Context
-        //                init(context: Context) {
-        //                    self.context = context
-        //                }
-        //
-        //                func didReceiveBodyPart(
-        //                    task: HTTPClient.Task<HTTPClient.Response>,
-        //                    _ buffer: ByteBuffer
-        //                ) -> EventLoopFuture<Void> {
-        //                    self.context.client.withLock { $0.append(buffer.string) }
-        //                    return task.eventLoop.makeSucceededFuture(())
-        //                }
-        //
-        //                func didFinishRequest(task: HTTPClient.Task<HTTPClient.Response>) throws -> HTTPClient.Response {
-        //                    .init(host: "", status: .ok, version: .init(major: 1, minor: 1), headers: [:], body: nil)
-        //                }
-        //            }
-        //            let response = ResponseDelegate(context: context)
-        //            _ = try await HTTPClient.shared.execute(
-        //                request: request,
-        //                delegate: response
-        //            ).get()
-        //
-        //            let server = context.server.withLock { $0 }
-        //            let client = context.client.withLock { $0 }
-        //            #expect(server == ["foo", "bar", "baz"])
-        //            #expect(client == ["foo", "bar", "baz"])
-        //        }
-        //    }
-        //
-        //    @Test("Test Skip Streaming")
-        //    func testSkipStreaming() async throws {
-        //        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        //        let app = try await Application(.testing, .shared(eventLoopGroup))
-        //
-        //        app.on(.post, "echo", body: .stream) { request in
-        //            "hello, world"
-        //        }
-        //
-        //        app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-        //        app.environment.arguments = ["serve"]
-        //        try await app.startup()
-        //
-        //        let port = try #require(app.http.server.shared.localAddress?.port, "Failed to get port")
-        //        let request = try HTTPClient.Request(
-        //            url: "http://localhost:\(port)/echo",
-        //            method: .POST,
-        //            headers: [
-        //                "transfer-encoding": "chunked"
-        //            ],
-        //            body: .stream(length: nil, { stream in
-        //                // We set the application to have a single event loop so we can use the same
-        //                // event loop here
-        //                let streamBox = NIOLoopBound(stream, eventLoop: eventLoopGroup.any())
-        //                return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-        //                    streamBox.value.write(.byteBuffer(.init(string: "bar")))
-        //                }.flatMap {
-        //                    streamBox.value.write(.byteBuffer(.init(string: "baz")))
-        //                }
-        //            })
-        //        )
-        //
-        //        let a = try await HTTPClient.shared.execute(request: request).get()
-        //        #expect(a.status == .ok)
-        //        let b = try await HTTPClient.shared.execute(request: request).get()
-        //        #expect(b.status == .ok)
-        //
-        //        try await app.shutdown()
-        //    }
-
-        //    @Test("Test Request Body Stream Gets Finalised Even If Client Disappears")
-        //    func testRequestBodyStreamGetsFinalisedEvenIfClientDisappears() async throws {
-        //        try await withApp { app in
-        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-        //
-        //            let serverIsFinalisedPromise = app.eventLoopGroup.any().makePromise(of: Void.self)
-        //            let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
-        //
-        //            app.on(.post, "hello", body: .stream) { req -> Response in
-        //                return Response(body: .init(stream: { writer in
-        //                    req.body.drain { stream in
-        //                        switch stream {
-        //                        case .buffer:
-        //                            ()
-        //                        case .end:
-        //                            serverIsFinalisedPromise.succeed(())
-        //                            writer.write(.end, promise: nil)
-        //                        case .error(let error):
-        //                            serverIsFinalisedPromise.fail(error)
-        //                            writer.write(.error(error), promise: nil)
-        //                        }
-        //                        return allDonePromise.futureResult
-        //                    }
-        //                }))
-        //            }
-        //
-        //            app.environment.arguments = ["serve"]
-        //            try await app.startup()
-        //
-        //            let ip = try #require(app.http.server.shared.localAddress?.ipAddress)
-        //            let port = try #require(app.http.server.shared.localAddress?.port)
-        //
-        //            let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
-        //            // This originally was either a read timeout or deadline exceeded error
-        //            await #expect(throws: HTTPClientError.deadlineExceeded) {
-        //                try await HTTPClient.shared.execute(.POST,
-        //                                                         url: "http://\(ip):\(port)/hello",
-        //                                                         body: .byteBuffer(tenMB),
-        //                                                         deadline: .now() + .milliseconds(100)).get()
-        //            }
-        //
-        //            allDonePromise.succeed(()) // This unblocks the server
-        //            await #expect(throws: NIOHTTP1.HTTPParserError.invalidEOFState) {
-        //                try await serverIsFinalisedPromise.futureResult.get()
-        //            }
-        //        }
-        //    }
-        //
-        //    @Test("Test Request Body Backpressure")
-        //    func testRequestBodyBackpressureWorks() async throws {
-        //        try await withApp { app in
-        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-        //
-        //            let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
-        //            let bytesTheServerSaw = ManagedAtomic<Int>(0)
-        //            let bytesTheClientSent = ManagedAtomic<Int>(0)
-        //            let serverSawEnd = ManagedAtomic<Bool>(false)
-        //            let serverSawRequest = ManagedAtomic<Bool>(false)
-        //            let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
-        //
-        //            app.on(.post, "hello", body: .stream) { req -> Response in
-        //                #expect(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged == true)
-        //
-        //                return Response(body: .init(stream: { writer in
-        //                    req.body.drain { stream in
-        //                        switch stream {
-        //                        case .buffer(let bytes):
-        //                            numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .relaxed)
-        //                            bytesTheServerSaw.wrappingIncrement(by: bytes.readableBytes, ordering: .relaxed)
-        //                        case .end:
-        //                            Issue.record("backpressure should prevent us seeing the end of the request.")
-        //                            serverSawEnd.store(true, ordering: .relaxed)
-        //                            writer.write(.end, promise: nil)
-        //                        case .error(let error):
-        //                            writer.write(.error(error), promise: nil)
-        //                        }
-        //                        return allDonePromise.futureResult
-        //                    }
-        //                }))
-        //            }
-        //
-        //            app.environment.arguments = ["serve"]
-        //            try await app.startup()
-        //
-        //            let ip = try #require(app.http.server.shared.localAddress?.ipAddress)
-        //            let port = try #require(app.http.server.shared.localAddress?.port)
-        //
-        //            final class ResponseDelegate: HTTPClientResponseDelegate {
-        //                typealias Response = Void
-        //
-        //                private let bytesTheClientSent: ManagedAtomic<Int>
-        //
-        //                init(bytesTheClientSent: ManagedAtomic<Int>) {
-        //                    self.bytesTheClientSent = bytesTheClientSent
-        //                }
-        //
-        //                func didFinishRequest(task: HTTPClient.Task<Response>) throws -> Response {
-        //                    return ()
-        //                }
-        //
-        //                func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
-        //                    self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .relaxed)
-        //                }
-        //            }
-        //
-        //            let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
-        //            let request = try! HTTPClient.Request(url: "http://\(ip):\(port)/hello",
-        //                                                  method: .POST,
-        //                                                  headers: [:],
-        //                                                  body: .byteBuffer(tenMB))
-        //            let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
-        //            // This originally was either a read timeout or deadline exceeded error
-        //            await #expect(throws: HTTPClientError.deadlineExceeded) {
-        //                try await HTTPClient.shared.execute(request: request,
-        //                                                         delegate: delegate,
-        //                                                         deadline: .now() + .milliseconds(500)).get()
-        //            }
-        //
-        //            #expect(1 == numberOfTimesTheServerGotOfferedBytes.load(ordering: .relaxed))
-        //            #expect(tenMB.readableBytes > bytesTheServerSaw.load(ordering: .relaxed))
-        //            #expect(tenMB.readableBytes > bytesTheClientSent.load(ordering: .relaxed))
-        //            #expect(0 == bytesTheClientSent.load(ordering: .relaxed)) // We'd only see this if we sent the full 10 MB.
-        //            #expect(serverSawEnd.load(ordering: .relaxed) == false)
-        //            #expect(serverSawRequest.load(ordering: .relaxed) == true)
-        //
-        //            allDonePromise.succeed(())
-        //        }
-        //    }
-        //
-    }
-
     @Suite("Address Configuration Tests")
     struct AddressConfigurationTests {
         @Test("Address, hostname and port stay consistent")
@@ -917,78 +526,6 @@ struct ServerTests {
             }
         }
 
-        //    @Test("Test Socket Path Override")
-        //    func testSocketPathOverride() async throws {
-        //        let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
-        //
-        //        let env = Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--unix-socket", socketPath]
-        //        )
-        //
-        //        let app = try await Application(env)
-        //
-        //        app.get("foo") { _ in "bar" }
-        //        try await app.startup()
-        //
-        //        let res = try await app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }
-        //        #expect(res.body?.string == "bar")
-        //
-        //        // no server should be bound to the port despite one being set on the configuration.
-        //        await #expect(throws: IOError.self) {
-        //            try await app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }
-        //        }
-        //
-        //        try await app.shutdown()
-        //    }
-        //
-        //    @Test("Test Incompatible Startup Options")
-        //    func testIncompatibleStartupOptions() async throws {
-        //        func checkForError(_ app: Application) async throws {
-        //            await #expect(throws: ServeCommand.Error.incompatibleFlags) {
-        //                try await app.startup()
-        //            }
-        //            try await app.shutdown()
-        //        }
-        //
-        //        var app = try await Application(Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", "/path/to/socket"]
-        //        ))
-        //        try await checkForError(app)
-        //
-        //        app = try await Application(Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--hostname", "localhost", "--unix-socket", "/path/to/socket"]
-        //        ))
-        //        try await checkForError(app)
-        //
-        //        app = try await Application(Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--unix-socket", "/path/to/socket"]
-        //        ))
-        //        try await checkForError(app)
-        //
-        //        app = try await Application(Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--unix-socket", "/path/to/socket"]
-        //        ))
-        //        try await checkForError(app)
-        //
-        //        app = try await Application(Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
-        //        ))
-        //        try await checkForError(app)
-        //
-        //        app = try await Application(Environment(
-        //            name: "testing",
-        //            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
-        //        ))
-        //        try await checkForError(app)
-        //    }
-        //
-
         @Test("Test Too Large Port", .bug("https://github.com/vapor/vapor/issues/2245"))
         func testTooLargePort() async throws {
             try await withApp { app in
@@ -1000,41 +537,58 @@ struct ServerTests {
                 }
             }
         }
-    //
-    //    @Test("Test Start With Valid Socket File")
-    //    func testStartWithValidSocketFile() async throws {
-    //        try await withApp { app in
-    //            let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
-    //
-    //            app.http.server.configuration.address = .unixDomainSocket(path: socketPath)
-    //            app.environment.arguments = ["serve"]
-    //            await #expect(throws: Never.self) {
-    //                try await app.startup()
-    //            }
-    //        }
-    //    }
-    //
-    //    @Test("Test Start With Unsupported Socket File")
-    //    func testStartWithUnsupportedSocketFile() async throws {
-    //        try await withApp { app in
-    //            app.http.server.configuration.address = .unixDomainSocket(path: "/tmp")
-    //
-    //            await #expect(throws: IOError.self) {
-    //                try await app.startup()
-    //            }
-    //        }
-    //    }
-    //
-    //    @Test("Test Start With Invalid Socket File Path")
-    //    func testStartWithInvalidSocketFilePath() async throws {
-    //        try await withApp { app in
-    //            app.http.server.configuration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
-    //
-    //            await #expect(throws: IOError.self) {
-    //                try await app.startup()
-    //            }
-    //        }
-    //    }
+        /// NIOHTTPServer cannot bind a unix domain socket yet: `NIOHTTPServerAdapter` logs a warning and
+        /// falls back to `127.0.0.1:8080` instead. Disabled until it can, so they neither run against the
+        /// fallback nor get lost.
+        static let unixDomainSocketsUnsupported: Comment =
+            "NIOHTTPServer has no unix domain socket support; the adapter falls back to 127.0.0.1:8080"
+
+        @Test("Server serves over a unix domain socket",
+              .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
+        func testStartWithValidSocketFile() async throws {
+            try await withApp { app in
+                let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
+                app.serverConfiguration.address = .unixDomainSocket(path: socketPath)
+                app.get("foo") { _ in "bar" }
+                try await app.boot()
+
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    group.addTask { try await app.server.run() }
+                    let bound = try await app.server.listeningAddress
+                    #expect(bound.pathname == socketPath)
+
+                    let url = URI(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo").string
+                    let res = try await HTTPClient.shared.execute(HTTPClientRequest(url: url), timeout: .seconds(10))
+                    #expect(res.status == .ok)
+                    try #expect(await res.body.collect(upTo: 1 << 20).string == "bar")
+                    group.cancelAll()
+                }
+            }
+        }
+
+        @Test("Server startup fails when the socket path is a directory",
+              .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
+        func testStartWithUnsupportedSocketFile() async throws {
+            try await withApp { app in
+                app.serverConfiguration.address = .unixDomainSocket(path: "/tmp")
+                try await app.boot()
+                await #expect(throws: (any Error).self) {
+                    try await app.server.run()
+                }
+            }
+        }
+
+        @Test("Server startup fails when the socket path's directory does not exist",
+              .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
+        func testStartWithInvalidSocketFilePath() async throws {
+            try await withApp { app in
+                app.serverConfiguration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
+                try await app.boot()
+                await #expect(throws: (any Error).self) {
+                    try await app.server.run()
+                }
+            }
+        }
 
         @Test("Test Configuration Has Actual Port After Start")
         func testConfigurationHasActualPortAfterStart() async throws {
@@ -1128,7 +682,6 @@ struct ServerTests {
                 let garbage = try await rawExchange(
                     port: port, rawRequest: "TOTALLY not a valid HTTP request\r\n\r\n")
                 // Rejecting outright or hanging up are both fine; carrying on as if it parsed is not.
-                print("=== garbage: closed=\(garbage.serverClosed) bytes=\(garbage.bytes.debugDescription)")
                 #expect(garbage.serverClosed || garbage.bytes.contains("400"))
 
                 // And the listener is still healthy for everyone else.
@@ -1137,6 +690,106 @@ struct ServerTests {
 
                 await group.triggerGracefulShutdown()
                 try await tg.waitForAll()
+            }
+        }
+    }
+
+    @Test("Server chunk-frames a streamed response of unknown length")
+    func testUnknownLengthStreamedResponseIsChunkFramed() async throws {
+        try await withApp { app in
+            // A real HTTP client hides framing — it parses the response by the rules the server is
+            // supposed to be following — so asserting the wire format needs a socket. Vapor sets
+            // `Transfer-Encoding: chunked` for a body with no declared count; the server writes the
+            // chunk sizes and the terminating chunk. Covers what `PipelineTests.testEchoHandlers`
+            // checked against an `EmbeddedChannel` pipeline that no longer exists.
+            app.post("echo") { req -> Response in
+                // Bodies are lazy, so ask for it.
+                let body = try await req.body.collect() ?? Data()
+                return Response(body: .init(stream: { writer in
+                    try await writer.write(body)
+                }))
+            }
+
+            try await withRunningServer(app) { port in
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /echo HTTP/1.1\r\nHost: localhost\r\nContent-Length: 3\r\n\r\nabc",
+                    until: { $0.contains("0\r\n\r\n") })
+
+                #expect(exchange.bytes.contains("HTTP/1.1 200 OK"))
+                // Unknown length, so chunked rather than a Content-Length.
+                #expect(exchange.bytes.lowercased().contains("transfer-encoding: chunked"))
+                #expect(!exchange.bytes.lowercased().contains("content-length:"))
+                // The body, chunk-framed, then the terminating zero-length chunk.
+                #expect(exchange.bytes.contains("3\r\nabc\r\n"))
+                #expect(exchange.bytes.hasSuffix("0\r\n\r\n"))
+                // Framing was valid, so the connection stays up.
+                #expect(!exchange.serverClosed)
+            }
+        }
+    }
+
+    @Test("Server treats a request with no framing headers as having an empty body")
+    func testRequestWithNoFramingHeadersHasEmptyBody() async throws {
+        try await withApp { app in
+            // Neither `Content-Length` nor `Transfer-Encoding`, so the request has no body. The server
+            // must treat it as empty and answer rather than wait for bytes that are never coming.
+            // AsyncHTTPClient always sends `Content-Length: 0` for a body-less POST, so a client-based
+            // test never exercises this. Covers `PipelineTests.testEOFFraming`.
+            app.post("count") { req -> String in
+                "\(req.body.data?.count ?? 0)"
+            }
+
+            try await withRunningServer(app) { port in
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /count HTTP/1.1\r\nHost: localhost\r\n\r\n",
+                    until: { $0.contains("\r\n\r\n0") })
+
+                #expect(exchange.bytes.contains("HTTP/1.1 200 OK"))
+                #expect(exchange.bytes.hasSuffix("0"))
+                #expect(!exchange.serverClosed)
+            }
+        }
+    }
+
+    @Test("Server closes with Connection: close when it can't drain the request body")
+    func testUndrainableRequestBodyIsAnsweredWithConnectionClose() async throws {
+        try await withApp { app in
+            // A request rejected without being read leaves its body on the wire. If more is left than
+            // `maxDrainBytes`, the connection can't be reused — and the client has to learn that from
+            // the response, not from a socket that dies under its still-in-flight upload. Answering
+            // with keep-alive framing and then hanging up makes the client fail the request it has
+            // already been answered.
+            app.routes.defaultMaxBodySize = 1
+            // The handler has to *ask* for the body for the limit to bite — that is what lazy
+            // collection means. A route that never reads an oversized body now answers normally.
+            app.on(.post, "reject") { req -> HTTPResponse.Status in
+                _ = try await req.body.collect()
+                return .ok
+            }
+
+            try await withRunningServer(app) { port in
+                let oversized = String(repeating: "a", count: 500_000)
+                #expect(oversized.utf8.count > app.serverConfiguration.maxDrainBytes)
+
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: """
+                        POST /reject HTTP/1.1\r
+                        Host: localhost\r
+                        Content-Length: \(oversized.utf8.count)\r
+                        \r
+                        \(oversized)
+                        """,
+                    until: { $0.contains("\r\n\r\n") })
+
+                #expect(exchange.bytes.contains("HTTP/1.1 413 Payload Too Large"))
+                #expect(exchange.bytes.lowercased().contains("connection: close"))
+                // Deliberately no assertion on *how* the connection ends. With this much of the body
+                // left unread the server's close races the client's remaining writes, so it lands as
+                // either a clean FIN or an RST depending on timing — asserting either one is a flake.
+                // The header is the contract: the client is told not to reuse the connection.
             }
         }
     }
@@ -1181,20 +834,18 @@ struct ServerTests {
         try await withApp { app in
             let payload = [UInt8].random(count: 1 << 20)
 
-            app.on(.post, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPResponse.Status in
-                guard let data = req.body.data else {
+            app.on(.post, "payload", maxBodySize: "1gb") { req -> HTTPResponse.Status in
+                guard let data = try await req.body.collect() else {
                     throw Abort(.internalServerError)
                 }
-                #expect(payload.count == data.readableBytes)
-                #expect([UInt8](data.readableBytesView) == payload)
+                #expect(payload.count == data.count)
+                #expect([UInt8](data) == payload)
                 return .ok
             }
 
-            var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
-            buffer.writeBytes(payload)
             try await app.testing(.running) { client in
                 let res = try await client.post("payload") { req in
-                    req.body = buffer
+                    req.body = .init(data: Data(payload))
                 }
                 #expect(res.status == .ok)
             }

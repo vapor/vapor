@@ -2,9 +2,7 @@
 import RoutingKit
 // Disable until we need it
 //import WebSocketKit
-import NIOCore
 import HTTPTypes
-import NIOPosix
 
 //public struct WebSocketMaxFrameSize: Sendable, ExpressibleByIntegerLiteral {
 //    let value: Int

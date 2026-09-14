@@ -1,10 +1,10 @@
-/// Anchors a ``ResponseBodyWriter``'s lifetime to the scope that lends it out.
+/// Anchors a ``HTTPBodyWriter``'s lifetime to the scope that lends it out.
 ///
 /// A writer is non-escapable, and its lifetime is expressed as a dependency on a borrow of one of
 /// these. Whoever drives a body stream creates a token as a local, lends it to the writer it builds,
 /// and lets it die when the call returns — at which point the compiler considers every writer
 /// derived from it dead too.
-struct ResponseBodyWriterScope: ~Copyable {
+struct HTTPBodyWriterScope: ~Copyable {
     init() {}
 }
 
@@ -21,38 +21,32 @@ struct ResponseBodyWriterScope: ~Copyable {
 /// A writer is **non-escapable**, and is only valid for the duration of the body-stream closure it
 /// was handed to. This ensures a write can never happen after the response was concluded
 /// See https://github.com/vapor/vapor/issues/2976.
-public protocol ResponseBodyWriter: ~Escapable {
+public protocol HTTPBodyWriter: ~Escapable {
     /// Write a single chunk of bytes
-    func write(_ bytes: RawSpan) async throws
+    func write(_ bytes: Span<UInt8>) async throws
 
     /// Write a sequence of bytes.
-    /// This is required on the protocol to ensure it gets used when ``ResponseBodyWriter`` is an existential.
+    /// This is required on the protocol to ensure it gets used when ``HTTPBodyWriter`` is an existential.
     /// This allows us to avoid a copy in certain scenarios
     func write(_ bytes: some Sequence<UInt8>) async throws
 }
 
-extension ResponseBodyWriter where Self: ~Escapable {
-    /// Write a single chunk of bytes
-    @inlinable
-    public func write(_ bytes: Span<UInt8>) async throws {
-        try await self.write(bytes.bytes)
-    }
-
+extension HTTPBodyWriter where Self: ~Escapable {
     /// Write the UTF-8 Representation of a `String`
     @inlinable
     public func write(_ string: String) async throws {
-        try await self.write(string.utf8Span.span.bytes)
+        try await self.write(string.utf8Span.span)
     }
 
     /// Write a sequence of bytes.
     ///
-    /// Copies into contiguous storage so the bytes can be handed over as a `RawSpan`.
+    /// Copies into contiguous storage so the bytes can be handed over as a `Span<UInt8>`.
     /// `withContiguousStorageIfAvailable` is unusable here: its closure is synchronous, and
-    /// `write(_ bytes: RawSpan)` must be awaited. Writers that copy synchronously should override.
+    /// `write(_ bytes: Span<UInt8>)` must be awaited. Writers that copy synchronously should override.
     @inlinable
     public func write(_ bytes: some Sequence<UInt8>) async throws {
         let contiguous = ContiguousArray(bytes)
-        try await self.write(contiguous.span.bytes)
+        try await self.write(contiguous.span)
     }
 
     /// Write a sequence of byte chunks, in order
