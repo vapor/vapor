@@ -671,7 +671,7 @@ struct ServerTLSTests {
             app.serverConfiguration.tlsConfiguration = tls
             app.get("hello") { _ in "world" }
 
-            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity))) { client in
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity))) { client -> Void in
                 await #expect(throws: (any Error).self) {
                     try await client.get("hello") { $0.timeout = .seconds(15) }
                 }
