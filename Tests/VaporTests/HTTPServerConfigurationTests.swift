@@ -49,10 +49,10 @@ struct HTTPServerConfigurationTests {
             #expect(config.httpVersions == [.http1_1])
         }
 
-        @Test("HTTP/1.1 and HTTP/2 are distinct versions")
+        @Test("HTTP/1.1, HTTP/2 and HTTP/3 are distinct versions")
         func testDistinctVersions() {
-            let versions: Set<ServerConfiguration.HTTPVersion> = [.http1_1, .http2(config: .defaults)]
-            #expect(versions.count == 2)
+            let versions: Set<ServerConfiguration.HTTPVersion> = [.http1_1, .http2(config: .defaults), .http3(config: .defaults)]
+            #expect(versions.count == 3)
         }
 
         @Test("HTTP/2 versions are equal regardless of configuration")
@@ -64,29 +64,38 @@ struct HTTPServerConfigurationTests {
             #expect(a == b)
             #expect(Set([a, b]).count == 1)
         }
+
+        @Test("HTTP/3 versions are equal regardless of configuration")
+        func http3EqualByVersionOnly() {
+            // Equality and hashing are by protocol version only,
+            // so two HTTP/3 entries with different configuration collapse to a single set member.
+            let a: ServerConfiguration.HTTPVersion = .http3(config: .defaults)
+            let b: ServerConfiguration.HTTPVersion = .http3(config: .init(
+                preferHuffmanEncoding: false,
+                quicConfiguration: .defaults,
+                connectionSettings: .defaults
+            ))
+            #expect(a == b)
+            #expect(Set([a, b]).count == 1)
+        }
     }
 
     @Suite("Preflight validation")
     struct PreflightValidationTests {
-        // HTTP/2 requires TLS, so any version set containing HTTP/2 must be rejected over
+        // HTTP/2 and HTTP/3 require TLS, so any version set containing HTTP/2 or HTTP/3 must be rejected over
         // plaintext — even when HTTP/1.1 is also present.
-        @Test("HTTP/2 requested over plaintext throws", arguments: [
-            [ServerConfiguration.HTTPVersion.http2(config: .defaults)],
-            [.http1_1, .http2(config: .defaults)],
+        @Test("HTTP/2 and HTTP/3 requested over plaintext throws", arguments: [
+            [ServerConfiguration.HTTPVersion.http2(config: .defaults), .http3(config: .defaults)],
+            [.http1_1, .http2(config: .defaults), .http3(config: .defaults)],
         ] as [Set<ServerConfiguration.HTTPVersion>])
-        func testHTTP2WithoutTLSFails(_ versions: Set<ServerConfiguration.HTTPVersion>) async throws {
+        func testHTTP2AndHTTP3WithoutTLSFails(_ versions: Set<ServerConfiguration.HTTPVersion>) async throws {
             try await withApp { app in
                 app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
                 app.serverConfiguration.httpVersions = versions
-                // tlsConfiguration is intentionally left nil: HTTP/2 requires TLS.
+                // tlsConfiguration is intentionally left nil: HTTP/2 and HTTP/3 both require TLS.
 
-                do {
+                await #expect(throws: NIOHTTPServerAdapterError.http2And3RequireTLS) {
                     try await app.server.run()
-                    Issue.record("Expected run() to throw for \(versions).")
-                } catch NIOHTTPServerAdapterError.http2RequiresTLS {
-                    // Expected.
-                } catch {
-                    Issue.record("Expected http2RequiresTLS but got \(error).")
                 }
             }
         }
@@ -97,13 +106,8 @@ struct HTTPServerConfigurationTests {
                 app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
                 app.serverConfiguration.httpVersions = []
 
-                do {
+                await #expect(throws: NIOHTTPServerAdapterError.noHTTPVersionsSpecified) {
                     try await app.server.run()
-                    Issue.record("Expected run() to throw for an empty httpVersions set.")
-                } catch NIOHTTPServerAdapterError.noHTTPVersionsSpecified {
-                    // Expected.
-                } catch {
-                    Issue.record("Expected noHTTPVersionsSpecified but got \(error).")
                 }
             }
         }

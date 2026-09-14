@@ -85,12 +85,13 @@ extension ServerConfiguration {
 
     /// An HTTP protocol version the server can advertise and serve.
     ///
-    /// Use ``http1_1`` and ``http2(config:)`` to build the set passed to ``ServerConfiguration/httpVersions``.
+    /// Use ``http1_1``, ``http2(config:)``, and ``http3(config:)`` to build the set passed to ``ServerConfiguration/httpVersions``.
     public struct HTTPVersion: Sendable, Hashable {
-        /// The underlying protocol version, carrying the HTTP/2 configuration when applicable.
+        /// The underlying protocol version, carrying the HTTP/2 and HTTP/3 configuration when applicable.
         enum Version: Sendable, Hashable {
             case http1_1
             case http2(config: HTTP2)
+            case http3(config: HTTP3)
         }
 
         var version: Version
@@ -107,6 +108,13 @@ extension ServerConfiguration {
             Self.init(version: .http2(config: config))
         }
 
+        /// The HTTP/3 protocol version.
+        ///
+        /// - Parameter config: The configuration to use for HTTP/3 connections.
+        public static func http3(config: HTTP3) -> Self {
+            Self.init(version: .http3(config: config))
+        }
+
         /// Equality is by protocol version only: two values are equal when they represent the same HTTP
         /// version, ignoring any associated configuration.
         ///
@@ -117,11 +125,10 @@ extension ServerConfiguration {
         /// `NIOHTTPServerConfiguration.HTTPVersion`, which does the same.
         public static func == (lhs: Self, rhs: Self) -> Bool {
             switch (lhs.version, rhs.version) {
-            case (.http1_1, .http1_1), (.http2, .http2):
-                return true
-
+            case (.http1_1, .http1_1), (.http2, .http2), (.http3, .http3):
+                true
             default:
-                return false
+                false
             }
         }
 
@@ -130,9 +137,10 @@ extension ServerConfiguration {
             switch self.version {
             case .http1_1:
                 hasher.combine(1)
-
             case .http2:
                 hasher.combine(2)
+            case .http3:
+                hasher.combine(3)
             }
         }
     }
