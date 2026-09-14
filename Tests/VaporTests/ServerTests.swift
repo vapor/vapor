@@ -530,8 +530,7 @@ struct ServerTests {
         func testTooLargePort() async throws {
             try await withApp { app in
                 app.serverConfiguration.address = .hostname("127.0.0.1", port: .max)
-                // This is a ListeningAddressError but not public so we can't assert on that
-                await #expect(throws: (any Error).self) {
+                await #expect(throws: SocketAddressError.UnknownHost.self) {
                     try await app.boot()
                     try await app.server.run()
                 }
