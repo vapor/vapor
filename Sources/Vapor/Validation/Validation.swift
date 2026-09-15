@@ -30,6 +30,31 @@ public struct Validation: Sendable {
             }
         }
     }
+
+    init<T>(
+        key: BasicCodingKey,
+        validating type: T.Type,
+        validator: Validator<T>,
+        customFailureDescription: String?
+    ) {
+        self.init(
+            key: key,
+            valuelessKeyBehavior: .ignore,
+            customFailureDescription: customFailureDescription
+        ) { decoder -> any ValidatorResult in
+            do {
+                return try validator.validate(type.init(from: decoder))
+            } catch DecodingError.valueNotFound {
+                return ValidatorResults.NotFound()
+            } catch DecodingError.typeMismatch(let type, _) {
+                return ValidatorResults.TypeMismatch(type: type)
+            } catch DecodingError.dataCorrupted(let context) {
+                return ValidatorResults.Invalid(reason: context.debugDescription)
+            } catch {
+                return ValidatorResults.Codable(error: error)
+            }
+        }
+    }
     
     init(nested key: BasicCodingKey, required: Bool, keyed validations: Validations, customFailureDescription: String?) {
         self.init(
