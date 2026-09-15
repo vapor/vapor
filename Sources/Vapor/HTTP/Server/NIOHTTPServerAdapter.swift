@@ -21,6 +21,9 @@ enum NIOHTTPServerAdapterError: Error {
 
     /// The address was asked for after the server had stopped serving.
     case serverStopped
+
+    /// The provided group to use for the QUIC TLS 1.3 key exchange is not supported by the underlying server.
+    case unsupportedKeyExchangeGroup
 }
 
 /// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
@@ -138,7 +141,6 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                     )
                 ))
             case .http3(let config):
-                // `swift-http-server` lacks public initializers for `QUICConfiguration` and `ConnectionSettings`
                 var quicConfiguration: NIOHTTPServerConfiguration.HTTP3.QUICConfiguration = .defaults
                 quicConfiguration.serverName = config.quicConfiguration.serverName
                 quicConfiguration.keyExchangeGroup = switch config.quicConfiguration.keyExchangeGroup {
@@ -146,7 +148,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                     case .secp384: .secp384
                     case .x25519: .x25519
                     case .x25519MLKEM768: .x25519MLKEM768
-                    default: preconditionFailure("Unsupported key exchange group: \(config.quicConfiguration.keyExchangeGroup)")
+                    default: throw NIOHTTPServerAdapterError.unsupportedKeyExchangeGroup
                     }
                 quicConfiguration.maxIdleTimeout = config.quicConfiguration.maxIdleTimeout
                 quicConfiguration.initialMaxData = config.quicConfiguration.initialMaxData
@@ -168,7 +170,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 connectionSettings.qpackBlockedStreams = config.connectionSettings.qpackBlockedStreams
                 connectionSettings.maximumFieldSectionSize = config.connectionSettings.maximumFieldSectionSize
 
-                supportedHTTPVersions.insert(NIOHTTPServerConfiguration.HTTPVersion.http3(
+                supportedHTTPVersions.insert(.http3(
                     config: .init(
                         preferHuffmanEncoding: config.preferHuffmanEncoding,
                         quicConfiguration: quicConfiguration,
