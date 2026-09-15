@@ -17,13 +17,11 @@ let package = Package(
     ],
     traits: [
         .trait(name: "WebSockets"),
-        .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
         .trait(name: "Multipart"),
         .trait(name: "MacroRouting"),
         .default(enabledTraits: [
             "WebSockets",
-            "bcrypt",
             "HTTPClient",
             "Multipart",
             "MacroRouting",
@@ -101,7 +99,7 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "aa39e5c6c1934a2a06b26d2977c67bbc3846ab8b"),
+        .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "3d1adf2be5af598ea95a31575013468d6f08f79e"),
     ],
     targets: [
         // Vapor
