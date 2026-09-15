@@ -17,13 +17,11 @@ let package = Package(
     ],
     traits: [
         .trait(name: "WebSockets"),
-        .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
         .trait(name: "Multipart"),
         .trait(name: "MacroRouting"),
         .default(enabledTraits: [
             "WebSockets",
-            "bcrypt",
             "HTTPClient",
             "Multipart",
             "MacroRouting",
