@@ -99,7 +99,7 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "9b75bce220c97a2078eda303f6c11de376a29755"),
+        .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.2.0")),
     ],
     targets: [
         // Vapor
