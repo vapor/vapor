@@ -1,3 +1,4 @@
+import Foundation
 import Vapor
 import X509
 import Logging
@@ -5,11 +6,45 @@ import SwiftASN1
 
 func configure(_ app: Application) async throws {
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
-    if app.environment == .tls {
+    switch app.environment {
+    case .tls:
         app.serverConfiguration.port = 8443
         let privateKey = try Certificate.PrivateKey(pemEncoded: TLSData.sampleServerPrivateKeyPEM)
         let certChain = [try Certificate(pemEncoded: TLSData.sampleServerCertificatePEM)]
         app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
+    case .http3:
+        // To hit an HTTP/3 endpoint, you can use a cURL version that supports HTTP/3 inside Docker
+        //
+        // docker run --rm -p 8443:8443/udp alpine/curl-http3 curl https://host.docker.internal:8443/ping --http3-only --insecure
+        //
+        // If you want to test it with certificate verification enabled, use the following command
+        //
+        // docker run --rm \
+        //  -v "$(pwd)/Tests/VaporTests/Utilities:/certs:ro" \
+        //  -p 8443:8443/udp \
+        //  alpine/curl-http3 curl -i https://localhost:8443/ping --http3-only \
+        //  --connect-to localhost:8443:host.docker.internal:8443 \
+        //  --cacert /certs/http3-cacert.pem
+        app.serverConfiguration.address = .hostname("0.0.0.0", port: 8443)
+        let certificateChainPath = URL(filePath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appending(path: "Tests/VaporTests/Utilities/http3.crt")
+            .path()
+        let privateKeyPath = URL(filePath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appending(path: "Tests/VaporTests/Utilities/http3.key")
+            .path()
+        app.serverConfiguration.tlsConfiguration = .pemFile(
+            certificateChainPath: certificateChainPath,
+            privateKeyPath: privateKeyPath
+        )
+        app.serverConfiguration.httpVersions = [.http3(config: .defaults)]
+    default:
+        break
     }
 
     // routes
@@ -25,6 +60,7 @@ actor MemoryCache {
 
 extension Environment {
     static var tls: Environment { .custom(name: "tls") }
+    static var http3: Environment { .custom(name: "http3") }
 }
 
 enum TLSData {
