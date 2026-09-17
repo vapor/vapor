@@ -45,16 +45,34 @@ def main():
     (output / 'revision.json').write_text(json.dumps(metadata, indent=2) + '\n')
     if not args.skip_build:
         run(['swift', 'build', '--package-path', 'Performance', '-c', 'release'], output / 'build.log', env)
-    # The benchmark plugin builds before executing; it is finished before wrk starts.
+    benchmark_binary = ROOT / 'Benchmarks' / '.build' / 'release' / 'VaporBenchmarks'
+    benchmark_tool = benchmark_binary.with_name('BenchmarkTool')
+    if not benchmark_tool.exists():
+        run(['swift', 'package', '--package-path', 'Benchmarks', '--disable-sandbox',
+             '--allow-writing-to-package-directory', 'benchmark', 'list'], output / 'benchmark-tool-build.log', env)
+    elif not args.skip_build:
+        run(['swift', 'build', '--package-path', 'Benchmarks', '-c', 'release', '--product', 'VaporBenchmarks'],
+            output / 'benchmark-build.log', env)
+    # Invoke the same tool as the plugin, without its socket sandbox or repeated tool rebuilds.
+    # On Linux the plugin supplies these interposers through LD_PRELOAD.
+    if sys.platform.startswith('linux'):
+        libraries = [benchmark_tool.with_name(name) for name in
+                     ['libSwiftRuntimeInterposerSwift.so', 'libMallocInterposerSwift.so']]
+        preload = [str(p) for p in libraries if p.exists()]
+        if env.get('LD_PRELOAD'):
+            preload.append(env['LD_PRELOAD'])
+        env['LD_PRELOAD'] = ':'.join(preload)
     baseline = 'iteration-' + args.name
-    command = ['swift', 'package', '--package-path', 'Benchmarks', '--allow-writing-to-package-directory',
-               'benchmark', 'baseline', 'update', baseline, '--filter', args.filter, '--no-progress', '--scale',
-               '--metric', 'instructions', '--metric', 'mallocCountTotal', '--metric', 'wallClock', '--metric', 'throughput']
+    common = [str(benchmark_tool), '--command', 'baseline', '--baseline-storage-path', str(ROOT / 'Benchmarks'),
+              '--grouping', 'benchmark', '--targets', 'VaporBenchmarks', '--baseline', baseline]
+    command = common + ['--baseline-operation', 'update', '--format', 'text',
+                        '--benchmark-executable-paths', str(benchmark_binary), '--filter', args.filter,
+                        '--no-progress', '--scale', '--metrics', 'instructions', '--metrics', 'mallocCountTotal',
+                        '--metrics', 'wallClock', '--metrics', 'throughput']
     run(command, output / 'counters.txt', env)
     source = ROOT / 'Benchmarks' / '.benchmarkBaselines' / 'VaporBenchmarks' / baseline
     shutil.copytree(source, output / 'counter-baseline')
-    run(['swift', 'package', '--package-path', 'Benchmarks', '--allow-writing-to-package-directory',
-         'benchmark', 'baseline', 'read', baseline, '--format', 'jmh', '--path', str(output)],
+    run(common + ['--baseline-operation', 'read', '--format', 'jmh', '--path', str(output)],
         output / 'counter-export.log', env)
     for package, name in [(ROOT / 'Benchmarks', 'benchmarks'), (PERF, 'performance')]:
         shutil.copyfile(package / 'Package.resolved', output / f'dependencies-{name}.json')

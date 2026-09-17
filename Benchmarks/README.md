@@ -5,7 +5,7 @@ Requires Swift 6.4. The suite uses benchmark 1.36.2 and measures instructions, m
 ```sh
 swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark list
 NIO_SINGLETON_GROUP_LOOP_COUNT=4 NIO_SINGLETON_BLOCKING_POOL_THREAD_COUNT=4 \
-  swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark \
+  swift package --package-path Benchmarks --disable-sandbox --allow-writing-to-package-directory benchmark \
   --filter '^(e2e|network)/.*' --no-progress --scale
 ```
 
