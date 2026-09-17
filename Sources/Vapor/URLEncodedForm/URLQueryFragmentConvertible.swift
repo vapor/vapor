@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// Capable of converting to / from `URLQueryFragment`.
@@ -30,7 +30,8 @@ extension FixedWidthInteger {
     /// `URLEncodedFormDataConvertible` conformance.
     init?(urlQueryFragmentValue value: URLQueryFragment) {
         guard let decodedString = try? value.asUrlDecoded(),
-            let fwi = Self.init(decodedString) else {
+            let fwi = Self.init(decodedString)
+        else {
             return nil
         }
         self = fwi
@@ -42,23 +43,23 @@ extension FixedWidthInteger {
     }
 }
 
-extension Int: URLQueryFragmentConvertible { }
-extension Int8: URLQueryFragmentConvertible { }
-extension Int16: URLQueryFragmentConvertible { }
-extension Int32: URLQueryFragmentConvertible { }
-extension Int64: URLQueryFragmentConvertible { }
-extension UInt: URLQueryFragmentConvertible { }
-extension UInt8: URLQueryFragmentConvertible { }
-extension UInt16: URLQueryFragmentConvertible { }
-extension UInt32: URLQueryFragmentConvertible { }
-extension UInt64: URLQueryFragmentConvertible { }
-
+extension Int: URLQueryFragmentConvertible {}
+extension Int8: URLQueryFragmentConvertible {}
+extension Int16: URLQueryFragmentConvertible {}
+extension Int32: URLQueryFragmentConvertible {}
+extension Int64: URLQueryFragmentConvertible {}
+extension UInt: URLQueryFragmentConvertible {}
+extension UInt8: URLQueryFragmentConvertible {}
+extension UInt16: URLQueryFragmentConvertible {}
+extension UInt32: URLQueryFragmentConvertible {}
+extension UInt64: URLQueryFragmentConvertible {}
 
 extension BinaryFloatingPoint {
     /// `URLEncodedFormDataConvertible` conformance.
     init?(urlQueryFragmentValue value: URLQueryFragment) {
         guard let decodedString = try? value.asUrlDecoded(),
-            let double = Double(decodedString) else {
+            let double = Double(decodedString)
+        else {
             return nil
         }
         self = Self.init(double)
@@ -70,8 +71,8 @@ extension BinaryFloatingPoint {
     }
 }
 
-extension Float: URLQueryFragmentConvertible { }
-extension Double: URLQueryFragmentConvertible { }
+extension Float: URLQueryFragmentConvertible {}
+extension Double: URLQueryFragmentConvertible {}
 
 extension Bool: URLQueryFragmentConvertible {
     /// `URLEncodedFormDataConvertible` conformance.
@@ -97,7 +98,8 @@ extension Decimal: URLQueryFragmentConvertible {
     /// `URLEncodedFormDataConvertible` conformance.
     init?(urlQueryFragmentValue value: URLQueryFragment) {
         guard let decodedString = try? value.asUrlDecoded(),
-            let decimal = Decimal(string: decodedString) else {
+            let decimal = Decimal(string: decodedString)
+        else {
             return nil
         }
         self = decimal

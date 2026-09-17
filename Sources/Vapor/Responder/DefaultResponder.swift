@@ -1,11 +1,12 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 public import HTTPTypes
 public import Logging
 import RoutingKit
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 /// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.
 package struct DefaultResponder: Responder {
@@ -51,11 +52,13 @@ package struct DefaultResponder: Responder {
     // See `Responder.respond(to:)`
     package func respond(to request: Request) async throws -> Response {
         var parameters = Parameters()
-        guard let cachedRoute = self.getRoute(
-            method: request.method,
-            path: request.url.path,
-            parameters: &parameters
-        ) else {
+        guard
+            let cachedRoute = self.getRoute(
+                method: request.method,
+                path: request.url.path,
+                parameters: &parameters
+            )
+        else {
             return try await self.notFoundResponder.respond(to: request)
         }
         return try await cachedRoute.responder.respond(
@@ -69,7 +72,8 @@ package struct DefaultResponder: Responder {
         path: String,
         parameters: inout Parameters
     ) -> CachedRoute? {
-        let pathComponents = path
+        let pathComponents =
+            path
             .split(separator: "/")
             .map { String($0).removingPercentEncoding ?? String($0) }
 
@@ -89,10 +93,12 @@ package struct DefaultResponder: Responder {
         let resolvedMethod = (method == .head) ? .get : method
 
         var routeParameters = Parameters()
-        guard let route = self.router.route(
-            path: [resolvedMethod.rawValue] + pathComponents,
-            parameters: &routeParameters
-        ) else {
+        guard
+            let route = self.router.route(
+                path: [resolvedMethod.rawValue] + pathComponents,
+                parameters: &routeParameters
+            )
+        else {
             return nil
         }
         parameters = routeParameters

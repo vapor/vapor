@@ -35,7 +35,7 @@ public protocol LifecycleHandler: Sendable {
 }
 
 extension LifecycleHandler {
-    public func willBoot(_ application: Application) async throws { }
-    public func didBoot(_ application: Application) async throws { }
-    public func shutdown(_ application: Application) async { }
+    public func willBoot(_ application: Application) async throws {}
+    public func didBoot(_ application: Application) async throws {}
+    public func shutdown(_ application: Application) async {}
 }

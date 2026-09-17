@@ -1,8 +1,8 @@
 #if WebSockets
-import RoutingKit
-// Disable until we need it
-//import WebSocketKit
-import HTTPTypes
+    import RoutingKit
+    // Disable until we need it
+    //import WebSocketKit
+    import HTTPTypes
 
 //public struct WebSocketMaxFrameSize: Sendable, ExpressibleByIntegerLiteral {
 //    let value: Int
@@ -60,7 +60,7 @@ import HTTPTypes
 //        self.on(.get, path) { request -> Response in
 //            let res = Response(status: .switchingProtocols)
 //            res.upgrader = WebSocketUpgrader(maxFrameSize: maxFrameSize, shouldUpgrade: {
-//                shouldUpgrade(request)                
+//                shouldUpgrade(request)
 //            }, onUpgrade: { ws in
 //                onUpgrade(request, ws)
 //            })

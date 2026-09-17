@@ -1,9 +1,9 @@
 public protocol URLQueryDecoder: Sendable {
     func decode<D>(_ decodable: D.Type, from url: URI) throws -> D
-        where D: Decodable
+    where D: Decodable
 
     func decode<D>(_ decodable: D.Type, from url: URI, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
-        where D: Decodable
+    where D: Decodable
 }
 
 public protocol URLQueryEncoder: Sendable {
@@ -20,8 +20,7 @@ extension URLQueryEncoder {
 
 extension URLQueryDecoder {
     public func decode<D>(_ decodable: D.Type, from url: URI, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
-        where D: Decodable
-    {
+    where D: Decodable {
         try self.decode(decodable, from: url)
     }
 }

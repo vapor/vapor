@@ -19,11 +19,11 @@ extension ValidatorResults.Valid: ValidatorResult {
     public var isFailure: Bool {
         !self.isValid
     }
-    
+
     public var successDescription: String? {
         "is valid"
     }
-    
+
     public var failureDescription: String? {
         "is not valid"
     }

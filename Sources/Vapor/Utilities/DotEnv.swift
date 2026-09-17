@@ -1,19 +1,20 @@
-#if canImport(Glibc)
-import Glibc
-#elseif canImport(Musl)
-import Musl
-#elseif canImport(Android)
-import Android
-#else
-import Darwin
-#endif
 import Logging
 import NIOCore
 import _NIOFileSystem
-#if canImport(FoundationEssentials)
-import FoundationEssentials
+
+#if canImport(Glibc)
+    import Glibc
+#elseif canImport(Musl)
+    import Musl
+#elseif canImport(Android)
+    import Android
 #else
-import Foundation
+    import Darwin
+#endif
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
 #endif
 
 /// Reads dotenv (`.env`) files and loads them into the current process.
@@ -178,7 +179,7 @@ extension DotEnvFile {
                 return self.parseNext()
             case .newLine:
                 // empty line, skip
-                self.pop() // \n
+                self.pop()  // \n
                 // then parse next
                 return self.parseNext()
             default:
@@ -190,7 +191,7 @@ extension DotEnvFile {
         private mutating func skipComment() {
             let commentLength: Int
             if let toNewLine = self.countDistance(to: .newLine) {
-                commentLength = toNewLine + 1 // include newline
+                commentLength = toNewLine + 1  // include newline
             } else {
                 commentLength = self.source.readableBytes
             }
@@ -204,7 +205,7 @@ extension DotEnvFile {
             guard let key = self.source.readString(length: keyLength) else {
                 return nil
             }
-            self.pop() // =
+            self.pop()  // =
             guard let value = self.parseLineValue() else {
                 return nil
             }
@@ -275,20 +276,20 @@ extension DotEnvFile {
     }
 }
 
-private extension UInt8 {
-    static var newLine: UInt8 {
+extension UInt8 {
+    fileprivate static var newLine: UInt8 {
         return 0xA
     }
 
-    static var space: UInt8 {
+    fileprivate static var space: UInt8 {
         return 0x20
     }
 
-    static var octothorpe: UInt8 {
+    fileprivate static var octothorpe: UInt8 {
         return 0x23
     }
 
-    static var equal: UInt8 {
+    fileprivate static var equal: UInt8 {
         return 0x3D
     }
 }

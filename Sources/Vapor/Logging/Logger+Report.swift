@@ -1,9 +1,10 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 public import Logging
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 extension Logger {
     /// Reports an `Error` to this `Logger`.

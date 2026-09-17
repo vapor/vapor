@@ -1,6 +1,7 @@
-@testable import Vapor
-import Testing
 import Foundation
+import Testing
+
+@testable import Vapor
 
 @Suite("URL Encoded Form Tests")
 struct URLEncodedFormTests {
@@ -9,8 +10,8 @@ struct URLEncodedFormTests {
     @Test("Test Decode")
     func testDecode() throws {
         let data = """
-        name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
-        """
+            name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
+            """
 
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
         #expect(user.name == "Tanner")
@@ -27,8 +28,8 @@ struct URLEncodedFormTests {
     @Test("Test Decode Comma Separated Array")
     func testDecodeCommaSeparatedArray() throws {
         let data = """
-        name=Tanner&age=23&pets=Zizek,Foo%2C&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
-        """
+            name=Tanner&age=23&pets=Zizek,Foo%2C&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
+            """
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
         #expect(user.name == "Tanner")
         #expect(user.age == 23)
@@ -44,8 +45,8 @@ struct URLEncodedFormTests {
     @Test("Test Decode Without Array Brackets")
     func testDecodeWithoutArrayBrackets() throws {
         let data = """
-        name=Tanner&age=23&pets=Zizek&pets=Foo&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
-        """
+            name=Tanner&age=23&pets=Zizek&pets=Foo&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
+            """
 
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
         #expect(user.name == "Tanner")
@@ -62,8 +63,8 @@ struct URLEncodedFormTests {
     @Test("Test Decode Arrays To Single Value Fails")
     func testDecodeArraysToSingleValueFails() throws {
         let data = """
-        name[]=Tanner&age[]=23&pets[]=Zizek&pets[]=Foo&dict[a][]=1&dict[b][]=2&foos[]=baz&nums[]=3.14
-        """
+            name[]=Tanner&age[]=23&pets[]=Zizek&pets[]=Foo&dict[a][]=1&dict[b][]=2&foos[]=baz&nums[]=3.14
+            """
         #expect(throws: DecodingError.self) {
             try URLEncodedFormDecoder().decode(User.self, from: data)
         }
@@ -72,8 +73,8 @@ struct URLEncodedFormTests {
     @Test("Test Decode String With Commas")
     func testDecodeStringWithCommas() throws {
         let data = """
-        name=Vapor, Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
-        """
+            name=Vapor, Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
+            """
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
         #expect(user.name == "Vapor, Tanner")
         #expect(user.age == 23)
@@ -90,15 +91,15 @@ struct URLEncodedFormTests {
     func testDecodeWithoutFlagsAsBoolFailsWhenBoolIsRequired() throws {
         let decoder = URLEncodedFormDecoder(configuration: .init(boolFlags: false))
         let dataWithoutBool = """
-        name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
-        """
+            name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
+            """
         #expect(throws: DecodingError.self) {
             try decoder.decode(User.self, from: dataWithoutBool)
         }
 
         let dataWithBool = """
-        name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14&isCool=false
-        """
+            name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14&isCool=false
+            """
         let user = try decoder.decode(User.self, from: dataWithBool)
         #expect(user.name == "Tanner")
         #expect(user.age == 23)
@@ -119,8 +120,8 @@ struct URLEncodedFormTests {
         }
 
         let data = """
-        array[0]=a&array[1]=&array[2]=b&array[3]=
-        """
+            array[0]=a&array[1]=&array[2]=b&array[3]=
+            """
         let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
         #expect(test.array[0] == "a")
         #expect(test.array[1] == "")
@@ -135,8 +136,8 @@ struct URLEncodedFormTests {
         }
 
         let data = """
-        array[]=a&array[]=&array[]=b&array[]=
-        """
+            array[]=a&array[]=&array[]=b&array[]=
+            """
         let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
         #expect(test.array[0] == "a")
         #expect(test.array[1] == "")
@@ -151,8 +152,8 @@ struct URLEncodedFormTests {
         }
 
         let data = """
-        array[0]=a&array[1]=b
-        """
+            array[0]=a&array[1]=b
+            """
         let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
         #expect(test.array[0] == "a")
         #expect(test.array[1] == "b")
@@ -186,7 +187,8 @@ struct URLEncodedFormTests {
             ]
         )
 
-        let decodedDefaultFromUnixTimestamp = try URLEncodedFormDecoder().decode(DateArrayCoding.self, from: "dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0")
+        let decodedDefaultFromUnixTimestamp = try URLEncodedFormDecoder().decode(
+            DateArrayCoding.self, from: "dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0")
         #expect(decodedDefaultFromUnixTimestamp == toEncode)
 
         let resultForDefault = try URLEncodedFormEncoder().encode(toEncode)
@@ -208,7 +210,10 @@ struct URLEncodedFormTests {
         let resultForInternetDateTime = try URLEncodedFormEncoder(
             configuration: .init(dateEncodingStrategy: .iso8601)
         ).encode(toEncode)
-        #expect(resultForInternetDateTime == "dates[]=1970-01-01T00%3A00%3A00Z&dates[]=1970-01-01T02%3A46%3A40Z&dates[]=1970-01-01T05%3A33%3A20Z&dates[]=1970-01-01T08%3A20%3A00Z&dates[]=1970-01-01T11%3A06%3A40Z&dates[]=1970-01-01T13%3A53%3A20Z")
+        #expect(
+            resultForInternetDateTime
+                == "dates[]=1970-01-01T00%3A00%3A00Z&dates[]=1970-01-01T02%3A46%3A40Z&dates[]=1970-01-01T05%3A33%3A20Z&dates[]=1970-01-01T08%3A20%3A00Z&dates[]=1970-01-01T11%3A06%3A40Z&dates[]=1970-01-01T13%3A53%3A20Z"
+        )
 
         let decodedInternetDateTime = try URLEncodedFormDecoder(
             configuration: .init(dateDecodingStrategy: .iso8601)
@@ -236,22 +241,27 @@ struct URLEncodedFormTests {
         }
         let factory = DateFormatterFactory()
         let resultCustom = try URLEncodedFormEncoder(
-            configuration: .init(dateEncodingStrategy: .custom { date, encoder in
-                var container = encoder.singleValueContainer()
-                try container.encode(factory.currentValue.string(from: date))
-            })
+            configuration: .init(
+                dateEncodingStrategy: .custom { date, encoder in
+                    var container = encoder.singleValueContainer()
+                    try container.encode(factory.currentValue.string(from: date))
+                })
         ).encode(toEncode)
-        #expect("dates[]=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2002%3A46%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2005%3A33%3A20%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2008%3A20%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2011%3A06%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2013%3A53%3A20%20Timezone%3A%20Z" == resultCustom)
+        #expect(
+            "dates[]=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2002%3A46%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2005%3A33%3A20%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2008%3A20%3A00%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2011%3A06%3A40%20Timezone%3A%20Z&dates[]=Date%3A%201970-01-01%20Time%3A%2013%3A53%3A20%20Timezone%3A%20Z"
+                == resultCustom)
 
         let decodedCustom = try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategy: .custom { decoder -> Date in
-                let container = try decoder.singleValueContainer()
-                let string = try container.decode(String.self)
-                guard let date = factory.currentValue.date(from: string) else {
-                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to decode date from string '\(string)'")
-                }
-                return date
-            })
+            configuration: .init(
+                dateDecodingStrategy: .custom { decoder -> Date in
+                    let container = try decoder.singleValueContainer()
+                    let string = try container.decode(String.self)
+                    guard let date = factory.currentValue.date(from: string) else {
+                        throw DecodingError.dataCorruptedError(
+                            in: container, debugDescription: "Unable to decode date from string '\(string)'")
+                    }
+                    return date
+                })
         ).decode(DateArrayCoding.self, from: resultCustom)
         #expect(decodedCustom == toEncode)
     }
@@ -310,22 +320,25 @@ struct URLEncodedFormTests {
         }
         let factory = DateFormatterFactory()
         let resultCustom = try URLEncodedFormEncoder(
-            configuration: .init(dateEncodingStrategy: .custom { date, encoder in
-                var container = encoder.singleValueContainer()
-                try container.encode(factory.currentValue.string(from: date))
-            })
+            configuration: .init(
+                dateEncodingStrategy: .custom { date, encoder in
+                    var container = encoder.singleValueContainer()
+                    try container.encode(factory.currentValue.string(from: date))
+                })
         ).encode(toEncode)
         #expect("date=Date%3A%201970-01-01%20Time%3A%2000%3A00%3A00%20Timezone%3A%20Z" == resultCustom)
 
         let decodedCustom = try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategy: .custom { decoder -> Date in
-                let container = try decoder.singleValueContainer()
-                let string = try container.decode(String.self)
-                guard let date = factory.currentValue.date(from: string) else {
-                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to decode date from string '\(string)'")
-                }
-                return date
-            })
+            configuration: .init(
+                dateDecodingStrategy: .custom { decoder -> Date in
+                    let container = try decoder.singleValueContainer()
+                    let string = try container.decode(String.self)
+                    guard let date = factory.currentValue.date(from: string) else {
+                        throw DecodingError.dataCorruptedError(
+                            in: container, debugDescription: "Unable to decode date from string '\(string)'")
+                    }
+                    return date
+                })
         ).decode(DateCoding.self, from: resultCustom)
         #expect(decodedCustom == toEncode)
     }
@@ -381,8 +394,10 @@ struct URLEncodedFormTests {
 
     @Test("Test Multi Object Array Encode")
     func testMultiObjectArrayEncode() throws {
-        let tanner = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
-        let ravneet = User(name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
+        let tanner = User(
+            name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
+        let ravneet = User(
+            name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
         let usersToEncode = Users(users: [tanner, ravneet])
         let result = try URLEncodedFormEncoder().encode(usersToEncode)
         #expect(result.contains("users[0][pets][]=Zizek"))
@@ -412,8 +427,10 @@ struct URLEncodedFormTests {
 
     @Test("Test Multi Object Values Array Encoding")
     func testMultiObjectValuesArrayEncoding() throws {
-        let tanner = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
-        let ravneet = User(name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
+        let tanner = User(
+            name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
+        let ravneet = User(
+            name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
         let usersToEncode = Users(users: [tanner, ravneet])
         let result = try URLEncodedFormEncoder(
             configuration: .init(arrayEncoding: .values)
@@ -446,7 +463,9 @@ struct URLEncodedFormTests {
 
     @Test("Test Arrays of Arrays of Objects")
     func testArraysOfArraysOfObjects() throws {
-        let toEncode = [[User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)]]
+        let toEncode = [
+            [User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)]
+        ]
         let result = try URLEncodedFormEncoder().encode(toEncode)
         let kvs = result.split(separator: "&")
         #expect(kvs.contains("0[0][name]=Tanner"))
@@ -457,8 +476,10 @@ struct URLEncodedFormTests {
 
     @Test("Test Multi Object Array Encode With Array Separator")
     func testMultiObjectArrayEncodeWithArraySeparator() throws {
-        let tanner = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
-        let ravneet = User(name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
+        let tanner = User(
+            name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
+        let ravneet = User(
+            name: "Ravneet", age: 33, pets: ["Piku"], dict: ["a": -3, "b": 99], foos: [.baz, .bar], nums: [3.14, 144], isCool: true)
         let usersToEncode = Users(users: [tanner, ravneet])
         let result = try URLEncodedFormEncoder(
             configuration: .init(arrayEncoding: .separator(","))
@@ -620,11 +641,16 @@ struct URLEncodedFormTests {
     func testSubArray2() throws {
         let data = "greetings[sub]=hello&greetings[sub][]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        let expected: URLEncodedFormData = ["greetings": ["sub":
-                URLEncodedFormData(values: ["hello"], children: [
-                    "": "hola",
-                ]),
-        ]]
+        let expected: URLEncodedFormData = [
+            "greetings": [
+                "sub":
+                    URLEncodedFormData(
+                        values: ["hello"],
+                        children: [
+                            "": "hola"
+                        ])
+            ]
+        ]
         #expect(form == expected)
     }
 
@@ -632,11 +658,16 @@ struct URLEncodedFormTests {
     func testSubArray3() throws {
         let data = "greetings[sub][]=hello&greetings[sub]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        let expected: URLEncodedFormData = ["greetings": ["sub":
-                URLEncodedFormData(values: ["hola"], children: [
-                    "": "hello",
-                ]),
-        ]]
+        let expected: URLEncodedFormData = [
+            "greetings": [
+                "sub":
+                    URLEncodedFormData(
+                        values: ["hola"],
+                        children: [
+                            "": "hello"
+                        ])
+            ]
+        ]
         #expect(form == expected)
     }
 
@@ -644,11 +675,16 @@ struct URLEncodedFormTests {
     func testSubArray4() throws {
         let data = "greetings[sub][]=hello&greetings[sub]=hola&greetings[sub]=bonjour"
         let form = try URLEncodedFormParser().parse(data)
-        let expected: URLEncodedFormData = ["greetings": ["sub":
-                URLEncodedFormData(values: ["hola", "bonjour"], children: [
-                    "": "hello",
-                ]),
-        ]]
+        let expected: URLEncodedFormData = [
+            "greetings": [
+                "sub":
+                    URLEncodedFormData(
+                        values: ["hola", "bonjour"],
+                        children: [
+                            "": "hello"
+                        ])
+            ]
+        ]
         #expect(form == expected)
     }
 
@@ -670,9 +706,11 @@ struct URLEncodedFormTests {
     func testFlags() throws {
         let data = "hello=&foo"
         let form = try URLEncodedFormParser().parse(data)
-        let expected = URLEncodedFormData(values: ["foo"], children: [
-            "hello": URLEncodedFormData(""),
-        ])
+        let expected = URLEncodedFormData(
+            values: ["foo"],
+            children: [
+                "hello": URLEncodedFormData("")
+            ])
         #expect(form == expected)
     }
 
@@ -718,7 +756,7 @@ struct URLEncodedFormTests {
     @Test("Test Percent Encoding Special Characters")
     func testPercentEncodingSpecial() throws {
         let data = try URLEncodedFormSerializer().serialize([
-            "test": "&;!$'(),/:=?@~",
+            "test": "&;!$'(),/:=?@~"
         ])
         #expect(data == "test=%26%3B%21%24%27%28%29%2C%2F%3A%3D%3F%40%7E")
     }

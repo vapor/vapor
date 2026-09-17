@@ -1,10 +1,11 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
 public import HTTPTypes
 import Synchronization
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 extension Response {
     /// Shared consumption state for a streaming body, this ensures it's only called once and can be shared amongst copies
@@ -59,7 +60,7 @@ extension Response {
     struct BodyStream: Sendable {
         /// The number of bytes the stream will produce, or `nil` if that is not known in advance.
         let count: Int?
-        let callback: @Sendable (borrowing any HTTPBodyWriter & ~Escapable) async throws -> ()
+        let callback: @Sendable (borrowing any HTTPBodyWriter & ~Escapable) async throws -> Void
         let state = BodyStreamState()
     }
 
@@ -213,7 +214,7 @@ extension Response {
         /// The collecting counterpart to ``data``, for where the body may or may not be a stream and
         /// the bytes are genuinely needed - a client response, say. An already-collected or buffered
         /// body is returned without re-reading anything.
-        /// 
+        ///
         /// - Parameter max: The most bytes to buffer, as ``collect(max:)``. `nil` buffers whatever
         ///   the body produces.
         /// - Returns: The body's bytes, or `nil` if the body is empty.
@@ -336,7 +337,7 @@ extension Response {
         ///   - count: The number of bytes that will be written. The `stream` **MUST** produce exactly
         ///     `count` bytes. `nil` means the length is not known in advance, and the response is chunked.
         /// - Throws: ``Response/Body/NegativeCountError`` if `count` is negative.
-        public init(stream: @escaping @Sendable (borrowing any HTTPBodyWriter & ~Escapable) async throws -> (), count: Int?) throws {
+        public init(stream: @escaping @Sendable (borrowing any HTTPBodyWriter & ~Escapable) async throws -> Void, count: Int?) throws {
             // A negative length is not a shorter body, it is an impossible one. Left unchecked it
             // reaches the wire as a malformed `Content-Length`, so it is rejected at the one point a
             // bad value can enter. Thrown rather than trapped: a mistake in one handler must not
@@ -391,7 +392,7 @@ extension Response {
         ///
         /// - Parameters:
         ///   - stream: The closure that writes the body chunks.
-        public init(stream: @escaping @Sendable (borrowing any HTTPBodyWriter & ~Escapable) async throws -> ()) {
+        public init(stream: @escaping @Sendable (borrowing any HTTPBodyWriter & ~Escapable) async throws -> Void) {
             // `nil` can never be rejected, so this stays non-throwing.
             self.storage = .stream(.init(count: nil, callback: stream))
         }

@@ -1,5 +1,5 @@
-import RoutingKit
 import HTTPTypes
+import RoutingKit
 
 extension Application {
     /// Returns all routes registered to the `Application`'s `Router` in an ASCII-formatted table `String`.
@@ -18,23 +18,26 @@ extension Application {
         let routes = self.routes
         let includeDescription = !routes.all.filter { $0.routeDescription != nil }.isEmpty
         let pathSeparator = "/"
-        return String.asciiTable(routes.all.map { route -> [String] in
-            var column = [route.method.rawValue]
-            if route.path.isEmpty {
-                column.append(pathSeparator)
-            } else {
-                column.append(route.path
-                    .map { pathSeparator + $0.description }
-                    .reduce("", +)
-                )
-            }
-            if includeDescription {
-                let desc = route.routeDescription
-                    .flatMap { $0 } ?? ""
-                column.append(desc)
-            }
-            return column
-        })
+        return String.asciiTable(
+            routes.all.map { route -> [String] in
+                var column = [route.method.rawValue]
+                if route.path.isEmpty {
+                    column.append(pathSeparator)
+                } else {
+                    column.append(
+                        route.path
+                            .map { pathSeparator + $0.description }
+                            .reduce("", +)
+                    )
+                }
+                if includeDescription {
+                    let desc =
+                        route.routeDescription
+                        .flatMap { $0 } ?? ""
+                    column.append(desc)
+                }
+                return column
+            })
     }
 }
 

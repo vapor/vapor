@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 private actor MemoryCacheStorage {
@@ -22,8 +22,7 @@ private actor MemoryCacheStorage {
     }
 
     func get<T>(_ key: String) -> T?
-        where T: Decodable & Sendable
-    {
+    where T: Decodable & Sendable {
         guard let box = self.storage[key] as? CacheEntryBox<T> else { return nil }
         if let expiresAt = box.expiresAt, expiresAt < Date() {
             self.storage.removeValue(forKey: key)
@@ -34,8 +33,7 @@ private actor MemoryCacheStorage {
     }
 
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
-        where T: Encodable & Sendable
-    {
+    where T: Encodable & Sendable {
         if let value = value {
             var box = CacheEntryBox(value)
             if let expirationTime = expirationTime {

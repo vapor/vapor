@@ -1,6 +1,6 @@
+import CompilerPluginSupport
 // swift-tools-version:6.4
 import PackageDescription
-import CompilerPluginSupport
 
 let package = Package(
     name: "vapor",
@@ -69,7 +69,7 @@ let package = Package(
 
         // WebSocket client library built on SwiftNIO
         // Disable until websockets are working
-//        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
+        //        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
 
         // MultipartKit, Multipart encoding and decoding
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "5.0.0-beta.1"),
@@ -146,7 +146,7 @@ let package = Package(
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
-                .product(name: "Algorithms", package: "swift-algorithms")
+                .product(name: "Algorithms", package: "swift-algorithms"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -240,18 +240,20 @@ let package = Package(
     ]
 )
 
-var swiftSettings: [SwiftSetting] { [
-    .strictMemorySafety(),
-//    .treatAllWarnings(as: .error),
-    .enableUpcomingFeature("ExistentialAny"),
-    .enableUpcomingFeature("InternalImportsByDefault"),
-    .enableUpcomingFeature("MemberImportVisibility"),
-    .enableUpcomingFeature("InferIsolatedConformances"),
-    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
-    .enableUpcomingFeature("ImmutableWeakCaptures"),
-    .enableExperimentalFeature("SuppressedAssociatedTypesWithDefaults"),
-    .enableExperimentalFeature("LifetimeDependence"),
-    .enableExperimentalFeature("Lifetimes"),
-    .enableUpcomingFeature("LifetimeDependence"),
-    .enableUpcomingFeature("ImmutableWeakCaptures"),
-] }
+var swiftSettings: [SwiftSetting] {
+    [
+        .strictMemorySafety(),
+        //    .treatAllWarnings(as: .error),
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
+        .enableUpcomingFeature("MemberImportVisibility"),
+        .enableUpcomingFeature("InferIsolatedConformances"),
+        .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+        .enableUpcomingFeature("ImmutableWeakCaptures"),
+        .enableExperimentalFeature("SuppressedAssociatedTypesWithDefaults"),
+        .enableExperimentalFeature("LifetimeDependence"),
+        .enableExperimentalFeature("Lifetimes"),
+        .enableUpcomingFeature("LifetimeDependence"),
+        .enableUpcomingFeature("ImmutableWeakCaptures"),
+    ]
+}

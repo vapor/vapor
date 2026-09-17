@@ -8,7 +8,7 @@ extension Request {
     /// inner middleware stays visible to an outer middleware as the response unwinds — that is how
     /// ``SessionAuthenticator`` persists a user authenticated further down the chain. Reading has no
     /// side effects.
-    /// 
+    ///
     /// See ``RequestAuthenticator`` for more information.
     public final class Authentication: Sendable {
         let storage = Mutex<AuthenticationStorage>(.init())

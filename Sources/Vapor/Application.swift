@@ -2,8 +2,9 @@ public import Configuration
 import Logging
 public import ServiceLifecycle
 import UnixSignals
+
 #if HTTPClient
-import AsyncHTTPClient
+    import AsyncHTTPClient
 #endif
 
 /// Core type representing a Vapor application.
@@ -46,7 +47,7 @@ public final class Application: Sendable, Service {
     private let _middlewares: FreezableType<Middlewares>
     private let _serverConfiguration: FreezableType<ServerConfiguration>
     private let _services: FreezableType<[any Service]>
-    private let _lifecycleHandlers: FreezableType<[ any LifecycleHandler]>
+    private let _lifecycleHandlers: FreezableType<[any LifecycleHandler]>
     let _routes: FreezableType<RouteStorage>
 
     // MARK: - Other Types
@@ -117,27 +118,27 @@ public final class Application: Sendable, Service {
 
         // Service Setup
         switch services.viewRenderer {
-            case .default:
-                self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory)
-            case .provided(let renderer):
-                self.viewRenderer = renderer
+        case .default:
+            self.viewRenderer = PlaintextRenderer(viewsDirectory: self.directoryConfiguration.viewsDirectory)
+        case .provided(let renderer):
+            self.viewRenderer = renderer
         }
 
         switch services.cache {
-            case .default:
-                self.cache = MemoryCache()
-            case .provided(let cache):
-                self.cache = cache
+        case .default:
+            self.cache = MemoryCache()
+        case .provided(let cache):
+            self.cache = cache
         }
 
         switch services.client {
         case .default:
             #if HTTPClient
-            // `HTTPClient.shared` is configured like a browser, which includes decoding gzip and deflate.
-            self.client = VaporHTTPClient(
-                http: HTTPClient.shared, contentConfiguration: self.contentConfiguration, decodesCompressedBodies: true)
+                // `HTTPClient.shared` is configured like a browser, which includes decoding gzip and deflate.
+                self.client = VaporHTTPClient(
+                    http: HTTPClient.shared, contentConfiguration: self.contentConfiguration, decodesCompressedBodies: true)
             #else
-            self.client = BlackholeClient(contentConfiguration: self.contentConfiguration)
+                self.client = BlackholeClient(contentConfiguration: self.contentConfiguration)
             #endif
         case .provided(let client):
             self.client = client
@@ -168,7 +169,7 @@ public final class Application: Sendable, Service {
         case .provided(let server):
             self.server = server
         }
-        
+
         await DotEnvFile.load(for: self.environment)
     }
 
@@ -213,10 +214,11 @@ public final class Application: Sendable, Service {
     public func start() async throws {
         try await self.withLifecycle {
             var services: [ServiceGroupConfiguration.ServiceConfiguration] = []
-            services.append(.init(
-                service: self.server,
-                successTerminationBehavior: .gracefullyShutdownGroup
-            ))
+            services.append(
+                .init(
+                    service: self.server,
+                    successTerminationBehavior: .gracefullyShutdownGroup
+                ))
             for service in self._services.value {
                 services.append(.init(service: service))
             }
@@ -259,7 +261,7 @@ public final class Application: Sendable, Service {
         Logger.current.debug("Application shutting down")
 
         Logger.current.trace("Shutting down providers")
-        for handler in self._lifecycleHandlers.value.reversed()  {
+        for handler in self._lifecycleHandlers.value.reversed() {
             await handler.shutdown(self)
         }
 
@@ -297,7 +299,6 @@ public final class Application: Sendable, Service {
     public func addLifecycleHandler(_ lifecycleHander: any LifecycleHandler) {
         self._lifecycleHandlers.withValue { $0.append(lifecycleHander) }
     }
-
 
     deinit {
         Logger.current.trace("Application deinitialized, goodbye!")

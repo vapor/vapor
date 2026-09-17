@@ -1,5 +1,6 @@
-#warning("Should this be internal?")
 public import NIOHTTPCompression
+
+#warning("Should this be internal?")
 
 extension ServerConfiguration {
     /// Supported HTTP decompression options.

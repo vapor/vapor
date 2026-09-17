@@ -1,19 +1,19 @@
-import Vapor
-import NIOCore
-import Synchronization
-import HTTPTypes
-import _NIOFileSystem
 import Crypto
-import Vapor
-import Testing
-import VaporTesting
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
+import HTTPTypes
+import NIOCore
 import RoutingKit
+import Synchronization
+import Testing
+import Vapor
+import VaporTesting
+import _NIOFileSystem
 import _NIOFileSystemFoundationCompat
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("File Tests")
 struct FileTests {
@@ -298,7 +298,7 @@ struct FileTests {
 
     @Test("A file response advertises range support with Accept-Ranges")
     func testFileResponseAdvertisesAcceptRanges() async throws {
-        try await withRangeServer { client,_ in
+        try await withRangeServer { client, _ in
             // A whole-file response is what tells a client it may ask for a range at all, so it
             // carries the header just as a partial one does.
             let whole = try await client.get("/file-stream")
@@ -318,10 +318,11 @@ struct FileTests {
         }
     }
 
-    @Test("A byte range serves exactly the bytes it asked for",
-          .bug("https://github.com/vapor/vapor/issues/2566"))
+    @Test(
+        "A byte range serves exactly the bytes it asked for",
+        .bug("https://github.com/vapor/vapor/issues/2566"))
     func testByteRangeServesExactlyTheRequestedBytes() async throws {
-        try await withRangeServer { client,contents in
+        try await withRangeServer { client, contents in
             // The three ranges from the issue, which each came back with `end + 1` bytes (the range
             // start was ignored) rather than `end - start + 1`.
             for (start, end) in [(1024, 24601), (24602, 68000), (0, 0), (168_000, 168_502)] {
@@ -345,10 +346,11 @@ struct FileTests {
         }
     }
 
-    @Test("An open-ended and a suffix range serve exactly the bytes they asked for",
-          .bug("https://github.com/vapor/vapor/issues/2566"))
+    @Test(
+        "An open-ended and a suffix range serve exactly the bytes they asked for",
+        .bug("https://github.com/vapor/vapor/issues/2566"))
     func testOpenEndedAndSuffixRangesServeExactBytes() async throws {
-        try await withRangeServer { client,contents in
+        try await withRangeServer { client, contents in
             let size = contents.count
 
             // `bytes=1024-` is everything from 1024 to the last byte.
@@ -370,10 +372,11 @@ struct FileTests {
         }
     }
 
-    @Test("A byte range running past the end of the file is clamped to the end",
-          .bug("https://github.com/vapor/vapor/issues/2991"))
+    @Test(
+        "A byte range running past the end of the file is clamped to the end",
+        .bug("https://github.com/vapor/vapor/issues/2991"))
     func testRangePastEndOfFileIsClamped() async throws {
-        try await withRangeServer { client,contents in
+        try await withRangeServer { client, contents in
             let size = contents.count
 
             // The case from the issue: an end past EOF used to be a 400. Other servers serve up to
@@ -406,10 +409,11 @@ struct FileTests {
         }
     }
 
-    @Test("A byte range that selects no bytes is 416, not 400",
-          .bug("https://github.com/vapor/vapor/issues/2991"))
+    @Test(
+        "A byte range that selects no bytes is 416, not 400",
+        .bug("https://github.com/vapor/vapor/issues/2991"))
     func testRangePastEndOfFileIs416() async throws {
-        try await withRangeServer { client,contents in
+        try await withRangeServer { client, contents in
             let size = contents.count
 
             // A range whose *start* is at or past the end selects nothing, so there is nothing to
@@ -432,14 +436,15 @@ struct FileTests {
         }
     }
 
-    @Test("A malformed byte range is a 400, not a 416",
-          .bug("https://github.com/vapor/vapor/issues/2991"))
+    @Test(
+        "A malformed byte range is a 400, not a 416",
+        .bug("https://github.com/vapor/vapor/issues/2991"))
     func testMalformedRangeIsBadRequest() async throws {
         // A malformed range is rejected outright rather than narrowed. Unlike one that merely runs
         // past the end of the file, there is no sensible window to clamp these to: the client asked
         // for something that isn't a range at all. The well-formed-but-unsatisfiable cases, which
         // are a 416, live in `testRangePastEndOfFileIs416`.
-        try await withRangeServer { client,_ in
+        try await withRangeServer { client, _ in
             let malformed: [HTTPFields.Range.Value] = [
                 // Negative bounds, for each of the three range shapes.
                 .start(value: -20),
@@ -461,8 +466,9 @@ struct FileTests {
         }
     }
 
-    @Test("Every byte range against an empty file is unsatisfiable",
-          .bug("https://github.com/vapor/vapor/issues/2991"))
+    @Test(
+        "Every byte range against an empty file is unsatisfiable",
+        .bug("https://github.com/vapor/vapor/issues/2991"))
     func testRangeAgainstEmptyFileIs416() async throws {
         let path = try await makeTemporaryFile(size: 0)
         defer { try? FileManager.default.removeItem(atPath: path) }
@@ -482,8 +488,9 @@ struct FileTests {
         }
     }
 
-    @Test("FileMiddleware clamps a range past the end of the file too",
-          .bug("https://github.com/vapor/vapor/issues/2991"))
+    @Test(
+        "FileMiddleware clamps a range past the end of the file too",
+        .bug("https://github.com/vapor/vapor/issues/2991"))
     func testFileMiddlewareRangePastEndOfFile() async throws {
         // The issue was reported against `FileMiddleware`, which reaches the same range handling
         // through `FileIO`. Checked here so the fix can't regress for only one of the two entry points.
@@ -510,26 +517,33 @@ struct FileTests {
         }
     }
 
-    @Test("Range resolution clamps and rejects the same way the file streamer does",
-          .bug("https://github.com/vapor/vapor/issues/2991"))
+    @Test(
+        "Range resolution clamps and rejects the same way the file streamer does",
+        .bug("https://github.com/vapor/vapor/issues/2991"))
     func testAsResponseContentRangeLeniency() throws {
         // The header-level API backing the streamer, checked directly so the semantics are pinned
         // without needing a server.
-        #expect(try HTTPFields.Range.Value.within(start: 200, end: 1000)
-            .asResponseContentRange(limit: 600) == .withinWithLimit(start: 200, end: 599, limit: 600))
-        #expect(try HTTPFields.Range.Value.within(start: 0, end: 600)
-            .asResponseContentRange(limit: 600) == .withinWithLimit(start: 0, end: 599, limit: 600))
-        #expect(try HTTPFields.Range.Value.start(value: 200)
-            .asResponseContentRange(limit: 600) == .withinWithLimit(start: 200, end: 599, limit: 600))
-        #expect(try HTTPFields.Range.Value.tail(value: 1000)
-            .asResponseContentRange(limit: 600) == .withinWithLimit(start: 0, end: 599, limit: 600))
+        #expect(
+            try HTTPFields.Range.Value.within(start: 200, end: 1000)
+                .asResponseContentRange(limit: 600) == .withinWithLimit(start: 200, end: 599, limit: 600))
+        #expect(
+            try HTTPFields.Range.Value.within(start: 0, end: 600)
+                .asResponseContentRange(limit: 600) == .withinWithLimit(start: 0, end: 599, limit: 600))
+        #expect(
+            try HTTPFields.Range.Value.start(value: 200)
+                .asResponseContentRange(limit: 600) == .withinWithLimit(start: 200, end: 599, limit: 600))
+        #expect(
+            try HTTPFields.Range.Value.tail(value: 1000)
+                .asResponseContentRange(limit: 600) == .withinWithLimit(start: 0, end: 599, limit: 600))
 
         func expectStatus(_ status: HTTPResponse.Status, _ range: HTTPFields.Range.Value) {
-            #expect(performing: {
-                _ = try range.asResponseContentRange(limit: 600)
-            }, throws: { error in
-                (error as? Abort)?.status == status
-            })
+            #expect(
+                performing: {
+                    _ = try range.asResponseContentRange(limit: 600)
+                },
+                throws: { error in
+                    (error as? Abort)?.status == status
+                })
         }
         // Unsatisfiable: selects no bytes.
         expectStatus(.rangeNotSatisfiable, .start(value: 600))
@@ -595,7 +609,8 @@ struct FileTests {
     func testDefaultFileAbsolute() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html", etagCache: app.fileETagHashCache))
+            app.middleware.use(
+                FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html", etagCache: app.fileETagHashCache))
 
             try await app.testing { client in
                 let root = try await client.get("Utilities/")

@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 extension Validator where T == String {
@@ -11,8 +11,8 @@ extension Validator where T == String {
             guard
                 $0.wholeMatch(of: emailRegex) != nil,
                 // https://emailregex.com/email-validation-summary
-                $0.count <= 320, // total length
-                $0.split(separator: "@")[0].count <= 64 // length before `@`
+                $0.count <= 320,  // total length
+                $0.split(separator: "@")[0].count <= 64  // length before `@`
             else {
                 return ValidatorResults.Email(isValidEmail: false)
             }
@@ -25,8 +25,8 @@ extension Validator where T == String {
             guard
                 $0.wholeMatch(of: internationalEmailRegex) != nil,
                 // https://emailregex.com/email-validation-summary/
-                $0.count <= 320, // total length
-                $0.split(separator: "@")[0].count <= 64 // length before `@`
+                $0.count <= 320,  // total length
+                $0.split(separator: "@")[0].count <= 64  // length before `@`
             else {
                 return ValidatorResults.Email(isValidEmail: false)
             }

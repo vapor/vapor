@@ -1,11 +1,12 @@
 import ConsoleLogger
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 import Logging
 import Vapor
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 let isLoggingConfigured: Bool = {
     ConsoleLogger.bootstrapWithConfigReader(config: testConfigReader)

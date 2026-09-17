@@ -1,11 +1,12 @@
+import Algorithms
 import NIOCore
 import _NIOFileSystem
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
-import Algorithms
 
 extension Environment {
     /// Load the content of a file at a given path as a secret.
@@ -20,9 +21,10 @@ extension Environment {
         do {
             return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
                 let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
-                return String(buffer
-                    .getString(at: buffer.readerIndex, length: buffer.readableBytes)!
-                    .trimming(while: \.isWhitespace))
+                return String(
+                    buffer
+                        .getString(at: buffer.readerIndex, length: buffer.readableBytes)!
+                        .trimming(while: \.isWhitespace))
             }
         } catch {
             return nil

@@ -1,15 +1,19 @@
+import ServiceLifecycle
 public import Testing
 public import Vapor
-import ServiceLifecycle
 
 extension Application {
-    public func testing<T>(_ method: Method = .inMemory, options: LiveTestOptions = .live, sourceLocation: SourceLocation = #_sourceLocation, _ body: (any TestClient) async throws -> T) async throws -> T {
+    public func testing<T>(
+        _ method: Method = .inMemory, options: LiveTestOptions = .live, sourceLocation: SourceLocation = #_sourceLocation,
+        _ body: (any TestClient) async throws -> T
+    ) async throws -> T {
         try await self.boot()
         switch method {
         case .inMemory:
             return try await inMemoryTesting(body)
         case .running:
-            return try await liveTesting(hostname: options.hostname, port: options.port, options: options.clientOptions, sourceLocation: sourceLocation, body)
+            return try await liveTesting(
+                hostname: options.hostname, port: options.port, options: options.clientOptions, sourceLocation: sourceLocation, body)
         }
     }
 

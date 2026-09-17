@@ -1,10 +1,11 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
 public import HTTPTypes
 import Synchronization
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 extension Request {
     /// A view onto this request's body.
@@ -153,7 +154,7 @@ extension Request {
         /// `CustomStringConvertible`, because that protocol requires an escapable conformer.
         public var description: String {
             if let data = self.data {
-               return String(decoding: data, as: UTF8.self)
+                return String(decoding: data, as: UTF8.self)
             } else {
                 return ""
             }

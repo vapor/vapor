@@ -1,18 +1,22 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-@testable import Vapor
 import Testing
+
+@testable import Vapor
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("RFC 1123 Date")
 struct DateRFC1123Tests {
-    @Test("Formats known instants", arguments: [
-        (0.0, "Thu, 01 Jan 1970 00:00:00 GMT"),          // Unix epoch
-        (784_111_777.0, "Sun, 06 Nov 1994 08:49:37 GMT"), // the RFC 9110 example
-        (1_000_000_000.0, "Sun, 09 Sep 2001 01:46:40 GMT"),
-    ])
+    @Test(
+        "Formats known instants",
+        arguments: [
+            (0.0, "Thu, 01 Jan 1970 00:00:00 GMT"),  // Unix epoch
+            (784_111_777.0, "Sun, 06 Nov 1994 08:49:37 GMT"),  // the RFC 9110 example
+            (1_000_000_000.0, "Sun, 09 Sep 2001 01:46:40 GMT"),
+        ])
     func formats(_ timestamp: Double, _ expected: String) {
         #expect(Date(timeIntervalSince1970: timestamp).formatted(.rfc1123) == expected)
     }
@@ -36,12 +40,12 @@ struct DateRFC1123Tests {
 
     @Test("Parses all three HTTP date formats to the same instant")
     func parsesThreeFormats() throws {
-        let expected = 784_111_777.0 // Sun, 06 Nov 1994 08:49:37 GMT
+        let expected = 784_111_777.0  // Sun, 06 Nov 1994 08:49:37 GMT
         let forms = [
-            "Sun, 06 Nov 1994 08:49:37 GMT",   // IMF-fixdate (RFC 1123, preferred)
+            "Sun, 06 Nov 1994 08:49:37 GMT",  // IMF-fixdate (RFC 1123, preferred)
             "Sunday, 06-Nov-94 08:49:37 GMT",  // RFC 850 (obsolete)
-            "Sun Nov  6 08:49:37 1994",        // asctime (two spaces before a single-digit day)
-            "Sun Nov 6 08:49:37 1994",         // asctime with collapsed whitespace
+            "Sun Nov  6 08:49:37 1994",  // asctime (two spaces before a single-digit day)
+            "Sun Nov 6 08:49:37 1994",  // asctime with collapsed whitespace
         ]
         for form in forms {
             #expect(try Date(form, strategy: .rfc1123).timeIntervalSince1970 == expected)
@@ -57,12 +61,14 @@ struct DateRFC1123Tests {
         #expect(date.formatted(.rfc1123) == "Sun, 06 Nov 1994 08:49:37 GMT")
     }
 
-    @Test("RFC 850 two-digit year pivots at 70", arguments: [
-        ("Sunday, 01-Jan-69 00:00:00 GMT", " 2069 "),
-        ("Sunday, 01-Jan-70 00:00:00 GMT", " 1970 "),
-        ("Sunday, 01-Jan-99 00:00:00 GMT", " 1999 "),
-        ("Sunday, 01-Jan-00 00:00:00 GMT", " 2000 "),
-    ])
+    @Test(
+        "RFC 850 two-digit year pivots at 70",
+        arguments: [
+            ("Sunday, 01-Jan-69 00:00:00 GMT", " 2069 "),
+            ("Sunday, 01-Jan-70 00:00:00 GMT", " 1970 "),
+            ("Sunday, 01-Jan-99 00:00:00 GMT", " 1999 "),
+            ("Sunday, 01-Jan-00 00:00:00 GMT", " 2000 "),
+        ])
     func rfc850YearPivot(_ input: String, _ expectedYear: String) throws {
         #expect(try Date(input, strategy: .rfc1123).formatted(.rfc1123).contains(expectedYear))
     }
@@ -74,16 +80,18 @@ struct DateRFC1123Tests {
         #expect(parsed.formatted(.rfc1123).contains(" \(name) "))
     }
 
-    @Test("Throws on malformed input", arguments: [
-        "",                                 // no tokens
-        "garbage",                          // one token
-        "one two three",                    // wrong token count
-        "Sun, 06 Xyz 1994 08:49:37 GMT",    // unknown month name
-        "Sun, 06 Nov 1994 08:49 GMT",       // time missing seconds
-        "Sun, XX Nov 1994 08:49:37 GMT",    // non-numeric day
-        "Sunday, 06Nov94 08:49:37 GMT",     // RFC 850 date not dash-separated
-        "Sunday, 06-Nov 08:49:37 GMT",      // RFC 850 date missing a component
-    ])
+    @Test(
+        "Throws on malformed input",
+        arguments: [
+            "",  // no tokens
+            "garbage",  // one token
+            "one two three",  // wrong token count
+            "Sun, 06 Xyz 1994 08:49:37 GMT",  // unknown month name
+            "Sun, 06 Nov 1994 08:49 GMT",  // time missing seconds
+            "Sun, XX Nov 1994 08:49:37 GMT",  // non-numeric day
+            "Sunday, 06Nov94 08:49:37 GMT",  // RFC 850 date not dash-separated
+            "Sunday, 06-Nov 08:49:37 GMT",  // RFC 850 date missing a component
+        ])
     func throwsOnMalformed(_ input: String) {
         #expect(throws: Date.RFC1123ParseStrategy.ParseError.self) {
             try Date(input, strategy: .rfc1123)
@@ -99,9 +107,9 @@ struct DateRFC1123Tests {
             let date = Date(timeIntervalSince1970: timestamp)
             let formatted = date.formatted(.rfc1123)
             let parsed = try Date(formatted, strategy: .rfc1123)
-            #expect(parsed.timeIntervalSince1970 == timestamp)      // whole seconds preserved
-            #expect(parsed.formatted(.rfc1123) == formatted)        // stable
-            timestamp += 3_215_777 // an odd, non-day-aligned step to vary all fields
+            #expect(parsed.timeIntervalSince1970 == timestamp)  // whole seconds preserved
+            #expect(parsed.formatted(.rfc1123) == formatted)  // stable
+            timestamp += 3_215_777  // an odd, non-day-aligned step to vary all fields
         }
     }
 }

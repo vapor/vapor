@@ -1,12 +1,13 @@
-import Testing
-import VaporTesting
-import Vapor
 import HTTPTypes
 import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 @Suite("Route Tests")
@@ -247,10 +248,11 @@ struct RouteTests {
 
             try await app.testing { client in
                 let invalidEmail = try await client.post("/users") { req in
-                    try req.content.encode([
-                        "name": "vapor",
-                        "email": "foo"
-                    ], as: .json)
+                    try req.content.encode(
+                        [
+                            "name": "vapor",
+                            "email": "foo",
+                        ], as: .json)
                 }
                 #expect(invalidEmail.status == .badRequest)
                 try #expect(await invalidEmail.body.requireString().contains("email is not a valid email address"))
@@ -368,10 +370,10 @@ struct RouteTests {
     @Test("Test Similar Routing Path")
     func testSimilarRoutingPath() async throws {
         try await withApp { app in
-            app.get("api","addresses") { req in
+            app.get("api", "addresses") { req in
                 "a"
             }
-            app.get("api", "addresses","search", ":id") { req in
+            app.get("api", "addresses", "search", ":id") { req in
                 "b"
             }
 
@@ -471,29 +473,31 @@ struct RouteTests {
     }
 
     #if WebSockets
-    @Test("Test Websocket Upgrade", .disabled())
-    func testWebsocketUpgrade() async throws {
-//        try await withApp { app in
-//            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
-//            let testMarkerHeaderValue = "addedInShouldUpgrade"
-//
-//            app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
-//                [testMarkerHeaderKey: testMarkerHeaderValue]
-//            }, onUpgrade: { _, _ in })
-//
-//            try await app.testing(method: .running()).test(.get, "customshouldupgrade", beforeRequest: { req async in
-//                req.headers[.secWebSocketVersion] = "13"
-//                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
-//                req.headers[.connection] = "Upgrade"
-//                req.headers[.upgrade] = "websocket"
-//            }) { res in
-//                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
-//            }
-//        }
-    }
+        @Test("Test Websocket Upgrade", .disabled())
+        func testWebsocketUpgrade() async throws {
+            //        try await withApp { app in
+            //            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
+            //            let testMarkerHeaderValue = "addedInShouldUpgrade"
+            //
+            //            app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
+            //                [testMarkerHeaderKey: testMarkerHeaderValue]
+            //            }, onUpgrade: { _, _ in })
+            //
+            //            try await app.testing(method: .running()).test(.get, "customshouldupgrade", beforeRequest: { req async in
+            //                req.headers[.secWebSocketVersion] = "13"
+            //                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
+            //                req.headers[.connection] = "Upgrade"
+            //                req.headers[.upgrade] = "websocket"
+            //            }) { res in
+            //                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
+            //            }
+            //        }
+        }
     #endif
 
-    @Test("Test Double Slash Route Access", .bug("https://github.com/vapor/vapor/issues/3137"), .bug("https://github.com/vapor/vapor/issues/3142"))
+    @Test(
+        "Test Double Slash Route Access", .bug("https://github.com/vapor/vapor/issues/3137"),
+        .bug("https://github.com/vapor/vapor/issues/3142"))
     func testDoubleSlashRouteAccess() async throws {
         try await withApp { app in
             app.get(":foo", ":bar", "buz") { req -> String in

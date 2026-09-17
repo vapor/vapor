@@ -1,13 +1,14 @@
-import Vapor
-import VaporTesting
-import Testing
 import HTTPTypes
 import RoutingKit
 import Synchronization
+import Testing
+import Vapor
+import VaporTesting
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 @Suite("Client Streaming Tests")

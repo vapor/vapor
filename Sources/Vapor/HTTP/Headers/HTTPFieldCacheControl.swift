@@ -1,9 +1,10 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 // Comments on these properties are copied from the mozilla doc URL shown below.
 extension HTTPFields {
@@ -113,41 +114,44 @@ extension HTTPFields {
         public static func parse(_ value: String) -> CacheControl? {
             var cache = CacheControl()
 
-            return value
+            return
+                value
                 .replacing(" ", with: "")
                 .replacing("\t", with: "")
                 .lowercased()
                 .split(separator: ",")
-                .reduce(false, {
-                    let str = String($1)
+                .reduce(
+                    false,
+                    {
+                        let str = String($1)
 
-                    if let keyPath = Self.exactMatch[str] {
-                        cache[keyPath: keyPath] = true
+                        if let keyPath = Self.exactMatch[str] {
+                            cache[keyPath: keyPath] = true
+                            return true
+                        }
+
+                        if value == "max-stale" {
+                            cache.maxStale = .init()
+                            return true
+                        }
+
+                        let parts = str.split(separator: "=")
+                        guard parts.count == 2, let seconds = Int(parts[1]), seconds >= 0 else {
+                            return $0
+                        }
+
+                        if parts[0] == "max-stale" {
+                            cache.maxStale = .init(seconds: seconds)
+                            return true
+                        }
+
+                        guard let keyPath = Self.prefix[String(parts[0])] else {
+                            return $0
+                        }
+
+                        cache[keyPath: keyPath] = seconds
                         return true
-                    }
-
-                    if value == "max-stale" {
-                        cache.maxStale = .init()
-                        return true
-                    }
-
-                    let parts = str.split(separator: "=")
-                    guard parts.count == 2, let seconds = Int(parts[1]), seconds >= 0 else {
-                        return $0
-                    }
-
-                    if parts[0] == "max-stale" {
-                        cache.maxStale = .init(seconds: seconds)
-                        return true
-                    }
-
-                    guard let keyPath = Self.prefix[String(parts[0])] else {
-                        return $0
-                    }
-
-                    cache[keyPath: keyPath] = seconds
-                    return true
-            }) ? cache : nil
+                    }) ? cache : nil
         }
 
         /// Generates the header string for this instance.
@@ -180,7 +184,7 @@ extension HTTPFields {
             "public": \.isPublic,
             "private": \.isPrivate,
             "proxy-revalidate": \.proxyRevalidate,
-            "only-if-cached": \.onlyIfCached
+            "only-if-cached": \.onlyIfCached,
         ]
 
         private static let prefix: [String: any WritableKeyPath<Self, Int?> & Sendable] = [
@@ -188,7 +192,7 @@ extension HTTPFields {
             "s-maxage": \.sMaxAge,
             "min-fresh": \.minFresh,
             "stale-while-revalidate": \.staleWhileRevalidate,
-            "stale-if-error": \.staleIfError
+            "stale-if-error": \.staleIfError,
         ]
     }
 

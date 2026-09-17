@@ -47,8 +47,8 @@ extension HTTPFields {
     }
 }
 
-private extension String {
-    func escapingHTTPQuotedString() -> String {
+extension String {
+    fileprivate func escapingHTTPQuotedString() -> String {
         var escaped = ""
         escaped.reserveCapacity(self.count)
         for character in self {

@@ -1,14 +1,15 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import NIOCore
-import _NIOFileSystem
+import Crypto
 import HTTPTypes
 import Logging
-import Crypto
+import NIOCore
+import _NIOFileSystem
 import _NIOFileSystemFoundationCompat
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 extension Application {
     public var fileio: FileIO {
@@ -75,10 +76,10 @@ public struct FileIO: Sendable {
     public func streamFile(
         at path: String,
         for request: Request,
-        chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
+        chunkSize: Int64 = 128 * 1024,  // was the default in NonBlockingFileIO
         mediaType: HTTPMediaType? = nil,
         advancedETagComparison: Bool = false,
-        onCompleted: @escaping @Sendable (Result<Void, any Error>) async throws -> () = { _ in }
+        onCompleted: @escaping @Sendable (Result<Void, any Error>) async throws -> Void = { _ in }
     ) async throws -> Response {
         // Get file attributes for this file.
         guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(path)) else {
@@ -160,8 +161,7 @@ public struct FileIO: Sendable {
         }
         // Set Content-Type header based on the media type
         // Only set Content-Type if file not modified and returned above.
-        if
-            let fileExtension = path.components(separatedBy: ".").last,
+        if let fileExtension = path.components(separatedBy: ".").last,
             let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
         {
             headers.contentType = type
@@ -169,34 +169,35 @@ public struct FileIO: Sendable {
 
         let fileSystem = self.fileSystem
         var response = Response(status: responseStatus, headers: headers)
-        response.body = try .init(stream: { writer in
-            // We can't use `withFileHandle` here because it's inferred as `@concurrent` and we're NonisolatedNonSending
-            let handle: ReadFileHandle
-            do {
-                handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
-            } catch {
-                try await onCompleted(.failure(error))
-                throw error
-            }
-            // Wrap the close handle in a task to avoid inheriting cancellation. We always want to close the
-            // handle, but without it we can hit a subtle issue where the defer would be cancelled before
-            // close had triggered, leading to a crash
-            defer { await Task { try? await handle.close() }.value }
-
-            do {
-                let chunks = handle.readChunks(
-                    in: offset..<(offset + Int64(byteCount)),
-                    chunkLength: .bytes(chunkSize)
-                )
-                for try await chunk in chunks {
-                    try await writer.write(chunk.readableBytesUInt8Span)
+        response.body = try .init(
+            stream: { writer in
+                // We can't use `withFileHandle` here because it's inferred as `@concurrent` and we're NonisolatedNonSending
+                let handle: ReadFileHandle
+                do {
+                    handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
+                } catch {
+                    try await onCompleted(.failure(error))
+                    throw error
                 }
-            } catch {
-                try await onCompleted(.failure(error))
-                throw error
-            }
-            try await onCompleted(.success(()))
-        }, count: byteCount)
+                // Wrap the close handle in a task to avoid inheriting cancellation. We always want to close the
+                // handle, but without it we can hit a subtle issue where the defer would be cancelled before
+                // close had triggered, leading to a crash
+                defer { await Task { try? await handle.close() }.value }
+
+                do {
+                    let chunks = handle.readChunks(
+                        in: offset..<(offset + Int64(byteCount)),
+                        chunkLength: .bytes(chunkSize)
+                    )
+                    for try await chunk in chunks {
+                        try await writer.write(chunk.readableBytesUInt8Span)
+                    }
+                } catch {
+                    try await onCompleted(.failure(error))
+                    throw error
+                }
+                try await onCompleted(.success(()))
+            }, count: byteCount)
 
         return response
     }

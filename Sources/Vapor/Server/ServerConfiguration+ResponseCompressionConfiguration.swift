@@ -3,7 +3,7 @@ extension ServerConfiguration {
     public struct ResponseCompressionConfiguration: Sendable {
         /// The default initial byte buffer capacity to use for the compressor if none is specified.
         public static let defaultInitialByteBufferCapacity = 1024
-        
+
         /// Disables compression unconditionally.
         ///
         /// This is useful when you never want any response to be compressed for debugging purposes.
@@ -14,7 +14,7 @@ extension ServerConfiguration {
                 allowRequestOverrides: false
             )
         }
-        
+
         /// Disables compression for all content types unless a route overrides the preference. This is the default.
         ///
         /// - SeeAlso: See ``ResponseCompressionMiddleware`` for more information on overriding compression preferences in routes.
@@ -25,7 +25,7 @@ extension ServerConfiguration {
                 allowRequestOverrides: true
             )
         }
-        
+
         /// Disables compression by default, but allows easily compressible types such as text, unless a route overrides the preference.
         ///
         /// - SeeAlso: See ``ResponseCompressionMiddleware`` for more information on overriding compression preferences in routes.
@@ -36,7 +36,7 @@ extension ServerConfiguration {
                 allowRequestOverrides: true
             )
         }
-        
+
         /// Enables compression by default, disallowing already compressed types such as images or video, unless a route overrides the preference.
         ///
         /// - SeeAlso: See ``ResponseCompressionMiddleware`` for more information on overriding compression preferences in routes.
@@ -47,7 +47,7 @@ extension ServerConfiguration {
                 allowRequestOverrides: true
             )
         }
-        
+
         /// Disables compression by default, but offers options to allow it for the specified types.
         ///
         /// - Parameters:
@@ -60,13 +60,14 @@ extension ServerConfiguration {
             allowedTypes: HTTPMediaTypeSet = .none,
             allowRequestOverrides: Bool = true
         ) -> Self {
-            .init(storage: .disabled(
-                initialByteBufferCapacity: initialByteBufferCapacity,
-                allowedTypes: allowedTypes,
-                allowRequestOverrides: allowRequestOverrides
-            ))
+            .init(
+                storage: .disabled(
+                    initialByteBufferCapacity: initialByteBufferCapacity,
+                    allowedTypes: allowedTypes,
+                    allowRequestOverrides: allowRequestOverrides
+                ))
         }
-        
+
         /// Enables compression by default, but offers options to disallow it for the specified types.
         ///
         /// - Parameters:
@@ -79,62 +80,70 @@ extension ServerConfiguration {
             disallowedTypes: HTTPMediaTypeSet = .incompressible,
             allowRequestOverrides: Bool = true
         ) -> Self {
-            .init(storage: .enabled(
-                initialByteBufferCapacity: initialByteBufferCapacity,
-                disallowedTypes: disallowedTypes,
-                allowRequestOverrides: true
-            ))
+            .init(
+                storage: .enabled(
+                    initialByteBufferCapacity: initialByteBufferCapacity,
+                    disallowedTypes: disallowedTypes,
+                    allowRequestOverrides: true
+                ))
         }
-        
+
         enum Storage {
             case disabled(initialByteBufferCapacity: Int, allowedTypes: HTTPMediaTypeSet, allowRequestOverrides: Bool)
             case enabled(initialByteBufferCapacity: Int, disallowedTypes: HTTPMediaTypeSet, allowRequestOverrides: Bool)
-            
+
             var initialByteBufferCapacity: Int {
                 get {
                     switch self {
                     case .disabled(let initialByteBufferCapacity, _, _),
-                            .enabled(let initialByteBufferCapacity, _, _):
+                        .enabled(let initialByteBufferCapacity, _, _):
                         return initialByteBufferCapacity
                     }
                 }
                 set {
                     switch self {
                     case .disabled(_, let allowedTypes, let allowRequestOverrides):
-                        self = .disabled(initialByteBufferCapacity: newValue, allowedTypes: allowedTypes, allowRequestOverrides: allowRequestOverrides)
+                        self = .disabled(
+                            initialByteBufferCapacity: newValue, allowedTypes: allowedTypes, allowRequestOverrides: allowRequestOverrides)
                     case .enabled(_, let disallowedTypes, let allowRequestOverrides):
-                        self = .enabled(initialByteBufferCapacity: newValue, disallowedTypes: disallowedTypes, allowRequestOverrides: allowRequestOverrides)
+                        self = .enabled(
+                            initialByteBufferCapacity: newValue, disallowedTypes: disallowedTypes,
+                            allowRequestOverrides: allowRequestOverrides)
                     }
                 }
             }
-            
+
             var allowRequestOverrides: Bool {
                 get {
                     switch self {
                     case .disabled(_, _, let allowRequestOverrides),
-                            .enabled(_, _, let allowRequestOverrides):
+                        .enabled(_, _, let allowRequestOverrides):
                         return allowRequestOverrides
                     }
                 }
                 set {
                     switch self {
                     case .disabled(let initialByteBufferCapacity, let allowedTypes, _):
-                        self = .disabled(initialByteBufferCapacity: initialByteBufferCapacity, allowedTypes: allowedTypes, allowRequestOverrides: newValue)
+                        self = .disabled(
+                            initialByteBufferCapacity: initialByteBufferCapacity, allowedTypes: allowedTypes,
+                            allowRequestOverrides: newValue)
                     case .enabled(let initialByteBufferCapacity, let disallowedTypes, _):
-                        self = .enabled(initialByteBufferCapacity: initialByteBufferCapacity, disallowedTypes: disallowedTypes, allowRequestOverrides: newValue)
+                        self = .enabled(
+                            initialByteBufferCapacity: initialByteBufferCapacity, disallowedTypes: disallowedTypes,
+                            allowRequestOverrides: newValue)
                     }
                 }
             }
         }
-        
+
         var storage: Storage
-        
+
         /// The initial buffer capacity to use when instantiating the compressor.
         public var initialByteBufferCapacity: Int {
             get { storage.initialByteBufferCapacity }
             set { storage.initialByteBufferCapacity = newValue }
         }
-        
+
         /// Allow routes and requests to explicitly override compression.
         ///
         /// - SeeAlso: See ``ResponseCompressionMiddleware`` for more information.

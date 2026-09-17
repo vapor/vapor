@@ -1,11 +1,12 @@
 public import Metrics
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 public import MetricsTestKit
 public import Testing
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public final class TaskLocalMetricsSystemWrapper: MetricsFactory {
     public init() {}
@@ -56,7 +57,9 @@ public final class TaskLocalMetricsSystemWrapper: MetricsFactory {
 public struct MetricsTaskLocalTrait: TestTrait, SuiteTrait, TestScoping {
     fileprivate var implementation: @Sendable (_ body: @Sendable () async throws -> Void) async throws -> Void
 
-    public func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable @concurrent () async throws -> Void) async throws {
+    public func provideScope(
+        for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable @concurrent () async throws -> Void
+    ) async throws {
         try await implementation {
             try await function()
         }

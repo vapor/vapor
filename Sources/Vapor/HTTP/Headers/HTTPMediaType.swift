@@ -1,9 +1,10 @@
 import Algorithms
 import HTTPTypes
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// Represents an encoded data-format, used in HTTP, HTML, email, and elsewhere.
@@ -57,7 +58,7 @@ import Foundation
 ///
 public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Sendable, Codable {
     // See `Equatable.==(_:_:)`.
-    public static func ==(lhs: HTTPMediaType, rhs: HTTPMediaType) -> Bool {
+    public static func == (lhs: HTTPMediaType, rhs: HTTPMediaType) -> Bool {
         guard lhs.type != "*" && rhs.type != "*" else {
             return true
         }
@@ -177,12 +178,12 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
 
 /// A collection for efficiently determining if a set of types contains another type.
 public struct HTTPMediaTypeSet: Sendable {
-    let mediaTypeLookup: [String : [String : Set<HTTPMediaType>]]
+    let mediaTypeLookup: [String: [String: Set<HTTPMediaType>]]
     let allowsAny: Bool
     let allowsNone: Bool
 
     public init(mediaTypes: some Sequence<HTTPMediaType>) {
-        var mediaTypeLookup: [String : [String : Set<HTTPMediaType>]] = [:]
+        var mediaTypeLookup: [String: [String: Set<HTTPMediaType>]] = [:]
         for mediaType in mediaTypes {
             mediaTypeLookup[mediaType.type, default: [:]][mediaType.subType, default: Set()].insert(mediaType)
         }
@@ -227,85 +228,88 @@ extension HTTPMediaTypeSet: ExpressibleByArrayLiteral {
 }
 
 // MARK: - Media Type Dataset
-public extension HTTPMediaType {
+extension HTTPMediaType {
     /// Any media type (*/*).
-    static let any = HTTPMediaType(type: "*", subType: "*")
+    public static let any = HTTPMediaType(type: "*", subType: "*")
     /// Plain text media type.
-    static let plainText = HTTPMediaType(type: "text", subType: "plain", parameters: ["charset": "utf-8"])
+    public static let plainText = HTTPMediaType(type: "text", subType: "plain", parameters: ["charset": "utf-8"])
     /// HTML media type.
-    static let html = HTTPMediaType(type: "text", subType: "html", parameters: ["charset": "utf-8"])
+    public static let html = HTTPMediaType(type: "text", subType: "html", parameters: ["charset": "utf-8"])
     /// CSS media type.
-    static let css = HTTPMediaType(type: "text", subType: "css", parameters: ["charset": "utf-8"])
+    public static let css = HTTPMediaType(type: "text", subType: "css", parameters: ["charset": "utf-8"])
     /// URL encoded form media type.
-    static let urlEncodedForm = HTTPMediaType(type: "application", subType: "x-www-form-urlencoded", parameters: ["charset": "utf-8"])
+    public static let urlEncodedForm = HTTPMediaType(
+        type: "application", subType: "x-www-form-urlencoded", parameters: ["charset": "utf-8"])
     /// Multipart encoded form data.
-    static let formData = HTTPMediaType(type: "multipart", subType: "form-data")
+    public static let formData = HTTPMediaType(type: "multipart", subType: "form-data")
     // Multipart encoded form data with boundary.
-    static func formData(boundary: String) -> HTTPMediaType {
-        .init(type: "multipart", subType: "form-data", parameters: [
-            "boundary": boundary
-        ])
+    public static func formData(boundary: String) -> HTTPMediaType {
+        .init(
+            type: "multipart", subType: "form-data",
+            parameters: [
+                "boundary": boundary
+            ])
     }
     /// Mixed multipart encoded data.
-    static let multipart = HTTPMediaType(type: "multipart", subType: "mixed")
+    public static let multipart = HTTPMediaType(type: "multipart", subType: "mixed")
     /// JSON media type.
-    static let json = HTTPMediaType(type: "application", subType: "json", parameters: ["charset": "utf-8"])
+    public static let json = HTTPMediaType(type: "application", subType: "json", parameters: ["charset": "utf-8"])
     /// JSON API media type.
     ///
     /// > Note: [JSON API specification](https://jsonapi.org/format/)
-    static let jsonAPI = HTTPMediaType(type: "application", subType: "vnd.api+json", parameters: ["charset": "utf-8"])
+    public static let jsonAPI = HTTPMediaType(type: "application", subType: "vnd.api+json", parameters: ["charset": "utf-8"])
     /// JSON sequence media type.
     ///
     /// > Note: [JSON Text Sequence RFC](https://datatracker.ietf.org/doc/html/rfc7464)
-    static let jsonSequence = HTTPMediaType(type: "application", subType: "json-seq", parameters: ["charset": "utf-8"])
+    public static let jsonSequence = HTTPMediaType(type: "application", subType: "json-seq", parameters: ["charset": "utf-8"])
     /// XML media type.
-    static let xml = HTTPMediaType(type: "application", subType: "xml", parameters: ["charset": "utf-8"])
+    public static let xml = HTTPMediaType(type: "application", subType: "xml", parameters: ["charset": "utf-8"])
     /// DTD media type.
-    static let dtd = HTTPMediaType(type: "application", subType: "xml-dtd", parameters: ["charset": "utf-8"])
+    public static let dtd = HTTPMediaType(type: "application", subType: "xml-dtd", parameters: ["charset": "utf-8"])
     /// PDF data.
-    static let pdf = HTTPMediaType(type: "application", subType: "pdf")
+    public static let pdf = HTTPMediaType(type: "application", subType: "pdf")
     /// Zip file.
-    static let zip = HTTPMediaType(type: "application", subType: "zip")
+    public static let zip = HTTPMediaType(type: "application", subType: "zip")
     /// tar file.
-    static let tar = HTTPMediaType(type: "application", subType: "x-tar")
+    public static let tar = HTTPMediaType(type: "application", subType: "x-tar")
     /// Gzip file.
-    static let gzip = HTTPMediaType(type: "application", subType: "x-gzip")
+    public static let gzip = HTTPMediaType(type: "application", subType: "x-gzip")
     /// Bzip2 file.
-    static let bzip2 = HTTPMediaType(type: "application", subType: "x-bzip2")
+    public static let bzip2 = HTTPMediaType(type: "application", subType: "x-bzip2")
     /// Binary data.
-    static let binary = HTTPMediaType(type: "application", subType: "octet-stream")
+    public static let binary = HTTPMediaType(type: "application", subType: "octet-stream")
     /// GIF image.
-    static let gif = HTTPMediaType(type: "image", subType: "gif")
+    public static let gif = HTTPMediaType(type: "image", subType: "gif")
     /// JPEG image.
-    static let jpeg = HTTPMediaType(type: "image", subType: "jpeg")
+    public static let jpeg = HTTPMediaType(type: "image", subType: "jpeg")
     /// PNG image.
-    static let png = HTTPMediaType(type: "image", subType: "png")
+    public static let png = HTTPMediaType(type: "image", subType: "png")
     /// SVG image.
-    static let svg = HTTPMediaType(type: "image", subType: "svg+xml")
+    public static let svg = HTTPMediaType(type: "image", subType: "svg+xml")
     /// TIFF image.
-    static let tiff = HTTPMediaType(type: "image", subType: "tiff")
+    public static let tiff = HTTPMediaType(type: "image", subType: "tiff")
     /// WebP image.
-    static let webp = HTTPMediaType(type: "image", subType: "webp")
+    public static let webp = HTTPMediaType(type: "image", subType: "webp")
     /// JPEG XL image.
-    static let jxl = HTTPMediaType(type: "image", subType: "jxl")
+    public static let jxl = HTTPMediaType(type: "image", subType: "jxl")
     /// AVIF image.
-    static let avif = HTTPMediaType(type: "image", subType: "avif")
+    public static let avif = HTTPMediaType(type: "image", subType: "avif")
     /// HEIC (HEVC in HEIF) image
-    static let heic = HTTPMediaType(type: "image", subType: "heic")
+    public static let heic = HTTPMediaType(type: "image", subType: "heic")
     /// Basic audio.
-    static let audio = HTTPMediaType(type: "audio", subType: "basic")
+    public static let audio = HTTPMediaType(type: "audio", subType: "basic")
     /// MIDI audio.
-    static let midi = HTTPMediaType(type: "audio", subType: "x-midi")
+    public static let midi = HTTPMediaType(type: "audio", subType: "x-midi")
     /// MP3 audio.
-    static let mp3 = HTTPMediaType(type: "audio", subType: "mpeg")
+    public static let mp3 = HTTPMediaType(type: "audio", subType: "mpeg")
     /// Wave audio.
-    static let wave = HTTPMediaType(type: "audio", subType: "wav")
+    public static let wave = HTTPMediaType(type: "audio", subType: "wav")
     /// OGG audio.
-    static let ogg = HTTPMediaType(type: "audio", subType: "vorbis")
+    public static let ogg = HTTPMediaType(type: "audio", subType: "vorbis")
     /// AVI video.
-    static let avi = HTTPMediaType(type: "video", subType: "avi")
+    public static let avi = HTTPMediaType(type: "video", subType: "avi")
     /// MPEG video.
-    static let mpeg = HTTPMediaType(type: "video", subType: "mpeg")
+    public static let mpeg = HTTPMediaType(type: "video", subType: "mpeg")
 }
 
 // MARK: File Extensions

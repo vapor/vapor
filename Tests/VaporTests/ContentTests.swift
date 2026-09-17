@@ -1,13 +1,14 @@
 import HTTPTypes
-import Vapor
-import Testing
-import VaporTesting
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("Content Tests")
 struct ContentTests {
@@ -27,33 +28,33 @@ struct ContentTests {
     func testComplexContent() async throws {
         // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
         let complexJSON = """
-        {
-            "id": "0001",
-            "type": "donut",
-            "name": "Cake",
-            "ppu": 0.55,
-            "batters":
-                {
-                    "batter":
-                        [
-                            { "id": "1001", "type": "Regular" },
-                            { "id": "1002", "type": "Chocolate" },
-                            { "id": "1003", "type": "Blueberry" },
-                            { "id": "1004", "type": "Devil's Food" }
-                        ]
-                },
-            "topping":
-                [
-                    { "id": "5001", "type": "None" },
-                    { "id": "5002", "type": "Glazed" },
-                    { "id": "5005", "type": "Sugar" },
-                    { "id": "5007", "type": "Powdered Sugar" },
-                    { "id": "5006", "type": "Chocolate with Sprinkles" },
-                    { "id": "5003", "type": "Chocolate" },
-                    { "id": "5004", "type": "Maple" }
-                ]
-        }
-        """
+            {
+                "id": "0001",
+                "type": "donut",
+                "name": "Cake",
+                "ppu": 0.55,
+                "batters":
+                    {
+                        "batter":
+                            [
+                                { "id": "1001", "type": "Regular" },
+                                { "id": "1002", "type": "Chocolate" },
+                                { "id": "1003", "type": "Blueberry" },
+                                { "id": "1004", "type": "Devil's Food" }
+                            ]
+                    },
+                "topping":
+                    [
+                        { "id": "5001", "type": "None" },
+                        { "id": "5002", "type": "Glazed" },
+                        { "id": "5005", "type": "Sugar" },
+                        { "id": "5007", "type": "Powdered Sugar" },
+                        { "id": "5006", "type": "Chocolate with Sprinkles" },
+                        { "id": "5003", "type": "Chocolate" },
+                        { "id": "5004", "type": "Maple" }
+                    ]
+            }
+            """
 
         try await withApp { app throws in
             var request = Request(
@@ -67,8 +68,8 @@ struct ContentTests {
     @Test("Test decoding errors return 400", .bug("https://github.com/vapor/vapor/issues/1534"))
     func testGH1534() async throws {
         let data = """
-        {"name":"hi","bar":"asdf"}
-        """
+            {"name":"hi","bar":"asdf"}
+            """
 
         try await withApp { app in
             app.routes.get("decode_error") { _ -> String in
@@ -83,7 +84,9 @@ struct ContentTests {
             try await app.testing { client in
                 let res = try await client.get("/decode_error")
                 #expect(res.status == .badRequest)
-                try #expect(await res.body.requireString().contains(#"Value was not of type 'Int' at path 'bar'. Expected to decode Int but found a string"#))
+                try #expect(
+                    await res.body.requireString().contains(
+                        #"Value was not of type 'Int' at path 'bar'. Expected to decode Int but found a string"#))
             }
         }
     }
@@ -187,11 +190,13 @@ struct ContentTests {
 
             app.routes.post("decode-bad-header") { req async throws -> String in
                 #expect(req.headers.contentType == .audio)
-                await #expect(performing: {
-                    try await req.content.decode(FooContent.self)
-                }, throws: { error in
-                    (error as? Abort)?.status == .unsupportedMediaType
-                })
+                await #expect(
+                    performing: {
+                        try await req.content.decode(FooContent.self)
+                    },
+                    throws: { error in
+                        (error as? Abort)?.status == .unsupportedMediaType
+                    })
                 #expect(try await req.content.decode(FooDecodable.self, as: .json) == FooDecodable())
                 return "decoded!"
             }
@@ -208,255 +213,270 @@ struct ContentTests {
     }
 
     #if Multipart
-    @Test("Multipart Decode")
-    func testMultipartDecode() async throws {
-        let data = """
-        --123\r
-        Content-Disposition: form-data; name="name"\r
-        \r
-        Vapor\r
-        --123\r
-        Content-Disposition: form-data; name="age"\r
-        \r
-        4\r
-        --123\r
-        Content-Disposition: form-data; name="image"; filename="droplet.png"\r
-        \r
-        <contents of image>\r
-        --123--\r
+        @Test("Multipart Decode")
+        func testMultipartDecode() async throws {
+            let data = """
+                --123\r
+                Content-Disposition: form-data; name="name"\r
+                \r
+                Vapor\r
+                --123\r
+                Content-Disposition: form-data; name="age"\r
+                \r
+                4\r
+                --123\r
+                Content-Disposition: form-data; name="image"; filename="droplet.png"\r
+                \r
+                <contents of image>\r
+                --123--\r
 
-        """
-        let expected = User(
-            name: "Vapor",
-            age: 4,
-            image: File(data: "<contents of image>", filename: "droplet.png")
-        )
+                """
+            let expected = User(
+                name: "Vapor",
+                age: 4,
+                image: File(data: "<contents of image>", filename: "droplet.png")
+            )
 
-        struct User: Content, Equatable {
-            var name: String
-            var age: Int
-            var image: File
-        }
-
-        try await withApp { app in
-            app.routes.get("multipart") { req -> User in
-                let decoded = try await req.content.decode(User.self)
-                #expect(decoded == expected)
-                return decoded
+            struct User: Content, Equatable {
+                var name: String
+                var age: Int
+                var image: File
             }
 
-            try await app.testing { client in
-                let res = try await client.get("/multipart", headers: [
-                    .contentType: "multipart/form-data; boundary=123"
-                ]) { req in
-                    req.body = .init(data: Data(data.utf8))
+            try await withApp { app in
+                app.routes.get("multipart") { req -> User in
+                    let decoded = try await req.content.decode(User.self)
+                    #expect(decoded == expected)
+                    return decoded
                 }
-                #expect(res.status == .ok)
-                expectJSONEquals(res.body.string, expected)
-            }
-        }
-    }
 
-    @Test("Test Multipart Decoded Empty Multipart Form")
-    func testMultipartDecodedEmptyMultipartForm() async throws {
-        let data = """
-        --123\r
-        --123--\r
-        """
-        let expected = User(
-            name: "Vapor"
-        )
-
-        struct User: Content, Equatable {
-            var name: String
-        }
-
-        try await withApp { app in
-            app.routes.get("multipart") { req -> User in
-                let decoded = try await req.content.decode(User.self)
-                #expect(decoded == expected)
-                return decoded
-            }
-
-            try await app.testing { client in
-                let res = try await client.get("/multipart", headers: [
-                    .contentType: "multipart/form-data; boundary=123"
-                ]) { req in
-                    req.body = .init(data: Data(data.utf8))
+                try await app.testing { client in
+                    let res = try await client.get(
+                        "/multipart",
+                        headers: [
+                            .contentType: "multipart/form-data; boundary=123"
+                        ]
+                    ) { req in
+                        req.body = .init(data: Data(data.utf8))
+                    }
+                    #expect(res.status == .ok)
+                    expectJSONEquals(res.body.string, expected)
                 }
-                #expect(res.status == .unprocessableContent)
             }
         }
-    }
 
-    @Test("Test Multipart Decoded Empty Body")
-    func testMultipartDecodedEmptyBody() async throws {
-        let expected = User(
-            name: "Vapor"
-        )
+        @Test("Test Multipart Decoded Empty Multipart Form")
+        func testMultipartDecodedEmptyMultipartForm() async throws {
+            let data = """
+                --123\r
+                --123--\r
+                """
+            let expected = User(
+                name: "Vapor"
+            )
 
-        struct User: Content, Equatable {
-            var name: String
-        }
-
-        try await withApp { app in
-            app.routes.get("multipart") { req -> User in
-                let decoded = try await req.content.decode(User.self)
-                #expect(decoded == expected)
-                return decoded
+            struct User: Content, Equatable {
+                var name: String
             }
 
-            try await app.testing { client in
-                let res = try await client.get("/multipart", headers: [
-                    .contentType: "multipart/form-data; boundary=123"
-                ])
-                #expect(res.status == .unprocessableContent)
-            }
-        }
-    }
-
-    @Test("Test Multipart Decode Unicode")
-    func testMultipartDecodeUnicode() async throws {
-        let data = """
-        --123\r
-        Content-Disposition: form-data; name="name"\r
-        \r
-        Vapor\r
-        --123\r
-        Content-Disposition: form-data; name="age"\r
-        \r
-        4\r
-        --123\r
-        Content-Disposition: form-data; name="image"; filename="她在吃水果.png"; filename*="UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png"\r
-        \r
-        <contents of image>\r
-        --123--\r
-
-        """
-        let expected = User(
-            name: "Vapor",
-            age: 4,
-            image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
-        )
-
-        struct User: Content, Equatable, Sendable {
-            var name: String
-            var age: Int
-            var image: File
-        }
-
-        try await withApp { app in
-            app.routes.get("multipart") { req -> User in
-                let decoded = try await req.content.decode(User.self)
-                #expect(decoded == expected)
-                return decoded
-            }
-
-            try await app.testing { client in
-                let res = try await client.get("/multipart", headers: [
-                    .contentType: "multipart/form-data; boundary=123"
-                ]) { req in
-                    req.body = .init(data: Data(data.utf8))
+            try await withApp { app in
+                app.routes.get("multipart") { req -> User in
+                    let decoded = try await req.content.decode(User.self)
+                    #expect(decoded == expected)
+                    return decoded
                 }
-                #expect(res.status == .ok)
-                expectJSONEquals(res.body.string, expected)
-            }
-        }
-    }
 
-    @Test("Test Multipart Encoding")
-    func testMultipartEncode() async throws {
-        struct User: Content {
-            static let defaultContentType: HTTPMediaType = .formData
-            var name: String
-            var age: Int
-            var image: File
-        }
-
-        try await withApp { app in
-            app.get("multipart") { _ -> User in
-                User(
-                    name: "Vapor",
-                    age: 4,
-                    image: File(data: "<contents of image>", filename: "droplet.png")
-                )
-            }
-            try await app.testing { client in
-                let res = try await client.get("/multipart")
-                #expect(res.status == .ok)
-                let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
-                try #expect(await res.body.requireString().contains("Content-Disposition: form-data; name=\"name\""))
-                try #expect(await res.body.requireString().contains("--\(boundary)"))
-                try #expect(await res.body.requireString().contains("filename=\"droplet.png\""))
-                try #expect(await res.body.requireString().contains("name=\"image\""))
-            }
-        }
-    }
-
-    @Test("Test Multipart Encoding with Unicode")
-    func testMultiPartEncodeUnicode() async throws {
-        struct User: Content {
-            static let defaultContentType: HTTPMediaType = .formData
-            var name: String
-            var age: Int
-            var image: File
-        }
-
-        try await withApp { app in
-            app.get("multipart") { _ -> User in
-                User(
-                    name: "Vapor",
-                    age: 4,
-                    image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
-                )
-            }
-            try await app.testing { client in
-                let res = try await client.get("/multipart")
-                #expect(res.status == .ok)
-                let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
-                try #expect(await res.body.requireString().contains("Content-Disposition: form-data; name=\"name\""))
-                try #expect(await res.body.requireString().contains("--\(boundary)"))
-                try #expect(await res.body.requireString().contains("filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\""))
-                try #expect(await res.body.requireString().contains("name=\"image\""))
-            }
-        }
-    }
-
-    @Test("Multipart File prefers header contentType", .bug("https://github.com/vapor/vapor/issues/2571"))
-    func testMultipartFileContentTypeUsesHeader() async throws {
-        // A file named "your-face.jpg" but with Content-Type: image/webp
-        // The decoded File.contentType should be image/webp, not image/jpeg
-        let data = """
-        --123\r
-        Content-Disposition: form-data; name="upload"; filename="your-face.jpg"\r
-        Content-Type: image/webp\r
-        \r
-        1234\r
-        --123--\r\n
-        """
-
-        struct Payload: Content {
-            let upload: File
-        }
-
-        try await withApp { app in
-            app.routes.get("multipart") { req -> String in
-                let payload = try await req.content.decode(Payload.self)
-                #expect(payload.upload.filename == "your-face.jpg")
-                #expect(payload.upload.contentType == .webp)
-                return "ok"
-            }
-
-            try await app.testing { client in
-                let res = try await client.get("/multipart", headers: [
-                    .contentType: "multipart/form-data; boundary=123"
-                ]) { req in
-                    req.body = .init(data: Data(data.utf8))
+                try await app.testing { client in
+                    let res = try await client.get(
+                        "/multipart",
+                        headers: [
+                            .contentType: "multipart/form-data; boundary=123"
+                        ]
+                    ) { req in
+                        req.body = .init(data: Data(data.utf8))
+                    }
+                    #expect(res.status == .unprocessableContent)
                 }
-                #expect(res.status == .ok)
             }
         }
-    }
+
+        @Test("Test Multipart Decoded Empty Body")
+        func testMultipartDecodedEmptyBody() async throws {
+            let expected = User(
+                name: "Vapor"
+            )
+
+            struct User: Content, Equatable {
+                var name: String
+            }
+
+            try await withApp { app in
+                app.routes.get("multipart") { req -> User in
+                    let decoded = try await req.content.decode(User.self)
+                    #expect(decoded == expected)
+                    return decoded
+                }
+
+                try await app.testing { client in
+                    let res = try await client.get(
+                        "/multipart",
+                        headers: [
+                            .contentType: "multipart/form-data; boundary=123"
+                        ])
+                    #expect(res.status == .unprocessableContent)
+                }
+            }
+        }
+
+        @Test("Test Multipart Decode Unicode")
+        func testMultipartDecodeUnicode() async throws {
+            let data = """
+                --123\r
+                Content-Disposition: form-data; name="name"\r
+                \r
+                Vapor\r
+                --123\r
+                Content-Disposition: form-data; name="age"\r
+                \r
+                4\r
+                --123\r
+                Content-Disposition: form-data; name="image"; filename="她在吃水果.png"; filename*="UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png"\r
+                \r
+                <contents of image>\r
+                --123--\r
+
+                """
+            let expected = User(
+                name: "Vapor",
+                age: 4,
+                image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
+            )
+
+            struct User: Content, Equatable, Sendable {
+                var name: String
+                var age: Int
+                var image: File
+            }
+
+            try await withApp { app in
+                app.routes.get("multipart") { req -> User in
+                    let decoded = try await req.content.decode(User.self)
+                    #expect(decoded == expected)
+                    return decoded
+                }
+
+                try await app.testing { client in
+                    let res = try await client.get(
+                        "/multipart",
+                        headers: [
+                            .contentType: "multipart/form-data; boundary=123"
+                        ]
+                    ) { req in
+                        req.body = .init(data: Data(data.utf8))
+                    }
+                    #expect(res.status == .ok)
+                    expectJSONEquals(res.body.string, expected)
+                }
+            }
+        }
+
+        @Test("Test Multipart Encoding")
+        func testMultipartEncode() async throws {
+            struct User: Content {
+                static let defaultContentType: HTTPMediaType = .formData
+                var name: String
+                var age: Int
+                var image: File
+            }
+
+            try await withApp { app in
+                app.get("multipart") { _ -> User in
+                    User(
+                        name: "Vapor",
+                        age: 4,
+                        image: File(data: "<contents of image>", filename: "droplet.png")
+                    )
+                }
+                try await app.testing { client in
+                    let res = try await client.get("/multipart")
+                    #expect(res.status == .ok)
+                    let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
+                    try #expect(await res.body.requireString().contains("Content-Disposition: form-data; name=\"name\""))
+                    try #expect(await res.body.requireString().contains("--\(boundary)"))
+                    try #expect(await res.body.requireString().contains("filename=\"droplet.png\""))
+                    try #expect(await res.body.requireString().contains("name=\"image\""))
+                }
+            }
+        }
+
+        @Test("Test Multipart Encoding with Unicode")
+        func testMultiPartEncodeUnicode() async throws {
+            struct User: Content {
+                static let defaultContentType: HTTPMediaType = .formData
+                var name: String
+                var age: Int
+                var image: File
+            }
+
+            try await withApp { app in
+                app.get("multipart") { _ -> User in
+                    User(
+                        name: "Vapor",
+                        age: 4,
+                        image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
+                    )
+                }
+                try await app.testing { client in
+                    let res = try await client.get("/multipart")
+                    #expect(res.status == .ok)
+                    let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
+                    try #expect(await res.body.requireString().contains("Content-Disposition: form-data; name=\"name\""))
+                    try #expect(await res.body.requireString().contains("--\(boundary)"))
+                    try #expect(
+                        await res.body.requireString().contains("filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\""))
+                    try #expect(await res.body.requireString().contains("name=\"image\""))
+                }
+            }
+        }
+
+        @Test("Multipart File prefers header contentType", .bug("https://github.com/vapor/vapor/issues/2571"))
+        func testMultipartFileContentTypeUsesHeader() async throws {
+            // A file named "your-face.jpg" but with Content-Type: image/webp
+            // The decoded File.contentType should be image/webp, not image/jpeg
+            let data = """
+                --123\r
+                Content-Disposition: form-data; name="upload"; filename="your-face.jpg"\r
+                Content-Type: image/webp\r
+                \r
+                1234\r
+                --123--\r\n
+                """
+
+            struct Payload: Content {
+                let upload: File
+            }
+
+            try await withApp { app in
+                app.routes.get("multipart") { req -> String in
+                    let payload = try await req.content.decode(Payload.self)
+                    #expect(payload.upload.filename == "your-face.jpg")
+                    #expect(payload.upload.contentType == .webp)
+                    return "ok"
+                }
+
+                try await app.testing { client in
+                    let res = try await client.get(
+                        "/multipart",
+                        headers: [
+                            .contentType: "multipart/form-data; boundary=123"
+                        ]
+                    ) { req in
+                        req.body = .init(data: Data(data.utf8))
+                    }
+                    #expect(res.status == .ok)
+                }
+            }
+        }
     #endif
 
     @Test("Test URLEncoded Form Decode")
@@ -541,9 +561,12 @@ struct ContentTests {
             }
 
             try await app.testing { client in
-                let res = try await client.get("/check", headers: [
-                    .init("X-Test-Value")!: "PRESENT"
-                ]) { req in
+                let res = try await client.get(
+                    "/check",
+                    headers: [
+                        .init("X-Test-Value")!: "PRESENT"
+                    ]
+                ) { req in
                     try req.content.encode(["foo": "bar"], as: .json)
                     req.headers.contentType = .xml
                 }
@@ -703,36 +726,45 @@ struct ContentTests {
         }
 
         var request = ClientRequest(url: .init(scheme: "https", host: "example.com", path: "/api"))
-        try request.query.encode(Foo(status:
-            "⬆️ taylorswift just released swift-mongodb v0.10.1 – use BSON and MongoDB in pure Swift\n\nhttps://swiftpackageindex.com/tayloraswift/swift-mongodb#releases"
-        ))
+        try request.query.encode(
+            Foo(
+                status:
+                    "⬆️ taylorswift just released swift-mongodb v0.10.1 – use BSON and MongoDB in pure Swift\n\nhttps://swiftpackageindex.com/tayloraswift/swift-mongodb#releases"
+            ))
 
-        #expect(request.url.string == "https://example.com/api?status=%E2%AC%86%EF%B8%8F%20taylorswift%20just%20released%20swift-mongodb%20v0.10.1%20%E2%80%93%20use%20BSON%20and%20MongoDB%20in%20pure%20Swift%0A%0Ahttps%3A%2F%2Fswiftpackageindex.com%2Ftayloraswift%2Fswift-mongodb%23releases")
+        #expect(
+            request.url.string
+                == "https://example.com/api?status=%E2%AC%86%EF%B8%8F%20taylorswift%20just%20released%20swift-mongodb%20v0.10.1%20%E2%80%93%20use%20BSON%20and%20MongoDB%20in%20pure%20Swift%0A%0Ahttps%3A%2F%2Fswiftpackageindex.com%2Ftayloraswift%2Fswift-mongodb%23releases"
+        )
     }
 
     @Test("Test Snake Case Coding Key Error")
     func testSnakeCaseCodingKeyError() async throws {
         try await withApp { app in
             var req = Request()
-            try req.content.encode([
-                "title": "The title"
-            ], as: .json)
+            try req.content.encode(
+                [
+                    "title": "The title"
+                ], as: .json)
 
             struct PostInput: Content {
                 enum CodingKeys: String, CodingKey {
-                    case id, title, isFree = "is_free"
+                    case id, title
+                    case isFree = "is_free"
                 }
 
                 let id: UUID?
                 let title: String
                 let isFree: Bool
             }
-            await #expect(performing: {
-                try await req.content.decode(PostInput.self)
-            }, throws: { error in
-                return (error as? any AbortError)?.reason ==
-                        #"No such key 'is_free' at path ''. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
-            })
+            await #expect(
+                performing: {
+                    try await req.content.decode(PostInput.self)
+                },
+                throws: { error in
+                    return (error as? any AbortError)?.reason
+                        == #"No such key 'is_free' at path ''. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
+                })
         }
     }
 
@@ -749,11 +781,14 @@ struct ContentTests {
             struct DecodeModel: Content {
                 let badJson: String
             }
-            await #expect(performing: {
-                try await req.content.decode(DecodeModel.self)
-            }, throws: { error in
-                return (error as? any AbortError)?.reason.contains(#"Data corrupted at path ''. The given data was not valid JSON"#) ?? false
-            })
+            await #expect(
+                performing: {
+                    try await req.content.decode(DecodeModel.self)
+                },
+                throws: { error in
+                    return (error as? any AbortError)?.reason.contains(#"Data corrupted at path ''. The given data was not valid JSON"#)
+                        ?? false
+                })
         }
     }
 
@@ -761,9 +796,10 @@ struct ContentTests {
     func testValueNotFoundError() async throws {
         try await withApp { app in
             var req = Request()
-            try req.content.encode([
-                "items": ["1"]
-            ], as: .json)
+            try req.content.encode(
+                [
+                    "items": ["1"]
+                ], as: .json)
 
             struct DecodeModel: Content {
                 struct Item: Content {
@@ -777,12 +813,14 @@ struct ContentTests {
 
                 let items: Item
             }
-            await #expect(performing: {
-                try await req.content.decode(DecodeModel.self)
-            }, throws: { error in
-                return (error as? any AbortError)?.reason ==
-                #"No value found (expected type 'String') at path 'items.Index 1'. Unkeyed container is at end."#
-            })
+            await #expect(
+                performing: {
+                    try await req.content.decode(DecodeModel.self)
+                },
+                throws: { error in
+                    return (error as? any AbortError)?.reason
+                        == #"No value found (expected type 'String') at path 'items.Index 1'. Unkeyed container is at end."#
+                })
         }
     }
 
@@ -790,11 +828,12 @@ struct ContentTests {
     func testTypeMismatchError() async throws {
         try await withApp { app in
             var req = Request()
-            try req.content.encode([
-                "item": [
-                    "title": "The title"
-                ]
-            ], as: .json)
+            try req.content.encode(
+                [
+                    "item": [
+                        "title": "The title"
+                    ]
+                ], as: .json)
 
             struct DecodeModel: Content {
                 struct Item: Content {
@@ -803,11 +842,14 @@ struct ContentTests {
 
                 let item: Item
             }
-            await #expect(performing: {
-                try await req.content.decode(DecodeModel.self)
-            }, throws: { error in
-                (error as? any AbortError)?.reason.contains(#"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#) ?? false
-            })
+            await #expect(
+                performing: {
+                    try await req.content.decode(DecodeModel.self)
+                },
+                throws: { error in
+                    (error as? any AbortError)?.reason.contains(
+                        #"Value was not of type 'Int' at path 'item.title'. Expected to decode Int but found a string"#) ?? false
+                })
         }
     }
 
@@ -853,10 +895,10 @@ struct ContentTests {
             }
 
             let body = """
-        {
-          "example": "example"
-        }
-        """
+                {
+                  "example": "example"
+                }
+                """
 
             var headers = HTTPFields()
             headers[.contentType] = "text/plain"

@@ -15,8 +15,10 @@ public struct LiveTestOptions: Sendable {
     }
 
     public static var live: Self { .init() }
-    public static func live(hostname: String = "127.0.0.1", port: Int = 0,
-                            clientOptions: LiveClientOptions = .init()) -> Self {
+    public static func live(
+        hostname: String = "127.0.0.1", port: Int = 0,
+        clientOptions: LiveClientOptions = .init()
+    ) -> Self {
         self.init(hostname: hostname, port: port, clientOptions: clientOptions)
     }
 }

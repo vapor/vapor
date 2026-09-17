@@ -44,7 +44,7 @@ extension Application {
     func applyAddressConfiguration(_ config: AddressConfiguration) {
         switch (config.hostname, config.port, config.bind, config.socketPath) {
         case (.none, .none, .none, .none):
-            break // use defaults
+            break  // use defaults
         case (.none, .none, .none, .some(let socketPath)):
             self.serverConfiguration.address = .unixDomainSocket(path: socketPath)
         case (.none, .none, .some(let address), .none):

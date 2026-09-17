@@ -1,12 +1,13 @@
-import VaporTesting
-import Testing
-import Vapor
 import HTTPTypes
 import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 @Suite("Session Tests")
@@ -21,7 +22,7 @@ struct SessionTests {
                 req.session.data["foo"] = "bar"
                 return "set"
             }
-            sessions.get("del") { req  -> String in
+            sessions.get("del") { req -> String in
                 req.session.destroy()
                 return "del"
             }
@@ -32,9 +33,10 @@ struct SessionTests {
                 cookie = setRes.headers.setCookie?["vapor-session"]
                 #expect(cookie != nil)
                 var ops = await cache.ops
-                #expect(ops == [
-                    #"create SessionData(storage: ["foo": "bar"])"#,
-                ])
+                #expect(
+                    ops == [
+                        #"create SessionData(storage: ["foo": "bar"])"#
+                    ])
                 await cache.resetOps()
                 #expect(cookie?.string == "a")
 
@@ -46,10 +48,11 @@ struct SessionTests {
                 let delRes = try await client.get("/del", headers: headers)
                 try #expect(await delRes.body.requireString() == "del")
                 ops = await cache.ops
-                #expect(ops == [
-                    #"read SessionID(string: "a")"#,
-                    #"delete SessionID(string: "a")"#
-                ])
+                #expect(
+                    ops == [
+                        #"read SessionID(string: "a")"#,
+                        #"delete SessionID(string: "a")"#,
+                    ])
             }
         }
     }
@@ -245,7 +248,7 @@ struct SessionTests {
 
 actor MockKeyedCache: SessionDriver {
     var ops: [String] = []
-    init() { }
+    init() {}
 
     func getOps() -> [String] {
         ops

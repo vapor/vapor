@@ -1,8 +1,9 @@
 public import HTTPTypes
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 public struct ClientResponse: Sendable {
@@ -26,7 +27,7 @@ public struct ClientResponse: Sendable {
         status: HTTPResponse.Status = .ok,
         headers: HTTPFields = [:],
         body: Response.Body = .empty,
-        maxBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB, matching `ClientRequest`
+        maxBodySize: Int = 10 * 1024 * 1024,  // Default to 10 MB, matching `ClientRequest`
         contentConfiguration: ContentConfiguration = .default()
     ) {
         self.status = status
@@ -49,13 +50,13 @@ extension ClientResponse {
             return self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E: Encodable {
             var data = Data()
             try encoder.encode(encodable, to: &data, headers: &self.headers, userInfo: [:])
             self.body = .init(data: data)
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D: Decodable {
             var body = self.body
             guard let data = try await body.collect() else {
                 throw Abort(.lengthRequired)
@@ -63,7 +64,7 @@ extension ClientResponse {
             return try decoder.decode(D.self, from: data, headers: self.headers, userInfo: [:])
         }
 
-        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C: Content {
             var body = Data()
             var content = content
             try content.beforeEncode()
@@ -74,7 +75,8 @@ extension ClientResponse {
 
     public var content: any ContentContainer {
         get {
-            _ContentContainer(body: self.body, headers: self.headers, maxBodySize: self.maxBodySize, contentConfiguration: self.contentConfiguration)
+            _ContentContainer(
+                body: self.body, headers: self.headers, maxBodySize: self.maxBodySize, contentConfiguration: self.contentConfiguration)
         }
         set {
             let container = (newValue as! _ContentContainer)

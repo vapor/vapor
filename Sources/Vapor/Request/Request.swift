@@ -1,12 +1,13 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
+public import HTTPTypes
 public import RoutingKit
 import Synchronization
-public import HTTPTypes
 public import X509
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 /// Represents an HTTP request in an application.
 public struct Request: CustomStringConvertible, Sendable {
@@ -65,8 +66,7 @@ public struct Request: CustomStringConvertible, Sendable {
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
-            where D: Decodable
-        {
+        where D: Decodable {
             try decoder.decode(D.self, from: self.url)
         }
 
@@ -94,13 +94,13 @@ public struct Request: CustomStringConvertible, Sendable {
             self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E: Encodable {
             var body = Data()
             try encoder.encode(encodable, to: &body, headers: &self.headers, userInfo: [:])
             self.body = body
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D: Decodable {
             // Prefer the already-buffered body; otherwise collect a streamed body on demand so
             // Collect on first need: this is what makes `content.decode` work on a lazy body.
             let resolved: Data?
@@ -115,7 +115,7 @@ public struct Request: CustomStringConvertible, Sendable {
             return try decoder.decode(D.self, from: body, headers: self.headers, userInfo: [:])
         }
 
-        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C: Content {
             var content = content
             try content.beforeEncode()
             var body = Data()

@@ -1,9 +1,10 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
 public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 extension HTTPFields {
     /// Represents the HTTP `Last-Modified` header.

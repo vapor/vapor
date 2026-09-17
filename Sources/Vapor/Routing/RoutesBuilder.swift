@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-public import FoundationEssentials
+    public import FoundationEssentials
 #else
-public import Foundation
+    public import Foundation
 #endif
 
 public protocol RoutesBuilder {

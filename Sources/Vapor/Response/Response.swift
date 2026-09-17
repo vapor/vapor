@@ -1,8 +1,9 @@
 public import HTTPTypes
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// An HTTP response from a server back to the client.
@@ -18,7 +19,7 @@ public struct Response: CustomStringConvertible, Sendable {
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
     public var headers: HTTPFields
-    
+
     /// The `Body`. Updating this property will also update the associated transport headers.
     ///
     ///     res.body = Response.Body(string: "Hello, world!")
@@ -33,15 +34,15 @@ public struct Response: CustomStringConvertible, Sendable {
 
     /// Optional Upgrade behavior to apply to this response.
     /// currently, websocket upgrades are the only defined case.
-//    public var upgrader: (any Upgrader)? {
-//        get {
-//            self.responseBox.withLockedValue { $0.upgrader }
-//        }
-//        set {
-//            self.responseBox.withLockedValue { $0.upgrader = newValue }
-//        }
-//    }
-    
+    //    public var upgrader: (any Upgrader)? {
+    //        get {
+    //            self.responseBox.withLockedValue { $0.upgrader }
+    //        }
+    //        set {
+    //            self.responseBox.withLockedValue { $0.upgrader = newValue }
+    //        }
+    //    }
+
     /// Get and set `HTTPCookies` for this `Response`.
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
@@ -52,7 +53,7 @@ public struct Response: CustomStringConvertible, Sendable {
             self.headers.setCookie = newValue
         }
     }
-    
+
     // See `CustomStringConvertible.description`.
     public var description: String {
         var desc: [String] = []
@@ -112,7 +113,7 @@ public struct Response: CustomStringConvertible, Sendable {
     private let contentConfiguration: ContentConfiguration
 
     // MARK: Init
-    
+
     /// Creates a new `Response`.
     ///
     ///     let res = Response(status: .ok)
@@ -152,7 +153,6 @@ public struct Response: CustomStringConvertible, Sendable {
         self.status = status
     }
 }
-
 
 extension HTTPFields {
     mutating func updateContentLength(_ contentLength: Int?) {

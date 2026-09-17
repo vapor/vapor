@@ -1,9 +1,9 @@
-import Vapor
-import Testing
-import VaporTesting
 import HTTPTypes
 import Logging
 import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
 
 /// Covers what `run()` does to the application when it fails.
 ///

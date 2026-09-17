@@ -21,7 +21,7 @@ extension ValidatorResults.And: ValidatorResult {
     public var isFailure: Bool {
         self.left.isFailure || self.right.isFailure
     }
-    
+
     public var successDescription: String? {
         switch (self.left.isFailure, self.right.isFailure) {
         case (false, false):
@@ -34,7 +34,7 @@ extension ValidatorResults.And: ValidatorResult {
             return nil
         }
     }
-    
+
     public var failureDescription: String? {
         switch (self.left.isFailure, self.right.isFailure) {
         case (true, true):

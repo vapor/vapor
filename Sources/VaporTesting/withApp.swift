@@ -1,9 +1,10 @@
 public import Configuration
-public import Vapor
+public import Logging
 import ServiceLifecycle
+public import Vapor
+
 @testable import CoreMetrics
 @testable import Instrumentation
-public import Logging
 
 /// Perform a test while handling lifecycle of the application.
 /// Feel free to create a custom function like this, tailored to your project.

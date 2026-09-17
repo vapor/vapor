@@ -1,7 +1,8 @@
-@testable import Vapor
 import Configuration
 import Testing
 import VaporTesting
+
+@testable import Vapor
 
 /// Covers the command-line address flags, which reach the server via
 /// `Application.applyAddressConfiguration(_:)` on the way through `run()` and `start()`.

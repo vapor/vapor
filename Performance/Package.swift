@@ -4,16 +4,16 @@ import PackageDescription
 let package = Package(
     name: "vapor-performance",
     platforms: [
-        .macOS("26.2"),
+        .macOS("26.2")
     ],
     dependencies: [
-        .package(name: "vapor", path: ".."),
+        .package(name: "vapor", path: "..")
     ],
     targets: [
         .executableTarget(
             name: "PerformanceServer",
             dependencies: [
-                .product(name: "Vapor", package: "vapor"),
+                .product(name: "Vapor", package: "vapor")
             ],
             path: "Sources/PerformanceServer",
             swiftSettings: [
@@ -30,6 +30,6 @@ let package = Package(
                 .enableUpcomingFeature("LifetimeDependence"),
                 .enableUpcomingFeature("ImmutableWeakCaptures"),
             ]
-        ),
+        )
     ]
 )

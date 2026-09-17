@@ -56,7 +56,7 @@ public final class Session: Sendable {
 
 public struct SessionID: Sendable, Equatable, Hashable {
     public let string: String
-    
+
     public init(string: String) {
         self.string = string
     }

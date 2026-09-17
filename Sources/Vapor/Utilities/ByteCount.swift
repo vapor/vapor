@@ -1,9 +1,9 @@
 import Algorithms
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// Represents a number of bytes:
@@ -29,7 +29,7 @@ extension ByteCount: ExpressibleByIntegerLiteral {
     /// Initializes the `ByteCount` with the raw byte count
     /// - Parameter value: The number of bytes
     public init(integerLiteral value: Int) {
-         self.value = value
+        self.value = value
     }
 }
 
@@ -48,10 +48,10 @@ extension ByteCount: ExpressibleByStringLiteral {
             "kb": 10,
             "mb": 20,
             "gb": 30,
-            "tb": 40
+            "tb": 40,
         ]
 
-        let cleanValue = value.lowercased().trimming(while: { $0 == " " || $0 == "\t"} ).replacing(" ", with: "")
+        let cleanValue = value.lowercased().trimming(while: { $0 == " " || $0 == "\t" }).replacing(" ", with: "")
         for suffix in validSuffixes {
             guard cleanValue.hasSuffix(suffix.key) else { continue }
             guard let stringIntValue = cleanValue.split(separator: suffix.key).first else {

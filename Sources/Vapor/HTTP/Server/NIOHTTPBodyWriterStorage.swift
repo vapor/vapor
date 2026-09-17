@@ -1,5 +1,5 @@
-import NIOHTTPServer
 import BasicContainers
+import NIOHTTPServer
 
 /// Holds the server's move-only response writer for the duration of one response
 final class NIOHTTPBodyWriterStorage {

@@ -1,21 +1,22 @@
-@testable import Vapor
-import VaporTesting
 import AsyncHTTPClient
 import Crypto
+import Foundation
+import HTTPTypes
+import Logging
 import NIOCertificateReloading
-import Synchronization
 import NIOCore
 import NIOHTTP1
 import NIOPosix
 import NIOSSL
-import ServiceLifecycle
-import Logging
-import Testing
-import HTTPTypes
-import Foundation
-import X509
-import SwiftASN1
 import RoutingKit
+import ServiceLifecycle
+import SwiftASN1
+import Synchronization
+import Testing
+import VaporTesting
+import X509
+
+@testable import Vapor
 
 @Suite("Server TLS Tests")
 struct ServerTLSTests {
@@ -427,9 +428,10 @@ struct ServerTLSTests {
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.boot()
 
-            let serviceGroup = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
 
             let bound: Vapor.SocketAddress = try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask { try await serviceGroup.run() }
@@ -554,7 +556,8 @@ struct ServerTLSTests {
                 return chain.leaf == identity.certificate ? "trusted" : "unexpected \(chain.leaf.subject)"
             }
 
-            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity))) { client in
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity)))
+            { client in
                 let response = try await client.get("whoami")
                 #expect(response.status == .ok)
                 let body = try await response.body.requireString()
@@ -562,7 +565,9 @@ struct ServerTLSTests {
                 // records a validated chain when a custom verification callback hands one back, never
                 // from BoringSSL's own trust-root verification. `custom` is the way to get the chain
                 // until that changes; see testCustomVerifierAcceptsExpiredCertificate.
-                #warning("NIOSSL does not expose the chain BoringSSL verified against trust roots, so peerCertificateChain is nil there — drop this withKnownIssue (and the one in testOptionalClientCertificate) when swift-nio-ssl or swift-http-server hand it back")
+                #warning(
+                    "NIOSSL does not expose the chain BoringSSL verified against trust roots, so peerCertificateChain is nil there — drop this withKnownIssue (and the one in testOptionalClientCertificate) when swift-nio-ssl or swift-http-server hand it back"
+                )
                 withKnownIssue("trust-root verification does not expose the chain to the handler") {
                     #expect(body == "trusted")
                 }
@@ -582,7 +587,8 @@ struct ServerTLSTests {
             app.serverConfiguration.tlsConfiguration = tls
             app.get("hello") { _ in "world" }
 
-            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: trusted))) { client in
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: trusted))) {
+                client in
                 // No assertion on the error's type. The server rejects the client after its own
                 // handshake has completed, so what the client sees depends on whether its request
                 // was already in flight when the alert arrived: a TLS error or a closed connection.
@@ -643,17 +649,19 @@ struct ServerTLSTests {
             let server = try TestCredentials.localhost()
             var tls = ServerConfiguration.TLSConfiguration.inMemory(
                 certificateChain: [server.certificate], privateKey: server.privateKey)
-            tls.clientCertificateVerification = .init(trust: .custom { chain in
-                presented.withLock { $0 = chain }
-                return .verified(ValidatedCertificateChain(uncheckedCertificateChain: chain))
-            })
+            tls.clientCertificateVerification = .init(
+                trust: .custom { chain in
+                    presented.withLock { $0 = chain }
+                    return .verified(ValidatedCertificateChain(uncheckedCertificateChain: chain))
+                })
             app.serverConfiguration.tlsConfiguration = tls
             app.get("whoami") { req -> String in
                 guard let chain = req.peerCertificateChain else { return "anonymous" }
                 return chain.leaf == expired.certificate ? "trusted" : "unexpected \(chain.leaf.subject)"
             }
 
-            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: expired))) { client in
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: expired))) {
+                client in
                 try #expect(await client.get("whoami").body.requireString() == "trusted")
             }
         }
@@ -671,7 +679,8 @@ struct ServerTLSTests {
             app.serverConfiguration.tlsConfiguration = tls
             app.get("hello") { _ in "world" }
 
-            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity))) { client -> Void in
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity)))
+            { client -> Void in
                 await #expect(throws: (any Error).self) {
                     try await client.get("hello") { $0.timeout = .seconds(15) }
                 }

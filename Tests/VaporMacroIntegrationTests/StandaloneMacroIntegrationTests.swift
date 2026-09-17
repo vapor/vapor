@@ -1,84 +1,84 @@
 #if MacroRouting
-import Testing
-import Vapor
-import VaporTesting
-import VaporMacros
-import HTTPTypes
-import RoutingKit
+    import Testing
+    import Vapor
+    import VaporTesting
+    import VaporMacros
+    import HTTPTypes
+    import RoutingKit
 
-@Suite("Standalone Macro Routing Integration Tests")
-struct StandaloneMacroIntegrationTests {
+    @Suite("Standalone Macro Routing Integration Tests")
+    struct StandaloneMacroIntegrationTests {
 
-    @Test("GET macro route returns correct response")
-    func standaloneGetRoute() async throws {
-        try await withApp { app in
-            registerStandaloneRoutes(app)
+        @Test("GET macro route returns correct response")
+        func standaloneGetRoute() async throws {
+            try await withApp { app in
+                registerStandaloneRoutes(app)
 
-            try await app.testing { client in
-                let res = try await client.get("/standalone/hello")
-                #expect(res.status == .ok)
-                try #expect(await res.body.requireString() == "hello from standalone")
+                try await app.testing { client in
+                    let res = try await client.get("/standalone/hello")
+                    #expect(res.status == .ok)
+                    try #expect(await res.body.requireString() == "hello from standalone")
+                }
+            }
+        }
+
+        @Test("GET macro route with path parameter")
+        func standaloneGetRouteWithPathParameter() async throws {
+            try await withApp { app in
+                registerStandaloneRoutes(app)
+
+                try await app.testing { client in
+                    let res = try await client.get("/standalone/users/99")
+                    #expect(res.status == .ok)
+                    try #expect(await res.body.requireString() == "standalone user with id: 99")
+                }
+            }
+        }
+
+        @Test("POST macro route")
+        func standalonePostRoute() async throws {
+            try await withApp { app in
+                registerStandaloneRoutes(app)
+
+                try await app.testing { client in
+                    let res = try await client.post("/standalone/create")
+                    #expect(res.status == .ok)
+                    try #expect(await res.body.requireString() == "created")
+                }
+            }
+        }
+
+        @Test("DELETE macro route")
+        func standaloneDeleteRoute() async throws {
+            try await withApp { app in
+                registerStandaloneRoutes(app)
+
+                try await app.testing { client in
+                    let res = try await client.delete("/standalone/remove/5")
+                    #expect(res.status == .ok)
+                    try #expect(await res.body.requireString() == "deleted 5")
+                }
             }
         }
     }
 
-    @Test("GET macro route with path parameter")
-    func standaloneGetRouteWithPathParameter() async throws {
-        try await withApp { app in
-            registerStandaloneRoutes(app)
+    // MARK: - Standalone Routes
 
-            try await app.testing { client in
-                let res = try await client.get("/standalone/users/99")
-                #expect(res.status == .ok)
-                try #expect(await res.body.requireString() == "standalone user with id: 99")
-            }
+    func registerStandaloneRoutes(_ app: Application) {
+        #GET(on: app, "standalone", "hello") { (req: Request) async throws -> String in
+            return "hello from standalone"
+        }
+
+        #GET(on: app, "standalone", "users", Int.self) { (req: Request, id: Int) async throws -> String in
+            return "standalone user with id: \(id)"
+        }
+
+        #POST(on: app, "standalone", "create") { (req: Request) async throws -> String in
+            return "created"
+        }
+
+        #DELETE(on: app, "standalone", "remove", Int.self) { (req: Request, id: Int) async throws -> String in
+            return "deleted \(id)"
         }
     }
-
-    @Test("POST macro route")
-    func standalonePostRoute() async throws {
-        try await withApp { app in
-            registerStandaloneRoutes(app)
-
-            try await app.testing { client in
-                let res = try await client.post("/standalone/create")
-                #expect(res.status == .ok)
-                try #expect(await res.body.requireString() == "created")
-            }
-        }
-    }
-
-    @Test("DELETE macro route")
-    func standaloneDeleteRoute() async throws {
-        try await withApp { app in
-            registerStandaloneRoutes(app)
-
-            try await app.testing { client in
-                let res = try await client.delete("/standalone/remove/5")
-                #expect(res.status == .ok)
-                try #expect(await res.body.requireString() == "deleted 5")
-            }
-        }
-    }
-}
-
-// MARK: - Standalone Routes
-
-func registerStandaloneRoutes(_ app: Application) {
-    #GET(on: app, "standalone", "hello") { (req: Request) async throws -> String in
-        return "hello from standalone"
-    }
-
-    #GET(on: app, "standalone", "users", Int.self) { (req: Request, id: Int) async throws -> String in
-        return "standalone user with id: \(id)"
-    }
-
-    #POST(on: app, "standalone", "create") { (req: Request) async throws -> String in
-        return "created"
-    }
-
-    #DELETE(on: app, "standalone", "remove", Int.self) { (req: Request, id: Int) async throws -> String in
-        return "deleted \(id)"
-    }
-}
 #endif
