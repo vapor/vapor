@@ -1,0 +1,5 @@
+module CVaporZlib [system] {
+    header "shim.h"
+    link "z"
+    export *
+}

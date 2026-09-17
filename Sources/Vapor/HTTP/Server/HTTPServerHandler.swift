@@ -71,10 +71,13 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
             // 3. Run responder chain
             let vaporResponse = try await responder.respond(to: vaporRequest)
 
-            let httpResponse = HTTPResponse(
+            var httpResponse = HTTPResponse(
                 status: vaporResponse.status,
                 headerFields: vaporResponse.headers
             )
+            // Framing belongs to the transport. NIO adds chunked encoding for HTTP/1.1
+            // streams; forwarding this header into HTTP/2 would make the response invalid.
+            httpResponse.headerFields[.transferEncoding] = nil
 
             // 4. Send the response head and body
             guard let sender = responseSender.take() else {

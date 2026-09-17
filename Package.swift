@@ -117,7 +117,7 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
                 .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
-                .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
+                "CVaporZlib",
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
@@ -138,6 +138,12 @@ let package = Package(
                 .product(name: "SystemPackage", package: "swift-system"),
             ],
             swiftSettings: swiftSettings
+        ),
+
+        .systemLibrary(
+            name: "CVaporZlib",
+            pkgConfig: "zlib",
+            providers: [.apt(["zlib1g-dev"]), .brew(["zlib"])]
         ),
 
         .macro(
@@ -195,6 +201,7 @@ let package = Package(
         .testTarget(
             name: "VaporTests",
             dependencies: [
+                .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
                 .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),

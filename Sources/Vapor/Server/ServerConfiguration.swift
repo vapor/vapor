@@ -7,6 +7,12 @@ public struct ServerConfiguration: Sendable {
     /// The HTTP versions the server accepts. Defaults to HTTP/1.1 only; adding HTTP/2 requires a ``tlsConfiguration``.
     public var httpVersions: Set<HTTPVersion>
 
+    /// Request body decompression. Disabled by default.
+    public var requestDecompression: RequestDecompressionConfiguration
+
+    /// Response compression policy, including per-route overrides.
+    public var responseCompression: ResponseCompressionConfiguration
+
     /// How many file content hashes to keep for ``Application/fileio`` and middleware created by `app.makeFileMiddleware()`.
     ///
     /// Only files served with `advancedETagComparison` enabled are hashed, and each entry is just a
@@ -30,13 +36,17 @@ public struct ServerConfiguration: Sendable {
         tlsConfiguration: TLSConfiguration? = nil,
         httpVersions: Set<HTTPVersion> = [.http1_1],
         eTagHashCacheCapacity: UInt = 1024,
-        maxDrainBytes: Int = 1 << 14
+        maxDrainBytes: Int = 1 << 14,
+        requestDecompression: RequestDecompressionConfiguration = .disabled,
+        responseCompression: ResponseCompressionConfiguration = .disabled
     ) {
         self.address = address
         self.tlsConfiguration = tlsConfiguration
         self.httpVersions = httpVersions
         self.eTagHashCacheCapacity = eTagHashCacheCapacity
         self.maxDrainBytes = maxDrainBytes
+        self.requestDecompression = requestDecompression
+        self.responseCompression = responseCompression
     }
 
     /// Host name the server will bind to.
