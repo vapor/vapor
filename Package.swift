@@ -38,7 +38,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: ["CommandLineArguments"]),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "4.0.0"),
+        // TODO: Update to stable release when swift-certificates and swift-nio-{quic/http3} have releases that depend on it
+        .package(url: "https://github.com/apple/swift-crypto.git", exact: "5.0.0-beta.2"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "5.0.0-beta"),
@@ -99,7 +100,12 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.2.0")),
+        // TODO: Update to tagged release once it depends on a tagged release of SwiftNIO HTTP/3
+        .package(url: "https://github.com/swift-server/swift-http-server.git", branch: "main", traits: [.defaults, "HTTP3"]),
+
+        // HTTP/3 and QUIC support for SwiftNIO - used for testing
+        .package(url: "https://github.com/apple/swift-nio-http3.git", branch: "main"),
+        .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.2.2")),
     ],
     targets: [
         // Vapor
@@ -202,6 +208,9 @@ let package = Package(
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
+                .product(name: "NIOHTTP3", package: "swift-nio-http3"),
+                .product(name: "NIOQUIC", package: "swift-nio-quic"),
+                .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),
@@ -215,6 +224,9 @@ let package = Package(
                 .copy("Utilities/localhost.crt"),
                 .copy("Utilities/localhost.key"),
                 .copy("Utilities/long-test-file.txt"),
+                .copy("Utilities/http3.crt"),
+                .copy("Utilities/http3.key"),
+                .copy("Utilities/http3-cacert.pem"),
             ],
             swiftSettings: swiftSettings
         ),

@@ -9,10 +9,10 @@ enum NIOHTTPServerAdapterError: Error {
     /// The underlying server reported that it was listening but exposed no addresses.
     case noListeningAddress
 
-    /// HTTP/2 was requested without TLS. HTTP/2 is negotiated over TLS via ALPN, so a
-    /// ``ServerConfiguration/tlsConfiguration`` is required to serve it. Cleartext HTTP/2 (h2c) is not
+    /// HTTP/2 or HTTP/3 were requested without TLS. HTTP/2 and HTTP/3 are negotiated over TLS via ALPN, so a
+    /// ``ServerConfiguration/tlsConfiguration`` is required to serve them. Cleartext HTTP/2 (h2c) is not
     /// supported by the underlying server yet; if that changes this check will be gated behind an opt-in.
-    case http2RequiresTLS
+    case http2And3RequireTLS
 
     /// No HTTP versions were configured. ``ServerConfiguration/httpVersions`` must contain at least one version.
     case noHTTPVersionsSpecified
@@ -23,6 +23,9 @@ enum NIOHTTPServerAdapterError: Error {
 
     /// The address was asked for after the server had stopped serving.
     case serverStopped
+
+    /// The provided group to use for the QUIC TLS 1.3 key exchange is not supported by the underlying server.
+    case unsupportedKeyExchangeGroup
 }
 
 /// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
@@ -139,6 +142,43 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                         )
                     )
                 ))
+            case .http3(let config):
+                var quicConfiguration: NIOHTTPServerConfiguration.HTTP3.QUICConfiguration = .defaults
+                quicConfiguration.serverName = config.quicConfiguration.serverName
+                quicConfiguration.keyExchangeGroup = switch config.quicConfiguration.keyExchangeGroup {
+                    case .secp256: .secp256
+                    case .secp384: .secp384
+                    case .x25519: .x25519
+                    case .x25519MLKEM768: .x25519MLKEM768
+                    default: throw NIOHTTPServerAdapterError.unsupportedKeyExchangeGroup
+                    }
+                quicConfiguration.maxIdleTimeout = config.quicConfiguration.maxIdleTimeout
+                quicConfiguration.initialMaxData = config.quicConfiguration.initialMaxData
+                quicConfiguration.initialMaxStreamDataBidirectionalLocal = config.quicConfiguration.initialMaxStreamDataBidirectionalLocal
+                quicConfiguration.initialMaxStreamDataBidirectionalRemote = config.quicConfiguration.initialMaxStreamDataBidirectionalRemote
+                quicConfiguration.initialMaxStreamDataUnidirectional = config.quicConfiguration.initialMaxStreamDataUnidirectional
+                quicConfiguration.initialMaxStreamsBidirectional = config.quicConfiguration.initialMaxStreamsBidirectional
+                quicConfiguration.initialMaxStreamsUnidirectional = config.quicConfiguration.initialMaxStreamsUnidirectional
+                quicConfiguration.keepAliveInterval = config.quicConfiguration.keepAliveInterval
+                quicConfiguration.sendRetry = config.quicConfiguration.sendRetry
+                quicConfiguration.keyLogPath = config.quicConfiguration.keyLogPath
+                quicConfiguration.qLogConfiguration = switch config.quicConfiguration.qLogConfiguration {
+                    case .none: nil
+                    case .some(let qLogConfig): .init(path: qLogConfig.path, topic: qLogConfig.topic, description: qLogConfig.description)
+                    }
+
+                var connectionSettings: NIOHTTPServerConfiguration.HTTP3.ConnectionSettings = .defaults
+                connectionSettings.qpackMaximumTableCapacity = config.connectionSettings.qpackMaximumTableCapacity
+                connectionSettings.qpackBlockedStreams = config.connectionSettings.qpackBlockedStreams
+                connectionSettings.maximumFieldSectionSize = config.connectionSettings.maximumFieldSectionSize
+
+                supportedHTTPVersions.insert(.http3(
+                    config: .init(
+                        preferHuffmanEncoding: config.preferHuffmanEncoding,
+                        quicConfiguration: quicConfiguration,
+                        connectionSettings: connectionSettings
+                    )
+                ))
             }
         }
 
@@ -146,11 +186,11 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             throw NIOHTTPServerAdapterError.noHTTPVersionsSpecified
         }
 
-        // HTTP/2 is negotiated via ALPN, which requires TLS. Over plaintext, only HTTP/1.1 is allowed.
+        // HTTP/2 and HTTP/3 are negotiated via ALPN, which requires TLS. Over plaintext, only HTTP/1.1 is allowed.
         guard self.context.configuration.value.isTLSEnabled
             || self.context.configuration.value.httpVersions == [.http1_1]
         else {
-            throw NIOHTTPServerAdapterError.http2RequiresTLS
+            throw NIOHTTPServerAdapterError.http2And3RequireTLS
         }
 
         let (hostname, port) = self.resolveBindAddress()
