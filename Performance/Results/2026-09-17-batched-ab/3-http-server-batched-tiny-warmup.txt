@@ -1,0 +1,15 @@
+Running 2s test @ http://127.0.0.1:18080/bench/tiny
+  4 threads and 64 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   732.64us  160.17us   3.88ms   82.53%
+    Req/Sec    21.31k   670.02    22.31k    73.81%
+  Latency Distribution
+     50%  716.00us
+     75%  783.00us
+     90%    0.88ms
+     99%    1.31ms
+  178138 requests in 2.10s, 13.76MB read
+Requests/sec:  84811.87
+Transfer/sec:      6.55MB
+
+METRICS {"requests":178138,"duration_us":2100390,"bytes":14429178,"p50_us":716,"p99_us":1308,"connect_errors":0,"read_errors":0,"write_errors":0,"status_errors":0,"timeouts":0}

@@ -1,0 +1,18 @@
+Building for production...
+[Computing dependencies]
+[Constructing description]
+[Pre-planning 1 / 2860]
+[Planning 169 / 2860]
+[Planning 1635 / 2860]
+[Planning deferred tasks]
+[Constructing 290 / 7082]
+[Constructing 5378 / 7082]
+[Starting]
+[1 / 264] ContainersPreview
+[6 / 203] CNIOLinux
+[9 / 23] PerformanceServer-product
+[10 / 15] PerformanceServer-product
+[12 / 16] PerformanceServer-product
+[14 / 16] PerformanceServer-product
+[15 / 16] PerformanceServer-product
+Build complete! (11.74 secs)

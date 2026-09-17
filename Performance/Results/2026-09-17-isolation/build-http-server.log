@@ -1,0 +1,15 @@
+Building for production...
+[Computing dependencies]
+[Provisioning 9 / 96]
+[Pre-planning 1 / 1938]
+[Planning 1297 / 1938]
+[Planning deferred tasks]
+[Constructing 850 / 4985]
+[Starting]
+[9 / 153]
+[9 / 43] CCryptoBoringSSL
+[13 / 18] HTTPServerPerformanceServer-product
+[15 / 19] HTTPServerPerformanceServer-product
+[17 / 19] HTTPServerPerformanceServer-product
+[18 / 19] HTTPServerPerformanceServer-product
+Build complete! (8.67 secs)

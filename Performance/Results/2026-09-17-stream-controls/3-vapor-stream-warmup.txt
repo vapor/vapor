@@ -1,0 +1,15 @@
+Running 2s test @ http://127.0.0.1:18080/bench/stream
+  4 threads and 64 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     4.38ms  377.34us   8.91ms   83.75%
+    Req/Sec     3.66k    96.95     3.81k    67.86%
+  Latency Distribution
+     50%    4.34ms
+     75%    4.53ms
+     90%    4.77ms
+     99%    5.38ms
+  30617 requests in 2.10s, 479.63MB read
+Requests/sec:  14576.63
+Transfer/sec:    228.35MB
+
+METRICS {"requests":30617,"duration_us":2100417,"bytes":502930328,"p50_us":4336,"p99_us":5380,"connect_errors":0,"read_errors":0,"write_errors":0,"status_errors":0,"timeouts":0}

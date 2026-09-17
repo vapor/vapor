@@ -1,0 +1,1919 @@
+[
+  {
+    "requests": 337872,
+    "duration_us": 5100196,
+    "bytes": 27367632,
+    "p50_us": 912,
+    "p99_us": 1893,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor",
+    "route": "tiny",
+    "repeat": 1,
+    "requests_per_second": 66246.86580672587,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 184803,
+    "duration_us": 5100498,
+    "bytes": 12126588223,
+    "p50_us": 1718,
+    "p99_us": 2291,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor",
+    "route": "large",
+    "repeat": 1,
+    "requests_per_second": 36232.34437107906,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 332261,
+    "duration_us": 5100070,
+    "bytes": 44523060,
+    "p50_us": 887,
+    "p99_us": 2213,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor",
+    "route": "json",
+    "repeat": 1,
+    "requests_per_second": 65148.32149362656,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Length": "48",
+        "Content-Type": "application/json; charset=utf-8"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 421843,
+    "duration_us": 5100190,
+    "bytes": 34169283,
+    "p50_us": 676,
+    "p99_us": 1894,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor-batched",
+    "route": "tiny",
+    "repeat": 1,
+    "requests_per_second": 82711.23232663881,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 230239,
+    "duration_us": 5099969,
+    "bytes": 15108118269,
+    "p50_us": 1385,
+    "p99_us": 1860,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor-batched",
+    "route": "large",
+    "repeat": 1,
+    "requests_per_second": 45145.17637264069,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 399963,
+    "duration_us": 5100467,
+    "bytes": 53595042,
+    "p50_us": 691,
+    "p99_us": 2723,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor-batched",
+    "route": "json",
+    "repeat": 1,
+    "requests_per_second": 78416.93711575822,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Length": "48",
+        "Content-Type": "application/json; charset=utf-8"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 322212,
+    "duration_us": 5100590,
+    "bytes": 26099172,
+    "p50_us": 999,
+    "p99_us": 1381,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server",
+    "route": "tiny",
+    "repeat": 1,
+    "requests_per_second": 63171.51545213397,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 190937,
+    "duration_us": 5100299,
+    "bytes": 12529144331,
+    "p50_us": 1658,
+    "p99_us": 2152,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server",
+    "route": "large",
+    "repeat": 1,
+    "requests_per_second": 37436.432648360416,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 322120,
+    "duration_us": 5099677,
+    "bytes": 43164424,
+    "p50_us": 982,
+    "p99_us": 1538,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server",
+    "route": "json",
+    "repeat": 1,
+    "requests_per_second": 63164.78475009299,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "48"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 422617,
+    "duration_us": 5100081,
+    "bytes": 34231977,
+    "p50_us": 737,
+    "p99_us": 1342,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server-batched",
+    "route": "tiny",
+    "repeat": 1,
+    "requests_per_second": 82864.76234397062,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 226314,
+    "duration_us": 5099871,
+    "bytes": 14850498366,
+    "p50_us": 1391,
+    "p99_us": 2006,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server-batched",
+    "route": "large",
+    "repeat": 1,
+    "requests_per_second": 44376.41657994879,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 438755,
+    "duration_us": 5099989,
+    "bytes": 58793170,
+    "p50_us": 702,
+    "p99_us": 1304,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server-batched",
+    "route": "json",
+    "repeat": 1,
+    "requests_per_second": 86030.57771301076,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "48"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 431840,
+    "duration_us": 5100646,
+    "bytes": 50957120,
+    "p50_us": 716,
+    "p99_us": 1717,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "hummingbird",
+    "route": "tiny",
+    "repeat": 1,
+    "requests_per_second": 84663.78572439648,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2",
+        "Date": "Thu, 17 Sep 2026 00:08:05 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 227309,
+    "duration_us": 5100273,
+    "bytes": 14924199704,
+    "p50_us": 1378,
+    "p99_us": 1877,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "hummingbird",
+    "route": "large",
+    "repeat": 1,
+    "requests_per_second": 44568.00645769354,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536",
+        "Date": "Thu, 17 Sep 2026 00:08:12 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 436018,
+    "duration_us": 5100015,
+    "bytes": 74559078,
+    "p50_us": 706,
+    "p99_us": 1298,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "hummingbird",
+    "route": "json",
+    "repeat": 1,
+    "requests_per_second": 85493.47403880184,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "48",
+        "Date": "Thu, 17 Sep 2026 00:08:19 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 391555,
+    "duration_us": 5099738,
+    "bytes": 55600810,
+    "p50_us": 782,
+    "p99_us": 1746,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor4",
+    "route": "tiny",
+    "repeat": 1,
+    "requests_per_second": 76779.43455134361,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "2",
+        "connection": "close",
+        "date": "Thu, 17 Sep 2026 00:08:26 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 240502,
+    "duration_us": 5100055,
+    "bytes": 15796171360,
+    "p50_us": 1308,
+    "p99_us": 1788,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor4",
+    "route": "large",
+    "repeat": 1,
+    "requests_per_second": 47156.74634881388,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "65536",
+        "connection": "close",
+        "date": "Thu, 17 Sep 2026 00:08:34 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 354906,
+    "duration_us": 5100240,
+    "bytes": 69206670,
+    "p50_us": 884,
+    "p99_us": 1937,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor4",
+    "route": "json",
+    "repeat": 1,
+    "requests_per_second": 69586.13712295891,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "48",
+        "connection": "close",
+        "date": "Thu, 17 Sep 2026 00:08:41 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 427997,
+    "duration_us": 5100412,
+    "bytes": 34667757,
+    "p50_us": 658,
+    "p99_us": 2122,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor-batched",
+    "route": "tiny",
+    "repeat": 2,
+    "requests_per_second": 83914.20144098163,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 230920,
+    "duration_us": 5100478,
+    "bytes": 15152739480,
+    "p50_us": 1369,
+    "p99_us": 2025,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor-batched",
+    "route": "large",
+    "repeat": 2,
+    "requests_per_second": 45274.18802708295,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 392956,
+    "duration_us": 5100784,
+    "bytes": 52656104,
+    "p50_us": 707,
+    "p99_us": 2732,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor-batched",
+    "route": "json",
+    "repeat": 2,
+    "requests_per_second": 77038.35331980338,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Length": "48",
+        "Content-Type": "application/json; charset=utf-8"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 326459,
+    "duration_us": 5100458,
+    "bytes": 26443179,
+    "p50_us": 964,
+    "p99_us": 1528,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server",
+    "route": "tiny",
+    "repeat": 2,
+    "requests_per_second": 64005.82065375306,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 189614,
+    "duration_us": 5100252,
+    "bytes": 12442281149,
+    "p50_us": 1652,
+    "p99_us": 2308,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server",
+    "route": "large",
+    "repeat": 2,
+    "requests_per_second": 37177.37868638647,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 334093,
+    "duration_us": 5099832,
+    "bytes": 44768548,
+    "p50_us": 935,
+    "p99_us": 1612,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server",
+    "route": "json",
+    "repeat": 2,
+    "requests_per_second": 65510.5893684341,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "48"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 423882,
+    "duration_us": 5099495,
+    "bytes": 34334442,
+    "p50_us": 729,
+    "p99_us": 1362,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server-batched",
+    "route": "tiny",
+    "repeat": 2,
+    "requests_per_second": 83122.34838939934,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 222808,
+    "duration_us": 5100595,
+    "bytes": 14620438152,
+    "p50_us": 1412,
+    "p99_us": 2057,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server-batched",
+    "route": "large",
+    "repeat": 2,
+    "requests_per_second": 43682.74681679294,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 440258,
+    "duration_us": 5100531,
+    "bytes": 58994572,
+    "p50_us": 697,
+    "p99_us": 1349,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server-batched",
+    "route": "json",
+    "repeat": 2,
+    "requests_per_second": 86316.11100883418,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "48"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 437396,
+    "duration_us": 5100007,
+    "bytes": 51612728,
+    "p50_us": 721,
+    "p99_us": 1107,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "hummingbird",
+    "route": "tiny",
+    "repeat": 2,
+    "requests_per_second": 85763.80385360256,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2",
+        "Date": "Thu, 17 Sep 2026 00:09:54 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 224314,
+    "duration_us": 5100593,
+    "bytes": 14727592648,
+    "p50_us": 1399,
+    "p99_us": 1904,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "hummingbird",
+    "route": "large",
+    "repeat": 2,
+    "requests_per_second": 43978.02373175041,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536",
+        "Date": "Thu, 17 Sep 2026 00:10:01 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 422262,
+    "duration_us": 5099660,
+    "bytes": 72206802,
+    "p50_us": 720,
+    "p99_us": 1403,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "hummingbird",
+    "route": "json",
+    "repeat": 2,
+    "requests_per_second": 82801.99072095002,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "48",
+        "Date": "Thu, 17 Sep 2026 00:10:08 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 353193,
+    "duration_us": 5099874,
+    "bytes": 50153406,
+    "p50_us": 824,
+    "p99_us": 2273,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor4",
+    "route": "tiny",
+    "repeat": 2,
+    "requests_per_second": 69255.24042358693,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "2",
+        "connection": "close",
+        "date": "Thu, 17 Sep 2026 00:10:15 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 236585,
+    "duration_us": 5100214,
+    "bytes": 15538902800,
+    "p50_us": 1336,
+    "p99_us": 1817,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor4",
+    "route": "large",
+    "repeat": 2,
+    "requests_per_second": 46387.269240075024,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "65536",
+        "connection": "close",
+        "date": "Thu, 17 Sep 2026 00:10:23 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 362702,
+    "duration_us": 5099805,
+    "bytes": 70726890,
+    "p50_us": 868,
+    "p99_us": 1891,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor4",
+    "route": "json",
+    "repeat": 2,
+    "requests_per_second": 71120.75853880687,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "48",
+        "connection": "close",
+        "date": "Thu, 17 Sep 2026 00:10:30 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 326412,
+    "duration_us": 5100688,
+    "bytes": 26439372,
+    "p50_us": 917,
+    "p99_us": 2299,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor",
+    "route": "tiny",
+    "repeat": 2,
+    "requests_per_second": 63993.72006286211,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 180556,
+    "duration_us": 5100230,
+    "bytes": 11847920662,
+    "p50_us": 1747,
+    "p99_us": 2698,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor",
+    "route": "large",
+    "repeat": 2,
+    "requests_per_second": 35401.54071483051,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 309934,
+    "duration_us": 5100852,
+    "bytes": 41531156,
+    "p50_us": 932,
+    "p99_us": 2767,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor",
+    "route": "json",
+    "repeat": 2,
+    "requests_per_second": 60761.22185078101,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Length": "48",
+        "Content-Type": "application/json; charset=utf-8"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 308943,
+    "duration_us": 5100279,
+    "bytes": 25024383,
+    "p50_us": 999,
+    "p99_us": 2137,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server",
+    "route": "tiny",
+    "repeat": 3,
+    "requests_per_second": 60573.74508335721,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 183359,
+    "duration_us": 5099648,
+    "bytes": 12031834304,
+    "p50_us": 1718,
+    "p99_us": 2443,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server",
+    "route": "large",
+    "repeat": 3,
+    "requests_per_second": 35955.226713686905,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 343243,
+    "duration_us": 5100384,
+    "bytes": 45994648,
+    "p50_us": 931,
+    "p99_us": 1376,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server",
+    "route": "json",
+    "repeat": 3,
+    "requests_per_second": 67297.48191508718,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "48"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 442841,
+    "duration_us": 5100476,
+    "bytes": 35870121,
+    "p50_us": 700,
+    "p99_us": 1269,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server-batched",
+    "route": "tiny",
+    "repeat": 3,
+    "requests_per_second": 86823.46510404127,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 233574,
+    "duration_us": 5100489,
+    "bytes": 15326908638,
+    "p50_us": 1359,
+    "p99_us": 1926,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server-batched",
+    "route": "large",
+    "repeat": 3,
+    "requests_per_second": 45794.43265145754,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 445057,
+    "duration_us": 5100336,
+    "bytes": 59637638,
+    "p50_us": 690,
+    "p99_us": 1399,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "http-server-batched",
+    "route": "json",
+    "repeat": 3,
+    "requests_per_second": 87260.32951554564,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "48"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 453506,
+    "duration_us": 5100441,
+    "bytes": 53513708,
+    "p50_us": 685,
+    "p99_us": 1181,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "hummingbird",
+    "route": "tiny",
+    "repeat": 3,
+    "requests_per_second": 88915.05656079543,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2",
+        "Date": "Thu, 17 Sep 2026 00:11:42 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 234729,
+    "duration_us": 5100343,
+    "bytes": 15411367224,
+    "p50_us": 1354,
+    "p99_us": 1843,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "hummingbird",
+    "route": "large",
+    "repeat": 3,
+    "requests_per_second": 46022.19889917207,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536",
+        "Date": "Thu, 17 Sep 2026 00:11:50 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 377768,
+    "duration_us": 5038770,
+    "bytes": 64598328,
+    "p50_us": 712,
+    "p99_us": 69086,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "hummingbird",
+    "route": "json",
+    "repeat": 3,
+    "requests_per_second": 74972.26505674997,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": "48",
+        "Date": "Thu, 17 Sep 2026 00:11:57 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 374949,
+    "duration_us": 5101034,
+    "bytes": 53242758,
+    "p50_us": 780,
+    "p99_us": 1885,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor4",
+    "route": "tiny",
+    "repeat": 3,
+    "requests_per_second": 73504.50908580495,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "2",
+        "connection": "close",
+        "date": "Thu, 17 Sep 2026 00:12:04 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 247008,
+    "duration_us": 5100175,
+    "bytes": 16223485440,
+    "p50_us": 1291,
+    "p99_us": 1743,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor4",
+    "route": "large",
+    "repeat": 3,
+    "requests_per_second": 48431.2793188469,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "65536",
+        "connection": "close",
+        "date": "Thu, 17 Sep 2026 00:12:11 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 369572,
+    "duration_us": 5099901,
+    "bytes": 72066540,
+    "p50_us": 848,
+    "p99_us": 1857,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor4",
+    "route": "json",
+    "repeat": 3,
+    "requests_per_second": 72466.50474195479,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "48",
+        "connection": "close",
+        "date": "Thu, 17 Sep 2026 00:12:19 GMT"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 351900,
+    "duration_us": 5100208,
+    "bytes": 28504058,
+    "p50_us": 869,
+    "p99_us": 1979,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor",
+    "route": "tiny",
+    "repeat": 3,
+    "requests_per_second": 68997.18599712012,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 198349,
+    "duration_us": 5101143,
+    "bytes": 13015512110,
+    "p50_us": 1609,
+    "p99_us": 2316,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor",
+    "route": "large",
+    "repeat": 3,
+    "requests_per_second": 38883.246362628925,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 296364,
+    "duration_us": 5105330,
+    "bytes": 39712776,
+    "p50_us": 855,
+    "p99_us": 22364,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor",
+    "route": "json",
+    "repeat": 3,
+    "requests_per_second": 58049.920377331146,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Length": "48",
+        "Content-Type": "application/json; charset=utf-8"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  },
+  {
+    "requests": 428051,
+    "duration_us": 5100786,
+    "bytes": 34672131,
+    "p50_us": 644,
+    "p99_us": 5645,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor-batched",
+    "route": "tiny",
+    "repeat": 3,
+    "requests_per_second": 83918.63528483649,
+    "validation": {
+      "body_bytes": 2,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "2"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/tiny"
+    ]
+  },
+  {
+    "requests": 230295,
+    "duration_us": 5100473,
+    "bytes": 15111760269,
+    "p50_us": 1370,
+    "p99_us": 2074,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor-batched",
+    "route": "large",
+    "repeat": 3,
+    "requests_per_second": 45151.694754584525,
+    "validation": {
+      "body_bytes": 65536,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": "65536"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/large"
+    ]
+  },
+  {
+    "requests": 404935,
+    "duration_us": 5100139,
+    "bytes": 54261290,
+    "p50_us": 679,
+    "p99_us": 2766,
+    "connect_errors": 0,
+    "read_errors": 0,
+    "write_errors": 0,
+    "status_errors": 0,
+    "timeouts": 0,
+    "framework": "vapor-batched",
+    "route": "json",
+    "repeat": 3,
+    "requests_per_second": 79396.85565432628,
+    "validation": {
+      "body_bytes": 48,
+      "headers": {
+        "Content-Length": "48",
+        "Content-Type": "application/json; charset=utf-8"
+      }
+    },
+    "command": [
+      "wrk",
+      "-t4",
+      "-c64",
+      "--timeout",
+      "2s",
+      "--latency",
+      "-s",
+      "/Users/timc/Developer/Vapor/vapor/Performance/wrk-metrics.lua",
+      "-d5s",
+      "http://127.0.0.1:18080/bench/json"
+    ]
+  }
+]

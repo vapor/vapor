@@ -1,0 +1,79 @@
+􀟈  Test run started.
+􀄵  Testing Library Version: 2084
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite ConnectionLifecycleTests started.
+􀟈  Suite HTTPKeepAliveHandlerTests started.
+􀟈  Suite "Connection Backpressure End-to-End" started.
+􀟈  Test "Per-connection invocation count" started.
+􀟈  Test "HTTP/1.1 keep-alive: single connection-handler invocation, multiple requests" started.
+􀟈  Test "Bidirectional streaming works — head is flushed (with Connection: close) when a body part is written" started.
+􀟈  Test "Pipelined requests on a single connection all succeed" started.
+􀟈  Test "Server sends head+end (no body) before request .end — Connection: close in header" started.
+􀟈  Test "Read cycle ends without request .end while head is buffered — Connection: close added" started.
+􀟈  Test "connection.handleRequests closure overload" started.
+􀟈  Test "State isolation across keep-alive HTTP/1.1 connections" started.
+􀟈  Test "HTTP/2: single connection-handler invocation, concurrent streams" started.
+􀟈  Test "Connection handler returning without handleRequests drops the connection" started.
+􀟈  Test "ConnectionContext.httpVersion is correct" started.
+􀟈  Test "Throwing connection handler doesn't bring down the server" started.
+􀟈  Test "Informational (1xx) responses pass through without buffering or closing" started.
+􀟈  Test channelClosesOnConnectionError() started.
+􀟈  Test "More connections than maxConnections all eventually complete" started.
+􀟈  Test "Requests succeed under connection limit" started.
+􀟈  Test "No connection limit by default" started.
+􀟈  Test case passing 1 argument http1Variant → .plaintextHTTP1_1 to "Pipelined requests on a single connection all succeed" started.
+􀟈  Test case passing 1 argument http1Variant → .http1_1 to "Bidirectional streaming works — head is flushed (with Connection: close) when a body part is written" started.
+􀟈  Test case passing 1 argument httpVersion → .plaintextHTTP1_1 to "Per-connection invocation count" started.
+􀟈  Test case passing 1 argument http1Variant → .http1_1 to "Read cycle ends without request .end while head is buffered — Connection: close added" started.
+􀟈  Test case passing 1 argument http1Variant → .plaintextHTTP1_1 to "Read cycle ends without request .end while head is buffered — Connection: close added" started.
+􀟈  Test case passing 1 argument httpVersion → .plaintextHTTP1_1 to "HTTP/1.1 keep-alive: single connection-handler invocation, multiple requests" started.
+􀟈  Test case passing 1 argument httpVersion → .http1_1 to "HTTP/1.1 keep-alive: single connection-handler invocation, multiple requests" started.
+􀟈  Test case passing 1 argument http1Variant → .http1_1 to "Server sends head+end (no body) before request .end — Connection: close in header" started.
+􀟈  Test case passing 1 argument http1Variant → .plaintextHTTP1_1 to "Server sends head+end (no body) before request .end — Connection: close in header" started.
+􀟈  Test case passing 1 argument http1Variant → .plaintextHTTP1_1 to "Bidirectional streaming works — head is flushed (with Connection: close) when a body part is written" started.
+􀟈  Test case passing 1 argument http1Variant → .http1_1 to "Pipelined requests on a single connection all succeed" started.
+􀟈  Test case passing 1 argument http1Variant → .plaintextHTTP1_1 to "State isolation across keep-alive HTTP/1.1 connections" started.
+􀟈  Test case passing 1 argument httpVersion → .http1_1 to "Per-connection invocation count" started.
+􀟈  Test case passing 1 argument httpVersion → .plaintextHTTP1_1 to "ConnectionContext.httpVersion is correct" started.
+􀟈  Test case passing 1 argument http1Variant → .http1_1 to "State isolation across keep-alive HTTP/1.1 connections" started.
+􀟈  Test case passing 1 argument httpVersion → .http2 to "Per-connection invocation count" started.
+􀟈  Test case passing 1 argument httpVersion → .plaintextHTTP1_1 to "Connection handler returning without handleRequests drops the connection" started.
+􀟈  Test case passing 1 argument httpVersion → .http1_1 to "ConnectionContext.httpVersion is correct" started.
+􀟈  Test case passing 1 argument httpVersion → .http2 to "ConnectionContext.httpVersion is correct" started.
+􀟈  Test case passing 1 argument httpVersion → .http2 to "Connection handler returning without handleRequests drops the connection" started.
+􀟈  Test case passing 1 argument httpVersion → .http1_1 to "Connection handler returning without handleRequests drops the connection" started.
+􀟈  Test case passing 1 argument http1Variant → .http1_1 to "Informational (1xx) responses pass through without buffering or closing" started.
+􀟈  Test case passing 1 argument httpVersion → .plaintextHTTP1_1 to "More connections than maxConnections all eventually complete" started.
+􀟈  Test case passing 1 argument http1Variant → .plaintextHTTP1_1 to "Informational (1xx) responses pass through without buffering or closing" started.
+􀟈  Test case passing 1 argument httpVersion → .plaintextHTTP1_1 to "Throwing connection handler doesn't bring down the server" started.
+􀟈  Test case passing 1 argument httpVersion → .http1_1 to "Throwing connection handler doesn't bring down the server" started.
+􀟈  Test case passing 1 argument httpVersion → .http2 to "Throwing connection handler doesn't bring down the server" started.
+􀟈  Test case passing 1 argument httpVersion → .http1_1 to "More connections than maxConnections all eventually complete" started.
+􀟈  Test case passing 1 argument httpVersion → .http2 to "More connections than maxConnections all eventually complete" started.
+􀟈  Test case passing 1 argument httpVersion → .plaintextHTTP1_1 to "No connection limit by default" started.
+􀟈  Test case passing 1 argument httpVersion → .plaintextHTTP1_1 to "Requests succeed under connection limit" started.
+􀟈  Test case passing 1 argument httpVersion → .http1_1 to "No connection limit by default" started.
+􀟈  Test case passing 1 argument httpVersion → .http2 to "No connection limit by default" started.
+􀟈  Test case passing 1 argument httpVersion → .http1_1 to "Requests succeed under connection limit" started.
+􀟈  Test case passing 1 argument httpVersion → .http2 to "Requests succeed under connection limit" started.
+􁁛  Test channelClosesOnConnectionError() passed after 0.033 seconds.
+􁁛  Test "connection.handleRequests closure overload" passed after 0.072 seconds.
+􁁛  Test "Read cycle ends without request .end while head is buffered — Connection: close added" with 2 test cases passed after 0.079 seconds.
+􁁛  Test "ConnectionContext.httpVersion is correct" with 3 test cases passed after 0.081 seconds.
+􁁛  Test "Connection handler returning without handleRequests drops the connection" with 3 test cases passed after 0.081 seconds.
+􁁛  Test "State isolation across keep-alive HTTP/1.1 connections" with 2 test cases passed after 0.082 seconds.
+􁁛  Test "HTTP/1.1 keep-alive: single connection-handler invocation, multiple requests" with 2 test cases passed after 0.082 seconds.
+􁁛  Test "Pipelined requests on a single connection all succeed" with 2 test cases passed after 0.083 seconds.
+􁁛  Test "Informational (1xx) responses pass through without buffering or closing" with 2 test cases passed after 0.084 seconds.
+􁁛  Test "Server sends head+end (no body) before request .end — Connection: close in header" with 2 test cases passed after 0.086 seconds.
+􁁛  Test "Bidirectional streaming works — head is flushed (with Connection: close) when a body part is written" with 2 test cases passed after 0.088 seconds.
+􁁛  Suite HTTPKeepAliveHandlerTests passed after 0.088 seconds.
+􁁛  Test "HTTP/2: single connection-handler invocation, concurrent streams" passed after 0.088 seconds.
+􁁛  Test "Requests succeed under connection limit" with 3 test cases passed after 0.089 seconds.
+􁁛  Test "No connection limit by default" with 3 test cases passed after 0.089 seconds.
+􁁛  Test "More connections than maxConnections all eventually complete" with 3 test cases passed after 0.090 seconds.
+􁁛  Suite "Connection Backpressure End-to-End" passed after 0.090 seconds.
+􁁛  Test "Throwing connection handler doesn't bring down the server" with 3 test cases passed after 0.092 seconds.
+􁁛  Test "Per-connection invocation count" with 3 test cases passed after 0.096 seconds.
+􁁛  Suite ConnectionLifecycleTests passed after 0.096 seconds.
+􁁛  Test run with 17 tests in 3 suites passed after 0.096 seconds.

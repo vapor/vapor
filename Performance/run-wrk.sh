@@ -10,8 +10,8 @@
 #
 # Numbers from `wrk` move a great deal with whatever else the machine is doing - a build running in
 # the background roughly halved throughput when this was written. Close everything else, and treat
-# small differences between runs as noise rather than signal. For attributable numbers (allocations
-# and instructions) use the package-benchmark suite in ../Benchmarks instead.
+# small differences between runs as noise rather than signal. Use compare.py for repeated runs
+# across frameworks, response validation, and saved raw measurements.
 set -e
 cd "${0:A:h}"
 
@@ -26,8 +26,7 @@ command -v wrk >/dev/null || { echo "wrk not found - brew install wrk"; exit 1; 
 echo "building..."
 swift build -c release --product PerformanceServer
 
-# Server output goes to a log rather than the terminal - Vapor logs every request, which would
-# bury the results table under thousands of lines during a run.
+# Keep server diagnostics separate from results. The performance app suppresses request logs.
 SRVLOG="${TMPDIR:-/tmp}/vapor-perf-server.log"
 PERF_PORT=$PORT ./.build/release/PerformanceServer > "$SRVLOG" 2>&1 &
 SRVPID=$!

@@ -1,0 +1,54 @@
+{
+  "started_utc": "2026-09-17T00:13:40.199772+00:00",
+  "arguments": {
+    "routes": [
+      "stream",
+      "file"
+    ],
+    "frameworks": [
+      "vapor",
+      "vapor-batched"
+    ],
+    "binary": [
+      "vapor=Performance/.build/ab/stock/PerformanceServer",
+      "vapor-batched=Performance/.build/ab/batched/PerformanceServer"
+    ],
+    "duration": 5,
+    "warmup": 2,
+    "repeats": 3,
+    "connections": 64,
+    "threads": 4,
+    "server_threads": 4,
+    "port": 18080,
+    "skip_build": true,
+    "output": "Performance/Results/2026-09-17-stream-controls"
+  },
+  "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "swift": "swift-driver version: 1.168.6 Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.0.0",
+  "hardware": "hw.model: MacBookPro18,3\nhw.ncpu: 10\nhw.memsize: 34359738368\nmachdep.cpu.brand_string: Apple M1 Pro",
+  "wrk": "wrk 4.2.0 [kqueue] Copyright (C) 2012 Will Glozer\nUsage: wrk <options> <url>                            \n  Options:                                            \n    -c, --connections <N>  Connections to keep open   \n    -d, --duration    <T>  Duration of test           \n    -t, --threads     <N>  Number of threads to use   \n                                                      \n    -s, --script      <S>  Load Lua script file       \n    -H, --header      <H>  Add header to request      \n        --latency          Print latency statistics   \n        --timeout     <T>  Socket/request timeout     \n    -v, --version          Print version details      \n                                                      \n  Numeric arguments may include a SI unit (1k, 1M, 1G)\n  Time arguments may include a time unit (2s, 2m, 2h)",
+  "vapor_commit": "5dfe8b81197d9edfe0298a3961ee119c11e413fd",
+  "git_status": "M Package.swift\n M README.md\n M Sources/PerformanceServer/main.swift\n M run-wrk.sh\n?? Comparisons/\n?? Patches/\n?? RESULTS.md\n?? Results/\n?? Sources/HTTPServerPerformanceServer/\n?? __pycache__/\n?? compare.py\n?? wrk-metrics.lua",
+  "binary_sha256": {
+    "vapor": "ddff99a89d009f6deb8d92d9e3292ba4f77b8c0e502b7b07cecfc30e6a746d64",
+    "vapor-batched": "40ea6222cd144ce3c6733ff3228b97bc1e27ccf717cdef055de471faa1b0ae4f"
+  },
+  "binary_paths": {
+    "vapor": "/Users/timc/Developer/Vapor/vapor/Performance/.build/ab/stock/PerformanceServer",
+    "vapor-batched": "/Users/timc/Developer/Vapor/vapor/Performance/.build/ab/batched/PerformanceServer"
+  },
+  "driver_sha256": "a23daea6c6d3bec7b0f8dfdc9b8aaebd41c289227ed40da4bb11b83617c32816",
+  "source_sha256": {
+    "Sources/HTTPServerPerformanceServer/Server.swift": "3e0680537d3196299cfb4b3e164a0650e5d6f10d88e6a518720d1c4c0210f5f1",
+    "Sources/PerformanceServer/main.swift": "29433ff171bd436f9c875e7ee2fd54a946dd1eabe9206d3688342827098f1161",
+    "Comparisons/Sources/Vapor4PerformanceServer/main.swift": "981d1b8b93400c77cc7664f629c3148a5e76dd7cc2e33846533dcf6302d93f53",
+    "Comparisons/Sources/HummingbirdPerformanceServer/main.swift": "a07c6cdd996ff383d177edfeea0d1d912861e09587277e01b95f2b133421d40c"
+  },
+  "environment": {
+    "PERF_HOST": "127.0.0.1",
+    "PERF_PORT": "18080",
+    "NIO_SINGLETON_GROUP_LOOP_COUNT": "4",
+    "NIO_SINGLETON_BLOCKING_POOL_THREAD_COUNT": "4"
+  },
+  "protocol": "HTTP/1.1, plaintext, keep-alive, no pipelining; loopback client and server"
+}
