@@ -175,15 +175,15 @@ public struct FileIO: Sendable {
             return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
         }
 
+        // Advertise range support
+        headers.replaceOrAdd(name: .acceptRanges, value: "bytes")
+
         // Create the HTTP response.
         let response = Response(status: .ok, headers: headers)
         let offset: Int64
         let byteCount: Int
         if let contentRange = contentRange {
-            response.responseBox.withLockedValue { box in
-                box.status = .partialContent
-                box.headers.add(name: .accept, value: contentRange.unit.serialize())
-            }
+            response.status = .partialContent
             if let firstRange = contentRange.ranges.first {
                 do {
                     let range = try firstRange.asResponseContentRange(limit: fileSize)
@@ -535,13 +535,15 @@ public struct FileIO: Sendable {
             return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
         }
 
+        // Advertise range support
+        headers.replaceOrAdd(name: .acceptRanges, value: "bytes")
+
         // Create the HTTP response.
         let response = Response(status: .ok, headers: headers)
         let offset: Int64
         let byteCount: Int
         if let contentRange = contentRange {
             response.status = .partialContent
-            response.headers.add(name: .accept, value: contentRange.unit.serialize())
             if let firstRange = contentRange.ranges.first {
                 do {
                     let range = try firstRange.asResponseContentRange(limit: Int(fileInfo.size))
