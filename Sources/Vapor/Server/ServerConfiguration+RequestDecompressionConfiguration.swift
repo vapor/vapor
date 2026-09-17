@@ -1,3 +1,4 @@
+#if Compression
 extension ServerConfiguration {
     /// Supported HTTP decompression options.
     public struct RequestDecompressionConfiguration: Sendable {
@@ -66,3 +67,5 @@ extension ServerConfiguration {
         }
     }
 }
+
+#endif

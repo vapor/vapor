@@ -1,3 +1,4 @@
+#if Compression
 import CVaporZlib
 import HTTPTypes
 #if canImport(FoundationEssentials)
@@ -19,15 +20,17 @@ import Foundation
     init(coding: Coding, compressing: Bool, capacity: Int = 16_384) throws {
         self.compressing = compressing
         self.capacity = max(64, min(capacity, 65_536))
-        self.stream = unsafe .allocate(capacity: 1)
+        unsafe self.stream = .allocate(capacity: 1)
         unsafe self.stream.initialize(to: z_stream())
         let windowBits: Int32 = coding == .gzip ? 31 : 15
-        let result = if compressing {
-            unsafe deflateInit2_(self.stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, windowBits, 8,
-                                Z_DEFAULT_STRATEGY, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
-        } else {
-            unsafe inflateInit2_(self.stream, windowBits, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
-        }
+        let result =
+            if compressing {
+                unsafe deflateInit2_(
+                    self.stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, windowBits, 8,
+                    Z_DEFAULT_STRATEGY, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
+            } else {
+                unsafe inflateInit2_(self.stream, windowBits, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
+            }
         guard result == Z_OK else {
             throw Abort(.internalServerError, reason: "Could not initialize HTTP body codec (\(result))")
         }
@@ -36,8 +39,7 @@ import Foundation
 
     deinit {
         if self.initialized {
-            if self.compressing { _ = unsafe deflateEnd(self.stream) }
-            else { _ = unsafe inflateEnd(self.stream) }
+            if self.compressing { _ = unsafe deflateEnd(self.stream) } else { _ = unsafe inflateEnd(self.stream) }
         }
         unsafe self.stream.deinitialize(count: 1)
         unsafe self.stream.deallocate()
@@ -52,7 +54,7 @@ import Foundation
         var output = Data(count: self.capacity)
         let offered = min(input.count, Int(UInt32.max))
         let result = input.withUnsafeBufferPointer { source in
-            output.withUnsafeMutableBytes { destination in
+            unsafe output.withUnsafeMutableBytes { destination in
                 unsafe self.stream.pointee.next_in = UnsafeMutablePointer(mutating: source.baseAddress)
                 unsafe self.stream.pointee.avail_in = UInt32(offered)
                 unsafe self.stream.pointee.next_out = destination.bindMemory(to: UInt8.self).baseAddress
@@ -69,8 +71,9 @@ import Foundation
         let consumed = unsafe offered - Int(self.stream.pointee.avail_in)
         let produced = unsafe self.capacity - Int(self.stream.pointee.avail_out)
         guard result == Z_OK || result == Z_STREAM_END || result == Z_BUF_ERROR else {
-            throw Abort(self.compressing ? .internalServerError : .badRequest,
-                        reason: "Invalid compressed HTTP body (\(result))")
+            throw Abort(
+                self.compressing ? .internalServerError : .badRequest,
+                reason: "Invalid compressed HTTP body (\(result))")
         }
         self.complete = result == Z_STREAM_END
         output.count = produced
@@ -91,8 +94,10 @@ final class HTTPBodyDecompressor {
     private var sourceEnded = false
     private var pendingOutput = false
 
-    init(source: RequestBodyStream, coding: HTTPBodyCodec.Coding,
-         limit: ServerConfiguration.RequestDecompressionConfiguration.DecompressionLimit) throws {
+    init(
+        source: RequestBodyStream, coding: HTTPBodyCodec.Coding,
+        limit: ServerConfiguration.RequestDecompressionConfiguration.DecompressionLimit
+    ) throws {
         self.source = source
         self.codec = try HTTPBodyCodec(coding: coding, compressing: false)
         self.limit = limit
@@ -129,3 +134,5 @@ final class HTTPBodyDecompressor {
         }
     }
 }
+
+#endif

@@ -270,5 +270,7 @@ extension HTTPField.Name {
 
 // MARK: Internal Vapor Marker Headers
 extension HTTPField.Name {
+    #if Compression
     public static let xVaporResponseCompression = Self("X-Vapor-Response-Compression")!
+    #endif
 }

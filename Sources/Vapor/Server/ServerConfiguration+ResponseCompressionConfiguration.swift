@@ -1,3 +1,4 @@
+#if Compression
 extension ServerConfiguration {
     /// Supported HTTP response compression options.
     public struct ResponseCompressionConfiguration: Sendable {
@@ -153,3 +154,5 @@ extension ServerConfiguration {
         }
     }
 }
+
+#endif

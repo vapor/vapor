@@ -40,7 +40,11 @@ package final class ServerContext: Sendable {
         case .provided(let provided):
             responder = provided
         }
+        #if Compression
         return HTTPCompressionMiddleware(configuration: self.configuration.value)
             .makeResponder(chainingTo: responder)
+        #else
+        return responder
+        #endif
     }
 }

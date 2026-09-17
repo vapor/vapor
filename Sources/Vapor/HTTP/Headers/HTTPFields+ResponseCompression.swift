@@ -1,3 +1,4 @@
+#if Compression
 public import HTTPTypes
 
 #if canImport(FoundationEssentials)
@@ -56,3 +57,5 @@ extension HTTPFields {
         }
     }
 }
+
+#endif

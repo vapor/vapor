@@ -1,3 +1,4 @@
+#if Compression
 import RoutingKit
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -21,21 +22,21 @@ struct ConditionalCompressionTests {
         func testEncodingEnable() {
             var headers = HTTPFields()
             headers.responseCompression = .enable
-            #expect(headers == [markerHeader : "enable"])
+            #expect(headers == [markerHeader: "enable"])
         }
 
         @Test("Test disabling encoding")
         func testEncodingDisable() {
             var headers = HTTPFields()
             headers.responseCompression = .disable
-            #expect(headers == [markerHeader : "disable"])
+            #expect(headers == [markerHeader: "disable"])
         }
 
         @Test("Test Encoding Uses Default")
         func testEncodingUseDefault() {
             var headers = HTTPFields()
             headers.responseCompression = .useDefault
-            #expect(headers == [markerHeader : "useDefault"])
+            #expect(headers == [markerHeader: "useDefault"])
         }
 
         @Test("Test Encoding Unset")
@@ -49,16 +50,16 @@ struct ConditionalCompressionTests {
         func testUpdating() {
             var headers = HTTPFields()
             headers.responseCompression = .enable
-            #expect(headers == [markerHeader : "enable"])
+            #expect(headers == [markerHeader: "enable"])
             headers.responseCompression = .disable
-            #expect(headers == [markerHeader : "disable"])
+            #expect(headers == [markerHeader: "disable"])
             headers.responseCompression = .unset
             #expect(headers == [:])
             headers.append(HTTPField(name: markerHeader, value: "enable"))
             headers.append(HTTPField(name: markerHeader, value: "disable"))
-            #expect(headers == [markerHeader : "enable", markerHeader : "disable"])
+            #expect(headers == [markerHeader: "enable", markerHeader: "disable"])
             headers.responseCompression = .disable
-            #expect(headers == [markerHeader : "disable"])
+            #expect(headers == [markerHeader: "disable"])
         }
 
         @Test("Test Decoding Unset")
@@ -69,49 +70,49 @@ struct ConditionalCompressionTests {
 
         @Test("Decoding Enabled")
         func testDecodingEnabled() {
-            let headers: HTTPFields = [markerHeader : "enable"]
+            let headers: HTTPFields = [markerHeader: "enable"]
             #expect(headers.responseCompression == .enable)
         }
 
         @Test("Decoding Disabled")
         func testDecodingDisabled() {
-            let headers: HTTPFields = [markerHeader : "disable"]
+            let headers: HTTPFields = [markerHeader: "disable"]
             #expect(headers.responseCompression == .disable)
         }
 
         @Test("Test Decoding Use Default")
         func testDecodingUseDefault() {
-            let headers: HTTPFields = [markerHeader : "useDefault"]
+            let headers: HTTPFields = [markerHeader: "useDefault"]
             #expect(headers.responseCompression == .useDefault)
         }
 
         @Test("Test Decoding Literal Unset")
         func testDecodingLiteralUnset() {
-            let headers: HTTPFields = [markerHeader : "unset"]
+            let headers: HTTPFields = [markerHeader: "unset"]
             #expect(headers.responseCompression == .unset)
         }
 
         @Test("Test Decoding Other")
         func testDecodingOther() {
-            let headers: HTTPFields = [markerHeader : "other"]
+            let headers: HTTPFields = [markerHeader: "other"]
             #expect(headers.responseCompression == .unset)
         }
 
         @Test("Test Decoding Multiple Valid")
         func testDecodingMultipleValid() {
-            let headers: HTTPFields = [markerHeader : "enable", markerHeader : "disable"]
+            let headers: HTTPFields = [markerHeader: "enable", markerHeader: "disable"]
             #expect(headers.responseCompression == .disable)
         }
 
         @Test("Test Decoding Multiple First Invalid")
         func testDecodingMultipleFirstInvalid() {
-            let headers: HTTPFields = [markerHeader : "other", markerHeader : "enable"]
+            let headers: HTTPFields = [markerHeader: "other", markerHeader: "enable"]
             #expect(headers.responseCompression == .enable)
         }
 
         @Test("Test Decoding Multiple Last Invalid")
         func testDecodingMultipleLastInvalid() {
-            let headers: HTTPFields = [markerHeader : "enable", markerHeader : "other"]
+            let headers: HTTPFields = [markerHeader: "enable", markerHeader: "other"]
             #expect(headers.responseCompression == .unset)
         }
     }
@@ -198,7 +199,8 @@ struct ConditionalCompressionTests {
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
-                    headers.contentType = unknownType /// Not explicitly marked as compressible or not.
+                    headers.contentType = unknownType
+                    /// Not explicitly marked as compressible or not.
                     return Response(status: .ok, headers: headers, body: .init(string: compressiblePayload))
                 }
             }
@@ -227,7 +229,8 @@ struct ConditionalCompressionTests {
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
-                    headers.contentType = .png /// PNGs are explicitly called out as incompressible.
+                    headers.contentType = .png
+                    /// PNGs are explicitly called out as incompressible.
                     return Response(status: .ok, headers: headers, body: .init(string: compressiblePayload))
                 }
             }
@@ -256,7 +259,8 @@ struct ConditionalCompressionTests {
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
-                    headers.contentType = .mpeg /// Videos are explicitly called out as incompressible, but as a class.
+                    headers.contentType = .mpeg
+                    /// Videos are explicitly called out as incompressible, but as a class.
                     return Response(status: .ok, headers: headers, body: .init(string: compressiblePayload))
                 }
             }
@@ -285,7 +289,8 @@ struct ConditionalCompressionTests {
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
-                    headers.contentType = .plainText /// Text types are explicitly called out as compressible, but as a class.
+                    headers.contentType = .plainText
+                    /// Text types are explicitly called out as compressible, but as a class.
                     return Response(status: .ok, headers: headers, body: .init(string: compressiblePayload))
                 }
             }
@@ -635,11 +640,12 @@ struct ConditionalCompressionTests {
                 (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
                 (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
             ]) { app in
-                app.responseCompression(.unset).responseCompression(.disable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { _ in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    return Response(status: .ok, headers: headers, body: .init(string: compressiblePayload))
-                }
+                app.responseCompression(.unset).responseCompression(.disable).responseCompression(.unset).responseCompression(.useDefault)
+                    .responseCompression(.unset).get("resource") { _ in
+                        var headers = HTTPFields()
+                        headers.contentType = unknownType
+                        return Response(status: .ok, headers: headers, body: .init(string: compressiblePayload))
+                    }
             }
         }
 
@@ -664,17 +670,16 @@ struct ConditionalCompressionTests {
                 (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
                 (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
             ]) { app in
-                app.responseCompression(.unset).responseCompression(.enable).responseCompression(.unset).responseCompression(.useDefault).responseCompression(.unset).get("resource") { _ in
-                    var headers = HTTPFields()
-                    headers.contentType = unknownType
-                    return Response(status: .ok, headers: headers, body: .init(string: compressiblePayload))
-                }
+                app.responseCompression(.unset).responseCompression(.enable).responseCompression(.unset).responseCompression(.useDefault)
+                    .responseCompression(.unset).get("resource") { _ in
+                        var headers = HTTPFields()
+                        headers.contentType = unknownType
+                        return Response(status: .ok, headers: headers, body: .init(string: compressiblePayload))
+                    }
             }
         }
 
     }
-
-
 
     @Suite("Conditional Response Compression Route Tests")
     struct ConditionalResponseCompressionRouteTests {
@@ -688,7 +693,9 @@ struct ConditionalCompressionTests {
             let response = try await middleware.respond(to: Request(), chainingTo: responder)
             let header = response.headers[values: .xVaporResponseCompression]
 
-            #expect(header == compressionValue.map { $0.components(separatedBy: ", ") }?.map { String($0[...]) } ?? [], sourceLocation: sourceLocation)
+            #expect(
+                header == compressionValue.map { $0.components(separatedBy: ", ") }?.map { String($0[...]) } ?? [],
+                sourceLocation: sourceLocation)
         }
 
         let enabledMiddleware = ResponseCompressionMiddleware(override: .enable)
@@ -706,106 +713,152 @@ struct ConditionalCompressionTests {
             try await withApp { app in
                 let unsetResponse = TestResponder { _ in Response() }
 
-                try await expectResponseCompression(middleware: enabledMiddleware, responder: unsetResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: disabledMiddleware, responder: unsetResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: defaultMiddleware, responder: unsetResponse, compressionValue: "useDefault", on: app)
+                try await expectResponseCompression(
+                    middleware: enabledMiddleware, responder: unsetResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: disabledMiddleware, responder: unsetResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: defaultMiddleware, responder: unsetResponse, compressionValue: "useDefault", on: app)
                 try await expectResponseCompression(middleware: unsetMiddleware, responder: unsetResponse, compressionValue: nil, on: app)
 
-                try await expectResponseCompression(middleware: forceEnabledMiddleware, responder: unsetResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: forceDisabledMiddleware, responder: unsetResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: forceDefaultMiddleware, responder: unsetResponse, compressionValue: "useDefault", on: app)
-                try await expectResponseCompression(middleware: forceUnsetMiddleware, responder: unsetResponse, compressionValue: nil, on: app)
+                try await expectResponseCompression(
+                    middleware: forceEnabledMiddleware, responder: unsetResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDisabledMiddleware, responder: unsetResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDefaultMiddleware, responder: unsetResponse, compressionValue: "useDefault", on: app)
+                try await expectResponseCompression(
+                    middleware: forceUnsetMiddleware, responder: unsetResponse, compressionValue: nil, on: app)
             }
         }
 
         @Test("Test Routing Does Not Prioritize Empty Response")
         func testRoutingDoesNotPrioritizeEmptyResponse() async throws {
             try await withApp { app in
-                let emptyResponse = TestResponder { _ in Response(headers: [markerHeader : ""]) }
+                let emptyResponse = TestResponder { _ in Response(headers: [markerHeader: ""]) }
 
-                try await expectResponseCompression(middleware: enabledMiddleware, responder: emptyResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: disabledMiddleware, responder: emptyResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: defaultMiddleware, responder: emptyResponse, compressionValue: "useDefault", on: app)
+                try await expectResponseCompression(
+                    middleware: enabledMiddleware, responder: emptyResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: disabledMiddleware, responder: emptyResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: defaultMiddleware, responder: emptyResponse, compressionValue: "useDefault", on: app)
                 try await expectResponseCompression(middleware: unsetMiddleware, responder: emptyResponse, compressionValue: nil, on: app)
 
-                try await expectResponseCompression(middleware: forceEnabledMiddleware, responder: emptyResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: forceDisabledMiddleware, responder: emptyResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: forceDefaultMiddleware, responder: emptyResponse, compressionValue: "useDefault", on: app)
-                try await expectResponseCompression(middleware: forceUnsetMiddleware, responder: emptyResponse, compressionValue: nil, on: app)
+                try await expectResponseCompression(
+                    middleware: forceEnabledMiddleware, responder: emptyResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDisabledMiddleware, responder: emptyResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDefaultMiddleware, responder: emptyResponse, compressionValue: "useDefault", on: app)
+                try await expectResponseCompression(
+                    middleware: forceUnsetMiddleware, responder: emptyResponse, compressionValue: nil, on: app)
             }
         }
 
         @Test("Test Routing Prioritizes Empty Response")
         func testRoutingPrioritizesEnabledResponse() async throws {
             try await withApp { app in
-                let enabledResponse = TestResponder { _ in Response(headers: [markerHeader : "enable"]) }
+                let enabledResponse = TestResponder { _ in Response(headers: [markerHeader: "enable"]) }
 
-                try await expectResponseCompression(middleware: enabledMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: disabledMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: defaultMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: unsetMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: enabledMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: disabledMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: defaultMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: unsetMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
 
-                try await expectResponseCompression(middleware: forceEnabledMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: forceDisabledMiddleware, responder: enabledResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: forceDefaultMiddleware, responder: enabledResponse, compressionValue: "useDefault", on: app)
-                try await expectResponseCompression(middleware: forceUnsetMiddleware, responder: enabledResponse, compressionValue: nil, on: app)
+                try await expectResponseCompression(
+                    middleware: forceEnabledMiddleware, responder: enabledResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDisabledMiddleware, responder: enabledResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDefaultMiddleware, responder: enabledResponse, compressionValue: "useDefault", on: app)
+                try await expectResponseCompression(
+                    middleware: forceUnsetMiddleware, responder: enabledResponse, compressionValue: nil, on: app)
             }
         }
 
         @Test("Test Routing Prioritizes Disabled Response")
         func testRoutingPrioritizesDisabledResponse() async throws {
             try await withApp { app in
-                let disabledResponse = TestResponder { _ in Response(headers: [markerHeader : "disable"]) }
+                let disabledResponse = TestResponder { _ in Response(headers: [markerHeader: "disable"]) }
 
-                try await expectResponseCompression(middleware: enabledMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: disabledMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: defaultMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: unsetMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: enabledMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: disabledMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: defaultMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: unsetMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
 
-                try await expectResponseCompression(middleware: forceEnabledMiddleware, responder: disabledResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: forceDisabledMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: forceDefaultMiddleware, responder: disabledResponse, compressionValue: "useDefault", on: app)
-                try await expectResponseCompression(middleware: forceUnsetMiddleware, responder: disabledResponse, compressionValue: nil, on: app)
+                try await expectResponseCompression(
+                    middleware: forceEnabledMiddleware, responder: disabledResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDisabledMiddleware, responder: disabledResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDefaultMiddleware, responder: disabledResponse, compressionValue: "useDefault", on: app)
+                try await expectResponseCompression(
+                    middleware: forceUnsetMiddleware, responder: disabledResponse, compressionValue: nil, on: app)
             }
         }
 
         @Test("Test Routing Doesn't Profitize Other Response")
         func testRoutingDoesNotPrioritizeOtherResponse() async throws {
             try await withApp { app in
-                let otherResponse = TestResponder { _ in Response(headers: [markerHeader : "other"]) }
+                let otherResponse = TestResponder { _ in Response(headers: [markerHeader: "other"]) }
 
-                try await expectResponseCompression(middleware: enabledMiddleware, responder: otherResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: disabledMiddleware, responder: otherResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: defaultMiddleware, responder: otherResponse, compressionValue: "useDefault", on: app)
+                try await expectResponseCompression(
+                    middleware: enabledMiddleware, responder: otherResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: disabledMiddleware, responder: otherResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: defaultMiddleware, responder: otherResponse, compressionValue: "useDefault", on: app)
                 try await expectResponseCompression(middleware: unsetMiddleware, responder: otherResponse, compressionValue: nil, on: app)
 
-                try await expectResponseCompression(middleware: forceEnabledMiddleware, responder: otherResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: forceDisabledMiddleware, responder: otherResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: forceDefaultMiddleware, responder: otherResponse, compressionValue: "useDefault", on: app)
-                try await expectResponseCompression(middleware: forceUnsetMiddleware, responder: otherResponse, compressionValue: nil, on: app)
+                try await expectResponseCompression(
+                    middleware: forceEnabledMiddleware, responder: otherResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDisabledMiddleware, responder: otherResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDefaultMiddleware, responder: otherResponse, compressionValue: "useDefault", on: app)
+                try await expectResponseCompression(
+                    middleware: forceUnsetMiddleware, responder: otherResponse, compressionValue: nil, on: app)
             }
         }
 
         @Test("Test Routing Prioritizes Multiple Response")
         func testRoutingPrioritizesMultipleResponse() async throws {
             try await withApp { app in
-                let multipleResponse = TestResponder { _ in Response(headers: [markerHeader : "enable", markerHeader : "disable"]) }
+                let multipleResponse = TestResponder { _ in Response(headers: [markerHeader: "enable", markerHeader: "disable"]) }
 
-                try await expectResponseCompression(middleware: enabledMiddleware, responder: multipleResponse, compressionValue: "enable, disable", on: app)
-                try await expectResponseCompression(middleware: disabledMiddleware, responder: multipleResponse, compressionValue: "enable, disable", on: app)
-                try await expectResponseCompression(middleware: defaultMiddleware, responder: multipleResponse, compressionValue: "enable, disable", on: app)
-                try await expectResponseCompression(middleware: unsetMiddleware, responder: multipleResponse, compressionValue: "enable, disable", on: app)
+                try await expectResponseCompression(
+                    middleware: enabledMiddleware, responder: multipleResponse, compressionValue: "enable, disable", on: app)
+                try await expectResponseCompression(
+                    middleware: disabledMiddleware, responder: multipleResponse, compressionValue: "enable, disable", on: app)
+                try await expectResponseCompression(
+                    middleware: defaultMiddleware, responder: multipleResponse, compressionValue: "enable, disable", on: app)
+                try await expectResponseCompression(
+                    middleware: unsetMiddleware, responder: multipleResponse, compressionValue: "enable, disable", on: app)
 
-                try await expectResponseCompression(middleware: forceEnabledMiddleware, responder: multipleResponse, compressionValue: "enable", on: app)
-                try await expectResponseCompression(middleware: forceDisabledMiddleware, responder: multipleResponse, compressionValue: "disable", on: app)
-                try await expectResponseCompression(middleware: forceDefaultMiddleware, responder: multipleResponse, compressionValue: "useDefault", on: app)
-                try await expectResponseCompression(middleware: forceUnsetMiddleware, responder: multipleResponse, compressionValue: nil, on: app)
+                try await expectResponseCompression(
+                    middleware: forceEnabledMiddleware, responder: multipleResponse, compressionValue: "enable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDisabledMiddleware, responder: multipleResponse, compressionValue: "disable", on: app)
+                try await expectResponseCompression(
+                    middleware: forceDefaultMiddleware, responder: multipleResponse, compressionValue: "useDefault", on: app)
+                try await expectResponseCompression(
+                    middleware: forceUnsetMiddleware, responder: multipleResponse, compressionValue: nil, on: app)
             }
         }
     }
 }
 
-private let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
+private let compressiblePayload =
+    #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
 
 private let unknownType = HTTPMediaType(type: "vapor-test", subType: "unknown")
 
@@ -816,3 +869,5 @@ private struct TestResponder: Responder {
         transform(request)
     }
 }
+
+#endif
