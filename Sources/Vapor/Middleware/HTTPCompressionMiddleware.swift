@@ -1,3 +1,4 @@
+#if Compression
 import HTTPTypes
 import Synchronization
 #if canImport(FoundationEssentials)
@@ -14,8 +15,9 @@ struct HTTPCompressionMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         var request = request
         if case .enabled(let limit) = self.configuration.requestDecompression.storage,
-           let encoding = request.headers[.contentEncoding]?.trimmingCharacters(in: .whitespaces),
-           let coding = HTTPBodyCodec.Coding(rawValue: encoding.lowercased()) {
+            let encoding = request.headers[.contentEncoding]?.trimmingCharacters(in: .whitespaces),
+            let coding = HTTPBodyCodec.Coding(rawValue: encoding.lowercased())
+        {
             let source = request.bodyStorage.storage.withLock { storage in
                 switch storage {
                 case .stream(let stream): stream
@@ -46,15 +48,17 @@ struct HTTPCompressionMiddleware: Middleware {
             }
         }
         guard enabled, response.headers[.contentEncoding] == nil,
-              response.status.kind != .informational,
-              response.status != .noContent, response.status != .notModified,
-              response.status != .partialContent, response.headers[.contentRange] == nil,
-              response.body.count != 0 else { return response }
+            response.status.kind != .informational,
+            response.status != .noContent, response.status != .notModified,
+            response.status != .partialContent, response.headers[.contentRange] == nil,
+            response.body.count != 0
+        else { return response }
 
         // Cache entries for both the encoded and identity variants depend on Accept-Encoding.
-        let vary = response.headers[.vary]?.split(separator: ",").map {
-            $0.trimmingCharacters(in: .whitespaces).lowercased()
-        } ?? []
+        let vary =
+            response.headers[.vary]?.split(separator: ",").map {
+                $0.trimmingCharacters(in: .whitespaces).lowercased()
+            } ?? []
         if !vary.contains("*") && !vary.contains("accept-encoding") {
             response.headers.append(.init(name: .vary, value: "Accept-Encoding"))
         }
@@ -152,3 +156,5 @@ private struct CompressingBodyWriter: HTTPBodyWriter, ~Escapable {
         }
     }
 }
+
+#endif

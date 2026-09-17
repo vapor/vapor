@@ -1,3 +1,4 @@
+#if Compression
 public import HTTPTypes
 
 /// Overrides the response compression settings for a route.
@@ -64,3 +65,5 @@ extension RoutesBuilder {
         self.grouped(ResponseCompressionMiddleware(override: override, force: shouldForce))
     }
 }
+
+#endif

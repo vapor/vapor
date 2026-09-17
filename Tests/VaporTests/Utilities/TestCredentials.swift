@@ -1,8 +1,8 @@
 import Foundation
+import NIOSSL
+import SwiftASN1
 import Testing
 import X509
-import SwiftASN1
-import NIOSSL
 
 /// The long-lived self-signed certificate used by the TLS tests.
 ///
