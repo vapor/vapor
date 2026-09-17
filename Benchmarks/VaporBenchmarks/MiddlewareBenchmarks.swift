@@ -110,7 +110,7 @@ func middlewareBenchmarks() {
         }
     } setup: {
         try await setUpApplication { app in
-            app.grouped(app.sessions.middleware).get("hello") { _ in "hello" }
+            app.grouped(SessionsMiddleware(session: app.sessionDriver)).get("hello") { _ in "hello" }
         }
     } teardown: {
         try await tearDownApplication()
@@ -123,7 +123,7 @@ func middlewareBenchmarks() {
         }
     } setup: {
         try await setUpApplication { app in
-            app.grouped(app.sessions.middleware).get("hello") { req -> String in
+            app.grouped(SessionsMiddleware(session: app.sessionDriver)).get("hello") { req -> String in
                 req.session.data["visits"] = "1"
                 return "hello"
             }

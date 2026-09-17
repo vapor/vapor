@@ -48,7 +48,7 @@ func contentBenchmarks() {
         let call = RequestCall(
             .post, "/decode",
             headers: [.contentType: "application/json"],
-            body: ByteBuffer(data: encoded)
+            body: encoded
         )
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -67,7 +67,7 @@ func contentBenchmarks() {
         let call = RequestCall(
             .post, "/decode",
             headers: [.contentType: "application/x-www-form-urlencoded"],
-            body: ByteBuffer(string: "email=vapor%40vapor.codes&password=secret")
+            body: json("email=vapor%40vapor.codes&password=secret")
         )
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))

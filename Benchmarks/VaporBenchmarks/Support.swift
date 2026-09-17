@@ -1,11 +1,14 @@
 import Benchmark
 import HTTPTypes
+import Foundation
 import NIOCore
 import Vapor
 
 // MARK: Shared application
 
 nonisolated(unsafe) var app: Application!
+
+let benchmarkContentConfiguration = ContentConfiguration.default()
 
 nonisolated(unsafe) var responder: (any Responder)!
 
@@ -27,13 +30,13 @@ struct RequestCall {
     var method: HTTPRequest.Method
     var path: String
     var headers: HTTPFields
-    var body: ByteBuffer?
+    var body: Data?
 
     init(
         _ method: HTTPRequest.Method = .get,
         _ path: String,
         headers: HTTPFields = [:],
-        body: ByteBuffer? = nil
+        body: Data? = nil
     ) {
         self.method = method
         self.path = path
@@ -53,7 +56,8 @@ func run(_ call: RequestCall) async throws -> Int {
         method: call.method,
         url: URI(string: call.path),
         headers: call.headers,
-        collectedBody: call.body
+        collectedBody: call.body,
+        contentConfiguration: benchmarkContentConfiguration
     )
     let response = try await responder.respond(to: request)
     var sink = [UInt8]()
@@ -96,8 +100,8 @@ func makeItems(_ count: Int) -> [Item] {
     (0..<count).map(makeItem)
 }
 
-func json(_ string: String) -> ByteBuffer {
-    ByteBuffer(string: string)
+func json(_ string: String) -> Data {
+    Data(string.utf8)
 }
 
 struct BenchUser: Authenticatable, Content {

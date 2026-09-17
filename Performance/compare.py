@@ -27,6 +27,7 @@ SERVERS = {
     "vapor-batched": (ROOT, "PerformanceServer"),
 }
 EXPECTED = {
+    "status": b"",
     "tiny": b"OK",
     "small": b"x" * 1024,
     "large": b"x" * (64 * 1024),
@@ -53,7 +54,7 @@ def positive_int(value):
 def check_response(url, route):
     with HTTP.open(url, timeout=5) as response:
         body = response.read()
-        if response.status != 200:
+        if response.status != (204 if route == "status" else 200):
             raise RuntimeError(f"{url}: HTTP {response.status}")
         actual = json.loads(body) if route == "json" else body
         if actual != EXPECTED[route]:

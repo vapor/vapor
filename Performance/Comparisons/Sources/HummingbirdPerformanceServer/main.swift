@@ -23,6 +23,7 @@ if !FileManager.default.fileExists(atPath: filePath) {
 }
 
 let router = Router()
+router.get("bench/status") { _, _ in HTTPResponse.Status.noContent }
 router.get("bench/tiny") { _, _ in "OK" }
 router.get("bench/small") { _, _ in small }
 router.get("bench/large") { _, _ in large }

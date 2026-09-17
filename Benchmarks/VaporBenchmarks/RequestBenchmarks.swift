@@ -1,3 +1,4 @@
+import Foundation
 import Benchmark
 import NIOCore
 import Vapor
@@ -20,7 +21,7 @@ func requestBenchmarks() {
             .accept: "application/json",
             .userAgent: "benchmark",
         ]
-        let body = ByteBuffer(string: #"{"id":1,"name":"Widget"}"#)
+        let body = json(#"{"id":1,"name":"Widget"}"#)
         for _ in benchmark.scaledIterations {
             blackHole(
                 Request(

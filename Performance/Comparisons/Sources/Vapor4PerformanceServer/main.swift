@@ -24,6 +24,7 @@ app.logger.logLevel = .error
 app.http.server.configuration.hostname = host
 app.http.server.configuration.port = port
 
+app.get("bench", "status") { _ in HTTPStatus.noContent }
 app.get("bench", "tiny") { _ in "OK" }
 app.get("bench", "small") { _ in small }
 app.get("bench", "large") { _ in large }

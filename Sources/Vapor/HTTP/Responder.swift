@@ -3,7 +3,8 @@ public protocol Responder: Sendable {
 }
 
 extension Application {
-    package func makeResponder() -> any Responder {
+    /// Builds the configured responder after routes and middleware have been registered.
+    public func makeResponder() -> any Responder {
         self.serverContext.makeResponder()
     }
 }

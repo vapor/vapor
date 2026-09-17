@@ -130,3 +130,9 @@ Use these measurements as a local starting point, not a production capacity clai
 framework ranking. For stronger conclusions, repeat on a dedicated Linux server with a separate
 load generator, sweep connection counts, and add matched microbenchmarks to attribute differences.
 This checkout currently has no tracked runnable sources in `Benchmarks/`.
+
+## Twenty-iteration study
+
+The five required workloads include `/bench/status` (204, empty body). `Benchmarks/` measures instructions and allocations; see its README for the counter boundaries. `run-iteration.py NAME` records the current committed revision, counters and three repeats of all five HTTP workloads for Vapor and the raw server. Use `--frameworks vapor http-server vapor4 hummingbird` for comparisons.
+
+`DependencyLocks/*.json` are the preparation lockfiles. Copy each to its package's `Package.resolved` before resolving on another machine. Do not compare results across toolchains or hosts as though they were an optimization effect. The driver requires `wrk`, Python 3 and Swift 6.4; all artifacts are local, and no script pushes commits.

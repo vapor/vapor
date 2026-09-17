@@ -24,7 +24,10 @@ struct BenchmarkHandler: HTTPServerRequestHandler {
         responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
         var reader = consume reader
-        if request.path == "/bench/stream" {
+        if request.path == "/bench/status" {
+            var empty = UniqueArray<UInt8>()
+            try await responseSender.sendAndFinish(.init(status: .noContent), buffer: &empty)
+        } else if request.path == "/bench/stream" {
             var writer = try await responseSender.send(.init(status: .ok, headerFields: [.contentLength: "16384"]))
             for _ in 0..<16 {
                 var buffer = UniqueArray<UInt8>(copying: chunk.utf8)

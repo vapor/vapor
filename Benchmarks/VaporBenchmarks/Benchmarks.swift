@@ -1,6 +1,8 @@
 import Benchmark
+import Logging
 
 let benchmarks: @Sendable () -> Void = {
+    LoggingSystem.bootstrap { _ in SwiftLogNoOpLogHandler() }
     Benchmark.defaultConfiguration = .init(
         metrics: [.instructions, .mallocCountTotal, .wallClock],
         warmupIterations: 3,
@@ -8,6 +10,7 @@ let benchmarks: @Sendable () -> Void = {
         maxDuration: .seconds(3)
     )
 
+    endToEndBenchmarks()
     requestBenchmarks()
     authenticationBenchmarks()
     routingBenchmarks()

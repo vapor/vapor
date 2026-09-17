@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "vapor", path: ".."),
-        .package(url: "https://github.com/ordo-one/benchmark", from: "1.9.2"),
+        .package(url: "https://github.com/ordo-one/benchmark", exact: "1.36.2"),
     ],
     targets: [
         .executableTarget(
@@ -21,6 +21,7 @@ let package = Package(
             path: "VaporBenchmarks",
             swiftSettings: [
                 .enableUpcomingFeature("ExistentialAny"),
+                .enableExperimentalFeature("Lifetimes"),
             ],
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "benchmark"),

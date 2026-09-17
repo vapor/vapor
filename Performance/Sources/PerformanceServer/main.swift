@@ -37,6 +37,7 @@ struct DirectResponder: Responder {
 
     func respond(to request: Request) async throws -> Response {
         switch request.url.path {
+        case "/bench/status": try await HTTPResponse.Status.noContent.encodeResponse(for: request)
         case "/bench/tiny": try await "OK".encodeResponse(for: request)
         case "/bench/small": try await small.encodeResponse(for: request)
         case "/bench/large": try await large.encodeResponse(for: request)
@@ -55,6 +56,7 @@ if mode == "no-middleware" {
 }
 app.serverConfiguration.address = .hostname(host, port: port)
 
+app.get("bench", "status") { _ in HTTPResponse.Status.noContent }
 app.get("bench", "tiny") { _ in "OK" }
 app.get("bench", "small") { _ in small }
 app.get("bench", "large") { _ in large }
