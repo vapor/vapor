@@ -161,6 +161,26 @@ extension Request {
     }
 }
 
+/// Thrown by the read that finds the request body's transport has failed: the client hung up part-way
+/// through the body, sent fewer bytes than it declared, or sent something the HTTP parser rejected.
+///
+/// None of those is something the application can act on: a connection dropping mid-upload is an
+/// everyday event, and any client can truncate a body on purpose. The transport's own error is kept in
+/// ``underlying``. Later reads of the same body throw ``RequestBodyReadFailed``.
+public struct RequestBodyTransportFailed: Error {
+    /// The error the transport failed with.
+    public let underlying: any Error
+
+    public init(underlying: any Error) {
+        self.underlying = underlying
+    }
+}
+
+extension RequestBodyTransportFailed: AbortError {
+    public var status: HTTPResponse.Status { .badRequest }
+    public var reason: String { "The request body could not be read: \(self.underlying)" }
+}
+
 /// Thrown by a read on a stream whose earlier read failed at the transport.
 ///
 /// Once a transport read has failed the stream's position is unknown, so the alternative would be to

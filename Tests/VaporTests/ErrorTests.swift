@@ -1,5 +1,6 @@
 import Vapor
 import Logging
+import InMemoryLogging
 import Testing
 import VaporTesting
 #if canImport(FoundationEssentials)
@@ -109,6 +110,57 @@ struct ErrorTests {
         }
     }
 
+    @Test("Error middleware reports at the error's level, or debug", .bug("https://github.com/vapor/vapor/issues/3203"))
+    func errorMiddlewareReportLevels() async throws {
+        let logHandler = InMemoryLogHandler()
+        var logger = Logger(label: "codes.vapor.test", factory: { _ in logHandler })
+        logger.logLevel = .trace
+        try await withApp(logger: logger) { app in
+            app.get("server") { _ -> String in throw Abort(.internalServerError) }
+            app.get("client") { _ -> String in throw Abort(.forbidden) }
+            app.get("plain") { _ -> String in throw PlainError() }
+            app.get("loud") { _ -> String in throw LoudError() }
+
+            try await app.testing { client in
+                for path in ["server", "client", "plain", "loud", "missing"] {
+                    _ = try await client.get(URI(path: path))
+                }
+            }
+        }
+        // The middleware's reports are the entries carrying the request's URL.
+        let levels = Dictionary(
+            logHandler.entries.compactMap { entry -> (String, Logger.Level)? in
+                guard case .string(let url) = entry.metadata["url"] else { return nil }
+                return (url, entry.level)
+            },
+            uniquingKeysWith: { first, _ in first })
+        #expect(levels == [
+            "/server": .debug,
+            "/client": .debug,
+            "/plain": .debug,
+            "/loud": .error,
+            "/missing": .debug,
+        ])
+    }
+
+    @Test("Reporting an error uses the given level, then the error's own")
+    func reportUsesErrorLevel() {
+        let cases: [(any Error, Logger.Level?, Logger.Level)] = [
+            (LoudError(), nil, .error),
+            (Abort(.internalServerError), nil, .debug),
+            (PlainError(), nil, .warning),
+            (LoudError(), .debug, .debug),
+            (PlainError(), .info, .info),
+        ]
+        for (error, level, expected) in cases {
+            let logHandler = InMemoryLogHandler()
+            var logger = Logger(label: "codes.vapor.test", factory: { _ in logHandler })
+            logger.logLevel = .trace
+            logger.report(error: error, level: level)
+            #expect(logHandler.entries.map(\.level) == [expected], "\(type(of: error)) at \(String(describing: level))")
+        }
+    }
+
     @Test("Test Error Middleware Uses Content Configuration")
     func testErrorMiddlewareUsesContentConfiguration() async throws {
         var contentConfiguration = ContentConfiguration.default()
@@ -130,6 +182,14 @@ struct ErrorTests {
             }
         }
     }
+}
+
+private struct PlainError: Error {}
+
+private struct LoudError: DebuggableError {
+    var identifier: String { "loud" }
+    var reason: String { "Loud" }
+    var logLevel: Logger.Level { .error }
 }
 
 private struct Foo: Content {

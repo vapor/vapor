@@ -39,7 +39,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         defer { try? await bodyStream.drain(max: drainLimit) }
 
         // 2. Build Vapor request
-        let peerCerts = try? await requestContext.peerCertificateChain
+        let peerCerts = requestContext.validatedPeerCertificateChain
         let remoteAddress = requestContext.remoteAddress.flatMap { SocketAddress($0) }
         let localAddress = requestContext.localAddress.flatMap { SocketAddress($0) }
 

@@ -58,7 +58,7 @@ public protocol DebuggableError: LocalizedError, CustomDebugStringConvertible, C
     var gitHubIssues: [String] { get }
 
     /// Which log level this error should report as.
-    /// Defaults to `.warning`.
+    /// Defaults to `.debug`: most errors are handled by answering the request, so only implement this to make one louder.
     var logLevel: Logger.Level { get }
 }
 
@@ -104,7 +104,7 @@ extension DebuggableError {
     }
 
     public var logLevel: Logger.Level {
-        .warning
+        .debug
     }
 }
 

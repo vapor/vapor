@@ -17,13 +17,11 @@ let package = Package(
     ],
     traits: [
         .trait(name: "WebSockets"),
-        .trait(name: "bcrypt"),
         .trait(name: "HTTPClient"),
         .trait(name: "Multipart"),
         .trait(name: "MacroRouting"),
         .default(enabledTraits: [
             "WebSockets",
-            "bcrypt",
             "HTTPClient",
             "Multipart",
             "MacroRouting",
@@ -95,11 +93,14 @@ let package = Package(
         // Work with certificate encoding schemes
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0"),
 
+        // Idiomatic Swift interfaces to system calls and low-level types
+        .package(url: "https://github.com/apple/swift-system.git", from: "1.8.0"),
+
         // Swift syntax parsing and generation
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", revision: "aa39e5c6c1934a2a06b26d2977c67bbc3846ab8b", traits: [.defaults, "HTTP3"]),
+        .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.2.0"), traits: [.defaults, "HTTP3"]),
 
         // HTTP/3 and QUIC support for SwiftNIO - used for testing
         .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.3.0")),
@@ -137,6 +138,7 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "NIOHTTPServer", package: "swift-http-server"),
+                .product(name: "SystemPackage", package: "swift-system"),
             ],
             swiftSettings: swiftSettings
         ),
