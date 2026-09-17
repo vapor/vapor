@@ -24,7 +24,7 @@ def run(command, log, env):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('name', help='unique name, e.g. 00-baseline or 01-batch-buffered')
-    parser.add_argument('--filter', default='^(e2e|network)/')
+    parser.add_argument('--filter', default='^(e2e|network)/.*')
     parser.add_argument('--frameworks', nargs='+', default=['vapor', 'http-server'])
     parser.add_argument('--duration', type=int, default=3)
     parser.add_argument('--repeats', type=int, default=3)
