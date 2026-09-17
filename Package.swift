@@ -100,11 +100,12 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.2.0"), traits: [.defaults, "HTTP3"]),
+        // TODO: Update to tagged release once it depends on a tagged release of SwiftNIO HTTP/3
+        .package(url: "https://github.com/swift-server/swift-http-server.git", branch: "main", traits: [.defaults, "HTTP3"]),
 
         // HTTP/3 and QUIC support for SwiftNIO - used for testing
-        .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.3.0")),
-        .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.2.0")),
+        .package(url: "https://github.com/apple/swift-nio-http3.git", branch: "main"),
+        .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.2.2")),
     ],
     targets: [
         // Vapor
