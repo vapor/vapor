@@ -30,14 +30,17 @@ package final class ServerContext: Sendable {
 
     /// Builds the responder chain.
     package func makeResponder() -> any Responder {
+        let responder: any Responder
         switch self.responder {
         case .default:
-            DefaultResponder(
+            responder = DefaultResponder(
                 routes: self.routes.value,
                 middleware: self.middlewares.value.resolve()
             )
         case .provided(let provided):
-            provided
+            responder = provided
         }
+        return HTTPCompressionMiddleware(configuration: self.configuration.value)
+            .makeResponder(chainingTo: responder)
     }
 }

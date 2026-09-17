@@ -84,7 +84,7 @@ extension ServerConfiguration {
                 storage: .enabled(
                     initialByteBufferCapacity: initialByteBufferCapacity,
                     disallowedTypes: disallowedTypes,
-                    allowRequestOverrides: true
+                    allowRequestOverrides: allowRequestOverrides
                 ))
         }
 

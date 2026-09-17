@@ -8,7 +8,7 @@ public import HTTPTypes
 ///
 /// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPFields/ResponseCompression/useDefault``.
 ///
-/// - Note: Response compression is only actually used if the client indicates it supports it via an `Accept` header.
+/// - Note: Response compression is only actually used if the client indicates it supports it via an `Accept-Encoding` header.
 public struct ResponseCompressionMiddleware: Middleware {
     /// The response compression override to use over the base configuration.
     ///
@@ -53,7 +53,7 @@ extension RoutesBuilder {
     ///
     /// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPFields/ResponseCompression/useDefault``.
     ///
-    /// - Note: Response compression is only actually used if the client indicates it supports it via an `Accept` header.
+    /// - Note: Response compression is only actually used if the client indicates it supports it via an `Accept-Encoding` header.
     /// - Note: Setting the override to ``HTTPFields/ResponseCompression/unset`` has no effect here unless `force` is set to true.
     ///
     /// - Parameters:
