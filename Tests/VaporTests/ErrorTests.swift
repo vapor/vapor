@@ -182,6 +182,13 @@ struct ErrorTests {
             }
         }
     }
+
+    @Test("RouteNotFound reason includes the request URL", .bug("https://github.com/vapor/vapor/issues/3237"))
+    func testRouteNotFoundReasonIncludesURL() throws {
+        #expect(RouteNotFound(requestURL: "/Icons/missing.svg").reason == "No route found for \"/Icons/missing.svg\".")
+        #expect(RouteNotFound().reason == "Not Found")
+        #expect(RouteNotFound().status == .notFound)
+    }
 }
 
 private struct PlainError: Error {}
