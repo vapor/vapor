@@ -1,9 +1,9 @@
-import Vapor
-import HTTPTypes
-import Testing
-import VaporTesting
 import Foundation
+import HTTPTypes
 import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
 
 @Suite("Query Tests")
 struct QueryTests {
@@ -182,7 +182,8 @@ struct QueryTests {
                 return .ok
             }
 
-            let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+            let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(
+                withAllowedCharacters: .urlQueryAllowed)!
             try await app.testing { client in
                 let res = try await client.get("/urlencodedform?\(data)")
                 #expect(res.status.code == 200)
@@ -203,11 +204,12 @@ struct QueryTests {
 
             try await app.testing { client in
                 let res = try await client.get("/custom-encode")
-                try #expect(await res.body.requireString() == """
-            {
-              "hello" : "world"
-            }
-            """)
+                try #expect(
+                    await res.body.requireString() == """
+                        {
+                          "hello" : "world"
+                        }
+                        """)
             }
         }
     }
@@ -304,10 +306,10 @@ struct QueryTests {
                 method: .get,
                 url: URI(string: "/")
             )
-            struct BarStruct : Content {
+            struct BarStruct: Content {
                 let bar: Bool
             }
-            struct OptionalBarStruct : Content {
+            struct OptionalBarStruct: Content {
                 let bar: Bool?
                 let baz: String?
             }

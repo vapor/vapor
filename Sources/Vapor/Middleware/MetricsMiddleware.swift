@@ -5,15 +5,16 @@ import Metrics
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-metrics/
 public final class MetricsMiddleware: Middleware {
-    
+
     public init() {}
-    
+
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         let startInstant = ContinuousClock.now
-        
+
         // Attributes: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#http-server-semantic-conventions
         let httpRequestMethod = request.method.rawValue
-        let urlScheme = request.headers.forwarded.first?.proto ?? request.headers[values: .xForwardedProto].first ?? request.url.scheme ?? "undefined"
+        let urlScheme =
+            request.headers.forwarded.first?.proto ?? request.headers[values: .xForwardedProto].first ?? request.url.scheme ?? "undefined"
         let httpRoute: String
         if let route = request.route {
             httpRoute = "/" + route.path.map { "\($0)" }.joined(separator: "/")
@@ -22,7 +23,7 @@ public final class MetricsMiddleware: Middleware {
         }
         let networkProtocolName = "http"
         let networkProtocolVersion = "\(request.version.major).\(request.version.minor)"
-        
+
         // http.server.active_requests
         // https://opentelemetry.io/docs/specs/semconv/http/http-metrics/#metric-httpserveractive_requests
         let httpServerActiveRequests = Meter(
@@ -37,7 +38,7 @@ public final class MetricsMiddleware: Middleware {
         defer {
             httpServerActiveRequests.decrement()
         }
-        
+
         // Process request
         let responseOrError: ResponseOrError
         var errorType = "undefined"
@@ -53,7 +54,7 @@ public final class MetricsMiddleware: Middleware {
                 httpResponseStatusCode = error.status.code.description
             }
         }
-        
+
         // http.server.request.body.size
         // https://opentelemetry.io/docs/specs/semconv/http/http-metrics/#metric-httpserverrequestbodysize
         Recorder(
@@ -62,18 +63,18 @@ public final class MetricsMiddleware: Middleware {
                 // Required
                 ("http.request.method", httpRequestMethod),
                 ("url.scheme", urlScheme),
-                
+
                 // Conditionally Required
                 ("error.type", errorType),
                 ("http.response.status_code", httpResponseStatusCode),
                 ("http.route", httpRoute),
                 ("network.protocol.name", networkProtocolName),
-                
+
                 // Recommended
                 ("network.protocol.version", networkProtocolVersion),
             ]
         ).record(request.body.bytesRead)
-        
+
         // http.server.request.duration
         // https://opentelemetry.io/docs/specs/semconv/http/http-metrics/#metric-httpserverrequestduration
         let elapsed = startInstant.duration(to: .now)
@@ -84,23 +85,23 @@ public final class MetricsMiddleware: Middleware {
                 // Required
                 ("http.request.method", httpRequestMethod),
                 ("url.scheme", urlScheme),
-                
+
                 // Conditionally Required
                 ("error.type", errorType),
                 ("http.response.status_code", httpResponseStatusCode),
                 ("http.route", httpRoute),
                 ("network.protocol.name", networkProtocolName),
-                
+
                 // Recommended
                 ("network.protocol.version", networkProtocolVersion),
             ]
         ).recordNanoseconds(elapsedNanos)
-        
+
         switch responseOrError {
         case .error(let error):
             throw error
         case .response(let response):
-            
+
             // http.server.response.body.size
             // https://opentelemetry.io/docs/specs/semconv/http/http-metrics/#metric-httpserverresponsebodysize
             //
@@ -114,13 +115,13 @@ public final class MetricsMiddleware: Middleware {
                         // Required
                         ("http.request.method", httpRequestMethod),
                         ("url.scheme", urlScheme),
-                    
+
                         // Conditionally Required
                         ("error.type", errorType),
                         ("http.response.status_code", httpResponseStatusCode),
                         ("http.route", httpRoute),
                         ("network.protocol.name", networkProtocolName),
-                    
+
                         // Recommended
                         ("network.protocol.version", networkProtocolVersion),
                     ]
@@ -131,7 +132,7 @@ public final class MetricsMiddleware: Middleware {
     }
 }
 
-fileprivate enum ResponseOrError {
+private enum ResponseOrError {
     case response(Response)
     case error(any Error)
 }

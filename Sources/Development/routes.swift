@@ -1,11 +1,11 @@
 import Foundation
-import Vapor
-import NIOCore
 import HTTPTypes
-import _NIOFileSystem
-import RoutingKit
 import Logging
+import NIOCore
+import RoutingKit
+import Vapor
 import VaporMacros
+import _NIOFileSystem
 
 struct Creds: Content {
     var email: String
@@ -49,7 +49,7 @@ func routes(_ app: Application) async throws {
     }
 
     app.on(.post, "large-file", maxBodySize: 1_000_000_000) { req -> String in
-        return req.body.data?.count.description  ?? "none"
+        return req.body.data?.count.description ?? "none"
     }
 
     app.get("json", routeDescription: "Returns Some Test JSON") { req -> [String: String] in
@@ -57,17 +57,17 @@ func routes(_ app: Application) async throws {
     }
 
     #warning("TODO")
-//    app.webSocket("ws") { req, ws in
-//        ws.onText { ws, text in
-//            ws.send(text.reversed())
-//            if text == "close" {
-//                ws.close(promise: nil)
-//            }
-//        }
-//
-//        let ip = req.remoteAddress?.description ?? "<no ip>"
-//        ws.send("Hello 👋 \(ip)")
-//    }
+    //    app.webSocket("ws") { req, ws in
+    //        ws.onText { ws, text in
+    //            ws.send(text.reversed())
+    //            if text == "close" {
+    //                ws.close(promise: nil)
+    //            }
+    //        }
+    //
+    //        let ip = req.remoteAddress?.description ?? "<no ip>"
+    //        ws.send("Hello 👋 \(ip)")
+    //    }
 
     app.on(.post, "file") { req in
         try await req.body.forEachChunk { part in
@@ -77,11 +77,12 @@ func routes(_ app: Application) async throws {
     }
 
     app.get("stream", "chunks") { _ -> Response in
-        Response(body: .init(stream: { writer in
-            for i in 1...5 {
-                try await writer.write("chunk \(i)\n")
-            }
-        }))
+        Response(
+            body: .init(stream: { writer in
+                for i in 1...5 {
+                    try await writer.write("chunk \(i)\n")
+                }
+            }))
     }
 
     app.get("stream", "sequence") { _ -> Response in
@@ -91,43 +92,47 @@ func routes(_ app: Application) async throws {
             }
             continuation.finish()
         }
-        return Response(body: .init(stream: { writer in
-            for await chunk in lines {
-                try await writer.write(chunk)
-            }
-        }))
+        return Response(
+            body: .init(stream: { writer in
+                for await chunk in lines {
+                    try await writer.write(chunk)
+                }
+            }))
     }
 
     app.get("stream", "firehose") { _ -> Response in
-        Response(body: .init(stream: { writer in
-            let chunk = [UInt8](repeating: 0x41, count: 16 * 1024)
-            for _ in 0..<10_000 {
-                try await writer.write(chunk)
-            }
-        }))
+        Response(
+            body: .init(stream: { writer in
+                let chunk = [UInt8](repeating: 0x41, count: 16 * 1024)
+                for _ in 0..<10_000 {
+                    try await writer.write(chunk)
+                }
+            }))
     }
 
     // Sleeps between chunks: with `curl` you can see each line arrive ~0.5s apart, which shows
     // the write suspends and the response is produced lazily rather than buffered up front.
     app.get("stream", "slow") { _ -> Response in
-        Response(body: .init(stream: { writer in
-            for i in 1...10 {
-                try await writer.write("chunk \(i)\n")
-                try await Task.sleep(for: .milliseconds(500))
-            }
-        }))
+        Response(
+            body: .init(stream: { writer in
+                for i in 1...10 {
+                    try await writer.write("chunk \(i)\n")
+                    try await Task.sleep(for: .milliseconds(500))
+                }
+            }))
     }
 
     app.get("stream", "file") { _ -> Response in
         let path = #filePath
         let fileSystem = FileSystem.shared
-        return Response(body: .init(stream: { writer in
-            let handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
-            defer { try? await handle.close() }
-            for try await chunk in handle.readChunks(chunkLength: .bytes(64 * 1024)) {
-                try await writer.write(chunk.readableBytesUInt8Span)
-            }
-        }))
+        return Response(
+            body: .init(stream: { writer in
+                let handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
+                defer { try? await handle.close() }
+                for try await chunk in handle.readChunks(chunkLength: .bytes(64 * 1024)) {
+                    try await writer.write(chunk.readableBytesUInt8Span)
+                }
+            }))
     }
 
     // TODO: Implement shutdown route using structured concurrency
@@ -246,17 +251,18 @@ func routes(_ app: Application) async throws {
     }
 
     #if !canImport(FoundationEssentials)
-    app.on(.post, "upload") { req -> HTTPResponse.Status in
-        return try await FileSystem.shared.withFileHandle(
-            forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
-            options: .newFile(replaceExisting: true)) { handle in
+        app.on(.post, "upload") { req -> HTTPResponse.Status in
+            return try await FileSystem.shared.withFileHandle(
+                forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
+                options: .newFile(replaceExisting: true)
+            ) { handle in
                 var writer = handle.bufferedWriter()
                 try await req.body.forEachChunk { part in
                     try await writer.write(contentsOf: part.withUnsafeBytes { unsafe Array($0) })
                 }
                 return .ok
             }
-    }
+        }
     #endif
 
     let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
@@ -325,11 +331,11 @@ func routes(_ app: Application) async throws {
     }
 
     #if MacroRouting
-    try await app.register(collection: UserController())
+        try await app.register(collection: UserController())
 
-    #GET(on: app, "macros", "types", Int.self) { (req: Request, id: Int) async throws -> String in
-        return "macro route with id: \(id)"
-    }
+        #GET(on: app, "macros", "types", Int.self) { (req: Request, id: Int) async throws -> String in
+            return "macro route with id: \(id)"
+        }
     #endif
 }
 
@@ -345,11 +351,12 @@ func proxy(_ req: Request, to upstream: URI, using client: any Client) async thr
     do {
         return try await client.send(req.method, headers: headers, to: upstream) { outgoing in
             if hasBody {
-                outgoing.body = try .init(stream: { writer in
-                    try await req.body.forEachChunk { chunk in
-                        try await writer.write(chunk)
-                    }
-                }, count: declaredLength)
+                outgoing.body = try .init(
+                    stream: { writer in
+                        try await req.body.forEachChunk { chunk in
+                            try await writer.write(chunk)
+                        }
+                    }, count: declaredLength)
             }
             outgoing.maxResponseBodySize = .max
             outgoing.timeout = .seconds(300)
@@ -410,70 +417,70 @@ struct TestController: RouteCollection {
 }
 
 #if MacroRouting
-@Controller
-struct UserController {
-    @GET("api", "macros", "users")
-    func getUsers(req: Request) async throws -> String {
-        return "users"
+    @Controller
+    struct UserController {
+        @GET("api", "macros", "users")
+        func getUsers(req: Request) async throws -> String {
+            return "users"
+        }
+
+        @HTTP(.patch, "api", "macros", "users", "custom")
+        func getCustomHTTPMethod(req: Request) async throws -> String {
+            return "custom HTTP method"
+        }
+
+        @GET("api", "macros", "users", Int.self)
+        func getUser(req: Request, id: Int) async throws -> String {
+            return "user with id: \(id)"
+        }
+
+        @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
+        func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
+            return "custom HTTP method"
+        }
+
+        @POST("api", "macros", "lots", UUID.self, Int.self, String.self, Int.self)
+        func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String, anotherNumber: Int) async throws -> String {
+            return "uuid: \(uuid), number: \(number), text: \(text), anotherNumber: \(anotherNumber)"
+        }
+
+        @POST("api", "macros", "sync")
+        func syncRoute(req: Request) throws -> String {
+            "Sync"
+        }
+
+        @GET("macros", "manual", "int", ":id")
+        @Sendable
+        func macroDynamicPathParameter(req: Request) async throws -> String {
+            let id = try req.parameters.require("id")
+            return "macro route with id: \(id)"
+        }
+
+        @GET("macros", "manual", "partial", ":{my-file}.json")
+        @Sendable
+        func macroDynamicPartialPathParameter(req: Request) async throws -> String {
+            let file = try req.parameters.require("my-file")
+            return "macro route with file: \(file)"
+        }
+
+        @POST("api", "macros", "users", Int.self, "promote")
+        @AuthMiddleware(User.self, UserAuthMiddleware())
+        func promoteUser(req: Request, authenticatedUser: User, id: Int) async throws -> User {
+            // Must have: Request, User, then Int (in that order)
+            return authenticatedUser
+        }
+
+        //    These routes are expected not to compile and are here to demonstate/test that
+        //    @GET("NotResponseCodable")
+        //    func testNotARoute(req: Request) async throws -> NotContentType {
+        //        NotContentType(something: "")
+        //    }
+
+        //    @GET("Void")
+        //    func testVoidRoute(req: Request) throws {
+        //
+        //    }
     }
-
-    @HTTP(.patch, "api", "macros", "users", "custom")
-    func getCustomHTTPMethod(req: Request) async throws -> String {
-        return "custom HTTP method"
-    }
-
-    @GET("api", "macros", "users", Int.self)
-    func getUser(req: Request, id: Int) async throws -> String {
-        return "user with id: \(id)"
-    }
-
-    @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
-    func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
-        return "custom HTTP method"
-    }
-
-    @POST("api", "macros", "lots", UUID.self, Int.self, String.self, Int.self)
-    func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String, anotherNumber: Int) async throws -> String {
-        return "uuid: \(uuid), number: \(number), text: \(text), anotherNumber: \(anotherNumber)"
-    }
-
-    @POST("api", "macros", "sync")
-    func syncRoute(req: Request) throws -> String {
-        "Sync"
-    }
-
-    @GET("macros", "manual", "int", ":id")
-    @Sendable
-    func macroDynamicPathParameter(req: Request) async throws -> String {
-        let id = try req.parameters.require("id")
-        return "macro route with id: \(id)"
-    }
-
-    @GET("macros", "manual", "partial", ":{my-file}.json")
-    @Sendable
-    func macroDynamicPartialPathParameter(req: Request) async throws -> String {
-        let file = try req.parameters.require("my-file")
-        return "macro route with file: \(file)"
-    }
-
-    @POST("api", "macros", "users", Int.self, "promote")
-    @AuthMiddleware(User.self, UserAuthMiddleware())
-    func promoteUser(req: Request, authenticatedUser: User, id: Int) async throws -> User {
-        // Must have: Request, User, then Int (in that order)
-        return authenticatedUser
-    }
-
-//    These routes are expected not to compile and are here to demonstate/test that
-//    @GET("NotResponseCodable")
-//    func testNotARoute(req: Request) async throws -> NotContentType {
-//        NotContentType(something: "")
-//    }
-
-//    @GET("Void")
-//    func testVoidRoute(req: Request) throws {
-//
-//    }
-}
 #endif
 
 struct NotContentType {
@@ -491,5 +498,5 @@ struct UserAuthMiddleware: Middleware {
             request.auth.login(User(id: 1, name: "Vapor"))
         }
         return try await next.respond(to: request)
-     }
+    }
 }

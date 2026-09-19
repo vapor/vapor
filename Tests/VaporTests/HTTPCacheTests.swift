@@ -1,11 +1,12 @@
-import Vapor
-import Testing
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 import HTTPTypes
+import Testing
+import Vapor
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("HTTP Cache Tests")
 class HTTPCacheTests {

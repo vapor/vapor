@@ -1,8 +1,9 @@
 import HTTPTypes
+
 #if canImport(FoundationEssentials)
-public import FoundationEssentials
+    public import FoundationEssentials
 #else
-public import Foundation
+    public import Foundation
 #endif
 
 public struct View: ResponseEncodable, Sendable {
@@ -13,7 +14,8 @@ public struct View: ResponseEncodable, Sendable {
     }
 
     public func encodeResponse(for request: Request) async throws -> Response {
-        let response = Response(headers: .init(dictionaryLiteral: (.contentType, HTTPMediaType.html.serialize())), body: .init(data: self.data))
+        let response = Response(
+            headers: .init(dictionaryLiteral: (.contentType, HTTPMediaType.html.serialize())), body: .init(data: self.data))
         return response
     }
 }

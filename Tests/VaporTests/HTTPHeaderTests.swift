@@ -1,11 +1,13 @@
-@testable import Vapor
-import Testing
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 import HTTPTypes
+import Testing
+
+@testable import Vapor
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("HTTP Header Tests")
 struct HTTPHeaderTests {
@@ -36,81 +38,90 @@ struct HTTPHeaderTests {
     @Test("Test Directive Parsing with Parameters")
     func testValue_directives() throws {
         var parser = HTTPFields.DirectiveParser(string: #"a; b=c, d"#)
-        #expect(parser.nextDirectives() == [
-            .init(value: "a"),
-            .init(value: "b", parameter: "c"),
-        ])
-        #expect(parser.nextDirectives() == [
-            .init(value: "d")
-        ])
+        #expect(
+            parser.nextDirectives() == [
+                .init(value: "a"),
+                .init(value: "b", parameter: "c"),
+            ])
+        #expect(
+            parser.nextDirectives() == [
+                .init(value: "d")
+            ])
     }
 
     @Test("Test Directive Parsing with Quoted Parameters")
     func testValue_directives_quote() throws {
         var parser = HTTPFields.DirectiveParser(string: #""a;b"; c="d;e", f"#)
-        #expect(parser.nextDirectives() == [
-            .init(value: "a;b"),
-            .init(value: "c", parameter: "d;e"),
-        ])
-        #expect(parser.nextDirectives() == [
-            .init(value: "f")
-        ])
+        #expect(
+            parser.nextDirectives() == [
+                .init(value: "a;b"),
+                .init(value: "c", parameter: "d;e"),
+            ])
+        #expect(
+            parser.nextDirectives() == [
+                .init(value: "f")
+            ])
     }
 
     @Test("Test Directive Parsing for Content-Type")
     func testValue_directives_contentType() throws {
         var parser = HTTPFields.DirectiveParser(string: "application/json; charset=utf8")
-        #expect(parser.nextDirectives() == [
-            .init(value: "application/json"),
-            .init(value: "charset", parameter: "utf8"),
-        ])
+        #expect(
+            parser.nextDirectives() == [
+                .init(value: "application/json"),
+                .init(value: "charset", parameter: "utf8"),
+            ])
     }
 
     @Test("Test Multiple Directives Parsing")
     func testValue_directives_multiple() throws {
         var parser = HTTPFields.DirectiveParser(string: "foo; bar=1; baz=2")
-        #expect(parser.nextDirectives() == [
-            .init(value: "foo"),
-            .init(value: "bar", parameter: "1"),
-            .init(value: "baz", parameter: "2"),
-        ])
+        #expect(
+            parser.nextDirectives() == [
+                .init(value: "foo"),
+                .init(value: "bar", parameter: "1"),
+                .init(value: "baz", parameter: "2"),
+            ])
     }
 
     @Test("Test Multiple Directives Parsing with Quotes")
     func testValue_directives_multiple_quote() throws {
         var parser = HTTPFields.DirectiveParser(string: #"foo; bar=1; baz="2""#)
-        #expect(parser.nextDirectives() == [
-            .init(value: "foo"),
-            .init(value: "bar", parameter: "1"),
-            .init(value: "baz", parameter: "2"),
-        ])
+        #expect(
+            parser.nextDirectives() == [
+                .init(value: "foo"),
+                .init(value: "bar", parameter: "1"),
+                .init(value: "baz", parameter: "2"),
+            ])
     }
 
     @Test("Test Multiple Directives Parsing with Quoted Semicolon")
     func testValue_directives_multiple_quotedSemicolon() throws {
         var parser = HTTPFields.DirectiveParser(string: #"foo; bar=1; baz="2;3""#)
-        #expect(parser.nextDirectives() == [
-            .init(value: "foo"),
-            .init(value: "bar", parameter: "1"),
-            .init(value: "baz", parameter: "2;3"),
-        ])
+        #expect(
+            parser.nextDirectives() == [
+                .init(value: "foo"),
+                .init(value: "bar", parameter: "1"),
+                .init(value: "baz", parameter: "2;3"),
+            ])
     }
 
     @Test("Test Multiple Directives Parsing with Quoted Semicolon and Equals")
     func testValue_directives_multiple_quotedSemicolonEqual() throws {
         var parser = HTTPFields.DirectiveParser(string: #"foo; bar=1; baz="2;=3""#)
-        #expect(parser.nextDirectives() == [
-            .init(value: "foo"),
-            .init(value: "bar", parameter: "1"),
-            .init(value: "baz", parameter: "2;=3"),
-        ])
+        #expect(
+            parser.nextDirectives() == [
+                .init(value: "foo"),
+                .init(value: "bar", parameter: "1"),
+                .init(value: "baz", parameter: "2;=3"),
+            ])
     }
 
     @Test("Test Directive Serialization")
     func testValue_serialize() throws {
         let serializer = HTTPFields.DirectiveSerializer(directives: [
             [.init(value: "foo"), .init(value: "bar", parameter: "baz")],
-            [.init(value: "qux", parameter: "quuz")]
+            [.init(value: "qux", parameter: "quuz")],
         ])
         #expect(serializer.serialize() == "foo; bar=\"baz\", qux=\"quuz\"")
     }
@@ -204,7 +215,10 @@ struct HTTPHeaderTests {
     func testComplexCookieParsing() throws {
         var headers = HTTPFields()
         do {
-            headers[values: .setCookie] = ["SIWA_STATE=CJKxa71djx6CaZ0MwRjtvtJ5Zub+kfaoIEZGoY3wXKA=; Path=/; SameSite=None; HttpOnly; Secure", "vapor-session=TL7r+TS3RNhpEC6HoCfukq+7edNHKF2elF6WiKV4JCg=; Expires=Wed, 02 Jun 2021 14:57:57 GMT; Path=/; SameSite=None; HttpOnly; Secure"]
+            headers[values: .setCookie] = [
+                "SIWA_STATE=CJKxa71djx6CaZ0MwRjtvtJ5Zub+kfaoIEZGoY3wXKA=; Path=/; SameSite=None; HttpOnly; Secure",
+                "vapor-session=TL7r+TS3RNhpEC6HoCfukq+7edNHKF2elF6WiKV4JCg=; Expires=Wed, 02 Jun 2021 14:57:57 GMT; Path=/; SameSite=None; HttpOnly; Secure",
+            ]
             #expect(headers.setCookie?.all.count == 2)
 
             let siwaState = try #require(headers.setCookie?["SIWA_STATE"])
@@ -215,7 +229,7 @@ struct HTTPHeaderTests {
 
             let vaporSession = try #require(headers.setCookie?["vapor-session"])
             #expect(vaporSession.sameSite == HTTPCookies.SameSitePolicy.none)
-            #expect(vaporSession.expires == Date(timeIntervalSince1970: 1622645877))
+            #expect(vaporSession.expires == Date(timeIntervalSince1970: 1_622_645_877))
             #expect(vaporSession.isHTTPOnly)
             #expect(vaporSession.isSecure)
         }
@@ -234,10 +248,11 @@ struct HTTPHeaderTests {
         var headers = HTTPFields()
         headers[.forwarded] = #"for=192.0.2.43, for="[2001:db8:cafe::17]""#
 
-        #expect(headers.forwarded.map { $0.for } == [
-            "192.0.2.43",
-            "[2001:db8:cafe::17]",
-        ])
+        #expect(
+            headers.forwarded.map { $0.for } == [
+                "192.0.2.43",
+                "[2001:db8:cafe::17]",
+            ])
     }
 
     @Test("Test Multiple Forwarded Headers (Deprecated)")
@@ -245,10 +260,11 @@ struct HTTPHeaderTests {
         var headers = HTTPFields()
         headers[.xForwardedFor] = "192.0.2.43, 2001:db8:cafe::17"
 
-        #expect(headers.forwarded.compactMap { $0.for } == [
-            "192.0.2.43",
-            "2001:db8:cafe::17",
-        ])
+        #expect(
+            headers.forwarded.compactMap { $0.for } == [
+                "192.0.2.43",
+                "2001:db8:cafe::17",
+            ])
     }
 
     @Test("Test Multiple Forwarded Headers Set Via HTTP Types (Deprecated)")
@@ -256,24 +272,25 @@ struct HTTPHeaderTests {
         var headers = HTTPFields()
         headers[values: .xForwardedFor] = ["192.0.2.43", "2001:db8:cafe::17"]
 
-        #expect(headers.forwarded.compactMap { $0.for } == [
-            "192.0.2.43",
-            "2001:db8:cafe::17",
-        ])
+        #expect(
+            headers.forwarded.compactMap { $0.for } == [
+                "192.0.2.43",
+                "2001:db8:cafe::17",
+            ])
     }
 
     @Test("Test Forwarded Header Serialization")
     func testForwarded_serialization() throws {
         var headers = HTTPFields()
-        headers.forwarded.append(.init(
-            by: "203.0.113.43",
-            for: "192.0.2.60",
-            host: nil,
-            proto: "http"
-        ))
+        headers.forwarded.append(
+            .init(
+                by: "203.0.113.43",
+                for: "192.0.2.60",
+                host: nil,
+                proto: "http"
+            ))
 
-        #expect(headers[.forwarded] ==
-            #"by="203.0.113.43"; for="192.0.2.60"; proto="http""#)
+        #expect(headers[.forwarded] == #"by="203.0.113.43"; for="192.0.2.60"; proto="http""#)
     }
 
     @Test("Test X-Request-Id Header")
@@ -298,7 +315,10 @@ struct HTTPHeaderTests {
     @Test("Test Multiple Cookie Parsing")
     func testCookie_parsingMultiple() throws {
         var headers = HTTPFields()
-        headers[values: .cookie] = ["vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==", "_ga=GA1.1.500315824.1585154561", "_gid=GA1.1.500224287.1585154561", "!#$%&'*+-.^_`~=symbols"]
+        headers[values: .cookie] = [
+            "vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==", "_ga=GA1.1.500315824.1585154561", "_gid=GA1.1.500224287.1585154561",
+            "!#$%&'*+-.^_`~=symbols",
+        ]
 
         print("headrs")
         print("\(headers)")
@@ -315,9 +335,9 @@ struct HTTPHeaderTests {
     func testCookie_parsing() throws {
         var headers = HTTPFields()
         headers[.cookie] =
-                """
-                vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==; _ga=GA1.1.500315824.1585154561; _gid=GA1.1.500224287.1585154561; !#$%&'*+-.^_`~=symbols
-                """
+            """
+            vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==; _ga=GA1.1.500315824.1585154561; _gid=GA1.1.500224287.1585154561; !#$%&'*+-.^_`~=symbols
+            """
 
         #expect(headers.cookie?["vapor-session"]?.string == "0FuTYcHmGw7Bz1G4HiF+EA==")
         #expect(headers.cookie?["vapor-session"]?.sameSite == .lax)
@@ -340,13 +360,18 @@ struct HTTPHeaderTests {
     @Test("Test Complex Cookie Parsing", .bug("https://github.com/vapor/vapor/issues/2316"))
     func testCookie_complexParsing() throws {
         var headers = HTTPFields()
-        headers[.cookie] = "oauth2_authentication_csrf=MTU4NzA1MTc0N3xEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJRGs1WkRKbU1HRTVNMlF3TmpRM1lUbGhOelptTnprMU5EYzRZMlk1WkRObXx6lRdSC3-hPvE1pxp4ylFlBruOyJtRo8OnzBrAriBr0w==; vapor-session=ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=; oauth2_consent_csrf=MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg=="
+        headers[.cookie] =
+            "oauth2_authentication_csrf=MTU4NzA1MTc0N3xEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJRGs1WkRKbU1HRTVNMlF3TmpRM1lUbGhOelptTnprMU5EYzRZMlk1WkRObXx6lRdSC3-hPvE1pxp4ylFlBruOyJtRo8OnzBrAriBr0w==; vapor-session=ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=; oauth2_consent_csrf=MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg=="
 
-        #expect(headers.cookie?["oauth2_authentication_csrf"]?.string ==
-            "MTU4NzA1MTc0N3xEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJRGs1WkRKbU1HRTVNMlF3TmpRM1lUbGhOelptTnprMU5EYzRZMlk1WkRObXx6lRdSC3-hPvE1pxp4ylFlBruOyJtRo8OnzBrAriBr0w==")
+        #expect(
+            headers.cookie?["oauth2_authentication_csrf"]?.string
+                == "MTU4NzA1MTc0N3xEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJRGs1WkRKbU1HRTVNMlF3TmpRM1lUbGhOelptTnprMU5EYzRZMlk1WkRObXx6lRdSC3-hPvE1pxp4ylFlBruOyJtRo8OnzBrAriBr0w=="
+        )
         #expect(headers.cookie?["vapor-session"]?.string == "ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=")
-        #expect(headers.cookie?["oauth2_consent_csrf"]?.string ==
-            "MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg==")
+        #expect(
+            headers.cookie?["oauth2_consent_csrf"]?.string
+                == "MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg=="
+        )
     }
 
     @Test("Test Invalid Cookie Handling")
@@ -392,12 +417,14 @@ struct HTTPHeaderTests {
 
     @Test("Test Range Directive Serialization")
     func testRangeDirectiveSerialization() throws {
-        let range = HTTPFields.Range(unit: .bytes, ranges: [
-            .within(start: 200, end: 1000),
-            .within(start: 2000, end: 6576),
-            .start(value: 19000),
-            .tail(value: 500)
-        ])
+        let range = HTTPFields.Range(
+            unit: .bytes,
+            ranges: [
+                .within(start: 200, end: 1000),
+                .within(start: 2000, end: 6576),
+                .start(value: 19000),
+                .tail(value: 500),
+            ])
 
         var headers = HTTPFields()
         headers.range = range
@@ -434,24 +461,28 @@ struct HTTPHeaderTests {
 
     @Test("Test Range Serialization")
     func testRangeSerialization() throws {
-        let range = HTTPFields.Range(unit: .bytes, ranges: [
-            .within(start: 200, end: 1000),
-            .within(start: 2000, end: 6576),
-            .start(value: 19000),
-            .tail(value: 500)
-        ])
+        let range = HTTPFields.Range(
+            unit: .bytes,
+            ranges: [
+                .within(start: 200, end: 1000),
+                .within(start: 2000, end: 6576),
+                .start(value: 19000),
+                .tail(value: 500),
+            ])
 
         #expect(range.serialize() == "bytes=200-1000, 2000-6576, 19000-, -500")
     }
 
     @Test("Test Range Deserialization")
     func testRangeDeserialization() throws {
-        let range = HTTPFields.Range(unit: .bytes, ranges: [
-            .within(start: 200, end: 1000),
-            .within(start: 2000, end: 6576),
-            .start(value: 19000),
-            .tail(value: 500)
-        ])
+        let range = HTTPFields.Range(
+            unit: .bytes,
+            ranges: [
+                .within(start: 200, end: 1000),
+                .within(start: 2000, end: 6576),
+                .start(value: 19000),
+                .tail(value: 500),
+            ])
 
         let directives = [
             HTTPFields.Directive(value: "bytes", parameter: "200-1000"),
@@ -466,7 +497,8 @@ struct HTTPHeaderTests {
     @Test("Test Link Header Parsing")
     func testLinkHeaderParsing() throws {
         var headers = HTTPFields()
-        headers[.link] = #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel=related, </?a=-2>; rel=related"#
+        headers[.link] =
+            #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel=related, </?a=-2>; rel=related"#
 
         #expect(headers.links?.count == 4)
 
@@ -504,7 +536,10 @@ struct HTTPHeaderTests {
         var headers = HTTPFields()
         headers.links = links
 
-        #expect(headers[.link] == #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel="related", </?a=-2>; rel="related""#)
+        #expect(
+            headers[.link]
+                == #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel="related", </?a=-2>; rel="related""#
+        )
     }
 
     /// Test parse and serialize of `Last-Modified` header
@@ -561,7 +596,10 @@ struct HTTPHeaderTests {
 
         let encodedHeaders = try encoder.encode(headers)
 
-        #expect(String(decoding: encodedHeaders, as: UTF8.self) == #"[{"name":"Date","value":"2001-01-01 00:01:40 +0000"},{"name":"Date","value":"2000-12-31 23:58:20 +0000"},{"name":"Connection","value":"be-strange"}]"#)
+        #expect(
+            String(decoding: encodedHeaders, as: UTF8.self)
+                == #"[{"name":"Date","value":"2001-01-01 00:01:40 +0000"},{"name":"Date","value":"2000-12-31 23:58:20 +0000"},{"name":"Connection","value":"be-strange"}]"#
+        )
 
         let decodedHeaders = try decoder.decode(HTTPFields.self, from: encodedHeaders)
 

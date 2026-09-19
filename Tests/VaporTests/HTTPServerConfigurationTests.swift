@@ -1,7 +1,8 @@
-@testable import Vapor
-import VaporTesting
 import ServiceLifecycle
 import Testing
+import VaporTesting
+
+@testable import Vapor
 
 @Suite("HTTP Server Configuration Tests")
 struct HTTPServerConfigurationTests {
@@ -70,10 +71,12 @@ struct HTTPServerConfigurationTests {
     struct PreflightValidationTests {
         // HTTP/2 requires TLS, so any version set containing HTTP/2 must be rejected over
         // plaintext — even when HTTP/1.1 is also present.
-        @Test("HTTP/2 requested over plaintext throws", arguments: [
-            [ServerConfiguration.HTTPVersion.http2(config: .defaults)],
-            [.http1_1, .http2(config: .defaults)],
-        ] as [Set<ServerConfiguration.HTTPVersion>])
+        @Test(
+            "HTTP/2 requested over plaintext throws",
+            arguments: [
+                [ServerConfiguration.HTTPVersion.http2(config: .defaults)],
+                [.http1_1, .http2(config: .defaults)],
+            ] as [Set<ServerConfiguration.HTTPVersion>])
         func testHTTP2WithoutTLSFails(_ versions: Set<ServerConfiguration.HTTPVersion>) async throws {
             try await withApp { app in
                 app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)

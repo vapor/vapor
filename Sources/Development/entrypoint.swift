@@ -1,15 +1,15 @@
 import Configuration
 import ConsoleLogger
-import Vapor
 import Logging
+import Vapor
 
 @main
 struct Entrypoint {
     static func main() async throws {
         let config = ConfigReader(providers: [
-                CommandLineArgumentsProvider(),
-                EnvironmentVariablesProvider(),
-            ]
+            CommandLineArgumentsProvider(),
+            EnvironmentVariablesProvider(),
+        ]
         )
         ConsoleLogger.bootstrapWithConfigReader(config: config)
         var logger = Logger(label: "codes.vapor.app")
@@ -27,4 +27,3 @@ struct Entrypoint {
         }
     }
 }
-

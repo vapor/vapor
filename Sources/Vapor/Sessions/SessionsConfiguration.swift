@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// Configuration options for sessions.
@@ -32,7 +32,7 @@ public struct SessionsConfiguration: Sendable {
             HTTPCookies.Value(
                 string: sessionID.string,
                 expires: Date(
-                    timeIntervalSinceNow: 60 * 60 * 24 * 7 // one week
+                    timeIntervalSinceNow: 60 * 60 * 24 * 7  // one week
                 ),
                 maxAge: nil,
                 domain: nil,

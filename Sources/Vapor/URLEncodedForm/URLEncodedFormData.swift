@@ -1,8 +1,9 @@
 import Logging
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// Keeps track if the string was percent encoded or not.
@@ -30,7 +31,8 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
         switch self {
         case .urlEncoded(let encoded):
             guard let decoded = encoded.removingPercentEncoding else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(encoded)"))
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(encoded)"))
             }
             return decoded
         case .urlDecoded(let decoded):
@@ -68,7 +70,7 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
     }
 
     var allChildKeysAreSequentialIntegers: Bool {
-        for i in 0...children.count-1 {
+        for i in 0...children.count - 1 {
             if !children.keys.contains(String(i)) {
                 return false
             }

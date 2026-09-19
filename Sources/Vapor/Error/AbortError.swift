@@ -59,7 +59,7 @@ extension DecodingError: AbortError {
         @unknown default: "unknown"
         }
     }
-    
+
     // See `CustomStringConvertible.description`.
     public var description: String {
         "Decoding error: \(self.reason)"
@@ -68,24 +68,24 @@ extension DecodingError: AbortError {
     // See `AbortError.reason`
     public var reason: String {
         switch self {
-        case let .dataCorrupted(ctx):       "Data corrupted \(self.contextReason(ctx))"
-        case let .keyNotFound(key, ctx):    "No such key '\(key.stringValue)' \(self.contextReason(ctx))"
-        case let .typeMismatch(type, ctx):  "Value was not of type '\(type)' \(self.contextReason(ctx))"
-        case let .valueNotFound(type, ctx): "No value found (expected type '\(type)') \(self.contextReason(ctx))"
-        @unknown default:                   "Unknown error"
+        case .dataCorrupted(let ctx): "Data corrupted \(self.contextReason(ctx))"
+        case .keyNotFound(let key, let ctx): "No such key '\(key.stringValue)' \(self.contextReason(ctx))"
+        case .typeMismatch(let type, let ctx): "Value was not of type '\(type)' \(self.contextReason(ctx))"
+        case .valueNotFound(let type, let ctx): "No value found (expected type '\(type)') \(self.contextReason(ctx))"
+        @unknown default: "Unknown error"
         }
     }
-    
+
     private func contextReason(_ context: Context) -> String {
         "at path '\(context.codingPath.dotPath)'\(context.debugDescriptionAndUnderlyingError)"
     }
 }
 
-private extension DecodingError.Context {
-    var debugDescriptionAndUnderlyingError: String {
+extension DecodingError.Context {
+    fileprivate var debugDescriptionAndUnderlyingError: String {
         "\(self.debugDescriptionNoTrailingDot)\(self.underlyingErrorDescription)."
     }
-    
+
     /// `debugDescription` sometimes has a trailing dot, and sometimes not.
     private var debugDescriptionNoTrailingDot: String {
         if self.debugDescription.isEmpty {
@@ -96,7 +96,7 @@ private extension DecodingError.Context {
             ". \(self.debugDescription)"
         }
     }
-    
+
     private var underlyingErrorDescription: String {
         self.underlyingError.map { ". Underlying error: \(String(describing: $0))" } ?? ""
     }

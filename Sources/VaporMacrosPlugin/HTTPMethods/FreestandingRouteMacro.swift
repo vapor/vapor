@@ -1,13 +1,14 @@
-public import SwiftSyntax
-public import SwiftSyntaxMacros
-import SwiftSyntaxBuilder
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import HTTPTypes
 import Algorithms
+import HTTPTypes
+public import SwiftSyntax
+import SwiftSyntaxBuilder
+public import SwiftSyntaxMacros
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 enum FreestandingRouteMacro {
     public static func expansion(
@@ -66,18 +67,19 @@ enum FreestandingRouteMacro {
 
         // Build the path registration string
         let path = pathComponents.joined(separator: "\", \"")
-        let pathRegistration = if path == "" {
-            ""
-        } else {
-            ", \"\(path)\""
-        }
+        let pathRegistration =
+            if path == "" {
+                ""
+            } else {
+                ", \"\(path)\""
+            }
 
         // Extract parameter names from the closure signature
         var closureParams: [(label: String, name: String)] = []
         if let signature = trailingClosure.signature {
-            if case let .parameterClause(parameterClause) = signature.parameterClause {
+            if case .parameterClause(let parameterClause) = signature.parameterClause {
                 for (index, param) in parameterClause.parameters.enumerated() {
-                    if index == 0 { continue } // Skip `req`
+                    if index == 0 { continue }  // Skip `req`
                     let name = param.secondName?.text ?? param.firstName.text
                     closureParams.append((label: name, name: name))
                 }
@@ -91,9 +93,9 @@ enum FreestandingRouteMacro {
         for (index, paramType) in parameterTypes.enumerated() {
             let parameterName = "\(paramType.lowercased())\(index)"
             parameterExtraction += """
-            let \(parameterName) = try req.parameters.require("\(parameterName)", as: \(paramType).self)
+                let \(parameterName) = try req.parameters.require("\(parameterName)", as: \(paramType).self)
 
-            """
+                """
             callParameters += ", \(parameterName)"
         }
 
@@ -105,20 +107,20 @@ enum FreestandingRouteMacro {
         // The registered `Route` is unused, so bind it to `_` to avoid an unused value warning
         if parameterTypes.isEmpty {
             registration = """
-            let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
-                let _closure = \(trailingClosure)
-                let result: some ResponseEncodable = try \(raw: isAsync ? "await " : "")_closure(req)
-                return try await result.encodeResponse(for: req)
-            }
-            """
+                let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
+                    let _closure = \(trailingClosure)
+                    let result: some ResponseEncodable = try \(raw: isAsync ? "await " : "")_closure(req)
+                    return try await result.encodeResponse(for: req)
+                }
+                """
         } else {
             registration = """
-            let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
-                \(raw: parameterExtraction)let _closure = \(trailingClosure)
-                let result: some ResponseEncodable = try \(raw: isAsync ? "await " : "")_closure(req\(raw: callParameters))
-                return try await result.encodeResponse(for: req)
-            }
-            """
+                let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
+                    \(raw: parameterExtraction)let _closure = \(trailingClosure)
+                    let result: some ResponseEncodable = try \(raw: isAsync ? "await " : "")_closure(req\(raw: callParameters))
+                    return try await result.encodeResponse(for: req)
+                }
+                """
         }
 
         return [registration]

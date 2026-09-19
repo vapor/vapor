@@ -1,43 +1,48 @@
-@testable import Vapor
 import Testing
+
+@testable import Vapor
 
 @Suite("Case-Insensitive ASCII Equality")
 struct StringProtocolCaseInsensitiveEqualASCIITests {
-    @Test("Equal ignoring ASCII letter case", arguments: [
-        ("", ""),                                   // both empty
-        ("hello", "hello"),                         // identical
-        ("Hello", "hello"),                         // leading capital
-        ("HELLO", "hello"),                         // all caps vs all lower
-        ("HeLLo", "hEllO"),                         // mixed vs inverted case
-        ("A", "a"),                                 // lower bound of A–Z fold range
-        ("Z", "z"),                                 // upper bound of A–Z fold range
-        ("application/json", "APPLICATION/JSON"),   // HTTPMediaType-style value
-        ("Foo-Bar_123", "foo-bar_123"),             // only letters fold; -, _, digits stay
-        ("123!@#", "123!@#"),                       // no letters at all
-        ("@", "@"),                                 // non-letter equal to itself
-        ("[", "["),
-        ("Straße", "STRAßE"),                       // ASCII folds around a non-ASCII byte
-        ("café", "café"),                           // identical non-ASCII
-    ])
+    @Test(
+        "Equal ignoring ASCII letter case",
+        arguments: [
+            ("", ""),  // both empty
+            ("hello", "hello"),  // identical
+            ("Hello", "hello"),  // leading capital
+            ("HELLO", "hello"),  // all caps vs all lower
+            ("HeLLo", "hEllO"),  // mixed vs inverted case
+            ("A", "a"),  // lower bound of A–Z fold range
+            ("Z", "z"),  // upper bound of A–Z fold range
+            ("application/json", "APPLICATION/JSON"),  // HTTPMediaType-style value
+            ("Foo-Bar_123", "foo-bar_123"),  // only letters fold; -, _, digits stay
+            ("123!@#", "123!@#"),  // no letters at all
+            ("@", "@"),  // non-letter equal to itself
+            ("[", "["),
+            ("Straße", "STRAßE"),  // ASCII folds around a non-ASCII byte
+            ("café", "café"),  // identical non-ASCII
+        ])
     func equal(_ a: String, _ b: String) {
         #expect(a.isCaseInsensitiveEqualASCII(to: b))
-        #expect(b.isCaseInsensitiveEqualASCII(to: a)) // symmetric
+        #expect(b.isCaseInsensitiveEqualASCII(to: a))  // symmetric
     }
 
-    @Test("Not equal", arguments: [
-        ("hello", "world"),   // different content
-        ("hello", "hell"),    // b is a prefix of a (different length)
-        ("hell", "hello"),    // a is a prefix of b (different length)
-        ("", "a"),            // empty vs non-empty
-        ("@", "`"),           // 0x40 vs 0x60: differ by 0x20 but neither is a letter
-        ("[", "{"),           // 0x5B vs 0x7B: just outside A–Z / a–z, differ by 0x20
-        ("é", "e"),           // 2 UTF-8 bytes vs 1: length mismatch, not a case fold
-        ("café", "CAFÉ"),     // same byte length, but É vs é is non-ASCII and not folded
-        ("Ω", "ω"),           // non-ASCII case is never folded
-    ])
+    @Test(
+        "Not equal",
+        arguments: [
+            ("hello", "world"),  // different content
+            ("hello", "hell"),  // b is a prefix of a (different length)
+            ("hell", "hello"),  // a is a prefix of b (different length)
+            ("", "a"),  // empty vs non-empty
+            ("@", "`"),  // 0x40 vs 0x60: differ by 0x20 but neither is a letter
+            ("[", "{"),  // 0x5B vs 0x7B: just outside A–Z / a–z, differ by 0x20
+            ("é", "e"),  // 2 UTF-8 bytes vs 1: length mismatch, not a case fold
+            ("café", "CAFÉ"),  // same byte length, but É vs é is non-ASCII and not folded
+            ("Ω", "ω"),  // non-ASCII case is never folded
+        ])
     func notEqual(_ a: String, _ b: String) {
         #expect(!a.isCaseInsensitiveEqualASCII(to: b))
-        #expect(!b.isCaseInsensitiveEqualASCII(to: a)) // symmetric
+        #expect(!b.isCaseInsensitiveEqualASCII(to: a))  // symmetric
     }
 
     @Test("Every ASCII uppercase letter equals its lowercase counterpart")
@@ -62,7 +67,7 @@ struct StringProtocolCaseInsensitiveEqualASCIITests {
 
     @Test("Works across StringProtocol types")
     func mixedStringProtocolTypes() {
-        let world = "Hello World".dropFirst(6) // Substring "World"
+        let world = "Hello World".dropFirst(6)  // Substring "World"
         #expect(world.isCaseInsensitiveEqualASCII(to: "world"))
         #expect("WORLD".isCaseInsensitiveEqualASCII(to: world))
         #expect(!world.isCaseInsensitiveEqualASCII(to: "word"))

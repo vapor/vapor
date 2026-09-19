@@ -1,11 +1,12 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
+public import HTTPTypes
 import NIOCore
 import _NIOFileSystem
-public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 /// Serves static files from a public directory.
 ///
@@ -25,12 +26,13 @@ public final class FileMiddleware: Middleware {
         let description: String
 
         /// Cannot generate Bundle Resource URL
-        public static let bundleResourceURLIsNil: Self = .init(description: "Cannot generate Bundle Resource URL: Bundle Resource URL is nil")
+        public static let bundleResourceURLIsNil: Self = .init(
+            description: "Cannot generate Bundle Resource URL: Bundle Resource URL is nil")
 
         /// Cannot find any actual folder for the given Public Directory
-        public static let publicDirectoryIsNotAFolder: Self = .init(description: "Cannot find any actual folder for the given Public Directory")
+        public static let publicDirectoryIsNotAFolder: Self = .init(
+            description: "Cannot find any actual folder for the given Public Directory")
     }
-
 
     /// Creates a new `FileMiddleware`.
     ///
@@ -96,7 +98,8 @@ public final class FileMiddleware: Middleware {
 
                         if try await FileSystem.shared.info(forFileAt: .init(absPath)) != nil {
                             // If the default file exists, stream it
-                            return try await fileIO
+                            return
+                                try await fileIO
                                 .streamFile(at: absPath, for: request, advancedETagComparison: advancedETagComparison)
                                 .applyingCachePolicy(cachePolicy)
                         }
@@ -110,7 +113,8 @@ public final class FileMiddleware: Middleware {
                 }
             } else {
                 // file exists, stream it
-                return try await fileIO
+                return
+                    try await fileIO
                     .streamFile(at: absPath, for: request, advancedETagComparison: advancedETagComparison)
                     .applyingCachePolicy(cachePolicy)
             }
@@ -131,30 +135,30 @@ public final class FileMiddleware: Middleware {
     /// - important: Make sure the public directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
     /// - returns: A fully qualified FileMiddleware if the given `publicDirectory` can be served, throws a `BundleSetupError` otherwise
     #if !canImport(FoundationEssentials)
-    public convenience init(
-        bundle: Bundle,
-        publicDirectory: String = "Public",
-        defaultFile: String? = nil,
-        directoryAction: DirectoryAction = .none,
-        cachePolicy: CachePolicy = .browserDefault,
-        etagCache: FileETagHashCache
-    ) throws {
-        guard let bundleResourceURL = bundle.resourceURL else {
-            throw BundleSetupError.bundleResourceURLIsNil
-        }
-        let publicDirectoryURL = bundleResourceURL.appendingPathComponent(publicDirectory.removeLeadingSlashes())
-        guard (try? publicDirectoryURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
-            throw BundleSetupError.publicDirectoryIsNotAFolder
-        }
+        public convenience init(
+            bundle: Bundle,
+            publicDirectory: String = "Public",
+            defaultFile: String? = nil,
+            directoryAction: DirectoryAction = .none,
+            cachePolicy: CachePolicy = .browserDefault,
+            etagCache: FileETagHashCache
+        ) throws {
+            guard let bundleResourceURL = bundle.resourceURL else {
+                throw BundleSetupError.bundleResourceURLIsNil
+            }
+            let publicDirectoryURL = bundleResourceURL.appendingPathComponent(publicDirectory.removeLeadingSlashes())
+            guard (try? publicDirectoryURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
+                throw BundleSetupError.publicDirectoryIsNotAFolder
+            }
 
-        self.init(
-            publicDirectory: publicDirectoryURL.path,
-            defaultFile: defaultFile,
-            directoryAction: directoryAction,
-            cachePolicy: cachePolicy,
-            etagCache: etagCache
-        )
-    }
+            self.init(
+                publicDirectory: publicDirectoryURL.path,
+                defaultFile: defaultFile,
+                directoryAction: directoryAction,
+                cachePolicy: cachePolicy,
+                etagCache: etagCache
+            )
+        }
     #endif
 
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory
@@ -178,14 +182,14 @@ public final class FileMiddleware: Middleware {
     }
 }
 
-fileprivate extension String {
+extension String {
     /// Determines if input path is absolute based on a leading slash
-    func isAbsolute() -> Bool {
+    fileprivate func isAbsolute() -> Bool {
         return self.hasPrefix("/")
     }
 
     /// Makes a path relative by removing all leading slashes
-    func removeLeadingSlashes() -> String {
+    fileprivate func removeLeadingSlashes() -> String {
         var newPath = self
         while newPath.hasPrefix("/") {
             newPath.removeFirst()
@@ -194,7 +198,7 @@ fileprivate extension String {
     }
 
     /// Adds a trailing slash to the path if one is not already present
-    func addTrailingSlash() -> String {
+    fileprivate func addTrailingSlash() -> String {
         var newPath = self
         if !newPath.hasSuffix("/") {
             newPath += "/"

@@ -1,15 +1,16 @@
-import NIOHTTPServer
 import BasicContainers
-import HTTPTypes
 import HTTPAPIs
+import HTTPTypes
+import Logging
 import NIOCore
 import NIOHTTP1
+import NIOHTTPServer
 import Synchronization
-import Logging
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// Bridges NIOHTTPServer's request handler protocol into Vapor's responder chain.
@@ -32,7 +33,8 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         // 1. Drain any body the handler didn't read so the keep-alive connection stays usable. GET/HEAD
         // aren't expected to carry a body, so their budget is 0: a body-less request drains nothing
         // (just reads `.end`), and one that does carry a body is left unread, closing the connection.
-        let drainLimit = (request.method == .get || request.method == .head)
+        let drainLimit =
+            (request.method == .get || request.method == .head)
             ? 0
             : context.configuration.value.maxDrainBytes
 
@@ -112,7 +114,8 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 // waste time going through the response body. `204` and `304` are defined as bodyless
                 // too: writing one anyway breaks framing, and the client reads it as the start of the
                 // next response.
-                let bodyIsForbidden = request.method == .head
+                let bodyIsForbidden =
+                    request.method == .head
                     || vaporResponse.status == .noContent
                     || vaporResponse.status == .notModified
                 guard !bodyIsForbidden else {

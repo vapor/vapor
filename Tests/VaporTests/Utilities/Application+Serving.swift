@@ -1,7 +1,7 @@
-import Vapor
 import RoutingKit
 import ServiceLifecycle
 import Testing
+import Vapor
 
 /// Starts an application, waits until it is serving, then runs `task` on it.
 func whileServing(_ task: (Application) -> Void) async throws {

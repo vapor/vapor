@@ -1,8 +1,9 @@
 import HTTPTypes
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 public protocol ContentContainer {
@@ -78,7 +79,7 @@ extension ContentContainer {
         var content = content
         try self.encode(&content, as: contentType)
     }
-    
+
     /// Serialize a ``Content`` object to the container without copying it, specifying an
     /// explicit content type.
     public mutating func encode(_ content: inout some Content, as contentType: HTTPMediaType) throws {
@@ -110,36 +111,39 @@ extension ContentContainer {
             try? await self.get(D.self, at: path)
         }
     }
-    
+
     /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
     ///     let name: String = try req.content.get(at: "user", "name")
     public func get<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) async throws -> D {
         try await self.get(at: path)
     }
-    
+
     /// Fetch a single ``Decodable`` value at the supplied keypath in this container.
     ///
     ///     let name = try req.content.get(String.self, at: ["user", "name"])
     public func get<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) async throws -> D {
         try await self.get(D.self, path: path.map(\.codingKey))
     }
-    
+
     // MARK: - Private
-    
+
     /// Execute a "get at coding key path" operation.
     private func get<D: Decodable>(_: D.Type = D.self, path: [any CodingKey]) async throws -> D {
-        try await self.decode(ContainerGetPathExecutor<D>.self, using: ForwardingContentDecoder(
-            base: self.configuredDecoder(),
-            info: ContainerGetPathExecutor<D>.userInfo(for: path)
-        )).result
+        try await self.decode(
+            ContainerGetPathExecutor<D>.self,
+            using: ForwardingContentDecoder(
+                base: self.configuredDecoder(),
+                info: ContainerGetPathExecutor<D>.userInfo(for: path)
+            )
+        ).result
     }
 
     /// Look up a ``ContentEncoder`` for the supplied ``HTTPMediaType``.
     private func configuredEncoder(for mediaType: HTTPMediaType) throws -> any ContentEncoder {
         try self.contentConfiguration.requireEncoder(for: mediaType)
     }
-    
+
     /// Look up a ``ContentDecoder`` for the container's ``contentType``.
     private func configuredDecoder(for mediaType: HTTPMediaType? = nil) throws -> any ContentDecoder {
         guard let contentType = mediaType ?? self.contentType else {
@@ -150,10 +154,11 @@ extension ContentContainer {
 }
 
 /// Injects coder userInfo into a ``ContentDecoder`` so we don't have to add passthroughs to ``ContentContainer``.
-fileprivate struct ForwardingContentDecoder: ContentDecoder {
+private struct ForwardingContentDecoder: ContentDecoder {
     let base: any ContentDecoder, info: [CodingUserInfoKey: any Sendable]
 
-    func decode<D>(_ decodable: D.Type, from body: Data, headers: HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws -> D where D : Decodable {
+    func decode<D>(_ decodable: D.Type, from body: Data, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
+    where D: Decodable {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: userInfo.merging(self.info) { $1 })
     }
 }

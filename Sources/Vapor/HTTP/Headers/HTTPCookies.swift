@@ -1,9 +1,10 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
 public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 extension HTTPFields {
     /// Get and set ``HTTPCookies`` for an HTTP request.
@@ -246,11 +247,13 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     }
 
     init(directives: [HTTPFields.Directive]) {
-        self.cookies = directives.reduce(into: [:], { (cookies, directive) in
-            if let value = directive.parameter {
-                cookies[.init(directive.value)] = .init(string: .init(value))
-            }
-        })
+        self.cookies = directives.reduce(
+            into: [:],
+            { (cookies, directive) in
+                if let value = directive.parameter {
+                    cookies[.init(directive.value)] = .init(string: .init(value))
+                }
+            })
     }
 
     // See `ExpressibleByDictionaryLiteral.init(dictionaryLiteral:)`.

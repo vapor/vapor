@@ -1,17 +1,18 @@
-import HTTPTypes
-import Vapor
 import AsyncHTTPClient
-import ServiceLifecycle
+import Foundation
+import HTTPTypes
+import InMemoryTracing
 import Metrics
-@testable import CoreMetrics
 import MetricsTestKit
-import Tracing
-import Testing
-import VaporTesting
 import RegexBuilder
 import RoutingKit
-import InMemoryTracing
-import Foundation
+import ServiceLifecycle
+import Testing
+import Tracing
+import Vapor
+import VaporTesting
+
+@testable import CoreMetrics
 
 @Suite("Middleware Tests")
 struct MiddlewareTests {
@@ -76,7 +77,8 @@ struct MiddlewareTests {
     func testCORSMiddlewareAnyAllowedOrigin() async throws {
         try await withApp { app in
             app.grouped(
-                CORSMiddleware(configuration: .init(allowedOrigin: .any(["foo", "bar"]), allowedMethods: [.get], allowedHeaders: [.origin]))
+                CORSMiddleware(
+                    configuration: .init(allowedOrigin: .any(["foo", "bar"]), allowedMethods: [.get], allowedHeaders: [.origin]))
             ).get("order") { req -> String in
                 return "done"
             }
@@ -161,26 +163,27 @@ struct MiddlewareTests {
     func testCORSMiddlewareDynamicOriginAllowed() async throws {
         try await withApp { app in
             app.grouped(
-                CORSMiddleware(configuration: .init(
-                    allowedOrigin: .dynamic({ req in
-                        guard let origin = req.headers[values: .origin].first else {
-                            return ""
-                        }
-                        let regex = Regex {
-                            Anchor.startOfLine
-                            "http://example-"
-                            OneOrMore {
-                                CharacterClass.digit
+                CORSMiddleware(
+                    configuration: .init(
+                        allowedOrigin: .dynamic({ req in
+                            guard let origin = req.headers[values: .origin].first else {
+                                return ""
                             }
-                            ".com"
-                            Anchor.endOfLine
-                        }
-                        let isMatch = origin.wholeMatch(of: regex) != nil
-                        return isMatch ? origin : ""
-                    }),
-                    allowedMethods: [.get],
-                    allowedHeaders: []
-                ))
+                            let regex = Regex {
+                                Anchor.startOfLine
+                                "http://example-"
+                                OneOrMore {
+                                    CharacterClass.digit
+                                }
+                                ".com"
+                                Anchor.endOfLine
+                            }
+                            let isMatch = origin.wholeMatch(of: regex) != nil
+                            return isMatch ? origin : ""
+                        }),
+                        allowedMethods: [.get],
+                        allowedHeaders: []
+                    ))
             ).get("order") { req -> String in
                 return "done"
             }
@@ -204,110 +207,117 @@ struct MiddlewareTests {
     }
 
     #if !canImport(FoundationEssentials)
-    @Test("Test File Middleware From Bundle")
-    func testFileMiddlewareFromBundle() async throws {
-        try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", etagCache: app.fileETagHashCache)
-            app.middleware.use(fileMiddleware)
+        @Test("Test File Middleware From Bundle")
+        func testFileMiddlewareFromBundle() async throws {
+            try await withApp { app in
+                let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", etagCache: app.fileETagHashCache)
+                app.middleware.use(fileMiddleware)
 
-            try await app.testing { client in
-                let result = try await client.get("/foo.txt")
-                #expect(result.status == .ok)
-                try #expect(await result.body.requireString() == "bar\n")
-                #expect(result.headers[.cacheControl] == nil)
-                #expect(result.headers[.age] == nil)
+                try await app.testing { client in
+                    let result = try await client.get("/foo.txt")
+                    #expect(result.status == .ok)
+                    try #expect(await result.body.requireString() == "bar\n")
+                    #expect(result.headers[.cacheControl] == nil)
+                    #expect(result.headers[.age] == nil)
+                }
             }
         }
-    }
 
-    @Test("Test File MIddleware With Browser Default Cache Policy")
-    func testFileMiddlewareWithBrowserDefaultCachePolicy() async throws {
-        try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .browserDefault, etagCache: app.fileETagHashCache)
-            app.middleware.use(fileMiddleware)
+        @Test("Test File MIddleware With Browser Default Cache Policy")
+        func testFileMiddlewareWithBrowserDefaultCachePolicy() async throws {
+            try await withApp { app in
+                let fileMiddleware = try FileMiddleware(
+                    bundle: .module, publicDirectory: "/", cachePolicy: .browserDefault, etagCache: app.fileETagHashCache)
+                app.middleware.use(fileMiddleware)
 
-            try await app.testing { client in
-                let result = try await client.get("/foo.txt")
-                #expect(result.status == .ok)
-                try #expect(await result.body.requireString() == "bar\n")
-                #expect(result.headers[.cacheControl] == nil)
-                #expect(result.headers[.age] == nil)
-            }
+                try await app.testing { client in
+                    let result = try await client.get("/foo.txt")
+                    #expect(result.status == .ok)
+                    try #expect(await result.body.requireString() == "bar\n")
+                    #expect(result.headers[.cacheControl] == nil)
+                    #expect(result.headers[.age] == nil)
+                }
 
-        }
-    }
-
-    @Test("Test File Middleware With No Cache Policy")
-    func testFileMiddlewareWithNoCachePolicy() async throws {
-        try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .noCache, etagCache: app.fileETagHashCache)
-            app.middleware.use(fileMiddleware)
-
-            try await app.testing { client in
-                let result = try await client.get("/foo.txt")
-                #expect(result.status == .ok)
-                try #expect(await result.body.requireString() == "bar\n")
-                #expect(result.headers[.cacheControl] == "no-cache")
-                #expect(result.headers[.age] == nil)
             }
         }
-    }
 
-    @Test("Test File Middleware With Max Age Cache Policy")
-    func testFileMiddlewareWithMaxAgeCachePolicy() async throws {
-        try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .cache(upTo:
-                    .seconds(300)), etagCache: app.fileETagHashCache)
-            app.middleware.use(fileMiddleware)
+        @Test("Test File Middleware With No Cache Policy")
+        func testFileMiddlewareWithNoCachePolicy() async throws {
+            try await withApp { app in
+                let fileMiddleware = try FileMiddleware(
+                    bundle: .module, publicDirectory: "/", cachePolicy: .noCache, etagCache: app.fileETagHashCache)
+                app.middleware.use(fileMiddleware)
 
-            try await app.testing { client in
-                let result = try await client.get("/foo.txt")
-                #expect(result.status == .ok)
-                try #expect(await result.body.requireString() == "bar\n")
-                #expect(result.headers[.cacheControl] == "max-age=300")
-                #expect(result.headers[.age] == "0")
+                try await app.testing { client in
+                    let result = try await client.get("/foo.txt")
+                    #expect(result.status == .ok)
+                    try #expect(await result.body.requireString() == "bar\n")
+                    #expect(result.headers[.cacheControl] == "no-cache")
+                    #expect(result.headers[.age] == nil)
+                }
             }
         }
-    }
 
-    @Test("Test File Middleware With Custom Cache Policy")
-    func testFileMiddlewareWithCustomCachePolicy() async throws {
-        try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/", cachePolicy: .custom(cacheControlHeader: .init(isPublic: true), ageHeader: 10), etagCache: app.fileETagHashCache)
-            app.middleware.use(fileMiddleware)
+        @Test("Test File Middleware With Max Age Cache Policy")
+        func testFileMiddlewareWithMaxAgeCachePolicy() async throws {
+            try await withApp { app in
+                let fileMiddleware = try FileMiddleware(
+                    bundle: .module, publicDirectory: "/",
+                    cachePolicy: .cache(
+                        upTo:
+                            .seconds(300)), etagCache: app.fileETagHashCache)
+                app.middleware.use(fileMiddleware)
 
-            try await app.testing { client in
-                let result = try await client.get("/foo.txt")
-                #expect(result.status == .ok)
-                try #expect(await result.body.requireString() == "bar\n")
-                #expect(result.headers[.cacheControl] == "public")
-                #expect(result.headers[.age] == "10")
+                try await app.testing { client in
+                    let result = try await client.get("/foo.txt")
+                    #expect(result.status == .ok)
+                    try #expect(await result.body.requireString() == "bar\n")
+                    #expect(result.headers[.cacheControl] == "max-age=300")
+                    #expect(result.headers[.age] == "0")
+                }
             }
         }
-    }
 
-    @Test("Test File Middleware From Bundle Subfolder")
-    func testFileMiddlewareFromBundleSubfolder() async throws {
-        try await withApp { app in
-            let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities", etagCache: app.fileETagHashCache)
-            app.middleware.use(fileMiddleware)
+        @Test("Test File Middleware With Custom Cache Policy")
+        func testFileMiddlewareWithCustomCachePolicy() async throws {
+            try await withApp { app in
+                let fileMiddleware = try FileMiddleware(
+                    bundle: .module, publicDirectory: "/", cachePolicy: .custom(cacheControlHeader: .init(isPublic: true), ageHeader: 10),
+                    etagCache: app.fileETagHashCache)
+                app.middleware.use(fileMiddleware)
 
-            try await app.testing { client in
-                let result = try await client.get("/index.html")
-                #expect(result.status == .ok)
-                try #expect(await result.body.requireString() == "<h1>Subdirectory Default</h1>\n")
+                try await app.testing { client in
+                    let result = try await client.get("/foo.txt")
+                    #expect(result.status == .ok)
+                    try #expect(await result.body.requireString() == "bar\n")
+                    #expect(result.headers[.cacheControl] == "public")
+                    #expect(result.headers[.age] == "10")
+                }
             }
         }
-    }
 
-    @Test("Test File Middleware From Bundle Invalid Public Directory")
-    func testFileMiddlewareFromBundleInvalidPublicDirectory() {
-        #expect(throws: FileMiddleware.BundleSetupError.publicDirectoryIsNotAFolder) {
-            try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder", etagCache: FileETagHashCache(capacity: 10))
+        @Test("Test File Middleware From Bundle Subfolder")
+        func testFileMiddlewareFromBundleSubfolder() async throws {
+            try await withApp { app in
+                let fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities", etagCache: app.fileETagHashCache)
+                app.middleware.use(fileMiddleware)
+
+                try await app.testing { client in
+                    let result = try await client.get("/index.html")
+                    #expect(result.status == .ok)
+                    try #expect(await result.body.requireString() == "<h1>Subdirectory Default</h1>\n")
+                }
+            }
         }
-    }
+
+        @Test("Test File Middleware From Bundle Invalid Public Directory")
+        func testFileMiddlewareFromBundleInvalidPublicDirectory() {
+            #expect(throws: FileMiddleware.BundleSetupError.publicDirectoryIsNotAFolder) {
+                try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder", etagCache: FileETagHashCache(capacity: 10))
+            }
+        }
     #endif
-    
+
     @Test("Test Metrics Middleware", .withMetrics(TestMetrics()))
     func testMetricsMiddleware() async throws {
         try await withApp { app in
@@ -333,7 +343,7 @@ struct MiddlewareTests {
             )
             #expect(httpServerActiveRequests.lastValue == 0.0)
 
-            let httpServerRequestBodySize =  try metrics.expectRecorder(
+            let httpServerRequestBodySize = try metrics.expectRecorder(
                 "http.server.request.body.size",
                 [
                     ("http.request.method", "GET"),
@@ -362,7 +372,7 @@ struct MiddlewareTests {
                 )
             }
 
-            let httpServerResponseBodySize =  try metrics.expectRecorder(
+            let httpServerResponseBodySize = try metrics.expectRecorder(
                 "http.server.response.body.size",
                 [
                     ("http.request.method", "GET"),
@@ -400,10 +410,12 @@ struct MiddlewareTests {
             app.middleware.use(MetricsMiddleware())
             // A stream that declares its length can be measured without reading it.
             app.get("streamMetrics") { _ in
-                Response(body: try .init(stream: { writer in
-                    try await writer.write("alpha")
-                    try await writer.write("beta")
-                }, count: 9))
+                Response(
+                    body: try .init(
+                        stream: { writer in
+                            try await writer.write("alpha")
+                            try await writer.write("beta")
+                        }, count: 9))
             }
 
             let status = try await app.testing { client in
@@ -434,10 +446,11 @@ struct MiddlewareTests {
             // No declared length, and the middleware must not read the body to find one - so there is
             // no size to record. This used to record the `-1` sentinel as if it were a byte count.
             app.get("streamMetrics") { _ in
-                Response(body: .init(stream: { writer in
-                    try await writer.write("alpha")
-                    try await writer.write("beta")
-                }))
+                Response(
+                    body: .init(stream: { writer in
+                        try await writer.write("alpha")
+                        try await writer.write("beta")
+                    }))
             }
 
             let (status, body) = try await app.testing { client in

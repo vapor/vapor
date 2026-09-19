@@ -1,7 +1,7 @@
-import VaporTesting
+import RoutingKit
 import Testing
 import Vapor
-import RoutingKit
+import VaporTesting
 
 @Suite("Endpoint Cache Tests")
 struct EndpointCacheTests {

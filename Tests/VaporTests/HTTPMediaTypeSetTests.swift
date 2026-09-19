@@ -1,13 +1,14 @@
-@testable import Vapor
-import Testing
 import HTTPTypes
+import Testing
+
+@testable import Vapor
 
 @Suite("HTTP Media Type Set Tests")
 struct HTTPMediaTypeSetTests {
     @Test("Test empty set")
     func testEmptySet() {
         let mediaSet = HTTPMediaTypeSet.none
-        
+
         #expect(mediaSet.contains(.any) == false)
         #expect(mediaSet.contains(.html) == false)
         #expect(mediaSet.contains(.multipart) == false)
@@ -20,12 +21,12 @@ struct HTTPMediaTypeSetTests {
     @Test("Test All Set")
     func testAllSet() {
         let mediaSet = HTTPMediaTypeSet.all
-        
+
         #expect(mediaSet.contains(.any))
         #expect(mediaSet.contains(.html))
         #expect(mediaSet.contains(.multipart))
 
-        #expect(mediaSet.mediaTypeLookup == ["*": ["*" : [.any]]])
+        #expect(mediaSet.mediaTypeLookup == ["*": ["*": [.any]]])
         #expect(mediaSet.allowsNone == false)
         #expect(mediaSet.allowsAny)
     }
@@ -33,21 +34,21 @@ struct HTTPMediaTypeSetTests {
     @Test("Test Initialisation")
     func testInitialization() {
         var mediaSet: HTTPMediaTypeSet
-        
+
         mediaSet = []
         #expect(mediaSet.mediaTypeLookup == [:])
 
         mediaSet = [.any]
-        #expect(mediaSet.mediaTypeLookup == ["*" : ["*" : [.any]]])
+        #expect(mediaSet.mediaTypeLookup == ["*": ["*": [.any]]])
 
         mediaSet = [.html]
-        #expect(mediaSet.mediaTypeLookup == ["text" : ["html" : [.html]]])
+        #expect(mediaSet.mediaTypeLookup == ["text": ["html": [.html]]])
 
         mediaSet = [.html, .css]
-        #expect(mediaSet.mediaTypeLookup == ["text" : ["css" : [.css], "html": [.html]]])
+        #expect(mediaSet.mediaTypeLookup == ["text": ["css": [.css], "html": [.html]]])
 
         mediaSet = [.html, .png]
-        #expect(mediaSet.mediaTypeLookup == ["text" : ["html": [.html]], "image" : ["png" : [.png]]])
+        #expect(mediaSet.mediaTypeLookup == ["text": ["html": [.html]], "image": ["png": [.png]]])
     }
 
     @Test("Test Contains")
@@ -61,7 +62,7 @@ struct HTTPMediaTypeSetTests {
             HTTPMediaType(type: "b", subType: "-", parameters: ["A": "a"]),
             HTTPMediaType(type: "b", subType: "-", parameters: ["B": "b"]),
         ]
-        
+
         #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "1")))
         #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "2")))
         #expect(mediaSet.contains(HTTPMediaType(type: "a", subType: "-", parameters: ["A": "a"])))

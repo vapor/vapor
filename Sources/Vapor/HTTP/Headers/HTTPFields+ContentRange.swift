@@ -1,11 +1,12 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-public import HTTPTypes
 import Algorithms
+public import HTTPTypes
 import Logging
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 extension HTTPFields {
 
@@ -48,7 +49,8 @@ extension HTTPFields {
             }
             self.ranges = rangeCandidates
             let lowerCasedUnit = directives[0].value.trimming(while: \.isWhitespace).lowercased()
-            self.unit = lowerCasedUnit == "bytes"
+            self.unit =
+                lowerCasedUnit == "bytes"
                 ? RangeUnit.bytes
                 : RangeUnit.custom(value: lowerCasedUnit)
         }
@@ -75,7 +77,8 @@ extension HTTPFields {
             guard let contentRange = HTTPFields.ContentRange.Value.from(responseStr: rangeStr) else {
                 return nil
             }
-            self.unit = lowerCasedUnit == "bytes"
+            self.unit =
+                lowerCasedUnit == "bytes"
                 ? RangeUnit.bytes
                 : RangeUnit.custom(value: lowerCasedUnit)
             self.range = contentRange
@@ -166,11 +169,11 @@ extension HTTPFields.Range {
             switch (count > 0 ? Int(ranges[0]) : nil, count > 1 ? Int(ranges[1]) : nil) {
             case (nil, nil):
                 return nil
-            case let (.some(start), nil):
+            case (.some(let start), nil):
                 return .start(value: start)
-            case let (nil, .some(tail)):
+            case (nil, .some(let tail)):
                 return .tail(value: tail)
-            case let (.some(start), .some(end)):
+            case (.some(let start), .some(let end)):
                 return .within(start: start, end: end)
             }
         }
@@ -193,7 +196,7 @@ extension HTTPFields.ContentRange {
     /// Represents the value of the `Content-Range` request header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
-    public enum Value : Equatable {
+    public enum Value: Equatable {
         case within(start: Int, end: Int)
         case withinWithLimit(start: Int, end: Int, limit: Int)
         case any(size: Int)
@@ -207,7 +210,7 @@ extension HTTPFields.ContentRange {
         /// - parameters:
         ///     - requestStr: String representing the response range
         /// - returns: A `HTTPFields.ContentRange.Value` if the `responseStr` is valid, `nil` otherwise.
-        public static func from<T>(responseStr: T) -> HTTPFields.ContentRange.Value? where T : StringProtocol {
+        public static func from<T>(responseStr: T) -> HTTPFields.ContentRange.Value? where T: StringProtocol {
             let ranges = responseStr.split(separator: "-", omittingEmptySubsequences: false)
                 .map { $0.trimming(while: \.isWhitespace) }
 
@@ -216,8 +219,9 @@ extension HTTPFields.ContentRange {
                 let anyRangeOfSize = ranges[0].split(separator: "/", omittingEmptySubsequences: false)
                 guard anyRangeOfSize.count == 2,
                     anyRangeOfSize[0] == "*",
-                    let size = Int(anyRangeOfSize[1]) else {
-                        return nil
+                    let size = Int(anyRangeOfSize[1])
+                else {
+                    return nil
                 }
                 return .any(size: size)
             case 2:

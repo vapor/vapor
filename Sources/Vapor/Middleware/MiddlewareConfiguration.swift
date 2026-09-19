@@ -6,12 +6,11 @@ public struct Middlewares: Sendable {
     /// The configured middleware.
     private var storage: [any Middleware]
 
-  
     public enum Position {
-      case beginning
-      case end
+        case beginning
+        case end
     }
-  
+
     /// Create a new, empty `Middleware`.
     public init() {
         self.storage = []
@@ -25,12 +24,12 @@ public struct Middlewares: Sendable {
     ///            Otherwise, use the type-based method and register the `Middleware`
     ///            using factory method to `Services`.
     public mutating func use(_ middleware: any Middleware, at position: Position = .end) {
-      switch position {
-      case .end:
-        self.storage.append(middleware)
-      case .beginning:
-        self.storage.insert(middleware, at: 0)
-      }
+        switch position {
+        case .end:
+            self.storage.append(middleware)
+        case .beginning:
+            self.storage.insert(middleware, at: 0)
+        }
     }
 
     /// Resolves the configured middleware for a given container

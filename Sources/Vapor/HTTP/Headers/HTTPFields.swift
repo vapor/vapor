@@ -16,7 +16,7 @@ extension HTTPFields {
             }
         }
     }
-    
+
     /// Returns a collection of `MediaTypePreference`s specified by this HTTP message's `"Accept"` header.
     ///
     /// You can access all `MediaType`s in this collection to check membership.

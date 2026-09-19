@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 public struct ValidationCharacterSet: Sendable {
@@ -61,8 +61,8 @@ extension ValidationCharacterSet {
     public static let alphanumerics = Self(description: "A-Z, a-z, 0-9") {
         switch $0.properties.generalCategory {
         case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter,
-             .nonspacingMark, .spacingMark, .enclosingMark,
-             .decimalNumber, .letterNumber, .otherNumber:
+            .nonspacingMark, .spacingMark, .enclosingMark,
+            .decimalNumber, .letterNumber, .otherNumber:
             true
         default:
             false
@@ -140,7 +140,7 @@ extension ValidatorResults {
             guard let idx = scalars.firstIndex(where: { !self.characterSet.contains($0) }) else {
                 return nil
             }
-            return idx ..< scalars.index(after: idx)
+            return idx..<scalars.index(after: idx)
         }
 
         public var invalidSlice: String? {
@@ -190,7 +190,7 @@ extension ValidatorResults {
                 guard let idx = scalars.firstIndex(where: { !self.characterSet.contains($0) }) else {
                     return nil
                 }
-                return (offset, idx ..< scalars.index(after: idx))
+                return (offset, idx..<scalars.index(after: idx))
             }
         }
 

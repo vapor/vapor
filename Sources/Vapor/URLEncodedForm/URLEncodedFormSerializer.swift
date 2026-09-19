@@ -45,9 +45,10 @@ extension Array where Element == any CodingKey {
         if count < 1 {
             return ""
         }
-        return try self[0].stringValue.urlEncoded(codingPath: self) + self[1...].map { (key: CodingKey) -> String in
-            try "[" + key.stringValue.urlEncoded(codingPath: self) + "]"
-        }.joined()
+        return try self[0].stringValue.urlEncoded(codingPath: self)
+            + self[1...].map { (key: CodingKey) -> String in
+                try "[" + key.stringValue.urlEncoded(codingPath: self) + "]"
+            }.joined()
     }
 }
 

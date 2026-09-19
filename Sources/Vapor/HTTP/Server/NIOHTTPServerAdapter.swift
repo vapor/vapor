@@ -1,8 +1,8 @@
+import Logging
 import NIOCore
 import NIOHTTPServer
 import Synchronization
 import SystemPackage
-import Logging
 
 /// Errors thrown by ``NIOHTTPServerAdapter``.
 enum NIOHTTPServerAdapterError: Error {
@@ -129,16 +129,17 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             case .http1_1:
                 supportedHTTPVersions.insert(.http1_1)
             case .http2(let config):
-                supportedHTTPVersions.insert(.http2(
-                    config: .init(
-                        maxFrameSize: config.maxFrameSize,
-                        targetWindowSize: config.targetWindowSize,
-                        maxConcurrentStreams: config.maxConcurrentStreams,
-                        gracefulShutdown: .init(
-                            maximumGracefulShutdownDuration: config.gracefulShutdown.maximumGracefulShutdownDuration
+                supportedHTTPVersions.insert(
+                    .http2(
+                        config: .init(
+                            maxFrameSize: config.maxFrameSize,
+                            targetWindowSize: config.targetWindowSize,
+                            maxConcurrentStreams: config.maxConcurrentStreams,
+                            gracefulShutdown: .init(
+                                maximumGracefulShutdownDuration: config.gracefulShutdown.maximumGracefulShutdownDuration
+                            )
                         )
-                    )
-                ))
+                    ))
             }
         }
 
@@ -147,8 +148,9 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         }
 
         // HTTP/2 is negotiated via ALPN, which requires TLS. Over plaintext, only HTTP/1.1 is allowed.
-        guard self.context.configuration.value.isTLSEnabled
-            || self.context.configuration.value.httpVersions == [.http1_1]
+        guard
+            self.context.configuration.value.isTLSEnabled
+                || self.context.configuration.value.httpVersions == [.http1_1]
         else {
             throw NIOHTTPServerAdapterError.http2RequiresTLS
         }

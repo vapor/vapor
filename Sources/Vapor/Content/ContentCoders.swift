@@ -1,9 +1,10 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
 public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 /// Conform a type to this protocol to make it usable for encoding data via Vapor's ``ContentConfiguration`` system.
 public protocol ContentEncoder: Sendable {
@@ -11,7 +12,8 @@ public protocol ContentEncoder: Sendable {
     /// ``Foundation/Data``, and any appropriate headers for the type of the content may be stored in the provided
     /// ``HTTPTypes/HTTPFields`` objects. The provided ``userInfo`` dictionary must be forwarded to the underlying
     /// ``Swift/Encoder`` used to perform the encoding operation.
-    func encode(_ encodable: some Encodable, to body: inout Data, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws
+    func encode(_ encodable: some Encodable, to body: inout Data, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable])
+        throws
 }
 
 /// Conform a type to this protocol to make it usable for decoding data via Vapor's ``ContentConfiguration`` system.
@@ -20,5 +22,5 @@ public protocol ContentDecoder: Sendable {
     /// optionally guided by the provided ``HTTPTypes/HTTPFields``. The provided ``userInfo`` dictionary must be
     /// forwarded to the underlying ``Swift/Decoder`` used to perform the decoding operation.
     func decode<D>(_ decodable: D.Type, from body: Data, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
-        where D: Decodable
+    where D: Decodable
 }

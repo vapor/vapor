@@ -1,11 +1,12 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-#warning("Make this internal")
 public import NIOCore
 import NIOFoundationEssentialsCompat
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
+#warning("Make this internal")
 
 /// Represents a single file.
 public struct File: Codable, Equatable, Sendable {

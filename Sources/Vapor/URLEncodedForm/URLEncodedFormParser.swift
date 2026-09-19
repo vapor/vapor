@@ -1,12 +1,12 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue` into
 internal struct URLEncodedFormParser {
-    init() { }
+    init() {}
 
     func parse(_ query: String) throws -> URLEncodedFormData {
         let plusDecodedQuery = query.replacing("+", with: "%20")
@@ -14,7 +14,7 @@ internal struct URLEncodedFormParser {
         for pair in plusDecodedQuery.split(separator: "&") {
             let kv = pair.split(
                 separator: "=",
-                maxSplits: 1, // max 1, `foo=a=b` should be `"foo": "a=b"`
+                maxSplits: 1,  // max 1, `foo=a=b` should be `"foo": "a=b"`
                 omittingEmptySubsequences: false
             )
             switch kv.count {

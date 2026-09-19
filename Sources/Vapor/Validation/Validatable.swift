@@ -16,23 +16,23 @@ extension Validatable {
     public static func validate(content request: Request) async throws {
         try await self.validations().validate(request: request).assert()
     }
-    
+
     public static func validate(query request: Request) throws {
         try self.validations().validate(query: request.url, contentConfiguration: request.contentConfiguration).assert()
     }
-    
+
     public static func validate(json: String, contentConfiguration: ContentConfiguration = .default()) throws {
         try self.validations().validate(json: json, contentConfiguration: contentConfiguration).assert()
     }
-    
+
     public static func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws {
         try self.validations().validate(query: query, contentConfiguration: contentConfiguration).assert()
     }
-    
+
     public static func validate(_ decoder: any Decoder) throws {
         try self.validations().validate(decoder).assert()
     }
-    
+
     public static func validations() -> Validations {
         var validations = Validations()
         self.validations(&validations)

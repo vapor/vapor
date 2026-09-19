@@ -1,6 +1,6 @@
-public import SwiftSyntaxMacros
-public import SwiftSyntax
 import HTTPTypes
+public import SwiftSyntax
+public import SwiftSyntaxMacros
 
 public struct HTTPMethodMacro: PeerMacro {
     public static func expansion(
@@ -35,7 +35,7 @@ public struct HTTPMethodMacro: PeerMacro {
             throw MacroError.invalidHTTPMethod(methodExpr.description)
         }
 
-        return try HTTPMethodMacroUtilities.expansion(of: node, providingPeersOf: declaration, in: context, for: httpMethod, customHTTPMethod: true)
+        return try HTTPMethodMacroUtilities.expansion(
+            of: node, providingPeersOf: declaration, in: context, for: httpMethod, customHTTPMethod: true)
     }
 }
-

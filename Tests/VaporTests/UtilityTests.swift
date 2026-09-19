@@ -1,5 +1,6 @@
-@testable import Vapor
 import Testing
+
+@testable import Vapor
 
 @Suite("Utility Tests")
 struct UtilityTests {

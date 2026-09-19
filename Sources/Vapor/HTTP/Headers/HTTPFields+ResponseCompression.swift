@@ -1,9 +1,10 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 extension HTTPFields {
     /// A marker header internal to vapor that explicitely allows or disallows response compression.
@@ -45,7 +46,7 @@ extension HTTPFields {
 
     /// A marker header internal to vapor that explicitly allows or disallows response compression.
     public var responseCompression: ResponseCompression {
-        get { ResponseCompression(string: self[values: .xVaporResponseCompression].last.map { String ($0) }) }
+        get { ResponseCompression(string: self[values: .xVaporResponseCompression].last.map { String($0) }) }
         set {
             if let newValue = newValue.rawValue {
                 self[.xVaporResponseCompression] = newValue

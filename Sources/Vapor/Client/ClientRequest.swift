@@ -1,9 +1,10 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
 public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 public struct ClientRequest: Sendable {
     /// The body of a request the client is about to send.
@@ -35,7 +36,7 @@ public struct ClientRequest: Sendable {
         headers: HTTPFields = [:],
         body: Body = .empty,
         timeout: Duration? = nil,
-        maxResponseBodySize: Int = 10 * 1024 * 1024, // Default to 10 MB
+        maxResponseBodySize: Int = 10 * 1024 * 1024,  // Default to 10 MB
         contentConfiguration: ContentConfiguration = .default()
     ) {
         self.method = method
@@ -54,8 +55,7 @@ extension ClientRequest {
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
-            where D: Decodable
-        {
+        where D: Decodable {
             return try decoder.decode(D.self, from: self.url)
         }
 
@@ -104,7 +104,8 @@ extension ClientRequest {
         get {
             // `data` is `nil` for a stream nothing has collected, which for a request being built
             // means the caller supplied one; encoding replaces it either way.
-            return _ContentContainer(body: self.body.data, headers: self.headers, contentConfiguration: self.contentConfiguration) }
+            return _ContentContainer(body: self.body.data, headers: self.headers, contentConfiguration: self.contentConfiguration)
+        }
         set {
             let container = (newValue as! _ContentContainer)
             self.body = container.body.map { Body(data: $0) } ?? .empty

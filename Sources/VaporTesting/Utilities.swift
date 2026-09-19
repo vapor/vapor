@@ -1,11 +1,12 @@
-public import Vapor
 import HTTPTypes
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 public import Testing
+public import Vapor
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 extension Response.Body {
     public func requireString(max: BodySizeLimit = .default) async throws -> String {
@@ -21,8 +22,7 @@ public func expectJSONEquals<T>(
     _ test: T,
     sourceLocation: SourceLocation = #_sourceLocation
 )
-where T: Codable & Equatable
-{
+where T: Codable & Equatable {
     guard let data = data else {
         Issue.record("nil does not equal \(test)", sourceLocation: sourceLocation)
         return

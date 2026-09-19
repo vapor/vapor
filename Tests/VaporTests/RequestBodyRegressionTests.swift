@@ -1,19 +1,20 @@
-import Vapor
-import VaporTesting
-import Testing
+import AsyncHTTPClient
+import HTTPTypes
+import InMemoryLogging
+import Logging
 import NIOCore
 import NIOHTTP1
 import NIOPosix
-import AsyncHTTPClient
-import HTTPTypes
 import RoutingKit
 import Synchronization
-import Logging
-import InMemoryLogging
+import Testing
+import Vapor
+import VaporTesting
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// Regressions for reported request-body bugs, one test per issue.
@@ -28,8 +29,7 @@ struct RequestBodyRegressionTests {
                 let outcomes = await withTaskGroup(of: Result<Int, any Error>.self) { group in
                     for _ in 0..<2 {
                         group.addTask {
-                            do { return .success(try await req.body.data()?.count ?? -1) }
-                            catch { return .failure(error) }
+                            do { return .success(try await req.body.data()?.count ?? -1) } catch { return .failure(error) }
                         }
                     }
                     return await group.reduce(into: [Result<Int, any Error>]()) { $0.append($1) }
@@ -119,7 +119,9 @@ struct RequestBodyRegressionTests {
         }
     }
 
-    @Test("Chunks are delivered one at a time, never overlapping", .bug("https://github.com/vapor/vapor/issues/2564"), .bug("https://github.com/vapor/vapor/issues/2565"))
+    @Test(
+        "Chunks are delivered one at a time, never overlapping", .bug("https://github.com/vapor/vapor/issues/2564"),
+        .bug("https://github.com/vapor/vapor/issues/2565"))
     func chunksNeverOverlap() async throws {
         try await withApp { app in
             app.on(.post, "sequence") { req -> String in
@@ -239,8 +241,9 @@ struct RequestBodyRegressionTests {
                         }
                     }
                 try await channel.executeThenClose { _, outbound in
-                    try await outbound.write(ByteBuffer(
-                        string: "POST /cut HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\n\r\n0123456789"))
+                    try await outbound.write(
+                        ByteBuffer(
+                            string: "POST /cut HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\n\r\n0123456789"))
                     await reading.wait()
                 }
                 // The handler notices the hang-up on its own schedule. Wait for its verdict while
@@ -254,8 +257,9 @@ struct RequestBodyRegressionTests {
     /// A client that promises a body and hangs up part-way surfaced NIO's parser error to the error
     /// middleware, which reported it as a warning. Nothing the application can do about a truncated
     /// upload, and any client can send one, so it now reports at debug.
-    @Test("A truncated upload reports at debug, not as a warning",
-          .bug("https://github.com/vapor/vapor/issues/3203"), .timeLimit(.minutes(1)))
+    @Test(
+        "A truncated upload reports at debug, not as a warning",
+        .bug("https://github.com/vapor/vapor/issues/3203"), .timeLimit(.minutes(1)))
     func truncatedUploadReportsAtDebug() async throws {
         /// Sits outside the error middleware, so reaching it means the error has been reported.
         struct ReportedMiddleware: Middleware {
@@ -294,8 +298,9 @@ struct RequestBodyRegressionTests {
                         }
                     }
                 try await channel.executeThenClose { _, outbound in
-                    try await outbound.write(ByteBuffer(
-                        string: "POST /cut HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\n\r\nthis is just 21 bytes"))
+                    try await outbound.write(
+                        ByteBuffer(
+                            string: "POST /cut HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\n\r\nthis is just 21 bytes"))
                     await reading.wait()
                 }
                 await reported.wait()

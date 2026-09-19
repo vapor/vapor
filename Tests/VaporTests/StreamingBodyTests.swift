@@ -1,23 +1,23 @@
-import Vapor
-import Crypto
-import VaporTesting
 import AsyncHTTPClient
-import NIOCore
-import Synchronization
-import NIOPosix
-import NIOHTTP1
+import Crypto
 import HTTPTypes
-import ServiceLifecycle
-import Logging
 import InMemoryLogging
-import Testing
+import Logging
+import NIOCore
+import NIOHTTP1
+import NIOPosix
 import RoutingKit
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
+import ServiceLifecycle
+import Synchronization
+import Testing
+import Vapor
+import VaporTesting
 
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("Streaming Body Tests")
 struct StreamingBodyTests {
@@ -42,9 +42,11 @@ struct StreamingBodyTests {
 
         try await withApp(logger: logger) { app in
             app.get("short-stream") { _ -> Response in
-                Response(body: try .init(stream: { writer in
-                    try await writer.write(Array("short".utf8))
-                }, count: 1000))
+                Response(
+                    body: try .init(
+                        stream: { writer in
+                            try await writer.write(Array("short".utf8))
+                        }, count: 1000))
             }
             app.get("ok") { _ in "ok" }
 
@@ -87,9 +89,10 @@ struct StreamingBodyTests {
             app.get("buffered") { _ in "Hello, buffered, world!" }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -115,17 +118,20 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("stream") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write("Hello, ")
-                    try await writer.write("streaming, ")
-                    try await writer.write("world!")
-                }))
+                Response(
+                    status: .ok,
+                    body: .init(stream: { writer in
+                        try await writer.write("Hello, ")
+                        try await writer.write("streaming, ")
+                        try await writer.write("world!")
+                    }))
             }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -155,9 +161,10 @@ struct StreamingBodyTests {
             }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -188,9 +195,10 @@ struct StreamingBodyTests {
             }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -216,17 +224,20 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("many") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
-                    for _ in 0..<chunkCount {
-                        try await writer.write("x")
-                    }
-                }))
+                Response(
+                    status: .ok,
+                    body: .init(stream: { writer in
+                        for _ in 0..<chunkCount {
+                            try await writer.write("x")
+                        }
+                    }))
             }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -254,17 +265,20 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("error-mid-stream") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write("partial")
-                    throw MidStreamError()
-                }))
+                Response(
+                    status: .ok,
+                    body: .init(stream: { writer in
+                        try await writer.write("partial")
+                        throw MidStreamError()
+                    }))
             }
             app.get("ok") { _ in "ok" }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -286,10 +300,10 @@ struct StreamingBodyTests {
                     do {
                         _ = try await resp.body.collect(upTo: 1 << 20)
                     } catch {
-                        sawFailureSignal = true // truncated/incomplete body surfaced as an error
+                        sawFailureSignal = true  // truncated/incomplete body surfaced as an error
                     }
                 } catch {
-                    sawFailureSignal = true // request failed outright
+                    sawFailureSignal = true  // request failed outright
                 }
                 #expect(sawFailureSignal, "client must observe truncation/failure when the stream errors mid-body")
 
@@ -315,17 +329,21 @@ struct StreamingBodyTests {
             // never concluded and the client can never receive the full 8-byte body — it either
             // errors on the truncated response or sees fewer bytes than advertised.
             app.get("abort") { _ -> Response in
-                Response(status: .ok, body: try .init(stream: { writer in
-                    try await writer.write("AAAA")
-                    throw MidStreamError()
-                }, count: 8))
+                Response(
+                    status: .ok,
+                    body: try .init(
+                        stream: { writer in
+                            try await writer.write("AAAA")
+                            throw MidStreamError()
+                        }, count: 8))
             }
             app.get("ok") { _ in "ok" }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -364,18 +382,21 @@ struct StreamingBodyTests {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("firehose") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
-                    for _ in 0..<100_000 {
-                        try await writer.write("x")
-                    }
-                }))
+                Response(
+                    status: .ok,
+                    body: .init(stream: { writer in
+                        for _ in 0..<100_000 {
+                            try await writer.write("x")
+                        }
+                    }))
             }
             app.get("ok") { _ in "ok" }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -405,8 +426,9 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Handlers whose client hung up before the response complete, and the server keeps serving",
-          .timeLimit(.minutes(1)), .bug("https://github.com/vapor/vapor/pull/2905"))
+    @Test(
+        "Handlers whose client hung up before the response complete, and the server keeps serving",
+        .timeLimit(.minutes(1)), .bug("https://github.com/vapor/vapor/pull/2905"))
     func testAbandonedRequestsStillCompleteTheirHandlers() async throws {
         // The Vapor 4 shape of this: a client sends a request and closes the connection before the
         // handler has built its `Response`. The response was discarded, and its body-stream callback
@@ -423,16 +445,21 @@ struct StreamingBodyTests {
             app.get("abandon") { _ -> Response in
                 entered.withLock { $0 += 1 }
                 defer {
-                    if completed.withLock({ $0 += 1; return $0 }) == numberOfClients {
+                    if completed.withLock({
+                        $0 += 1
+                        return $0
+                    }) == numberOfClients {
                         allCompleted.reach()
                     }
                 }
                 // Long enough for the client's close to reach the server before the response exists,
                 // which is the ordering the original bug needed.
                 try await Task.sleep(for: .milliseconds(10))
-                return Response(status: .ok, body: .init(stream: { writer in
-                    try await writer.write("gone")
-                }))
+                return Response(
+                    status: .ok,
+                    body: .init(stream: { writer in
+                        try await writer.write("gone")
+                    }))
             }
             app.get("ok") { _ in "ok" }
 
@@ -472,34 +499,37 @@ struct StreamingBodyTests {
         // once the socket buffers fill. It has to clear the several MiB the writer accepts past
         // the channel's watermark, which varies with how promptly the event loop is scheduled,
         // so the cap is set well clear of that; all it does is bound what a broken run buffers.
-        let maxChunks = 8192 // 128 MiB
+        let maxChunks = 8192  // 128 MiB
         let produced = Mutex(0)
 
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("firehose") { _ -> Response in
-                Response(status: .ok, body: .init(stream: { writer in
-                    let chunk = [UInt8](repeating: 0x41, count: chunkSize)
-                    for _ in 0..<maxChunks {
-                        try await writer.write(chunk)
-                        produced.withLock { $0 += 1 }
-                        // The writer hands each chunk to the connection's event loop and only
-                        // hears that the channel has filled up once that loop gets round to it.
-                        // Until then the chunks sit in the loop's queue, so a producer running
-                        // flat out while the loop is starved — the loops are shared with every
-                        // other test in the process — could push the whole cap into memory before
-                        // the first writability change was ever seen, which read as "produced
-                        // 8192/8192". Pacing the producer against the loops keeps it at most one
-                        // chunk ahead of what the channel has accounted for.
-                        try await eventLoopsCaughtUp()
-                    }
-                }))
+                Response(
+                    status: .ok,
+                    body: .init(stream: { writer in
+                        let chunk = [UInt8](repeating: 0x41, count: chunkSize)
+                        for _ in 0..<maxChunks {
+                            try await writer.write(chunk)
+                            produced.withLock { $0 += 1 }
+                            // The writer hands each chunk to the connection's event loop and only
+                            // hears that the channel has filled up once that loop gets round to it.
+                            // Until then the chunks sit in the loop's queue, so a producer running
+                            // flat out while the loop is starved — the loops are shared with every
+                            // other test in the process — could push the whole cap into memory before
+                            // the first writability change was ever seen, which read as "produced
+                            // 8192/8192". Pacing the producer against the loops keeps it at most one
+                            // chunk ahead of what the channel has accounted for.
+                            try await eventLoopsCaughtUp()
+                        }
+                    }))
             }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -524,8 +554,9 @@ struct StreamingBodyTests {
                     }
 
                 try await channel.executeThenClose { _, outbound in
-                    try await outbound.write(ByteBuffer(
-                        string: "GET /firehose HTTP/1.1\r\nHost: localhost\r\n\r\n"))
+                    try await outbound.write(
+                        ByteBuffer(
+                            string: "GET /firehose HTTP/1.1\r\nHost: localhost\r\n\r\n"))
 
                     // Nothing reads the socket, so the kernel receive buffer fills, then the send
                     // side, and the producer's writes must suspend. Sample until the count holds
@@ -565,23 +596,28 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server survives a stream that writes fewer bytes than its declared length", .timeLimit(.minutes(1)),
-          .bug("https://github.com/swift-server/swift-http-server/issues/116"))
+    @Test(
+        "Server survives a stream that writes fewer bytes than its declared length", .timeLimit(.minutes(1)),
+        .bug("https://github.com/swift-server/swift-http-server/issues/116"))
     func testBadStreamLengthDoesNotBreakServer() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             // Declares `Content-Length: 2` (via `count`) but only writes a single byte.
             app.get("bad-length") { _ -> Response in
-                Response(status: .ok, body: try .init(stream: { writer in
-                    try await writer.write("a")
-                }, count: 2))
+                Response(
+                    status: .ok,
+                    body: try .init(
+                        stream: { writer in
+                            try await writer.write("a")
+                        }, count: 2))
             }
             app.get("ok") { _ in "ok" }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -615,8 +651,9 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("A middleware that reads the request body does not break a streaming response",
-          .bug("https://github.com/vapor/vapor/issues/2933"))
+    @Test(
+        "A middleware that reads the request body does not break a streaming response",
+        .bug("https://github.com/vapor/vapor/issues/2933"))
     func testMiddlewareReadingBodyWithStreamingResponse() async throws {
         // The repro from the issue: a middleware peeks at the request body, and the route echoes
         // that body back as a streaming response. The old response-body stream signalled its own
@@ -642,12 +679,14 @@ struct StreamingBodyTests {
             app.on(.post, "echo") { request -> Response in
                 // The route reads the same body the middleware already read, and streams it back.
                 let payload = request.body.data ?? Data()
-                var response = Response(body: try .init(stream: { writer in
-                    // Several chunks, so the response really is streamed rather than written once.
-                    for start in stride(from: 0, to: payload.count, by: 4096) {
-                        try await writer.write(payload[start..<min(start + 4096, payload.count)])
-                    }
-                }, count: payload.count))
+                var response = Response(
+                    body: try .init(
+                        stream: { writer in
+                            // Several chunks, so the response really is streamed rather than written once.
+                            for start in stride(from: 0, to: payload.count, by: 4096) {
+                                try await writer.write(payload[start..<min(start + 4096, payload.count)])
+                            }
+                        }, count: payload.count))
                 response.headers.contentType = .binary
                 return response
             }
@@ -830,9 +869,11 @@ struct StreamingBodyTests {
         continuation.yield("beta")
         continuation.finish()
 
-        var response = Response(status: .ok, body: .init(stream: { writer in
-            for await chunk in chunks { try await writer.write(chunk) }
-        }))
+        var response = Response(
+            status: .ok,
+            body: .init(stream: { writer in
+                for await chunk in chunks { try await writer.write(chunk) }
+            }))
         let collected = try await response.body.collect()
         #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "alphabeta")
 
@@ -926,10 +967,11 @@ struct StreamingBodyTests {
     @Test("collect(max:) rejects a declared length over the limit without running the stream")
     func testCollectMaxRejectsDeclaredLengthBeforeRunning() async throws {
         let ran = Mutex(false)
-        var body = try Response.Body(stream: { writer in
-            ran.withLock { $0 = true }
-            try await writer.write(String(repeating: "x", count: 1000))
-        }, count: 1000)
+        var body = try Response.Body(
+            stream: { writer in
+                ran.withLock { $0 = true }
+                try await writer.write(String(repeating: "x", count: 1000))
+            }, count: 1000)
         await #expect(throws: Abort.self) { try await body.collect(max: 256) }
         #expect(ran.withLock { $0 } == false)
     }
@@ -976,9 +1018,11 @@ struct StreamingBodyTests {
                 continuation.yield("world")
                 continuation.finish()
 
-                let response = Response(status: .ok, body: .init(stream: { writer in
-                    for await chunk in chunks { try await writer.write(chunk) }
-                }))
+                let response = Response(
+                    status: .ok,
+                    body: .init(stream: { writer in
+                        for await chunk in chunks { try await writer.write(chunk) }
+                    }))
                 var copy = response.body
                 _ = try await copy.collect()
                 return response
@@ -1046,10 +1090,11 @@ struct StreamingBodyTests {
     func testTesterResponseBodyIsLazy() async throws {
         try await withApp { app in
             app.get("stream") { _ in
-                Response(body: .init(stream: { writer in
-                    try await writer.write("alpha")
-                    try await writer.write("beta")
-                }))
+                Response(
+                    body: .init(stream: { writer in
+                        try await writer.write("alpha")
+                        try await writer.write("beta")
+                    }))
             }
 
             try await app.testing(.running) { client in
@@ -1080,7 +1125,7 @@ struct StreamingBodyTests {
             _ = try Response.Body(stream: { _ in }, count: 0)
             _ = try Response.Body(stream: { _ in }, count: nil)
         }
-        _ = Response.Body(stream: { _ in })   // the convenience cannot fail, so it does not throw
+        _ = Response.Body(stream: { _ in })  // the convenience cannot fail, so it does not throw
 
         // It surfaces as a 500 with a diagnosable reason rather than an opaque failure.
         let error = Response.Body.NegativeCountError(count: -5)
@@ -1099,8 +1144,9 @@ struct StreamingBodyTests {
         #expect(collected.map { String(decoding: $0, as: UTF8.self) } == "done")
     }
 
-    @Test("Server does not write a body for a status that cannot carry one", .timeLimit(.minutes(1)),
-          .bug("https://github.com/swift-server/swift-http-server/issues/118"))
+    @Test(
+        "Server does not write a body for a status that cannot carry one", .timeLimit(.minutes(1)),
+        .bug("https://github.com/swift-server/swift-http-server/issues/118"))
     func testBodylessStatusDoesNotWriteBody() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -1113,9 +1159,10 @@ struct StreamingBodyTests {
             }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -1137,17 +1184,19 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server closes the connection when the client asks for Connection: close", .timeLimit(.minutes(1)),
-          .bug("https://github.com/swift-server/swift-http-server/issues/119"))
+    @Test(
+        "Server closes the connection when the client asks for Connection: close", .timeLimit(.minutes(1)),
+        .bug("https://github.com/swift-server/swift-http-server/issues/119"))
     func testConnectionCloseIsHonoured() async throws {
         try await withApp { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             app.get("hello") { _ in "hi" }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -1164,7 +1213,9 @@ struct StreamingBodyTests {
                 // RFC 9112 § 9.6: a server that receives `Connection: close` must close the
                 // connection once the response is sent, and should echo the header back. Today the
                 // connection is left open until the 30s read-header timeout reaps it.
-                #warning("swift-http-server#119: the request's `Connection` header is never read, so `Connection: close` is ignored — drop this `withKnownIssue` when the upstream fix lands")
+                #warning(
+                    "swift-http-server#119: the request's `Connection` header is never read, so `Connection: close` is ignored — drop this `withKnownIssue` when the upstream fix lands"
+                )
                 withKnownIssue("the connection is left open after the response") {
                     #expect(exchange.serverClosed)
                     #expect(exchange.bytes.lowercased().contains("connection: close"))
@@ -1176,8 +1227,9 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Server survives a client aborting mid-file-stream", .timeLimit(.minutes(1)),
-          .bug("https://github.com/swift-server/swift-http-server/issues/53"))
+    @Test(
+        "Server survives a client aborting mid-file-stream", .timeLimit(.minutes(1)),
+        .bug("https://github.com/swift-server/swift-http-server/issues/53"))
     func testClientAbortMidFileStreamDoesNotBreakServer() async throws {
         // Big enough that the server is still reading when the client gives up: the transport
         // can't have buffered the whole thing, so the body closure is mid-read when it's cancelled.
@@ -1191,9 +1243,10 @@ struct StreamingBodyTests {
             app.get("ok") { _ in "ok" }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -1235,9 +1288,10 @@ struct StreamingBodyTests {
             app.get("ok") { _ in "ok" }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -1259,8 +1313,9 @@ struct StreamingBodyTests {
         }
     }
 
-    @Test("Response body stream completion runs once when the client disconnects",
-          .timeLimit(.minutes(1)), .bug("https://github.com/vapor/vapor/issues/3002"))
+    @Test(
+        "Response body stream completion runs once when the client disconnects",
+        .timeLimit(.minutes(1)), .bug("https://github.com/vapor/vapor/issues/3002"))
     func testStreamCompletionRunsOnceOnClientDisconnect() async throws {
         // The Vapor 4 shape of this bug: the body-stream closure wrote `.end`/`.error` itself while
         // the server concluded the same response, so a connection failure ran the completion twice.
@@ -1281,9 +1336,10 @@ struct StreamingBodyTests {
             }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()

@@ -68,7 +68,7 @@ package final class ChunkHandoff<Chunk: Sendable>: Sendable {
                 consumer.resume(returning: chunk)
                 producer.resume()
             case .park:
-                break // resumed by `next()` when the chunk is taken
+                break  // resumed by `next()` when the chunk is taken
             case .stop(let error):
                 producer.resume(throwing: error)
             }
@@ -115,7 +115,7 @@ package final class ChunkHandoff<Chunk: Sendable>: Sendable {
                 consumer.resume(returning: chunk)
                 producer?.resume()
             case .park:
-                break // resumed by `send(_:)` or `finish(throwing:)`
+                break  // resumed by `send(_:)` or `finish(throwing:)`
             case .end:
                 consumer.resume(returning: nil)
             case .fail(let error):

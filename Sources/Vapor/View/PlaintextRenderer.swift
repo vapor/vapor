@@ -1,11 +1,12 @@
-import NIOCore
 import Logging
-import _NIOFileSystem
+import NIOCore
 import NIOFoundationEssentialsCompat
+import _NIOFileSystem
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// A ``ViewRenderer`` that serves views from files on disk, without any templating.
@@ -13,7 +14,7 @@ import Foundation
 /// `PlaintextRenderer` reads the requested file from its configured views directory and returns
 /// its raw contents as a ``View``. The `context` passed to ``render(_:_:)`` is ignored as no
 /// template substitution is performed.
-/// 
+///
 /// This renderer is mainly used for testing. Its use in production is
 /// discouraged. Consider using [Leaf] if you need a real templating engine.
 ///
@@ -47,7 +48,7 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     ///
     /// If `name` is an absolute path (begins with `/`), it is used as-is; otherwise it is resolved
     /// against the renderer's views directory. The `context` is ignored, as no templating is applied.
-    /// 
+    ///
     /// > Warning: The name of the template is not sanitized, so you should ensure that you trust any
     /// > input passed to it, or sanitize it to prevent directory traversal attacks
     ///
@@ -57,11 +58,12 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     ///   - context: The rendering context. Ignored by this renderer.
     /// - Returns: A ``View`` containing the raw file contents.
     /// - Throws: An error if the file cannot be read, or if its size exceeds 32 megabytes.
-    public func render<E>(_ name: String, _ context: E) async throws -> View where E : Encodable {
+    public func render<E>(_ name: String, _ context: E) async throws -> View where E: Encodable {
         Logger.current.trace(
             "Rendering plaintext view",
             metadata: ["name": "\(name)", "context": "\(context)"])
-        let path = name.hasPrefix("/")
+        let path =
+            name.hasPrefix("/")
             ? name
             : self.viewsDirectory + name
         return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in

@@ -1,6 +1,6 @@
+import HTTPTypes
 public import SwiftSyntax
 public import SwiftSyntaxMacros
-import HTTPTypes
 
 public struct HTTPPutMacro: PeerMacro {
     public static func expansion(

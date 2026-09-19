@@ -1,11 +1,12 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import Synchronization
 import BasicContainers
 import NIOHTTPServer
+import Synchronization
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 /// Holds the server's move-only, non-`Sendable` request `Reader` behind a `Mutex`, so it can live in `Request
 ///

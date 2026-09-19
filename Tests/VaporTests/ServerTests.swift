@@ -1,23 +1,24 @@
-import NIOHTTP1
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import Vapor
 import AsyncHTTPClient
-import NIOCore
-import Synchronization
-import HTTPTypes
 import Atomics
-import ServiceLifecycle
+import HTTPTypes
 import Logging
+import NIOCore
+import NIOHTTP1
+import NIOHTTPTypesHTTP1
 import RoutingKit
+import ServiceLifecycle
+import SwiftASN1
+import Synchronization
 import Testing
+import Vapor
 import VaporTesting
 import X509
-import SwiftASN1
-import NIOHTTPTypesHTTP1
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("Server Tests")
 struct ServerTests {
@@ -506,9 +507,10 @@ struct ServerTests {
                 app.get("foo") { _ in "bar" }
 
                 try await app.boot()
-                let group = ServiceGroup(configuration: .init(
-                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                    logger: Logger.current))
+                let group = ServiceGroup(
+                    configuration: .init(
+                        services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                        logger: Logger.current))
                 try await withThrowingTaskGroup(of: Void.self) { tg in
                     tg.addTask { try await group.run() }
 
@@ -554,10 +556,14 @@ struct ServerTests {
 
         @Test("addressInUse names the address, bracketing IPv6 hosts")
         func testAddressInUseDescription() {
-            #expect(ServerError.addressInUse(host: "127.0.0.1", port: 8080).description
-                == "Cannot start the server: 127.0.0.1:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it.")
-            #expect(ServerError.addressInUse(host: "::1", port: 8080).description
-                == "Cannot start the server: [::1]:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it.")
+            #expect(
+                ServerError.addressInUse(host: "127.0.0.1", port: 8080).description
+                    == "Cannot start the server: 127.0.0.1:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it."
+            )
+            #expect(
+                ServerError.addressInUse(host: "::1", port: 8080).description
+                    == "Cannot start the server: [::1]:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it."
+            )
         }
 
         /// NIOHTTPServer cannot bind a unix domain socket yet: `NIOHTTPServerAdapter` logs a warning and
@@ -566,8 +572,9 @@ struct ServerTests {
         static let unixDomainSocketsUnsupported: Comment =
             "NIOHTTPServer has no unix domain socket support; the adapter falls back to 127.0.0.1:8080"
 
-        @Test("Server serves over a unix domain socket",
-              .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
+        @Test(
+            "Server serves over a unix domain socket",
+            .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
         func testStartWithValidSocketFile() async throws {
             try await withApp { app in
                 let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
@@ -589,8 +596,9 @@ struct ServerTests {
             }
         }
 
-        @Test("Server startup fails when the socket path is a directory",
-              .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
+        @Test(
+            "Server startup fails when the socket path is a directory",
+            .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
         func testStartWithUnsupportedSocketFile() async throws {
             try await withApp { app in
                 app.serverConfiguration.address = .unixDomainSocket(path: "/tmp")
@@ -601,8 +609,9 @@ struct ServerTests {
             }
         }
 
-        @Test("Server startup fails when the socket path's directory does not exist",
-              .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
+        @Test(
+            "Server startup fails when the socket path's directory does not exist",
+            .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
         func testStartWithInvalidSocketFilePath() async throws {
             try await withApp { app in
                 app.serverConfiguration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
@@ -618,9 +627,10 @@ struct ServerTests {
             try await withApp { app in
                 app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
                 try await app.boot()
-                let group = ServiceGroup(configuration: .init(
-                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                    logger: Logger.current))
+                let group = ServiceGroup(
+                    configuration: .init(
+                        services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                        logger: Logger.current))
                 try await withThrowingTaskGroup(of: Void.self) { tg in
                     tg.addTask { try await group.run() }
 
@@ -646,9 +656,10 @@ struct ServerTests {
             }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -692,9 +703,10 @@ struct ServerTests {
             app.get("ok") { _ in "ok" }
 
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask {
                     try await group.run()
@@ -728,9 +740,10 @@ struct ServerTests {
             app.post("echo") { req -> Response in
                 // Bodies are lazy, so ask for it.
                 let body = try await req.body.collect() ?? Data()
-                return Response(body: .init(stream: { writer in
-                    try await writer.write(body)
-                }))
+                return Response(
+                    body: .init(stream: { writer in
+                        try await writer.write(body)
+                    }))
             }
 
             try await withRunningServer(app) { port in
@@ -875,7 +888,7 @@ struct ServerTests {
 
     @Test("Test Missing Body", .bug("https://github.com/vapor/vapor/issues/1786"))
     func testMissingBody() async throws {
-        struct User: Content { }
+        struct User: Content {}
 
         try await withApp { app in
             app.get("user") { req -> User in
@@ -898,9 +911,10 @@ struct ServerTests {
 
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
             try await app.boot()
-            let group = ServiceGroup(configuration: .init(
-                services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
-                logger: Logger.current))
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
             try await withThrowingTaskGroup(of: Void.self) { tg in
                 tg.addTask { try await group.run() }
                 let port = try #require(try await app.server.listeningAddress.port)
@@ -951,8 +965,8 @@ final class CustomServer: Server, Sendable {
     }
 }
 
-private extension ByteBuffer {
-    init?(base64String: String) {
+extension ByteBuffer {
+    fileprivate init?(base64String: String) {
         guard let decoded = Data(base64Encoded: base64String) else { return nil }
         var buffer = ByteBufferAllocator().buffer(capacity: decoded.count)
         buffer.writeBytes(decoded)
