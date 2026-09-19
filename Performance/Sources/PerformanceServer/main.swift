@@ -48,9 +48,11 @@ struct DirectResponder: Responder {
 }
 
 let mode = ProcessInfo.processInfo.environment["PERF_MODE"] ?? "default"
-let app = try await Application(.production, services: .init(
-    responder: mode == "direct" ? .provided(DirectResponder()) : .default
-))
+let app = try await Application(
+    .production,
+    services: .init(
+        responder: mode == "direct" ? .provided(DirectResponder()) : .default
+    ))
 if mode == "no-middleware" {
     app.middleware = .init()
 }
@@ -61,6 +63,18 @@ app.get("bench", "tiny") { _ in "OK" }
 app.get("bench", "small") { _ in small }
 app.get("bench", "large") { _ in large }
 app.get("bench", "json") { _ in json }
+
+// Routing diagnostics have identical registration and response work in all trie candidates.
+app.get("bench", "routing-parameter", ":id") { req in try req.parameters.require("id") }
+app.get("bench", "routing-catchall", "**") { req in req.parameters.getCatchall().joined(separator: "/") }
+app.get("bench", "routing-shadowed", "**") { _ in "fallback" }
+app.get("bench", "routing-shadowed", "fixed", "end") { _ in "OK" }
+app.get("bench", "routing-alternatives", "fixed.txt", "end") { _ in "OK" }
+app.get("bench", "routing-alternatives", ":{name}.txt", "other") { _ in "other" }
+app.get("bench", "routing-alternatives", ":{name}.{ext}", "else") { _ in "else" }
+app.get("bench", "routing-partial", ":{name}.txt") { req in try req.parameters.require("name") }
+app.get("bench", "routing-backtrack", "fixed", "dead") { _ in "dead" }
+app.get("bench", "routing-backtrack", ":id", "end") { req in try req.parameters.require("id") }
 
 app.get("bench", "stream") { _ -> Response in
     Response(

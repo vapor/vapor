@@ -1,9 +1,60 @@
 import Benchmark
-import Vapor
 import Foundation
+import HTTPTypes
 import RoutingKit
+import Vapor
 
 func routingBenchmarks() {
+    // Keep construction costs visible when trading startup storage for fast lookup.
+    for count in [200, 1000] {
+        Benchmark("routing/build \(count) static routes", configuration: .init(scalingFactor: .one)) { benchmark in
+            for _ in benchmark.scaledIterations {
+                blackHole(app.makeResponder())
+            }
+        } setup: {
+            try await setUpApplication { app in
+                for index in 0..<count {
+                    app.get("api", "resource\(index)", "detail") { _ in "hello" }
+                }
+            }
+        } teardown: {
+            try await tearDownApplication()
+        }
+    }
+
+    for (name, method, path) in [
+        ("literal with dynamic neighbours", HTTPRequest.Method.get, "/items/fixed"),
+        ("parameter with literal neighbours", .get, "/items/123"),
+        ("encoded literal", .get, "/items/f%69xed"),
+        ("trailing slash literal", .get, "/items/fixed/"),
+        ("HEAD parameter before GET literal", .head, "/items/fixed"),
+    ] {
+        Benchmark("routing/\(name)") { benchmark in
+            let call = RequestCall(method, path)
+            for _ in benchmark.scaledIterations { blackHole(try await run(call)) }
+        } setup: {
+            try await setUpApplication { app in
+                app.get("items", "fixed") { _ in "literal" }
+                app.get("items", ":id") { request in try request.parameters.require("id") }
+                app.on(.head, "items", ":id") { _ in "explicit HEAD" }
+            }
+        } teardown: {
+            try await tearDownApplication()
+        }
+    }
+
+    Benchmark("routing/case insensitive literal") { benchmark in
+        let call = RequestCall(.get, "/API/HeLLo")
+        for _ in benchmark.scaledIterations { blackHole(try await run(call)) }
+    } setup: {
+        try await setUpApplication { app in
+            app.routes.caseInsensitive = true
+            app.get("api", "hello") { _ in "hello" }
+        }
+    } teardown: {
+        try await tearDownApplication()
+    }
+
     Benchmark("routing/static shallow") { benchmark in
         let call = RequestCall(.get, "/hello")
         for _ in benchmark.scaledIterations {

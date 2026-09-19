@@ -1,9 +1,0 @@
-{
-  "base_http_server_revision": "9b75bce220c97a2078eda303f6c11de376a29755",
-  "base_http_server_version": "0.2.0",
-  "patch": "Performance/Patches/swift-http-server-batched-send.patch",
-  "patch_sha256": "c9ddc79b6ce3a225ca8b189e9c5d8f5af3dfdfb000f29f92ff337672dd6bc939",
-  "production_source_change": "Only NIOHTTPServer.ResponseSender.sendAndFinish is overridden to submit head/body/end in one outbound batch. Vapor library code is unchanged.",
-  "normal_dependency_restored": true,
-  "regression_tests": "27 tests in 6 suites passed; includes parameterized tests, HTTP/1.1, HTTP/2, connection lifecycle, keep-alive, and backpressure."
-}

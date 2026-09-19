@@ -1,4 +1,7 @@
+import AsyncHTTPClient
 import BasicContainers
+import Benchmark
+import BenchmarkSupport
 import Foundation
 import HTTPTypes
 import Logging
@@ -66,21 +69,47 @@ struct BenchmarkHandler: HTTPServerRequestHandler {
     }
 }
 
-@main
-struct HTTPServerPerformanceServer {
-    static func main() async throws {
-        LoggingSystem.bootstrap { label in
-            var handler = StreamLogHandler.standardError(label: label)
-            handler.logLevel = .error
-            return handler
+nonisolated(unsafe) private var serverTask: Task<Void, any Error>?
+nonisolated(unsafe) private var serverURL = ""
+
+private func setUpServer() async throws {
+    let configuration = try NIOHTTPServerConfiguration(
+        bindTarget: .hostAndPort(host: "127.0.0.1", port: 0),
+        supportedHTTPVersions: [.http1_1], transportSecurity: .plaintext
+    )
+    let server = NIOHTTPServer(configuration: configuration)
+    serverTask = Task { try await server.serve(handler: BenchmarkHandler()) }
+    let addresses = try await server.listeningAddresses
+    serverURL = "http://127.0.0.1:\(addresses[0].port)"
+}
+
+let benchmarks: @Sendable () -> Void = {
+    LoggingSystem.bootstrap { _ in SwiftLogNoOpLogHandler() }
+    Benchmark.defaultConfiguration = .init(
+        metrics: [.instructions, .mallocCountTotal, .wallClock],
+        warmupIterations: 3,
+        scalingFactor: .kilo,
+        maxDuration: .seconds(3)
+    )
+    configureSmokeRun()
+    for route in ["status", "tiny", "json", "large", "stream"] {
+        // Match Vapor's network fixture, including client, collection bound,
+        // timed validation and scaling. Startup and shutdown stay outside timing.
+        Benchmark("network/\(route)", configuration: .init(scalingFactor: .one)) { benchmark in
+            let request = HTTPClientRequest(url: serverURL + "/bench/\(route)")
+            for _ in benchmark.scaledIterations {
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
+                let body = try await response.body.collect(upTo: 131072)
+                precondition(Int(response.status.code) == (route == "status" ? 204 : 200))
+                blackHole(body)
+            }
+        } setup: {
+            try await setUpServer()
+            try await validateResponse(route: route, at: serverURL)
+        } teardown: {
+            serverTask?.cancel()
+            _ = await serverTask?.result
+            serverTask = nil
         }
-        let environment = ProcessInfo.processInfo.environment
-        let server = NIOHTTPServer(
-            configuration: try .init(
-                bindTarget: .hostAndPort(host: environment["PERF_HOST"] ?? "127.0.0.1", port: Int(environment["PERF_PORT"] ?? "") ?? 8080),
-                supportedHTTPVersions: [.http1_1],
-                transportSecurity: .plaintext
-            ))
-        try await server.serve(handler: BenchmarkHandler())
     }
 }

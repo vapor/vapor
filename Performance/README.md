@@ -1,138 +1,134 @@
-# Performance
+# HTTP performance harness
 
-A standalone Vapor app plus a `wrk` driver, for load-testing the request/response path on demand.
-Separate package, so it never affects the main build.
+Compare the current Vapor checkout, Vapor 4 and Hummingbird with matching HTTP/1.1
+workloads. The separate packages do not affect normal library builds. They use
+released dependencies and run without any optimization patches or SwiftPM edits.
 
-## Compare Vapor, Vapor 4, and Hummingbird
-
-See the [initial measured results](RESULTS.md) for the 16 September 2026 laptop baseline,
-including throughput, tail latency, raw data, and limitations.
-
-```sh
-cd Performance
-python3 compare.py                         # build all three; all six routes
-python3 compare.py tiny json               # selected routes
-python3 compare.py --duration 30 --connections 256
-python3 compare.py --skip-build            # reuse release binaries after building
-python3 compare.py tiny --frameworks vapor # just the current checkout
-```
-
-Requires Swift 6.4, Python 3, and `wrk` (`brew install wrk`). The current package targets
-macOS 26.2 or later. Comparison servers live in the independent `Comparisons/` package:
-Vapor **4.122.1** and Hummingbird **2.26.0**, pinned to exact releases. Its SwiftNIO **2.101.3**
-and swift-log **1.15.0** pins match the initial current-Vapor baseline; revisit these pins
-when updating that baseline. All dependency revisions are saved with each run.
-
-The driver builds everything before measuring, checks every response's complete body
-(JSON semantically), runs discarded warm-ups, and rotates framework order between passes.
-Defaults: three passes, 10 seconds per measurement, 3 seconds warm-up, 64 connections,
-four `wrk` threads, and four NIO event-loop and blocking-pool threads. All servers use
-the POSIX socket transport, including Hummingbird on macOS. Each server runs alone on
-loopback port 18080, using plaintext HTTP/1.1 with keep-alive and no pipelining or compression.
-Request-log output is disabled; each framework otherwise retains its configured/default
-middleware (the Hummingbird router has no added middleware).
-
-Results go to a new `Results/<UTC timestamp>/` directory (override with `--output`):
-
-- `summary.md`: median throughput, min–max throughput, and median per-run p50/p99 latency.
-- `results.json`: every measured sample, response headers, body sizes, and load commands.
-- `metadata.json`: hardware, compiler, settings, current Vapor revision, source and binary hashes.
-- `dependencies-*.json`: resolved dependency versions and revisions.
-- `*-warmup.txt`, `*-measured.txt`, and server/build logs: raw output.
-
-Any socket error, timeout, HTTP error counted by `wrk`, empty measurement, or failed response
-validation aborts the run. Completed samples and raw logs are retained on failure. The driver
-stops its servers on completion, failure, or interruption. Use `--help` for all settings.
-`--skip-build` trusts the existing binaries; rebuild after changing sources or dependencies.
-
-The buffered and JSON routes use each framework's normal response conversion/encoding.
-The streaming route performs sixteen awaited 1 KiB writes with a known content length.
-The file route uses a shared 1 MiB fixture and 128 KiB read chunks, warmed into the OS cache.
-Vapor uses its HTTP file-response helper (including file metadata/ETag/range handling);
-Hummingbird uses `FileIO.loadFile`. Treat this as an API-level file-serving comparison:
-the helpers perform different amounts of HTTP work. Response headers are recorded so those
-differences remain visible. This is not a disk-throughput test.
-
-## Isolate the HTTP server
-
-See the [17 September investigation](INVESTIGATION.md) for layer isolation, CPU profiling,
-and the measured effect of batching buffered response writes.
+Requires Swift 6.4, Python 3 and `wrk` (`brew install wrk` on macOS). macOS builds
+require 26.2 or later; Linux is supported by the package manifests and CI builds.
 
 ```sh
-python3 compare.py tiny large --frameworks vapor vapor-direct vapor-no-middleware http-server
+python3 Performance/compare.py
+python3 Performance/compare.py status tiny json large stream --duration 30 --connections 256
+python3 Performance/compare.py status tiny json large stream --frameworks vapor http-server vapor4 hummingbird
+python3 Performance/compare.py tiny --frameworks vapor vapor-direct vapor-no-middleware http-server
 ```
 
-`http-server` calls `NIOHTTPServer` directly, without Vapor. It supports `tiny`, `small`,
-`large`, `json`, and `stream`; JSON is encoded per request. It consumes request end so
-connections remain reusable. It has no file-serving workload. `vapor-direct` bypasses
-Vapor's router and middleware using a custom responder and supports the four buffered
-routes. `vapor-no-middleware` retains routing but removes middleware. Normal `vapor`
-measurements and the default three-framework selection are unchanged.
+Vapor 4.122.1 and Hummingbird 2.26.0 are pinned in `Comparisons/Package.swift`.
+SwiftNIO and swift-log comparison pins match the prepared current-Vapor locks.
+Revisit these pins together when refreshing dependencies, and retain the resolved
+revisions with results. Never silently compare runs across dependency updates.
 
-Use `--skip-build --binary FRAMEWORK=/absolute/path/to/executable` to compare saved release
-executables without rebuilding during measurement. Overrides are hashed in the metadata.
-The explicit `vapor-batched` and `http-server-batched` labels require saved binary overrides
-and are for the [HTTP-server batching experiment](Patches/README.md). Dependency lock files
-alone cannot describe a patched executable: keep its patch and build provenance with the results.
+## Workloads
 
-## Existing Hummingbird benchmarks
-
-Hummingbird includes a [`PerformanceTest` server](https://github.com/hummingbird-project/hummingbird/blob/2.26.0/Sources/PerformanceTest/main.swift)
-with plaintext, JSON, POST-body echo, and delayed responses, plus example `wrk` commands.
-The adapters here follow the same approach but match Vapor's existing payloads and suppress
-request-log output. The upstream server enables debug request logging, so running it unchanged
-would introduce a logging difference.
-
-Its [`HummingbirdBenchmarks` suite](https://github.com/hummingbird-project/hummingbird/tree/2.26.0/Benchmarks/HummingbirdBenchmarks)
-uses `package-benchmark` for routers, URI/query parsing, cookies, and URL-encoded forms:
-
-```sh
-# In a Hummingbird checkout; requires package-benchmark's platform dependencies.
-ENABLE_HB_BENCHMARKS=1 swift package benchmark
-```
-
-These are useful candidates for future matched microbenchmarks, but are not equivalent to
-end-to-end HTTP throughput. This comparison driver does not run that microbenchmark suite.
-
-## Original single-server runner
-
-```sh
-cd Performance
-./run-wrk.sh                       # every route
-./run-wrk.sh tiny large            # selected routes
-DURATION=30s CONNECTIONS=256 ./run-wrk.sh
-```
-
-Requires `wrk` (`brew install wrk`). The script builds the server, starts it, waits until it is
-actually serving, runs a discarded warm-up before each measurement, and shuts it down afterwards.
-Use `compare.py` for repeated measurements, complete response validation, and saved error counts.
-
-## Routes
-
-| route | body | what it tells you |
+| Route under `/bench/` | Response | Purpose |
 | --- | --- | --- |
-| `/bench/tiny` | 2 B | throughput ceiling - overhead only, payload is irrelevant |
-| `/bench/small` | 1 KiB | typical small buffered response |
-| `/bench/large` | 64 KiB | buffered response where copying dominates |
-| `/bench/json` | 48 B | `Content` encoding |
-| `/bench/stream` | 16 KiB | streaming writer, 16 awaited chunks |
-| `/bench/file` | 1 MiB | real `FileIO` streaming, 8 x 128 KiB chunks |
+| `status` | 204, no body | Minimum response overhead |
+| `tiny` | 2 B text | Small response overhead |
+| `small` | 1 KiB text | Typical buffered response |
+| `json` | JSON object with id, name and tags | Per-request content encoding |
+| `large` | 64 KiB text | Buffered copying and transport |
+| `stream` | Sixteen awaited 1 KiB writes | Streaming and flushing |
+| `file` | 1 MiB, 128 KiB read chunks | File-response API with a warmed file cache |
 
-## Interpreting the numbers
+All three frameworks support these workloads. The raw `http-server` supports every
+shape except `file`; `vapor-direct` supports `status`, `tiny`, `small`, `json` and
+`large`. `vapor-no-middleware` retains the router but removes default middleware.
+JSON is compared semantically, and all other responses are checked byte-for-byte
+before load. Streaming has a known content length. File helpers perform different
+HTTP metadata/range work, so file results are an API-level comparison, not a disk or
+identical-operation benchmark.
 
-The client and server share one machine, so CPU contention, background applications, power mode,
-and thermal state affect the results. Small differences or overlapping ranges need longer runs
-on a quiet machine. `wrk` is a closed-loop saturation test; its percentiles do not establish
-latency at a fixed arrival rate. The summary's latency columns are medians of individual runs'
-percentiles, not percentiles of a combined latency distribution.
+Additional Vapor routing diagnostics exercise parameter lengths, catchalls,
+encoded literals, partial alternatives, partial captures and backtracking:
 
-Use these measurements as a local starting point, not a production capacity claim or a universal
-framework ranking. For stronger conclusions, repeat on a dedicated Linux server with a separate
-load generator, sweep connection counts, and add matched microbenchmarks to attribute differences.
-This checkout currently has no tracked runnable sources in `Benchmarks/`.
+```sh
+python3 Performance/compare.py routing-parameter/42 routing-catchall/a/b/c \
+  routing-shadowed/f%69xed/end routing-alternatives/f%69xed.txt/end \
+  routing-partial/report.txt routing-backtrack/fixed/end --frameworks vapor
+```
 
-## Twenty-iteration study
+These diagnostic routes have no matched Hummingbird/Vapor 4 fixture; the harness
+rejects unsupported combinations. Use `--help` for the complete route selection.
+Request-ID access, POST echo/body draining, isolated trie lookup and component
+allocation/instruction measurements are covered in [Benchmarks](../Benchmarks/README.md).
 
-The five required workloads include `/bench/status` (204, empty body). `Benchmarks/` measures instructions and allocations; see its README for the counter boundaries. `run-iteration.py NAME` records the current committed revision, counters and three repeats of all five HTTP workloads for Vapor and the raw server. Use `--frameworks vapor http-server vapor4 hummingbird` for comparisons.
+## Repeating and saving comparisons
 
-`DependencyLocks/*.json` are the preparation lockfiles. Copy each to its package's `Package.resolved` before resolving on another machine. Do not compare results across toolchains or hosts as though they were an optimization effect. The driver requires `wrk`, Python 3 and Swift 6.4; all artifacts are local, and no script pushes commits.
+The driver builds before measuring, validates complete responses, discards warmups
+and rotates framework order. Defaults are three passes, 10 seconds measured,
+3 seconds warmup, 64 connections, four wrk threads and four server event-loop/blocking
+threads. Servers run one at a time on loopback with POSIX sockets, plaintext HTTP/1.1,
+keep-alive, no pipelining/compression and request logging disabled.
+
+```sh
+python3 Performance/compare.py tiny json --interleave-routes --record-cpu \
+  --server-threads 4 --connections 16 --output /tmp/vapor-comparison
+# Compare a saved baseline executable with the newly built candidate:
+python3 Performance/compare.py tiny --frameworks vapor-baseline vapor --skip-build \
+  --binary vapor-baseline=/absolute/path/to/saved/PerformanceServer
+# Save all three counter suites plus the five primary HTTP shapes:
+python3 Performance/run-iteration.py main-baseline
+```
+
+`--interleave-routes` restarts each server per route to bring comparable samples
+closer together. `--record-cpu` adds diagnostic process CPU per completed request,
+including measured connection setup/teardown but excluding warmup. `--wrk PATH`
+selects and hashes a specific load generator. The earlier `run-wrk.sh` remains a
+convenience runner; use the Python harness for reproducible comparisons.
+
+Each new `Results/<name-or-UTC-time>/` directory stores:
+
+- Raw warmup/load output and server/build logs, including failed attempts.
+- Every measured sample in `results.json`, with response headers, validation and command.
+- Median throughput/range and median per-run latency percentiles in `summary.md`.
+- Compiler, hardware, settings, Git revision/status, source/binary/client hashes and dependency locks.
+- Server shutdown status, including forced termination.
+
+The counter runner also saves raw baselines, JMH exports, counter availability, interposer hashes,
+SwiftPM workspace selections and the current source diff. Results are ignored by
+Git; archive them with your report. `--skip-build` explicitly trusts existing
+executables: keep the source revision, patches and lockfiles with saved binaries;
+checkout metadata alone does not describe their source.
+
+Socket errors, timeouts, HTTP errors, empty/invalid measurements and incorrect
+responses abort the run. Completed samples and raw logs remain available. Only
+children started by this driver are stopped, including after failure/interruption.
+
+## Reproducing dependency versions
+
+From a clean checkout, before building:
+
+```sh
+cp Performance/DependencyLocks/benchmarks.json Benchmarks/Package.resolved
+cp Performance/DependencyLocks/performance.json Performance/Package.resolved
+cp Performance/DependencyLocks/comparisons.json Performance/Comparisons/Package.resolved
+swift package --package-path Benchmarks resolve
+swift package --package-path Performance resolve
+swift package --package-path Performance/Comparisons resolve
+```
+
+Use a fresh build directory to avoid carrying SwiftPM edited dependencies between
+branches. Package.resolved files are machine-local; the named snapshots are tracked.
+Each measured run records the actual resolutions and workspace state. Linux may add
+platform-specific interposer pins; keep that platform's actual lock with its results.
+
+## Validation and limits
+
+```sh
+python3 -m unittest discover -s Performance/Tests
+swift build --package-path Performance -c release
+swift build --package-path Performance/Comparisons -c release
+```
+
+CI also runs the counter fixture smoke mode described in `Benchmarks/README.md`.
+The benchmark branch provides measurement infrastructure, not performance changes
+or a claim that one framework is universally faster.
+
+Client/server CPU contention, background work, thermal state and power settings
+matter on loopback. Repeat on quiet machines with balanced samples; use a separate
+load generator for stronger server-capacity claims. wrk is a closed-loop saturation
+test, not fixed-arrival-rate latency. Reported p99 is the median of individual run
+p99s, not the percentile of a merged distribution. Missing hardware counters must
+be reported as unavailable. Do not compare numbers across hosts/toolchains as an
+optimization effect.

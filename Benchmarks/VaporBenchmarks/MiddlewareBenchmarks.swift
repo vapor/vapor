@@ -1,6 +1,6 @@
 import Benchmark
-import Vapor
 import HTTPTypes
+import Vapor
 
 func middlewareBenchmarks() {
     Benchmark("middleware/none") { benchmark in

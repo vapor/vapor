@@ -1,8 +1,8 @@
 import Benchmark
-import NIOCore
-import Vapor
 import Foundation
 import HTTPTypes
+import NIOCore
+import Vapor
 
 func contentBenchmarks() {
     Benchmark("content/decode JSON body small") { benchmark in

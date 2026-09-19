@@ -1,6 +1,6 @@
 import Benchmark
-import HTTPTypes
 import Foundation
+import HTTPTypes
 import NIOCore
 import Vapor
 

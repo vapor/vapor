@@ -29,12 +29,14 @@ router.get("bench/small") { _, _ in small }
 router.get("bench/large") { _, _ in large }
 router.get("bench/json") { _, _ in json }
 router.get("bench/stream") { _, _ in
-    Response(status: .ok, body: .init(contentLength: 16 * 1024) { writer in
-        for _ in 0..<16 {
-            try await writer.write(ByteBuffer(string: chunk))
-        }
-        try await writer.finish(nil)
-    })
+    Response(
+        status: .ok,
+        body: .init(contentLength: 16 * 1024) { writer in
+            for _ in 0..<16 {
+                try await writer.write(ByteBuffer(string: chunk))
+            }
+            try await writer.finish(nil)
+        })
 }
 let fileIO = FileIO()
 router.get("bench/file") { _, context in

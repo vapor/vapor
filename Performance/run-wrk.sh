@@ -19,7 +19,7 @@ PORT="${PERF_PORT:-8080}"
 THREADS="${THREADS:-4}"
 CONNECTIONS="${CONNECTIONS:-64}"
 DURATION="${DURATION:-10s}"
-ROUTES=(${@:-tiny small large json stream file})
+ROUTES=(${@:-status tiny small large json stream file})
 
 command -v wrk >/dev/null || { echo "wrk not found - brew install wrk"; exit 1; }
 
@@ -45,7 +45,9 @@ for r in $ROUTES; do
   URL="http://127.0.0.1:$PORT/bench/$r"
   CODE=$(curl -s -o /dev/null -w '%{http_code}' "$URL")
   BYTES=$(curl -s -o /dev/null -w '%{size_download}' "$URL")
-  if [[ "$CODE" != "200" ]]; then
+  EXPECTED_CODE=200
+  [[ "$r" == "status" ]] && EXPECTED_CODE=204
+  if [[ "$CODE" != "$EXPECTED_CODE" ]]; then
     printf "%-10s %12s\n" "$r" "HTTP $CODE"
     continue
   fi

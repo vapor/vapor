@@ -30,11 +30,13 @@ app.get("bench", "small") { _ in small }
 app.get("bench", "large") { _ in large }
 app.get("bench", "json") { _ in json }
 app.get("bench", "stream") { _ -> Response in
-    Response(body: .init(managedAsyncStream: { writer in
-        for _ in 0..<16 {
-            try await writer.write(.buffer(ByteBuffer(string: chunk)))
-        }
-    }, count: 16 * 1024))
+    Response(
+        body: .init(
+            managedAsyncStream: { writer in
+                for _ in 0..<16 {
+                    try await writer.write(.buffer(ByteBuffer(string: chunk)))
+                }
+            }, count: 16 * 1024))
 }
 app.get("bench", "file") { req async throws -> Response in
     try await req.fileio.asyncStreamFile(at: filePath, chunkSize: 128 * 1024)

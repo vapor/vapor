@@ -1,8 +1,8 @@
 import Benchmark
 import Foundation
+import HTTPTypes
 import NIOCore
 import Vapor
-import HTTPTypes
 
 func responseBenchmarks() {
     Benchmark("response/String") { benchmark in

@@ -74,9 +74,15 @@ jobs:
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v7
-      # Just build for now to make sure it actually compiles
+      # Build release mode, including Hummingbird and the raw HTTP-server counters.
       - name: Build the benchmarks
-        run: swift build --package-path Benchmarks
+        run: swift build --package-path Benchmarks -c release
+      - name: Smoke-test all benchmark fixtures
+        run: |
+          BENCHMARK_SMOKE=1 NIO_SINGLETON_GROUP_LOOP_COUNT=2 NIO_SINGLETON_BLOCKING_POOL_THREAD_COUNT=2 \
+            swift package --package-path Benchmarks --disable-sandbox --allow-writing-to-package-directory benchmark --no-progress
+      - name: Test the HTTP harness
+        run: python3 -m unittest discover -s Performance/Tests
 
   performance-harness:
     runs-on: ubuntu-latest
@@ -89,7 +95,9 @@ jobs:
         uses: actions/checkout@v7
       # Just build for now to make sure it actually compiles
       - name: Build the performance harness
-        run: swift build --package-path Performance
+        run: |
+          swift build --package-path Performance -c release
+          swift build --package-path Performance/Comparisons -c release
 
   submit-dependencies:
     permissions:

@@ -1,6 +1,6 @@
 import Benchmark
-import Vapor
 import HTTPTypes
+import Vapor
 
 func authenticationBenchmarks() {
     Benchmark("auth/login") { benchmark in

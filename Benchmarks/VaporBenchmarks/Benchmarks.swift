@@ -1,4 +1,5 @@
 import Benchmark
+import BenchmarkSupport
 import Logging
 
 let benchmarks: @Sendable () -> Void = {
@@ -9,11 +10,13 @@ let benchmarks: @Sendable () -> Void = {
         scalingFactor: .kilo,
         maxDuration: .seconds(3)
     )
+    configureSmokeRun()
 
     endToEndBenchmarks()
     requestBenchmarks()
     authenticationBenchmarks()
     routingBenchmarks()
+    trieBenchmarks()
     responseBenchmarks()
     serialisationBenchmarks()
     writerBenchmarks()

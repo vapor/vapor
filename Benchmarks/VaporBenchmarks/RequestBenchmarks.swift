@@ -1,10 +1,39 @@
-import Foundation
 import Benchmark
+import Foundation
+import HTTPTypes
 import NIOCore
 import Vapor
-import HTTPTypes
 
 func requestBenchmarks() {
+    for reads in [0, 1, 10] {
+        Benchmark("request/create configured and read ID \(reads) times") { benchmark in
+            for _ in benchmark.scaledIterations {
+                let request = Request(contentConfiguration: benchmarkContentConfiguration)
+                for _ in 0..<reads { blackHole(request.id) }
+                blackHole(request)
+            }
+        }
+    }
+
+    for path in ["/bench/tiny", "/items/hello%20world?q=a%2Fb"] {
+        Benchmark("request/origin path \(path)") { benchmark in
+            for _ in benchmark.scaledIterations {
+                let uri = URI(path: path)
+                blackHole(uri.path)
+                blackHole(uri.query)
+            }
+        }
+    }
+
+    Benchmark("request/mutate origin path") { benchmark in
+        for _ in benchmark.scaledIterations {
+            var uri = URI(path: "/items/one?sort=name")
+            uri.query = "sort=date"
+            uri.path = "/items/two"
+            blackHole(uri.string)
+        }
+    }
+
     Benchmark("request/create") { benchmark in
         for _ in benchmark.scaledIterations {
             blackHole(Request())
