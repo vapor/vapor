@@ -50,6 +50,7 @@ jobs:
       ios_xcodebuild_action: ""
       ios_scheme_name: Vapor
       with_linting: true
+      enable_all_traits: true
     secrets: inherit
 
   package-traits:
