@@ -110,7 +110,8 @@ swift package --package-path Performance/Comparisons resolve
 
 Use a fresh build directory to avoid carrying SwiftPM edited dependencies between
 branches. Package.resolved files are machine-local; the named snapshots are tracked.
-Each measured run records the actual resolutions and workspace state. Linux may add
+Each run records its actual resolutions; the counter runner also records workspace
+selections. Lockfiles alone do not describe edited dependencies. Linux may add
 platform-specific interposer pins; keep that platform's actual lock with its results.
 
 ## Validation and limits
