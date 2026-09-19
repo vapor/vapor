@@ -108,15 +108,29 @@ package struct DefaultResponder: Responder {
 
 private struct NotFoundResponder: Responder {
     func respond(to request: Request) async throws -> Response {
-        throw RouteNotFound()
+        throw RouteNotFound(requestURL: request.url.string)
     }
 }
 
-public struct RouteNotFound: Error {}
+public struct RouteNotFound: Error {
+    /// The request URL that did not match any route, when available.
+    public let requestURL: String?
+
+    public init(requestURL: String? = nil) {
+        self.requestURL = requestURL
+    }
+}
 
 extension RouteNotFound: AbortError {
     public var status: HTTPResponse.Status {
         .notFound
+    }
+
+    public var reason: String {
+        if let requestURL {
+            return "No route found for \"\(requestURL)\"."
+        }
+        return "Not Found"
     }
 }
 
