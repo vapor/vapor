@@ -3,7 +3,7 @@ import HTTPTypes
 import Vapor
 
 func middlewareBenchmarks() {
-    Benchmark("middleware/none") { benchmark in
+    Benchmark("middleware.none") { benchmark in
         let call = RequestCall(.get, "/hello")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -16,7 +16,7 @@ func middlewareBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("middleware/one passthrough") { benchmark in
+    Benchmark("middleware.one-passthrough") { benchmark in
         let call = RequestCall(.get, "/hello")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -29,7 +29,7 @@ func middlewareBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("middleware/five passthrough") { benchmark in
+    Benchmark("middleware.five-passthrough") { benchmark in
         let call = RequestCall(.get, "/hello")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -43,7 +43,7 @@ func middlewareBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("middleware/error handling") { benchmark in
+    Benchmark("middleware.error-handling") { benchmark in
         let call = RequestCall(.get, "/boom")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -56,7 +56,7 @@ func middlewareBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("middleware/CORS") { benchmark in
+    Benchmark("middleware.CORS") { benchmark in
         let call = RequestCall(.get, "/hello", headers: [.origin: "https://vapor.codes"])
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -69,7 +69,7 @@ func middlewareBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("middleware/CORS preflight") { benchmark in
+    Benchmark("middleware.CORS-preflight") { benchmark in
         let call = RequestCall(
             .options, "/hello",
             headers: [
@@ -89,7 +89,7 @@ func middlewareBenchmarks() {
     }
 
     for count in [0, 1, 5, 20] {
-        Benchmark("middleware/chain \(count) layers") { benchmark in
+        Benchmark("middleware.chain-\(count)-layers") { benchmark in
             let request = Request()
             let chain = [any Middleware](repeating: PassthroughMiddleware(), count: count)
                 .makeResponder(chainingTo: EchoResponder())
@@ -103,7 +103,7 @@ func middlewareBenchmarks() {
         }
     }
 
-    Benchmark("middleware/sessions no cookie") { benchmark in
+    Benchmark("middleware.sessions-no-cookie") { benchmark in
         let call = RequestCall(.get, "/hello")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -117,7 +117,7 @@ func middlewareBenchmarks() {
     }
 
     // One request per sample lets us remove its session after measurement, including warmups.
-    Benchmark("middleware/sessions create", configuration: .init(scalingFactor: .one)) { benchmark in
+    Benchmark("middleware.sessions-create", configuration: .init(scalingFactor: .one)) { benchmark in
         let request = Request(url: "/hello", contentConfiguration: benchmarkContentConfiguration)
         let response = try await responder.respond(to: request)
         var bytes = [UInt8]()
@@ -151,7 +151,7 @@ func middlewareBenchmarks() {
 
     let sessionID = SessionID(string: "benchmark-session")
     let sessionHeaders: HTTPFields = [.cookie: "vapor-session=\(sessionID.string)"]
-    Benchmark("middleware/sessions update") { benchmark in
+    Benchmark("middleware.sessions-update") { benchmark in
         let call = RequestCall(.get, "/hello", headers: sessionHeaders)
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))

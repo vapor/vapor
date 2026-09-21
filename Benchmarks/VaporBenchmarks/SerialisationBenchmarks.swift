@@ -21,19 +21,19 @@ private func serialise(_ body: Response.Body) async throws -> Int {
 }
 
 func serialisationBenchmarks() {
-    Benchmark("serialise/String 1KiB") { benchmark in
+    Benchmark("serialise.String-1KiB") { benchmark in
         for _ in benchmark.scaledIterations {
             blackHole(try await serialise(Response.Body(string: payload1k)))
         }
     }
 
-    Benchmark("serialise/String 64KiB") { benchmark in
+    Benchmark("serialise.String-64KiB") { benchmark in
         for _ in benchmark.scaledIterations {
             blackHole(try await serialise(Response.Body(string: payload64k)))
         }
     }
 
-    Benchmark("serialise/Data 1KiB") { benchmark in
+    Benchmark("serialise.Data-1KiB") { benchmark in
         for _ in benchmark.scaledIterations {
             blackHole(try await serialise(Response.Body(data: data1k)))
         }

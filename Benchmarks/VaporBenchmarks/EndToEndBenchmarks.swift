@@ -65,7 +65,7 @@ private func configureWorkloads(_ app: Application) {
 func endToEndBenchmarks() {
     for route in responseRoutes {
         // Includes request construction, routing, middleware, encoding, and body consumption.
-        Benchmark("e2e/\(route)") { benchmark in
+        Benchmark("e2e.\(route)") { benchmark in
             let call = RequestCall(.get, "/bench/\(route)")
             for _ in benchmark.scaledIterations { blackHole(try await run(call)) }
         } setup: {
@@ -83,7 +83,7 @@ func endToEndBenchmarks() {
     for route in responseRoutes + uploadRoutes {
         // Actual HTTP framing and socket transport. Counters include the in-process AHC client:
         // use this to compare revisions, not as a server-only allocation count.
-        Benchmark("network/\(route)", configuration: .init(scalingFactor: .one)) { benchmark in
+        Benchmark("network.\(route)", configuration: .init(scalingFactor: .one)) { benchmark in
             for _ in benchmark.scaledIterations {
                 let request = makeNetworkRequest(route: route, at: serverURL)
                 let response = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
@@ -113,7 +113,7 @@ func endToEndBenchmarks() {
     // Separate from the established network suite: the handler leaves the upload
     // unread, exercising bounded server draining and keep-alive after the response.
     for bodySize in [1024, 65536] {
-        Benchmark("drain-network/\(bodySize / 1024)KiB", configuration: .init(scalingFactor: .one)) { benchmark in
+        Benchmark("drain-network.\(bodySize / 1024)KiB", configuration: .init(scalingFactor: .one)) { benchmark in
             var request = HTTPClientRequest(url: serverURL + "/bench/discard")
             request.method = .POST
             request.body = .bytes([UInt8](repeating: 120, count: bodySize))
@@ -148,7 +148,7 @@ func endToEndBenchmarks() {
         ("id-once", "id-1", 0), ("id-repeated", "id-10", 0),
         ("echo-1KiB", "echo", 1024), ("echo-64KiB", "echo", 65536),
     ] {
-        Benchmark("network/\(name)", configuration: .init(scalingFactor: .one)) { benchmark in
+        Benchmark("network.\(name)", configuration: .init(scalingFactor: .one)) { benchmark in
             var request = HTTPClientRequest(url: serverURL + "/bench/\(route)")
             if bodySize > 0 {
                 request.method = .POST

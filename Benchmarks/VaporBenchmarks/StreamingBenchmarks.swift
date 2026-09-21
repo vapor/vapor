@@ -15,7 +15,7 @@ private let chunk256 = String(repeating: "x", count: 256)
 private let bytes4k = [UInt8](repeating: 0x78, count: 4 * 1024)
 
 func streamingBenchmarks() {
-    Benchmark("stream/1 x 64KiB") { benchmark in
+    Benchmark("stream.1-x-64KiB") { benchmark in
         for _ in benchmark.scaledIterations {
             var body = try Response.Body(
                 stream: { writer in
@@ -25,7 +25,7 @@ func streamingBenchmarks() {
         }
     }
 
-    Benchmark("stream/16 x 4KiB") { benchmark in
+    Benchmark("stream.16-x-4KiB") { benchmark in
         for _ in benchmark.scaledIterations {
             var body = try Response.Body(
                 stream: { writer in
@@ -35,7 +35,7 @@ func streamingBenchmarks() {
         }
     }
 
-    Benchmark("stream/256 x 256B") { benchmark in
+    Benchmark("stream.256-x-256B") { benchmark in
         for _ in benchmark.scaledIterations {
             var body = try Response.Body(
                 stream: { writer in
@@ -45,7 +45,7 @@ func streamingBenchmarks() {
         }
     }
 
-    Benchmark("stream/16 x 4KiB via Span") { benchmark in
+    Benchmark("stream.16-x-4KiB-via-Span") { benchmark in
         for _ in benchmark.scaledIterations {
             var body = try Response.Body(
                 stream: { writer in
@@ -55,7 +55,7 @@ func streamingBenchmarks() {
         }
     }
 
-    Benchmark("stream/16 x 4KiB via Sequence") { benchmark in
+    Benchmark("stream.16-x-4KiB-via-Sequence") { benchmark in
         for _ in benchmark.scaledIterations {
             var body = try Response.Body(
                 stream: { writer in
@@ -66,7 +66,7 @@ func streamingBenchmarks() {
     }
 
     // End to end: routing, middleware and the drain in `run(_:)`, not just the body in isolation.
-    Benchmark("stream/responder 16 x 4KiB") { benchmark in
+    Benchmark("stream.responder-16-x-4KiB") { benchmark in
         let call = RequestCall(.get, "/stream")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))

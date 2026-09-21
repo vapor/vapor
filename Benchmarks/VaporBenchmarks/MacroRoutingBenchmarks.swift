@@ -5,7 +5,7 @@ import Vapor
 import VaporMacros
 
 func macroRoutingBenchmarks() {
-    Benchmark("macro-routing/plain route") { benchmark in
+    Benchmark("macro-routing.plain-route") { benchmark in
         let call = RequestCall(.get, "/macro/plain")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -18,7 +18,7 @@ func macroRoutingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("macro-routing/plain route hand-written") { benchmark in
+    Benchmark("macro-routing.plain-route-hand-written") { benchmark in
         let call = RequestCall(.get, "/manual/plain")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -31,7 +31,7 @@ func macroRoutingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("macro-routing/typed path parameter") { benchmark in
+    Benchmark("macro-routing.typed-path-parameter") { benchmark in
         let call = RequestCall(.get, "/macro/items/42")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -44,7 +44,7 @@ func macroRoutingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("macro-routing/typed path parameter hand-written") { benchmark in
+    Benchmark("macro-routing.typed-path-parameter-hand-written") { benchmark in
         let call = RequestCall(.get, "/manual/items/42")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -59,7 +59,7 @@ func macroRoutingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("macro-routing/Content response") { benchmark in
+    Benchmark("macro-routing.Content-response") { benchmark in
         let call = RequestCall(.get, "/macro/item")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -72,7 +72,7 @@ func macroRoutingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("macro-routing/authenticated route") { benchmark in
+    Benchmark("macro-routing.authenticated-route") { benchmark in
         let call = RequestCall(.get, "/macro/me", headers: [.authorization: "Bearer token"])
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -85,7 +85,7 @@ func macroRoutingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("macro-routing/optional auth anonymous") { benchmark in
+    Benchmark("macro-routing.optional-auth-anonymous") { benchmark in
         let call = RequestCall(.get, "/macro/feed")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -98,7 +98,7 @@ func macroRoutingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("macro-routing/four path parameters") { benchmark in
+    Benchmark("macro-routing.four-path-parameters") { benchmark in
         let call = RequestCall(.post, "/macro/lots/E621E1F8-C36C-495A-93FC-0C247A3E6E5F/7/widget/9")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))

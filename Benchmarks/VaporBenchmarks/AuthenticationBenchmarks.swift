@@ -3,7 +3,7 @@ import HTTPTypes
 import Vapor
 
 func authenticationBenchmarks() {
-    Benchmark("auth/login") { benchmark in
+    Benchmark("auth.login") { benchmark in
         let request = Request()
         let user = BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes")
         for _ in benchmark.scaledIterations {
@@ -16,7 +16,7 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("auth/get") { benchmark in
+    Benchmark("auth.get") { benchmark in
         let request = Request()
         request.auth.login(BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes"))
         for _ in benchmark.scaledIterations {
@@ -28,7 +28,7 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("auth/get miss") { benchmark in
+    Benchmark("auth.get-miss") { benchmark in
         let request = Request()
         for _ in benchmark.scaledIterations {
             blackHole(request.auth.get(BenchUser.self))
@@ -39,7 +39,7 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("auth/require") { benchmark in
+    Benchmark("auth.require") { benchmark in
         let request = Request()
         request.auth.login(BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes"))
         for _ in benchmark.scaledIterations {
@@ -51,7 +51,7 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("auth/has") { benchmark in
+    Benchmark("auth.has") { benchmark in
         let request = Request()
         request.auth.login(BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes"))
         for _ in benchmark.scaledIterations {
@@ -63,7 +63,7 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("auth/two types") { benchmark in
+    Benchmark("auth.two-types") { benchmark in
         let user = BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes")
         let token = BenchToken(value: "secret")
         for _ in benchmark.scaledIterations {
@@ -79,7 +79,7 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("auth/logout") { benchmark in
+    Benchmark("auth.logout") { benchmark in
         let request = Request()
         let user = BenchUser(id: 1, name: "Vapor", email: "vapor@vapor.codes")
         for _ in benchmark.scaledIterations {
@@ -93,7 +93,7 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("auth/basic authenticator authorized") { benchmark in
+    Benchmark("auth.basic-authenticator-authorized") { benchmark in
         let call = RequestCall(.get, "/protected", headers: [.authorization: "Basic dmFwb3I6c2VjcmV0"])
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -107,7 +107,7 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("auth/basic authenticator unauthorized") { benchmark in
+    Benchmark("auth.basic-authenticator-unauthorized") { benchmark in
         let call = RequestCall(.get, "/protected")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -121,7 +121,7 @@ func authenticationBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("auth/bearer authenticator authorized") { benchmark in
+    Benchmark("auth.bearer-authenticator-authorized") { benchmark in
         let call = RequestCall(.get, "/protected", headers: [.authorization: "Bearer token"])
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))

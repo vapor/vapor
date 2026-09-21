@@ -5,7 +5,7 @@ import NIOCore
 import Vapor
 
 func responseBenchmarks() {
-    Benchmark("response/String") { benchmark in
+    Benchmark("response.String") { benchmark in
         let call = RequestCall(.get, "/string")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -18,7 +18,7 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/HTTPResponse.Status") { benchmark in
+    Benchmark("response.HTTPResponse.Status") { benchmark in
         let call = RequestCall(.get, "/status")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -31,7 +31,7 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/Response constructed directly") { benchmark in
+    Benchmark("response.Response-constructed-directly") { benchmark in
         let call = RequestCall(.get, "/response")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -46,7 +46,7 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/Content small") { benchmark in
+    Benchmark("response.Content-small") { benchmark in
         let call = RequestCall(.get, "/small")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -59,7 +59,7 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/Content single") { benchmark in
+    Benchmark("response.Content-single") { benchmark in
         let call = RequestCall(.get, "/item")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -73,7 +73,7 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/Content array of 10") { benchmark in
+    Benchmark("response.Content-array-of-10") { benchmark in
         let call = RequestCall(.get, "/items")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -87,7 +87,7 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/Content array of 100") { benchmark in
+    Benchmark("response.Content-array-of-100") { benchmark in
         let call = RequestCall(.get, "/items")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -103,7 +103,7 @@ func responseBenchmarks() {
 
     // Was `.init(buffer:)`; that initialiser is gone from the public API on the
     // remove-byte-buffer-response branch, so all three environments use `Data` to stay comparable.
-    Benchmark("response/binary body 1KiB") { benchmark in
+    Benchmark("response.binary-body-1KiB") { benchmark in
         let call = RequestCall(.get, "/buffer")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -117,7 +117,7 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/redirect") { benchmark in
+    Benchmark("response.redirect") { benchmark in
         let call = RequestCall(.get, "/redirect")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -130,7 +130,7 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/encode Content directly") { benchmark in
+    Benchmark("response.encode-Content-directly") { benchmark in
         let request = Request()
         let item = makeItem()
         for _ in benchmark.scaledIterations {
@@ -142,7 +142,7 @@ func responseBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("response/encode String directly") { benchmark in
+    Benchmark("response.encode-String-directly") { benchmark in
         let request = Request()
         for _ in benchmark.scaledIterations {
             blackHole(try await "hello".encodeResponse(for: request))

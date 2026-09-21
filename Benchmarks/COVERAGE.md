@@ -5,8 +5,8 @@ The package measures the current Vapor checkout at three levels:
 | Layer | Purpose | Measurement boundary |
 | --- | --- | --- |
 | Component fixtures | Identify changes in allocations, instructions and elapsed time for individual operations | Routing/trie lookup, requests, content, authentication, middleware, responses, serialization, macros and writers |
-| `e2e/` | Measure a complete responder invocation | Fresh request, routing, default middleware, encoding and complete body consumption into a copying sink |
-| `network/` and `drain-network/` | Exercise the HTTP path and request/response streaming | In-process client and server, serial plaintext HTTP/1.1 loopback requests and keep-alive reuse |
+| `e2e.` | Measure a complete responder invocation | Fresh request, routing, default middleware, encoding and complete body consumption into a copying sink |
+| `network.` and `drain-network.` | Exercise the HTTP path and request/response streaming | In-process client and server, serial plaintext HTTP/1.1 loopback requests and keep-alive reuse |
 
 The responder fixtures do not include sockets or HTTP framing. The network
 fixtures include both client and server work; their counters cannot be attributed

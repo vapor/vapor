@@ -7,7 +7,7 @@ import RoutingKit
 func routingBenchmarks() {
     // Keep construction costs visible when trading startup storage for fast lookup.
     for count in [200, 1000] {
-        Benchmark("routing/build \(count) static routes", configuration: .init(scalingFactor: .one)) { benchmark in
+        Benchmark("routing.build-\(count)-static-routes", configuration: .init(scalingFactor: .one)) { benchmark in
             for _ in benchmark.scaledIterations {
                 blackHole(app.makeBenchmarkResponder())
             }
@@ -23,13 +23,13 @@ func routingBenchmarks() {
     }
 
     for (name, method, path) in [
-        ("literal with dynamic neighbours", HTTPRequest.Method.get, "/items/fixed"),
-        ("parameter with literal neighbours", .get, "/items/123"),
-        ("encoded literal", .get, "/items/f%69xed"),
-        ("trailing slash literal", .get, "/items/fixed/"),
-        ("HEAD parameter before GET literal", .head, "/items/fixed"),
+        ("literal-with-dynamic-neighbours", HTTPRequest.Method.get, "/items/fixed"),
+        ("parameter-with-literal-neighbours", .get, "/items/123"),
+        ("encoded-literal", .get, "/items/f%69xed"),
+        ("trailing-slash-literal", .get, "/items/fixed/"),
+        ("HEAD-parameter-before-GET-literal", .head, "/items/fixed"),
     ] {
-        Benchmark("routing/\(name)") { benchmark in
+        Benchmark("routing.\(name)") { benchmark in
             let call = RequestCall(method, path)
             for _ in benchmark.scaledIterations { blackHole(try await run(call)) }
         } setup: {
@@ -43,7 +43,7 @@ func routingBenchmarks() {
         }
     }
 
-    Benchmark("routing/case insensitive literal") { benchmark in
+    Benchmark("routing.case-insensitive-literal") { benchmark in
         let call = RequestCall(.get, "/API/HeLLo")
         for _ in benchmark.scaledIterations { blackHole(try await run(call)) }
     } setup: {
@@ -55,7 +55,7 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("routing/static shallow") { benchmark in
+    Benchmark("routing.static-shallow") { benchmark in
         let call = RequestCall(.get, "/hello")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -68,7 +68,7 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("routing/static deep") { benchmark in
+    Benchmark("routing.static-deep") { benchmark in
         let call = RequestCall(.get, "/api/v1/users/list")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -81,7 +81,7 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("routing/one path parameter") { benchmark in
+    Benchmark("routing.one-path-parameter") { benchmark in
         let call = RequestCall(.get, "/users/42")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -96,7 +96,7 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("routing/three path parameters") { benchmark in
+    Benchmark("routing.three-path-parameters") { benchmark in
         let call = RequestCall(.get, "/orgs/vapor/repos/vapor/issues/42")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -114,7 +114,7 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("routing/catchall") { benchmark in
+    Benchmark("routing.catchall") { benchmark in
         let call = RequestCall(.get, "/files/images/logo/vapor.png")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -129,7 +129,7 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("routing/not found") { benchmark in
+    Benchmark("routing.not-found") { benchmark in
         let call = RequestCall(.get, "/does/not/exist")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -142,7 +142,7 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("routing/hit among 200 routes") { benchmark in
+    Benchmark("routing.hit-among-200-routes") { benchmark in
         let call = RequestCall(.get, "/api/resource150/detail")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -157,7 +157,7 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("routing/method dispatch") { benchmark in
+    Benchmark("routing.method-dispatch") { benchmark in
         let call = RequestCall(.patch, "/items/1")
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
@@ -174,7 +174,7 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
-    Benchmark("routing/parameters require String") { benchmark in
+    Benchmark("routing.parameters-require-String") { benchmark in
         var parameters = Parameters()
         parameters.set("id", to: "42")
         for _ in benchmark.scaledIterations {
@@ -182,7 +182,7 @@ func routingBenchmarks() {
         }
     }
 
-    Benchmark("routing/parameters require Int") { benchmark in
+    Benchmark("routing.parameters-require-Int") { benchmark in
         var parameters = Parameters()
         parameters.set("id", to: "42")
         for _ in benchmark.scaledIterations {
@@ -190,7 +190,7 @@ func routingBenchmarks() {
         }
     }
 
-    Benchmark("routing/parameters require UUID") { benchmark in
+    Benchmark("routing.parameters-require-UUID") { benchmark in
         var parameters = Parameters()
         parameters.set("id", to: "E621E1F8-C36C-495A-93FC-0C247A3E6E5F")
         for _ in benchmark.scaledIterations {

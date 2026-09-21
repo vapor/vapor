@@ -61,7 +61,7 @@ func configureBenchmarks() {
     #endif
 
     Benchmark.defaultConfiguration = .init(
-        metrics: [mode.metric], tags: ["measurement": mode.rawValue],
+        metrics: [mode.metric],
         warmupIterations: 5, scalingFactor: .kilo, maxDuration: .seconds(5),
         thresholds: [mode.metric: mode.thresholds]
     )

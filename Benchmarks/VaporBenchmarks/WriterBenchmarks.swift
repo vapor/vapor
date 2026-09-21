@@ -12,7 +12,7 @@ private let dataPayload = Data(repeating: 0x78, count: 1024)
 private let chunks = 8
 
 func writerBenchmarks() {
-    Benchmark("writer/Sequence Array 1KiB x8") { benchmark in
+    Benchmark("writer.Sequence-Array-1KiB-x8") { benchmark in
         for _ in benchmark.scaledIterations {
             var body = try Response.Body(
                 stream: { writer in
@@ -24,7 +24,7 @@ func writerBenchmarks() {
         }
     }
 
-    Benchmark("writer/Sequence ArraySlice 1KiB x8") { benchmark in
+    Benchmark("writer.Sequence-ArraySlice-1KiB-x8") { benchmark in
         for _ in benchmark.scaledIterations {
             var body = try Response.Body(
                 stream: { writer in
@@ -36,7 +36,7 @@ func writerBenchmarks() {
         }
     }
 
-    Benchmark("writer/Sequence Data 1KiB x8") { benchmark in
+    Benchmark("writer.Sequence-Data-1KiB-x8") { benchmark in
         for _ in benchmark.scaledIterations {
             var body = try Response.Body(
                 stream: { writer in
