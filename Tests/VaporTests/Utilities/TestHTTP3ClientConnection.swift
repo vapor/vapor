@@ -86,13 +86,21 @@ func withTestHTTP3ClientConnection<Value>(
     do {
         let value = try await h3Connection.makeRequestStream().executeThenClose(body)
 
-        // try await quicChannel.close()
-        // try await connectionChannel.close()
+        do {
+            try await quicChannel.close()
+            try await connectionChannel.close()
+        } catch ChannelError.alreadyClosed {
+            ()
+        }
 
         return value
     } catch {
-        try? await quicChannel.close()
-        try? await connectionChannel.close()
+        do {
+            try await quicChannel.close()
+            try await connectionChannel.close()
+        } catch ChannelError.alreadyClosed {
+            ()
+        }
 
         throw error
     }
