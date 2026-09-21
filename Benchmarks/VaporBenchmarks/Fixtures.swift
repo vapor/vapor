@@ -3,14 +3,14 @@ import Benchmark
 import Foundation
 import NIOCore
 
-package let responseStreams = [
+let responseStreams = [
     (route: "stream", chunkSize: 1024, chunkCount: 16, knownLength: true),
     (route: "stream-chunked", chunkSize: 1024, chunkCount: 16, knownLength: false),
     (route: "stream-coarse", chunkSize: 65536, chunkCount: 1, knownLength: true),
     (route: "stream-fine", chunkSize: 256, chunkCount: 256, knownLength: true),
 ]
-package let responseRoutes = ["status", "tiny", "small", "json", "large"] + responseStreams.map(\.route)
-package let uploadRoutes = ["stream-upload-known", "stream-upload-chunked", "collect-upload-known", "collect-upload-chunked"]
+let responseRoutes = ["status", "tiny", "small", "json", "large"] + responseStreams.map(\.route)
+let uploadRoutes = ["stream-upload-known", "stream-upload-chunked", "collect-upload-known", "collect-upload-chunked"]
 
 /// Pull-based chunks avoid a producer task pre-buffering the entire upload.
 private struct UploadChunks: AsyncSequence, Sendable {
@@ -30,8 +30,8 @@ private struct UploadChunks: AsyncSequence, Sendable {
     func makeAsyncIterator() -> AsyncIterator { AsyncIterator() }
 }
 
-/// Make a fresh stream for each request, with identical chunk production in every suite.
-package func makeNetworkRequest(route: String, at baseURL: String) -> HTTPClientRequest {
+/// Make a fresh stream for each request, so each iteration consumes the full upload.
+func makeNetworkRequest(route: String, at baseURL: String) -> HTTPClientRequest {
     var request = HTTPClientRequest(url: baseURL + "/bench/" + route)
     if uploadRoutes.contains(route) {
         request.method = .POST
@@ -41,7 +41,7 @@ package func makeNetworkRequest(route: String, at baseURL: String) -> HTTPClient
 }
 
 /// CI executes every fixture once; these results are not performance measurements.
-package func configureSmokeRun() {
+func configureSmokeRun() {
     guard ProcessInfo.processInfo.environment["BENCHMARK_SMOKE"] == "1" else { return }
     Benchmark.defaultConfiguration = .init(
         metrics: [.wallClock], warmupIterations: 0, scalingFactor: .one,
@@ -56,7 +56,7 @@ private struct Payload: Decodable, Equatable {
 }
 
 /// Check complete bodies before timing so a broken fixture cannot look faster.
-package func validateResponse(route: String, at baseURL: String) async throws {
+func validateResponse(route: String, at baseURL: String) async throws {
     let response = try await HTTPClient.shared.execute(
         makeNetworkRequest(route: route, at: baseURL), timeout: .seconds(5)
     )
@@ -72,7 +72,7 @@ package func validateResponse(route: String, at baseURL: String) async throws {
         contentType: response.headers.first(name: "content-type"))
 }
 
-package func validateBody(route: String, status: Int, body: Data, contentType: String?) throws {
+func validateBody(route: String, status: Int, body: Data, contentType: String?) throws {
     precondition(status == (route == "status" ? 204 : 200), route)
     if route == "json" {
         precondition(contentType?.hasPrefix("application/json") == true)

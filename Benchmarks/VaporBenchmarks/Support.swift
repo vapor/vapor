@@ -48,9 +48,8 @@ struct RequestCall {
 /// Drive a request through the responder chain *and* consume the response body, mirroring what
 /// `HTTPServerHandler` does when it serialises a response onto the transport.
 ///
-/// Without the drain these benchmarks stopped at `respond(to:)` and never measured serialisation -
-/// the same gap Hummingbird closes with its no-op `ResponseBodyWriter`. The sink here copies rather
-/// than discarding, because the copy into the server's byte container is part of the cost.
+/// The sink copies the complete body to include the cost of producing bytes, including streamed
+/// responses whose contents are generated after `respond(to:)` returns.
 func run(_ call: RequestCall) async throws -> Int {
     let request = Request(
         method: call.method,

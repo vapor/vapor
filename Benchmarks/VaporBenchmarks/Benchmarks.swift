@@ -1,5 +1,4 @@
 import Benchmark
-import BenchmarkSupport
 import Logging
 
 let benchmarks: @Sendable () -> Void = {

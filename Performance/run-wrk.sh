@@ -10,8 +10,8 @@
 #
 # Numbers from `wrk` move a great deal with whatever else the machine is doing - a build running in
 # the background roughly halved throughput when this was written. Close everything else, and treat
-# small differences between runs as noise rather than signal. Use compare.py for repeated runs
-# across frameworks, response validation, and saved raw measurements.
+# small differences between runs as noise rather than signal. For attributable numbers (allocations
+# and instructions) use the package-benchmark suite in ../Benchmarks instead.
 set -e
 cd "${0:A:h}"
 
@@ -19,14 +19,15 @@ PORT="${PERF_PORT:-8080}"
 THREADS="${THREADS:-4}"
 CONNECTIONS="${CONNECTIONS:-64}"
 DURATION="${DURATION:-10s}"
-ROUTES=(${@:-status tiny small large json stream file})
+ROUTES=(${@:-tiny small large json stream file})
 
 command -v wrk >/dev/null || { echo "wrk not found - brew install wrk"; exit 1; }
 
 echo "building..."
 swift build -c release --product PerformanceServer
 
-# Keep server diagnostics separate from results. The performance app suppresses request logs.
+# Server output goes to a log rather than the terminal - Vapor logs every request, which would
+# bury the results table under thousands of lines during a run.
 SRVLOG="${TMPDIR:-/tmp}/vapor-perf-server.log"
 PERF_PORT=$PORT ./.build/release/PerformanceServer > "$SRVLOG" 2>&1 &
 SRVPID=$!
@@ -45,9 +46,7 @@ for r in $ROUTES; do
   URL="http://127.0.0.1:$PORT/bench/$r"
   CODE=$(curl -s -o /dev/null -w '%{http_code}' "$URL")
   BYTES=$(curl -s -o /dev/null -w '%{size_download}' "$URL")
-  EXPECTED_CODE=200
-  [[ "$r" == "status" ]] && EXPECTED_CODE=204
-  if [[ "$CODE" != "$EXPECTED_CODE" ]]; then
+  if [[ "$CODE" != "200" ]]; then
     printf "%-10s %12s\n" "$r" "HTTP $CODE"
     continue
   fi

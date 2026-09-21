@@ -1,6 +1,5 @@
 import AsyncHTTPClient
 import Benchmark
-import BenchmarkSupport
 import Foundation
 import HTTPTypes
 import Logging
@@ -66,7 +65,6 @@ private func configureWorkloads(_ app: Application) {
 func endToEndBenchmarks() {
     for route in responseRoutes {
         // Includes request construction, routing, middleware, encoding, and body consumption.
-        // Mirrors Hummingbird's responder benchmarks, while retaining the cost of copying bytes.
         Benchmark("e2e/\(route)") { benchmark in
             let call = RequestCall(.get, "/bench/\(route)")
             for _ in benchmark.scaledIterations { blackHole(try await run(call)) }
