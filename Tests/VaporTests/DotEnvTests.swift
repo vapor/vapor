@@ -1,8 +1,9 @@
-@testable import Vapor
-import NIOPosix
 import NIOCore
+import NIOPosix
 import Testing
 import VaporTesting
+
+@testable import Vapor
 
 @Suite("DotEnv Tests")
 struct DotEnvTests {
@@ -12,23 +13,24 @@ struct DotEnvTests {
         let path = "/" + folder + "/Utilities/test.env"
         let file = try await DotEnvFile.read(path: path)
         let test = file.lines.map { $0.description }.joined(separator: "\n")
-        #expect(test == """
-        NODE_ENV=development
-        BASIC=basic
-        AFTER_LINE=after_line
-        UNDEFINED_EXPAND=$TOTALLY_UNDEFINED_ENV_KEY
-        EMPTY=
-        SINGLE_QUOTES=single_quotes
-        DOUBLE_QUOTES=double_quotes
-        EXPAND_NEWLINES=expand\nnewlines
-        DONT_EXPAND_NEWLINES_1=dontexpand\\nnewlines
-        DONT_EXPAND_NEWLINES_2=dontexpand\\nnewlines
-        EQUAL_SIGNS=equals==
-        RETAIN_INNER_QUOTES={"foo": "bar"}
-        RETAIN_INNER_QUOTES_AS_STRING={"foo": "bar"}
-        INCLUDE_SPACE=some spaced out string
-        USERNAME=therealnerdybeast@example.tld
-        """)
+        #expect(
+            test == """
+                NODE_ENV=development
+                BASIC=basic
+                AFTER_LINE=after_line
+                UNDEFINED_EXPAND=$TOTALLY_UNDEFINED_ENV_KEY
+                EMPTY=
+                SINGLE_QUOTES=single_quotes
+                DOUBLE_QUOTES=double_quotes
+                EXPAND_NEWLINES=expand\nnewlines
+                DONT_EXPAND_NEWLINES_1=dontexpand\\nnewlines
+                DONT_EXPAND_NEWLINES_2=dontexpand\\nnewlines
+                EQUAL_SIGNS=equals==
+                RETAIN_INNER_QUOTES={"foo": "bar"}
+                RETAIN_INNER_QUOTES_AS_STRING={"foo": "bar"}
+                INCLUDE_SPACE=some spaced out string
+                USERNAME=therealnerdybeast@example.tld
+                """)
     }
 
     @Test("Test Parsing works without a trailing newline")
@@ -38,10 +40,11 @@ struct DotEnvTests {
         buffer.writeString(env)
         var parser = DotEnvFile.Parser(source: buffer)
         let lines = parser.parse()
-        #expect(lines == [
-            .init(key: "FOO", value: "bar"),
-            .init(key: "BAR", value: "baz"),
-        ])
+        #expect(
+            lines == [
+                .init(key: "FOO", value: "bar"),
+                .init(key: "BAR", value: "baz"),
+            ])
     }
 
     @Test("Test Parsing comments")
@@ -51,8 +54,9 @@ struct DotEnvTests {
         buffer.writeString(env)
         var parser = DotEnvFile.Parser(source: buffer)
         let lines = parser.parse()
-        #expect(lines == [
-            .init(key: "FOO", value: "bar")
-        ])
+        #expect(
+            lines == [
+                .init(key: "FOO", value: "bar")
+            ])
     }
 }

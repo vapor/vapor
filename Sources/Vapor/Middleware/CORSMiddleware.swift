@@ -55,7 +55,6 @@ public final class CORSMiddleware: Middleware {
         }
     }
 
-
     /// Configuration used for populating headers in response for CORS requests.
     public struct Configuration: Sendable {
         /// Default CORS configuration.
@@ -169,23 +168,22 @@ public final class CORSMiddleware: Middleware {
 
 // MARK: Private
 
-private extension Request {
+extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
-    var isPreflight: Bool {
+    fileprivate var isPreflight: Bool {
         return self.method == .options && self.headers[.accessControlRequestMethod] != nil
     }
 }
 
-private extension CORSMiddleware.AllowOriginSetting {
-  /// Returns `true` when the value of `Access-Control-Allow-Origin`
-  /// depends on the incoming `Origin` header.
-  var variesByRequestOrigin: Bool {
-    switch self {
-    case .originBased, .any, .dynamic:
-      return true
-    default:
-      return false
+extension CORSMiddleware.AllowOriginSetting {
+    /// Returns `true` when the value of `Access-Control-Allow-Origin`
+    /// depends on the incoming `Origin` header.
+    fileprivate var variesByRequestOrigin: Bool {
+        switch self {
+        case .originBased, .any, .dynamic:
+            return true
+        default:
+            return false
+        }
     }
-  }
 }
-

@@ -1,22 +1,23 @@
-import Vapor
-import NIOCore
 import AsyncHTTPClient
 import Atomics
+import HTTPTypes
+import Logging
+import NIOCore
+import NIOFoundationEssentialsCompat
+import NIOHTTP1
+import NIOHTTPTypesHTTP1
+import NIOPosix
+import RoutingKit
 import Synchronization
 import Testing
+import Vapor
 import VaporTesting
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
-import HTTPTypes
-import NIOHTTP1
-import RoutingKit
-import Logging
-import NIOFoundationEssentialsCompat
-import NIOPosix
-import NIOHTTPTypesHTTP1
 
 @Suite("Request Tests")
 struct RequestTests {
@@ -84,11 +85,12 @@ struct RequestTests {
             // out as the streamed response body, exercising request streaming and response
             // streaming together in a single round-trip.
             app.on(.post, "echo") { req -> Response in
-                Response(body: .init(stream: { writer in
-                    try await req.body.forEachChunk { chunk in
-                        try await writer.write(chunk)
-                    }
-                }))
+                Response(
+                    body: .init(stream: { writer in
+                        try await req.body.forEachChunk { chunk in
+                            try await writer.write(chunk)
+                        }
+                    }))
             }
 
             try await withRunningServer(app) { port in
@@ -187,7 +189,7 @@ struct RequestTests {
                             numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .sequentiallyConsistent)
                             bytesTheServerSaw.wrappingIncrement(by: firstChunkBytes, ordering: .sequentiallyConsistent)
                             holdingFirstChunk.reach()
-                            try await Task.sleep(for: .seconds(3600)) // wait "forever"
+                            try await Task.sleep(for: .seconds(3600))  // wait "forever"
                         }
                         serverSawEnd.store(true, ordering: .sequentiallyConsistent)
                         return Response(status: .ok)
@@ -231,10 +233,11 @@ struct RequestTests {
                 // sometimes reported sent in full and the assertion below flaked. 64 MB is beyond any
                 // default on either platform.
                 let upload = ByteBuffer(repeating: 0x41, count: 64 * 1024 * 1024)
-                let request = try HTTPClient.Request(url: "http://127.0.0.1:\(port)/hello",
-                                                     method: .POST,
-                                                     headers: [:],
-                                                     body: .byteBuffer(upload))
+                let request = try HTTPClient.Request(
+                    url: "http://127.0.0.1:\(port)/hello",
+                    method: .POST,
+                    headers: [:],
+                    body: .byteBuffer(upload))
                 let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
                 let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
                 // No deadline: the request ends when the test cancels it, once the server has shown
@@ -246,7 +249,7 @@ struct RequestTests {
                 #expect(numberOfTimesTheServerGotOfferedBytes.load(ordering: .sequentiallyConsistent) == 1)
                 #expect(upload.readableBytes >= bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
                 #expect(upload.readableBytes >= bytesTheClientSent.load(ordering: .sequentiallyConsistent))
-                #expect(bytesTheClientSent.load(ordering: .sequentiallyConsistent) == 0) // Non-zero only if the whole body was written.
+                #expect(bytesTheClientSent.load(ordering: .sequentiallyConsistent) == 0)  // Non-zero only if the whole body was written.
                 #expect(serverSawEnd.load(ordering: .sequentiallyConsistent) == false)
                 #expect(serverSawRequest.load(ordering: .sequentiallyConsistent) == true)
 
@@ -260,10 +263,12 @@ struct RequestTests {
     @Test("Test Large Body Collection Doesn't Crash", .bug("https://github.com/vapor/vapor/issues/2985"))
     func testLargeBodyCollectionDoesntCrash() async throws {
         try await withApp { app in
-            app.on(.post, "upload", use: { request async throws -> String  in
-                let collected = try await request.body.collect(max: .unlimited) ?? Data()
-                return "Received \(collected.count) bytes"
-            })
+            app.on(
+                .post, "upload",
+                use: { request async throws -> String in
+                    let collected = try await request.body.collect(max: .unlimited) ?? Data()
+                    return "Received \(collected.count) bytes"
+                })
 
             try await app.testing(.running) { client in
                 // Large bodies, repeatedly. #2985 was a crash in the streaming body's handling of
@@ -1069,9 +1074,6 @@ struct AsyncLazySequence<Base: Sequence>: AsyncSequence {
     typealias Element = Base.Element
     struct AsyncIterator: AsyncIteratorProtocol {
         var iterator: Base.Iterator
-        init(iterator: Base.Iterator) {
-            self.iterator = iterator
-        }
 
         mutating func next() async throws -> Base.Element? {
             self.iterator.next()
@@ -1079,10 +1081,6 @@ struct AsyncLazySequence<Base: Sequence>: AsyncSequence {
     }
 
     var base: Base
-
-    init(base: Base) {
-        self.base = base
-    }
 
     func makeAsyncIterator() -> AsyncIterator {
         .init(iterator: self.base.makeIterator())
@@ -1099,8 +1097,8 @@ extension Sequence {
     }
 }
 
-fileprivate extension String {
-    static func randomDigits(length: Int = 999) -> String {
+extension String {
+    fileprivate static func randomDigits(length: Int = 999) -> String {
         var string = ""
         for _ in 0...999 {
             string += String(Int.random(in: 0...9))

@@ -1,5 +1,5 @@
-import Logging
 public import HTTPTypes
+import Logging
 
 public protocol Client: Sendable {
     var contentConfiguration: ContentConfiguration { get }
@@ -7,26 +7,36 @@ public protocol Client: Sendable {
 }
 
 extension Client {
-    public func get(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+    public func get(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in }) async throws
+        -> ClientResponse
+    {
         try await self.send(.get, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    public func post(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+    public func post(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in }) async throws
+        -> ClientResponse
+    {
         try await self.send(.post, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    public func patch(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+    public func patch(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in }) async throws
+        -> ClientResponse
+    {
         try await self.send(.patch, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    public func put(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+    public func put(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in }) async throws
+        -> ClientResponse
+    {
         try await self.send(.put, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    public func delete(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+    public func delete(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> Void = { _ in }) async throws
+        -> ClientResponse
+    {
         try await self.send(.delete, headers: headers, to: url, beforeSend: beforeSend)
     }
-    
+
     public func post<T>(_ url: URI, headers: HTTPFields = [:], content: T) async throws -> ClientResponse where T: Content {
         try await self.post(url, headers: headers, beforeSend: { try $0.content.encode(content) })
     }
@@ -43,7 +53,7 @@ extension Client {
         _ method: HTTPRequest.Method,
         headers: HTTPFields = [:],
         to url: URI,
-        beforeSend: (inout ClientRequest) throws -> () = { _ in }
+        beforeSend: (inout ClientRequest) throws -> Void = { _ in }
     ) async throws -> ClientResponse {
         var request = ClientRequest(method: method, url: url, headers: headers, contentConfiguration: self.contentConfiguration)
         try beforeSend(&request)

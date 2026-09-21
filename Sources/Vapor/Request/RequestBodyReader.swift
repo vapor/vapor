@@ -1,9 +1,7 @@
 /// Anchors a ``RequestBodyReader``'s (non-escapable) lifetime. ``Request/Body/withReader(_:)`` makes one
 /// as a local and lends it to the reader; when the call returns the token dies and the reader with it,
 /// so the reader can't be stashed and read after the request moved on.
-struct RequestBodyReaderScope: ~Copyable {
-    init() {}
-}
+struct RequestBodyReaderScope: ~Copyable {}
 
 /// Reads an HTTP request body, pulled straight off the connection with backpressure (the server stops
 /// reading until the handler asks for more). Implementations come from the HTTP server layer.

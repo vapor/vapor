@@ -1,9 +1,10 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
 public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 /// Encodes data as plaintext, utf8.
 public struct PlaintextEncoder: ContentEncoder {
@@ -19,7 +20,9 @@ public struct PlaintextEncoder: ContentEncoder {
     }
 
     // See `ContentEncoder.encode(_:to:headers:userInfo:)`.
-    public func encode(_ encodable: some Encodable, to body: inout Data, headers: inout HTTPFields, userInfo: [CodingUserInfoKey : any Sendable]) throws {
+    public func encode(
+        _ encodable: some Encodable, to body: inout Data, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]
+    ) throws {
         let encoder = _PlaintextEncoder(userInfo: userInfo)
         var container = encoder.singleValueContainer()
         try container.encode(encodable)

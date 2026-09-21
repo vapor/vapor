@@ -1,5 +1,5 @@
-public import RoutingKit
 public import HTTPTypes
+public import RoutingKit
 
 extension RoutesBuilder {
     @discardableResult
@@ -140,9 +140,11 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
-        self.on(method, path, maxBodySize: maxBodySize, routeDescription: routeDescription, use: { request in
-            try await closure(request)
-        })
+        self.on(
+            method, path, maxBodySize: maxBodySize, routeDescription: routeDescription,
+            use: { request in
+                try await closure(request)
+            })
     }
 
     @discardableResult

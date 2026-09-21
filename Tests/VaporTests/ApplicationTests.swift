@@ -1,14 +1,14 @@
-import Vapor
 import AsyncHTTPClient
+import Foundation
+import HTTPTypes
+import Logging
+import NIOFoundationEssentialsCompat
 import NIOHTTP1
+import RoutingKit
 import ServiceLifecycle
 import Testing
+import Vapor
 import VaporTesting
-import HTTPTypes
-import RoutingKit
-import Logging
-import Foundation
-import NIOFoundationEssentialsCompat
 
 @Suite("Application Tests")
 struct ApplicationTests {
@@ -186,7 +186,7 @@ struct ApplicationTests {
     @Test("Test Swift Error")
     func testSwiftError() async throws {
         try await withApp { app in
-            struct Foo: Error { }
+            struct Foo: Error {}
 
             app.get("error") { req -> String in
                 throw Foo()
@@ -258,7 +258,7 @@ struct ApplicationTests {
 
                 let address = try await app.server.listeningAddress
                 #expect(address.host == "0.0.0.0")
-                if case let .hostname(_, port) = app.serverConfiguration.address {
+                if case .hostname(_, let port) = app.serverConfiguration.address {
                     #expect(0 == port)
                 } else {
                     Issue.record("Bind address not right")
@@ -297,15 +297,15 @@ struct ApplicationTests {
 
             let table = app.routesASCIITable()
             let expected = """
-            +------+------------+
-            | GET  | /hello     |
-            +------+------------+
-            | POST | /submit    |
-            +------+------------+
-            | GET  | /items/:id |
-            +------+------------+
+                +------+------------+
+                | GET  | /hello     |
+                +------+------------+
+                | POST | /submit    |
+                +------+------------+
+                | GET  | /items/:id |
+                +------+------------+
 
-            """
+                """
             #expect(table == expected)
         }
     }

@@ -1,10 +1,10 @@
+import AsyncHTTPClient
+import HTTPTypes
+import RoutingKit
+import Synchronization
+import Testing
 import Vapor
 import VaporTesting
-import AsyncHTTPClient
-import Testing
-import HTTPTypes
-import Synchronization
-import RoutingKit
 
 /// Tests to make sure Vapor's swift-testing integration works.
 @Suite("Vapor Testing Tests")
@@ -31,9 +31,11 @@ struct VaporTestingTests {
                 await #expect(
                     performing: {
                         try await req.content.decode(FooContent.self)
-                    }, throws: { error in
+                    },
+                    throws: { error in
                         guard let abort = error as? Abort,
-                              abort.status == .unsupportedMediaType else {
+                            abort.status == .unsupportedMediaType
+                        else {
                             Issue.record("Unexpected error: \(error)")
                             return false
                         }
@@ -132,11 +134,12 @@ struct VaporTestingTests {
                 // end rather than being cancelled or never started.
                 let streamsCompleted = Mutex(0)
                 app.get("stream") { _ in
-                    Response(body: .init(stream: { writer in
-                        try await writer.write("alpha")
-                        try await writer.write("beta")
-                        streamsCompleted.withLock { $0 += 1 }
-                    }))
+                    Response(
+                        body: .init(stream: { writer in
+                            try await writer.write("alpha")
+                            try await writer.write("beta")
+                            streamsCompleted.withLock { $0 += 1 }
+                        }))
                 }
 
                 try await app.testing(method) { client in

@@ -1,15 +1,16 @@
-import Vapor
-import Logging
-import InMemoryLogging
-import Testing
-import VaporTesting
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 import HTTPTypes
+import InMemoryLogging
+import Logging
 import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("Error Tests")
 struct ErrorTests {
@@ -17,20 +18,20 @@ struct ErrorTests {
     @Test("Test Debug Description of Errors")
     func testPrintable() throws {
         let expectedPrintable = """
-        FooError.noFoo: You do not have a `foo`.
-        Here are some possible causes:
-        - You did not set the flongwaffle.
-        - The session ended before a `Foo` could be made.
-        - The universe conspires against us all.
-        - Computers are hard.
-        These suggestions could address the issue:
-        - You really want to use a `Bar` here.
-        - Take up the guitar and move to the beach.
-        Vapor's documentation talks about this:
-        - http://documentation.com/Foo
-        - http://documentation.com/foo/noFoo
+            FooError.noFoo: You do not have a `foo`.
+            Here are some possible causes:
+            - You did not set the flongwaffle.
+            - The session ended before a `Foo` could be made.
+            - The universe conspires against us all.
+            - Computers are hard.
+            These suggestions could address the issue:
+            - You really want to use a `Bar` here.
+            - Take up the guitar and move to the beach.
+            Vapor's documentation talks about this:
+            - http://documentation.com/Foo
+            - http://documentation.com/foo/noFoo
 
-        """
+            """
         #expect(FooError.noFoo.debugDescription == expectedPrintable)
     }
 
@@ -52,22 +53,25 @@ struct ErrorTests {
 
     @Test("Test Error Causes")
     func testCausesAndSuggestions() {
-        #expect(FooError.noFoo.possibleCauses == [
-            "You did not set the flongwaffle.",
-            "The session ended before a `Foo` could be made.",
-            "The universe conspires against us all.",
-            "Computers are hard."
-        ])
+        #expect(
+            FooError.noFoo.possibleCauses == [
+                "You did not set the flongwaffle.",
+                "The session ended before a `Foo` could be made.",
+                "The universe conspires against us all.",
+                "Computers are hard.",
+            ])
 
-        #expect(FooError.noFoo.suggestedFixes == [
-            "You really want to use a `Bar` here.",
-            "Take up the guitar and move to the beach."
-        ])
+        #expect(
+            FooError.noFoo.suggestedFixes == [
+                "You really want to use a `Bar` here.",
+                "Take up the guitar and move to the beach.",
+            ])
 
-        #expect(FooError.noFoo.documentationLinks == [
-            "http://documentation.com/Foo",
-            "http://documentation.com/foo/noFoo"
-        ])
+        #expect(
+            FooError.noFoo.documentationLinks == [
+                "http://documentation.com/Foo",
+                "http://documentation.com/foo/noFoo",
+            ])
     }
 
     @Test("Test Minimum Conformance")
@@ -75,9 +79,9 @@ struct ErrorTests {
         let minimum = MinimumError.alpha
         let description = minimum.debugDescription
         let expectation = """
-        MinimumError.alpha: Not enabled
+            MinimumError.alpha: Not enabled
 
-        """
+            """
         #expect(description == expectation)
     }
 
@@ -134,13 +138,14 @@ struct ErrorTests {
                 return (url, entry.level)
             },
             uniquingKeysWith: { first, _ in first })
-        #expect(levels == [
-            "/server": .debug,
-            "/client": .debug,
-            "/plain": .debug,
-            "/loud": .error,
-            "/missing": .debug,
-        ])
+        #expect(
+            levels == [
+                "/server": .debug,
+                "/client": .debug,
+                "/plain": .debug,
+                "/loud": .error,
+                "/missing": .debug,
+            ])
     }
 
     @Test("Reporting an error uses the given level, then the error's own")
@@ -217,12 +222,12 @@ private enum MinimumError: String, DebuggableError {
     ///     }
     var reason: String {
         switch self {
-            case .alpha:
-                return "Not enabled"
-            case .bravo:
-                return "Enabled, but I'm not configured"
-            case .charlie:
-                return "Broken beyond repair"
+        case .alpha:
+            return "Not enabled"
+        case .bravo:
+            return "Enabled, but I'm not configured"
+        case .charlie:
+            return "Broken beyond repair"
         }
     }
 
@@ -241,7 +246,6 @@ private enum MinimumError: String, DebuggableError {
         return []
     }
 }
-
 
 private enum FooError: String, DebuggableError {
     case noFoo
@@ -268,7 +272,7 @@ private enum FooError: String, DebuggableError {
                 "You did not set the flongwaffle.",
                 "The session ended before a `Foo` could be made.",
                 "The universe conspires against us all.",
-                "Computers are hard."
+                "Computers are hard.",
             ]
         }
     }
@@ -278,7 +282,7 @@ private enum FooError: String, DebuggableError {
         case .noFoo:
             return [
                 "You really want to use a `Bar` here.",
-                "Take up the guitar and move to the beach."
+                "Take up the guitar and move to the beach.",
             ]
         }
     }
@@ -288,7 +292,7 @@ private enum FooError: String, DebuggableError {
         case .noFoo:
             return [
                 "http://documentation.com/Foo",
-                "http://documentation.com/foo/noFoo"
+                "http://documentation.com/foo/noFoo",
             ]
         }
     }

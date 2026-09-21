@@ -1,8 +1,9 @@
 public import Logging
+
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 /// Emits a log message containing the request method and path to a `Request`'s logger.

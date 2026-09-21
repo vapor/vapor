@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 extension Date {
@@ -35,12 +35,12 @@ extension Date.RFC1123FormatStyle: FormatStyle {
         }
 
         var out = ""
-        out.reserveCapacity(29)              // "Sun, 06 Nov 1994 08:49:37 GMT" is always 29 chars
-        out += Self.dayNames[weekday - 1]    // Calendar weekday: 1 = Sunday ... 7 = Saturday
+        out.reserveCapacity(29)  // "Sun, 06 Nov 1994 08:49:37 GMT" is always 29 chars
+        out += Self.dayNames[weekday - 1]  // Calendar weekday: 1 = Sunday ... 7 = Saturday
         out += ", "
         out += Self.pad(day, 2)
         out += " "
-        out += Self.monthNames[month - 1]    // Calendar month: 1 ... 12
+        out += Self.monthNames[month - 1]  // Calendar month: 1 ... 12
         out += " "
         out += Self.pad(year, 4)
         out += " "

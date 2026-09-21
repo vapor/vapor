@@ -1,14 +1,15 @@
-import Synchronization
-import Vapor
-import VaporTesting
-import Testing
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 import HTTPTypes
 import RoutingKit
+import Synchronization
+import Testing
+import Vapor
+import VaporTesting
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("Authentication Tests")
 struct AuthenticationTests {
@@ -33,7 +34,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                Test.authenticator(), Test.guardMiddleware()
+                Test.authenticator(), Test.guardMiddleware(),
             ]).get("test") { req -> String in
                 return try req.auth.require(Test.self).name
             }
@@ -79,7 +80,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                Test.authenticator(), Test.guardMiddleware()
+                Test.authenticator(), Test.guardMiddleware(),
             ]).get("test") { req -> String in
                 return try req.auth.require(Test.self).name
             }
@@ -107,7 +108,7 @@ struct AuthenticationTests {
         struct TestAuthenticator: BasicAuthenticator {
             let realm = #"Private "Area""#
 
-            func authenticate(basic: BasicAuthorization, for request: Request) async throws { }
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {}
         }
 
         try await withApp { app in
@@ -135,13 +136,13 @@ struct AuthenticationTests {
     @Test("Test Bearer Authenticator WWW Authenticate Header")
     func bearerAuthenticatorWWWAuthenticateHeader() async throws {
         struct DefaultRealmAuthenticator: BearerAuthenticator {
-            func authenticate(bearer: BearerAuthorization, for request: Request) async throws { }
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws {}
         }
 
         struct CustomRealmAuthenticator: BearerAuthenticator {
             let realm = #"API "v2""#
 
-            func authenticate(bearer: BearerAuthorization, for request: Request) async throws { }
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws {}
         }
 
         try await withApp { app in
@@ -184,7 +185,7 @@ struct AuthenticationTests {
 
     @Test("Test Throwing Authenticator WWW Authenticate Header")
     func throwingAuthenticatorWWWAuthenticateHeader() async throws {
-        struct NotAnAbortError: Error { }
+        struct NotAnAbortError: Error {}
 
         struct TestAuthenticator: BearerAuthenticator {
             let realm = "API"
@@ -282,7 +283,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                middleware, TestAuthenticator()
+                middleware, TestAuthenticator(),
             ]).get("test") { _ in
                 Response(status: .ok)
             }
@@ -306,18 +307,18 @@ struct AuthenticationTests {
 
     @Test("Test Chained Authenticators WWW Authenticate Header")
     func chainedAuthenticatorsWWWAuthenticateHeader() async throws {
-        struct Test: Authenticatable { }
+        struct Test: Authenticatable {}
 
         struct BasicTestAuthenticator: BasicAuthenticator {
             let realm = "Basic Realm"
 
-            func authenticate(basic: BasicAuthorization, for request: Request) async throws { }
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {}
         }
 
         struct BearerTestAuthenticator: BearerAuthenticator {
             let realm = "Bearer Realm"
 
-            func authenticate(bearer: BearerAuthorization, for request: Request) async throws { }
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws {}
         }
 
         try await withApp { app in
@@ -325,16 +326,16 @@ struct AuthenticationTests {
             // innermost one and stamps its challenge before any of the others see the error. The
             // rethrown error then carries a challenge, so the outer authenticators leave it alone.
             app.routes.grouped([
-                BasicTestAuthenticator(), BearerTestAuthenticator(), Test.guardMiddleware()
+                BasicTestAuthenticator(), BearerTestAuthenticator(), Test.guardMiddleware(),
             ]).get("bearer-innermost") { _ -> String in "" }
 
             app.routes.grouped([
-                BearerTestAuthenticator(), BasicTestAuthenticator(), Test.guardMiddleware()
+                BearerTestAuthenticator(), BasicTestAuthenticator(), Test.guardMiddleware(),
             ]).get("basic-innermost") { _ -> String in "" }
 
             // The same ordering applies to a returned response, not just to a thrown error.
             app.routes.grouped([
-                BasicTestAuthenticator(), BearerTestAuthenticator()
+                BasicTestAuthenticator(), BearerTestAuthenticator(),
             ]).get("returned") { _ in
                 Response(status: .unauthorized)
             }
@@ -381,7 +382,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                Test.authenticator(), Test.guardMiddleware()
+                Test.authenticator(), Test.guardMiddleware(),
             ]).get("test") { req -> String in
                 return try req.auth.require(Test.self).name
             }
@@ -422,7 +423,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                Test.authenticator(), Test.guardMiddleware()
+                Test.authenticator(), Test.guardMiddleware(),
             ]).get("test") { req -> String in
                 return try req.auth.require(Test.self).name
             }
@@ -466,7 +467,7 @@ struct AuthenticationTests {
 
         try await withApp { app in
             app.routes.grouped([
-                Test.authenticator(), redirectMiddleware
+                Test.authenticator(), redirectMiddleware,
             ]).get("test") { req -> String in
                 return try req.auth.require(Test.self).name
             }
@@ -574,7 +575,7 @@ struct AuthenticationTests {
         try await withApp { app in
             app.routes.grouped([
                 app.sessionsMiddleware,
-                TestSessionAuthenticator()
+                TestSessionAuthenticator(),
             ]).get("test") { req -> UserInfo in
                 UserInfo(name: req.auth.get(Test.self)?.sessionID ?? "none")
             }

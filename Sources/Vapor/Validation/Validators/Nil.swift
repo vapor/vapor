@@ -15,7 +15,7 @@ extension ValidatorResults.Nil: ValidatorResult {
     public var isFailure: Bool {
         !self.isNil
     }
-    
+
     public var successDescription: String? {
         "is null"
     }

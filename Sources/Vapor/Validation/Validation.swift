@@ -1,9 +1,10 @@
 public struct Validation: Sendable {
     enum ValuelessKeyBehavior {
-        case missing // value is required; return a Missing() result if key is not found
-        case skipWhenUnset // value is not required, but should not be nil-checked; return a Skipped() result only if key doesn't exist at all
-        case skipAlways // value is not required, return a Skipped() result if key is unset or nil
-        case ignore // value is not relevant, call run closure regardless of key presence
+        case missing  // value is required; return a Missing() result if key is not found
+        // Value is not required, but should not be nil-checked; return a Skipped() result only if key doesn't exist at all.
+        case skipWhenUnset
+        case skipAlways  // value is not required, return a Skipped() result if key is unset or nil
+        case ignore  // value is not relevant, call run closure regardless of key presence
     }
     let key: BasicCodingKey
     let valuelessKeyBehavior: ValuelessKeyBehavior
@@ -26,11 +27,11 @@ public struct Validation: Sendable {
             } catch DecodingError.dataCorrupted(let context) {
                 return ValidatorResults.Invalid(reason: context.debugDescription)
             } catch {
-               return ValidatorResults.Codable(error: error)
+                return ValidatorResults.Codable(error: error)
             }
         }
     }
-    
+
     init(nested key: BasicCodingKey, required: Bool, keyed validations: Validations, customFailureDescription: String?) {
         self.init(
             key: key,
@@ -44,8 +45,11 @@ public struct Validation: Sendable {
             }
         }
     }
-    
-    init(nested key: BasicCodingKey, required: Bool, unkeyed factory: @Sendable @escaping (Int, inout Validations) -> (), customFailureDescription: String?) {
+
+    init(
+        nested key: BasicCodingKey, required: Bool, unkeyed factory: @Sendable @escaping (Int, inout Validations) -> Void,
+        customFailureDescription: String?
+    ) {
         self.init(
             key: key,
             valuelessKeyBehavior: required ? .missing : .skipAlways,
@@ -66,11 +70,11 @@ public struct Validation: Sendable {
             }
         }
     }
-    
+
     init(key: BasicCodingKey, result: any ValidatorResult, customFailureDescription: String?) {
         self.init(key: key, valuelessKeyBehavior: .ignore, customFailureDescription: customFailureDescription) { _ in result }
     }
-    
+
     init(
         key: BasicCodingKey,
         valuelessKeyBehavior: ValuelessKeyBehavior,
@@ -88,7 +92,7 @@ public struct ValidationResult: Sendable {
     public let key: BasicCodingKey
     public let result: any ValidatorResult
     public let customFailureDescription: String?
-    
+
     init(key: BasicCodingKey, result: any ValidatorResult, customFailureDescription: String? = nil) {
         self.key = key
         self.result = result
@@ -100,12 +104,12 @@ extension ValidationResult: ValidatorResult {
     public var isFailure: Bool {
         self.result.isFailure
     }
-    
+
     public var successDescription: String? {
         self.result.successDescription
             .map { "\(self.key) \($0)" }
     }
-    
+
     public var failureDescription: String? {
         self.result.failureDescription
             .map { "\(self.key) \($0)" }

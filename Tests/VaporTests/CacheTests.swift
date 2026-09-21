@@ -1,6 +1,6 @@
 import Testing
-import VaporTesting
 import Vapor
+import VaporTesting
 
 @Suite("Cache Tests")
 struct CacheTests {
@@ -42,7 +42,6 @@ struct CacheTests {
     }
 }
 
-
 // Always returns "bar" for key "foo".
 // That's all...
 struct FooCache: Cache {
@@ -50,5 +49,5 @@ struct FooCache: Cache {
         return key == "foo" ? "bar" as? T : nil
     }
 
-    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T : Encodable, T : Sendable {}
+    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T: Encodable, T: Sendable {}
 }

@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+    import FoundationEssentials
 #else
-import Foundation
+    import Foundation
 #endif
 
 // MARK: - URI
@@ -77,7 +77,9 @@ public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, Express
         self.init(scheme: scheme, userinfo: nil, host: host, port: port, path: path, query: query, fragment: fragment)
     }
 
-    public init(scheme: Scheme = .init(), host: String? = nil, port: Int? = nil, path: String, query: String? = nil, fragment: String? = nil) {
+    public init(
+        scheme: Scheme = .init(), host: String? = nil, port: Int? = nil, path: String, query: String? = nil, fragment: String? = nil
+    ) {
         self.init(scheme: scheme, userinfo: nil, host: host, port: port, path: path, query: query, fragment: fragment)
     }
 

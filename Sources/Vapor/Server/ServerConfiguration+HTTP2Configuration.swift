@@ -89,6 +89,7 @@ extension ServerConfiguration {
     public struct HTTPVersion: Sendable, Hashable {
         /// The underlying protocol version, carrying the HTTP/2 or HTTP/3 configuration when applicable.
         enum Version: Sendable, Hashable {
+            // swift-format-ignore: AlwaysUseLowerCamelCase
             case http1_1
             case http2(config: HTTP2)
             case http3(config: HTTP3)
@@ -96,6 +97,7 @@ extension ServerConfiguration {
 
         var version: Version
 
+        // swift-format-ignore: AlwaysUseLowerCamelCase
         /// The HTTP/1.1 protocol version.
         public static var http1_1: Self {
             Self.init(version: .http1_1)

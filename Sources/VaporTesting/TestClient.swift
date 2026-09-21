@@ -1,9 +1,10 @@
-@testable public import Vapor
-import Foundation
-import Synchronization
 import AsyncHTTPClient
+import Foundation
 import Logging
 import NIOPosix
+import Synchronization
+
+@testable public import Vapor
 
 public protocol TestClient: Client {
     var baseURL: URI? { get }
@@ -110,7 +111,8 @@ struct LiveTestClient: TestClient {
     let unreadBodies = UnreadBodies()
 
     var baseURL: URI? {
-        URI(scheme: self.app.serverConfiguration.isTLSEnabled ? "https" : "http",
+        URI(
+            scheme: self.app.serverConfiguration.isTLSEnabled ? "https" : "http",
             host: self.address.host ?? "localhost", port: self.address.port, path: "/")
     }
     var contentConfiguration: ContentConfiguration {

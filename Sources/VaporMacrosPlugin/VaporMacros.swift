@@ -1,5 +1,5 @@
-import SwiftSyntaxMacros
 import SwiftCompilerPlugin
+import SwiftSyntaxMacros
 
 @main
 struct VaporMacrosPlugin: CompilerPlugin {

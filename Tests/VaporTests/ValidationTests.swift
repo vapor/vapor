@@ -1,13 +1,14 @@
-import Vapor
-import Testing
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import VaporTesting
 import HTTPTypes
 import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("Validation Tests")
 struct ValidationTests {
@@ -33,10 +34,6 @@ struct ValidationTests {
             struct Pet: Codable {
                 var name: String
                 var age: Int
-                init(name: String, age: Int) {
-                    self.name = name
-                    self.age = age
-                }
             }
 
             init(id: Int? = nil, name: String, age: Int, gender: Gender, pet: Pet, preferredColors: [String] = [], isAdmin: Bool) {
@@ -58,10 +55,10 @@ struct ValidationTests {
                 v.add("gender", as: String.self, is: .case(of: Gender.self))
                 // validate the email is valid and is not nil
                 v.add("email", as: String?.self, is: !.nil && .email)
-                v.add("email", as: String?.self, is: .email && !.nil) // test other way
+                v.add("email", as: String?.self, is: .email && !.nil)  // test other way
                 // validate the email is valid or is nil
                 v.add("email", as: String?.self, is: .nil || .email)
-                v.add("email", as: String?.self, is: .email || .nil) // test other way
+                v.add("email", as: String?.self, is: .email || .nil)  // test other way
                 v.add(
                     "email",
                     as: String?.self,
@@ -98,70 +95,72 @@ struct ValidationTests {
         }
 
         let valid = """
-        {
-            "name": "Tanner",
-            "age": 24,
-            "gender": "male",
-            "email": "me@tanner.xyz",
-            "luckyNumber": 5,
-            "profilePictureURL": "https://foo.jpg",
-            "preferredColors": ["blue"],
-            "pet": {
-                "name": "Zizek",
-                "age": 3
-            },
-            "hobbies": [
-                {
-                    "title": "Football"
+            {
+                "name": "Tanner",
+                "age": 24,
+                "gender": "male",
+                "email": "me@tanner.xyz",
+                "luckyNumber": 5,
+                "profilePictureURL": "https://foo.jpg",
+                "preferredColors": ["blue"],
+                "pet": {
+                    "name": "Zizek",
+                    "age": 3
                 },
-                {
-                    "title": "Computer science"
-                }
-            ],
-            "favoritePet": null,
-            "isAdmin": true
-        }
-        """
+                "hobbies": [
+                    {
+                        "title": "Football"
+                    },
+                    {
+                        "title": "Computer science"
+                    }
+                ],
+                "favoritePet": null,
+                "isAdmin": true
+            }
+            """
         #expect(throws: Never.self) {
             try User.validate(json: valid)
         }
 
-        let validURL: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
+        let validURL: URI =
+            "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
         #expect(throws: Never.self) {
             try User.validate(query: validURL)
         }
 
         let invalidUser = """
-        {
-            "name": "Tan!ner",
-            "age": 24,
-            "gender": "other",
-            "email": "me@tanner.xyz",
-            "luckyNumber": 5,
-            "profilePictureURL": "https://foo.jpg",
-            "preferredColors": ["blue"],
-            "pet": {
-                "name": "Zizek",
-                "age": 3
-            },
-            "isAdmin": true,
-            "hobbies": [
-                {
-                    "title": "Football"
+            {
+                "name": "Tan!ner",
+                "age": 24,
+                "gender": "other",
+                "email": "me@tanner.xyz",
+                "luckyNumber": 5,
+                "profilePictureURL": "https://foo.jpg",
+                "preferredColors": ["blue"],
+                "pet": {
+                    "name": "Zizek",
+                    "age": 3
                 },
-                {
-                    "title": "Computer science"
-                }
-            ]
-        }
-        """
+                "isAdmin": true,
+                "hobbies": [
+                    {
+                        "title": "Football"
+                    },
+                    {
+                        "title": "Computer science"
+                    }
+                ]
+            }
+            """
 
         let jsonError = #expect(throws: ValidationsError.self) {
             try User.validate(json: invalidUser)
         }
         #expect(jsonError?.description == "name contains '!' (allowed: A-Z, a-z, 0-9)")
 
-        let invalidUserURL: URI = "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
+        let invalidUserURL: URI =
+            "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
         let urlError = #expect(throws: ValidationsError.self) {
             try User.validate(query: invalidUserURL)
         }
@@ -188,22 +187,22 @@ struct ValidationTests {
             static func validations(_ v: inout Validations) {
                 // validate the international email is valid and is not nil
                 v.add("email", as: String?.self, is: !.nil && .internationalEmail)
-                v.add("email", as: String?.self, is: .internationalEmail && !.nil) // test other way
+                v.add("email", as: String?.self, is: .internationalEmail && !.nil)  // test other way
             }
         }
 
         let valid = """
-        {
-            "email": "ß@tanner.xyz"
-        }
-        """
+            {
+                "email": "ß@tanner.xyz"
+            }
+            """
         #expect(throws: Never.self) {
             try Email.validate(json: valid)
         }
 
         // N.B.: These two checks previously asserted against a URI containing the unencoded `ß` character.
         // Such a URI is semantically incorrect (per RFC 3986) and should have been considered a bug.
-        let validURL: URI = "https://tanner.xyz/email?email=%C3%9F@tanner.xyz" // ß
+        let validURL: URI = "https://tanner.xyz/email?email=%C3%9F@tanner.xyz"  // ß
         #expect(throws: Never.self) {
             try Email.validate(query: validURL)
         }
@@ -214,10 +213,10 @@ struct ValidationTests {
         }
 
         let invalidUser = """
-        {
-            "email": "me@tanner@.xyz",
-        }
-        """
+            {
+                "email": "me@tanner@.xyz",
+            }
+            """
         let jsonError = #expect(throws: ValidationsError.self) {
             try Email.validate(json: invalidUser)
         }
@@ -240,10 +239,6 @@ struct ValidationTests {
             struct Pet: Codable {
                 var name: String
                 var age: Int
-                init(name: String, age: Int) {
-                    self.name = name
-                    self.age = age
-                }
             }
 
             static func validations(_ v: inout Validations) {
@@ -260,15 +255,15 @@ struct ValidationTests {
         }
 
         let invalidPetJSON = """
-        {
-            "name": "Tanner",
-            "age": 24,
-            "pet": {
-                "name": "Zi!zek",
-                "age": 3
+            {
+                "name": "Tanner",
+                "age": 24,
+                "pet": {
+                    "name": "Zi!zek",
+                    "age": 3
+                }
             }
-        }
-        """
+            """
         let jsonError = #expect(throws: ValidationsError.self) {
             try User.validate(json: invalidPetJSON)
         }
@@ -291,16 +286,10 @@ struct ValidationTests {
 
             struct Hobby: Codable {
                 var title: String
-                init(title: String) {
-                    self.title = title
-                }
             }
 
             struct Allergy: Codable {
                 var title: String
-                init(title: String) {
-                    self.title = title
-                }
             }
 
             static func validations(_ v: inout Validations) {
@@ -317,72 +306,75 @@ struct ValidationTests {
         }
 
         let invalidNestedArray = """
-        {
-            "name": "Tanner",
-            "age": 24,
-            "hobbies": [
-                {
-                    "title": "Football€"
-                },
-                {
-                    "title": "Co"
-                }
-            ]
-        }
-        """
+            {
+                "name": "Tanner",
+                "age": 24,
+                "hobbies": [
+                    {
+                        "title": "Football€"
+                    },
+                    {
+                        "title": "Co"
+                    }
+                ]
+            }
+            """
         let jsonError = #expect(throws: ValidationsError.self) {
             try User.validate(json: invalidNestedArray)
         }
-        #expect(jsonError?.description == "hobbies at index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and at index 1 title is less than minimum of 5 character(s)")
+        #expect(
+            jsonError?.description
+                == "hobbies at index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and at index 1 title is less than minimum of 5 character(s)"
+        )
 
         let invalidNestedArray2 = """
-        {
-            "name": "Tanner",
-            "age": 24,
-            "allergies": [
-                {
-                    "title": "Peanuts"
-                }
-            ]
-        }
-        """
+            {
+                "name": "Tanner",
+                "age": 24,
+                "allergies": [
+                    {
+                        "title": "Peanuts"
+                    }
+                ]
+            }
+            """
         let jsonError2 = #expect(throws: ValidationsError.self) {
             try User.validate(json: invalidNestedArray2)
         }
         #expect(jsonError2?.description == "hobbies is required, hobbies is required")
 
         let invalidNestedArray3 = """
-        {
-            "name": "Tanner",
-            "age": 24,
-            "hobbies": [
-                {
-                    "title": "Football"
-                }
-            ],
-            "allergies": [
-                {
-                    "title": "Peanuts€"
-                }
-            ]
-        }
-        """
+            {
+                "name": "Tanner",
+                "age": 24,
+                "hobbies": [
+                    {
+                        "title": "Football"
+                    }
+                ],
+                "allergies": [
+                    {
+                        "title": "Peanuts€"
+                    }
+                ]
+            }
+            """
         let jsonError3 = #expect(throws: ValidationsError.self) {
             try User.validate(json: invalidNestedArray3)
         }
         #expect(jsonError3?.description == "allergies at index 0 title contains '€' (allowed: A-Z, a-z)")
 
         let validNestedArray = """
-        {
-            "name": "Tanner",
-            "age": 24,
-            "hobbies": [
-                {
-                    "title": "Football"
-                }
-            ],
-        }
-        """
+            {
+                "name": "Tanner",
+                "age": 24,
+                "hobbies": [
+                    {
+                        "title": "Football"
+                    }
+                ],
+            }
+            """
         #expect(throws: Never.self) {
             try User.validate(json: validNestedArray)
         }
@@ -397,9 +389,6 @@ struct ValidationTests {
 
             struct Hobby: Codable {
                 var title: String
-                init(title: String) {
-                    self.title = title
-                }
             }
 
             static func validations(_ v: inout Validations) {
@@ -416,37 +405,39 @@ struct ValidationTests {
         }
 
         #expect(throws: Never.self) {
-            try User.validate(json: """
-        {
-            "name": "Tanner",
-            "age": 24,
-            "hobbies": [
-                {
-                    "title": "€"
-                },
-                {
-                    "title": "hello"
-                }
-            ]
-        }
-        """)
+            try User.validate(
+                json: """
+                    {
+                        "name": "Tanner",
+                        "age": 24,
+                        "hobbies": [
+                            {
+                                "title": "€"
+                            },
+                            {
+                                "title": "hello"
+                            }
+                        ]
+                    }
+                    """)
         }
 
         let validationError = #expect(throws: ValidationsError.self) {
-            try User.validate(json: """
-        {
-            "name": "Tanner",
-            "age": 24,
-            "hobbies": [
-                {
-                    "title": "hello"
-                },
-                {
-                    "title": "€"
-                }
-            ]
-        }
-        """)
+            try User.validate(
+                json: """
+                    {
+                        "name": "Tanner",
+                        "age": 24,
+                        "hobbies": [
+                            {
+                                "title": "hello"
+                            },
+                            {
+                                "title": "€"
+                            }
+                        ]
+                    }
+                    """)
         }
         #expect(validationError?.description == "hobbies at index 1 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9)")
     }
@@ -463,11 +454,11 @@ struct ValidationTests {
         }
 
         let invalidUser = """
-        {
-            "name": "Tan!ner",
-            "age": 24
-        }
-        """
+            {
+                "name": "Tan!ner",
+                "age": 24
+            }
+            """
         do {
             try User.validate(json: invalidUser)
         } catch let error as ValidationsError {
@@ -507,19 +498,25 @@ struct ValidationTests {
         expect(["\n\r\t"], passes: .ascii)
         expect(["\n\r\t", "\u{129}"], fails: .ascii, "string at index 1 contains 'ĩ' (allowed: ASCII)")
         expect([" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"], passes: .ascii)
-        expect(["ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"], fails: .ascii, "string at index 0 contains '🤠' (allowed: ASCII)")
+        expect(
+            ["ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"], fails: .ascii,
+            "string at index 0 contains '🤠' (allowed: ASCII)")
     }
 
     @Test("Test Alphanumeric")
     func testAlphanumeric() {
         expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .alphanumeric)
-        expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .alphanumeric, "contains '+' (allowed: A-Z, a-z, 0-9)")
+        expect(
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .alphanumeric,
+            "contains '+' (allowed: A-Z, a-z, 0-9)")
     }
 
     @Test("Test Collection Alphanumeric")
     func testCollectionAlphanumeric() {
         expect(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], passes: .alphanumeric)
-        expect(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef", "ghijklmnopqrstuvwxyz0123456789+/"], fails: .alphanumeric, "string at index 1 contains '+' (allowed: A-Z, a-z, 0-9)")
+        expect(
+            ["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef", "ghijklmnopqrstuvwxyz0123456789+/"], fails: .alphanumeric,
+            "string at index 1 contains '+' (allowed: A-Z, a-z, 0-9)")
     }
 
     @Test("Test Empty")
@@ -674,7 +671,8 @@ struct ValidationTests {
     @Test("Test Case Of")
     func testCaseOf() {
         enum StringEnumType: String, CaseIterable {
-            case case1, case2, case3 = "CASE3"
+            case case1, case2
+            case case3 = "CASE3"
         }
         expect("case1", passes: .case(of: StringEnumType.self))
         expect("case2", passes: .case(of: StringEnumType.self))
@@ -682,7 +680,8 @@ struct ValidationTests {
         expect("case3", fails: .case(of: StringEnumType.self), "is not case1, case2, or CASE3")
 
         enum IntEnumType: Int, CaseIterable {
-            case case1 = 1, case2 = 2
+            case case1 = 1
+            case case2 = 2
         }
         expect(1, passes: .case(of: IntEnumType.self))
         expect(2, passes: .case(of: IntEnumType.self))
@@ -779,7 +778,7 @@ struct ValidationTests {
                 let res = try await client.post("users") { req in
                     try req.content.encode([
                         "name": "Vapor",
-                        "age": "asdf"
+                        "age": "asdf",
                     ])
                 }
                 #expect(res.status == .badRequest)
@@ -804,63 +803,63 @@ struct ValidationTests {
         }
 
         let valid = """
-        {
-            "url": null
-        }
-        """
+            {
+                "url": null
+            }
+            """
         #expect(throws: Never.self) {
             try Site.validate(json: valid)
         }
 
         let valid2 = """
-        {
-        }
-        """
+            {
+            }
+            """
         #expect(throws: Never.self) {
             try Site.validate(json: valid2)
         }
 
         let valid3 = """
-        {
-            "name": "Tim"
-        }
-        """
+            {
+                "name": "Tim"
+            }
+            """
         #expect(throws: Never.self) {
             try Site.validate(json: valid3)
         }
 
         let valid4 = """
-        {
-            "name": null
-        }
-        """
+            {
+                "name": null
+            }
+            """
         #expect(throws: Never.self) {
             try Site.validate(json: valid4)
         }
 
         let valid5 = """
-        {
-            "number": 3
-        }
-        """
+            {
+                "number": 3
+            }
+            """
         #expect(throws: Never.self) {
             try Site.validate(json: valid5)
         }
 
         let valid6 = """
-        {
-            "number": null
-        }
-        """
+            {
+                "number": null
+            }
+            """
         #expect(throws: Never.self) {
             try Site.validate(json: valid6)
         }
 
         let invalid1 = """
-        {
-            "number": "Tim"
-        }
-        """
+            {
+                "number": "Tim"
+            }
+            """
 
         do {
             try Site.validate(json: invalid1)
@@ -873,10 +872,10 @@ struct ValidationTests {
         }
 
         let invalid2 = """
-        {
-            "name": 3
-        }
-        """
+            {
+                "name": 3
+            }
+            """
         do {
             try Site.validate(json: invalid2)
         } catch let error as ValidationsError {
@@ -931,9 +930,6 @@ struct ValidationTests {
 
             struct Hobby: Codable {
                 var title: String
-                init(title: String) {
-                    self.title = title
-                }
             }
 
             static func validations(_ v: inout Validations) {
@@ -961,26 +957,29 @@ struct ValidationTests {
         }
 
         let invalidNestedArray = """
-        {
-            "name": "Andre",
-            "age": 26,
-            "hobbies": [
-                {
-                    "title": "Running€"
-                },
-                {
-                    "title": "Co"
-                },
-                {
-                    "title": ""
-                }
-            ]
-        }
-        """
+            {
+                "name": "Andre",
+                "age": 26,
+                "hobbies": [
+                    {
+                        "title": "Running€"
+                    },
+                    {
+                        "title": "Co"
+                    },
+                    {
+                        "title": ""
+                    }
+                ]
+            }
+            """
         let error = #expect(throws: ValidationsError.self) {
             try User.validate(json: invalidNestedArray)
         }
-        #expect(error?.description == "Something went wrong with the provided data, The provided name is invalid, A provided hobby value was not alphanumeric, A provided hobby value was empty")
+        #expect(
+            error?.description
+                == "Something went wrong with the provided data, The provided name is invalid, A provided hobby value was not alphanumeric, A provided hobby value was empty"
+        )
     }
 }
 

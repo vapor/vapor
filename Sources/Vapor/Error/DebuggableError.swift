@@ -1,9 +1,10 @@
-#if canImport(FoundationEssentials)
-public import FoundationEssentials
-#else
-public import Foundation
-#endif
 public import Logging
+
+#if canImport(FoundationEssentials)
+    public import FoundationEssentials
+#else
+    public import Foundation
+#endif
 
 /// `Debuggable` provides an interface that allows a type
 /// to be more easily debugged in the case of an error.
@@ -144,7 +145,6 @@ extension DebuggableError {
     }
 }
 
-
 // MARK: Representations
 /// Available formatting options for generating debug info for `Debuggable` errors.
 public enum HelpFormat {
@@ -203,9 +203,8 @@ extension DebuggableError {
     }
 }
 
-
 extension Sequence where Iterator.Element == String {
     var bulletedList: String {
-        self.map { "\n- \($0)" } .joined()
+        self.map { "\n- \($0)" }.joined()
     }
 }

@@ -16,14 +16,14 @@ public struct SessionData: Sendable {
     public var snapshot: [String: String] { self.storage }
 
     private var storage: [String: String]
-    
+
     /// Creates a new empty session data container.
     public init() {
         self.storage = [:]
     }
 
     /// Creates a session data container for the given data.
-    
+
     /// - Parameter data: The data to store in the container.
     public init(initialData data: [String: String]) {
         self.storage = data

@@ -23,9 +23,9 @@ extension Array where Element == any Middleware {
     }
 }
 
-public extension Middleware {
+extension Middleware {
     /// Wraps a `Responder` in a single `Middleware` creating a new `Responder`.
-    func makeResponder(chainingTo responder: any Responder) -> any Responder {
+    public func makeResponder(chainingTo responder: any Responder) -> any Responder {
         return HTTPMiddlewareResponder(middleware: self, responder: responder)
     }
 }
@@ -34,11 +34,6 @@ private struct HTTPMiddlewareResponder: Responder {
     var middleware: any Middleware
     var responder: any Responder
 
-    init(middleware: any Middleware, responder: any Responder) {
-        self.middleware = middleware
-        self.responder = responder
-    }
-    
     /// Chains an incoming request to another `Responder` on the router.
     /// - parameters:
     ///     - request: The incoming `Request`.

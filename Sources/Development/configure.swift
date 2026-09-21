@@ -1,8 +1,8 @@
 import Foundation
-import Vapor
-import X509
 import Logging
 import SwiftASN1
+import Vapor
+import X509
 
 func configure(_ app: Application) async throws {
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -64,7 +64,8 @@ extension Environment {
 }
 
 enum TLSData {
-    static var sampleServerCertificatePEM: String { """
+    static var sampleServerCertificatePEM: String {
+        """
         -----BEGIN CERTIFICATE-----
         MIIDeTCCAmGgAwIBAgIUMJzqelT95d/JU2Yp4/XHuqhJTs4wDQYJKoZIhvcNAQEL\nBQAwTDELMAkGA1UEBhMCVVMxKTAnBgNVBAoMIFZhcG9yIERldmVsb3BtZW50IEV4
         YW1wbGUgU2VydmVyMRIwEAYDVQQDDAlsb2NhbGhvc3QwHhcNMjMwMzEwMTIyNjQw\nWhcNMjcwMzEwMTIyNjQwWjBMMQswCQYDVQQGEwJVUzEpMCcGA1UECgwgVmFwb3Ig
@@ -79,7 +80,8 @@ enum TLSData {
         -----END CERTIFICATE-----
         """
     }
-    static var sampleServerPrivateKeyPEM: String { """
+    static var sampleServerPrivateKeyPEM: String {
+        """
         -----BEGIN PRIVATE KEY-----
         MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC2rwuxbh8k8BG2\nFBLVAxz3RCwoJWRsqadfqhNV7oUNaj4MexTASlwGGC40shHytRmqKwV3yxlucTR3
         0qyWFZoZtlDhjyW2bxbV2Xrn0M/Ad9burH1xCTVmyeivB1GZD8jUSUTkuSAYQ0Yi\nsVEyTk/j4aU9WaKETXf/f7/9CaDOBxFxOKDuyiG+HzOCLlSH03Ym+NmjB+4yjFX1

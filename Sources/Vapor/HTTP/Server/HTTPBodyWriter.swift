@@ -4,9 +4,7 @@
 /// these. Whoever drives a body stream creates a token as a local, lends it to the writer it builds,
 /// and lets it die when the call returns — at which point the compiler considers every writer
 /// derived from it dead too.
-struct HTTPBodyWriterScope: ~Copyable {
-    init() {}
-}
+struct HTTPBodyWriterScope: ~Copyable {}
 
 /// Protocol for writing HTTP response bodies.
 ///

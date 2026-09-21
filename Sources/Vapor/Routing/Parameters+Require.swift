@@ -1,6 +1,6 @@
-public import RoutingKit
 import HTTPTypes
 import Logging
+public import RoutingKit
 
 extension Parameters {
     /// Grabs the named parameter from the parameter bag.
@@ -21,8 +21,7 @@ extension Parameters {
     ///     - name: The name of the parameter.
     ///     - type: The required parameter value type.
     public func require<T>(_ name: String, as type: T.Type = T.self) throws -> T
-        where T: LosslessStringConvertible
-    {
+    where T: LosslessStringConvertible {
         guard let stringValue: String = get(name) else {
             self.logger.debug("The parameter does not exist", metadata: ["parameter": "\(name)"])
             throw Abort(.internalServerError, reason: "The parameter provided does not exist")

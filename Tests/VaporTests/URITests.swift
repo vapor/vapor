@@ -1,9 +1,9 @@
-import Vapor
 import Algorithms
-import Testing
 // Uses Foundation's `addingPercentEncoding(withAllowedCharacters:)` / `CharacterSet.url*Allowed`
 // as the reference encoder, so import full Foundation rather than FoundationEssentials.
 import Foundation
+import Testing
+import Vapor
 
 @Suite("URI Test")
 struct URITests {
@@ -122,9 +122,11 @@ struct URITests {
     @Test("Test Overlong URI Parsing")
     func testOverlongURIParsing() {
         let zeros = String(repeating: "0", count: 65_512)
-        let untrustedInput = "[https://vapor.codes.somewhere-else.test:](https://vapor.codes.somewhere-else.test/\(zeros)443)[\(zeros)](https://vapor.codes.somewhere-else.test/\(zeros)443)[443](https://vapor.codes.somewhere-else.test/\(zeros)443)"
+        let untrustedInput =
+            "[https://vapor.codes.somewhere-else.test:](https://vapor.codes.somewhere-else.test/\(zeros)443)[\(zeros)](https://vapor.codes.somewhere-else.test/\(zeros)443)[443](https://vapor.codes.somewhere-else.test/\(zeros)443)"
 
-        let readableInAssertionOutput = untrustedInput
+        let readableInAssertionOutput =
+            untrustedInput
             .replacing(zeros, with: "00...00")
             .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
         let uri = URI(string: untrustedInput)
@@ -138,8 +140,8 @@ struct URITests {
         #if canImport(Darwin)
             // TODO: It is not clear why the "encode the first colon as %3A but none of the others" behavior appears, and why only on Darwin
             #expect(
-                uri.path.replacing(zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1) ==
-                readableInAssertionOutput.replacing("%3A", with: ":", maxReplacements: 1)
+                uri.path.replacing(zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1)
+                    == readableInAssertionOutput.replacing("%3A", with: ":", maxReplacements: 1)
             )
         #else
             #expect(uri.path == "/")
@@ -177,14 +179,17 @@ struct URITests {
         expectURIString("file:///a/../b/../c", hasScheme: "file", hasPath: "/a/../b/../c")
         expectURIString("ftp://ftp.gnu.org/", hasScheme: "ftp", hasHost: "ftp.gnu.org", hasPath: "/")
         expectURIString("ftp://ftp.gnu.org/pub/gnu", hasScheme: "ftp", hasHost: "ftp.gnu.org", hasPath: "/pub/gnu")
-        expectURIString("ftp://luser@ftp.gnu.org/pub/gnu",
+        expectURIString(
+            "ftp://luser@ftp.gnu.org/pub/gnu",
             hasScheme: "ftp", hasUserinfo: "luser", hasHost: "ftp.gnu.org", hasPath: "/pub/gnu"
         )
         expectURIString("ftp://@ftp.gnu.org/pub/gnu", hasScheme: "ftp", hasUserinfo: "", hasHost: "ftp.gnu.org", hasPath: "/pub/gnu")
-        expectURIString("ftp://luser:password@ftp.gnu.org/pub/gnu",
+        expectURIString(
+            "ftp://luser:password@ftp.gnu.org/pub/gnu",
             hasScheme: "ftp", hasUserinfo: "luser:password", hasHost: "ftp.gnu.org", hasPath: "/pub/gnu"
         )
-        expectURIString("ftp://:password@ftp.gnu.org/pub/gnu",
+        expectURIString(
+            "ftp://:password@ftp.gnu.org/pub/gnu",
             hasScheme: "ftp", hasUserinfo: ":password", hasHost: "ftp.gnu.org", hasPath: "/pub/gnu"
         )
         expectURIString("ftp://ftp.gnu.org:72/pub/gnu", hasScheme: "ftp", hasHost: "ftp.gnu.org", hasPort: 72, hasPath: "/pub/gnu")
@@ -194,22 +199,27 @@ struct URITests {
         expectURIString("http://www.apple.com/", hasScheme: "http", hasHost: "www.apple.com", hasPath: "/")
         expectURIString("http://www.apple.com/dir", hasScheme: "http", hasHost: "www.apple.com", hasPath: "/dir")
         expectURIString("http://www.apple.com/dir/", hasScheme: "http", hasHost: "www.apple.com", hasPath: "/dir/")
-        expectURIString("http://darin:nothin@www.apple.com:42/dir/",
+        expectURIString(
+            "http://darin:nothin@www.apple.com:42/dir/",
             hasScheme: "http", hasUserinfo: "darin:nothin", hasHost: "www.apple.com", hasPort: 42, hasPath: "/dir/"
         )
         expectURIString("http:/", hasScheme: "http", hasHost: nil, hasPath: "/")
-        expectURIString("http://www.apple.com/query?email=darin@apple.com",
+        expectURIString(
+            "http://www.apple.com/query?email=darin@apple.com",
             hasScheme: "http", hasHost: "www.apple.com", hasPath: "/query", hasQuery: "email=darin@apple.com"
         )
         expectURIString("HTTP://WWW.ZOO.COM/", hasScheme: "HTTP", hasHost: "WWW.ZOO.COM", hasPath: "/")
         expectURIString("HTTP://WWW.ZOO.COM/ED", hasScheme: "HTTP", hasHost: "WWW.ZOO.COM", hasPath: "/ED")
-        expectURIString("http://groups.google.com/groups?as_uauthors=joe@blow.com&as_scoring=d&hl=en",
+        expectURIString(
+            "http://groups.google.com/groups?as_uauthors=joe@blow.com&as_scoring=d&hl=en",
             hasScheme: "http", hasHost: "groups.google.com", hasPath: "/groups", hasQuery: "as_uauthors=joe@blow.com&as_scoring=d&hl=en"
         )
-        expectURIString("http://my.site.com/some/page.html#fragment",
+        expectURIString(
+            "http://my.site.com/some/page.html#fragment",
             hasScheme: "http", hasHost: "my.site.com", hasPath: "/some/page.html", hasFragment: "fragment"
         )
-        expectURIString("scheme://user:pass@host:1/path/path2/file.html;params?query#fragment",
+        expectURIString(
+            "scheme://user:pass@host:1/path/path2/file.html;params?query#fragment",
             hasScheme: "scheme", hasUserinfo: "user:pass", hasHost: "host", hasPort: 1, hasPath: "/path/path2/file.html;params",
             hasQuery: "query", hasFragment: "fragment", hasEqualString: false
         )
@@ -233,7 +243,8 @@ struct URITests {
         expectURIString("glorb:///x", hasScheme: "glorb", hasPath: "/x")
         expectURIString("uahsfcncvuhrtgvnahr", hasHost: nil, hasPath: "uahsfcncvuhrtgvnahr")
         expectURIString("http://[fe80::20a:27ff:feae:8b9e]/", hasScheme: "http", hasHost: "[fe80::20a:27ff:feae:8b9e]", hasPath: "/")
-        expectURIString("http://[fe80::20a:27ff:feae:8b9e%25en0]/", hasScheme: "http", hasHost: "[fe80::20a:27ff:feae:8b9e%25en0]", hasPath: "/")
+        expectURIString(
+            "http://[fe80::20a:27ff:feae:8b9e%25en0]/", hasScheme: "http", hasHost: "[fe80::20a:27ff:feae:8b9e%25en0]", hasPath: "/")
         expectURIString("http://host.com/foo/bar/../index.html", hasScheme: "http", hasHost: "host.com", hasPath: "/foo/bar/../index.html")
         expectURIString("http://host.com/foo/bar/./index.html", hasScheme: "http", hasHost: "host.com", hasPath: "/foo/bar/./index.html")
         expectURIString("http:/cgi-bin/Count.cgi?ft=0", hasScheme: "http", hasHost: nil, hasPath: "/cgi-bin/Count.cgi", hasQuery: "ft=0")
@@ -278,15 +289,15 @@ struct URITests {
 }
 
 func expectURIComponents(
-       scheme: @autoclosure () throws -> URI.Scheme?,
-     userinfo: @autoclosure () throws -> String? = nil,
-         host: @autoclosure () throws -> String? = nil,
-         port: @autoclosure () throws -> Int?    = nil,
-         path: @autoclosure () throws -> String,
-        query: @autoclosure () throws -> String? = nil,
-     fragment: @autoclosure () throws -> String? = nil,
-     generate expected: @autoclosure () throws -> String,
-       _ message: @autoclosure () -> Testing.Comment? = nil, sourceLocation: SourceLocation = #_sourceLocation
+    scheme: @autoclosure () throws -> URI.Scheme?,
+    userinfo: @autoclosure () throws -> String? = nil,
+    host: @autoclosure () throws -> String? = nil,
+    port: @autoclosure () throws -> Int? = nil,
+    path: @autoclosure () throws -> String,
+    query: @autoclosure () throws -> String? = nil,
+    fragment: @autoclosure () throws -> String? = nil,
+    generate expected: @autoclosure () throws -> String,
+    _ message: @autoclosure () -> Testing.Comment? = nil, sourceLocation: SourceLocation = #_sourceLocation
 ) {
     expectURIComponents(
         scheme: try scheme()?.value,
@@ -303,37 +314,51 @@ func expectURIComponents(
 }
 
 func expectURIComponents(
-       scheme: @autoclosure () throws -> String? = nil,
-     userinfo: @autoclosure () throws -> String? = nil,
-         host: @autoclosure () throws -> String? = nil,
-         port: @autoclosure () throws -> Int?    = nil,
-         path: @autoclosure () throws -> String,
-        query: @autoclosure () throws -> String? = nil,
-     fragment: @autoclosure () throws -> String? = nil,
-     generate expected: @autoclosure () throws -> String,
+    scheme: @autoclosure () throws -> String? = nil,
+    userinfo: @autoclosure () throws -> String? = nil,
+    host: @autoclosure () throws -> String? = nil,
+    port: @autoclosure () throws -> Int? = nil,
+    path: @autoclosure () throws -> String,
+    query: @autoclosure () throws -> String? = nil,
+    fragment: @autoclosure () throws -> String? = nil,
+    generate expected: @autoclosure () throws -> String,
     _ message: @autoclosure () -> Testing.Comment? = nil, sourceLocation: SourceLocation = #_sourceLocation
 ) {
     do {
         let messageString = message().testDescription
-        let scheme = try scheme(), rawuserinfo = try userinfo(), host = try host(), port = try port(),
-            path = try path(), query = try query(), fragment = try fragment()
+        let scheme = try scheme()
+        let rawuserinfo = try userinfo()
+        let host = try host()
+        let port = try port()
+        let path = try path()
+        let query = try query()
+        let fragment = try fragment()
         let uri = URI(scheme: scheme, userinfo: rawuserinfo, host: host, port: port, path: path, query: query, fragment: fragment)
 
         let userinfo = rawuserinfo.map {
-            !$0.contains(":") ? $0 :
-                $0.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false).enumerated()
-                  .map { $1.addingPercentEncoding(withAllowedCharacters: $0 == 0 ? .urlUserAllowed : .urlPasswordAllowed)! }
-                  .joined(separator: ":")
+            !$0.contains(":")
+                ? $0
+                : $0.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false).enumerated()
+                    .map { $1.addingPercentEncoding(withAllowedCharacters: $0 == 0 ? .urlUserAllowed : .urlPasswordAllowed)! }
+                    .joined(separator: ":")
         }
 
         // All components should be identical to their input counterparts with percent encoding.
-        #expect(uri.scheme ==   scheme,   "(scheme) \(messageString)", sourceLocation: sourceLocation)
+        #expect(uri.scheme == scheme, "(scheme) \(messageString)", sourceLocation: sourceLocation)
         #expect(uri.userinfo == userinfo, "(userinfo) \(messageString)", sourceLocation: sourceLocation)
-        #expect(uri.host ==     host?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),     "(host) \(messageString)", sourceLocation: sourceLocation)
-        #expect(uri.port ==     port,     "(port) \(messageString)", sourceLocation: sourceLocation)
-        #expect(uri.path ==     path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),     "(path) \(messageString)", sourceLocation: sourceLocation)
-        #expect(uri.query ==    query?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),    "(query) \(messageString)", sourceLocation: sourceLocation)
-        #expect(uri.fragment == fragment?.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed), "(fragment) \(messageString)", sourceLocation: sourceLocation)
+        #expect(
+            uri.host == host?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed), "(host) \(messageString)",
+            sourceLocation: sourceLocation)
+        #expect(uri.port == port, "(port) \(messageString)", sourceLocation: sourceLocation)
+        #expect(
+            uri.path == path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed), "(path) \(messageString)",
+            sourceLocation: sourceLocation)
+        #expect(
+            uri.query == query?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed), "(query) \(messageString)",
+            sourceLocation: sourceLocation)
+        #expect(
+            uri.fragment == fragment?.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed), "(fragment) \(messageString)",
+            sourceLocation: sourceLocation)
 
         // The URI's generated string should match the expected input.
         #expect(try uri.string == expected(), "(string) \(messageString)", sourceLocation: sourceLocation)
@@ -343,16 +368,16 @@ func expectURIComponents(
 }
 
 func expectURIString(
-     _ string: @autoclosure () throws -> String,
-     hasScheme scheme:     @autoclosure () throws -> String? = nil,
-     hasUserinfo userinfo: @autoclosure () throws -> String? = nil,
-     hasHost host:         @autoclosure () throws -> String? = "",
-     hasPort port:         @autoclosure () throws -> Int?    = nil,
-     hasPath path:         @autoclosure () throws -> String,
-     hasQuery query:       @autoclosure () throws -> String? = nil,
-     hasFragment fragment: @autoclosure () throws -> String? = nil,
-     hasEqualString exact: @autoclosure () throws -> Bool = true,
-     _ message: @autoclosure () -> Testing.Comment? = nil, sourceLocation: SourceLocation = #_sourceLocation
+    _ string: @autoclosure () throws -> String,
+    hasScheme scheme: @autoclosure () throws -> String? = nil,
+    hasUserinfo userinfo: @autoclosure () throws -> String? = nil,
+    hasHost host: @autoclosure () throws -> String? = "",
+    hasPort port: @autoclosure () throws -> Int? = nil,
+    hasPath path: @autoclosure () throws -> String,
+    hasQuery query: @autoclosure () throws -> String? = nil,
+    hasFragment fragment: @autoclosure () throws -> String? = nil,
+    hasEqualString exact: @autoclosure () throws -> Bool = true,
+    _ message: @autoclosure () -> Testing.Comment? = nil, sourceLocation: SourceLocation = #_sourceLocation
 ) {
     do {
         let string = try string()
@@ -360,17 +385,17 @@ func expectURIString(
         let messageString = message().testDescription
 
         // Each component should match its expected value.
-        #expect(try uri.scheme ==   scheme(),   "(scheme) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.scheme == scheme(), "(scheme) \(messageString)", sourceLocation: sourceLocation)
         #expect(try uri.userinfo == userinfo(), "(userinfo) \(messageString)", sourceLocation: sourceLocation)
-        #expect(try uri.host ==     host(),     "(host) \(messageString)", sourceLocation: sourceLocation)
-        #expect(try uri.port ==     port(),     "(port) \(messageString)", sourceLocation: sourceLocation)
-        #expect(try uri.path ==     path(),     "(path) \(messageString)", sourceLocation: sourceLocation)
-        #expect(try uri.query ==    query(),    "(query) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.host == host(), "(host) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.port == port(), "(port) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.path == path(), "(path) \(messageString)", sourceLocation: sourceLocation)
+        #expect(try uri.query == query(), "(query) \(messageString)", sourceLocation: sourceLocation)
         #expect(try uri.fragment == fragment(), "(fragment) \(messageString)", sourceLocation: sourceLocation)
 
         // The URI's generated string should come out identical to the input string, unless explicitly stated otherwise.
         if try exact() {
-            #expect(uri.string ==   string,     "(string) \(messageString)", sourceLocation: sourceLocation)
+            #expect(uri.string == string, "(string) \(messageString)", sourceLocation: sourceLocation)
         }
     } catch {
         Issue.record(error, message(), sourceLocation: sourceLocation)

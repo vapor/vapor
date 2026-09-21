@@ -1,9 +1,9 @@
-import Vapor
-import Testing
-import VaporTesting
 import HTTPTypes
 import Logging
 import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
 
 /// Covers what `run()` does to the application when it fails.
 ///
@@ -33,7 +33,10 @@ struct ApplicationLifecycleTests {
         }
     }
 
-    @Test("Dropping a booted application without shutting it down is a programmer error")
+    @Test(
+        "Dropping a booted application without shutting it down is a programmer error",
+        .enabled(if: _isDebugAssertConfiguration(), "Requires debug assertions")
+    )
     func testDroppingABootedApplicationAsserts() async {
         // Its lifecycle handlers were told to boot and never told to shut down, so whatever they
         // opened is never closed.

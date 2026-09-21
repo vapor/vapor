@@ -6,8 +6,7 @@ extension Validator where T: Equatable & CustomStringConvertible {
 
     /// Validates whether an item is contained in the supplied collection.
     public static func `in`<C>(_ collection: C) -> Validator<T>
-        where C: Collection & Sendable, C.Element == T
-    {
+    where C: Collection & Sendable, C.Element == T {
         .init {
             ValidatorResults.In(item: $0, items: .init(collection))
         }
@@ -19,7 +18,7 @@ extension ValidatorResults {
     public struct In<T> where T: Equatable & CustomStringConvertible & Sendable {
         /// Description of the item.
         public let item: T
-        
+
         /// Descriptions of the elements of the supplied collection.
         public let items: [T]
     }
@@ -30,11 +29,11 @@ extension ValidatorResults.In: ValidatorResult {
     public var isFailure: Bool {
         !self.items.contains(self.item)
     }
-    
+
     public var successDescription: String? {
         self.makeDescription(not: false)
     }
-    
+
     public var failureDescription: String? {
         self.makeDescription(not: true)
     }

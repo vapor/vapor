@@ -1,13 +1,14 @@
-import SwiftSyntax
-import SwiftSyntaxMacros
-import SwiftSyntaxBuilder
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import HTTPTypes
 import Algorithms
+import HTTPTypes
+import SwiftSyntax
+import SwiftSyntaxBuilder
+import SwiftSyntaxMacros
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 enum HTTPMethodMacroUtilities {
     public static func expansion(
@@ -23,10 +24,11 @@ enum HTTPMethodMacroUtilities {
             throw MacroError.notAFunction(macroName)
         }
 
-        let arguments: LabeledExprListSyntax? = switch node.arguments {
-        case .argumentList(let arguments): arguments
-        default: nil
-        }
+        let arguments: LabeledExprListSyntax? =
+            switch node.arguments {
+            case .argumentList(let arguments): arguments
+            default: nil
+            }
 
         var funcParameters: [FunctionParameterSyntax] = []
 
@@ -58,7 +60,8 @@ enum HTTPMethodMacroUtilities {
             if let authInfo {
                 let paramType = param.type.trimmedDescription
                 // Match both `User` and `User?` / `Optional<User>` against the auth type
-                let strippedType = paramType.hasSuffix("?")
+                let strippedType =
+                    paramType.hasSuffix("?")
                     ? String(paramType.dropLast())
                     : paramType.hasPrefix("Optional<") && paramType.hasSuffix(">")
                         ? String(paramType.dropFirst("Optional<".count).dropLast())
@@ -125,23 +128,23 @@ enum HTTPMethodMacroUtilities {
                 let varName = param.secondName?.text ?? param.firstName.text
                 if isOptionalAuth {
                     parameterExtraction += """
-                    let \(varName) = req.auth.get(\(authInfo.type).self)
+                        let \(varName) = req.auth.get(\(authInfo.type).self)
 
-                    """
+                        """
                 } else {
                     parameterExtraction += """
-                    let \(varName) = try req.auth.require(\(authInfo.type).self)
+                        let \(varName) = try req.auth.require(\(authInfo.type).self)
 
-                    """
+                        """
                 }
                 callParameters += ", \(functionParameterName): \(varName)"
             } else {
                 let paramType = parameterTypes[pathParamIndex]
                 let parameterName = "\(paramType.lowercased())\(pathParamIndex)"
                 parameterExtraction += """
-                let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(pathParamIndex)", as: \(paramType).self)
+                    let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(pathParamIndex)", as: \(paramType).self)
 
-                """
+                    """
                 callParameters += ", \(functionParameterName): \(parameterName)"
                 pathParamIndex += 1
             }
@@ -175,11 +178,11 @@ enum HTTPMethodMacroUtilities {
         if isInsideType {
             // Inside a Controller: generate a separate wrapper function as a member
             let wrapperFunc: DeclSyntax = """
-            @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
-                \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
-                return try await result.encodeResponse(for: req)
-            }
-            """
+                @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
+                    \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
+                    return try await result.encodeResponse(for: req)
+                }
+                """
             return [wrapperFunc]
         }
 
@@ -214,39 +217,41 @@ enum HTTPMethodMacroUtilities {
             }
 
             let path = pathComponents.joined(separator: "\", \"")
-            let pathRegistration = if path == "" {
-                ""
-            } else {
-                ", \"\(path)\""
-            }
+            let pathRegistration =
+                if path == "" {
+                    ""
+                } else {
+                    ", \"\(path)\""
+                }
             // Standalone context: inline the handler into the on() call as a single declaration
             // to avoid peer declarations referencing each other (which Swift doesn't support)
             let routeRegistration: DeclSyntax = """
-            let _register_\(raw: functionName) = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
-                \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
-                return try await result.encodeResponse(for: req)
-            }
-            """
+                let _register_\(raw: functionName) = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
+                    \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
+                    return try await result.encodeResponse(for: req)
+                }
+                """
             return [routeRegistration]
         }
 
         // No route registration variable found - generate just the wrapper function
         let wrapperFunc: DeclSyntax = """
-        @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
-            \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
-            return try await result.encodeResponse(for: req)
-        }
-        """
+            @Sendable func _route_\(raw: functionName)(req: Request) async throws -> Response {
+                \(raw: parameterExtraction)let result: some ResponseEncodable = try \(raw: isAsyncFunction ? "await " : "")\(raw: functionName)(\(raw: callParameters))
+                return try await result.encodeResponse(for: req)
+            }
+            """
         return [wrapperFunc]
     }
 
     /// Parse @AuthMiddleware attribute from a function declaration
     static func parseAuthMiddleware(from funcDecl: FunctionDeclSyntax) -> (type: String, middlewares: [String])? {
         for attribute in funcDecl.attributes {
-            guard case let .attribute(attr) = attribute,
-                  let identifier = attr.attributeName.as(IdentifierTypeSyntax.self),
-                  identifier.name.text == "AuthMiddleware",
-                  let args = attr.arguments?.as(LabeledExprListSyntax.self) else {
+            guard case .attribute(let attr) = attribute,
+                let identifier = attr.attributeName.as(IdentifierTypeSyntax.self),
+                identifier.name.text == "AuthMiddleware",
+                let args = attr.arguments?.as(LabeledExprListSyntax.self)
+            else {
                 continue
             }
             var authType: String? = nil

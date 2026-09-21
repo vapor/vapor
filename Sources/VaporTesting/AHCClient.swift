@@ -1,15 +1,16 @@
-import Vapor
-import NIOCore
 import AsyncHTTPClient
-import Logging
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import NIOHTTPTypesHTTP1
 import HTTPTypes
+import Logging
+import NIOCore
 import NIOHTTP1
+import NIOHTTPTypesHTTP1
+import Vapor
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 /// A ``Vapor/Client`` backed by AsyncHTTPClient, for the live test client.
 ///
@@ -48,7 +49,8 @@ struct AHCClient: Client {
             throw error
         }
         var headers = HTTPFields(response.headers, splitCookie: false)
-        let decoded = self.decodesCompressedBodies
+        let decoded =
+            self.decodesCompressedBodies
             && ["gzip", "deflate"].contains(headers[values: .contentEncoding].first?.lowercased() ?? "")
         if decoded {
             headers[.contentEncoding] = nil
@@ -69,11 +71,12 @@ struct AHCClient: Client {
             headers: headers,
             // Declaring the length lets a proxied response keep its `Content-Length` instead of
             // being re-framed as chunked. `nil` when the origin did not say.
-            body: try .init(stream: { writer in
-                for try await chunk in response.body {
-                    try await writer.write(chunk.readableBytesUInt8Span)
-                }
-            }, count: declaredLength),
+            body: try .init(
+                stream: { writer in
+                    for try await chunk in response.body {
+                        try await writer.write(chunk.readableBytesUInt8Span)
+                    }
+                }, count: declaredLength),
             maxBodySize: clientRequest.maxResponseBodySize,
             contentConfiguration: self.contentConfiguration
         )

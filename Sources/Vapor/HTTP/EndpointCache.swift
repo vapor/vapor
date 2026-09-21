@@ -1,10 +1,11 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import Logging
 public import HTTPTypes
+import Logging
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public enum EndpointCacheError: Swift.Error {
     case unexpectedResponseStatus(HTTPResponse.Status, uri: URI)
@@ -140,7 +141,8 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
 
             if let cacheControl = headers.cacheControl, let cacheUntil = self.cached.1 {
                 if let staleIfError = cacheControl.staleIfError,
-                    cacheUntil.addingTimeInterval(Double(staleIfError)) > Date() {
+                    cacheUntil.addingTimeInterval(Double(staleIfError)) > Date()
+                {
                     // Can use the data for staleIfError seconds past expiration when the server is non-responsive
                     return cached
                 } else if cacheControl.noCache == true && cacheUntil > Date() {

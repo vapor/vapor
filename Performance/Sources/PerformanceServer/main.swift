@@ -32,11 +32,13 @@ app.get("bench", "large") { _ in large }
 app.get("bench", "json") { _ in json }
 
 app.get("bench", "stream") { _ -> Response in
-    Response(body: try .init(stream: { writer in
-        for _ in 0..<16 {
-            try await writer.write(chunk)
-        }
-    }, count: 16 * 1024))
+    Response(
+        body: try .init(
+            stream: { writer in
+                for _ in 0..<16 {
+                    try await writer.write(chunk)
+                }
+            }, count: 16 * 1024))
 }
 
 app.get("bench", "file") { req in
