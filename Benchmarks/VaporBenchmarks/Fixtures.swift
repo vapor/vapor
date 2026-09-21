@@ -40,15 +40,6 @@ func makeNetworkRequest(route: String, at baseURL: String) -> HTTPClientRequest 
     return request
 }
 
-/// CI executes every fixture once; these results are not performance measurements.
-func configureSmokeRun() {
-    guard ProcessInfo.processInfo.environment["BENCHMARK_SMOKE"] == "1" else { return }
-    Benchmark.defaultConfiguration = .init(
-        metrics: [.wallClock], warmupIterations: 0, scalingFactor: .one,
-        maxDuration: .seconds(1), maxIterations: 1
-    )
-}
-
 private struct Payload: Decodable, Equatable {
     var id: Int
     var name: String

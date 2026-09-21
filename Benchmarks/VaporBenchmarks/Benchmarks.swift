@@ -3,13 +3,7 @@ import Logging
 
 let benchmarks: @Sendable () -> Void = {
     LoggingSystem.bootstrap { _ in SwiftLogNoOpLogHandler() }
-    Benchmark.defaultConfiguration = .init(
-        metrics: [.instructions, .mallocCountTotal, .wallClock],
-        warmupIterations: 3,
-        scalingFactor: .kilo,
-        maxDuration: .seconds(3)
-    )
-    configureSmokeRun()
+    configureBenchmarks()
 
     endToEndBenchmarks()
     requestBenchmarks()

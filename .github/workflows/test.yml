@@ -67,6 +67,13 @@ jobs:
 
   benchmarks:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - mode: uninstrumented
+            traits: ""
+          - mode: allocations
+            traits: "--traits AllocationCounting"
     permissions:
       contents: read
     if: ${{ !(github.event.pull_request.draft || false) }}
@@ -74,12 +81,11 @@ jobs:
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v7
-      - name: Build the benchmarks
-        run: swift build --package-path Benchmarks -c release
-      - name: Smoke-test all benchmark fixtures
+      - name: Build release benchmarks and smoke-test all fixtures
         run: |
           BENCHMARK_SMOKE=1 NIO_SINGLETON_GROUP_LOOP_COUNT=2 NIO_SINGLETON_BLOCKING_POOL_THREAD_COUNT=2 \
-            swift package --package-path Benchmarks --disable-sandbox --allow-writing-to-package-directory benchmark --no-progress
+            swift package --package-path Benchmarks --scratch-path Benchmarks/.build/${{ matrix.mode }} ${{ matrix.traits }} \
+              --disable-sandbox --allow-writing-to-package-directory benchmark --no-progress
 
   performance-harness:
     runs-on: ubuntu-latest

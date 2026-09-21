@@ -6,9 +6,14 @@ let package = Package(
     platforms: [
         .macOS("26.2")
     ],
+    traits: [
+        .trait(name: "AllocationCounting", description: "Build with the allocation counter interposer.")
+    ],
     dependencies: [
         .package(name: "vapor", path: ".."),
-        .package(url: "https://github.com/ordo-one/benchmark", exact: "1.36.2"),
+        .package(
+            url: "https://github.com/ordo-one/benchmark", exact: "1.36.2",
+            traits: [.trait(name: "MallocInterposer", condition: .when(traits: ["AllocationCounting"]))]),
         .package(url: "https://github.com/swift-server/async-http-client.git", exact: "1.35.0"),
     ],
     targets: [
@@ -22,6 +27,7 @@ let package = Package(
             ],
             path: "VaporBenchmarks",
             swiftSettings: [
+                .define("BENCHMARK_ALLOCATION_COUNTING", .when(traits: ["AllocationCounting"])),
                 .enableUpcomingFeature("ExistentialAny"),
                 .enableExperimentalFeature("Lifetimes"),
             ],

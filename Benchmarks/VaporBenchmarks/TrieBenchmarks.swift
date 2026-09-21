@@ -17,7 +17,7 @@ func trieBenchmarks() {
         precondition(router.route(path: path, parameters: &check) == expected, name)
         for (key, value) in captures { precondition(check.get(key) == value, name) }
         precondition(check.getCatchall() == catchall, name)
-        Benchmark("trie/\(name)", configuration: .init(maxDuration: .seconds(1))) { benchmark in
+        Benchmark("trie/\(name)") { benchmark in
             for _ in benchmark.scaledIterations {
                 var parameters = Parameters(logger)
                 blackHole(router.route(path: path, parameters: &parameters))
