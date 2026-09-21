@@ -1,7 +1,8 @@
 public struct Validation: Sendable {
     enum ValuelessKeyBehavior {
         case missing  // value is required; return a Missing() result if key is not found
-        case skipWhenUnset  // value is not required, but should not be nil-checked; return a Skipped() result only if key doesn't exist at all
+        // Value is not required, but should not be nil-checked; return a Skipped() result only if key doesn't exist at all.
+        case skipWhenUnset
         case skipAlways  // value is not required, return a Skipped() result if key is unset or nil
         case ignore  // value is not relevant, call run closure regardless of key presence
     }

@@ -34,11 +34,6 @@ private struct HTTPMiddlewareResponder: Responder {
     var middleware: any Middleware
     var responder: any Responder
 
-    init(middleware: any Middleware, responder: any Responder) {
-        self.middleware = middleware
-        self.responder = responder
-    }
-
     /// Chains an incoming request to another `Responder` on the router.
     /// - parameters:
     ///     - request: The incoming `Request`.

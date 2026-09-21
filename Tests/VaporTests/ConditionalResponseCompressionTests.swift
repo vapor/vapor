@@ -117,6 +117,8 @@ struct ConditionalCompressionTests {
     }
 
     #warning("Bring back")
+    // Keep the disabled server tests together until they can be restored.
+    // swift-format-ignore: NoBlockComments
     /*
         @Suite("Response Compression Server Tests")
         struct ConditionalResponseCompressionServerTests {

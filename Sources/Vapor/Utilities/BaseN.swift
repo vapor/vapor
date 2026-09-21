@@ -107,7 +107,8 @@ public struct BaseNEncoding: Sendable {
             guard !checkPad || seenPad == self.padding(for: bits, count: self.sizeEnc(for: bits, count: span.count)) else {
                 throw BreakLoopError()
             }  // require exact padding
-            guard bufBits == 0 || (buf & ((1 &<< bufBits) &- 1)) == 0 else { throw BreakLoopError() }  // require pad bits to be zero per spec
+            // Require pad bits to be zero per spec.
+            guard bufBits == 0 || (buf & ((1 &<< bufBits) &- 1)) == 0 else { throw BreakLoopError() }
         }
     }
 

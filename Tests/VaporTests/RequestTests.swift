@@ -1074,9 +1074,6 @@ struct AsyncLazySequence<Base: Sequence>: AsyncSequence {
     typealias Element = Base.Element
     struct AsyncIterator: AsyncIteratorProtocol {
         var iterator: Base.Iterator
-        init(iterator: Base.Iterator) {
-            self.iterator = iterator
-        }
 
         mutating func next() async throws -> Base.Element? {
             self.iterator.next()
@@ -1084,10 +1081,6 @@ struct AsyncLazySequence<Base: Sequence>: AsyncSequence {
     }
 
     var base: Base
-
-    init(base: Base) {
-        self.base = base
-    }
 
     func makeAsyncIterator() -> AsyncIterator {
         .init(iterator: self.base.makeIterator())

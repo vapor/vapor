@@ -53,11 +53,6 @@ public struct DotEnvFile: Sendable {
     /// All `KEY=VALUE` pairs found in the file.
     public let lines: [Line]
 
-    /// Creates a new DotEnvFile
-    init(lines: [Line]) {
-        self.lines = lines
-    }
-
     /// Loads this file's `KEY=VALUE` pairs into the current process.
     ///
     ///     let file: DotEnvFile
@@ -154,9 +149,6 @@ public struct DotEnvFile: Sendable {
 extension DotEnvFile {
     struct Parser {
         var source: ByteBuffer
-        init(source: ByteBuffer) {
-            self.source = source
-        }
 
         mutating func parse() -> [Line] {
             var lines: [Line] = []

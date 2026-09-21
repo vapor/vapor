@@ -35,7 +35,7 @@ extension HTTPFields {
                 return nil
             }
             var cookies = HTTPCookies()
-            setCookies.forEach { cookie in
+            for cookie in setCookies {
                 cookies[cookie.name] = cookie.value
             }
             return cookies

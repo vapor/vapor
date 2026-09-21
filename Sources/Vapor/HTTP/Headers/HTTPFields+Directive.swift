@@ -202,10 +202,6 @@ extension HTTPFields {
     struct DirectiveSerializer {
         let directives: [[Directive]]
 
-        init(directives: [[Directive]]) {
-            self.directives = directives
-        }
-
         func serialize() -> String {
             var main: [String] = []
 
