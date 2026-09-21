@@ -143,11 +143,12 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                             )
                         )
                     )
-                ))
+                )
             case .http3(let config):
                 var quicConfiguration: NIOHTTPServerConfiguration.HTTP3.QUICConfiguration = .defaults
                 quicConfiguration.serverName = config.quicConfiguration.serverName
-                quicConfiguration.keyExchangeGroup = switch config.quicConfiguration.keyExchangeGroup {
+                quicConfiguration.keyExchangeGroup =
+                    switch config.quicConfiguration.keyExchangeGroup {
                     case .secp256: .secp256
                     case .secp384: .secp384
                     case .x25519: .x25519
@@ -164,7 +165,8 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 quicConfiguration.keepAliveInterval = config.quicConfiguration.keepAliveInterval
                 quicConfiguration.sendRetry = config.quicConfiguration.sendRetry
                 quicConfiguration.keyLogPath = config.quicConfiguration.keyLogPath
-                quicConfiguration.qLogConfiguration = switch config.quicConfiguration.qLogConfiguration {
+                quicConfiguration.qLogConfiguration =
+                    switch config.quicConfiguration.qLogConfiguration {
                     case .none: nil
                     case .some(let qLogConfig): .init(path: qLogConfig.path, topic: qLogConfig.topic, description: qLogConfig.description)
                     }
@@ -174,13 +176,15 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 connectionSettings.qpackBlockedStreams = config.connectionSettings.qpackBlockedStreams
                 connectionSettings.maximumFieldSectionSize = config.connectionSettings.maximumFieldSectionSize
 
-                supportedHTTPVersions.insert(.http3(
-                    config: .init(
-                        preferHuffmanEncoding: config.preferHuffmanEncoding,
-                        quicConfiguration: quicConfiguration,
-                        connectionSettings: connectionSettings
+                supportedHTTPVersions.insert(
+                    .http3(
+                        config: .init(
+                            preferHuffmanEncoding: config.preferHuffmanEncoding,
+                            quicConfiguration: quicConfiguration,
+                            connectionSettings: connectionSettings
+                        )
                     )
-                ))
+                )
             }
         }
 

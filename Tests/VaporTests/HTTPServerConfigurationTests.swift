@@ -71,11 +71,13 @@ struct HTTPServerConfigurationTests {
             // Equality and hashing are by protocol version only,
             // so two HTTP/3 entries with different configuration collapse to a single set member.
             let a: ServerConfiguration.HTTPVersion = .http3(config: .defaults)
-            let b: ServerConfiguration.HTTPVersion = .http3(config: .init(
-                preferHuffmanEncoding: false,
-                quicConfiguration: .defaults,
-                connectionSettings: .defaults
-            ))
+            let b: ServerConfiguration.HTTPVersion = .http3(
+                config: .init(
+                    preferHuffmanEncoding: false,
+                    quicConfiguration: .defaults,
+                    connectionSettings: .defaults
+                )
+            )
             #expect(a == b)
             #expect(Set([a, b]).count == 1)
         }

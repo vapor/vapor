@@ -12,10 +12,11 @@ func withTestHTTP3ClientConnection<Value>(
     verificationConfiguration: VerificationConfiguration,
     logger: Logger,
     eventLoopGroup: any EventLoopGroup,
-    body: sending (
-        NIOAsyncChannelInboundStream<HTTPResponsePart>,
-        NIOAsyncChannelOutboundWriter<HTTPRequestPart>
-    ) async throws -> Value
+    body:
+        sending (
+            NIOAsyncChannelInboundStream<HTTPResponsePart>,
+            NIOAsyncChannelOutboundWriter<HTTPRequestPart>
+        ) async throws -> Value
 ) async throws -> Value {
     let (quicChannel, connectionCreator) = try await DatagramBootstrap(group: eventLoopGroup)
         .channelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)

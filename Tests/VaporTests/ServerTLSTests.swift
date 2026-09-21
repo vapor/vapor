@@ -8,8 +8,8 @@ import NIOCore
 import NIOHTTP1
 import NIOHTTPTypes
 import NIOPosix
-import NIOSSL
 import NIOQUIC
+import NIOSSL
 import RoutingKit
 import ServiceLifecycle
 import SwiftASN1
@@ -550,7 +550,7 @@ struct ServerTLSTests {
                 // The client defaults to `.automatic`, advertising both (and only) h2 and http/1.1 over ALPN.
                 // The server offers only h3, so the client should fail to negotiate a compatible protocol and throw an error.
                 try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
-                    _ = await #expect(throws: (any Error).self) { 
+                    _ = await #expect(throws: (any Error).self) {
                         try await client.execute(
                             HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
                             timeout: .seconds(30)
