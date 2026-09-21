@@ -93,9 +93,9 @@ public enum Base32 {
     public static let relaxed: BaseNEncoding = {
         var reverse = [Character: UInt8]()
 
-        Self.baseAlphabet.enumerated().forEach {
-            reverse[$1] = numericCast($0)
-            reverse[$1.uppercased().first!] = numericCast($0)
+        for (index, character) in Self.baseAlphabet.enumerated() {
+            reverse[character] = numericCast(index)
+            reverse[character.uppercased().first!] = numericCast(index)
         }
         reverse["0"] = reverse["O"]
         reverse["1"] = reverse["L"]

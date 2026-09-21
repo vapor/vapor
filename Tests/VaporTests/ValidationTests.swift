@@ -34,10 +34,6 @@ struct ValidationTests {
             struct Pet: Codable {
                 var name: String
                 var age: Int
-                init(name: String, age: Int) {
-                    self.name = name
-                    self.age = age
-                }
             }
 
             init(id: Int? = nil, name: String, age: Int, gender: Gender, pet: Pet, preferredColors: [String] = [], isAdmin: Bool) {
@@ -243,10 +239,6 @@ struct ValidationTests {
             struct Pet: Codable {
                 var name: String
                 var age: Int
-                init(name: String, age: Int) {
-                    self.name = name
-                    self.age = age
-                }
             }
 
             static func validations(_ v: inout Validations) {
@@ -294,16 +286,10 @@ struct ValidationTests {
 
             struct Hobby: Codable {
                 var title: String
-                init(title: String) {
-                    self.title = title
-                }
             }
 
             struct Allergy: Codable {
                 var title: String
-                init(title: String) {
-                    self.title = title
-                }
             }
 
             static func validations(_ v: inout Validations) {
@@ -403,9 +389,6 @@ struct ValidationTests {
 
             struct Hobby: Codable {
                 var title: String
-                init(title: String) {
-                    self.title = title
-                }
             }
 
             static func validations(_ v: inout Validations) {
@@ -947,9 +930,6 @@ struct ValidationTests {
 
             struct Hobby: Codable {
                 var title: String
-                init(title: String) {
-                    self.title = title
-                }
             }
 
             static func validations(_ v: inout Validations) {

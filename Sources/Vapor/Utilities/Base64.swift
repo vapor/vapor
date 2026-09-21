@@ -104,7 +104,7 @@ public enum Base64 {
 
     /// Canonical Base64 encoding per [RFC 4648 §4](https://datatracker.ietf.org/doc/html/rfc4648#section-4)
     public static let canonical: BaseNEncoding = .init(
-        bits: 6 /*64.trailingZeroBitCount*/,
+        bits: 6,  // 64.trailingZeroBitCount
         pad: "=",
         lookupTable: .init(Self.baseAlphabet)
     )
@@ -114,7 +114,7 @@ public enum Base64 {
 
     /// The variant Base64 encoding used by BCrypt, using `.` instead of `/` for value 62 and ignoring padding.
     public static let bcrypt: BaseNEncoding = .init(
-        bits: 6 /*64.trailingZeroBitCount*/,
+        bits: 6,  // 64.trailingZeroBitCount
         lookupTable: Self.baseAlphabet.map { $0 == "+" ? "." : $0 }
     )
 }

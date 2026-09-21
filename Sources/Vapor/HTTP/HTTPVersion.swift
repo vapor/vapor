@@ -47,18 +47,21 @@ public struct HTTPVersion: Equatable, Sendable {
         HTTPVersion(major: 2, minor: 0)
     }
 
+    // swift-format-ignore: AlwaysUseLowerCamelCase
     /// HTTP/1.1
     @inlinable
     public static var http1_1: HTTPVersion {
         HTTPVersion(major: 1, minor: 1)
     }
 
+    // swift-format-ignore: AlwaysUseLowerCamelCase
     /// HTTP/1.0
     @inlinable
     public static var http1_0: HTTPVersion {
         HTTPVersion(major: 1, minor: 0)
     }
 
+    // swift-format-ignore: AlwaysUseLowerCamelCase
     /// HTTP/0.9 (not supported by SwiftNIO)
     @inlinable
     public static var http0_9: HTTPVersion {

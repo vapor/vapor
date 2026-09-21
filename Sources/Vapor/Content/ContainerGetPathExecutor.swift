@@ -15,7 +15,7 @@ internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
 
         let lastDecoder = try keypath.dropLast().reduce(decoder) {
             if let index = $1.intValue {
-                try $0.unkeyedContainer(startingAt: index)._unsafe_inplace_superDecoder()
+                try $0.unkeyedContainer(startingAt: index)._unsafeInplaceSuperDecoder()
             } else {
                 try $0.container(keyedBy: BasicCodingKey.self).superDecoder(forKey: .init($1))
             }
@@ -58,7 +58,7 @@ extension UnkeyedDecodingContainer {
     ///
     /// Tagged with "unsafe" because a call to this method _MUST_ be the final use of the container before it goes out
     /// of scope, which we can't make the compiler enforce.
-    fileprivate func _unsafe_inplace_superDecoder() throws -> any Decoder {
+    fileprivate func _unsafeInplaceSuperDecoder() throws -> any Decoder {
         var inplace = self
         return try inplace.superDecoder()
     }

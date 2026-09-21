@@ -6,8 +6,6 @@
 
 /// Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue` into
 internal struct URLEncodedFormParser {
-    init() {}
-
     func parse(_ query: String) throws -> URLEncodedFormData {
         let plusDecodedQuery = query.replacing("+", with: "%20")
         var result: URLEncodedFormData = []

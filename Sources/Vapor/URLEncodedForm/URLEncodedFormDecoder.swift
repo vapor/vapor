@@ -440,16 +440,6 @@ private struct _Decoder: Decoder {
         var codingPath: [any CodingKey]
         var configuration: URLEncodedFormDecoder.Configuration
 
-        init(
-            data: URLEncodedFormData,
-            codingPath: [any CodingKey],
-            configuration: URLEncodedFormDecoder.Configuration
-        ) {
-            self.data = data
-            self.codingPath = codingPath
-            self.configuration = configuration
-        }
-
         func decodeNil() -> Bool {
             self.data.values.isEmpty
         }

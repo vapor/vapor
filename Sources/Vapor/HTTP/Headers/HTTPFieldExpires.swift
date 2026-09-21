@@ -18,10 +18,6 @@ extension HTTPFields {
             return nil
         }
 
-        init(expires: Date) {
-            self.expires = expires
-        }
-
         /// Generates the header string for this instance.
         public func serialize() -> String {
             expires.formatted(.rfc1123)
