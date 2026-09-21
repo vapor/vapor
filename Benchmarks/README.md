@@ -139,10 +139,71 @@ BENCHMARK_SMOKE=1 NIO_SINGLETON_GROUP_LOOP_COUNT=2 NIO_SINGLETON_BLOCKING_POOL_T
 This executes every fixture once with wall-clock measurement only, no warmup and no
 scaled repetitions. It exercises setup, request handling, validation and teardown
 without requiring hardware counters. **Smoke results are not performance results.**
-CI builds both the uninstrumented and allocation-counting release variants and
-executes this mode. Add `--traits AllocationCounting` and use the allocation build
-directory to smoke-test that variant locally. Performance thresholds belong on a
-controlled benchmark machine, not shared CI hosts.
+The test workflow builds both the uninstrumented and allocation-counting release
+variants and executes this mode. It also tests the CI driver. Add
+`--traits AllocationCounting` and use the allocation build directory to smoke-test
+that variant locally.
+
+## Shared benchmark workflow and Penny
+
+`.github/workflows/benchmark.yml` calls Vapor's shared benchmark workflow on pushes
+to `main` and through `workflow_dispatch`. It uses the controlled benchmark runner
+and pins the official `swift:6.4-bookworm` image. A maintainer with write access can
+request a run for a PR's current head with a new PR conversation comment:
+
+```text
+@penny-for-vapor benchmark
+```
+
+The workflow must first exist on the repository's default branch for Penny to
+dispatch it. A manual dispatch accepts the same `sha` input; leave it empty to run
+the selected ref. This is separate from the automatic correctness smoke checks.
+
+`ci.py` implements the shared workflow's `baseline update/read` and
+`thresholds update/check` commands. It runs all four measurement modes sequentially,
+with two NIO event-loop threads and two blocking-pool threads. Each mode has its own
+baseline and threshold directory. Allocation and uninstrumented builds stay in
+separate scratch directories. The resulting PR report and commit status compare
+against committed p90 thresholds, not a fresh run of `main`. Full reports are
+available in the `benchmark-reports` artifact if the PR comment is truncated.
+
+Initial p90 tolerances are 5% for instructions, 1% for allocations, and 10% for
+CPU/wall time. These are relative tolerances because most samples batch 1,000
+operations; session creation measures one. A change from zero to a positive value
+is explicitly treated as a regression. Calibrate tolerances against repeated runs
+on the benchmark runner. The shared workflow flags significant improvements as
+well as regressions, so intentional changes may require reviewed threshold updates.
+
+### Recording the first thresholds
+
+With no committed thresholds, the workflow records them on the benchmark runner
+and uploads a `benchmark-thresholds` artifact. Its report explicitly says that no
+performance comparison was performed. Download the artifact, review the values
+and commit its contents under `Benchmarks/Thresholds/`. Subsequent runs compare
+against those values automatically. To refresh thresholds after intentional
+changes, manually dispatch with `record_thresholds` enabled and review the new
+artifact. The workflow never commits or approves threshold changes itself.
+
+Do not seed these files with local or smoke results. Record the runner, compiler,
+dependency revisions and measurement mode when reviewing replacements. A compiler
+or runner change requires newly reviewed thresholds.
+
+The driver requires Python 3 (installed by the workflows) and rejects missing
+fixture thresholds, unexpected metrics and unavailable/zero instruction counters.
+It stores filenames that GitHub artifacts can accept, then adapts them to the
+names the dependency's threshold reader expects, including spaces, slashes and
+measurement tags. Keep the exported directory structure intact. To validate the
+driver locally:
+
+```sh
+python3 -m unittest discover -s Benchmarks/tests
+Benchmarks/ci.py baseline update local-check --mode instructions --filter '^trie/static$'
+Benchmarks/ci.py thresholds update local-check --mode instructions --filter '^trie/static$' --path /tmp/vapor-thresholds
+Benchmarks/ci.py thresholds check local-check --mode instructions --filter '^trie/static$' --path /tmp/vapor-thresholds
+```
+
+`--filter` selects fixtures when recording a baseline. Later operations use all
+results in that saved baseline, including their measurement tags.
 
 See [coverage and remaining scenarios](COVERAGE.md) for the measurement boundaries
 and future additions. Keep the compiler version, Git revision, local changes,

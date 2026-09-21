@@ -1,0 +1,31 @@
+name: benchmark
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        type: string
+        required: false
+        description: "PR commit SHA to benchmark; leave empty for the selected ref."
+      record_thresholds:
+        type: boolean
+        default: false
+        description: "Record thresholds for review instead of checking committed thresholds."
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  benchmark:
+    # Publish the companion vapor/ci commit before merging this workflow.
+    uses: vapor/ci/.github/workflows/run-benchmark.yml@43e56488a75c779994a8474801dea4b7ba0c66f3 # codex/benchmark-modes
+    with:
+      sha: ${{ inputs.sha }}
+      swift_image: swift:6.4-bookworm
+      benchmark_driver: Benchmarks/ci.py
+      # The first run exports runner-specific thresholds. Once they are committed,
+      # normal runs check them; an explicit dispatch can record replacements.
+      thresholds_mode: ${{ inputs.record_thresholds && 'record' || 'bootstrap' }}
+    secrets: inherit

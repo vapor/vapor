@@ -81,6 +81,11 @@ jobs:
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v7
+      - name: Test the shared-workflow driver
+        if: matrix.mode == 'uninstrumented'
+        run: |
+          apt-get update -q && apt-get install -yq python3
+          python3 -m unittest discover -s Benchmarks/tests
       - name: Build release benchmarks and smoke-test all fixtures
         run: |
           BENCHMARK_SMOKE=1 NIO_SINGLETON_GROUP_LOOP_COUNT=2 NIO_SINGLETON_BLOCKING_POOL_THREAD_COUNT=2 \

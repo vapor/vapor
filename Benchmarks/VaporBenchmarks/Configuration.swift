@@ -15,6 +15,14 @@ private enum MeasurementMode: String {
         case .wallClock: .wallClock
         }
     }
+
+    var thresholds: BenchmarkThresholds {
+        switch self {
+        case .allocations: .init(relative: [.p90: 1])
+        case .instructions: .init(relative: [.p90: 5])
+        case .cpu, .wallClock: .init(relative: [.p90: 10])
+        }
+    }
 }
 
 func configureBenchmarks() {
@@ -54,6 +62,7 @@ func configureBenchmarks() {
 
     Benchmark.defaultConfiguration = .init(
         metrics: [mode.metric], tags: ["measurement": mode.rawValue],
-        warmupIterations: 5, scalingFactor: .kilo, maxDuration: .seconds(5)
+        warmupIterations: 5, scalingFactor: .kilo, maxDuration: .seconds(5),
+        thresholds: [mode.metric: mode.thresholds]
     )
 }

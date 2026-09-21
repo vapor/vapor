@@ -46,5 +46,8 @@ chunks, so a client's yield count does not prescribe server read boundaries.
 
 Paced or sustained scenarios should use separate configurations: wall time
 dominated by deliberate delays would obscure the current per-operation counters.
-CI runs every fixture in smoke mode to validate correctness. Performance
-comparisons require controlled hardware and consistent toolchains and dependencies.
+The test workflow runs every fixture in smoke mode to validate correctness. The
+shared benchmark workflow runs all four measurement modes on its controlled runner
+and compares against reviewed p90 thresholds. Its first run exports thresholds for
+review; it does not perform a comparison until they have been committed. Keep
+toolchains and dependencies consistent when comparing results.
