@@ -70,7 +70,7 @@ jobs:
     permissions:
       contents: read
     if: ${{ !(github.event.pull_request.draft || false) }}
-    container: swiftlang/swift:nightly-6.4.x-bookworm
+    container: swift:6.4-bookworm
     steps:
       - name: Check out Vapor
         uses: actions/checkout@v7
