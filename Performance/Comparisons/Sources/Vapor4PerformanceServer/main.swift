@@ -42,5 +42,33 @@ app.get("bench", "file") { req async throws -> Response in
     try await req.fileio.asyncStreamFile(at: filePath, chunkSize: 128 * 1024)
 }
 
+for (route, chunkSize, chunkCount, knownLength) in [
+    ("stream-chunked", 1024, 16, false), ("stream-coarse", 65536, 1, true), ("stream-fine", 256, 256, true),
+] {
+    let bytes = String(repeating: "y", count: chunkSize)
+    app.get("bench", .init(stringLiteral: route)) { _ -> Response in
+        Response(
+            body: .init(
+                managedAsyncStream: { writer in
+                    for _ in 0..<chunkCount { try await writer.write(.buffer(ByteBuffer(string: bytes))) }
+                }, count: knownLength ? chunkSize * chunkCount : -1))
+    }
+}
+app.on(.POST, "bench", "upload", body: .stream) { request async throws -> Response in
+    var body = ByteBuffer()
+    for try await var chunk in request.body {
+        body.writeBuffer(&chunk)
+    }
+    return Response(body: .init(buffer: body))
+}
+app.on(.POST, "bench", "upload-stream", body: .stream) { request -> Response in
+    Response(
+        body: .init(managedAsyncStream: { writer in
+            for try await chunk in request.body {
+                try await writer.write(.buffer(chunk))
+            }
+        }))
+}
+
 try await app.execute()
 try await app.asyncShutdown()

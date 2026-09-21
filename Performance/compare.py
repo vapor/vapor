@@ -18,7 +18,9 @@ import urllib.request
 from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_ROUTES = ["status", "tiny", "small", "large", "json", "stream", "file"]
+DEFAULT_ROUTES = ["status", "tiny", "small", "large", "json", "stream", "stream-chunked",
+                  "stream-coarse", "stream-fine", "upload", "upload-stream", "file"]
+UPLOAD_ROUTES = {"upload", "upload-stream"}
 SERVERS = {
     "vapor": (ROOT, "PerformanceServer"),
     "vapor4": (ROOT / "Comparisons", "Vapor4PerformanceServer"),
@@ -36,6 +38,11 @@ EXPECTED = {
     "large": b"x" * (64 * 1024),
     "json": {"id": 1, "name": "benchmark", "tags": ["a", "b", "c"]},
     "stream": b"y" * (16 * 1024),
+    "stream-chunked": b"y" * (16 * 1024),
+    "stream-coarse": b"y" * (64 * 1024),
+    "stream-fine": b"y" * (64 * 1024),
+    "upload": b"x" * (64 * 1024),
+    "upload-stream": b"x" * (64 * 1024),
     "file": b"z" * (1 << 20),
     "routing-parameter/42": b"42",
     "routing-parameter/a-long-user-identifier-without-escapes": b"a-long-user-identifier-without-escapes",
@@ -63,7 +70,8 @@ def positive_int(value):
 
 
 def check_response(url, route):
-    with HTTP.open(url, timeout=5) as response:
+    request = urllib.request.Request(url, data=EXPECTED[route], headers={"Content-Type": "application/octet-stream"}) if route in UPLOAD_ROUTES else url
+    with HTTP.open(request, timeout=5) as response:
         body = response.read()
         if response.status != (204 if route == "status" else 200):
             raise RuntimeError(f"{url}: HTTP {response.status}")
@@ -206,11 +214,11 @@ def main():
             parser.error("--binary requires --skip-build and FRAMEWORK=PATH for a selected framework")
         overrides[name] = Path(path).resolve()
     if any(name.startswith("http-server") for name in args.frameworks) and "file" in args.routes:
-        parser.error("http-server supports tiny, small, large, json, stream; specify routes explicitly")
+        parser.error("http-server does not support file; specify routes explicitly")
     if any(name.endswith("-baseline") and name not in overrides for name in args.frameworks):
         parser.error("baseline comparisons require an explicit --binary snapshot")
-    if "vapor-direct" in args.frameworks and any(route in args.routes for route in ["file", "stream"]):
-        parser.error("vapor-direct supports tiny, small, large, json; specify routes explicitly")
+    if "vapor-direct" in args.frameworks and any(route not in ["status", "tiny", "small", "large", "json"] for route in args.routes):
+        parser.error("vapor-direct supports status, tiny, small, large, json; specify routes explicitly")
     if any(route not in EXPECTED for route in args.routes):
         parser.error(f"routes must be drawn from {', '.join(EXPECTED)}")
     if len(set(args.frameworks)) != len(args.frameworks):
@@ -250,6 +258,8 @@ def main():
                            NIO_SINGLETON_GROUP_LOOP_COUNT=str(args.server_threads),
                            NIO_SINGLETON_BLOCKING_POOL_THREAD_COUNT=str(args.server_threads))
         Path(environment["PERF_FILE"]).write_bytes(EXPECTED["file"])
+        upload_file = output / "upload.bin"
+        upload_file.write_bytes(EXPECTED["upload"])
         metadata = {
             "started_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "arguments": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
@@ -258,6 +268,7 @@ def main():
             "wrk": command_text([str(wrk_binary), "--version"]),
             "wrk_binary_path": str(wrk_binary),
             "wrk_binary_sha256": hashlib.sha256(wrk_binary.read_bytes()).hexdigest(),
+            "wrk_script_sha256": hashlib.sha256((ROOT / "wrk-metrics.lua").read_bytes()).hexdigest(),
             "vapor_commit": command_text(["git", "-C", str(ROOT), "rev-parse", "HEAD"]),
             "git_status": command_text(["git", "-C", str(ROOT), "status", "--short"]),
             "binary_sha256": {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in binaries.items()},
@@ -301,6 +312,8 @@ def main():
                         wrk = [str(wrk_binary), f"-t{args.threads}", f"-c{args.connections}", "--timeout", "2s", "--latency", "-s", str(ROOT / "wrk-metrics.lua")]
                         for phase, duration in [("warmup", args.warmup), ("measured", args.duration)]:
                             command = wrk + [f"-d{duration}s", base + route]
+                            if route in UPLOAD_ROUTES:
+                                command += ["--", str(upload_file)]
                             if args.record_cpu and phase == "measured":
                                 server_before_text, server_before = server_cpu_snapshot(process.pid)
                                 client_before = child_cpu_seconds()
@@ -334,6 +347,7 @@ def main():
         report(results, output)
     finally:
         (output / "fixture.bin").unlink(missing_ok=True)
+        (output / "upload.bin").unlink(missing_ok=True)
     print(f"Summary: {output / 'summary.md'}", flush=True)
 
 

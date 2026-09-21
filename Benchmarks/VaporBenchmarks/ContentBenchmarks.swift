@@ -4,7 +4,35 @@ import HTTPTypes
 import NIOCore
 import Vapor
 
+private struct FormPayload: Codable, Equatable {
+    var name: String
+    var page: Int
+    var tags: [String]
+}
+
 func contentBenchmarks() {
+    let form = FormPayload(name: "hello world", page: 2, tags: ["swift", "server"])
+    let encodedForm = "name=hello%20world&page=2&tags[0]=swift&tags[1]=server"
+    Benchmark("content/URLEncodedFormDecoder array fields") { benchmark in
+        let decoder = URLEncodedFormDecoder()
+        let decoded = try decoder.decode(FormPayload.self, from: encodedForm)
+        precondition(decoded == form)
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            blackHole(try decoder.decode(FormPayload.self, from: encodedForm))
+        }
+    }
+    Benchmark("content/URLEncodedFormEncoder array fields") { benchmark in
+        let encoder = URLEncodedFormEncoder()
+        let encoded = try encoder.encode(form)
+        let decoded = try URLEncodedFormDecoder().decode(FormPayload.self, from: encoded)
+        precondition(decoded == form)
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            blackHole(try encoder.encode(form))
+        }
+    }
+
     Benchmark("content/decode JSON body small") { benchmark in
         let call = RequestCall(
             .post, "/decode",

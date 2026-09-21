@@ -86,6 +86,31 @@ app.get("bench", "stream") { _ -> Response in
             }, count: 16 * 1024))
 }
 
+for (route, chunkSize, chunkCount, knownLength) in [
+    ("stream-chunked", 1024, 16, false), ("stream-coarse", 65536, 1, true), ("stream-fine", 256, 256, true),
+] {
+    let bytes = String(repeating: "y", count: chunkSize)
+    app.get("bench", .init(stringLiteral: route)) { _ in
+        Response(
+            body: try .init(
+                stream: { writer in
+                    for _ in 0..<chunkCount { try await writer.write(bytes) }
+                }, count: knownLength ? chunkSize * chunkCount : nil))
+    }
+}
+app.on(.post, "bench", "upload", maxBodySize: "128kb") { request in
+    let data = try await request.body.collect() ?? Data()
+    return Response(body: .init(data: data))
+}
+app.post("bench", "upload-stream") { request in
+    Response(
+        body: .init(stream: { writer in
+            try await request.body.forEachChunk { chunk in
+                try await writer.write(chunk)
+            }
+        }))
+}
+
 app.get("bench", "file") { req in
     try await app.fileio.streamFile(at: filePath, for: req)
 }

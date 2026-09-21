@@ -12,6 +12,7 @@ python3 Performance/compare.py
 python3 Performance/compare.py status tiny json large stream --duration 30 --connections 256
 python3 Performance/compare.py status tiny json large stream --frameworks vapor http-server vapor4 hummingbird
 python3 Performance/compare.py tiny --frameworks vapor vapor-direct vapor-no-middleware http-server
+python3 Performance/compare.py stream stream-chunked stream-coarse stream-fine upload upload-stream
 ```
 
 Vapor 4.122.1 and Hummingbird 2.26.0 are pinned in `Comparisons/Package.swift`.
@@ -29,15 +30,27 @@ revisions with results. Never silently compare runs across dependency updates.
 | `json` | JSON object with id, name and tags | Per-request content encoding |
 | `large` | 64 KiB text | Buffered copying and transport |
 | `stream` | Sixteen awaited 1 KiB writes | Streaming and flushing |
+| `stream-chunked` | Same 16 KiB, unknown length | Chunked response framing |
+| `stream-coarse` / `stream-fine` | 64 KiB in one / 256 awaited writes | Per-write overhead at fixed payload size |
+| `upload` | POST 64 KiB, buffered echo | Request stream collection and buffered response |
+| `upload-stream` | POST 64 KiB, streamed echo | Request reads forwarded to response writes, unknown response length |
 | `file` | 1 MiB, 128 KiB read chunks | File-response API with a warmed file cache |
 
 All three frameworks support these workloads. The raw `http-server` supports every
 shape except `file`; `vapor-direct` supports `status`, `tiny`, `small`, `json` and
 `large`. `vapor-no-middleware` retains the router but removes default middleware.
 JSON is compared semantically, and all other responses are checked byte-for-byte
-before load. Streaming has a known content length. File helpers perform different
+before load. `stream`, `stream-coarse` and `stream-fine` have a known content length;
+`stream-chunked` and `upload-stream` use chunked responses. File helpers perform different
 HTTP metadata/range work, so file results are an API-level comparison, not a disk or
 identical-operation benchmark.
+
+The upload load test prebuilds a fixed POST body once per wrk thread, without a Lua
+callback per request or response. This measures the server's collection/forwarding
+paths under concurrent HTTP load, with `Content-Length` requests. The counter suite
+additionally supplies a pull-based upload in sixteen 4 KiB chunks and exercises
+chunked request framing. Neither fixture models a deliberately slow producer or
+consumer, and transport can combine application chunks.
 
 Additional Vapor routing diagnostics exercise parameter lengths, catchalls,
 encoded literals, partial alternatives, partial captures and backtracking:
@@ -67,7 +80,7 @@ python3 Performance/compare.py tiny json --interleave-routes --record-cpu \
 # Compare a saved baseline executable with the newly built candidate:
 python3 Performance/compare.py tiny --frameworks vapor-baseline vapor --skip-build \
   --binary vapor-baseline=/absolute/path/to/saved/PerformanceServer
-# Save all three counter suites plus the five primary HTTP shapes:
+# Save all three counter suites plus all eleven shared HTTP shapes (including streaming/uploads):
 python3 Performance/run-iteration.py main-baseline
 ```
 
@@ -125,6 +138,18 @@ swift build --package-path Performance/Comparisons -c release
 CI also runs the counter fixture smoke mode described in `Benchmarks/README.md`.
 The benchmark branch provides measurement infrastructure, not performance changes
 or a claim that one framework is universally faster.
+
+For a short correctness check of the complete external streaming path:
+
+```sh
+python3 Performance/compare.py stream stream-chunked stream-coarse stream-fine upload upload-stream \
+  --frameworks vapor http-server vapor4 hummingbird \
+  --duration 1 --warmup 1 --repeats 1 --connections 4 --threads 1
+```
+
+Those short runs are validation, not stable performance evidence. See
+[the coverage review](../Benchmarks/COVERAGE.md) for remaining scenarios such as
+slow readers, TLS, HTTP/2 and compression.
 
 Client/server CPU contention, background work, thermal state and power settings
 matter on loopback. Repeat on quiet machines with balanced samples; use a separate

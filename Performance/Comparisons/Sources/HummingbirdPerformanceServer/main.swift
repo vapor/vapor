@@ -39,6 +39,26 @@ router.get("bench/stream") { _, _ in
         })
 }
 let fileIO = FileIO()
+for (route, chunkSize, chunkCount, knownLength) in [
+    ("stream-chunked", 1024, 16, false), ("stream-coarse", 65536, 1, true), ("stream-fine", 256, 256, true),
+] {
+    let bytes = String(repeating: "y", count: chunkSize)
+    router.get(.init("bench/\(route)")) { _, _ in
+        Response(
+            status: .ok,
+            body: .init(contentLength: knownLength ? chunkSize * chunkCount : nil) { writer in
+                for _ in 0..<chunkCount { try await writer.write(ByteBuffer(string: bytes)) }
+                try await writer.finish(nil)
+            })
+    }
+}
+router.post("bench/upload") { request, _ in
+    let body = try await request.body.collect(upTo: 131072)
+    return Response(status: .ok, body: .init(byteBuffer: body))
+}
+router.post("bench/upload-stream") { request, _ in
+    Response(status: .ok, body: .init(asyncSequence: request.body))
+}
 router.get("bench/file") { _, context in
     Response(status: .ok, body: try await fileIO.loadFile(path: filePath, context: context, chunkLength: 128 * 1024))
 }

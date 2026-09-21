@@ -10,6 +10,11 @@ struct BenchmarkHandler: HTTPServerRequestHandler {
     let small = String(repeating: "x", count: 1024)
     let large = String(repeating: "x", count: 64 * 1024)
     let chunk = String(repeating: "y", count: 1024)
+    let extraStreams = [
+        (route: "stream-chunked", chunk: String(repeating: "y", count: 1024), count: 16, knownLength: false),
+        (route: "stream-coarse", chunk: String(repeating: "y", count: 65536), count: 1, knownLength: true),
+        (route: "stream-fine", chunk: String(repeating: "y", count: 256), count: 256, knownLength: true),
+    ]
 
     struct Payload: Encodable {
         var id = 1
@@ -24,7 +29,39 @@ struct BenchmarkHandler: HTTPServerRequestHandler {
         responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
         var reader = consume reader
-        if request.path == "/bench/status" {
+        if request.path == "/bench/upload" {
+            var body = UniqueArray<UInt8>()
+            var finished = false
+            repeat {
+                finished = try await reader.read { chunk, trailers in
+                    body.append(copying: chunk.span)
+                    return trailers != nil
+                }
+            } while !finished
+            try await responseSender.sendAndFinish(.init(status: .ok, headerFields: [.contentLength: "\(body.count)"]), buffer: &body)
+            return
+        } else if request.path == "/bench/upload-stream" {
+            var writer = try await responseSender.send(.init(status: .ok))
+            var finished = false
+            repeat {
+                finished = try await reader.read { chunk, trailers in
+                    if !chunk.isEmpty { try await writer.write(buffer: &chunk) }
+                    return trailers != nil
+                }
+            } while !finished
+            var empty = UniqueArray<UInt8>()
+            try await writer.finish(buffer: &empty, finalElement: nil)
+            return
+        } else if let workload = extraStreams.first(where: { request.path == "/bench/" + $0.route }) {
+            let headers: HTTPFields = workload.knownLength ? [.contentLength: "\(workload.chunk.utf8.count * workload.count)"] : [:]
+            var writer = try await responseSender.send(.init(status: .ok, headerFields: headers))
+            for _ in 0..<workload.count {
+                var buffer = UniqueArray<UInt8>(copying: workload.chunk.utf8)
+                try await writer.write(buffer: &buffer)
+            }
+            var empty = UniqueArray<UInt8>()
+            try await writer.finish(buffer: &empty, finalElement: nil)
+        } else if request.path == "/bench/status" {
             var empty = UniqueArray<UInt8>()
             try await responseSender.sendAndFinish(.init(status: .noContent), buffer: &empty)
         } else if request.path == "/bench/stream" {

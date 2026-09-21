@@ -2,7 +2,7 @@ import Benchmark
 import Foundation
 import HTTPTypes
 import NIOCore
-import Vapor
+@_spi(Benchmarking) import Vapor
 
 // MARK: Shared application
 
@@ -16,7 +16,7 @@ func setUpApplication(_ configure: @Sendable (Application) async throws -> Void)
     let application = try await Application(.testing)
     try await configure(application)
     app = application
-    responder = application.makeResponder()
+    responder = application.makeBenchmarkResponder()
 }
 
 func tearDownApplication() async throws {

@@ -52,6 +52,28 @@ class HarnessTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 compare.check_response("http://localhost/bench/json", "json")
 
+    def test_upload_validation_posts_and_checks_all_bytes(self):
+        response = MagicMock()
+        response.status = 200
+        response.read.return_value = compare.EXPECTED["upload-stream"]
+        response.__enter__.return_value = response
+        with patch.object(compare.HTTP, "open", return_value=response) as request:
+            compare.check_response("http://localhost/bench/upload-stream", "upload-stream")
+            sent = request.call_args.args[0]
+            self.assertEqual(sent.get_method(), "POST")
+            self.assertEqual(sent.data, b"x" * 65536)
+            response.read.return_value = b"y" * 65536
+            with self.assertRaises(RuntimeError):
+                compare.check_response("http://localhost/bench/upload-stream", "upload-stream")
+
+    def test_direct_mode_rejects_streaming_before_build(self):
+        for route in ["stream-chunked", "stream-fine", "upload", "upload-stream"]:
+            with self.subTest(route=route):
+                result = subprocess.run([sys.executable, str(Path(compare.__file__)), route, "--frameworks", "vapor-direct"],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("vapor-direct supports", result.stderr)
+
     def test_invalid_measurements_are_rejected(self):
         metrics = dict(requests=1, duration_us=1, bytes=1, p50_us=1, p99_us=1,
                        connect_errors=0, read_errors=0, write_errors=0, status_errors=0, timeouts=0)

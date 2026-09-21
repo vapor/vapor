@@ -2,14 +2,14 @@ import Benchmark
 import Foundation
 import HTTPTypes
 import RoutingKit
-import Vapor
+@_spi(Benchmarking) import Vapor
 
 func routingBenchmarks() {
     // Keep construction costs visible when trading startup storage for fast lookup.
     for count in [200, 1000] {
         Benchmark("routing/build \(count) static routes", configuration: .init(scalingFactor: .one)) { benchmark in
             for _ in benchmark.scaledIterations {
-                blackHole(app.makeResponder())
+                blackHole(app.makeBenchmarkResponder())
             }
         } setup: {
             try await setUpApplication { app in

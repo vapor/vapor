@@ -15,6 +15,8 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 PERF = ROOT / "Performance"
 TARGETS = ["VaporBenchmarks", "RawHTTPServerBenchmarks", "HummingbirdBenchmarks"]
+HTTP_ROUTES = ["status", "tiny", "small", "json", "large", "stream", "stream-chunked",
+               "stream-coarse", "stream-fine", "upload", "upload-stream"]
 
 
 def run(command, log, env):
@@ -32,7 +34,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("name", help="unique result name, e.g. main-before-routing")
     parser.add_argument("--targets", nargs="+", choices=TARGETS, default=TARGETS)
-    parser.add_argument("--filter", default="^(e2e|network)/.*")
+    parser.add_argument("--filter", default="^(e2e|network|drain-network)/.*")
     parser.add_argument("--frameworks", nargs="+", default=["vapor", "http-server", "vapor4", "hummingbird"])
     parser.add_argument("--duration", type=int, default=10)
     parser.add_argument("--repeats", type=int, default=3)
@@ -119,7 +121,7 @@ def main():
         if any(not all(value.values()) for value in availability.values()):
             print(f"WARNING: {target} has unavailable counters; see metric-availability.json", flush=True)
     if not args.counters_only:
-        run([sys.executable, PERF / "compare.py", "status", "tiny", "json", "large", "stream",
+        run([sys.executable, PERF / "compare.py", *HTTP_ROUTES,
              "--frameworks", *args.frameworks, "--skip-build", "--duration", args.duration,
              "--warmup", "3", "--repeats", args.repeats, "--server-threads", args.server_threads,
              "--interleave-routes", "--record-cpu", "--output", output / "http",

@@ -5,6 +5,15 @@ import NIOCore
 import Vapor
 
 func requestBenchmarks() {
+    Benchmark("request/parse cookies") { benchmark in
+        let headers: HTTPFields = [.cookie: "session=abc123; theme=dark; language=en"]
+        precondition(headers.cookie?["session"]?.string == "abc123")
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            blackHole(headers.cookie)
+        }
+    }
+
     for reads in [0, 1, 10] {
         Benchmark("request/create configured and read ID \(reads) times") { benchmark in
             for _ in benchmark.scaledIterations {

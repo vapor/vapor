@@ -14,7 +14,7 @@ private struct BenchmarkPayload: ResponseEncodable {
 }
 
 private let largePayload = String(repeating: "x", count: 65536)
-private let streamChunk = String(repeating: "y", count: 1024)
+private let smallPayload = String(repeating: "x", count: 1024)
 nonisolated(unsafe) private var serverTask: Task<Void, any Error>?
 nonisolated(unsafe) private var serverURL = ""
 
@@ -22,15 +22,28 @@ private func setUpServer() async throws {
     let router = Router()
     router.get("bench/status") { _, _ in HTTPResponse.Status.noContent }
     router.get("bench/tiny") { _, _ in "OK" }
+    router.get("bench/small") { _, _ in smallPayload }
     router.get("bench/json") { _, _ in BenchmarkPayload() }
     router.get("bench/large") { _, _ in largePayload }
-    router.get("bench/stream") { _, _ in
-        Response(
-            status: .ok,
-            body: .init(contentLength: 16384) { writer in
-                for _ in 0..<16 { try await writer.write(ByteBuffer(string: streamChunk)) }
-                try await writer.finish(nil)
-            })
+    for workload in responseStreams {
+        let chunk = String(repeating: "y", count: workload.chunkSize)
+        router.get(.init("bench/\(workload.route)")) { _, _ in
+            Response(
+                status: .ok,
+                body: .init(contentLength: workload.knownLength ? workload.chunkSize * workload.chunkCount : nil) { writer in
+                    for _ in 0..<workload.chunkCount { try await writer.write(ByteBuffer(string: chunk)) }
+                    try await writer.finish(nil)
+                })
+        }
+    }
+    for route in uploadRoutes {
+        router.post(.init("bench/\(route)")) { request, _ in
+            if route.hasPrefix("collect-") {
+                let body = try await request.body.collect(upTo: 131072)
+                return Response(status: .ok, body: .init(byteBuffer: body))
+            }
+            return Response(status: .ok, body: .init(asyncSequence: request.body))
+        }
     }
     let group = MultiThreadedEventLoopGroup.singleton
     let (listening, ready) = AsyncThrowingStream<Int, any Error>.makeStream()
@@ -65,12 +78,12 @@ let benchmarks: @Sendable () -> Void = {
         maxDuration: .seconds(3)
     )
     configureSmokeRun()
-    for route in ["status", "tiny", "json", "large", "stream"] {
+    for route in responseRoutes + uploadRoutes {
         // Match Vapor's network fixture, including client, collection bound,
         // timed validation and scaling. Startup and shutdown stay outside timing.
         Benchmark("network/\(route)", configuration: .init(scalingFactor: .one)) { benchmark in
-            let request = HTTPClientRequest(url: serverURL + "/bench/\(route)")
             for _ in benchmark.scaledIterations {
+                let request = makeNetworkRequest(route: route, at: serverURL)
                 let response = try await HTTPClient.shared.execute(request, timeout: .seconds(5))
                 let body = try await response.body.collect(upTo: 131072)
                 precondition(Int(response.status.code) == (route == "status" ? 204 : 200))
