@@ -69,21 +69,31 @@ func middlewareBenchmarks() {
         try await tearDownApplication()
     }
 
+    let preflightHeaders: HTTPFields = [
+        .origin: "https://vapor.codes",
+        .accessControlRequestMethod: "GET",
+    ]
     Benchmark("middleware.CORS-preflight") { benchmark in
-        let call = RequestCall(
-            .options, "/hello",
-            headers: [
-                .origin: "https://vapor.codes",
-                .accessControlRequestMethod: "GET",
-            ]
-        )
+        let call = RequestCall(.options, "/hello", headers: preflightHeaders)
         for _ in benchmark.scaledIterations {
             blackHole(try await run(call))
         }
     } setup: {
         try await setUpApplication { app in
-            app.grouped(CORSMiddleware()).get("hello") { _ in "hello" }
+            // Register globally so unmatched OPTIONS requests still reach CORS.
+            app.middleware.use(CORSMiddleware(), at: .beginning)
+            app.get("hello") { _ in "hello" }
         }
+
+        let request = Request(
+            method: .options, url: "/hello", headers: preflightHeaders,
+            contentConfiguration: benchmarkContentConfiguration
+        )
+        var response = try await responder.respond(to: request)
+        let body = try await response.body.collect()
+        precondition(response.status == .ok && (body?.isEmpty ?? true))
+        precondition(response.headers[.accessControlAllowOrigin] == "https://vapor.codes")
+        precondition(response.headers[.accessControlAllowMethods] == CORSMiddleware.Configuration.default().allowedMethods)
     } teardown: {
         try await tearDownApplication()
     }

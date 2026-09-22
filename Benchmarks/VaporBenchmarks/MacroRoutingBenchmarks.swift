@@ -40,6 +40,7 @@ func macroRoutingBenchmarks() {
         try await setUpApplication { app in
             try await app.register(collection: BenchmarkController())
         }
+        try await validateTypedParameterResponse(at: "/macro/items/42")
     } teardown: {
         try await tearDownApplication()
     }
@@ -52,9 +53,11 @@ func macroRoutingBenchmarks() {
     } setup: {
         try await setUpApplication { app in
             app.get("manual", "items", ":id") { req in
-                try req.parameters.require("id", as: Int.self).description
+                let id = try req.parameters.require("id", as: Int.self)
+                return "item \(id)"
             }
         }
+        try await validateTypedParameterResponse(at: "/manual/items/42")
     } teardown: {
         try await tearDownApplication()
     }
@@ -110,6 +113,13 @@ func macroRoutingBenchmarks() {
     } teardown: {
         try await tearDownApplication()
     }
+}
+
+private func validateTypedParameterResponse(at path: String) async throws {
+    let request = Request(url: URI(string: path), contentConfiguration: benchmarkContentConfiguration)
+    var response = try await responder.respond(to: request)
+    let body = try await response.body.collect()
+    precondition(response.status == .ok && body.map { $0.elementsEqual("item 42".utf8) } == true)
 }
 
 struct BenchmarkAuthMiddleware: Middleware {
