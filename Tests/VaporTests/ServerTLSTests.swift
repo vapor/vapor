@@ -487,7 +487,7 @@ struct ServerTLSTests {
                 certificateChain: [credentials.certificate],
                 privateKey: credentials.privateKey
             )
-            app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
+            app.serverConfiguration.httpVersions = [.http1_1, .http2]
             app.get("hello") { _ in "world" }
 
             try await withRunningServer(app) { port in
@@ -513,7 +513,7 @@ struct ServerTLSTests {
                 certificateChain: [credentials.certificate],
                 privateKey: credentials.privateKey
             )
-            app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
+            app.serverConfiguration.httpVersions = [.http1_1, .http2]
             app.get("hello") { _ in "world" }
 
             try await withRunningServer(app) { port in
@@ -543,7 +543,7 @@ struct ServerTLSTests {
                 privateKeyPath: credentials.privateKeyPath
             )
             // Offer HTTP/3 only.
-            app.serverConfiguration.httpVersions = [.http3(config: .defaults)]
+            app.serverConfiguration.httpVersions = [.http3]
             app.get("hello") { _ in "world" }
 
             try await withRunningServer(app) { port in

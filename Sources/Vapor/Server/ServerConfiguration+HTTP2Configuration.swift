@@ -110,11 +110,25 @@ extension ServerConfiguration {
             Self.init(version: .http2(config: config))
         }
 
+        /// The HTTP/2 protocol version with default configuration values.
+        ///
+        /// > Note: Use ``http2(config:)`` to specify custom configuration values.
+        public static var http2: Self {
+            .http2(config: .defaults)
+        }
+
         /// The HTTP/3 protocol version.
         ///
         /// - Parameter config: The configuration to use for HTTP/3 connections.
         public static func http3(config: HTTP3) -> Self {
             Self.init(version: .http3(config: config))
+        }
+
+        /// The HTTP/3 protocol version with default configuration values.
+        ///
+        /// > Note: Use ``http3(config:)`` to specify custom configuration values.
+        public static var http3: Self {
+            .http3(config: .defaults)
         }
 
         /// Equality is by protocol version only: two values are equal when they represent the same HTTP

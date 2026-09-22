@@ -52,7 +52,7 @@ struct HTTPServerConfigurationTests {
 
         @Test("HTTP/1.1, HTTP/2 and HTTP/3 are distinct versions")
         func testDistinctVersions() {
-            let versions: Set<ServerConfiguration.HTTPVersion> = [.http1_1, .http2(config: .defaults), .http3(config: .defaults)]
+            let versions: Set<ServerConfiguration.HTTPVersion> = [.http1_1, .http2, .http3]
             #expect(versions.count == 3)
         }
 
@@ -60,7 +60,7 @@ struct HTTPServerConfigurationTests {
         func testHTTP2EqualByVersionOnly() {
             // Equality and hashing are by protocol version only, so two HTTP/2 entries with
             // different configuration collapse to a single set member.
-            let a: ServerConfiguration.HTTPVersion = .http2(config: .defaults)
+            let a: ServerConfiguration.HTTPVersion = .http2
             let b: ServerConfiguration.HTTPVersion = .http2(config: .init(maxFrameSize: 1))
             #expect(a == b)
             #expect(Set([a, b]).count == 1)
@@ -70,7 +70,7 @@ struct HTTPServerConfigurationTests {
         func http3EqualByVersionOnly() {
             // Equality and hashing are by protocol version only,
             // so two HTTP/3 entries with different configuration collapse to a single set member.
-            let a: ServerConfiguration.HTTPVersion = .http3(config: .defaults)
+            let a: ServerConfiguration.HTTPVersion = .http3
             let b: ServerConfiguration.HTTPVersion = .http3(
                 config: .init(
                     preferHuffmanEncoding: false,
@@ -90,8 +90,8 @@ struct HTTPServerConfigurationTests {
         @Test(
             "HTTP/2 and HTTP/3 requested over plaintext throw",
             arguments: [
-                [ServerConfiguration.HTTPVersion.http2(config: .defaults), .http3(config: .defaults)],
-                [.http1_1, .http2(config: .defaults), .http3(config: .defaults)],
+                [ServerConfiguration.HTTPVersion.http2, .http3],
+                [.http1_1, .http2, .http3],
             ] as [Set<ServerConfiguration.HTTPVersion>])
         func testHTTP2AndHTTP3WithoutTLSFails(_ versions: Set<ServerConfiguration.HTTPVersion>) async throws {
             try await withApp { app in
