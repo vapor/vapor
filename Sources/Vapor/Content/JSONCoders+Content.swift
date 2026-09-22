@@ -1,9 +1,9 @@
 public import HTTPTypes
 
 #if canImport(FoundationEssentials)
-    public import FoundationEssentials
+public import FoundationEssentials
 #else
-    public import Foundation
+public import Foundation
 #endif
 
 extension JSONEncoder: ContentEncoder {
@@ -14,12 +14,12 @@ extension JSONEncoder: ContentEncoder {
 
         if !userInfo.isEmpty {  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
             #if canImport(Darwin)
-                let existingUserInfo = self.userInfo
+            let existingUserInfo = self.userInfo
             #else
-                #warning("Check")
-                // JSONEncoder.userInfo does not declare its values as Sendable yet on Linux.
-                // This appears to be an oversight, as JSONDecoder does not have the same issue.
-                let existingUserInfo = self.userInfo as! [CodingUserInfoKey: any Sendable]
+            #warning("Check")
+            // JSONEncoder.userInfo does not declare its values as Sendable yet on Linux.
+            // This appears to be an oversight, as JSONDecoder does not have the same issue.
+            let existingUserInfo = self.userInfo as! [CodingUserInfoKey: any Sendable]
             #endif
 
             try body.append(

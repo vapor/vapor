@@ -5,9 +5,9 @@ import Vapor
 import VaporTesting
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 @Suite("Route Tests")
@@ -473,26 +473,26 @@ struct RouteTests {
     }
 
     #if WebSockets
-        @Test("Test Websocket Upgrade", .disabled())
-        func testWebsocketUpgrade() async throws {
-            //        try await withApp { app in
-            //            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
-            //            let testMarkerHeaderValue = "addedInShouldUpgrade"
-            //
-            //            app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
-            //                [testMarkerHeaderKey: testMarkerHeaderValue]
-            //            }, onUpgrade: { _, _ in })
-            //
-            //            try await app.testing(method: .running()).test(.get, "customshouldupgrade", beforeRequest: { req async in
-            //                req.headers[.secWebSocketVersion] = "13"
-            //                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
-            //                req.headers[.connection] = "Upgrade"
-            //                req.headers[.upgrade] = "websocket"
-            //            }) { res in
-            //                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
-            //            }
-            //        }
-        }
+    @Test("Test Websocket Upgrade", .disabled())
+    func testWebsocketUpgrade() async throws {
+        //        try await withApp { app in
+        //            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
+        //            let testMarkerHeaderValue = "addedInShouldUpgrade"
+        //
+        //            app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
+        //                [testMarkerHeaderKey: testMarkerHeaderValue]
+        //            }, onUpgrade: { _, _ in })
+        //
+        //            try await app.testing(method: .running()).test(.get, "customshouldupgrade", beforeRequest: { req async in
+        //                req.headers[.secWebSocketVersion] = "13"
+        //                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
+        //                req.headers[.connection] = "Upgrade"
+        //                req.headers[.upgrade] = "websocket"
+        //            }) { res in
+        //                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
+        //            }
+        //        }
+    }
     #endif
 
     @Test(

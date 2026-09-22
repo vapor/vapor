@@ -6,9 +6,9 @@ import _NIOFileSystem
 import _NIOFileSystemFoundationCompat
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 extension Application {

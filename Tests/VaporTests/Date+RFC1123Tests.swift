@@ -3,9 +3,9 @@ import Testing
 @testable import Vapor
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 @Suite("RFC 1123 Date")

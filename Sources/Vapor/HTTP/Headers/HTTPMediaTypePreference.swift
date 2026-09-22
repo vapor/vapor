@@ -1,9 +1,9 @@
 import HTTPTypes
 
 #if canImport(FoundationEssentials)
-    public import FoundationEssentials
+public import FoundationEssentials
 #else
-    public import Foundation
+public import Foundation
 #endif
 
 /// Represents a `MediaType` and its associated preference, `q`.

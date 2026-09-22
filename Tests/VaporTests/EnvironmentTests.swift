@@ -3,24 +3,24 @@ import Testing
 @testable import Vapor
 
 #if canImport(Darwin)
-    import Darwin
+import Darwin
 #elseif os(Windows)
-    import CRT
+import CRT
 #elseif canImport(Glibc)
-    import Glibc
+import Glibc
 #elseif canImport(Android)
-    import Android
+import Android
 #elseif canImport(Musl)
-    import Musl
+import Musl
 #elseif canImport(WASILibc)
-    import WASILibc
+import WASILibc
 #else
-    #error("Unsupported runtime")
+#error("Unsupported runtime")
 #endif
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 @Suite("Environment Secret Tests")

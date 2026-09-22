@@ -1,9 +1,9 @@
 import Algorithms
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Represents a number of bytes:

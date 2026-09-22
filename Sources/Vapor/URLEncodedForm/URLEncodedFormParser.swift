@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue` into

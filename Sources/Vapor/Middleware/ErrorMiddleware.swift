@@ -2,9 +2,9 @@ import HTTPTypes
 import Logging
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Captures all errors and transforms them into an internal server error HTTP response.

@@ -4,9 +4,9 @@ import Synchronization
 public import X509
 
 #if canImport(FoundationEssentials)
-    public import FoundationEssentials
+public import FoundationEssentials
 #else
-    public import Foundation
+public import Foundation
 #endif
 
 /// Represents an HTTP request in an application.
