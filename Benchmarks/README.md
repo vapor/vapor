@@ -171,29 +171,33 @@ the `benchmark-reports` artifact if the PR comment is truncated.
 
 Initial p90 tolerances are 5% for instructions, 1% for allocations, and 10% for
 CPU/wall time. These are relative tolerances because most samples batch 1,000
-operations; session creation measures one. A change from zero to a positive value
-is explicitly treated as a regression. Calibrate tolerances against repeated runs
-on the benchmark runner. The shared workflow flags significant improvements as
-well as regressions, so intentional changes may require reviewed threshold updates.
+operations; session creation measures one. Calibrate tolerances against repeated
+runs on the benchmark runner. The shared workflow flags significant improvements
+as well as regressions, so intentional changes may require reviewed threshold updates.
+The pinned benchmark package does not flag growth from a zero reference using
+relative tolerances; review these cases in the raw reports until that behaviour
+is addressed upstream.
 
 ### Recording the first thresholds
 
-With no committed thresholds, the workflow records them on the benchmark runner
-and uploads a `benchmark-thresholds` artifact. Its report explicitly says that no
-performance comparison was performed. Download the artifact, review the values
-and commit its contents under `Benchmarks/Thresholds/`. Subsequent runs compare
-against those values automatically. To refresh thresholds after intentional
-changes, manually dispatch with `record_thresholds` enabled and review the new
-artifact. The workflow never commits or approves threshold changes itself.
+Manually dispatch the workflow with `record_thresholds` enabled to record values
+on the benchmark runner and upload a `benchmark-thresholds` artifact. Its report
+explicitly says that no performance comparison was performed, and it does not set
+a performance commit status. Review the values and commit the artifact's contents
+under `Benchmarks/Thresholds/`, retaining the configuration subdirectories. Normal
+runs always compare against committed thresholds and fail if they are missing.
+Use the same explicit recording option to refresh thresholds after intentional
+changes. The workflow never commits or approves threshold changes itself.
 
 Do not seed these files with local or smoke results. Record the runner, compiler,
 dependency revisions and measurement mode when reviewing replacements. A compiler
 or runner change requires newly reviewed thresholds.
 
-Threshold validation is enabled in the shared workflow. It checks that every
-measured fixture has matching metrics, rejects unavailable/zero instruction
-counters, and detects growth from zero. These checks operate on the benchmark
-package's native threshold exports.
+Threshold coverage validation is enabled in the shared workflow. It requires
+nonempty native exports and matching metric keys for every exported fixture.
+Performance comparisons use the benchmark package's rules. Hardware-counter
+availability must be checked when reviewing results; the workflow does not reject
+zero instruction values itself.
 
 Benchmark names use `suite.case-name`, with no spaces, slashes or measurement
 tags, so native threshold export and import use the same filenames and GitHub can

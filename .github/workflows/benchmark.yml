@@ -20,7 +20,7 @@ permissions:
 jobs:
   benchmark:
     # Publish the companion vapor/ci commit before merging this workflow.
-    uses: vapor/ci/.github/workflows/run-benchmark.yml@38d33193e35619148e5c905815fa1c77db5f90e5 # codex/benchmark-modes
+    uses: vapor/ci/.github/workflows/run-benchmark.yml@1c7d2de79f0f6902836c7f71064fd9d26105a7b0 # better-benchmarks
     with:
       sha: ${{ inputs.sha }}
       swift_image: swift:6.4-bookworm
@@ -34,7 +34,5 @@ jobs:
       environment: >-
         {"NIO_SINGLETON_GROUP_LOOP_COUNT":"2","NIO_SINGLETON_BLOCKING_POOL_THREAD_COUNT":"2"}
       validate_thresholds: true
-      # The first run exports runner-specific thresholds. Once they are committed,
-      # normal runs check them; an explicit dispatch can record replacements.
-      thresholds_mode: ${{ inputs.record_thresholds && 'record' || 'bootstrap' }}
+      record_thresholds: ${{ inputs.record_thresholds || false }}
     secrets: inherit
