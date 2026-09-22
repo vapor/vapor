@@ -24,7 +24,7 @@ jobs:
       sha: ${{ inputs.sha }}
       swift_image: swift:6.4-noble
       # Release compilation of SwiftSyntax exceeds the default runner's 4 GB RAM.
-      runner_labels: runner=2cpu-4ram/ram=8/family=m8g
+      runner_labels: runner=2cpu-4ram/ram=8/family=m8g.large
       configurations: >-
         [
           {"name":"instructions","build":"uninstrumented","environment":{"BENCHMARK_MODE":"instructions"}},
