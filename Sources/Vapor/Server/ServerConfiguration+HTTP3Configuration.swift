@@ -1,5 +1,12 @@
 extension ServerConfiguration {
     /// Configuration for HTTP/3.
+    ///
+    ///
+    /// HTTP/3 requires TLS.
+    /// If a ``ServerConfiguration/HTTPVersion/http3(config:)`` version is added to ``ServerConfiguration/httpVersions``
+    /// without also setting a ``ServerConfiguration/tlsConfiguration``,
+    /// the server throws an error when it starts (rather than serving over plaintext),
+    /// so callers can catch it and decide how to handle it.
     public struct HTTP3: Sendable, Hashable {
         /// If true, Huffman encoding will be used where applicable, e.g. for header field sections.
         ///

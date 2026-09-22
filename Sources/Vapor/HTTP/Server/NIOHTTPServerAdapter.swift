@@ -9,8 +9,8 @@ enum NIOHTTPServerAdapterError: Error {
     /// The underlying server reported that it was listening but exposed no addresses.
     case noListeningAddress
 
-    /// HTTP/2 or HTTP/3 were requested without TLS. HTTP/2 and HTTP/3 are negotiated over TLS via ALPN, so a
-    /// ``ServerConfiguration/tlsConfiguration`` is required to serve them. Cleartext HTTP/2 (h2c) is not
+    /// HTTP/2 or HTTP/3 were requested without TLS. HTTP/2 and HTTP/3 require a
+    /// ``ServerConfiguration/tlsConfiguration`` to serve them. Cleartext HTTP/2 (h2c) is not
     /// supported by the underlying server yet; if that changes this check will be gated behind an opt-in.
     case http2And3RequireTLS
 
@@ -192,7 +192,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             throw NIOHTTPServerAdapterError.noHTTPVersionsSpecified
         }
 
-        // HTTP/2 and HTTP/3 are negotiated via ALPN, which requires TLS. Over plaintext, only HTTP/1.1 is allowed.
+        // HTTP/2 and HTTP/3 require TLS. Over plaintext, only HTTP/1.1 is allowed.
         guard
             self.context.configuration.value.isTLSEnabled
                 || self.context.configuration.value.httpVersions == [.http1_1]
