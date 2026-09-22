@@ -20,7 +20,7 @@ permissions:
 jobs:
   benchmark:
     # Publish the companion vapor/ci commit before merging this workflow.
-    uses: vapor/ci/.github/workflows/run-benchmark.yml@1c7d2de79f0f6902836c7f71064fd9d26105a7b0 # better-benchmarks
+    uses: vapor/ci/.github/workflows/run-benchmark.yml@6484ddc4f8d9aa4937d6376496812847fc1f8bbb # better-benchmarks
     with:
       sha: ${{ inputs.sha }}
       swift_image: swift:6.4-bookworm
