@@ -42,7 +42,8 @@ func configure(_ app: Application) async throws {
             certificateChainPath: certificateChainPath,
             privateKeyPath: privateKeyPath
         )
-        app.serverConfiguration.httpVersions = [.http3(config: .defaults)]
+        app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults), .http3(config: .defaults)]
+        app.middleware.use(AltSvcMiddleware(serverConfiguration: app.serverConfiguration))
     default:
         break
     }
