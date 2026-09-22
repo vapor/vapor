@@ -19,10 +19,12 @@ permissions:
 
 jobs:
   benchmark:
-    uses: vapor/ci/.github/workflows/run-benchmark.yml@0c321b2fac99f702b9641c021bd8be7ea276caca # main
+    uses: vapor/ci/.github/workflows/run-benchmark.yml@2cd1d09469265410cad36ca7247b7d4c1c826827 # runner resource selection
     with:
       sha: ${{ inputs.sha }}
       swift_image: swift:6.4-noble
+      # Release compilation of SwiftSyntax exceeds the default runner's 4 GB RAM.
+      runner_labels: runner=2cpu-4ram/ram=8/family=m8g
       configurations: >-
         [
           {"name":"instructions","build":"uninstrumented","environment":{"BENCHMARK_MODE":"instructions"}},
