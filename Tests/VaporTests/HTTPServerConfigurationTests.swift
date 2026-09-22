@@ -42,6 +42,61 @@ struct HTTPServerConfigurationTests {
         }
     }
 
+    @Suite("HTTP/3 configuration")
+    struct HTTP3Tests {
+        @Test("Default values")
+        func defaultValues() {
+            let http3 = ServerConfiguration.HTTP3.defaults
+            #expect(http3.preferHuffmanEncoding)
+            #expect(http3.quicConfiguration == .defaults)
+            #expect(http3.connectionSettings == .defaults)
+
+            let quic = ServerConfiguration.HTTP3.QUICConfiguration.defaults
+            #expect(quic.serverName == "")
+            #expect(quic.keyExchangeGroup == .x25519)
+            #expect(quic.maxIdleTimeout == .seconds(30))
+            #expect(quic.initialMaxData == 1024 * 1024)
+            #expect(quic.initialMaxStreamDataBidirectionalLocal == 1024 * 1024)
+            #expect(quic.initialMaxStreamDataBidirectionalRemote == 1024 * 1024)
+            #expect(quic.initialMaxStreamDataUnidirectional == 1024 * 1024)
+            #expect(quic.initialMaxStreamsBidirectional == 100)
+            #expect(quic.initialMaxStreamsUnidirectional == 100)
+            #expect(quic.keepAliveInterval == nil)
+            #expect(quic.sendRetry == false)
+            #expect(quic.keyLogPath == nil)
+            #expect(quic.qLogConfiguration == nil)
+
+            let connection = ServerConfiguration.HTTP3.ConnectionSettings.defaults
+            #expect(connection.qpackMaximumTableCapacity == 0)
+            #expect(connection.qpackBlockedStreams == 0)
+            #expect(connection.maximumFieldSectionSize == nil)
+        }
+
+        @Test("Custom values")
+        func customValues() {
+            var http3 = ServerConfiguration.HTTP3(
+                preferHuffmanEncoding: false,
+                quicConfiguration: .defaults,
+                connectionSettings: .defaults
+            )
+            #expect(http3.preferHuffmanEncoding == false)
+            #expect(http3.quicConfiguration == .defaults)
+            #expect(http3.connectionSettings == .defaults)
+
+            http3.quicConfiguration.keyExchangeGroup = .secp256
+            #expect(http3.quicConfiguration.keyExchangeGroup == .secp256)
+
+            http3.quicConfiguration.keyExchangeGroup = .secp384
+            #expect(http3.quicConfiguration.keyExchangeGroup == .secp384)
+
+            http3.quicConfiguration.keyExchangeGroup = .x25519MLKEM768
+            #expect(http3.quicConfiguration.keyExchangeGroup == .x25519MLKEM768)
+
+            http3.quicConfiguration.qLogConfiguration = .init(path: "test", topic: "test", description: "test")
+            #expect(http3.quicConfiguration.qLogConfiguration != nil)
+        }
+    }
+
     @Suite("Supported HTTP versions")
     struct SupportedHTTPVersionsTests {
         @Test("Defaults to HTTP/1.1 only")
