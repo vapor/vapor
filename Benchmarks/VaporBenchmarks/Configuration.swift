@@ -37,9 +37,9 @@ func configureBenchmarks() {
     }
 
     #if BENCHMARK_ALLOCATION_COUNTING
-        let defaultMode = MeasurementMode.allocations
+    let defaultMode = MeasurementMode.allocations
     #else
-        let defaultMode = MeasurementMode.instructions
+    let defaultMode = MeasurementMode.instructions
     #endif
     let name = environment["BENCHMARK_MODE"] ?? defaultMode.rawValue
     guard let mode = MeasurementMode(rawValue: name) else {
@@ -47,17 +47,17 @@ func configureBenchmarks() {
     }
 
     #if BENCHMARK_ALLOCATION_COUNTING
-        precondition(mode == .allocations, "Use a build without AllocationCounting for instruction and timing measurements.")
+    precondition(mode == .allocations, "Use a build without AllocationCounting for instruction and timing measurements.")
     #else
-        precondition(mode != .allocations, "Allocation measurements require --traits AllocationCounting.")
-        // The upstream Linux plugin preloads any interposer artifacts in its build directory,
-        // including leftovers from earlier builds with different traits.
-        for key in ["LD_PRELOAD", "DYLD_INSERT_LIBRARIES"] {
-            let libraries = environment[key] ?? ""
-            precondition(
-                !libraries.contains("MallocInterposer") && !libraries.contains("SwiftRuntimeInterposer"),
-                "Instruction and timing measurements require a fresh, separate --scratch-path without interposers.")
-        }
+    precondition(mode != .allocations, "Allocation measurements require --traits AllocationCounting.")
+    // The upstream Linux plugin preloads any interposer artifacts in its build directory,
+    // including leftovers from earlier builds with different traits.
+    for key in ["LD_PRELOAD", "DYLD_INSERT_LIBRARIES"] {
+        let libraries = environment[key] ?? ""
+        precondition(
+            !libraries.contains("MallocInterposer") && !libraries.contains("SwiftRuntimeInterposer"),
+            "Instruction and timing measurements require a fresh, separate --scratch-path without interposers.")
+    }
     #endif
 
     Benchmark.defaultConfiguration = .init(
