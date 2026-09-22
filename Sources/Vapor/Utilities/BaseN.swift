@@ -6,9 +6,9 @@ import Algorithms
 /// partially because the APIs that build on them are also non-`public` for their own reasons.
 
 #if canImport(FoundationEssentials)
-    import struct FoundationEssentials.Data
+import struct FoundationEssentials.Data
 #else
-    import struct Foundation.Data
+import struct Foundation.Data
 #endif
 
 public struct BaseNEncoding: Sendable {

@@ -8,9 +8,9 @@ import NIOHTTPServer
 import Synchronization
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Bridges NIOHTTPServer's request handler protocol into Vapor's responder chain.

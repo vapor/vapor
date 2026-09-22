@@ -1,9 +1,9 @@
 import Logging
 
 #if canImport(FoundationEssentials)
-    import class FoundationEssentials.FileManager
+import class FoundationEssentials.FileManager
 #else
-    import class Foundation.FileManager
+import class Foundation.FileManager
 #endif
 
 /// `DirectoryConfiguration` represents a configured working directory.
@@ -39,12 +39,12 @@ public struct DirectoryConfiguration: Sendable {
         let workingDirectory = cwd.isEmpty ? "./" : cwd
 
         #if Xcode
-            if workingDirectory.contains("DerivedData") {
-                Logger(label: "codes.vapor.directory-config")
-                    .warning(
-                        "No custom working directory set for this scheme, using the process working directory",
-                        metadata: ["workingDirectory": "\(workingDirectory)"])
-            }
+        if workingDirectory.contains("DerivedData") {
+            Logger(label: "codes.vapor.directory-config")
+                .warning(
+                    "No custom working directory set for this scheme, using the process working directory",
+                    metadata: ["workingDirectory": "\(workingDirectory)"])
+        }
         #endif
 
         return DirectoryConfiguration(workingDirectory: workingDirectory)

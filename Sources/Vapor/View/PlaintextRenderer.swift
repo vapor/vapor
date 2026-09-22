@@ -4,9 +4,9 @@ import NIOFoundationEssentialsCompat
 import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// A ``ViewRenderer`` that serves views from files on disk, without any templating.

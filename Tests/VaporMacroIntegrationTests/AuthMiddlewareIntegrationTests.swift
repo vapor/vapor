@@ -1,164 +1,164 @@
 #if MacroRouting
-    import Testing
-    import Vapor
-    import VaporTesting
-    import VaporMacros
-    import HTTPTypes
-    import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
+import VaporMacros
+import HTTPTypes
+import RoutingKit
 
-    @Suite("AuthMiddleware Macro Integration Tests")
-    struct AuthMiddlewareIntegrationTests {
+@Suite("AuthMiddleware Macro Integration Tests")
+struct AuthMiddlewareIntegrationTests {
 
-        @Test("Authenticated route returns user from req.auth.require")
-        func authRouteReturnsUser() async throws {
-            try await withApp { app in
-                try await app.register(collection: AuthTestController())
+    @Test("Authenticated route returns user from req.auth.require")
+    func authRouteReturnsUser() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
 
-                try await app.testing { client in
-                    let res = try await client.get(
-                        "/api/auth/me",
-                        headers: [.authorization: "Bearer test-token"]
-                    )
-                    #expect(res.status == .ok)
-                    try #expect(await res.body.requireString() == "Vapor")
-                }
-            }
-        }
-
-        @Test("Authenticated route without credentials returns 401")
-        func authRouteWithoutCredentialsFails() async throws {
-            try await withApp { app in
-                try await app.register(collection: AuthTestController())
-
-                try await app.testing { client in
-                    let res = try await client.get("/api/auth/me")
-                    #expect(res.status == .unauthorized)
-                }
-            }
-        }
-
-        @Test("Authenticated route with path parameter")
-        func authRouteWithPathParameter() async throws {
-            try await withApp { app in
-                try await app.register(collection: AuthTestController())
-
-                try await app.testing { client in
-                    let res = try await client.post(
-                        "/api/auth/users/42/promote",
-                        headers: [.authorization: "Bearer test-token"]
-                    )
-                    #expect(res.status == .ok)
-                    try #expect(await res.body.requireString() == "Vapor promoted 42")
-                }
-            }
-        }
-
-        @Test("Optional auth route works without credentials")
-        func optionalAuthRouteAnonymous() async throws {
-            try await withApp { app in
-                try await app.register(collection: AuthTestController())
-
-                try await app.testing { client in
-                    let res = try await client.get("/api/auth/feed")
-                    #expect(res.status == .ok)
-                    try #expect(await res.body.requireString() == "anonymous")
-                }
-            }
-        }
-
-        @Test("Optional auth route resolves user when credentials present")
-        func optionalAuthRouteAuthenticated() async throws {
-            try await withApp { app in
-                try await app.register(collection: AuthTestController())
-
-                try await app.testing { client in
-                    let res = try await client.get(
-                        "/api/auth/feed",
-                        headers: [.authorization: "Bearer test-token"]
-                    )
-                    #expect(res.status == .ok)
-                    try #expect(await res.body.requireString() == "Vapor")
-                }
-            }
-        }
-
-        @Test("Additional middleware in @AuthMiddleware runs before handler")
-        func additionalMiddlewareRuns() async throws {
-            try await withApp { app in
-                try await app.register(collection: AuthTestController())
-
-                try await app.testing { client in
-                    let forbidden = try await client.get(
-                        "/api/auth/admin",
-                        headers: [.authorization: "Bearer test-token"]
-                    )
-                    #expect(forbidden.status == .forbidden)
-
-                    let allowed = try await client.get(
-                        "/api/auth/admin",
-                        headers: [.authorization: "Bearer admin-token"]
-                    )
-                    #expect(allowed.status == .ok)
-                    try #expect(await allowed.body.requireString() == "Admin")
-                }
+            try await app.testing { client in
+                let res = try await client.get(
+                    "/api/auth/me",
+                    headers: [.authorization: "Bearer test-token"]
+                )
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == "Vapor")
             }
         }
     }
 
-    // MARK: - Test fixtures
+    @Test("Authenticated route without credentials returns 401")
+    func authRouteWithoutCredentialsFails() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
 
-    struct AuthTestUser: Authenticatable, Content {
-        let id: Int
-        let name: String
-        let isAdmin: Bool
-    }
-
-    struct AuthTestTokenMiddleware: Middleware {
-        func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
-            if let header = request.headers[.authorization] {
-                if header == "Bearer test-token" {
-                    request.auth.login(AuthTestUser(id: 1, name: "Vapor", isAdmin: false))
-                } else if header == "Bearer admin-token" {
-                    request.auth.login(AuthTestUser(id: 2, name: "Admin", isAdmin: true))
-                }
+            try await app.testing { client in
+                let res = try await client.get("/api/auth/me")
+                #expect(res.status == .unauthorized)
             }
-            return try await next.respond(to: request)
         }
     }
 
-    struct AuthTestAdminOnlyMiddleware: Middleware {
-        func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
-            guard let user = request.auth.get(AuthTestUser.self), user.isAdmin else {
-                throw Abort(.forbidden)
+    @Test("Authenticated route with path parameter")
+    func authRouteWithPathParameter() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
+
+            try await app.testing { client in
+                let res = try await client.post(
+                    "/api/auth/users/42/promote",
+                    headers: [.authorization: "Bearer test-token"]
+                )
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == "Vapor promoted 42")
             }
-            return try await next.respond(to: request)
         }
     }
 
-    @Controller
-    struct AuthTestController {
-        @GET("api", "auth", "me")
-        @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware())
-        func me(req: Request, user: AuthTestUser) async throws -> String {
-            return user.name
-        }
+    @Test("Optional auth route works without credentials")
+    func optionalAuthRouteAnonymous() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
 
-        @POST("api", "auth", "users", Int.self, "promote")
-        @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware())
-        func promote(req: Request, user: AuthTestUser, id: Int) async throws -> String {
-            return "\(user.name) promoted \(id)"
-        }
-
-        @GET("api", "auth", "feed")
-        @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware())
-        func feed(req: Request, user: AuthTestUser?) async throws -> String {
-            return user?.name ?? "anonymous"
-        }
-
-        @GET("api", "auth", "admin")
-        @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware(), AuthTestAdminOnlyMiddleware())
-        func admin(req: Request, user: AuthTestUser) async throws -> String {
-            return user.name
+            try await app.testing { client in
+                let res = try await client.get("/api/auth/feed")
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == "anonymous")
+            }
         }
     }
+
+    @Test("Optional auth route resolves user when credentials present")
+    func optionalAuthRouteAuthenticated() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
+
+            try await app.testing { client in
+                let res = try await client.get(
+                    "/api/auth/feed",
+                    headers: [.authorization: "Bearer test-token"]
+                )
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == "Vapor")
+            }
+        }
+    }
+
+    @Test("Additional middleware in @AuthMiddleware runs before handler")
+    func additionalMiddlewareRuns() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
+
+            try await app.testing { client in
+                let forbidden = try await client.get(
+                    "/api/auth/admin",
+                    headers: [.authorization: "Bearer test-token"]
+                )
+                #expect(forbidden.status == .forbidden)
+
+                let allowed = try await client.get(
+                    "/api/auth/admin",
+                    headers: [.authorization: "Bearer admin-token"]
+                )
+                #expect(allowed.status == .ok)
+                try #expect(await allowed.body.requireString() == "Admin")
+            }
+        }
+    }
+}
+
+// MARK: - Test fixtures
+
+struct AuthTestUser: Authenticatable, Content {
+    let id: Int
+    let name: String
+    let isAdmin: Bool
+}
+
+struct AuthTestTokenMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        if let header = request.headers[.authorization] {
+            if header == "Bearer test-token" {
+                request.auth.login(AuthTestUser(id: 1, name: "Vapor", isAdmin: false))
+            } else if header == "Bearer admin-token" {
+                request.auth.login(AuthTestUser(id: 2, name: "Admin", isAdmin: true))
+            }
+        }
+        return try await next.respond(to: request)
+    }
+}
+
+struct AuthTestAdminOnlyMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        guard let user = request.auth.get(AuthTestUser.self), user.isAdmin else {
+            throw Abort(.forbidden)
+        }
+        return try await next.respond(to: request)
+    }
+}
+
+@Controller
+struct AuthTestController {
+    @GET("api", "auth", "me")
+    @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware())
+    func me(req: Request, user: AuthTestUser) async throws -> String {
+        return user.name
+    }
+
+    @POST("api", "auth", "users", Int.self, "promote")
+    @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware())
+    func promote(req: Request, user: AuthTestUser, id: Int) async throws -> String {
+        return "\(user.name) promoted \(id)"
+    }
+
+    @GET("api", "auth", "feed")
+    @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware())
+    func feed(req: Request, user: AuthTestUser?) async throws -> String {
+        return user?.name ?? "anonymous"
+    }
+
+    @GET("api", "auth", "admin")
+    @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware(), AuthTestAdminOnlyMiddleware())
+    func admin(req: Request, user: AuthTestUser) async throws -> String {
+        return user.name
+    }
+}
 #endif

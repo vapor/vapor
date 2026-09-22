@@ -3,18 +3,18 @@ import NIOCore
 import _NIOFileSystem
 
 #if canImport(Glibc)
-    import Glibc
+import Glibc
 #elseif canImport(Musl)
-    import Musl
+import Musl
 #elseif canImport(Android)
-    import Android
+import Android
 #else
-    import Darwin
+import Darwin
 #endif
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Reads dotenv (`.env`) files and loads them into the current process.

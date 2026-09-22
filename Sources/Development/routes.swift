@@ -251,18 +251,18 @@ func routes(_ app: Application) async throws {
     }
 
     #if !canImport(FoundationEssentials)
-        app.on(.post, "upload") { req -> HTTPResponse.Status in
-            return try await FileSystem.shared.withFileHandle(
-                forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
-                options: .newFile(replaceExisting: true)
-            ) { handle in
-                var writer = handle.bufferedWriter()
-                try await req.body.forEachChunk { part in
-                    try await writer.write(contentsOf: part.withUnsafeBytes { unsafe Array($0) })
-                }
-                return .ok
+    app.on(.post, "upload") { req -> HTTPResponse.Status in
+        return try await FileSystem.shared.withFileHandle(
+            forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
+            options: .newFile(replaceExisting: true)
+        ) { handle in
+            var writer = handle.bufferedWriter()
+            try await req.body.forEachChunk { part in
+                try await writer.write(contentsOf: part.withUnsafeBytes { unsafe Array($0) })
             }
+            return .ok
         }
+    }
     #endif
 
     let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
@@ -331,11 +331,11 @@ func routes(_ app: Application) async throws {
     }
 
     #if MacroRouting
-        try await app.register(collection: UserController())
+    try await app.register(collection: UserController())
 
-        #GET(on: app, "macros", "types", Int.self) { (req: Request, id: Int) async throws -> String in
-            return "macro route with id: \(id)"
-        }
+    #GET(on: app, "macros", "types", Int.self) { (req: Request, id: Int) async throws -> String in
+        return "macro route with id: \(id)"
+    }
     #endif
 }
 
@@ -417,70 +417,70 @@ struct TestController: RouteCollection {
 }
 
 #if MacroRouting
-    @Controller
-    struct UserController {
-        @GET("api", "macros", "users")
-        func getUsers(req: Request) async throws -> String {
-            return "users"
-        }
-
-        @HTTP(.patch, "api", "macros", "users", "custom")
-        func getCustomHTTPMethod(req: Request) async throws -> String {
-            return "custom HTTP method"
-        }
-
-        @GET("api", "macros", "users", Int.self)
-        func getUser(req: Request, id: Int) async throws -> String {
-            return "user with id: \(id)"
-        }
-
-        @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
-        func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
-            return "custom HTTP method"
-        }
-
-        @POST("api", "macros", "lots", UUID.self, Int.self, String.self, Int.self)
-        func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String, anotherNumber: Int) async throws -> String {
-            return "uuid: \(uuid), number: \(number), text: \(text), anotherNumber: \(anotherNumber)"
-        }
-
-        @POST("api", "macros", "sync")
-        func syncRoute(req: Request) throws -> String {
-            "Sync"
-        }
-
-        @GET("macros", "manual", "int", ":id")
-        @Sendable
-        func macroDynamicPathParameter(req: Request) async throws -> String {
-            let id = try req.parameters.require("id")
-            return "macro route with id: \(id)"
-        }
-
-        @GET("macros", "manual", "partial", ":{my-file}.json")
-        @Sendable
-        func macroDynamicPartialPathParameter(req: Request) async throws -> String {
-            let file = try req.parameters.require("my-file")
-            return "macro route with file: \(file)"
-        }
-
-        @POST("api", "macros", "users", Int.self, "promote")
-        @AuthMiddleware(User.self, UserAuthMiddleware())
-        func promoteUser(req: Request, authenticatedUser: User, id: Int) async throws -> User {
-            // Must have: Request, User, then Int (in that order)
-            return authenticatedUser
-        }
-
-        //    These routes are expected not to compile and are here to demonstate/test that
-        //    @GET("NotResponseCodable")
-        //    func testNotARoute(req: Request) async throws -> NotContentType {
-        //        NotContentType(something: "")
-        //    }
-
-        //    @GET("Void")
-        //    func testVoidRoute(req: Request) throws {
-        //
-        //    }
+@Controller
+struct UserController {
+    @GET("api", "macros", "users")
+    func getUsers(req: Request) async throws -> String {
+        return "users"
     }
+
+    @HTTP(.patch, "api", "macros", "users", "custom")
+    func getCustomHTTPMethod(req: Request) async throws -> String {
+        return "custom HTTP method"
+    }
+
+    @GET("api", "macros", "users", Int.self)
+    func getUser(req: Request, id: Int) async throws -> String {
+        return "user with id: \(id)"
+    }
+
+    @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
+    func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
+        return "custom HTTP method"
+    }
+
+    @POST("api", "macros", "lots", UUID.self, Int.self, String.self, Int.self)
+    func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String, anotherNumber: Int) async throws -> String {
+        return "uuid: \(uuid), number: \(number), text: \(text), anotherNumber: \(anotherNumber)"
+    }
+
+    @POST("api", "macros", "sync")
+    func syncRoute(req: Request) throws -> String {
+        "Sync"
+    }
+
+    @GET("macros", "manual", "int", ":id")
+    @Sendable
+    func macroDynamicPathParameter(req: Request) async throws -> String {
+        let id = try req.parameters.require("id")
+        return "macro route with id: \(id)"
+    }
+
+    @GET("macros", "manual", "partial", ":{my-file}.json")
+    @Sendable
+    func macroDynamicPartialPathParameter(req: Request) async throws -> String {
+        let file = try req.parameters.require("my-file")
+        return "macro route with file: \(file)"
+    }
+
+    @POST("api", "macros", "users", Int.self, "promote")
+    @AuthMiddleware(User.self, UserAuthMiddleware())
+    func promoteUser(req: Request, authenticatedUser: User, id: Int) async throws -> User {
+        // Must have: Request, User, then Int (in that order)
+        return authenticatedUser
+    }
+
+    //    These routes are expected not to compile and are here to demonstate/test that
+    //    @GET("NotResponseCodable")
+    //    func testNotARoute(req: Request) async throws -> NotContentType {
+    //        NotContentType(something: "")
+    //    }
+
+    //    @GET("Void")
+    //    func testVoidRoute(req: Request) throws {
+    //
+    //    }
+}
 #endif
 
 struct NotContentType {

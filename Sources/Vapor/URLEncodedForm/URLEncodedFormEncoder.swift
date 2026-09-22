@@ -1,9 +1,9 @@
 public import HTTPTypes
 
 #if canImport(FoundationEssentials)
-    public import FoundationEssentials
+public import FoundationEssentials
 #else
-    public import Foundation
+public import Foundation
 #endif
 
 /// Encodes `Encodable` instances to `application/x-www-form-urlencoded` data.

@@ -7,9 +7,9 @@ import NIOHTTPTypesHTTP1
 import Vapor
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// A ``Vapor/Client`` backed by AsyncHTTPClient, for the live test client.

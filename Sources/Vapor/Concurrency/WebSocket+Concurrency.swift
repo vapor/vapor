@@ -1,17 +1,17 @@
 #if WebSockets
-    import NIOPosix
-    import NIOCore
-    import HTTPTypes
-    // Disable until we need it
-    //import WebSocketKit
-    import RoutingKit
-    #if canImport(FoundationEssentials)
-        import FoundationEssentials
-    #else
-        import Foundation
-    #endif
-    import NIOPosix
-    import NIOHTTPTypesHTTP1
+import NIOPosix
+import NIOCore
+import HTTPTypes
+// Disable until we need it
+//import WebSocketKit
+import RoutingKit
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+import NIOPosix
+import NIOHTTPTypesHTTP1
 
 //extension Request {
 //

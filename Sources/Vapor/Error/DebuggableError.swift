@@ -1,9 +1,9 @@
 public import Logging
 
 #if canImport(FoundationEssentials)
-    public import FoundationEssentials
+public import FoundationEssentials
 #else
-    public import Foundation
+public import Foundation
 #endif
 
 /// `Debuggable` provides an interface that allows a type

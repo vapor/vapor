@@ -3,9 +3,9 @@ import NIOCore
 import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
-    public import FoundationEssentials
+public import FoundationEssentials
 #else
-    public import Foundation
+public import Foundation
 #endif
 
 /// Serves static files from a public directory.
@@ -135,30 +135,30 @@ public final class FileMiddleware: Middleware {
     /// - important: Make sure the public directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
     /// - returns: A fully qualified FileMiddleware if the given `publicDirectory` can be served, throws a `BundleSetupError` otherwise
     #if !canImport(FoundationEssentials)
-        public convenience init(
-            bundle: Bundle,
-            publicDirectory: String = "Public",
-            defaultFile: String? = nil,
-            directoryAction: DirectoryAction = .none,
-            cachePolicy: CachePolicy = .browserDefault,
-            etagCache: FileETagHashCache
-        ) throws {
-            guard let bundleResourceURL = bundle.resourceURL else {
-                throw BundleSetupError.bundleResourceURLIsNil
-            }
-            let publicDirectoryURL = bundleResourceURL.appendingPathComponent(publicDirectory.removeLeadingSlashes())
-            guard (try? publicDirectoryURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
-                throw BundleSetupError.publicDirectoryIsNotAFolder
-            }
-
-            self.init(
-                publicDirectory: publicDirectoryURL.path,
-                defaultFile: defaultFile,
-                directoryAction: directoryAction,
-                cachePolicy: cachePolicy,
-                etagCache: etagCache
-            )
+    public convenience init(
+        bundle: Bundle,
+        publicDirectory: String = "Public",
+        defaultFile: String? = nil,
+        directoryAction: DirectoryAction = .none,
+        cachePolicy: CachePolicy = .browserDefault,
+        etagCache: FileETagHashCache
+    ) throws {
+        guard let bundleResourceURL = bundle.resourceURL else {
+            throw BundleSetupError.bundleResourceURLIsNil
         }
+        let publicDirectoryURL = bundleResourceURL.appendingPathComponent(publicDirectory.removeLeadingSlashes())
+        guard (try? publicDirectoryURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
+            throw BundleSetupError.publicDirectoryIsNotAFolder
+        }
+
+        self.init(
+            publicDirectory: publicDirectoryURL.path,
+            defaultFile: defaultFile,
+            directoryAction: directoryAction,
+            cachePolicy: cachePolicy,
+            etagCache: etagCache
+        )
+    }
     #endif
 
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory

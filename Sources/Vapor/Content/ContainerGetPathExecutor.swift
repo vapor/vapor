@@ -44,13 +44,13 @@ extension UnkeyedDecodingContainer {
     /// terminating loop, not an infinite recursion, which would at least eventually crash).
     fileprivate mutating func skip() throws {
         #if DEBUG
-            let entryIndex = self.currentIndex
+        let entryIndex = self.currentIndex
         #endif
 
         _ = try self.superDecoder()
 
         #if DEBUG
-            assert(self.currentIndex != entryIndex, "Broken `UnkeyedDecodingContainer.superDecoder()` implementation detected!")
+        assert(self.currentIndex != entryIndex, "Broken `UnkeyedDecodingContainer.superDecoder()` implementation detected!")
         #endif
     }
 

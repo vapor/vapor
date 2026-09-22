@@ -3,9 +3,9 @@ public import Logging
 import RoutingKit
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.

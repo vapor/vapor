@@ -1,12 +1,12 @@
 import HTTPTypes
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 #if Multipart
-    import MultipartKit
+import MultipartKit
 #endif
 
 /// Configures which ``Encoder``s and ``Decoder``s to use when interacting with data in HTTP messages.
@@ -49,9 +49,9 @@ public struct ContentConfiguration: Sendable {
         config.use(urlDecoder: URLEncodedFormDecoder())
 
         #if Multipart
-            // form-data
-            config.use(encoder: FormDataEncoder(), for: .formData)
-            config.use(decoder: FormDataDecoder(), for: .formData)
+        // form-data
+        config.use(encoder: FormDataEncoder(), for: .formData)
+        config.use(decoder: FormDataDecoder(), for: .formData)
         #endif
 
         return config
