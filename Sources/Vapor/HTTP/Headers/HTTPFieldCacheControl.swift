@@ -1,9 +1,9 @@
 public import HTTPTypes
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 // Comments on these properties are copied from the mozilla doc URL shown below.

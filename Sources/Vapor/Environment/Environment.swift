@@ -1,9 +1,9 @@
 public import Configuration
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have

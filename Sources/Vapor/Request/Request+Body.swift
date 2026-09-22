@@ -2,9 +2,9 @@ public import HTTPTypes
 import Synchronization
 
 #if canImport(FoundationEssentials)
-    public import FoundationEssentials
+public import FoundationEssentials
 #else
-    public import Foundation
+public import Foundation
 #endif
 
 extension Request {

@@ -15,9 +15,9 @@ import VaporTesting
 import X509
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 @Suite("Server Tests")

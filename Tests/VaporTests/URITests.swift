@@ -138,13 +138,13 @@ struct URITests {
         #expect(uri.query == nil)
         #expect(uri.fragment == nil)
         #if canImport(Darwin)
-            // TODO: It is not clear why the "encode the first colon as %3A but none of the others" behavior appears, and why only on Darwin
-            #expect(
-                uri.path.replacing(zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1)
-                    == readableInAssertionOutput.replacing("%3A", with: ":", maxReplacements: 1)
-            )
+        // TODO: It is not clear why the "encode the first colon as %3A but none of the others" behavior appears, and why only on Darwin
+        #expect(
+            uri.path.replacing(zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1)
+                == readableInAssertionOutput.replacing("%3A", with: ":", maxReplacements: 1)
+        )
         #else
-            #expect(uri.path == "/")
+        #expect(uri.path == "/")
         #endif
     }
 

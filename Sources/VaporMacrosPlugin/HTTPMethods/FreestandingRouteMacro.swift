@@ -5,9 +5,9 @@ import SwiftSyntaxBuilder
 public import SwiftSyntaxMacros
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 enum FreestandingRouteMacro {

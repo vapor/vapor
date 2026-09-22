@@ -2,9 +2,9 @@ public import NIOCore
 import NIOFoundationEssentialsCompat
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 #warning("Make this internal")
 

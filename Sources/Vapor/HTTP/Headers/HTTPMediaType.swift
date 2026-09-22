@@ -2,9 +2,9 @@ import Algorithms
 import HTTPTypes
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Represents an encoded data-format, used in HTTP, HTML, email, and elsewhere.

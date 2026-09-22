@@ -12,9 +12,9 @@ import Vapor
 import VaporTesting
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Regressions for reported request-body bugs, one test per issue.
