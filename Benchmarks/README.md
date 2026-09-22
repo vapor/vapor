@@ -12,7 +12,7 @@ Vapor or benchmark dependencies in Vapor's root manifest are required.
 swift package --package-path Benchmarks --scratch-path Benchmarks/.build/uninstrumented \
   --disable-sandbox --allow-writing-to-package-directory benchmark list
 NIO_SINGLETON_GROUP_LOOP_COUNT=4 NIO_SINGLETON_BLOCKING_POOL_THREAD_COUNT=4 \
-  swift package --package-path Benchmarks --scratch-path Benchmarks/.build/uninstrumented \
+  swift package -c release --package-path Benchmarks --scratch-path Benchmarks/.build/uninstrumented \
   --disable-sandbox --allow-writing-to-package-directory benchmark \
   --filter '^(e2e|network|drain-network)[.].*' --no-progress --scale
 
@@ -140,8 +140,9 @@ This executes every fixture once with wall-clock measurement only, no warmup and
 scaled repetitions. It exercises setup, request handling, validation and teardown
 without requiring hardware counters. **Smoke results are not performance results.**
 The test workflow builds both the uninstrumented and allocation-counting release
-variants and executes this mode. Add `--traits AllocationCounting` and use the
-allocation build directory to smoke-test that variant locally.
+variants and executes this mode on ARM64 with two CPUs, 8 GB RAM and no swap,
+matching the benchmark runner's constraints. Add `--traits AllocationCounting`
+and use the allocation build directory to smoke-test that variant locally.
 
 ## Shared benchmark workflow and Penny
 
@@ -163,7 +164,9 @@ Swift flags and build directory. The shared workflow runs the standard Swift
 benchmark commands sequentially, with two NIO event-loop threads and two
 blocking-pool threads. Each configuration has its own baseline and threshold
 directory; CPU, wall clock and instructions reuse the uninstrumented build.
-Allocation counting uses its own build with `AllocationCounting` enabled.
+Allocation counting uses its own build with `AllocationCounting` enabled. Vapor
+selects a two-CPU, 8 GB Graviton4 runner because release compilation of SwiftSyntax
+exceeds the shared workflow's default 4 GB memory budget, even with one build job.
 
 The shared workflow produces one PR report and commit status comparing against
 committed p90 thresholds, not a fresh run of `main`. Full reports are available in
