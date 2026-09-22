@@ -147,7 +147,7 @@ allocation build directory to smoke-test that variant locally.
 
 `.github/workflows/benchmark.yml` calls Vapor's shared benchmark workflow on pushes
 to `main` and through `workflow_dispatch`. It uses the controlled benchmark runner
-and pins the official `swift:6.4-bookworm` image. A maintainer with write access can
+and pins the official `swift:6.4-noble` image. A maintainer with write access can
 request a run for a PR's current head with a new PR conversation comment:
 
 ```text

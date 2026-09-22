@@ -22,7 +22,7 @@ jobs:
     uses: vapor/ci/.github/workflows/run-benchmark.yml@0c321b2fac99f702b9641c021bd8be7ea276caca # main
     with:
       sha: ${{ inputs.sha }}
-      swift_image: swift:6.4-bookworm
+      swift_image: swift:6.4-noble
       configurations: >-
         [
           {"name":"instructions","build":"uninstrumented","environment":{"BENCHMARK_MODE":"instructions"}},
