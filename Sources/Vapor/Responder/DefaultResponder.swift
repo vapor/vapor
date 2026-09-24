@@ -10,9 +10,6 @@ import Foundation
 
 /// Vapor's main ``Responder`` type. Combines configured middleware + router to create a responder.
 package struct DefaultResponder: Responder {
-    /// It's safe to mark this `nonisolated(unsafe)` because there are only two mutating operations
-    /// on a `TrieRouter` (calling `.register(_at:)` or changing its `options`), and we never do either
-    /// of those after `init()`.
     private let router: TrieRouter<CachedRoute>
     private let notFoundResponder: any Responder
 
