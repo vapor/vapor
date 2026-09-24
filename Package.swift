@@ -84,7 +84,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-http-types", from: "1.7.0"),
 
         // Common data structures
-        .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
+        // Pin until Async Algorithms releases a fix for the Collections 1.7.0 preview APIs.
+        .package(url: "https://github.com/apple/swift-collections", exact: "1.6.0"),
 
         // X509 certificate types for the Swift ecosystem
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.14.0"),
