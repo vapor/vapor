@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   benchmark:
-    uses: vapor/ci/.github/workflows/run-benchmark.yml@ad78413e13bebb9158083aa226608e028754106b # runner resource selection
+    uses: vapor/ci/.github/workflows/run-benchmark.yml@ad78413e13bebb9158083aa226608e028754106b # main
     with:
       sha: ${{ inputs.sha }}
       swift_image: swift:6.4-noble
