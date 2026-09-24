@@ -8,10 +8,6 @@ this separate package. Normal imports do not expose the hook; VaporTesting keeps
 using the existing package-access `makeResponder()`. No testing-enabled build of
 Vapor or benchmark dependencies in Vapor's root manifest are required.
 
-The benchmark package pins Swift Collections to 1.6.0 because Async Algorithms
-1.1.5 uses preview APIs removed in Collections 1.7.0. Revisit this pin when Async
-Algorithms supports the newer APIs, and re-record thresholds when updating it.
-
 ```sh
 swift package --package-path Benchmarks --scratch-path Benchmarks/.build/uninstrumented \
   --disable-sandbox --allow-writing-to-package-directory benchmark list
