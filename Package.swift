@@ -122,6 +122,7 @@ let package = Package(
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
+                .product(name: "BasicContainers", package: "swift-collections"),
                 .product(name: "RoutingKit", package: "routing-kit"),
                 // Disable until websockets are working
                 //.product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
