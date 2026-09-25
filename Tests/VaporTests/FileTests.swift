@@ -18,6 +18,113 @@ import Foundation
 @Suite("File Tests")
 struct FileTests {
 
+    @Test("Application-created file middleware serves a public directory")
+    func testApplicationFileMiddlewarePublicDirectory() async throws {
+        let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Utilities")
+        try await withApp { app in
+            app.middleware.use(app.makeFileMiddleware(publicDirectory: directory.path))
+
+            try await app.testing { client in
+                let response = try await client.get("/foo.txt")
+                #expect(response.status == .ok)
+                #expect(try await response.body.requireString() == "bar\n")
+            }
+        }
+    }
+
+    #if !canImport(FoundationEssentials)
+    @Test("Application-created file middleware serves bundle resources and shares ETags")
+    func testApplicationFileMiddlewareBundle() async throws {
+        try await withApp { app in
+            app.middleware.use(
+                try app.makeFileMiddleware(
+                    bundle: .module, publicDirectory: "SubUtilities", defaultFile: "index.html", advancedETagComparison: true))
+
+            try await app.testing { client in
+                let response = try await client.get("/")
+                #expect(response.status == .ok)
+                #expect(try await response.body.requireString() == "<h1>Subdirectory Default</h1>\n")
+                let path = try #require(Bundle.module.resourceURL).appendingPathComponent("SubUtilities/index.html").path
+                let entry = try #require(await app.fileETagHashCache.entry(forFileAt: path))
+                #expect(entry.digestHex == response.headers[.eTag])
+            }
+        }
+    }
+    #endif
+
+    @Test("Application-created file middleware supports conditional ETag requests")
+    func testApplicationFileMiddlewareConditionalETag() async throws {
+        let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Utilities")
+        try await withApp { app in
+            app.middleware.use(app.makeFileMiddleware(publicDirectory: directory.path, advancedETagComparison: true))
+
+            try await app.testing { client in
+                let response = try await client.get("/foo.txt")
+                #expect(response.status == .ok)
+                #expect(try await response.body.requireString() == "bar\n")
+                let eTag = try #require(response.headers[.eTag])
+                #expect(eTag == SHA256.hash(data: Data("bar\n".utf8)).hex)
+
+                let cached = try await client.get("/foo.txt", headers: [.ifNoneMatch: eTag])
+                #expect(cached.status == .notModified)
+                #expect(await app.fileETagHashCache.count == 1)
+            }
+        }
+    }
+
+    @Test("Application-created file middleware shares the configured cache with fileio")
+    func testApplicationFileMiddlewareSharedETagCache() async throws {
+        let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Utilities")
+        let firstPath = directory.appendingPathComponent("foo.txt").path
+        let secondPath = directory.appendingPathComponent("index.html").path
+        try await withApp(configuration: ServerConfiguration(eTagHashCacheCapacity: 1)) { app in
+            app.middleware.use(app.makeFileMiddleware(publicDirectory: directory.path, advancedETagComparison: true))
+            app.get("stream") { request in
+                try await app.fileio.streamFile(at: secondPath, for: request, advancedETagComparison: true)
+            }
+
+            try await app.testing { client in
+                let response = try await client.get("/foo.txt")
+                #expect(response.status == .ok)
+                #expect(try await response.body.requireString() == "bar\n")
+                let entry = try #require(await app.fileETagHashCache.entry(forFileAt: firstPath))
+                #expect(entry.digestHex == response.headers[.eTag])
+
+                let streamed = try await client.get("/stream")
+                #expect(streamed.status == .ok)
+                #expect(await app.fileETagHashCache.count == 1)
+                #expect(await app.fileETagHashCache.entry(forFileAt: firstPath) == nil)
+                let streamedEntry = try #require(await app.fileETagHashCache.entry(forFileAt: secondPath))
+                #expect(streamedEntry.digestHex == streamed.headers[.eTag])
+            }
+        }
+    }
+
+    @Test("Application-created file middleware forwards file serving options")
+    func testApplicationFileMiddlewareOptions() async throws {
+        let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Utilities")
+        try await withApp { app in
+            app.middleware.use(
+                app.makeFileMiddleware(
+                    publicDirectory: directory.path,
+                    defaultFile: "index.html",
+                    directoryAction: .redirect,
+                    cachePolicy: .noCache
+                ))
+
+            try await app.testing { client in
+                let redirect = try await client.get("/SubUtilities")
+                #expect(redirect.status == .movedPermanently)
+                #expect(redirect.headers[.location] == "/SubUtilities/")
+
+                let response = try await client.get("/SubUtilities/")
+                #expect(response.status == .ok)
+                #expect(try await response.body.requireString() == "<h1>Subdirectory Default</h1>\n")
+                #expect(response.headers[.cacheControl] == "no-cache")
+            }
+        }
+    }
+
     @Test("Test Stream File")
     func testStreamFile() async throws {
         try await withApp { app in
@@ -499,7 +606,7 @@ struct FileTests {
         let size = contents.count
 
         try await withApp { app in
-            app.middleware.use(FileMiddleware(publicDirectory: directory.path, etagCache: app.fileETagHashCache))
+            app.middleware.use(app.makeFileMiddleware(publicDirectory: directory.path))
 
             try await app.testing(.running) { client in
                 var headers = HTTPFields()
@@ -560,7 +667,7 @@ struct FileTests {
     func testPercentDecodedFilePath() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
+            app.middleware.use(app.makeFileMiddleware(publicDirectory: "/" + path))
 
             try await app.testing { client in
                 let res = try await client.get("/Utilities/foo%20bar.html")
@@ -574,7 +681,7 @@ struct FileTests {
     func testPercentDecodedRelativePath() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
+            app.middleware.use(app.makeFileMiddleware(publicDirectory: "/" + path))
 
             try await app.testing { client in
                 let traversal = try await client.get("%2e%2e/VaporTests/Utilities/foo.txt")
@@ -591,7 +698,7 @@ struct FileTests {
     func testDefaultFileRelative() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html", etagCache: app.fileETagHashCache))
+            app.middleware.use(app.makeFileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
 
             try await app.testing { client in
                 let root = try await client.get("Utilities/")
@@ -610,7 +717,7 @@ struct FileTests {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(
-                FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html", etagCache: app.fileETagHashCache))
+                app.makeFileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
 
             try await app.testing { client in
                 let root = try await client.get("Utilities/")
@@ -628,7 +735,7 @@ struct FileTests {
     func testNoDefaultFile() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
+            app.middleware.use(app.makeFileMiddleware(publicDirectory: "/" + path))
 
             try await app.testing { client in
                 let res = try await client.get("Utilities/")
@@ -642,11 +749,10 @@ struct FileTests {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(
-                FileMiddleware(
+                app.makeFileMiddleware(
                     publicDirectory: "/" + path,
                     defaultFile: "index.html",
-                    directoryAction: .redirect,
-                    etagCache: app.fileETagHashCache
+                    directoryAction: .redirect
                 )
             )
 
@@ -665,11 +771,10 @@ struct FileTests {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(
-                FileMiddleware(
+                app.makeFileMiddleware(
                     publicDirectory: "/" + path,
                     defaultFile: "index.html",
-                    directoryAction: .redirect,
-                    etagCache: app.fileETagHashCache
+                    directoryAction: .redirect
                 )
             )
 
@@ -694,11 +799,10 @@ struct FileTests {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
             app.middleware.use(
-                FileMiddleware(
+                app.makeFileMiddleware(
                     publicDirectory: "/" + path,
                     defaultFile: "index.html",
-                    directoryAction: .none,
-                    etagCache: app.fileETagHashCache
+                    directoryAction: .none
                 )
             )
 
@@ -835,7 +939,7 @@ struct FileTests {
     func testFileMiddlewareOnlyServesGetAndHead() async throws {
         try await withApp { app in
             let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
-            app.middleware.use(FileMiddleware(publicDirectory: "/" + path, etagCache: app.fileETagHashCache))
+            app.middleware.use(app.makeFileMiddleware(publicDirectory: "/" + path))
 
             try await app.testing(.running) { client in
                 let get = try await client.get("/Utilities/foo.txt")

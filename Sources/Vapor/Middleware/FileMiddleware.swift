@@ -8,9 +8,78 @@ public import FoundationEssentials
 public import Foundation
 #endif
 
+extension Application {
+    /// Creates file middleware that shares the application's ETag hash cache with ``fileio``.
+    ///
+    ///     app.middleware.use(app.makeFileMiddleware())
+    ///
+    /// The cache capacity is configured by `ServerConfiguration.eTagHashCacheCapacity` when the application is created.
+    ///
+    /// - Parameters:
+    ///   - publicDirectory: The directory to serve files from. Defaults to `directoryConfiguration.publicDirectory`.
+    ///   - defaultFile: The default file to serve for directory requests. A leading `/` makes it relative to the public directory root.
+    ///   - directoryAction: The action to take when a request matches a directory without a trailing slash.
+    ///   - advancedETagComparison: Whether to generate and cache content hashes instead of using the file's modification date and size.
+    ///   - cachePolicy: The browser cache policy to apply to served files.
+    public func makeFileMiddleware(
+        publicDirectory: String? = nil,
+        defaultFile: String? = nil,
+        directoryAction: FileMiddleware.DirectoryAction = .none,
+        advancedETagComparison: Bool = false,
+        cachePolicy: FileMiddleware.CachePolicy = .browserDefault
+    ) -> FileMiddleware {
+        FileMiddleware(
+            publicDirectory: publicDirectory ?? self.directoryConfiguration.publicDirectory,
+            defaultFile: defaultFile,
+            directoryAction: directoryAction,
+            advancedETagComparison: advancedETagComparison,
+            cachePolicy: cachePolicy,
+            fileIO: self.fileio
+        )
+    }
+
+    #if !canImport(FoundationEssentials)
+    /// Creates file middleware for bundle resources, sharing the application's ETag hash cache with ``fileio``.
+    ///
+    /// - Parameters:
+    ///   - bundle: The bundle containing the files to serve.
+    ///   - publicDirectory: The directory within the bundle to serve files from. Defaults to `Public`.
+    ///   - defaultFile: The default file to serve for directory requests. A leading `/` makes it relative to the public directory root.
+    ///   - directoryAction: The action to take when a request matches a directory without a trailing slash.
+    ///   - advancedETagComparison: Whether to generate and cache content hashes instead of using the file's modification date and size.
+    ///   - cachePolicy: The browser cache policy to apply to served files.
+    /// - Important: Include the public directory in the `Copy Bundle Resources` build phase of your Xcode project.
+    /// - Throws: A ``FileMiddleware/BundleSetupError`` if the bundle's public directory cannot be served.
+    public func makeFileMiddleware(
+        bundle: Bundle,
+        publicDirectory: String = "Public",
+        defaultFile: String? = nil,
+        directoryAction: FileMiddleware.DirectoryAction = .none,
+        advancedETagComparison: Bool = false,
+        cachePolicy: FileMiddleware.CachePolicy = .browserDefault
+    ) throws -> FileMiddleware {
+        guard let bundleResourceURL = bundle.resourceURL else {
+            throw FileMiddleware.BundleSetupError.bundleResourceURLIsNil
+        }
+        let publicDirectoryURL = bundleResourceURL.appendingPathComponent(publicDirectory.removeLeadingSlashes())
+        guard (try? publicDirectoryURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
+            throw FileMiddleware.BundleSetupError.publicDirectoryIsNotAFolder
+        }
+
+        return self.makeFileMiddleware(
+            publicDirectory: publicDirectoryURL.path,
+            defaultFile: defaultFile,
+            directoryAction: directoryAction,
+            advancedETagComparison: advancedETagComparison,
+            cachePolicy: cachePolicy
+        )
+    }
+    #endif
+}
+
 /// Serves static files from a public directory.
 ///
-/// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.
+/// Use `app.makeFileMiddleware()` to serve the application's `Public` directory and share its ETag hash cache.
 public final class FileMiddleware: Middleware {
     /// The public directory. Guaranteed to end with a slash.
     private let publicDirectory: String
@@ -34,29 +103,20 @@ public final class FileMiddleware: Middleware {
             description: "Cannot find any actual folder for the given Public Directory")
     }
 
-    /// Creates a new `FileMiddleware`.
-    ///
-    /// - parameters:
-    ///     - publicDirectory: The public directory to serve files from.
-    ///     - defaultFile: The name of the default file to look for and serve if a request hits any public directory. Starting with `/` implies
-    ///     an absolute path from the public directory root. If `nil`, no default files are served.
-    ///     - directoryAction: Determines the action to take when the request doesn't have a trailing slash but matches a directory.
-    ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
-    ///     - cacheControl: Specifies the browser's cache policy that should be used for all files. Defaults to the browser's default behavior ``CachePolicy/browserDefault``.
-    public init(
+    fileprivate init(
         publicDirectory: String,
-        defaultFile: String? = nil,
-        directoryAction: DirectoryAction = .none,
-        advancedETagComparison: Bool = false,
-        cachePolicy: CachePolicy = .browserDefault,
-        etagCache: FileETagHashCache
+        defaultFile: String?,
+        directoryAction: DirectoryAction,
+        advancedETagComparison: Bool,
+        cachePolicy: CachePolicy,
+        fileIO: FileIO
     ) {
         self.publicDirectory = publicDirectory.addTrailingSlash()
         self.defaultFile = defaultFile
         self.directoryAction = directoryAction
         self.advancedETagComparison = advancedETagComparison
         self.cachePolicy = cachePolicy
-        self.fileIO = FileIO(fileETagHashCache: etagCache)
+        self.fileIO = fileIO
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
@@ -122,44 +182,6 @@ public final class FileMiddleware: Middleware {
 
         return try await next.respond(to: request)
     }
-
-    /// Creates a new `FileMiddleware` for a server contained in an Xcode Project.
-    ///
-    /// - parameters:
-    ///     - bundle: The Bundle which contains the files to serve.
-    ///     - publicDirectory: The public directory to serve files from.
-    ///     - defaultFile: The name of the default file to look for and serve if a request hits any public directory. Starting with `/` implies an absolute path from the public directory root. If `nil`, no default files are served.
-    ///     - directoryAction: Determines the action to take when the request doesn't have a trailing slash but matches a directory.
-    ///     - cacheControl: Specifies the browser's cache policy that should be used for all files. Defaults to the browser's default behavior ``CachePolicy/browserDefault``.
-    ///
-    /// - important: Make sure the public directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
-    /// - returns: A fully qualified FileMiddleware if the given `publicDirectory` can be served, throws a `BundleSetupError` otherwise
-    #if !canImport(FoundationEssentials)
-    public convenience init(
-        bundle: Bundle,
-        publicDirectory: String = "Public",
-        defaultFile: String? = nil,
-        directoryAction: DirectoryAction = .none,
-        cachePolicy: CachePolicy = .browserDefault,
-        etagCache: FileETagHashCache
-    ) throws {
-        guard let bundleResourceURL = bundle.resourceURL else {
-            throw BundleSetupError.bundleResourceURLIsNil
-        }
-        let publicDirectoryURL = bundleResourceURL.appendingPathComponent(publicDirectory.removeLeadingSlashes())
-        guard (try? publicDirectoryURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
-            throw BundleSetupError.publicDirectoryIsNotAFolder
-        }
-
-        self.init(
-            publicDirectory: publicDirectoryURL.path,
-            defaultFile: defaultFile,
-            directoryAction: directoryAction,
-            cachePolicy: cachePolicy,
-            etagCache: etagCache
-        )
-    }
-    #endif
 
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory
     public struct DirectoryAction: Sendable {

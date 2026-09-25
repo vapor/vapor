@@ -52,7 +52,7 @@ public final class Application: Sendable, Service {
 
     // MARK: - Other Types
 
-    /// Content hashes for advanced ETag comparison, shared by every request.
+    /// Content hashes shared by `fileio` and middleware created by `makeFileMiddleware()`.
     package let fileETagHashCache: FileETagHashCache
     let lifecycleState: ApplicationStateMachine
     package let contentConfiguration: ContentConfiguration
