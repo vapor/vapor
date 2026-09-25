@@ -7,12 +7,12 @@ public struct ServerConfiguration: Sendable {
     /// The HTTP versions the server accepts. Defaults to HTTP/1.1 only; adding HTTP/2 requires a ``tlsConfiguration``.
     public var httpVersions: Set<HTTPVersion>
 
-    /// How many file content hashes to keep for advanced ETag comparison.
+    /// How many file content hashes to keep for ``Application/fileio`` and middleware created by `app.makeFileMiddleware()`.
     ///
     /// Only files served with `advancedETagComparison` enabled are hashed, and each entry is just a
     /// path and a digest — raise this when serving more such files than the default holds, so their
-    /// hashes aren't evicted before they're used again. A new capacity applies from the next hash
-    /// cached, so lowering it doesn't discard entries already held.
+    /// hashes aren't evicted before they're used again. The capacity is set when the application is
+    /// created.
     public var eTagHashCacheCapacity: UInt
 
     /// How many bytes of an *unread* request body the server will drain to keep the connection alive.
