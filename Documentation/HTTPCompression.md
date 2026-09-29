@@ -26,23 +26,35 @@ app.serverConfiguration.responseCompression.mediaTypes = .only(.compressible)
 
 app.middleware.use(app.makeResponseCompressionMiddleware(), at: .beginning)
 app.middleware.use(app.makeRequestDecompressionMiddleware())
-
-app.responseCompression(.disable).get("uncompressed") { _ in
-    "This route opts out."
-}
 ```
 
 Place response compression before `ErrorMiddleware` (using `at: .beginning` with the default application chain) to also compress error responses. Place request decompression after error middleware and before other middleware that reads bodies. This allows decoding errors to become HTTP responses and makes decoded bodies available to downstream consumers.
 
 For independent settings, construct `ResponseCompressionMiddleware(configuration:)` or `RequestDecompressionMiddleware(configuration:)` directly; both also have useful no-argument defaults. To limit compression or decompression to a route group, pass the desired middleware to `app.grouped(...)`. Group middleware only wraps that group's routes; compressing responses from application-level error middleware requires application-level response compression. Custom responders can be wrapped explicitly using `makeResponder(chainingTo:)`.
 
+To leave a route uncompressed, register response compression on a group and declare that route outside the group:
+
+```swift
+// Register the compressor on this group instead of app.middleware.
+let compressed = app.grouped(app.makeResponseCompressionMiddleware())
+compressed.get("compressed") { _ in
+    "This response can be compressed."
+}
+
+app.get("uncompressed") { _ in
+    "This response stays uncompressed."
+}
+```
+
+Application-level middleware wraps every route, including routes declared directly on `app`. When some routes must stay uncompressed, use group registration as above. Separate groups can use different `ResponseCompressionMiddleware(configuration:)` settings. Request decompression can still be registered globally or scoped to its own groups independently.
+
 Request configuration describes the decompression limit, defaulting to `.ratio(25)`. `.size(_:)`, `.ratio(_:)`, and `.none` belong to `ServerConfiguration.RequestDecompressionConfiguration.DecompressionLimit`. No NIO type appears in this API. A ratio is checked against compressed bytes received so far, matching the previous incremental semantics. `.none` removes the decompression limit, but does not remove a route's collection limit.
 
-Response configuration describes the media type policy, buffer capacity, and whether route overrides are allowed. The default `.only(.compressible)` policy compresses known compressible content types. Use `.excluding(.incompressible)` to compress everything except known incompressible types, or `.excluding(.none)` to allow all types (including responses without a content type). `.only(.none)` requires an explicit route or response override. Set `allowRequestOverrides` to `false` to enforce the configured media type policy.
+Response configuration describes the media type policy and buffer capacity. The default `.only(.compressible)` policy compresses known compressible content types. Use `.excluding(.incompressible)` to compress everything except known incompressible types, or `.excluding(.none)` to allow all types (including responses without a content type).
 
 Neither configuration has an enabled/disabled state. Leave the corresponding middleware out of the chain to turn that behavior off.
 
-The existing `app.responseCompression(...)` route helper is unchanged. Its preference-setting middleware is now an internal implementation detail; the public `ResponseCompressionMiddleware` performs compression. Overrides require a response compression middleware earlier in the chain. The internal marker is removed before a response leaves that middleware. Negotiation supports gzip and zlib-wrapped deflate. Encoded variants add `Vary: Accept-Encoding` and weaken strong ETags. Already encoded, empty, partial, HEAD, and bodyless-status responses are not compressed.
+The previous route override helper and internal marker header have been removed; middleware placement controls where compression applies. Negotiation supports gzip and zlib-wrapped deflate. Encoded variants add `Vary: Accept-Encoding` and weaken strong ETags. Already encoded, empty, partial, HEAD, and bodyless-status responses are not compressed.
 
 The configuration types belong to Vapor. If further configuration is needed, add Vapor-owned coding and compression-level value types with private backend conversion. Avoid accepting a backend's configuration type or introducing a public backend-selection API. `initialByteBufferCapacity` controls the output chunk capacity, bounded internally between 64 bytes and 64 KiB.
 
@@ -79,10 +91,10 @@ The package is not added as a dependency in this change. Importing its C module 
 
 Tests use the manifest's HTTP Server 0.2.0 dependency, with an unmodified dependency checkout. On macOS with Swift 6.4:
 
-- Default traits: 664 tests across the library, macros, and macro integration targets.
+- Default traits: 633 tests across the library, macros, and macro integration targets.
 - All default traits disabled: 543 tests.
-- Only `Compression` enabled: 595 tests.
+- Only `Compression` enabled: 564 tests.
 
-All three configurations completed successfully, with the same four pre-existing known issues concerning verified peer certificate chains and connection closure. An initial compression-only full-suite run crashed with `Deinited NIOAsyncWriter without calling finish()`. The 52 focused compression tests and an unchanged full-suite retry passed; the cause of that intermittent crash has not been isolated.
+All three configurations completed successfully, with the same four pre-existing known issues concerning verified peer certificate chains and connection closure. A compression-only full-suite run during earlier validation crashed with `Deinited NIOAsyncWriter without calling finish()`. It did not recur in these runs; the cause of that intermittent crash has not been isolated.
 
-The compression tests cover independent middleware registration, configuration without registration, default settings, route-group scoping, compressed error responses, the migrated content-type and override matrix, HTTP/1.1 and HTTP/2, gzip and deflate, byte and ratio limits, chunked input, streamed output, response metadata, malformed bodies, and producer failures. WebSocket and UNIX-socket tests remain deferred. Linux was not executed locally.
+The compression tests cover independent middleware registration, configuration without registration, default settings, route-group scoping and policies, compressed error responses, the migrated content-type matrix, HTTP/1.1 and HTTP/2, gzip and deflate, byte and ratio limits, chunked input, streamed output, response metadata, malformed bodies, and producer failures. WebSocket and UNIX-socket tests remain deferred. Linux was not executed locally.

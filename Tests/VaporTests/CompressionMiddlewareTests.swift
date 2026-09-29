@@ -123,5 +123,34 @@ struct CompressionMiddlewareTests {
             }
         }
     }
+
+    @Test("Route groups can use different compression policies and leave routes uncompressed", arguments: [false, true])
+    func routeGroupPolicies(live: Bool) async throws {
+        try await withApp { app in
+            let compressed = app.grouped(app.makeResponseCompressionMiddleware())
+            compressed.get("compressed") { _ in String(decoding: Self.plaintext, as: UTF8.self) }
+            compressed.get("default-image") { _ in
+                Response(headers: [.contentType: "image/png"], body: .init(data: Self.plaintext))
+            }
+            let allTypes = app.grouped(ResponseCompressionMiddleware(configuration: .init(mediaTypes: .excluding(.none))))
+            allTypes.get("compressed-image") { _ in
+                Response(headers: [.contentType: "image/png"], body: .init(data: Self.plaintext))
+            }
+            app.get("uncompressed") { _ in String(decoding: Self.plaintext, as: UTF8.self) }
+
+            try await self.withRawClient(app: app, method: live ? .running : .inMemory) { client in
+                for (path, compressed) in [
+                    ("/compressed", true), ("/default-image", false),
+                    ("/compressed-image", true), ("/uncompressed", false),
+                ] {
+                    let response = try await client.get(URI(string: path)) { $0.headers[.acceptEncoding] = "gzip" }
+                    #expect(response.status == .ok)
+                    #expect(response.headers[.contentEncoding] == (compressed ? "gzip" : nil))
+                    let body = try await response.body.data()
+                    if !compressed { #expect(body == Self.plaintext) }
+                }
+            }
+        }
+    }
 }
 #endif

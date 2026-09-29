@@ -13,8 +13,8 @@ public struct ServerConfiguration: Sendable {
     /// Register the middleware to apply these settings. Requires the `Compression` package trait.
     public var requestDecompression: RequestDecompressionConfiguration = .init()
 
-    /// Response compression settings for ``ResponseCompressionMiddleware``. Defaults to known compressible types,
-    /// allowing per-route overrides. Register the middleware to apply these settings.
+    /// Response compression settings for ``ResponseCompressionMiddleware``. Defaults to known compressible types.
+    /// Register the middleware to apply these settings.
     public var responseCompression: ResponseCompressionConfiguration = .init()
     #endif
 

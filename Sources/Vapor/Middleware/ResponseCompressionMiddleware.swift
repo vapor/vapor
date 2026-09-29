@@ -22,9 +22,10 @@ extension Application {
 /// Compresses response bodies using gzip or deflate when accepted by the client.
 ///
 /// Register this middleware to enable compression. The default policy compresses known compressible
-/// content types and allows route overrides. Place it before error middleware to compress error responses.
+/// content types. Place it before error middleware to compress error responses.
 /// Use ``Application/makeResponseCompressionMiddleware()`` to apply the application's server settings.
 /// Response compression is only enabled for routes whose middleware chain contains this middleware.
+/// To leave some routes uncompressed, register this middleware on a route group instead of the application.
 public struct ResponseCompressionMiddleware: Middleware {
     private let configuration: ServerConfiguration.ResponseCompressionConfiguration
 
@@ -36,16 +37,8 @@ public struct ResponseCompressionMiddleware: Middleware {
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         var response = try await next.respond(to: request)
-        let preference = response.headers.responseCompression
-        response.headers.responseCompression = .unset
         let policy = self.configuration
-        let enabled: Bool
-        switch (policy.allowRequestOverrides, preference) {
-        case (true, .enable): enabled = true
-        case (true, .disable): enabled = false
-        default: enabled = policy.mediaTypes.contains(response.headers.contentType)
-        }
-        guard enabled, response.headers[.contentEncoding] == nil,
+        guard policy.mediaTypes.contains(response.headers.contentType), response.headers[.contentEncoding] == nil,
             response.status.kind != .informational,
             response.status != .noContent, response.status != .notModified,
             response.status != .partialContent, response.headers[.contentRange] == nil,
