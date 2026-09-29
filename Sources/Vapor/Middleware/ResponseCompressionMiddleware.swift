@@ -26,6 +26,8 @@ extension Application {
 /// Use ``Application/makeResponseCompressionMiddleware()`` to apply the application's server settings.
 /// Response compression is only enabled for routes whose middleware chain contains this middleware.
 /// To leave some routes uncompressed, register this middleware on a route group instead of the application.
+/// For eligible responses, if the client excludes both supported encodings and the uncompressed
+/// representation, the middleware returns an empty `406 Not Acceptable` response.
 public struct ResponseCompressionMiddleware: Middleware {
     private let configuration: ServerConfiguration.ResponseCompressionConfiguration
 
@@ -53,7 +55,15 @@ public struct ResponseCompressionMiddleware: Middleware {
         if !vary.contains("*") && !vary.contains("accept-encoding") {
             response.headers.append(.init(name: .vary, value: "Accept-Encoding"))
         }
-        guard let coding = Self.negotiate(request.headers[.acceptEncoding]) else { return response }
+        let coding: HTTPBodyCodec.Coding
+        switch Self.negotiate(request.headers[.acceptEncoding]) {
+        case .compress(let selected): coding = selected
+        case .identity: return response
+        case .notAcceptable:
+            // This middleware can wrap ErrorMiddleware, so return the response rather than throw.
+            // Do not retain representation headers (such as ETag) from the rejected response.
+            return Response(status: .notAcceptable, headers: [.vary: response.headers[.vary] ?? "Accept-Encoding"])
+        }
         // HEAD must not execute a streaming body merely to calculate compressed metadata.
         guard request.method != .head else { return response }
 
@@ -91,27 +101,59 @@ public struct ResponseCompressionMiddleware: Middleware {
         return response
     }
 
+    enum NegotiationResult: Equatable, Sendable {
+        case compress(HTTPBodyCodec.Coding)
+        case identity
+        case notAcceptable
+    }
+
     /// Explicit exclusions override wildcard preferences; gzip wins equal weights.
-    static func negotiate(_ header: String?) -> HTTPBodyCodec.Coding? {
-        guard let header else { return nil }
-        var weights: [String: Double] = [:]
+    /// Invalid weights reject that coding. Conflicting duplicates use the lowest weight so that
+    /// an explicit exclusion cannot be undone by another entry or field line.
+    static func negotiate(_ header: String?) -> NegotiationResult {
+        guard let header else { return .identity }
+        let whitespace = CharacterSet(charactersIn: " \t")
+        // Only retain the four entries that affect selection, regardless of the number of unknown codings.
+        var weights: [String: Int] = [:]
         for item in header.split(separator: ",") {
-            let parts = item.split(separator: ";", omittingEmptySubsequences: false)
-            let name = parts[0].trimmingCharacters(in: .whitespaces).lowercased()
-            var weight = 1.0
-            for parameter in parts.dropFirst() {
-                let pair = parameter.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
-                if pair[0].trimmingCharacters(in: .whitespaces).lowercased() == "q" {
-                    weight = pair.count == 2 ? Double(pair[1].trimmingCharacters(in: .whitespaces)) ?? 0 : 0
-                }
+            let parts = item.split(separator: ";", maxSplits: 1, omittingEmptySubsequences: false)
+            let name = parts[0].trimmingCharacters(in: whitespace).lowercased()
+            guard name == "gzip" || name == "deflate" || name == "identity" || name == "*" else { continue }
+            let weight: Int
+            if parts.count == 1 {
+                weight = 1000
+            } else {
+                let parameter = parts[1].trimmingCharacters(in: whitespace)
+                weight = parameter.prefix(2).lowercased() == "q=" ? Self.qualityValue(parameter.dropFirst(2)) ?? 0 : 0
             }
-            weights[name] = weight.isFinite && (0...1).contains(weight) ? weight : 0
+            weights[name] = min(weights[name] ?? weight, weight)
         }
         let gzip = weights["gzip"] ?? weights["*"] ?? 0
         let deflate = weights["deflate"] ?? weights["*"] ?? 0
         let best = max(gzip, deflate)
-        guard best > 0, best >= (weights["identity"] ?? 0) else { return nil }
-        return gzip >= deflate ? .gzip : .deflate
+        if best > 0, best >= (weights["identity"] ?? 0) {
+            return .compress(gzip >= deflate ? .gzip : .deflate)
+        }
+        let acceptsIdentity = weights["identity"].map { $0 > 0 } ?? (weights["*"] != 0)
+        return acceptsIdentity ? .identity : .notAcceptable
+    }
+
+    /// RFC 9110 section 12.4.2: an ASCII 0 or 1, optionally followed by a decimal point and
+    /// at most three digits. Values beginning with 1 may only have zero fractional digits.
+    /// Integer thousandths avoid accepting floating-point extensions such as signs or exponents.
+    private static func qualityValue(_ value: Substring) -> Int? {
+        let bytes = value.utf8
+        guard (1...5).contains(bytes.count), let first = bytes.first, first == 48 || first == 49 else { return nil }
+        if bytes.count == 1 { return first == 49 ? 1000 : 0 }
+        guard bytes.dropFirst().first == 46 else { return nil }
+        var quality = first == 49 ? 1000 : 0
+        var place = 100
+        for digit in bytes.dropFirst(2) {
+            guard (48...57).contains(digit), first == 48 || digit == 48 else { return nil }
+            quality += Int(digit - 48) * place
+            place /= 10
+        }
+        return quality
     }
 }
 

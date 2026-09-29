@@ -21,12 +21,13 @@ struct HTTPCompressionTests {
         http2: Bool = false,
         decompressRequests: Bool = true,
         compressResponses: Bool = true,
+        decodeResponses: Bool = true,
         configure: (Application) throws -> Void,
         test: (any TestClient) async throws -> Void
     ) async throws {
         try await withApp { app in
             var clientConfiguration = HTTPClient.Configuration()
-            clientConfiguration.decompression = .enabled(limit: .none)
+            clientConfiguration.decompression = decodeResponses ? .enabled(limit: .none) : .disabled
             var options = LiveClientOptions(configuration: clientConfiguration)
             if http2 {
                 let credentials = try TestCredentials.localhost()
@@ -288,17 +289,46 @@ struct HTTPCompressionTests {
         }
     }
 
-    @Test(
-        "Accept-Encoding preferences",
-        arguments: [
-            ("gzip", "gzip"), ("deflate", "deflate"), ("GZip", "gzip"),
-            ("deflate;q=0.8, gzip;q=0.5", "deflate"), ("gzip;q=0, *;q=1", "deflate"),
-            ("*;q=0", nil), ("gzip;q=0, deflate;q=0", nil), ("br", nil),
-            ("gzip;q=garbage", nil), ("gzip;q", nil), ("gzip;q=NaN", nil),
-            ("gzip;q=2", nil), ("gzip;q=0.5, identity;q=1", nil), ("", nil),
-        ] as [(String, String?)])
-    func negotiation(header: String, expected: String?) {
-        #expect(ResponseCompressionMiddleware.negotiate(header)?.rawValue == expected)
+    @Test("Encoding negotiation over HTTP/1 and HTTP/2", arguments: [false, true])
+    func negotiation(http2: Bool) async throws {
+        try await self.withServer(http2: http2, decodeResponses: false) { app in
+            app.get("negotiate") { _ in
+                Response(headers: [.contentType: "text/plain", .eTag: "\"original\"", .vary: "Origin"], body: .init(string: Self.payload))
+            }
+        } test: { client in
+            let cases: [([String], String?, HTTPResponse.Status)] = [
+                ([], nil, .ok), ([""], nil, .ok), (["gzip"], "gzip", .ok),
+                (["deflate;q=0.8, gzip;q=0.5"], "deflate", .ok),
+                (["gzip;q=0.2", "deflate;q=0.8"], "deflate", .ok),
+                (["gzip;q=0", "gzip;q=1"], nil, .ok),
+                (["gzip;q=1", "gzip;q=0"], nil, .ok),
+                (["gzip;q=1e0"], nil, .ok), (["gzip;"], nil, .ok),
+                (["gzip;q=0", "*;q=1"], "deflate", .ok),
+                (["gzip;q=0.5, identity;q=1"], nil, .ok),
+                (["identity;q=0, gzip"], "gzip", .ok),
+                (["*;q=0"], nil, .notAcceptable),
+                (["br, identity;q=0"], nil, .notAcceptable),
+                (["gzip;q=0", "deflate;q=0", "identity;q=0"], nil, .notAcceptable),
+            ]
+            for (values, encoding, status) in cases {
+                let response = try await client.get("/negotiate") { request in
+                    request.headers[values: .acceptEncoding] = values
+                }
+                #expect(response.status == status)
+                #expect(response.headers[.contentEncoding] == encoding)
+                #expect(response.headers[.vary] == "Origin, Accept-Encoding")
+                let body = try await response.body.data()
+                if status == .notAcceptable {
+                    #expect(body?.isEmpty != false)
+                    #expect(response.headers[.eTag] == nil)
+                } else if encoding == nil {
+                    #expect(body == Data(Self.payload.utf8))
+                } else {
+                    #expect(body?.isEmpty == false)
+                    #expect(response.headers[.eTag] == "W/\"original\"")
+                }
+            }
+        }
     }
 }
 
