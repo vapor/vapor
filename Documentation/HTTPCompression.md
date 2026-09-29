@@ -1,33 +1,54 @@
 # HTTP compression migration
 
-Compression runs in a private middleware around the responder chain. It does not install handlers on the HTTP server's channels. The same implementation therefore applies to HTTP/1.1, HTTP/2, custom responders, and in-memory tests.
+Response compression and request decompression are separate public middleware. Register `ResponseCompressionMiddleware` to compress responses, and `RequestDecompressionMiddleware` to decode requests. Neither is installed automatically; setting server configuration alone does not enable either feature. Both work with HTTP/1.1, HTTP/2, and in-memory tests without installing channel handlers.
 
-Request decoding is lazy and precedes routing. A decompressed stream emits bounded chunks, and body collection still enforces the selected route's limit against the expanded bytes. The server retains its original reader for bounded draining. Response encoding runs after route overrides and error middleware; streaming writes await the transport, and failures abort the response without writing a successful terminator.
+Request decoding is lazy. A decompressed stream emits bounded chunks, and body collection still enforces the selected route's limit against the expanded bytes. The server retains its original reader for bounded draining. Response encoding runs as responses travel back through the middleware chain; streaming writes await the transport, and failures abort the response without writing a successful terminator.
 
 `Content-Encoding` and `Content-Length` are removed from decoded requests. Exceeding a decompression limit now returns 413 instead of closing the connection without an HTTP response. Invalid or incomplete compressed bodies return 400 when consumed before a response is sent. A failure discovered while writing a streaming response aborts that response.
 
 ## Vapor-owned API
 
-Configure compression before starting the application:
+Enable either direction by registering its middleware before starting the application:
 
 ```swift
-app.serverConfiguration.requestDecompression = .enabled(limit: .size(2_000_000))
-app.serverConfiguration.responseCompression = .enabledForCompressibleTypes
+// Compress known compressible response types, including error responses.
+app.middleware.use(app.makeResponseCompressionMiddleware(), at: .beginning)
+
+// Optionally decode gzip/deflate requests with a 25:1 expansion limit.
+app.middleware.use(app.makeRequestDecompressionMiddleware())
+```
+
+The application factories copy the current server settings. To customize them, configure the settings before creating the middleware:
+
+```swift
+app.serverConfiguration.requestDecompression.limit = .size(2_000_000)
+app.serverConfiguration.responseCompression.mediaTypes = .only(.compressible)
+
+app.middleware.use(app.makeResponseCompressionMiddleware(), at: .beginning)
+app.middleware.use(app.makeRequestDecompressionMiddleware())
 
 app.responseCompression(.disable).get("uncompressed") { _ in
     "This route opts out."
 }
 ```
 
-Request decoding defaults to `.disabled`. The `.enabled` shorthand uses `.ratio(25)`; `.size(_:)`, `.ratio(_:)`, and `.none` belong to `ServerConfiguration.RequestDecompressionConfiguration.DecompressionLimit`. No NIO type appears in this API. A ratio is checked against compressed bytes received so far, matching the previous incremental semantics. `.none` removes the decompression limit, but does not remove a route's collection limit.
+Place response compression before `ErrorMiddleware` (using `at: .beginning` with the default application chain) to also compress error responses. Place request decompression after error middleware and before other middleware that reads bodies. This allows decoding errors to become HTTP responses and makes decoded bodies available to downstream consumers.
 
-Response encoding retains the existing Vapor policy type: `.disabled`, `.forceDisabled`, `.enabledForCompressibleTypes`, and `.enabled`, plus allowlists, denylists, and route overrides. The internal marker is removed before a response leaves the middleware. Negotiation supports gzip and zlib-wrapped deflate. Encoded variants add `Vary: Accept-Encoding` and weaken strong ETags. Already encoded, empty, partial, HEAD, and bodyless-status responses are not compressed.
+For independent settings, construct `ResponseCompressionMiddleware(configuration:)` or `RequestDecompressionMiddleware(configuration:)` directly; both also have useful no-argument defaults. To limit compression or decompression to a route group, pass the desired middleware to `app.grouped(...)`. Group middleware only wraps that group's routes; compressing responses from application-level error middleware requires application-level response compression. Custom responders can be wrapped explicitly using `makeResponder(chainingTo:)`.
 
-Keeping the existing policy names makes migration small. If further configuration is needed, add Vapor-owned coding and compression-level value types with private backend conversion. Avoid accepting a backend's configuration type or introducing a public backend-selection API. `initialByteBufferCapacity` is retained for migration compatibility; its role is the output chunk capacity, bounded internally between 64 bytes and 64 KiB. A future API could name this `outputBufferSize`, or leave buffer sizing entirely internal.
+Request configuration describes the decompression limit, defaulting to `.ratio(25)`. `.size(_:)`, `.ratio(_:)`, and `.none` belong to `ServerConfiguration.RequestDecompressionConfiguration.DecompressionLimit`. No NIO type appears in this API. A ratio is checked against compressed bytes received so far, matching the previous incremental semantics. `.none` removes the decompression limit, but does not remove a route's collection limit.
+
+Response configuration describes the media type policy, buffer capacity, and whether route overrides are allowed. The default `.only(.compressible)` policy compresses known compressible content types. Use `.excluding(.incompressible)` to compress everything except known incompressible types, or `.excluding(.none)` to allow all types (including responses without a content type). `.only(.none)` requires an explicit route or response override. Set `allowRequestOverrides` to `false` to enforce the configured media type policy.
+
+Neither configuration has an enabled/disabled state. Leave the corresponding middleware out of the chain to turn that behavior off.
+
+The existing `app.responseCompression(...)` route helper is unchanged. Its preference-setting middleware is now an internal implementation detail; the public `ResponseCompressionMiddleware` performs compression. Overrides require a response compression middleware earlier in the chain. The internal marker is removed before a response leaves that middleware. Negotiation supports gzip and zlib-wrapped deflate. Encoded variants add `Vary: Accept-Encoding` and weaken strong ETags. Already encoded, empty, partial, HEAD, and bodyless-status responses are not compressed.
+
+The configuration types belong to Vapor. If further configuration is needed, add Vapor-owned coding and compression-level value types with private backend conversion. Avoid accepting a backend's configuration type or introducing a public backend-selection API. `initialByteBufferCapacity` controls the output chunk capacity, bounded internally between 64 bytes and 64 KiB.
 
 ## Optional dependency
 
-The `Compression` package trait is enabled by default. Disabling it removes the server compression API, middleware, codecs, and Vapor's zlib target dependency. The HTTP client retains its existing, separately managed decompression support.
+The `Compression` package trait is enabled by default. This makes the APIs available; registration enables their behavior. Disabling the trait removes the server compression API, middleware, codecs, and Vapor's zlib target dependency. The HTTP client retains its existing, separately managed decompression support.
 
 Examples for this checkout:
 
@@ -56,10 +77,12 @@ The package is not added as a dependency in this change. Importing its C module 
 
 ## Validation
 
-Tests use the manifest's HTTP Server 0.2.0 dependency in an isolated build directory, without the existing workspace's local HTTP-server edit. On macOS with Swift 6.4:
+Tests use the manifest's HTTP Server 0.2.0 dependency, with an unmodified dependency checkout. On macOS with Swift 6.4:
 
-- Default traits: 660 tests across the library, macros, and macro integration targets.
-- All default traits disabled: 542 tests.
-- Only `Compression` enabled: 591 tests.
+- Default traits: 664 tests across the library, macros, and macro integration targets.
+- All default traits disabled: 543 tests.
+- Only `Compression` enabled: 595 tests.
 
-All suites pass, with the same four pre-existing known issues concerning verified peer certificate chains and connection closure. The compression tests cover the migrated content-type and override matrix, HTTP/1.1 and HTTP/2, gzip and deflate, byte and ratio limits, chunked input, streamed output, response metadata, malformed bodies, and producer failures. WebSocket and UNIX-socket tests remain deferred. Linux was not executed locally.
+All three configurations completed successfully, with the same four pre-existing known issues concerning verified peer certificate chains and connection closure. An initial compression-only full-suite run crashed with `Deinited NIOAsyncWriter without calling finish()`. The 52 focused compression tests and an unchanged full-suite retry passed; the cause of that intermittent crash has not been isolated.
+
+The compression tests cover independent middleware registration, configuration without registration, default settings, route-group scoping, compressed error responses, the migrated content-type and override matrix, HTTP/1.1 and HTTP/2, gzip and deflate, byte and ratio limits, chunked input, streamed output, response metadata, malformed bodies, and producer failures. WebSocket and UNIX-socket tests remain deferred. Linux was not executed locally.

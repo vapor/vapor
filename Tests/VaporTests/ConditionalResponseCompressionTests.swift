@@ -5,7 +5,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import Vapor
+@testable import Vapor
 import AsyncHTTPClient
 import Atomics
 import Testing
@@ -129,6 +129,7 @@ struct ConditionalCompressionTests {
                 try await withApp { app in
                     app.serverConfiguration.responseCompression = configuration
                     try configure(app)
+                    app.middleware.use(app.makeResponseCompressionMiddleware(), at: .beginning)
                     try await app.testing(.running) { client in
                         let response = try await client.get("/resource") {
                             $0.headers[.acceptEncoding] = "gzip"
@@ -154,23 +155,23 @@ struct ConditionalCompressionTests {
         @Test("Test Auto Detected Type")
         func testAutoDetectedType() async throws {
             try await assertCompression([
-                (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, true),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), true),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (ServerConfiguration().responseCompression, true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), true),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.get("resource") { _ in compressiblePayload }
             }
@@ -180,22 +181,22 @@ struct ConditionalCompressionTests {
         func testUnknownType() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
@@ -210,22 +211,22 @@ struct ConditionalCompressionTests {
         func testImage() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, false),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
@@ -240,22 +241,22 @@ struct ConditionalCompressionTests {
         func testVideo() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, false),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
@@ -269,23 +270,23 @@ struct ConditionalCompressionTests {
         @Test("Test Text")
         func testText() async throws {
             try await assertCompression([
-                (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, true),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), true),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (ServerConfiguration().responseCompression, true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), true),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
@@ -300,22 +301,22 @@ struct ConditionalCompressionTests {
         func testMissingContentType() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), true),
             ]) { app in
                 app.get("resource") { _ in
                     Response(status: .ok, body: .init(string: compressiblePayload))
@@ -327,22 +328,22 @@ struct ConditionalCompressionTests {
         func testEnabledByResponse() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, true),
-                (.forceDisabled, false),
-                (.disabled, true),
-                (.enabledForCompressibleTypes, true),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), true),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), true),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), true),
+                (.init(), true),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), true),
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
@@ -357,22 +358,22 @@ struct ConditionalCompressionTests {
         func testDisabledByResponse() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, false),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.get("resource") { _ in
                     var headers = HTTPFields()
@@ -387,22 +388,22 @@ struct ConditionalCompressionTests {
         func testForceEnabledByResponse() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, true),
-                (.forceDisabled, false),
-                (.disabled, true),
-                (.enabledForCompressibleTypes, true),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), true),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), true),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), true),
+                (.init(), true),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), true),
             ]) { app in
                 app.responseCompression(.disable).get("resource") { _ in
                     var headers = HTTPFields()
@@ -417,22 +418,22 @@ struct ConditionalCompressionTests {
         func testForceDisabledByResponse() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, false),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.responseCompression(.enable).get("resource") { _ in
                     var headers = HTTPFields()
@@ -447,22 +448,22 @@ struct ConditionalCompressionTests {
         func testEnabledByRoute() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, true),
-                (.forceDisabled, false),
-                (.disabled, true),
-                (.enabledForCompressibleTypes, true),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), true),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), true),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), true),
+                (.init(), true),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), true),
             ]) { app in
                 app.responseCompression(.enable).get("resource") { _ in
                     var headers = HTTPFields()
@@ -476,22 +477,22 @@ struct ConditionalCompressionTests {
         func testDisabledByRoute() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, false),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), false),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.responseCompression(.disable).get("resource") { _ in
                     var headers = HTTPFields()
@@ -505,22 +506,22 @@ struct ConditionalCompressionTests {
         func testDisabledByRouteButReset() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.responseCompression(.disable).responseCompression(.useDefault).get("resource") { _ in
                     var headers = HTTPFields()
@@ -534,22 +535,22 @@ struct ConditionalCompressionTests {
         func testEnabledByRouteButReset() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.responseCompression(.enable).responseCompression(.useDefault).get("resource") { _ in
                     var headers = HTTPFields()
@@ -563,22 +564,22 @@ struct ConditionalCompressionTests {
         func testDisabledByRouteResetByResponse() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.responseCompression(.disable).get("resource") { _ in
                     var headers = HTTPFields()
@@ -593,22 +594,22 @@ struct ConditionalCompressionTests {
         func testEnabledByRouteResetByResponse() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.responseCompression(.enable).get("resource") { _ in
                     var headers = HTTPFields()
@@ -623,22 +624,22 @@ struct ConditionalCompressionTests {
         func testNoopsDisabledByRouteButReset() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.responseCompression(.unset).responseCompression(.disable).responseCompression(.unset).responseCompression(.useDefault)
                     .responseCompression(.unset).get("resource") { _ in
@@ -653,22 +654,22 @@ struct ConditionalCompressionTests {
         func testNoopsEnabledByRouteButReset() async throws {
             try await assertCompression([
                 (ServerConfiguration().responseCompression, false),
-                (.forceDisabled, false),
-                (.disabled, false),
-                (.enabledForCompressibleTypes, false),
-                (.enabled, true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: false), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: false), true),
-                (.disabled(allowedTypes: .none, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .compressible, allowRequestOverrides: true), false),
-                (.disabled(allowedTypes: .all, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: false), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: false), false),
-                (.enabled(disallowedTypes: .none, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .incompressible, allowRequestOverrides: true), true),
-                (.enabled(disallowedTypes: .all, allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.none)), false),
+                (.init(), false),
+                (.init(mediaTypes: .excluding(.incompressible)), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .only(.none), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.compressible), allowRequestOverrides: true), false),
+                (.init(mediaTypes: .only(.all), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: false), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: false), false),
+                (.init(mediaTypes: .excluding(.none), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.incompressible), allowRequestOverrides: true), true),
+                (.init(mediaTypes: .excluding(.all), allowRequestOverrides: true), false),
             ]) { app in
                 app.responseCompression(.unset).responseCompression(.enable).responseCompression(.unset).responseCompression(.useDefault)
                     .responseCompression(.unset).get("resource") { _ in
@@ -698,15 +699,15 @@ struct ConditionalCompressionTests {
                 sourceLocation: sourceLocation)
         }
 
-        let enabledMiddleware = ResponseCompressionMiddleware(override: .enable)
-        let disabledMiddleware = ResponseCompressionMiddleware(override: .disable)
-        let defaultMiddleware = ResponseCompressionMiddleware(override: .useDefault)
-        let unsetMiddleware = ResponseCompressionMiddleware(override: .unset)
+        let enabledMiddleware = ResponseCompressionOverrideMiddleware(override: .enable)
+        let disabledMiddleware = ResponseCompressionOverrideMiddleware(override: .disable)
+        let defaultMiddleware = ResponseCompressionOverrideMiddleware(override: .useDefault)
+        let unsetMiddleware = ResponseCompressionOverrideMiddleware(override: .unset)
 
-        let forceEnabledMiddleware = ResponseCompressionMiddleware(override: .enable, force: true)
-        let forceDisabledMiddleware = ResponseCompressionMiddleware(override: .disable, force: true)
-        let forceDefaultMiddleware = ResponseCompressionMiddleware(override: .useDefault, force: true)
-        let forceUnsetMiddleware = ResponseCompressionMiddleware(override: .unset, force: true)
+        let forceEnabledMiddleware = ResponseCompressionOverrideMiddleware(override: .enable, force: true)
+        let forceDisabledMiddleware = ResponseCompressionOverrideMiddleware(override: .disable, force: true)
+        let forceDefaultMiddleware = ResponseCompressionOverrideMiddleware(override: .useDefault, force: true)
+        let forceUnsetMiddleware = ResponseCompressionOverrideMiddleware(override: .unset, force: true)
 
         @Test("Test Routing Does Not Prioritize Unset Response")
         func testRoutingDoesNotPrioritizeUnsetResponse() async throws {

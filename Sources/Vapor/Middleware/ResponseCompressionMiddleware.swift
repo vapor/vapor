@@ -1,68 +1,157 @@
 #if Compression
-public import HTTPTypes
+import HTTPTypes
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
-/// Overrides the response compression settings for a route.
+extension Application {
+    /// Creates response compression middleware using the current ``serverConfiguration`` settings.
+    ///
+    /// Configure the settings before creating the middleware, then register it explicitly:
+    ///
+    ///     app.middleware.use(app.makeResponseCompressionMiddleware(), at: .beginning)
+    ///
+    /// Placing it before error middleware allows it to compress error responses as well.
+    public func makeResponseCompressionMiddleware() -> ResponseCompressionMiddleware {
+        ResponseCompressionMiddleware(configuration: self.serverConfiguration.responseCompression)
+    }
+}
+
+/// Compresses response bodies using gzip or deflate when accepted by the client.
 ///
-/// This is useful when a set of static routes does not need compression, or a set of dynamic routes does.
-///
-/// When the ``ServerConfiguration/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPFields/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPFields/ResponseCompression/disable`` can be set to explicitly disable compression.
-///
-/// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPFields/ResponseCompression/useDefault``.
-///
-/// - Note: Response compression is only actually used if the client indicates it supports it via an `Accept-Encoding` header.
+/// Register this middleware to enable compression. The default policy compresses known compressible
+/// content types and allows route overrides. Place it before error middleware to compress error responses.
+/// Use ``Application/makeResponseCompressionMiddleware()`` to apply the application's server settings.
+/// Response compression is only enabled for routes whose middleware chain contains this middleware.
 public struct ResponseCompressionMiddleware: Middleware {
-    /// The response compression override to use over the base configuration.
-    ///
-    /// Overrides are only used when the server's ``ServerConfiguration/ResponseCompressionConfiguration/allowRequestOverrides`` property is enabled, otherwise they are ignored.
-    ///
-    /// To clear an override set previously in the chain (ie. closer to the root route than to the original response), set ``HTTPFields/ResponseCompression/useDefault``.
-    ///
-    /// - Note: Middleware that come after this one, or responses with a ``HTTPFields/ResponseCompression`` header, will take priority over the override set here, unless ``shouldForce`` is set to true.
-    public var responseCompressionOverride: HTTPFields.ResponseCompression
+    private let configuration: ServerConfiguration.ResponseCompressionConfiguration
 
-    /// A flag to force the override atop whatever the response or output of middleware that process the response before this one.
-    public var shouldForce: Bool
-
-    /// Initialize a response compression middleware with an override.
-    ///
-    /// - Parameters:
-    ///   - override: The compression preference to apply if none is already set.
-    ///   - shouldForce: Wether to force the compression preference over what the response prefers.
-    ///
-    /// - SeeAlso: Please see ``responseCompressionOverride`` for more details.
-    public init(override: HTTPFields.ResponseCompression, force shouldForce: Bool = false) {
-        self.responseCompressionOverride = override
-        self.shouldForce = shouldForce
+    /// Creates middleware with a copy of the supplied compression settings.
+    /// - Parameter configuration: Response compression settings. Defaults to known compressible types.
+    public init(configuration: ServerConfiguration.ResponseCompressionConfiguration = .init()) {
+        self.configuration = configuration
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         var response = try await next.respond(to: request)
-        /// Only set the header if it is unset, and prefer the next responder's header over our own override, as _it_ is overriding ours.
-        if response.headers.responseCompression == .unset || shouldForce {
-            response.headers.responseCompression = responseCompressionOverride
+        let preference = response.headers.responseCompression
+        response.headers.responseCompression = .unset
+        let policy = self.configuration
+        let enabled: Bool
+        switch (policy.allowRequestOverrides, preference) {
+        case (true, .enable): enabled = true
+        case (true, .disable): enabled = false
+        default: enabled = policy.mediaTypes.contains(response.headers.contentType)
+        }
+        guard enabled, response.headers[.contentEncoding] == nil,
+            response.status.kind != .informational,
+            response.status != .noContent, response.status != .notModified,
+            response.status != .partialContent, response.headers[.contentRange] == nil,
+            response.body.count != 0
+        else { return response }
+
+        // Cache entries for both the encoded and identity variants depend on Accept-Encoding.
+        let vary =
+            response.headers[.vary]?.split(separator: ",").map {
+                $0.trimmingCharacters(in: .whitespaces).lowercased()
+            } ?? []
+        if !vary.contains("*") && !vary.contains("accept-encoding") {
+            response.headers.append(.init(name: .vary, value: "Accept-Encoding"))
+        }
+        guard let coding = Self.negotiate(request.headers[.acceptEncoding]) else { return response }
+        // HEAD must not execute a streaming body merely to calculate compressed metadata.
+        guard request.method != .head else { return response }
+
+        let original = response.body
+        let capacity = policy.initialByteBufferCapacity
+        response.headers[.contentEncoding] = coding.rawValue
+        // A strong validator for the identity bytes cannot be a strong validator for encoded bytes.
+        if let etag = response.headers[.eTag], !etag.hasPrefix("W/") {
+            response.headers[.eTag] = "W/" + etag
+        }
+        if case .stream(let stream) = original.storage, stream.state.collected == nil {
+            response.body = .init(stream: { writer in
+                let codec = try HTTPBodyCodec(coding: coding, compressing: true, capacity: capacity)
+                let compressor = CompressingBodyWriter(codec: codec, downstream: writer)
+                try stream.state.beginConsuming()
+                try await stream.callback(compressor)
+                if let count = stream.count, count != compressor.count.value {
+                    throw ResponseBodyLengthMismatch(declared: count, written: compressor.count.value)
+                }
+                try await compressor.finish()
+            })
+        } else {
+            let codec = try HTTPBodyCodec(coding: coding, compressing: true, capacity: capacity)
+            var compressed = Data()
+            try await original.withStreamingBytes { bytes in
+                var offset = 0
+                repeat {
+                    let result = try codec.process(bytes.extracting(offset...), finish: true)
+                    offset += result.consumed
+                    compressed.append(result.output)
+                } while !codec.complete
+            }
+            response.body = .init(data: compressed)
         }
         return response
     }
+
+    /// Explicit exclusions override wildcard preferences; gzip wins equal weights.
+    static func negotiate(_ header: String?) -> HTTPBodyCodec.Coding? {
+        guard let header else { return nil }
+        var weights: [String: Double] = [:]
+        for item in header.split(separator: ",") {
+            let parts = item.split(separator: ";", omittingEmptySubsequences: false)
+            let name = parts[0].trimmingCharacters(in: .whitespaces).lowercased()
+            var weight = 1.0
+            for parameter in parts.dropFirst() {
+                let pair = parameter.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
+                if pair[0].trimmingCharacters(in: .whitespaces).lowercased() == "q" {
+                    weight = pair.count == 2 ? Double(pair[1].trimmingCharacters(in: .whitespaces)) ?? 0 : 0
+                }
+            }
+            weights[name] = weight.isFinite && (0...1).contains(weight) ? weight : 0
+        }
+        let gzip = weights["gzip"] ?? weights["*"] ?? 0
+        let deflate = weights["deflate"] ?? weights["*"] ?? 0
+        let best = max(gzip, deflate)
+        guard best > 0, best >= (weights["identity"] ?? 0) else { return nil }
+        return gzip >= deflate ? .gzip : .deflate
+    }
 }
 
-extension RoutesBuilder {
-    /// Override the response compression settings for a route.
-    ///
-    /// This is useful when a set of static routes does not need compression, or a set of dynamic routes does.
-    ///
-    /// When the ``ServerConfiguration/ResponseCompressionConfiguration`` is set to be disabled by default, ``HTTPFields/ResponseCompression/enable`` can be set to explicitly enable compression. Likewise, when the configuration is set to be enabled by default, ``HTTPFields/ResponseCompression/disable`` can be set to explicitly disable compression.
-    ///
-    /// To ignore a preference a downstream middleware (ie. closer to the root route than to the original response) may propose in favor of the server defaults, use ``HTTPFields/ResponseCompression/useDefault``.
-    ///
-    /// - Note: Response compression is only actually used if the client indicates it supports it via an `Accept-Encoding` header.
-    /// - Note: Setting the override to ``HTTPFields/ResponseCompression/unset`` has no effect here unless `force` is set to true.
-    ///
-    /// - Parameters:
-    ///   - override: The compression preference to apply if none is already set.
-    ///   - shouldForce: Wether to force the compression preference over what the response prefers.
-    /// - Returns: A route with the specified response compression preferences.
-    public func responseCompression(_ override: HTTPFields.ResponseCompression, force shouldForce: Bool = false) -> any RoutesBuilder {
-        self.grouped(ResponseCompressionMiddleware(override: override, force: shouldForce))
+/// A borrowed writer wrapping the transport writer; never captures it in an escaping closure.
+private struct CompressingBodyWriter: HTTPBodyWriter, ~Escapable {
+    final class Count { var value = 0 }
+    let codec: HTTPBodyCodec
+    let downstream: any HTTPBodyWriter & ~Escapable
+    let count = Count()
+
+    @_lifetime(copy downstream)
+    init(codec: HTTPBodyCodec, downstream: borrowing any HTTPBodyWriter & ~Escapable) {
+        self.codec = codec
+        self.downstream = copy downstream
+    }
+
+    func write(_ bytes: Span<UInt8>) async throws {
+        self.count.value += bytes.count
+        var offset = 0
+        var full: Bool
+        repeat {
+            let result = try self.codec.process(bytes.extracting(offset...))
+            offset += result.consumed
+            full = result.output.count == self.codec.capacity
+            if !result.output.isEmpty { try await self.downstream.write(result.output.span) }
+        } while offset < bytes.count || full
+    }
+
+    func finish() async throws {
+        while !self.codec.complete {
+            let result = try self.codec.process(Span(), finish: true)
+            if !result.output.isEmpty { try await self.downstream.write(result.output.span) }
+        }
     }
 }
 
