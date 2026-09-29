@@ -267,10 +267,3 @@ extension HTTPField.Name {
     /// X-Request-Id header.
     public static let xRequestId = Self("X-Request-Id")!
 }
-
-// MARK: Internal Vapor Marker Headers
-extension HTTPField.Name {
-    #if Compression
-    public static let xVaporResponseCompression = Self("X-Vapor-Response-Compression")!
-    #endif
-}
