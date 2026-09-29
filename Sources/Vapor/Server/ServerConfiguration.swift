@@ -8,11 +8,14 @@ public struct ServerConfiguration: Sendable {
     public var httpVersions: Set<HTTPVersion>
 
     #if Compression
-    /// Request body decompression. Disabled by default. Requires the `Compression` package trait.
-    public var requestDecompression: RequestDecompressionConfiguration = .disabled
+    /// Request decompression settings for ``RequestDecompressionMiddleware``. Defaults to a 25:1 expansion limit.
+    ///
+    /// Register the middleware to apply these settings. Requires the `Compression` package trait.
+    public var requestDecompression: RequestDecompressionConfiguration = .init()
 
-    /// Response compression policy, including per-route overrides.
-    public var responseCompression: ResponseCompressionConfiguration = .disabled
+    /// Response compression settings for ``ResponseCompressionMiddleware``. Defaults to known compressible types,
+    /// allowing per-route overrides. Register the middleware to apply these settings.
+    public var responseCompression: ResponseCompressionConfiguration = .init()
     #endif
 
     /// How many file content hashes to keep for ``Application/fileio`` and middleware created by `app.makeFileMiddleware()`.

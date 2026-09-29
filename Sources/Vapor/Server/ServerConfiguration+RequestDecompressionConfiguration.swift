@@ -2,29 +2,14 @@
 extension ServerConfiguration {
     /// Supported HTTP decompression options.
     public struct RequestDecompressionConfiguration: Sendable {
-        /// Disables decompression. This is the default option.
-        public static var disabled: Self {
-            .init(storage: .disabled)
-        }
+        /// Maximum permitted expansion of a compressed request body.
+        public var limit: DecompressionLimit
 
-        /// Enables decompression with default configuration.
-        public static var enabled: Self {
-            .enabled(limit: .ratio(25))
+        /// Configures request decompression. Register ``RequestDecompressionMiddleware`` to apply it.
+        /// - Parameter limit: The decompression limit. Defaults to a 25:1 expansion ratio.
+        public init(limit: DecompressionLimit = .ratio(25)) {
+            self.limit = limit
         }
-
-        /// Enables decompression with custom configuration.
-        public static func enabled(
-            limit: DecompressionLimit
-        ) -> Self {
-            .init(storage: .enabled(limit: limit))
-        }
-
-        enum Storage {
-            case disabled
-            case enabled(limit: DecompressionLimit)
-        }
-
-        var storage: Storage
 
         /// Bounds the expanded body independently of a route's body collection limit.
         public struct DecompressionLimit: Sendable, Equatable {
