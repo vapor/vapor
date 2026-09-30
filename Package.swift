@@ -210,7 +210,6 @@ let package = Package(
                 .copy("Utilities/index.html"),
                 .copy("Utilities/SubUtilities/"),
                 .copy("Utilities/foo bar.html"),
-                .copy("Utilities/test.env"),
                 .copy("Utilities/my-secret-env-content"),
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),
