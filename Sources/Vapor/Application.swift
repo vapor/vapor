@@ -104,7 +104,7 @@ public final class Application: Sendable, Service {
         configuration: ServerConfiguration = .init(),
         configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
         services: ServiceConfiguration = .init()
-    ) async throws {
+    ) throws {
         let environment = try environment ?? Environment.detect(from: configReader)
         self.environment = environment
         self.lifecycleState = .init()
@@ -169,8 +169,6 @@ public final class Application: Sendable, Service {
         case .provided(let server):
             self.server = server
         }
-
-        await DotEnvFile.load(for: self.environment)
     }
 
     // MARK: - Execution

@@ -42,7 +42,7 @@ struct ApplicationLifecycleTests {
         // opened is never closed.
         await #expect(processExitsWith: .failure) {
             do {
-                let app = try await Application(.testing)
+                let app = try Application(.testing)
                 try await app.boot()
                 // Deliberately dropped without `shutdown()`.
             } catch {
@@ -57,7 +57,7 @@ struct ApplicationLifecycleTests {
         // application dropped without `shutdown()` tripped one, whether or not it had done anything.
         await #expect(processExitsWith: .success) {
             do {
-                let app = try await Application(.testing)
+                let app = try Application(.testing)
                 app.get("hello") { _ in "world" }
                 // Deliberately dropped without `shutdown()`.
             } catch {
@@ -68,7 +68,7 @@ struct ApplicationLifecycleTests {
 
     @Test("A server that fails to start still shuts the application down", .timeLimit(.minutes(1)))
     func testShutsDownWhenServerFailsToStart() async throws {
-        let app = try await Application(.testing)
+        let app = try Application(.testing)
         let handler = RecordingHandler()
         app.addLifecycleHandler(handler)
         app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
@@ -88,7 +88,7 @@ struct ApplicationLifecycleTests {
 
     @Test("A lifecycle handler that fails to boot still shuts the application down", .timeLimit(.minutes(1)))
     func testShutsDownWhenBootFails() async throws {
-        let app = try await Application(.testing)
+        let app = try Application(.testing)
         let handler = RecordingHandler(failBoot: true)
         app.addLifecycleHandler(handler)
 

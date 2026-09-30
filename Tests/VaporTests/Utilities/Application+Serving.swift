@@ -5,7 +5,7 @@ import Vapor
 
 /// Starts an application, waits until it is serving, then runs `task` on it.
 func whileServing(_ task: (Application) -> Void) async throws {
-    let app = try await Application(.testing)
+    let app = try Application(.testing)
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
     app.get("hello") { _ in "world" }
 

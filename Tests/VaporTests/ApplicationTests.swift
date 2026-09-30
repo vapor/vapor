@@ -38,7 +38,7 @@ struct ApplicationTests {
 
     @Test("Test stopping the application")
     func testApplicationStop() async throws {
-        let app = try await Application(.testing, configReader: testConfigReader)
+        let app = try Application(.testing, configReader: testConfigReader)
         app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
         try await app.boot()
         try await withThrowingTaskGroup(of: Void.self) { group in
@@ -140,7 +140,7 @@ struct ApplicationTests {
         }
 
         try await withApp { app in
-            let app = try await Application(.testing, configReader: testConfigReader)
+            let app = try Application(.testing, configReader: testConfigReader)
 
             let foo = Foo()
             app.addLifecycleHandler(foo)

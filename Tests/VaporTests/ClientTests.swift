@@ -171,7 +171,7 @@ struct ClientTests {
 
     // MARK: - Helpers
     func withRemoteApp<T: Sendable>(_ block: @Sendable (Application, Int) async throws -> T) async throws -> T {
-        let remoteApp = try await Application(.testing, configReader: testConfigReader)
+        let remoteApp = try Application(.testing, configReader: testConfigReader)
 
         remoteApp.get("json") { _ in
             SomeJSON()
