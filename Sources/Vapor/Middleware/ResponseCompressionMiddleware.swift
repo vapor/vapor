@@ -1,4 +1,5 @@
 #if Compression
+import Algorithms
 import HTTPTypes
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -50,7 +51,7 @@ public struct ResponseCompressionMiddleware: Middleware {
         // Cache entries for both the encoded and identity variants depend on Accept-Encoding.
         let vary =
             response.headers[.vary]?.split(separator: ",").map {
-                $0.trimmingCharacters(in: .whitespaces).lowercased()
+                $0.trimming(while: { $0 == " " || $0 == "\t" }).lowercased()
             } ?? []
         if !vary.contains("*") && !vary.contains("accept-encoding") {
             response.headers.append(.init(name: .vary, value: "Accept-Encoding"))
@@ -112,18 +113,17 @@ public struct ResponseCompressionMiddleware: Middleware {
     /// an explicit exclusion cannot be undone by another entry or field line.
     static func negotiate(_ header: String?) -> NegotiationResult {
         guard let header else { return .identity }
-        let whitespace = CharacterSet(charactersIn: " \t")
         // Only retain the four entries that affect selection, regardless of the number of unknown codings.
         var weights: [String: Int] = [:]
         for item in header.split(separator: ",") {
             let parts = item.split(separator: ";", maxSplits: 1, omittingEmptySubsequences: false)
-            let name = parts[0].trimmingCharacters(in: whitespace).lowercased()
+            let name = parts[0].trimming(while: { $0 == " " || $0 == "\t" }).lowercased()
             guard name == "gzip" || name == "deflate" || name == "identity" || name == "*" else { continue }
             let weight: Int
             if parts.count == 1 {
                 weight = 1000
             } else {
-                let parameter = parts[1].trimmingCharacters(in: whitespace)
+                let parameter = parts[1].trimming(while: { $0 == " " || $0 == "\t" })
                 weight = parameter.prefix(2).lowercased() == "q=" ? Self.qualityValue(parameter.dropFirst(2)) ?? 0 : 0
             }
             weights[name] = min(weights[name] ?? weight, weight)

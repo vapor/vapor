@@ -1,11 +1,7 @@
 #if Compression
+import Algorithms
 import HTTPTypes
 import Synchronization
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 
 extension Application {
     /// Creates request decompression middleware using the current ``serverConfiguration`` settings.
@@ -35,7 +31,7 @@ public struct RequestDecompressionMiddleware: Middleware {
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         var request = request
-        if let encoding = request.headers[.contentEncoding]?.trimmingCharacters(in: .whitespaces),
+        if let encoding = request.headers[.contentEncoding]?.trimming(while: { $0 == " " || $0 == "\t" }),
             let coding = HTTPBodyCodec.Coding(rawValue: encoding.lowercased())
         {
             let source = request.bodyStorage.storage.withLock { storage in
