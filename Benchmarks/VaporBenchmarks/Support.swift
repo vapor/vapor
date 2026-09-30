@@ -13,7 +13,7 @@ let benchmarkContentConfiguration = ContentConfiguration.default()
 nonisolated(unsafe) var responder: (any Responder)!
 
 func setUpApplication(_ configure: @Sendable (Application) async throws -> Void) async throws {
-    let application = try await Application(.testing)
+    let application = try Application(.testing)
     try await configure(application)
     app = application
     responder = application.makeBenchmarkResponder()

@@ -205,7 +205,7 @@ public final class Application: Sendable, Service {
     /// Registers SIGTERM and SIGINT handlers via `ServiceGroup` and blocks until
     /// a shutdown signal is received. This is the primary entry point for most apps:
     /// ```swift
-    /// let app = try await Application()
+    /// let app = try Application()
     /// try routes(app)
     /// try await app.start()
     /// ```
