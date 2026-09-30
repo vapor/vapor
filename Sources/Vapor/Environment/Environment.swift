@@ -47,18 +47,6 @@ public struct Environment: Sendable, Equatable {
     /// Creates a custom environment.
     public static func custom(name: String) -> Environment { .init(name: name) }
 
-    // MARK: - Env
-
-    /// Gets a key from the process environment
-    public static func get(_ key: String) -> String? {
-        return ProcessInfo.processInfo.environment[key]
-    }
-
-    /// The current process of the environment.
-    public static var process: Process {
-        return Process()
-    }
-
     // MARK: - Equatable
 
     // See `Equatable.==(_:_:)`.
