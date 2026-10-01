@@ -39,7 +39,7 @@ public func withApp<T>(
     MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
     InstrumentationSystem.bootstrapInternal(TaskLocalTracingSystemWrapper())
     return try await withLogger(logger) { _ in
-        let app = try await Application(environment, configuration: configuration, configReader: configReader, services: services)
+        let app = try Application(environment, configuration: configuration, configReader: configReader, services: services)
         let result: T
         do {
             try await configure?(app)

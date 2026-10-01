@@ -52,7 +52,7 @@ public final class Application: Sendable, Service {
 
     // MARK: - Other Types
 
-    /// Content hashes for advanced ETag comparison, shared by every request.
+    /// Content hashes shared by `fileio` and middleware created by `makeFileMiddleware()`.
     package let fileETagHashCache: FileETagHashCache
     let lifecycleState: ApplicationStateMachine
     package let contentConfiguration: ContentConfiguration
@@ -104,7 +104,7 @@ public final class Application: Sendable, Service {
         configuration: ServerConfiguration = .init(),
         configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
         services: ServiceConfiguration = .init()
-    ) async throws {
+    ) throws {
         let environment = try environment ?? Environment.detect(from: configReader)
         self.environment = environment
         self.lifecycleState = .init()
@@ -169,8 +169,6 @@ public final class Application: Sendable, Service {
         case .provided(let server):
             self.server = server
         }
-
-        await DotEnvFile.load(for: self.environment)
     }
 
     // MARK: - Execution
@@ -207,7 +205,7 @@ public final class Application: Sendable, Service {
     /// Registers SIGTERM and SIGINT handlers via `ServiceGroup` and blocks until
     /// a shutdown signal is received. This is the primary entry point for most apps:
     /// ```swift
-    /// let app = try await Application()
+    /// let app = try Application()
     /// try routes(app)
     /// try await app.start()
     /// ```

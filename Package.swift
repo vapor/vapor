@@ -38,8 +38,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: ["CommandLineArguments"]),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        // TODO: Update to stable release when swift-certificates and swift-nio-{quic/http3} have releases that depend on it
-        .package(url: "https://github.com/apple/swift-crypto.git", exact: "5.0.0-beta.2"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "5.0.0"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "5.0.0-beta"),
@@ -85,10 +84,11 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-http-types", from: "1.7.0"),
 
         // Common data structures
-        .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
+        // Pin until Async Algorithms releases a fix for the Collections 1.7.0 preview APIs.
+        .package(url: "https://github.com/apple/swift-collections", exact: "1.6.0"),
 
         // X509 certificate types for the Swift ecosystem
-        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.14.0"),
+        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.21.0"),
 
         // Work with certificate encoding schemes
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0"),
@@ -100,12 +100,11 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        // TODO: Update to tagged release once it depends on a tagged release of SwiftNIO HTTP/3
-        .package(url: "https://github.com/swift-server/swift-http-server.git", branch: "main", traits: [.defaults, "HTTP3"]),
+        .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.3.0"), traits: [.defaults, "HTTP3"]),
 
         // HTTP/3 and QUIC support for SwiftNIO - used for testing
-        .package(url: "https://github.com/apple/swift-nio-http3.git", branch: "main"),
-        .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.2.2")),
+        .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.4.0")),
     ],
     targets: [
         // Vapor
@@ -127,6 +126,7 @@ let package = Package(
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
+                .product(name: "BasicContainers", package: "swift-collections"),
                 .product(name: "RoutingKit", package: "routing-kit"),
                 // Disable until websockets are working
                 //.product(name: "WebSocketKit", package: "websocket-kit", condition: .when(traits: ["WebSockets"])),
@@ -217,7 +217,6 @@ let package = Package(
                 .copy("Utilities/index.html"),
                 .copy("Utilities/SubUtilities/"),
                 .copy("Utilities/foo bar.html"),
-                .copy("Utilities/test.env"),
                 .copy("Utilities/my-secret-env-content"),
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),

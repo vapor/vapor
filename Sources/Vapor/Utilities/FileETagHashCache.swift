@@ -1,7 +1,7 @@
 #if canImport(FoundationEssentials)
-public import FoundationEssentials
+package import FoundationEssentials
 #else
-public import Foundation
+package import Foundation
 #endif
 
 /// Caches the content hashes used for advanced ETag comparison.
@@ -10,7 +10,7 @@ public import Foundation
 /// rather than a dictionary in `Application.storage` for two reasons: storage hands back a copy, so
 /// read-modify-write updates could lose entries, and a shared mutable dictionary can't dedupe
 /// concurrent work. Here a miss becomes a single task that every caller for that file awaits.
-public actor FileETagHashCache {
+package actor FileETagHashCache {
     /// A cached hash, along with what it was computed from.
     package struct Entry: Sendable, Equatable {
         package let lastModified: Date
@@ -35,10 +35,11 @@ public actor FileETagHashCache {
     private var lastUsed: [String: UInt64] = [:]
     /// Hashes currently being computed, so concurrent callers share one read of the file.
     private var inFlight: [Generation: Task<String, any Error>] = [:]
-    /// How many entries to hold before evicting the coldest. Fixed for the cache's lifetime: it
-    /// comes from the server configuration, which is read when the application is created.
+    /// How many entries to hold before evicting the coldest. Fixed for the cache's lifetime.
     private let capacity: UInt
 
+    /// Creates a cache for advanced ETag hashes.
+    /// - Parameter capacity: The maximum number of cached hashes. A value of zero disables storage.
     package init(capacity: UInt) {
         self.capacity = capacity
     }

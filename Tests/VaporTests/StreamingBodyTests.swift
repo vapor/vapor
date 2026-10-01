@@ -434,15 +434,18 @@ struct StreamingBodyTests {
         // handler has built its `Response`. The response was discarded, and its body-stream callback
         // with it, so anything the callback was going to release never was. A `HTTPBodyWriter` can't
         // be left dangling that way — the server drives the closure and concludes the response — so
-        // what is left to pin down is that every such handler still runs to completion, returning or
-        // throwing rather than hanging, and that the server goes on serving afterwards.
+        // what is left to pin down is that every handler that started still runs to completion,
+        // returning or throwing rather than hanging, and that the server goes on serving afterwards.
         let numberOfClients = 100
+        let handlerStarted = (0..<numberOfClients).map { _ in Checkpoint() }
+        let clientClosed = (0..<numberOfClients).map { _ in Checkpoint() }
         let entered = Mutex(0)
         let completed = Mutex(0)
         let allCompleted = Checkpoint()
 
         try await withApp { app in
-            app.get("abandon") { _ -> Response in
+            app.get("abandon", ":id") { request -> Response in
+                let id = try request.parameters.require("id", as: Int.self)
                 entered.withLock { $0 += 1 }
                 defer {
                     if completed.withLock({
@@ -452,9 +455,12 @@ struct StreamingBodyTests {
                         allCompleted.reach()
                     }
                 }
-                // Long enough for the client's close to reach the server before the response exists,
-                // which is the ordering the original bug needed.
-                try await Task.sleep(for: .milliseconds(10))
+                handlerStarted[id].reach()
+                // Keep the response pending until the client has closed. Cancellation also releases
+                // this wait, so check it before producing a response. HTTP/1 on Darwin may not
+                // observe the disconnect yet, so completion must not depend on cancellation alone.
+                await clientClosed[id].wait()
+                try Task.checkCancellation()
                 return Response(
                     status: .ok,
                     body: .init(stream: { writer in
@@ -464,16 +470,20 @@ struct StreamingBodyTests {
             app.get("ok") { _ in "ok" }
 
             try await withRunningServer(app) { port in
-                for _ in 0..<numberOfClients {
+                for id in 0..<numberOfClients {
+                    defer { clientClosed[id].reach() }
                     let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
                         .connect(host: "127.0.0.1", port: port) { channel in
                             channel.eventLoop.makeCompletedFuture {
                                 try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
                             }
                         }
-                    // A complete request, then hang up without waiting for the answer.
+                    // Let the handler start before hanging up. Otherwise disconnect cancellation
+                    // can skip dispatch entirely, leaving allCompleted waiting for a handler that
+                    // never ran. executeThenClose closes the socket before the defer releases it.
                     try await channel.executeThenClose { _, outbound in
-                        try await outbound.write(ByteBuffer(string: "GET /abandon HTTP/1.1\r\nHost: localhost\r\n\r\n"))
+                        try await outbound.write(ByteBuffer(string: "GET /abandon/\(id) HTTP/1.1\r\nHost: localhost\r\n\r\n"))
+                        await handlerStarted[id].wait()
                     }
                 }
 

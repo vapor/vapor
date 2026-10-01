@@ -174,11 +174,6 @@ package final class RequestBodyStream: Sendable {
         self.state.withLock { $0.consumed }
     }
 
-    /// Whether a *transport* read has failed, after which the connection is being torn down.
-    package var transportFailed: Bool {
-        self.state.withLock { $0.failed }
-    }
-
     /// Reads the whole body into one buffer, aborting with 413 if it exceeds `max`.
     ///
     /// `expecting` is the declared `Content-Length`, used only to size the buffer up front; it is
