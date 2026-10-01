@@ -38,7 +38,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: ["CommandLineArguments"]),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", "4.0.0"..<"6.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "5.0.0"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "5.0.0-beta"),
@@ -88,7 +88,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections", exact: "1.6.0"),
 
         // X509 certificate types for the Swift ecosystem
-        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.14.0"),
+        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.21.0"),
 
         // Work with certificate encoding schemes
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0"),
@@ -100,7 +100,15 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.3.0")),
+        .package(
+            url: "https://github.com/swift-server/swift-http-server.git",
+            .upToNextMinor(from: "0.3.0"),
+            traits: [.defaults, "HTTP3"]
+        ),
+
+        // HTTP/3 and QUIC support for SwiftNIO - used for testing
+        .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.4.0")),
     ],
     targets: [
         // Vapor
@@ -204,6 +212,9 @@ let package = Package(
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
+                .product(name: "NIOHTTP3", package: "swift-nio-http3"),
+                .product(name: "NIOQUIC", package: "swift-nio-quic"),
+                .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),
@@ -216,6 +227,9 @@ let package = Package(
                 .copy("Utilities/localhost.crt"),
                 .copy("Utilities/localhost.key"),
                 .copy("Utilities/long-test-file.txt"),
+                .copy("Utilities/http3.crt"),
+                .copy("Utilities/http3.key"),
+                .copy("Utilities/http3-cacert.pem"),
             ],
             swiftSettings: swiftSettings
         ),
