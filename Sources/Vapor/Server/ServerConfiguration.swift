@@ -7,6 +7,17 @@ public struct ServerConfiguration: Sendable {
     /// The HTTP versions the server accepts. Defaults to HTTP/1.1 only; adding HTTP/2 requires a ``tlsConfiguration``.
     public var httpVersions: Set<HTTPVersion>
 
+    #if Compression
+    /// Request decompression settings for ``RequestDecompressionMiddleware``. Defaults to a 25:1 expansion limit.
+    ///
+    /// Register the middleware to apply these settings. Requires the `Compression` package trait.
+    public var requestDecompression: RequestDecompressionConfiguration = .init()
+
+    /// Response compression settings for ``ResponseCompressionMiddleware``. Defaults to known compressible types.
+    /// Register the middleware to apply these settings.
+    public var responseCompression: ResponseCompressionConfiguration = .init()
+    #endif
+
     /// How many file content hashes to keep for ``Application/fileio`` and middleware created by `app.makeFileMiddleware()`.
     ///
     /// Only files served with `advancedETagComparison` enabled are hashed, and each entry is just a

@@ -25,6 +25,8 @@ internal struct VaporHTTPClient: Client {
         var request = HTTPClientRequest(url: url.absoluteString)
         request.method = .init(clientRequest.method)
         request.headers = .init(clientRequest.headers)
+        // AHC chooses framing for the negotiated protocol. HTTP/2 forbids Transfer-Encoding.
+        request.headers.remove(name: "transfer-encoding")
         let (ahcBody, producer) = ahcRequestBody(clientRequest.body)
         request.body = ahcBody
         // The body's closure runs alongside the request: AHC pulls from the handoff as the connection

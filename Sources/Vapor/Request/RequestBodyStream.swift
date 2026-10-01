@@ -13,6 +13,13 @@ import Foundation
 /// A body is single-consumer: a read that finds the reader already checked out throws
 /// ``RequestBodyAlreadyBeingRead`` rather than silently reporting end-of-body.
 package final class RequestBodyStream: Sendable {
+    #if Compression
+    private final class DecoderStorage: Sendable {
+        let value: Mutex<HTTPBodyDecompressor?>
+        init(_ decoder: sending HTTPBodyDecompressor) { self.value = Mutex(decoder) }
+    }
+    #endif
+
     /// The reader plus its end latch. `~Copyable` because the `Reader` is move-only.
     private struct State: ~Copyable {
         /// The server's reader, or `nil` while a read has it checked out. Boxed in its own `Mutex`
@@ -41,6 +48,10 @@ package final class RequestBodyStream: Sendable {
         /// stream somebody else already took bytes from, and metrics can report a body size for a
         /// request nothing ever collected.
         var consumed = 0
+        #if Compression
+        var decompressor: DecoderStorage? = nil
+        var decompressionFailure: (any Error)? = nil
+        #endif
     }
     private let state: Mutex<State>
 
@@ -57,6 +68,9 @@ package final class RequestBodyStream: Sendable {
         case busy
         /// A transport read failed earlier; the stream's position is unknown.
         case failed
+        #if Compression
+        case decompressor(HTTPBodyDecompressor)
+        #endif
     }
 
     init(reader: consuming sending NIOHTTPServer.Reader) {
@@ -74,15 +88,34 @@ package final class RequestBodyStream: Sendable {
         self.state = Mutex(State(reader: nil, chunk: nil, replay: pending, finished: pending == nil))
     }
 
+    #if Compression
+    init(
+        decompressing source: RequestBodyStream, coding: HTTPBodyCodec.Coding,
+        limit: ServerConfiguration.RequestDecompressionConfiguration.DecompressionLimit
+    ) throws {
+        let decoder = try HTTPBodyDecompressor(source: source, coding: coding, limit: limit)
+        self.state = Mutex(State(reader: nil, chunk: nil, decompressor: DecoderStorage(decoder)))
+    }
+
+    #endif
+
     /// Reads one part of the body, handing its bytes to `body` as a borrowed `Span<UInt8>` plus a flag
     /// that is `true` at end-of-body (the span is then empty). The single primitive behind
     /// ``collect(max:)``, ``drain(max:)`` and ``RequestBodyReader``. The span borrows this stream's
     /// chunk buffer, so it is valid only for the call — copy out what you keep.
     func read<R>(_ body: (Span<UInt8>, Bool) async throws -> R) async throws -> R {
         // Check the reader out of the lock (synchronously); the `await`s below happen outside it.
-        let checkout = self.state.withLock { state -> sending Checkout in
+        let checkout = try self.state.withLock { state throws -> sending Checkout in
+            #if Compression
+            if let error = state.decompressionFailure { throw error }
+            #endif
             if state.failed { return .failed }
             if state.finished { return .ended }
+            #if Compression
+            if let box = state.decompressor.take(), let decoder = box.value.withLock({ $0.take() }) {
+                return .decompressor(decoder)
+            }
+            #endif
             if let pending = state.replay.take() {
                 // One chunk, then end on the next read — the same two-step shape a socket body has.
                 state.finished = true
@@ -96,6 +129,30 @@ package final class RequestBodyStream: Sendable {
             return .reader(reader, state.chunk.take() ?? UniqueArray())
         }
         switch consume checkout {
+        #if Compression
+        case .decompressor(let decoder):
+            let chunk: Data?
+            do {
+                chunk = try await decoder.read()
+            } catch {
+                // A decoding failure is not a transport failure: error middleware can still reply.
+                self.state.withLock { $0.decompressionFailure = error }
+                throw error
+            }
+            let result: R
+            do {
+                if let chunk {
+                    result = try await body(chunk.span, false)
+                } else {
+                    result = try await signalEndOfBody(to: body)
+                }
+            } catch {
+                self.stow(decoder, finished: chunk == nil, consumed: chunk?.count ?? 0)
+                throw error
+            }
+            self.stow(decoder, finished: chunk == nil, consumed: chunk?.count ?? 0)
+            return result
+        #endif
         case .ended:
             return try await signalEndOfBody(to: body)
         case .busy:
@@ -143,6 +200,18 @@ package final class RequestBodyStream: Sendable {
             return result
         }
     }
+
+    #if Compression
+    private func stow(_ decoder: sending HTTPBodyDecompressor, finished: Bool, consumed: Int) {
+        let box = DecoderStorage(decoder)
+        self.state.withLock { state in
+            state.decompressor = box
+            state.finished = finished
+            state.consumed += consumed
+        }
+    }
+
+    #endif
 
     /// Returns a checked-out reader and chunk buffer to the lock, latching the end if `finished`.
     ///
