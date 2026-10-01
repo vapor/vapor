@@ -15,7 +15,7 @@ struct Entrypoint {
         var logger = Logger(label: "codes.vapor.app")
         logger.logLevel = .debug
         return try await withLogger(logger) { _ in
-            let app = try await Application(configReader: config)
+            let app = try Application(configReader: config)
             do {
                 try await configure(app)
                 try await app.run()

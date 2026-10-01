@@ -238,13 +238,6 @@ func routes(_ app: Application) async throws {
         throw TestError()
     }
 
-    app.get("secret") { req in
-        guard let secret = try await Environment.secret(path: "PASSWORD_SECRET") else {
-            throw Abort(.badRequest)
-        }
-        return secret
-    }
-
     app.on(.post, "max-256", maxBodySize: 256) { req -> HTTPResponse.Status in
         print("in route")
         return .ok

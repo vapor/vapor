@@ -23,7 +23,7 @@ if !FileManager.default.fileExists(atPath: filePath) {
     try Data(repeating: 0x7A, count: 1 << 20).write(to: URL(fileURLWithPath: filePath))
 }
 
-let app = try await Application(.production)
+let app = try Application(.production)
 app.serverConfiguration.address = .hostname(host, port: port)
 
 app.get("bench", "tiny") { _ in "OK" }
