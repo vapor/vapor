@@ -3,7 +3,7 @@ import NIOPosix
 import Synchronization
 
 /// Sends a raw request over a plain TCP socket and returns every byte the server sends back
-/// within `grace`, along with whether the server closed the connection.
+/// until the exchange ends or `deadline` expires, along with whether the server closed the connection.
 ///
 /// A real HTTP client hides framing violations — it parses the response according to the rules
 /// the server is supposed to be following — so checking "is there a body on the wire" needs a
@@ -14,7 +14,7 @@ func rawExchange(
     path: String,
     extraHeaders: String = "",
     until isComplete: (@Sendable (String) -> Bool)? = nil,
-    quiet: Duration = .milliseconds(250),
+    quiet: Duration? = .milliseconds(250),
     deadline: Duration = .seconds(10)
 ) async throws -> (bytes: String, serverClosed: Bool) {
     try await rawExchange(
@@ -35,13 +35,13 @@ func rawExchange(
 ///     arrives. With a predicate the exchange runs until it matches, the server closes, or
 ///     `deadline` expires.
 ///   - quiet: How long to wait after the last byte before assuming nothing more is coming. Only a
-///     heuristic, and only sound for tests asserting that something is *absent*. Ignored when
-///     `isComplete` is given.
+///     heuristic, and only sound for tests asserting that something is *absent*. Pass `nil` when
+///     waiting for the server to close: silence does not prove EOF. Ignored when `isComplete` is given.
 func rawExchange(
     port: Int,
     rawRequest: String,
     until isComplete: (@Sendable (String) -> Bool)? = nil,
-    quiet: Duration = .milliseconds(250),
+    quiet: Duration? = .milliseconds(250),
     deadline: Duration = .seconds(10)
 ) async throws -> (bytes: String, serverClosed: Bool) {
     let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
@@ -71,15 +71,15 @@ func rawExchange(
             group.addTask {
                 // Wait for the response to go quiet rather than for a fixed slice of time: a
                 // loaded machine can take a while to answer at all, and a fixed grace period
-                // then reads nothing and fails the test for the wrong reason. `deadline` only
-                // runs out if the response never arrives.
+                // then reads nothing and fails the test for the wrong reason. The deadline also
+                // bounds exchanges waiting for a response predicate or for the server to close.
                 let start = ContinuousClock.now
-                while true {
+                while !Task.isCancelled {
                     try? await Task.sleep(for: .milliseconds(25))
                     if reachedEnd.withLock({ $0 }) { return }
                     if let isComplete {
                         if isComplete(received.withLock { $0 }) { return }
-                    } else {
+                    } else if let quiet {
                         let idle = ContinuousClock.now - lastActivity.withLock { $0 }
                         if !received.withLock({ $0.isEmpty }), idle >= quiet { return }
                     }
