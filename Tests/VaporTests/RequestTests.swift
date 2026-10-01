@@ -465,12 +465,14 @@ struct RequestTests {
                 // GET/HEAD → drain budget 0: any body is left unread, so the server closes the connection.
                 let get = try await rawExchange(
                     port: port,
-                    rawRequest: "GET /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                    rawRequest: "GET /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)",
+                    quiet: nil)
                 #expect(get.serverClosed)
 
                 let head = try await rawExchange(
                     port: port,
-                    rawRequest: "HEAD /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                    rawRequest: "HEAD /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)",
+                    quiet: nil)
                 #expect(head.serverClosed)
 
                 // A body-less GET/HEAD drains nothing (just reads `.end`), so the connection stays alive.
@@ -499,7 +501,8 @@ struct RequestTests {
                 let big = String(repeating: "A", count: 128)
                 let over = try await rawExchange(
                     port: port,
-                    rawRequest: "POST /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(big.count)\r\n\r\n\(big)")
+                    rawRequest: "POST /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(big.count)\r\n\r\n\(big)",
+                    quiet: nil)
                 #expect(over.serverClosed)
 
                 // Within the budget → fully drained, connection stays alive.
