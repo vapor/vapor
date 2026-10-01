@@ -100,7 +100,11 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.3.0"), traits: [.defaults, "HTTP3"]),
+        .package(
+            url: "https://github.com/swift-server/swift-http-server.git",
+            .upToNextMinor(from: "0.3.0"),
+            traits: [.defaults, "HTTP3"]
+        ),
 
         // HTTP/3 and QUIC support for SwiftNIO - used for testing
         .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.3.0")),

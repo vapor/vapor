@@ -107,7 +107,7 @@ func withTestHTTP3ClientConnection<Value>(
 }
 
 struct TestHTTP3SingleConnectionCreator: HTTP3ConnectionCreator {
-    let quicHandler: QUICHandler
+    let quicHandler: QUICHandler<QUICStreamChannels>
     let connectionInitializer: @Sendable (any Channel, NIOQUIC.QUICStreamCreator) -> EventLoopFuture<any Channel>
     let inboundStreamInitializer: @Sendable (any Channel) -> EventLoopFuture<Void>
 
