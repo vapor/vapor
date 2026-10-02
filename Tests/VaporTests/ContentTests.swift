@@ -946,6 +946,96 @@ struct ContentTests {
             }
         }
     }
+
+    @Test("ContentEncodable values encode as their default content type")
+    func testEncodeContentEncodable() throws {
+        var response = Response(status: .ok)
+        try response.content.encode(EncodeOnlyContent())
+
+        #expect(response.headers.contentType == .json)
+        #expect(response.body.string == #"{"name":"new name"}"#)
+    }
+
+    @Test("beforeEncode runs for ContentEncodable values with an explicit content type")
+    func testEncodeContentEncodableAs() throws {
+        var response = Response(status: .ok)
+        try response.content.encode(EncodeOnlyContent(), as: .json)
+
+        #expect(response.body.string == #"{"name":"new name"}"#)
+    }
+
+    @Test("ContentEncodable values use their own default content type")
+    func testContentEncodableDefaultContentType() throws {
+        var response = Response(status: .ok)
+        try response.content.encode(FormEncodeOnlyContent())
+
+        #expect(response.headers.contentType == .urlEncodedForm)
+        #expect(response.body.string == "name=Vapor")
+    }
+
+    @Test("ContentEncodable values encode into a query")
+    func testQueryEncodeContentEncodable() throws {
+        var request = ClientRequest(url: .init(scheme: "https", host: "example.com", path: "/api"))
+        try request.query.encode(EncodeOnlyContent())
+
+        #expect(request.url.query == "name=new%20name")
+    }
+
+    @Test("The client sends ContentEncodable values")
+    func testClientSendsContentEncodable() async throws {
+        struct ReceivedDecodable: Decodable {
+            let name: String
+        }
+
+        try await withApp { app in
+            app.routes.post("echo") { req async throws -> String in
+                try await req.content.decode(ReceivedDecodable.self).name
+            }
+
+            try await app.testing { client in
+                let res = try await client.post("/echo", content: EncodeOnlyContent())
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == "new name")
+            }
+        }
+    }
+
+    @Test("Built-in types keep their default content types")
+    func testBuiltInDefaultContentTypes() throws {
+        // Go through the protocol like the content containers do; `Int.defaultContentType`
+        // would be resolved at compile time and skip the conformance.
+        func defaultContentType<C: ContentEncodable>(of _: C.Type) -> HTTPMediaType {
+            C.defaultContentType
+        }
+
+        #expect(defaultContentType(of: String.self) == .plainText)
+        #expect(defaultContentType(of: Int.self) == .plainText)
+        #expect(defaultContentType(of: UInt8.self) == .plainText)
+        #expect(defaultContentType(of: Double.self) == .plainText)
+        #expect(defaultContentType(of: Float.self) == .plainText)
+        #expect(defaultContentType(of: Bool.self) == .json)
+        #expect(defaultContentType(of: [Int].self) == .json)
+        #expect(defaultContentType(of: [String: Int].self) == .json)
+
+        var response = Response(status: .ok)
+        try response.content.encode(42)
+        #expect(response.headers.contentType == .plainText)
+        #expect(response.body.string == "42")
+    }
+}
+
+private struct EncodeOnlyContent: ContentEncodable {
+    var name = "old name"
+
+    mutating func beforeEncode() throws {
+        name = "new name"
+    }
+}
+
+private struct FormEncodeOnlyContent: ContentEncodable {
+    static let defaultContentType = HTTPMediaType.urlEncodedForm
+
+    var name = "Vapor"
 }
 
 private struct SampleContent: Content {
