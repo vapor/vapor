@@ -1,6 +1,7 @@
 #if Compression
 import Algorithms
 import HTTPTypes
+import CompressionDeflate
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -40,8 +41,10 @@ public struct ResponseCompressionMiddleware: Middleware {
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         var response = try await next.respond(to: request)
-        let policy = self.configuration
-        guard policy.mediaTypes.contains(response.headers.contentType), response.headers[.contentEncoding] == nil,
+
+        guard 
+            self.configuration.mediaTypes.contains(response.headers.contentType), 
+            response.headers[.contentEncoding] == nil,
             response.status.kind != .informational,
             response.status != .noContent, response.status != .notModified,
             response.status != .partialContent, response.headers[.contentRange] == nil,
@@ -56,9 +59,15 @@ public struct ResponseCompressionMiddleware: Middleware {
         if !vary.contains("*") && !vary.contains("accept-encoding") {
             response.headers.append(.init(name: .vary, value: "Accept-Encoding"))
         }
-        let coding: HTTPBodyCodec.Coding
+        let coding: HTTPBodyCoding
+        let compressionConfiguration: Deflate.CompressionConfiguration
         switch Self.negotiate(request.headers[.acceptEncoding]) {
-        case .compress(let selected): coding = selected
+        case .compress(let selected):
+            coding = selected
+            switch selected {
+            case .deflate: compressionConfiguration = .default
+            case .gzip: compressionConfiguration = .gzip
+            }
         case .identity: return response
         case .notAcceptable:
             // This middleware can wrap ErrorMiddleware, so return the response rather than throw.
@@ -69,7 +78,7 @@ public struct ResponseCompressionMiddleware: Middleware {
         guard request.method != .head else { return response }
 
         let original = response.body
-        let capacity = policy.initialByteBufferCapacity
+        let capacity = max(64, min(self.configuration.initialByteBufferCapacity, 65_536))
         response.headers[.contentEncoding] = coding.rawValue
         // A strong validator for the identity bytes cannot be a strong validator for encoded bytes.
         if let etag = response.headers[.eTag], !etag.hasPrefix("W/") {
@@ -77,33 +86,40 @@ public struct ResponseCompressionMiddleware: Middleware {
         }
         if case .stream(let stream) = original.storage, stream.state.collected == nil {
             response.body = .init(stream: { writer in
-                let codec = try HTTPBodyCodec(coding: coding, compressing: true, capacity: capacity)
-                let compressor = CompressingBodyWriter(codec: codec, downstream: writer)
+                let compressor = CompressingBodyWriter(
+                    compressionConfiguration: compressionConfiguration, bufferCapacity: capacity, downstream: writer
+                )
                 try stream.state.beginConsuming()
                 try await stream.callback(compressor)
-                if let count = stream.count, count != compressor.count.value {
-                    throw ResponseBodyLengthMismatch(declared: count, written: compressor.count.value)
+                if let count = stream.count, count != compressor.count {
+                    throw ResponseBodyLengthMismatch(declared: count, written: compressor.count)
                 }
                 try await compressor.finish()
             })
         } else {
-            let codec = try HTTPBodyCodec(coding: coding, compressing: true, capacity: capacity)
+            var compressor = Deflate.StreamingCompressor(configuration: compressionConfiguration)
             var compressed = Data()
             try await original.withStreamingBytes { bytes in
-                var offset = 0
-                repeat {
-                    let result = try codec.process(bytes.extracting(offset...), finish: true)
-                    offset += result.consumed
-                    compressed.append(result.output)
-                } while !codec.complete
+                try compressor.compress(bytes) { span in
+                    for index in 0..<span.count {
+                        compressed.append(span[index])
+                    }
+                }
+
+                try compressor.finish() { span in
+                    for index in 0..<span.count {
+                        compressed.append(span[index])
+                    }
+                }
             }
+
             response.body = .init(data: compressed)
         }
         return response
     }
 
-    enum NegotiationResult: Equatable, Sendable {
-        case compress(HTTPBodyCodec.Coding)
+    enum NegotiationResult: Sendable, Equatable {
+        case compress(HTTPBodyCoding)
         case identity
         case notAcceptable
     }
@@ -158,36 +174,58 @@ public struct ResponseCompressionMiddleware: Middleware {
 }
 
 /// A borrowed writer wrapping the transport writer; never captures it in an escaping closure.
+
 private struct CompressingBodyWriter: HTTPBodyWriter, ~Escapable {
-    final class Count { var value = 0 }
-    let codec: HTTPBodyCodec
+    final class CompressorBox { 
+        var count = 0
+        var compressor: Deflate.StreamingCompressor
+
+        init(compressor: consuming Deflate.StreamingCompressor) {
+            self.compressor = compressor
+        }
+    }
+
+    var count: Int {
+        self.box.count
+    }
+
     let downstream: any HTTPBodyWriter & ~Escapable
-    let count = Count()
+    let box: CompressorBox
+    let bufferCapacity: Int
 
     @_lifetime(copy downstream)
-    init(codec: HTTPBodyCodec, downstream: borrowing any HTTPBodyWriter & ~Escapable) {
-        self.codec = codec
+    init(
+        compressionConfiguration: Deflate.CompressionConfiguration, 
+        bufferCapacity: Int,
+        downstream: borrowing any HTTPBodyWriter & ~Escapable
+    ) {
         self.downstream = copy downstream
+        self.box = .init(compressor: .init(configuration: compressionConfiguration))
+        self.bufferCapacity = bufferCapacity
     }
 
     func write(_ bytes: Span<UInt8>) async throws {
-        self.count.value += bytes.count
-        var offset = 0
-        var full: Bool
-        repeat {
-            let result = try self.codec.process(bytes.extracting(offset...))
-            offset += result.consumed
-            full = result.output.count == self.codec.capacity
-            if !result.output.isEmpty { try await self.downstream.write(result.output.span) }
-        } while offset < bytes.count || full
+        var consumed = 0
+        while consumed < bytes.count {
+            let output = try [UInt8](capacity: bufferCapacity) { outputSpan in
+                consumed += try box.compressor.compress(bytes.extracting(consumed...), into: &outputSpan)
+            }
+            if !output.isEmpty { 
+                try await self.downstream.write(output.span)
+            }
+        }
+        self.box.count += consumed
     }
 
     func finish() async throws {
-        while !self.codec.complete {
-            let result = try self.codec.process(Span(), finish: true)
-            if !result.output.isEmpty { try await self.downstream.write(result.output.span) }
+        var isFinished = false
+        while !isFinished {
+            let output = try [UInt8](capacity: bufferCapacity) { outputSpan in
+                isFinished = try box.compressor.finish(into: &outputSpan)
+            }
+            try await self.downstream.write(output.span)
         }
-    }
+    } 
 }
 
 #endif

@@ -90,10 +90,11 @@ package final class RequestBodyStream: Sendable {
 
     #if Compression
     init(
-        decompressing source: RequestBodyStream, coding: HTTPBodyCodec.Coding,
+        decompressing source: RequestBodyStream, 
+        coding: HTTPBodyCoding,
         limit: ServerConfiguration.RequestDecompressionConfiguration.DecompressionLimit
     ) throws {
-        let decoder = try HTTPBodyDecompressor(source: source, coding: coding, limit: limit)
+        let decoder = try HTTPBodyDecompressor(source: source, httpBodyCoding: coding, limit: limit)
         self.state = Mutex(State(reader: nil, chunk: nil, decompressor: DecoderStorage(decoder)))
     }
 
@@ -131,7 +132,7 @@ package final class RequestBodyStream: Sendable {
         switch consume checkout {
         #if Compression
         case .decompressor(let decoder):
-            let chunk: Data?
+            let chunk: [UInt8]?
             do {
                 chunk = try await decoder.read()
             } catch {

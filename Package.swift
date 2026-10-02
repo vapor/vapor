@@ -103,6 +103,9 @@ let package = Package(
 
         // HTTP Server for low level request and response handling
         .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.3.0")),
+
+        // HTTP response compression and request decompression
+        .package(url: "https://github.com/brokenhandsio/compression.git", revision: "c4e6f5be99225241fcc66d35ee7974d83d4f266b")
     ],
     targets: [
         // Vapor
@@ -119,7 +122,6 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
                 .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
-                .target(name: "CVaporZlib", condition: .when(traits: ["Compression"])),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOWebSocket", package: "swift-nio", condition: .when(traits: ["WebSockets"])),
                 .product(name: "Crypto", package: "swift-crypto"),
@@ -138,14 +140,9 @@ let package = Package(
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "NIOHTTPServer", package: "swift-http-server"),
                 .product(name: "SystemPackage", package: "swift-system"),
+                .product(name: "Compression", package: "compression", condition: .when(traits: ["Compression"]))
             ],
             swiftSettings: swiftSettings
-        ),
-
-        .systemLibrary(
-            name: "CVaporZlib",
-            pkgConfig: "zlib",
-            providers: [.apt(["zlib1g-dev"]), .brew(["zlib"])]
         ),
 
         .macro(
