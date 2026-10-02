@@ -115,8 +115,8 @@ extension BearerAuthenticator {
 
 /// Protocol for authenticators that use a credentials type to authenticate. See ``CredentialsAuthenticator`` for more information. Designed for use with HTML forms, works with JSON as well
 public protocol CredentialsAuthenticator: RequestAuthenticator {
-    /// The credentials type to decode from the request body. Must conform to ``Content``.
-    associatedtype Credentials: Content
+    /// The credentials type to decode from the request body. Must conform to ``ContentDecodable``.
+    associatedtype Credentials: ContentDecodable
     /// Authenticates the supplied credentials for this request.
     func authenticate(credentials: Credentials, for request: Request) async throws
 }

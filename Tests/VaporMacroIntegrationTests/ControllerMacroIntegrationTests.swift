@@ -113,6 +113,46 @@ struct ControllerMacroIntegrationTests {
             }
         }
     }
+
+    @Test("GET route returns a ContentEncodable value", .bug("https://github.com/vapor/vapor/issues/3342"))
+    func controllerGetRouteReturnsContentEncodable() async throws {
+        try await withApp { app in
+            try await app.register(collection: TestUserController())
+
+            try await app.testing { client in
+                let res = try await client.get("/api/test/greeting")
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == #"{"message":"HELLO"}"#)
+            }
+        }
+    }
+
+    @Test("POST route decodes a ContentDecodable body", .bug("https://github.com/vapor/vapor/issues/3342"))
+    func controllerPostRouteDecodesContentDecodable() async throws {
+        try await withApp { app in
+            try await app.register(collection: TestUserController())
+
+            try await app.testing { client in
+                let res = try await client.post("/api/test/greetings", content: ["name": "Vapor"])
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == #"{"message":"HELLO, VAPOR"}"#)
+            }
+        }
+    }
+}
+
+// MARK: - Test fixtures
+
+struct EncodeOnlyGreeting: ContentEncodable {
+    var message: String
+
+    mutating func beforeEncode() throws {
+        message = message.uppercased()
+    }
+}
+
+struct DecodeOnlyGreetingBody: ContentDecodable {
+    let name: String
 }
 
 // MARK: - Test Controller
@@ -126,6 +166,16 @@ struct TestUserController {
     @GET("api", "test", "users")
     func getUsers(req: Request) async throws -> String {
         return "users"
+    }
+
+    @GET("api", "test", "greeting")
+    func greeting(req: Request) async throws -> EncodeOnlyGreeting {
+        EncodeOnlyGreeting(message: "hello")
+    }
+
+    @POST(content: DecodeOnlyGreetingBody.self, "api", "test", "greetings")
+    func createGreeting(req: Request, body: DecodeOnlyGreetingBody) async throws -> EncodeOnlyGreeting {
+        EncodeOnlyGreeting(message: "hello, \(body.name)")
     }
 
     @GET("api", "test", "users", Int.self)

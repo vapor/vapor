@@ -37,15 +37,15 @@ extension Client {
         try await self.send(.delete, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    public func post<T>(_ url: URI, headers: HTTPFields = [:], content: T) async throws -> ClientResponse where T: Content {
+    public func post<T>(_ url: URI, headers: HTTPFields = [:], content: T) async throws -> ClientResponse where T: ContentEncodable {
         try await self.post(url, headers: headers, beforeSend: { try $0.content.encode(content) })
     }
 
-    public func patch<T>(_ url: URI, headers: HTTPFields = [:], content: T) async throws -> ClientResponse where T: Content {
+    public func patch<T>(_ url: URI, headers: HTTPFields = [:], content: T) async throws -> ClientResponse where T: ContentEncodable {
         try await self.patch(url, headers: headers, beforeSend: { try $0.content.encode(content) })
     }
 
-    public func put<T>(_ url: URI, headers: HTTPFields = [:], content: T) async throws -> ClientResponse where T: Content {
+    public func put<T>(_ url: URI, headers: HTTPFields = [:], content: T) async throws -> ClientResponse where T: ContentEncodable {
         try await self.put(url, headers: headers, beforeSend: { try $0.content.encode(content) })
     }
 
