@@ -32,7 +32,7 @@ public struct RequestDecompressionMiddleware: Middleware {
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         var request = request
         if let encoding = request.headers[.contentEncoding]?.trimming(while: { $0 == " " || $0 == "\t" }),
-            let coding = HTTPBodyCodec.Coding(rawValue: encoding.lowercased())
+            let coding = HTTPBodyCoding(rawValue: encoding.lowercased())
         {
             let source = request.bodyStorage.storage.withLock { storage in
                 switch storage {
