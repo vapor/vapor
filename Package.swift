@@ -105,7 +105,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.3.0")),
 
         // HTTP response compression and request decompression
-        .package(url: "https://github.com/brokenhandsio/compression.git", branch: "main")
+        .package(url: "https://github.com/brokenhandsio/compression.git", revision: "c4e6f5be99225241fcc66d35ee7974d83d4f266b")
     ],
     targets: [
         // Vapor
