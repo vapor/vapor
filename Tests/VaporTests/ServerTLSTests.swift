@@ -562,7 +562,7 @@ struct ServerTLSTests {
                 try await withTestHTTP3ClientConnection(
                     ipAddress: "127.0.0.1",
                     port: port,
-                    verificationConfiguration: .x509Certificates(trustRootsFilePath: caCertURL.path),
+                    verificationConfiguration: .x509Certificates(trustRootsFilePath: caCertURL.path()),
                     logger: .current,
                     eventLoopGroup: MultiThreadedEventLoopGroup.singleton
                 ) { inbound, outbound in
@@ -779,8 +779,8 @@ private struct TestCredentials {
         let privateKeyPEM = try String(contentsOf: privateKeyURL, encoding: .utf8)
 
         return Self(
-            certificatePath: certificateURL.path,
-            privateKeyPath: privateKeyURL.path,
+            certificatePath: certificateURL.path(),
+            privateKeyPath: privateKeyURL.path(),
             certificate: try Certificate(pemEncoded: certificatePEM),
             privateKey: try Certificate.PrivateKey(pemEncoded: privateKeyPEM),
             nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem)
