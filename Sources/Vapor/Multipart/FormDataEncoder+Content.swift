@@ -14,14 +14,20 @@ extension FormDataEncoder: ContentEncoder {
         let boundary = "----vaporBoundary\(randomBoundaryData())"
 
         headers.contentType = HTTPMediaType.formData(boundary: boundary)
+
+        let view: Data
         if !userInfo.isEmpty {
             var actualEncoder = self  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
 
             actualEncoder.userInfo.merge(userInfo) { $1 }
-            let view = try actualEncoder.encode(encodable, boundary: boundary, to: Data.self)
-            body.append(view)
+            view = try actualEncoder.encode(encodable, boundary: boundary, to: Data.self)
         } else {
-            let view = try self.encode(encodable, boundary: boundary, to: Data.self)
+            view = try self.encode(encodable, boundary: boundary, to: Data.self)
+        }
+
+        if body.isEmpty {
+            body = view
+        } else {
             body.append(view)
         }
     }
