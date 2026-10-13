@@ -19,6 +19,43 @@ database, or send HTTP requests. An application must supply its configured
 database service, schema, and client. The integration tests use a deterministic
 `Client` implementation and exercise real route registration and requests.
 
+## Compare the three APIs in Development
+
+Run `swift run Development` from the repository root and use the port printed in
+the `Server started` log. The examples in
+[`Sources/Development/MiddlewareServiceExamples.swift`](../../Sources/Development/MiddlewareServiceExamples.swift)
+use the same authentication and service-header middleware with three injection styles:
+
+| Style | Grouped authentication route | Service source |
+| --- | --- | --- |
+| Key path | `/api/macros/middleware/key-path/me` | `using: \Self.authentication` |
+| Typed factory | `/api/macros/middleware/factory/me` | `using: { (controller: Self) in ... }` |
+| Task local | `/api/macros/middleware/task-local/me` | A client bound with `withValue` during registration |
+
+Each controller also exposes `/attached` in place of `/me` to demonstrate the
+individual-handler `@AuthMiddleware` form. All six routes return `{"name":"Vapor"}`
+when sent `Authorization: Bearer demo-token`, and return 401 for a missing or
+invalid token. The `/me` routes also run `#Middleware` and return the
+`X-Example-Service: example-api` header. For example:
+
+```sh
+development_port=12345 # Replace with the port from the server log.
+curl -i -H 'Authorization: Bearer demo-token' \
+  "http://127.0.0.1:${development_port}/api/macros/middleware/key-path/me"
+```
+
+The example client responds in process, so these routes need no database or
+external API. The task-local example captures its client during registration;
+its binding has ended by the time requests arrive.
+
+`MiddlewareServicesIntegrationTests` runs the same cases against all three styles:
+two independently registered service instances, attached and grouped auth,
+required and optional users, missing and invalid credentials, and middleware
+order. Rebinding the task local during requests must not change the captured
+service. Separate loopback tests exercise dynamic task-local reads inside macro
+middleware, checking both a serving-scope binding and a missing binding, including
+that the HTTP caller's context does not become the server's context.
+
 ## Recommended API
 
 Keep dependencies in the controller and expose the middleware through a stored
