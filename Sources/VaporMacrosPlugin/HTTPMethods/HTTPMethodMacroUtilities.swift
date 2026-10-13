@@ -24,6 +24,11 @@ enum HTTPMethodMacroUtilities {
             throw MacroError.notAFunction(macroName)
         }
 
+        // @Controller lifts grouped handlers to member scope before expanding their route macros.
+        if isInsideGroupingMacro(context: context) {
+            return []
+        }
+
         let arguments: LabeledExprListSyntax? =
             switch node.arguments {
             case .argumentList(let arguments): arguments
@@ -254,20 +259,35 @@ enum HTTPMethodMacroUtilities {
             else {
                 continue
             }
-            var authType: String? = nil
-            var middlewares: [String] = []
-            for (i, arg) in args.enumerated() {
-                let exprStr = String(arg.expression.description.trimming(while: \.isWhitespace))
-                if i == 0 {
-                    authType = exprStr.replacing(".self", with: "")
-                } else {
-                    middlewares.append(exprStr)
-                }
-            }
-            if let authType {
-                return (type: authType, middlewares: middlewares)
+            if let first = args.first {
+                let authType = first.expression.trimmedDescription.replacing(".self", with: "")
+                return (type: authType, middlewares: GroupingMacroHelpers.middlewareExpressions(from: args, skipAuthType: true))
             }
         }
         return nil
+    }
+
+    static func isInsideGroupingMacro(context: some MacroExpansionContext) -> Bool {
+        let groupingNames: Set<String> = ["AuthMiddleware", "Middleware"]
+        for lexical in context.lexicalContext {
+            if lexical.is(StructDeclSyntax.self)
+                || lexical.is(ClassDeclSyntax.self)
+                || lexical.is(EnumDeclSyntax.self)
+                || lexical.is(ExtensionDeclSyntax.self)
+            {
+                return false
+            }
+            if let macroCall = lexical.as(MacroExpansionDeclSyntax.self),
+                groupingNames.contains(macroCall.macroName.text)
+            {
+                return true
+            }
+            if let macroCall = lexical.as(MacroExpansionExprSyntax.self),
+                groupingNames.contains(macroCall.macroName.text)
+            {
+                return true
+            }
+        }
+        return false
     }
 }
