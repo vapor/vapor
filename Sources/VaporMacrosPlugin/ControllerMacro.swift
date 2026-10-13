@@ -9,30 +9,32 @@ import FoundationEssentials
 import Foundation
 #endif
 
-public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro {
-    public static func expansion(
-        of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingAttributesFor member: some DeclSyntaxProtocol,
-        in context: some MacroExpansionContext
-    ) throws -> [AttributeSyntax] {
-        []
-    }
-
+public struct ControllerMacro: ExtensionMacro, MemberMacro {
     public static func expansion(
         of node: AttributeSyntax, providingMembersOf declaration: some DeclGroupSyntax, conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        []
+        let groups = declaration.memberBlock.members.compactMap { member -> Syntax? in
+            let syntax = Syntax(member.decl)
+            guard let call = GroupingMacroHelpers.macroCall(syntax),
+                call.isMiddlewareGroup
+            else { return nil }
+            return syntax
+        }
+        return try GroupingMacroHelpers.collectFunctions(from: groups).map { DeclSyntax($0.function) }
     }
 
     public static func expansion(
         of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingExtensionsOf type: some TypeSyntaxProtocol,
         conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
+        let topLevelItems: [Syntax] = declaration.memberBlock.members.map { Syntax($0.decl) }
+        let candidateFunctions = try GroupingMacroHelpers.collectFunctions(from: topLevelItems)
+
         // Find all functions with route macros
-        let functions = try declaration.memberBlock.members.compactMap { member -> (FunctionDeclSyntax, String, [String], [String])? in
-            guard let funcDecl = member.decl.as(FunctionDeclSyntax.self) else {
-                return nil
-            }
+        let functions = try candidateFunctions.compactMap {
+            candidate -> (FunctionDeclSyntax, String, [String], [String])? in
+            let funcDecl = candidate.function
 
             // Look for HTTP method attributes
             for attribute in funcDecl.attributes {
@@ -86,15 +88,7 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                     }
                 }
 
-                // Check for @AuthMiddleware
-                let middlewareExprs: [String] = {
-                    guard let authInfo = HTTPMethodMacroUtilities.parseAuthMiddleware(from: funcDecl) else {
-                        return []
-                    }
-                    return authInfo.middlewares
-                }()
-
-                return (funcDecl, httpMethod, pathComponents, middlewareExprs)
+                return (funcDecl, httpMethod, pathComponents, candidate.middlewares)
             }
 
             return nil
