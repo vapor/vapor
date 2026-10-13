@@ -1,3 +1,5 @@
+#if HTTP3
+
 extension ServerConfiguration {
     /// Configuration for HTTP/3.
     ///
@@ -269,3 +271,5 @@ extension ServerConfiguration.HTTP3 {
         }
     }
 }
+
+#endif

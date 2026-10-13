@@ -92,7 +92,9 @@ extension ServerConfiguration {
             // swift-format-ignore: AlwaysUseLowerCamelCase
             case http1_1
             case http2(config: HTTP2)
+            #if HTTP3
             case http3(config: HTTP3)
+            #endif
         }
 
         var version: Version
@@ -117,6 +119,7 @@ extension ServerConfiguration {
             .http2(config: .defaults)
         }
 
+        #if HTTP3
         /// The HTTP/3 protocol version.
         ///
         /// - Parameter config: The configuration to use for HTTP/3 connections.
@@ -130,6 +133,7 @@ extension ServerConfiguration {
         public static var http3: Self {
             .http3(config: .defaults)
         }
+        #endif
 
         /// Equality is by protocol version only: two values are equal when they represent the same HTTP
         /// version, ignoring any associated configuration.
@@ -141,20 +145,24 @@ extension ServerConfiguration {
         /// `NIOHTTPServerConfiguration.HTTPVersion`, which does the same.
         public static func == (lhs: Self, rhs: Self) -> Bool {
             switch (lhs.version, rhs.version) {
-            case (.http1_1, .http1_1), (.http2, .http2), (.http3, .http3):
-                true
-            default:
-                false
+            case (.http1_1, .http1_1), (.http2, .http2): true
+            #if HTTP3
+            case (.http3, .http3): true
+            #endif
+            default: false
             }
         }
 
         public static func < (lhs: borrowing ServerConfiguration.HTTPVersion, rhs: borrowing ServerConfiguration.HTTPVersion) -> Bool {
             switch (lhs.version, rhs.version) {
-            case (.http1_1, .http1_1), (.http2, .http2), (.http3, .http3): false
+            case (.http1_1, .http1_1), (.http2, .http2): false
             case (.http1_1, _): true
-            case (.http2, .http3): true
             case (.http2, .http1_1): false
+            #if HTTP3
+            case (.http3, .http3): false
+            case (.http2, .http3): true
             case (.http3, _): false
+            #endif
             }
         }
 
@@ -165,8 +173,10 @@ extension ServerConfiguration {
                 hasher.combine(1)
             case .http2:
                 hasher.combine(2)
+            #if HTTP3
             case .http3:
                 hasher.combine(3)
+            #endif
             }
         }
 
@@ -175,7 +185,9 @@ extension ServerConfiguration {
             switch self.version {
             case .http1_1: "http/1.1"
             case .http2: "h2"
+            #if HTTP3
             case .http3: "h3"
+            #endif
             }
         }
     }

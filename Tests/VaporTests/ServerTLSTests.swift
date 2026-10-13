@@ -8,7 +8,6 @@ import NIOCore
 import NIOHTTP1
 import NIOHTTPTypes
 import NIOPosix
-import NIOQUIC
 import NIOSSL
 import RoutingKit
 import ServiceLifecycle
@@ -19,6 +18,10 @@ import VaporTesting
 import X509
 
 @testable import Vapor
+
+#if HTTP3
+import NIOQUIC
+#endif
 
 @Suite("Server TLS Tests")
 struct ServerTLSTests {
@@ -532,6 +535,7 @@ struct ServerTLSTests {
         }
     }
 
+    #if HTTP3
     @Test("Server serves over HTTP/3", .timeLimit(.minutes(1)))
     func servesOverHTTP3() async throws {
         var logger = Logger(label: "http3-test")
@@ -583,6 +587,7 @@ struct ServerTLSTests {
             }
         }
     }
+    #endif
 
     // MARK: - Client certificates
 
@@ -772,6 +777,7 @@ private struct TestCredentials {
         )
     }
 
+    #if HTTP3
     static func http3() throws -> Self {
         let certificateURL = try #require(Bundle.module.url(forResource: "http3", withExtension: "crt"))
         let privateKeyURL = try #require(Bundle.module.url(forResource: "http3", withExtension: "key"))
@@ -786,6 +792,7 @@ private struct TestCredentials {
             nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem)
         )
     }
+    #endif
 }
 
 /// Generate a self-signed localhost certificate with SANs for hostname verification.

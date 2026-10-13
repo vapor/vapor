@@ -42,6 +42,7 @@ struct HTTPServerConfigurationTests {
         }
     }
 
+    #if HTTP3
     @Suite("HTTP/3 configuration")
     struct HTTP3Tests {
         @Test("Default values")
@@ -96,6 +97,7 @@ struct HTTPServerConfigurationTests {
             #expect(http3.quicConfiguration.qLogConfiguration != nil)
         }
     }
+    #endif
 
     @Suite("Supported HTTP versions")
     struct SupportedHTTPVersionsTests {
@@ -107,8 +109,13 @@ struct HTTPServerConfigurationTests {
 
         @Test("HTTP/1.1, HTTP/2 and HTTP/3 are distinct versions")
         func testDistinctVersions() {
-            let versions: Set<ServerConfiguration.HTTPVersion> = [.http1_1, .http2, .http3]
+            var versions: Set<ServerConfiguration.HTTPVersion> = [.http1_1, .http2]
+            #if HTTP3
+            versions.insert(.http3)
             #expect(versions.count == 3)
+            #else
+            #expect(versions.count == 2)
+            #endif
         }
 
         @Test("HTTP/2 versions are equal regardless of configuration")
@@ -121,6 +128,7 @@ struct HTTPServerConfigurationTests {
             #expect(Set([a, b]).count == 1)
         }
 
+        #if HTTP3
         @Test("HTTP/3 versions are equal regardless of configuration")
         func http3EqualByVersionOnly() {
             // Equality and hashing are by protocol version only,
@@ -136,18 +144,30 @@ struct HTTPServerConfigurationTests {
             #expect(a == b)
             #expect(Set([a, b]).count == 1)
         }
+        #endif
     }
 
     @Suite("Preflight validation")
     struct PreflightValidationTests {
         // HTTP/2 and HTTP/3 require TLS, so any version set containing HTTP/2 or HTTP/3 must be rejected over
         // plaintext — even when HTTP/1.1 is also present.
+        #if HTTP3
         @Test(
             "HTTP/2 and HTTP/3 requested over plaintext throw",
             arguments: [
                 [ServerConfiguration.HTTPVersion.http2, .http3],
                 [.http1_1, .http2, .http3],
-            ] as [Set<ServerConfiguration.HTTPVersion>])
+            ] as [Set<ServerConfiguration.HTTPVersion>]
+        )
+        #else
+        @Test(
+            "HTTP/2 requested over plaintext throws",
+            arguments: [
+                [ServerConfiguration.HTTPVersion.http2],
+                [.http1_1, .http2],
+            ] as [Set<ServerConfiguration.HTTPVersion>]
+        )
+        #endif
         func testHTTP2AndHTTP3WithoutTLSFails(_ versions: Set<ServerConfiguration.HTTPVersion>) async throws {
             try await withApp { app in
                 app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)

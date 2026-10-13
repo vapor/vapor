@@ -1,3 +1,5 @@
+#if HTTP3
+
 import HTTP3
 import Logging
 import NIOCore
@@ -161,3 +163,5 @@ extension HTTP3ClientConnection {
         }
     }
 }
+
+#endif

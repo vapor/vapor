@@ -1,3 +1,5 @@
+#if HTTP3
+
 import HTTPTypes
 
 /// A middleware that adds the [`Alt-Svc`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Alt-Svc) header to advertise available HTTP versions.
@@ -24,3 +26,5 @@ public struct AltSvcMiddleware: Middleware {
         return response
     }
 }
+
+#endif
