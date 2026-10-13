@@ -11,7 +11,7 @@ import VaporTesting
 struct TaskLocalRequestContextTests {
     @Test("Requests inherit the serving scope, not the registration or client scope", .timeLimit(.minutes(1)), arguments: [false, true])
     func servingScope(bindWhileServing: Bool) async throws {
-        try await withApp { app in
+        try await withApp(configReader: testConfigReader) { app in
             app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
 
             Context.$name.withValue("registration") {
