@@ -35,7 +35,7 @@ extension ContentContainer {
     /// Use the default decoder for the container's ``contentType`` to read a value of type `C`
     /// from the container.
     ///
-    /// - Note: The ``Content/defaultContentType-9sljl`` of `C` is ignored.
+    /// - Note: The ``ContentEncodable/defaultContentType`` of `C` is ignored.
     public func decode<C: Content>(_: C.Type) async throws -> C {
         var content = try await self.decode(C.self, using: self.configuredDecoder())
         try content.afterDecode()
@@ -55,7 +55,7 @@ extension ContentContainer {
     /// ``Content/afterDecode()``. Without it a ``Content`` type binds to the `Decodable` overload
     /// above, which cannot know to call the hook, and the type is silently returned unprocessed.
     ///
-    /// - Note: The ``Content/defaultContentType-9sljl`` of `C` is ignored.
+    /// - Note: The ``ContentEncodable/defaultContentType`` of `C` is ignored.
     public func decode<C: Content>(_: C.Type, as contentType: HTTPMediaType) async throws -> C {
         var content = try await self.decode(C.self, using: self.configuredDecoder(for: contentType))
         try content.afterDecode()
@@ -64,25 +64,25 @@ extension ContentContainer {
 
     // MARK: - Encoding helpers
 
-    /// Serialize a ``Content`` object to the container as its default content type.
-    public mutating func encode<C: Content>(_ content: C) throws {
+    /// Serialize a ``ContentEncodable`` value to the container as its default content type.
+    public mutating func encode<C: ContentEncodable>(_ content: C) throws {
         try self.encode(content, as: C.defaultContentType)
     }
 
-    /// Serialize a ``Content`` object to the container as its default content type without copying it.
-    public mutating func encode<C: Content>(_ content: inout C) throws {
+    /// Serialize a ``ContentEncodable`` value to the container as its default content type without copying it.
+    public mutating func encode<C: ContentEncodable>(_ content: inout C) throws {
         try self.encode(&content, as: C.defaultContentType)
     }
 
-    /// Serialize a ``Content`` object to the container, specifying an explicit content type.
-    public mutating func encode(_ content: some Content, as contentType: HTTPMediaType) throws {
+    /// Serialize a ``ContentEncodable`` value to the container, specifying an explicit content type.
+    public mutating func encode(_ content: some ContentEncodable, as contentType: HTTPMediaType) throws {
         var content = content
         try self.encode(&content, as: contentType)
     }
 
-    /// Serialize a ``Content`` object to the container without copying it, specifying an
+    /// Serialize a ``ContentEncodable`` value to the container without copying it, specifying an
     /// explicit content type.
-    public mutating func encode(_ content: inout some Content, as contentType: HTTPMediaType) throws {
+    public mutating func encode(_ content: inout some ContentEncodable, as contentType: HTTPMediaType) throws {
         try content.beforeEncode()
         try self.encode(content, using: self.configuredEncoder(for: contentType))
     }

@@ -292,6 +292,87 @@ struct RouteTests {
         }
     }
 
+    @Test("Routes can return ContentEncodable values", .bug("https://github.com/vapor/vapor/issues/3342"))
+    func testReturnContentEncodable() async throws {
+        struct Greeting: ContentEncodable {
+            var message: String
+
+            mutating func beforeEncode() throws {
+                message = message.uppercased()
+            }
+        }
+
+        try await withApp { app in
+            app.get("greeting") { _ in
+                Greeting(message: "hello")
+            }
+
+            app.post("greetings") { req async throws -> Response in
+                try await Greeting(message: "created").encodeResponse(status: .created, for: req)
+            }
+
+            try await app.testing { client in
+                let greeting = try await client.get("/greeting")
+                #expect(greeting.status == .ok)
+                #expect(greeting.headers.contentType == .json)
+                try #expect(await greeting.body.requireString() == #"{"message":"HELLO"}"#)
+
+                let created = try await client.post("/greetings")
+                #expect(created.status == .created)
+                try #expect(await created.body.requireString() == #"{"message":"CREATED"}"#)
+            }
+        }
+    }
+
+    @Test("Routes can return arrays and dictionaries of ContentEncodable values", .bug("https://github.com/vapor/vapor/issues/3342"))
+    func testReturnContentEncodableCollections() async throws {
+        struct Item: ContentEncodable {
+            let id: Int
+        }
+
+        try await withApp { app in
+            app.get("items") { _ in
+                [Item(id: 1), Item(id: 2)]
+            }
+
+            app.get("items-by-name") { _ in
+                ["first": Item(id: 1)]
+            }
+
+            try await app.testing { client in
+                let array = try await client.get("/items")
+                #expect(array.status == .ok)
+                #expect(array.headers.contentType == .json)
+                try #expect(await array.body.requireString() == #"[{"id":1},{"id":2}]"#)
+
+                let dictionary = try await client.get("/items-by-name")
+                #expect(dictionary.status == .ok)
+                #expect(dictionary.headers.contentType == .json)
+                try #expect(await dictionary.body.requireString() == #"{"first":{"id":1}}"#)
+            }
+        }
+    }
+
+    @Test("Arrays of Content still decode and encode")
+    func testContentArrayRoundTrip() async throws {
+        struct Todo: Content {
+            let title: String
+        }
+
+        try await withApp { app in
+            app.post("todos") { req async throws -> [Todo] in
+                try await req.content.decode([Todo].self)
+            }
+
+            try await app.testing { client in
+                let res = try await client.post("/todos", content: [Todo(title: "write tests")])
+                #expect(res.status == .ok)
+                #expect(res.headers.contentType == .json)
+                try #expect(await res.body.requireString() == #"[{"title":"write tests"}]"#)
+            }
+        }
+    }
+
     @Test("Test Head Request Forwarded to Get")
     func testHeadRequestForwardedToGet() async throws {
         try await withApp { app in

@@ -85,6 +85,29 @@ struct ControllerMacroIntegrationTests {
             }
         }
     }
+
+    @Test("GET route returns a ContentEncodable value", .bug("https://github.com/vapor/vapor/issues/3342"))
+    func controllerGetRouteReturnsContentEncodable() async throws {
+        try await withApp { app in
+            try await app.register(collection: TestUserController())
+
+            try await app.testing { client in
+                let res = try await client.get("/api/test/greeting")
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == #"{"message":"HELLO"}"#)
+            }
+        }
+    }
+}
+
+// MARK: - Test fixtures
+
+struct EncodeOnlyGreeting: ContentEncodable {
+    var message: String
+
+    mutating func beforeEncode() throws {
+        message = message.uppercased()
+    }
 }
 
 // MARK: - Test Controller
@@ -94,6 +117,11 @@ struct TestUserController {
     @GET("api", "test", "users")
     func getUsers(req: Request) async throws -> String {
         return "users"
+    }
+
+    @GET("api", "test", "greeting")
+    func greeting(req: Request) async throws -> EncodeOnlyGreeting {
+        EncodeOnlyGreeting(message: "hello")
     }
 
     @GET("api", "test", "users", Int.self)
