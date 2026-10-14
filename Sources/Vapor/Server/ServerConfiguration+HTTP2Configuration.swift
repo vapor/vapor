@@ -92,7 +92,7 @@ extension ServerConfiguration {
             // swift-format-ignore: AlwaysUseLowerCamelCase
             case http1_1
             case http2(config: HTTP2)
-            #if HTTP3
+            #if UnstableHTTP3
             case http3(config: HTTP3)
             #endif
         }
@@ -119,7 +119,7 @@ extension ServerConfiguration {
             .http2(config: .defaults)
         }
 
-        #if HTTP3
+        #if UnstableHTTP3
         /// The HTTP/3 protocol version.
         ///
         /// - Parameter config: The configuration to use for HTTP/3 connections.
@@ -146,7 +146,7 @@ extension ServerConfiguration {
         public static func == (lhs: Self, rhs: Self) -> Bool {
             switch (lhs.version, rhs.version) {
             case (.http1_1, .http1_1), (.http2, .http2): true
-            #if HTTP3
+            #if UnstableHTTP3
             case (.http3, .http3): true
             #endif
             default: false
@@ -158,7 +158,7 @@ extension ServerConfiguration {
             case (.http1_1, .http1_1), (.http2, .http2): false
             case (.http1_1, _): true
             case (.http2, .http1_1): false
-            #if HTTP3
+            #if UnstableHTTP3
             case (.http3, .http3): false
             case (.http2, .http3): true
             case (.http3, _): false
@@ -173,7 +173,7 @@ extension ServerConfiguration {
                 hasher.combine(1)
             case .http2:
                 hasher.combine(2)
-            #if HTTP3
+            #if UnstableHTTP3
             case .http3:
                 hasher.combine(3)
             #endif
@@ -185,7 +185,7 @@ extension ServerConfiguration {
             switch self.version {
             case .http1_1: "http/1.1"
             case .http2: "h2"
-            #if HTTP3
+            #if UnstableHTTP3
             case .http3: "h3"
             #endif
             }

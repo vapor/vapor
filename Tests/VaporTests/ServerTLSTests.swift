@@ -19,7 +19,7 @@ import X509
 
 @testable import Vapor
 
-#if HTTP3
+#if UnstableHTTP3
 import NIOQUIC
 #endif
 
@@ -535,7 +535,7 @@ struct ServerTLSTests {
         }
     }
 
-    #if HTTP3
+    #if UnstableHTTP3
     @Test("Server serves over HTTP/3", .timeLimit(.minutes(1)))
     func servesOverHTTP3() async throws {
         var logger = Logger(label: "http3-test")
@@ -777,7 +777,7 @@ private struct TestCredentials {
         )
     }
 
-    #if HTTP3
+    #if UnstableHTTP3
     static func http3() throws -> Self {
         let certificateURL = try #require(Bundle.module.url(forResource: "http3", withExtension: "crt"))
         let privateKeyURL = try #require(Bundle.module.url(forResource: "http3", withExtension: "key"))

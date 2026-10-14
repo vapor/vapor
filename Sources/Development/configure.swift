@@ -12,7 +12,7 @@ func configure(_ app: Application) async throws {
         let privateKey = try Certificate.PrivateKey(pemEncoded: TLSData.sampleServerPrivateKeyPEM)
         let certChain = [try Certificate(pemEncoded: TLSData.sampleServerCertificatePEM)]
         app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
-    #if HTTP3
+    #if UnstableHTTP3
     case .http3:
         // To hit an HTTP/3 endpoint, you can use a cURL version that supports HTTP/3 inside Docker
         //
@@ -63,7 +63,7 @@ actor MemoryCache {
 
 extension Environment {
     static var tls: Environment { .custom(name: "tls") }
-    #if HTTP3
+    #if UnstableHTTP3
     static var http3: Environment { .custom(name: "http3") }
     #endif
 }

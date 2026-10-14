@@ -144,7 +144,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                         )
                     )
                 )
-            #if HTTP3
+            #if UnstableHTTP3
             case .http3(let config):
                 var quicConfiguration: NIOHTTPServerConfiguration.HTTP3.QUICConfiguration = .defaults
                 quicConfiguration.serverName = config.quicConfiguration.serverName

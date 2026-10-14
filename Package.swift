@@ -18,9 +18,9 @@ let package = Package(
     traits: [
         .trait(name: "WebSockets"),
         .trait(name: "HTTPClient"),
-        .trait(name: "HTTP3"),
         .trait(name: "Multipart"),
         .trait(name: "MacroRouting"),
+        .trait(name: "UnstableHTTP3"),
         .default(enabledTraits: [
             "WebSockets",
             "HTTPClient",
@@ -104,7 +104,7 @@ let package = Package(
         .package(
             url: "https://github.com/swift-server/swift-http-server.git",
             .upToNextMinor(from: "0.3.0"),
-            traits: [.defaults, .trait(name: "HTTP3", condition: .when(traits: ["HTTP3"]))]
+            traits: [.defaults, .trait(name: "HTTP3", condition: .when(traits: ["UnstableHTTP3"]))]
         ),
 
         // HTTP/3 and QUIC support for SwiftNIO - used for testing
@@ -213,8 +213,8 @@ let package = Package(
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
-                .product(name: "NIOHTTP3", package: "swift-nio-http3", condition: .when(traits: ["HTTP3"])),
-                .product(name: "NIOQUIC", package: "swift-nio-quic", condition: .when(traits: ["HTTP3"])),
+                .product(name: "NIOHTTP3", package: "swift-nio-http3", condition: .when(traits: ["UnstableHTTP3"])),
+                .product(name: "NIOQUIC", package: "swift-nio-quic", condition: .when(traits: ["UnstableHTTP3"])),
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
             ],
             resources: [

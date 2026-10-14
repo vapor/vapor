@@ -1,4 +1,4 @@
-#if HTTP3
+#if UnstableHTTP3
 
 extension ServerConfiguration {
     /// Configuration for HTTP/3.

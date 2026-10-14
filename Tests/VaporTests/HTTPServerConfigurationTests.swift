@@ -42,7 +42,7 @@ struct HTTPServerConfigurationTests {
         }
     }
 
-    #if HTTP3
+    #if UnstableHTTP3
     @Suite("HTTP/3 configuration")
     struct HTTP3Tests {
         @Test("Default values")
@@ -110,7 +110,7 @@ struct HTTPServerConfigurationTests {
         @Test("HTTP/1.1, HTTP/2 and HTTP/3 are distinct versions")
         func testDistinctVersions() {
             var versions: Set<ServerConfiguration.HTTPVersion> = [.http1_1, .http2]
-            #if HTTP3
+            #if UnstableHTTP3
             versions.insert(.http3)
             #expect(versions.count == 3)
             #else
@@ -128,7 +128,7 @@ struct HTTPServerConfigurationTests {
             #expect(Set([a, b]).count == 1)
         }
 
-        #if HTTP3
+        #if UnstableHTTP3
         @Test("HTTP/3 versions are equal regardless of configuration")
         func http3EqualByVersionOnly() {
             // Equality and hashing are by protocol version only,
@@ -151,7 +151,7 @@ struct HTTPServerConfigurationTests {
     struct PreflightValidationTests {
         // HTTP/2 and HTTP/3 require TLS, so any version set containing HTTP/2 or HTTP/3 must be rejected over
         // plaintext — even when HTTP/1.1 is also present.
-        #if HTTP3
+        #if UnstableHTTP3
         @Test(
             "HTTP/2 and HTTP/3 requested over plaintext throw",
             arguments: [
