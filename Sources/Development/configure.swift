@@ -1,8 +1,13 @@
-import Foundation
 import Logging
 import SwiftASN1
 import Vapor
 import X509
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 func configure(_ app: Application) async throws {
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
