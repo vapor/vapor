@@ -12,7 +12,7 @@ enum NIOHTTPServerAdapterError: Error {
     /// HTTP/2 or HTTP/3 were requested without TLS. HTTP/2 and HTTP/3 require a
     /// ``ServerConfiguration/tlsConfiguration`` to serve them. Cleartext HTTP/2 (h2c) is not
     /// supported by the underlying server yet; if that changes this check will be gated behind an opt-in.
-    case http2And3RequireTLS
+    case tlsRequired
 
     /// No HTTP versions were configured. ``ServerConfiguration/httpVersions`` must contain at least one version.
     case noHTTPVersionsSpecified
@@ -199,7 +199,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             self.context.configuration.value.isTLSEnabled
                 || self.context.configuration.value.httpVersions == [.http1_1]
         else {
-            throw NIOHTTPServerAdapterError.http2And3RequireTLS
+            throw NIOHTTPServerAdapterError.tlsRequired
         }
 
         let (hostname, port) = self.resolveBindAddress()

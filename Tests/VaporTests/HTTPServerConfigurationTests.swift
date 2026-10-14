@@ -174,7 +174,7 @@ struct HTTPServerConfigurationTests {
                 app.serverConfiguration.httpVersions = versions
                 // tlsConfiguration is intentionally left nil: HTTP/2 and HTTP/3 both require TLS.
 
-                await #expect(throws: NIOHTTPServerAdapterError.http2And3RequireTLS) {
+                await #expect(throws: NIOHTTPServerAdapterError.tlsRequired) {
                     try await app.server.run()
                 }
             }
