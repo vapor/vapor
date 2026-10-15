@@ -26,6 +26,10 @@ If you are fixing a single GitHub issue in particular, you can add a test with a
 This will also help prevent regression.
 See [Associating bugs with tests](https://docs.swift.org/latest/documentation/testing/associatingbugs) for more information.
 
+### Dev container
+
+To easily test and develop Vapor on Linux from macOS, you can use the provided development container in the `.devcontainer` directory.
+
 ## API Documentation
 
 Make sure that any new public API is covered by API documentation and update any existing documentation where relevant. See [Writing Symbol Documentation in Your Source Files](https://docs.swift.org/latest/documentation/docc/writing-symbol-documentation-in-your-source-files) and [DocC](https://docs.swift.org/latest/documentation/docc) for more information.
