@@ -4,45 +4,54 @@
 
 ## Testing
 
-Once in Xcode, select the `vapor-Package` scheme and use `CMD+U` to run the tests.
+If you are using Xcode, select the `vapor-Package` scheme and use `CMD+U` to run the tests.
+
+If you are using VS Code, you can run the tests from the [Test Explorer view](https://docs.swift.org/latest/documentation/userdocs/test-explorer) using [the Swift Extension for VS Code](https://marketplace.visualstudio.com/items?itemName=swiftlang.swift-vscode).
 
 You can use the `Development` executables for testing out your code.
 
+```sh
+swift run Development
+```
+
+If you want to run the development server with TLS enabled, use the command below:
+
+```sh
+swift run Development --vapor-env tls
+```
+
 Don't forget to add tests for your new features.
 
-If you are fixing a single GitHub issue in particular, you can add a test named `testGH<issue number>` to ensure
-that your fix is working. This will also help prevent regression.
+If you are fixing a single GitHub issue in particular, you can add a test with a `.bug("https://github.com/vapor/vapor/issues/<issue number>")` trait to ensure that your fix is working.
+This will also help prevent regression.
+See [Associating bugs with tests](https://docs.swift.org/latest/documentation/testing/associatingbugs) for more information.
+
+### Dev container
+
+To easily test and develop Vapor on Linux from macOS, you can use the provided development container in the `.devcontainer` directory.
 
 ## API Documentation
 
-Make sure that any new public API is covered by API documentation and update any existing documentation where relevant. See [Formatting Quick Help](https://developer.apple.com/library/archive/documentation/Xcode/Reference/xcode_markup_formatting_ref/SymbolDocumentation.html#//apple_ref/doc/uid/TP40016497-CH51-SW1) and [Swift Documentation](https://nshipster.com/swift-documentation/) for more information.
+Make sure that any new public API is covered by API documentation and update any existing documentation where relevant. See [Writing Symbol Documentation in Your Source Files](https://docs.swift.org/latest/documentation/docc/writing-symbol-documentation-in-your-source-files) and [DocC](https://docs.swift.org/latest/documentation/docc) for more information.
 
 ## Style Guide
 
-When contributing code to Vapor, please try to follow existing style for consistency. 
+When contributing code to Vapor, please try to follow existing style for consistency.
 
-### Xcode Formatting
+### Formatting
 
-Avoid using "Xcode style" indentation where possible. This can be difficult to recreate in other editors.
+Vapor uses `swift-format` for formatting code.
 
-❌
-```swift
-func foo(bar: String,
-         baz: Int) {
-    ...
-}
+To format the code, run the following command:
+
+```sh
+swift format --parallel --in-place --recursive .
 ```
 
-Use normal indentation instead.
+To check if the code is properly formatted, you can run the following command:
 
-✅
-```swift
-func foo(
-    bar: String,
-    baz: Int
-) {
-    ...
-}
+```sh
+swift format lint --parallel --strict --recursive .
 ```
 
 ### Explicit self
@@ -72,7 +81,7 @@ Code that is only additive and will not break any existing code can be included 
 
 ## Releases
 
-All vapor/* packages use automated releases. When a PR is merged, the Vapor bot will check for certain PR labels and ship a new release right away. This ensures users get access to new features as soon as possible and helps to reduce human error. 
+All `vapor/*` packages use automated releases. When a PR is merged, the Vapor bot [Penny](https://github.com/vapor/penny-bot) will check for certain PR labels and ship a new release right away. This ensures users get access to new features as soon as possible and helps to reduce human error. 
 
 The release will use the PR's title and body directly. It will also include a note about who authored the release and who merged it. 
 
@@ -150,68 +159,6 @@ The following PR labels are supported by Vapor's release bot.
 - `release`: Advances the pre-release identifier (alpha -> beta -> rc)
 
 When Vapor's release bot makes a release, it will automatically notify the `#release` channel in Vapor's team chat and include a link to the release on the merged PR.
-
-## Maintainers
-
-Each repo under the Vapor organization has at least one [volunteer maintainer.](maintainers.md) [vapor/vapor's](https://github.com/vapor/vapor) current list of maintainers is:
-
-- [@MrLotU](https://github.com/MrLotU)
-- [@Joannis](https://github.com/Joannis)
-- [@0xTim](https://github.com/0xtim)
-- [@gwynne](https://github.com/gwynne)
-- [@siemensikkema](https://github.com/siemensikkema)
-
-## Extras
-
-Here are some bash functions to help you test Swift on Linux easily from macOS (you must have Docker installed).
-
-### Swift Linux
-
-```bash
-# Starts docker-machine and exports env variables.
-_docker_start() {
-    docker-machine start default
-    eval "$(docker-machine env default)"
-}
-alias docker-start='_docker_start'
-
-# Executes /usr/bin/swift in a Swift 4.1 docker container
-_swift_linux() {
-    _docker_start
-    docker run -it -v $PWD:/root/code -w /root/code norionomura/swift:swift-4.1-branch /usr/bin/swift $1
-}
-alias swift-linux='_swift_linux'
-```
-
-You can add these methods to your `~/.bash_profile`. Just run `source ~/.bash_profile` after or restart your terminal.
-
-Once added, you can run the following to test Swift projects on both macOS and Linux.
-
-```sh
-swift test
-swift-linux test
-```
-
-### Clean SPM
-
-Add the following code to your bash profile to make cleaning SPM temporary files easy.
-
-```bash
-# Cleans out all temporary SPM files
-_spm_clean() {
-	rm Package.resolved
-	rm -rf .build
-	rm -rf *.xcodeproj
-	rm -rf Packages
-}
-alias spm-clean='_spm_clean'
-```
-
-Once added, you can run `spm-clean`.
-
-```sh
-spm-clean
-```
 
 ----------
 
