@@ -200,6 +200,123 @@ struct HTTPMethodMacroTests {
         )
     }
 
+    @Test("POST retains a leading typed path parameter")
+    func testPostMacroWithLeadingPathParameter() {
+        assertMacroExpansion(
+            """
+            @POST(Int.self, "users")
+            func updateUser(req: Request, id: Int) async throws -> String {
+                return "updated"
+            }
+            """,
+            expandedSource: """
+                func updateUser(req: Request, id: Int) async throws -> String {
+                    return "updated"
+                }
+
+                @Sendable func _route_updateUser(req: Request) async throws -> Response {
+                    let int0 = try req.parameters.require("int0", as: Int.self)
+                    let result: some ResponseEncodable = try await updateUser(req: req, id: int0)
+                    return try await result.encodeResponse(for: req)
+                }
+                """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("POST decodes a labeled body type and retains path parameters")
+    func testPostMacroWithBodyAndPathParameter() {
+        assertMacroExpansion(
+            """
+            @POST(content: User.self, "users", Int.self)
+            func createUser(req: Request, user: User, id: Int) async throws -> String {
+                return user.name
+            }
+            """,
+            expandedSource: """
+                func createUser(req: Request, user: User, id: Int) async throws -> String {
+                    return user.name
+                }
+
+                @Sendable func _route_createUser(req: Request) async throws -> Response {
+                    let body = try await req.content.decode(User.self)
+                    let int0 = try req.parameters.require("int0", as: Int.self)
+                    let result: some ResponseEncodable = try await createUser(req: req, user: body, id: int0)
+                    return try await result.encodeResponse(for: req)
+                }
+                """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("POST content requires a response type")
+    func testPostMacroWithoutResponseType() {
+        assertMacroExpansion(
+            """
+            @POST(content: User.self, "users")
+            func createUser(req: Request, user: User) async throws {
+                save(user)
+            }
+            """,
+            expandedSource: """
+                func createUser(req: Request, user: User) async throws {
+                    save(user)
+                }
+                """,
+            diagnostics: [
+                DiagnosticSpec(message: "@POST handlers with content must declare a non-Void response type", line: 1, column: 1)
+            ],
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("POST content rejects an explicit Void response type")
+    func testPostMacroWithVoidResponseType() {
+        assertMacroExpansion(
+            """
+            @POST(content: User.self, "users")
+            func createUser(req: Request, user: User) async throws -> Void {
+                save(user)
+            }
+            """,
+            expandedSource: """
+                func createUser(req: Request, user: User) async throws -> Void {
+                    save(user)
+                }
+                """,
+            diagnostics: [
+                DiagnosticSpec(message: "@POST handlers with content must declare a non-Void response type", line: 1, column: 1)
+            ],
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
+    @Test("POST body type must match the handler")
+    func testPostMacroBodyTypeMismatch() {
+        assertMacroExpansion(
+            """
+            @POST(content: User.self, "users")
+            func createUser(req: Request, input: Other) async throws -> String {
+                return "created"
+            }
+            """,
+            expandedSource: """
+                func createUser(req: Request, input: Other) async throws -> String {
+                    return "created"
+                }
+                """,
+            diagnostics: [
+                DiagnosticSpec(message: "The first non-authentication parameter of @POST must have type User", line: 1, column: 1)
+            ],
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
     @Test("Test PUT macro")
     func testPutMacro() {
         assertMacroExpansion(

@@ -16,7 +16,8 @@ enum HTTPMethodMacroUtilities {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext,
         for method: HTTPRequest.Method,
-        customHTTPMethod: Bool = false
+        customHTTPMethod: Bool = false,
+        decodesContentArgument: Bool = false
     ) throws -> [DeclSyntax] {
         let macroName = node.attributeName.trimmedDescription
 
@@ -33,6 +34,18 @@ enum HTTPMethodMacroUtilities {
             switch node.arguments {
             case .argumentList(let arguments): arguments
             default: nil
+            }
+
+        // The labeled content type is decoded from the body. Unlabeled types
+        // remain path parameters, including the first argument of a route.
+        let bodyType: String? =
+            if decodesContentArgument,
+                let contentArgument = arguments?.first(where: { $0.label?.text == "content" }),
+                contentArgument.expression.trimmedDescription.hasSuffix(".self")
+            {
+                String(contentArgument.expression.trimmedDescription.dropLast(".self".count))
+            } else {
+                nil
             }
 
         var funcParameters: [FunctionParameterSyntax] = []
@@ -90,6 +103,21 @@ enum HTTPMethodMacroUtilities {
             }
         }
 
+        if let bodyType {
+            guard let bodyParameter = pathParams.first,
+                bodyParameter.type.trimmedDescription == bodyType
+            else {
+                throw MacroError.bodyParameterNotFound(bodyType)
+            }
+            pathParams.removeFirst()
+
+            guard let returnType = funcDecl.signature.returnClause?.type.trimmedDescription,
+                returnType != "Void", returnType != "()"
+            else {
+                throw MacroError.invalidResponseReturnType(macroName)
+            }
+        }
+
         // Parse path components and parameter types
         var parameterTypes: [String] = []
         var routeRegistrationVariable: String? = nil
@@ -101,12 +129,14 @@ enum HTTPMethodMacroUtilities {
                     routeRegistrationVariable = String(argument.expression.description.trimming(while: \.isWhitespace))
                     continue
                 }
+                if argument.label?.text == "content" {
+                    continue
+                }
                 // Skip the first non-on: argument for custom HTTP methods (that's the HTTP method itself)
                 if customHTTPMethod && !skippedHTTPMethod {
                     skippedHTTPMethod = true
                     continue
                 }
-
                 let exprStr = argument.expression.description.trimming(while: \.isWhitespace)
 
                 if exprStr.hasSuffix(".self") {
@@ -126,6 +156,7 @@ enum HTTPMethodMacroUtilities {
         var parameterExtraction = ""
         var callParameters = "req: req"
         var pathParamIndex = 0
+        var needsBodyParameter = bodyType != nil
 
         for (param, isAuth, isOptionalAuth) in allParamsWithAuth {
             let functionParameterName = param.firstName.text
@@ -143,6 +174,13 @@ enum HTTPMethodMacroUtilities {
                         """
                 }
                 callParameters += ", \(functionParameterName): \(varName)"
+            } else if needsBodyParameter, let bodyType {
+                parameterExtraction += """
+                    let body = try await req.content.decode(\(bodyType).self)
+
+                    """
+                callParameters += ", \(functionParameterName): body"
+                needsBodyParameter = false
             } else {
                 let paramType = parameterTypes[pathParamIndex]
                 let parameterName = "\(paramType.lowercased())\(pathParamIndex)"
@@ -198,7 +236,7 @@ enum HTTPMethodMacroUtilities {
                 var skippedHTTPMethodInPath = false
                 for (_, arg) in arguments.enumerated() {
                     // Skip the `on:` argument
-                    if arg.label?.text == "on" {
+                    if arg.label?.text == "on" || arg.label?.text == "content" {
                         continue
                     }
                     // Skip the first non-on: argument for custom HTTP methods
