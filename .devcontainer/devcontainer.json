@@ -1,6 +1,6 @@
 {
     "name": "Vapor",
-    "image": "swift:6.4-noble",
+    "image": "swift:6.4-resolute",
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
             "installZsh": "false",
