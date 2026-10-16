@@ -73,8 +73,17 @@ enum HTTPMethodMacroUtilities {
         // Separate auth params from path params
         var pathParams: [FunctionParameterSyntax] = []
         var allParamsWithAuth: [(param: FunctionParameterSyntax, isAuth: Bool, isOptionalAuth: Bool)] = []
+        var foundBodyParameter = false
 
         for param in funcParameters {
+            // When the content and authentication types match, the first
+            // matching parameter belongs to the body; later ones are auth.
+            if !foundBodyParameter, let bodyType, param.type.trimmedDescription == bodyType {
+                allParamsWithAuth.append((param: param, isAuth: false, isOptionalAuth: false))
+                pathParams.append(param)
+                foundBodyParameter = true
+                continue
+            }
             if let authInfo {
                 let paramType = param.type.trimmedDescription
                 // Match both `User` and `User?` / `Optional<User>` against the auth type

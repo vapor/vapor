@@ -59,6 +59,34 @@ struct AuthMiddlewareMacroTests {
         )
     }
 
+    @Test("POST content and authentication can use the same type")
+    func testPostContentWithSameAuthType() {
+        assertMacroExpansion(
+            """
+            @POST(content: User.self, "api", "users", Int.self)
+            @AuthMiddleware(User.self, UserAuthMiddleware())
+            func createUser(req: Request, input: User, id: Int, authenticatedUser: User) async throws -> String {
+                return "created"
+            }
+            """,
+            expandedSource: """
+                func createUser(req: Request, input: User, id: Int, authenticatedUser: User) async throws -> String {
+                    return "created"
+                }
+
+                @Sendable func _route_createUser(req: Request) async throws -> Response {
+                    let body = try await req.content.decode(User.self)
+                    let int0 = try req.parameters.require("int0", as: Int.self)
+                    let authenticatedUser = try req.auth.require(User.self)
+                    let result: some ResponseEncodable = try await createUser(req: req, input: body, id: int0, authenticatedUser: authenticatedUser)
+                    return try await result.encodeResponse(for: req)
+                }
+                """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
     @Test("Test AuthMiddleware with auth param after path param")
     func testAuthMiddlewareWithAuthAfterPath() {
         assertMacroExpansion(
