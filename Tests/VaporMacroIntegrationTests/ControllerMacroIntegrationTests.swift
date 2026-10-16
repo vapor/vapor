@@ -48,6 +48,34 @@ struct ControllerMacroIntegrationTests {
         }
     }
 
+    @Test("POST route decodes content and keeps subsequent path parameters")
+    func controllerPostRouteWithBody() async throws {
+        try await withApp { app in
+            try await app.register(collection: TestUserController())
+
+            try await app.testing { client in
+                let res = try await client.post("/api/test/users/42", content: CreateUserBody(name: "Vapor"))
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == "Vapor 42")
+
+                let missingBody = try await client.post("/api/test/users/42")
+                #expect(missingBody.status == .unsupportedMediaType)
+            }
+        }
+    }
+
+    @Test("POST body handler can explicitly return no content")
+    func controllerPostRouteWithExplicitNoContent() async throws {
+        try await withApp { app in
+            try await app.register(collection: TestUserController())
+
+            try await app.testing { client in
+                let res = try await client.post("/api/test/users", content: CreateUserBody(name: "Vapor"))
+                #expect(res.status == .noContent)
+            }
+        }
+    }
+
     @Test("Custom HTTP method route")
     func controllerCustomHTTPMethod() async throws {
         try await withApp { app in
@@ -89,6 +117,10 @@ struct ControllerMacroIntegrationTests {
 
 // MARK: - Test Controller
 
+struct CreateUserBody: Content {
+    let name: String
+}
+
 @Controller
 struct TestUserController {
     @GET("api", "test", "users")
@@ -104,6 +136,17 @@ struct TestUserController {
     @POST("api", "test", "sync")
     func syncRoute(req: Request) throws -> String {
         "Sync"
+    }
+
+    @POST(content: CreateUserBody.self, "api", "test", "users", Int.self)
+    func createUser(req: Request, user: CreateUserBody, id: Int) async throws -> String {
+        "\(user.name) \(id)"
+    }
+
+    @POST(content: CreateUserBody.self, "api", "test", "users")
+    func createUserWithExplicitNoContent(req: Request, user: CreateUserBody) async throws -> HTTPResponse.Status {
+        _ = user.name
+        return .noContent
     }
 
     @HTTP(.patch, "api", "test", "users", "custom")

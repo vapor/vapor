@@ -8,6 +8,7 @@ public struct HTTPPostMacro: PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        try HTTPMethodMacroUtilities.expansion(of: node, providingPeersOf: declaration, in: context, for: .post)
+        try HTTPMethodMacroUtilities.expansion(
+            of: node, providingPeersOf: declaration, in: context, for: .post, decodesContentArgument: true)
     }
 }

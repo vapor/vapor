@@ -53,6 +53,46 @@ struct AuthMiddlewareIntegrationTests {
         }
     }
 
+    @Test("Authenticated POST decodes content alongside the authenticated user")
+    func authenticatedPostWithContent() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
+
+            try await app.testing { client in
+                let response = try await client.post(
+                    "/api/auth/create",
+                    headers: [.authorization: "Bearer test-token"],
+                    content: AuthCreateUserBody(name: "Leaf")
+                )
+                #expect(response.status == .ok)
+                try #expect(await response.body.requireString() == "Vapor created Leaf")
+
+                let unauthorized = try await client.post(
+                    "/api/auth/create",
+                    content: AuthCreateUserBody(name: "Leaf")
+                )
+                #expect(unauthorized.status == .unauthorized)
+            }
+        }
+    }
+
+    @Test("Authenticated POST distinguishes body and auth values of the same type")
+    func authenticatedPostWithSameContentType() async throws {
+        try await withApp { app in
+            try await app.register(collection: AuthTestController())
+
+            try await app.testing { client in
+                let response = try await client.post(
+                    "/api/auth/echo",
+                    headers: [.authorization: "Bearer test-token"],
+                    content: AuthTestUser(id: 3, name: "Leaf", isAdmin: false)
+                )
+                #expect(response.status == .ok)
+                try #expect(await response.body.requireString() == "Vapor received Leaf")
+            }
+        }
+    }
+
     @Test("Optional auth route works without credentials")
     func optionalAuthRouteAnonymous() async throws {
         try await withApp { app in
@@ -113,6 +153,10 @@ struct AuthTestUser: Authenticatable, Content {
     let isAdmin: Bool
 }
 
+struct AuthCreateUserBody: Content {
+    let name: String
+}
+
 struct AuthTestTokenMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         if let header = request.headers[.authorization] {
@@ -147,6 +191,18 @@ struct AuthTestController {
     @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware())
     func promote(req: Request, user: AuthTestUser, id: Int) async throws -> String {
         return "\(user.name) promoted \(id)"
+    }
+
+    @POST(content: AuthCreateUserBody.self, "api", "auth", "create")
+    @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware())
+    func create(req: Request, user: AuthTestUser, input: AuthCreateUserBody) async throws -> String {
+        "\(user.name) created \(input.name)"
+    }
+
+    @POST(content: AuthTestUser.self, "api", "auth", "echo")
+    @AuthMiddleware(AuthTestUser.self, AuthTestTokenMiddleware())
+    func echo(req: Request, input: AuthTestUser, user: AuthTestUser) async throws -> String {
+        "\(user.name) received \(input.name)"
     }
 
     @GET("api", "auth", "feed")

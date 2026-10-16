@@ -26,6 +26,18 @@ public macro POST(on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents:
         type: "HTTPPostMacro"
     )
 
+/// Decodes the request body as `Body` and passes it to the first
+/// non-authentication handler parameter after `Request`.
+/// If `Body` is also the authentication type, the first parameter of that
+/// type receives the body and a later parameter receives the authenticated user.
+/// For example: `@POST(content: User.self, "users")`.
+@attached(peer, names: prefixed(_route_), prefixed(_register_))
+public macro POST<Body: Content>(content: Body.Type, on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents: Any...) =
+    #externalMacro(
+        module: "VaporMacrosPlugin",
+        type: "HTTPPostMacro"
+    )
+
 @attached(peer, names: prefixed(_route_), prefixed(_register_))
 public macro PUT(on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents: Any...) =
     #externalMacro(

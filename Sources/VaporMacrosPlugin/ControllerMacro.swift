@@ -73,6 +73,9 @@ public struct ControllerMacro: ExtensionMacro, MemberMacro {
                         if customHTTPMethod && index == 0 {
                             continue
                         }
+                        if arg.label?.text == "content" {
+                            continue
+                        }
                         let exprStr = arg.expression.description.trimming(while: \.isWhitespace)
 
                         // Check if it's a type (contains .self)

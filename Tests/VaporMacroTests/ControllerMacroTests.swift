@@ -234,6 +234,46 @@ struct ControllerMacroTests {
         )
     }
 
+    @Test("Controller POST body type is not part of the route path")
+    func testControllerPostWithBody() {
+        assertMacroExpansion(
+            """
+            @Controller
+            struct UserController {
+                @POST(content: User.self, "users", Int.self)
+                func createUser(req: Request, user: User, id: Int) async throws -> String {
+                    return user.name
+                }
+            }
+            """,
+            expandedSource: """
+                struct UserController {
+                    func createUser(req: Request, user: User, id: Int) async throws -> String {
+                        return user.name
+                    }
+
+                    @Sendable func _route_createUser(req: Request) async throws -> Response {
+                        let body = try await req.content.decode(User.self)
+                        let int0 = try req.parameters.require("int0", as: Int.self)
+                        let result: some ResponseEncodable = try await createUser(req: req, user: body, id: int0)
+                        return try await result.encodeResponse(for: req)
+                    }
+                }
+
+                extension UserController: RouteCollection {
+                    func boot(routes: any RoutesBuilder) throws {
+                    routes.post("users", ":int0") { req async throws -> Response in
+                        try await self._route_createUser(req: req)
+                    }
+
+                    }
+                }
+                """,
+            macroSpecs: testMacros,
+            failureHandler: FailureHandler.instance
+        )
+    }
+
     @Test("Test Controller with Root Route with Brackets")
     func testControllerWithRootRouteBrackets() async throws {
         assertMacroExpansion(
