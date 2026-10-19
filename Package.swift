@@ -5,10 +5,10 @@ import PackageDescription
 let package = Package(
     name: "vapor",
     platforms: [
-        .macOS("26.2"),
-        .iOS("26.2"),
-        .tvOS("26.2"),
-        .watchOS("26.2"),
+        .macOS("27.0"),
+        .iOS("27.0"),
+        .tvOS("27.0"),
+        .watchOS("27.0"),
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -103,13 +103,13 @@ let package = Package(
         // HTTP Server for low level request and response handling
         .package(
             url: "https://github.com/swift-server/swift-http-server.git",
-            .upToNextMinor(from: "0.3.0"),
+            .upToNextMinor(from: "0.4.0"),
             traits: [.defaults, .trait(name: "HTTP3", condition: .when(traits: ["UnstableHTTP3"]))]
         ),
 
         // HTTP/3 and QUIC support for SwiftNIO - used for testing
         .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.3.0")),
-        .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.4.0")),
+        .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.6.0")),
     ],
     targets: [
         // Vapor
