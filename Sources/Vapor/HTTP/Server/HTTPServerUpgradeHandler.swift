@@ -104,6 +104,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
             } else {
                 // The decoder stopped parsing at the upgrade request,
                 // so this connection can't safely serve another HTTP request. Close it
+                // This is a workaround for https://github.com/apple/swift-nio/pull/2570
                 self.upgradeState = .ready
                 res.headers.replaceOrAdd(name: .connection, value: "close")
                 context.channel.pipeline.syncOperations.removeHandler(buffer, promise: nil)

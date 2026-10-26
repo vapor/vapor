@@ -518,6 +518,7 @@ final class PipelineTests: XCTestCase {
     /// "Connection: Upgrade" + "Upgrade: websocket" makes NIO's decoder stop parsing after the request.
     /// If the upgrade is declined, the server must close rather than promise keep-alive
     /// and silently drop the next request.
+    /// This is a workaround for https://github.com/apple/swift-nio/pull/2570.
     func testDeclinedUpgradeClosesConnection() throws {
         app.get("health") { _ in "OK" }
 
