@@ -535,6 +535,63 @@ struct ServerTLSTests {
         }
     }
 
+    @Test("Graceful shutdown closes HTTP/2 connections after the configured limit", .timeLimit(.minutes(1)))
+    func testGracefulShutdownLimitClosesHTTP2Connections() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [credentials.certificate],
+                privateKey: credentials.privateKey
+            )
+            app.serverConfiguration.httpVersions = [
+                .http1_1,
+                .http2(config: .init(gracefulShutdown: .init(maximumGracefulShutdownDuration: .milliseconds(200)))),
+            ]
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+
+            let (handlerStarted, handlerStartedContinuation) = AsyncStream.makeStream(of: Void.self)
+            let (releaseHandler, releaseHandlerContinuation) = AsyncStream.makeStream(of: Void.self)
+            app.get("slow") { _ -> String in
+                handlerStartedContinuation.finish()
+                for await _ in releaseHandler {}
+                return "drained"
+            }
+
+            try await app.boot()
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current
+                )
+            )
+
+            try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    group.addTask { try await serviceGroup.run() }
+                    let port = try #require(try await app.server.listeningAddress.port)
+
+                    async let response = client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/slow"),
+                        timeout: .seconds(30)
+                    )
+                    for await _ in handlerStarted {}
+
+                    // The handler stays blocked, so only the limit can end the connection before the client times out.
+                    let shutdownStarted = ContinuousClock.now
+                    await serviceGroup.triggerGracefulShutdown()
+                    do {
+                        let response = try await response
+                        Issue.record("Expected the connection to be closed, got \(response.status)")
+                    } catch {}
+                    #expect(ContinuousClock.now - shutdownStarted < .seconds(10))
+
+                    releaseHandlerContinuation.finish()
+                    try await group.waitForAll()
+                }
+            }
+        }
+    }
+
     #if UnstableHTTP3
     @Test("Server serves over HTTP/3", .timeLimit(.minutes(1)))
     func servesOverHTTP3() async throws {
