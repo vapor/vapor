@@ -528,6 +528,20 @@ struct ServerTests {
             }
         }
 
+        @Test("Request reports HTTP/1.1 over plaintext", .timeLimit(.minutes(1)))
+        func testRequestVersionOverPlaintext() async throws {
+            try await withApp { app in
+                app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
+
+                try await withRunningServer(app) { port in
+                    let res = try await HTTPClient.shared.execute(
+                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/version"), timeout: .seconds(15))
+                    #expect(res.status == .ok)
+                    #expect(try await res.body.collect(upTo: 1024).string == "1.1")
+                }
+            }
+        }
+
         @Test("Test Too Large Port", .bug("https://github.com/vapor/vapor/issues/2245"))
         func testTooLargePort() async throws {
             try await withApp { app in
