@@ -127,6 +127,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         }
 
         var supportedHTTPVersions = Set<NIOHTTPServerConfiguration.HTTPVersion>()
+        var gracefulShutdown = NIOHTTPServerConfiguration.GracefulShutdownConfiguration.defaults
         for httpVersion in self.context.configuration.value.httpVersions {
             switch httpVersion.version {
             case .http1_1:
@@ -137,13 +138,12 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                         config: .init(
                             maxFrameSize: config.maxFrameSize,
                             targetWindowSize: config.targetWindowSize,
-                            maxConcurrentStreams: config.maxConcurrentStreams,
-                            gracefulShutdown: .init(
-                                maximumGracefulShutdownDuration: config.gracefulShutdown.maximumGracefulShutdownDuration
-                            )
+                            maxConcurrentStreams: config.maxConcurrentStreams
                         )
                     )
                 )
+                // swift-http-server takes the graceful shutdown limit server-wide but only enforces it on HTTP/2.
+                gracefulShutdown.maximumGracefulShutdownDuration = config.gracefulShutdown.maximumGracefulShutdownDuration
             #if UnstableHTTP3
             case .http3(let config):
                 var quicConfiguration: NIOHTTPServerConfiguration.HTTP3.QUICConfiguration = .defaults
@@ -204,11 +204,12 @@ final class NIOHTTPServerAdapter: Server, Sendable {
 
         let (hostname, port) = self.resolveBindAddress()
 
-        let configuration = try NIOHTTPServerConfiguration(
+        var configuration = try NIOHTTPServerConfiguration(
             bindTarget: .hostAndPort(host: hostname, port: port),
             supportedHTTPVersions: supportedHTTPVersions,
             transportSecurity: transportSecurity
         )
+        configuration.gracefulShutdown = gracefulShutdown
 
         let nioServer = NIOHTTPServer(
             configuration: configuration
