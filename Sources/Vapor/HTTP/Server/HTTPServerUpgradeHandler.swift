@@ -102,10 +102,16 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     return sendableBox.context.pipeline.syncOperations.removeHandler(sendableBox.buffer)
                 }.cascadeFailure(to: promise)
             } else {
-                // reset handlers
+                // The decoder stopped parsing at the upgrade request,
+                // so this connection can't safely serve another HTTP request. Close it
                 self.upgradeState = .ready
+                res.headers.replaceOrAdd(name: .connection, value: "close")
                 context.channel.pipeline.syncOperations.removeHandler(buffer, promise: nil)
-                context.write(self.wrapOutboundOut(res), promise: promise)
+                let closePromise = context.eventLoop.makePromise(of: Void.self)
+                let box = NIOLoopBound(context, eventLoop: context.eventLoop)
+                closePromise.futureResult.whenComplete { _ in box.value.close(promise: nil) }
+                closePromise.futureResult.cascade(to: promise)
+                context.write(self.wrapOutboundOut(res), promise: closePromise)
             }
         case .ready, .upgraded:
             context.write(self.wrapOutboundOut(res), promise: promise)

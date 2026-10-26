@@ -515,6 +515,29 @@ final class PipelineTests: XCTestCase {
         }
     }
 
+    /// "Connection: Upgrade" + "Upgrade: websocket" makes NIO's decoder stop parsing after the request.
+    /// If the upgrade is declined, the server must close rather than promise keep-alive
+    /// and silently drop the next request.
+    func testDeclinedUpgradeClosesConnection() throws {
+        app.get("health") { _ in "OK" }
+
+        let channel = EmbeddedChannel()
+        try channel.pipeline.addVaporHTTP1Handlers(
+            application: app,
+            responder: app.responder,
+            configuration: app.http.server.configuration
+        ).wait()
+
+        try channel.writeInbound(ByteBuffer(string:
+            "GET /events HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\n" +
+            "GET /health HTTP/1.1\r\n\r\n"
+        ))
+        let head = try channel.readOutbound(as: ByteBuffer.self)?.string
+        XCTAssertContains(head, "HTTP/1.1 404 Not Found")
+        XCTAssertContains(head, "connection: close")
+        XCTAssertFalse(channel.isActive)
+    }
+
     override class func setUp() {
         XCTAssert(isLoggingConfigured)
     }
