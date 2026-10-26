@@ -26,7 +26,7 @@ func withTestHTTP3ClientConnection<Value>(
             channel.eventLoop.makeCompletedFuture {
                 let (quicHandler, _) = try QUICHandler.makeHandlerAndConnectionMultiplexer(
                     channel: channel,
-                    quicConfiguration: QUICConfiguration.client(
+                    quicConfiguration: QUICConfiguration.forClient(
                         verificationConfiguration: verificationConfiguration,
                         applicationProtocols: ["h3"]
                     ),
