@@ -492,6 +492,7 @@ struct ServerTLSTests {
             )
             app.serverConfiguration.httpVersions = [.http1_1, .http2]
             app.get("hello") { _ in "world" }
+            app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
 
             try await withRunningServer(app) { port in
                 // Force the client to HTTP/1.1: enabling HTTP/2 on the server must not break H1 clients.
@@ -503,6 +504,12 @@ struct ServerTLSTests {
                     #expect(response.status == .ok)
                     #expect(response.version == .http1_1)
                     #expect(try await response.body.collect(upTo: 1024).string == "world")
+
+                    let versionResponse = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/version"),
+                        timeout: .seconds(30)
+                    )
+                    #expect(try await versionResponse.body.collect(upTo: 1024).string == "1.1")
                 }
             }
         }
@@ -518,6 +525,7 @@ struct ServerTLSTests {
             )
             app.serverConfiguration.httpVersions = [.http1_1, .http2]
             app.get("hello") { _ in "world" }
+            app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
 
             try await withRunningServer(app) { port in
                 // The client defaults to `.automatic`, advertising both h2 and http/1.1 over ALPN.
@@ -530,6 +538,12 @@ struct ServerTLSTests {
                     #expect(response.status == .ok)
                     #expect(response.version == .http2)
                     #expect(try await response.body.collect(upTo: 1024).string == "world")
+
+                    let versionResponse = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/version"),
+                        timeout: .seconds(30)
+                    )
+                    #expect(try await versionResponse.body.collect(upTo: 1024).string == "2.0")
                 }
             }
         }
@@ -606,6 +620,7 @@ struct ServerTLSTests {
             // Offer HTTP/3 only.
             app.serverConfiguration.httpVersions = [.http3]
             app.get("hello") { _ in "world" }
+            app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
 
             try await withRunningServer(app) { port in
                 // The client defaults to `.automatic`, advertising both (and only) h2 and http/1.1 over ALPN.
@@ -640,6 +655,25 @@ struct ServerTLSTests {
                             break
                         }
                     }
+                }
+
+                try await withTestHTTP3ClientConnection(
+                    ipAddress: "127.0.0.1",
+                    port: port,
+                    verificationConfiguration: .x509Certificates(trustRootsFilePath: caCertURL.path()),
+                    logger: .current,
+                    eventLoopGroup: MultiThreadedEventLoopGroup.singleton
+                ) { inbound, outbound in
+                    try await outbound.write(.head(.init(method: .get, scheme: "https", authority: "127.0.0.1:\(port)", path: "/version")))
+                    try await outbound.write(.end(nil))
+
+                    var body = ""
+                    for try await part in inbound {
+                        if case .body(let buffer) = part {
+                            body += String(buffer: buffer)
+                        }
+                    }
+                    #expect(body == "3.0")
                 }
             }
         }
