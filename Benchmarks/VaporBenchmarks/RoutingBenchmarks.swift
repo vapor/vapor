@@ -142,6 +142,21 @@ func routingBenchmarks() {
         try await tearDownApplication()
     }
 
+    Benchmark("routing.method-not-allowed") { benchmark in
+        let call = RequestCall(.put, "/items/1")
+        for _ in benchmark.scaledIterations {
+            blackHole(try await run(call))
+        }
+    } setup: {
+        try await setUpApplication { app in
+            app.get("items", ":id") { _ in "get" }
+            app.post("items") { _ in "post" }
+            app.delete("items", ":id") { _ in "delete" }
+        }
+    } teardown: {
+        try await tearDownApplication()
+    }
+
     Benchmark("routing.hit-among-200-routes") { benchmark in
         let call = RequestCall(.get, "/api/resource150/detail")
         for _ in benchmark.scaledIterations {

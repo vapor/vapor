@@ -24,8 +24,13 @@ package struct DefaultResponder: Responder {
             isCaseInsensitive: routes.caseInsensitive
         )
         var routerBuilder = TrieRouterBuilder(CachedRoute.self, config: config)
+        var registeredMethods: [HTTPRequest.Method] = []
 
         for route in routes.all {
+            if !registeredMethods.contains(route.method) {
+                registeredMethods.append(route.method)
+            }
+
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
                 route: route,
@@ -42,8 +47,11 @@ package struct DefaultResponder: Responder {
 
             routerBuilder.register(cached, at: [.constant(route.method.rawValue)] + path)
         }
-        self.router = routerBuilder.build()
-        self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
+        let router = routerBuilder.build()
+        self.router = router
+        self.notFoundResponder = middleware.makeResponder(
+            chainingTo: UnmatchedRouteResponder(router: router, registeredMethods: registeredMethods)
+        )
     }
 
     // See `Responder.respond(to:)`
@@ -69,10 +77,7 @@ package struct DefaultResponder: Responder {
         path: String,
         parameters: inout Parameters
     ) -> CachedRoute? {
-        let pathComponents =
-            path
-            .split(separator: "/")
-            .map { String($0).removingPercentEncoding ?? String($0) }
+        let pathComponents = Self.pathComponents(path)
 
         // If it's a HEAD request and a HEAD route exists, return that route...
         if method == .head {
@@ -101,11 +106,46 @@ package struct DefaultResponder: Responder {
         parameters = routeParameters
         return route
     }
-}
 
-private struct NotFoundResponder: Responder {
-    func respond(to request: Request) async throws -> Response {
-        throw RouteNotFound()
+    private static func pathComponents(_ path: String) -> [String] {
+        path
+            .split(separator: "/")
+            .map { String($0).removingPercentEncoding ?? String($0) }
+    }
+
+    /// Answers requests no route matched: 405 when the path is routed for other methods, 404 otherwise.
+    ///
+    /// Only reached on a miss, so matched requests never pay for probing the other methods.
+    private struct UnmatchedRouteResponder: Responder {
+        let router: TrieRouter<CachedRoute>
+        let registeredMethods: [HTTPRequest.Method]
+
+        func respond(to request: Request) async throws -> Response {
+            // Routing already missed for the request's own method, and for GET when it is a HEAD request.
+            let candidates = self.registeredMethods.filter { method in
+                method != request.method && !(request.method == .head && method == .get)
+            }
+            guard !candidates.isEmpty else {
+                throw RouteNotFound()
+            }
+
+            var path = [""] + DefaultResponder.pathComponents(request.url.path)
+            // Only whether a route matches is used, so every probe shares one throwaway `Parameters`;
+            // creating one per probe would also create a `Logger` per probe.
+            var parameters = Parameters()
+            var allowedMethods = candidates.filter { method in
+                path[0] = method.rawValue
+                return self.router.route(path: path, parameters: &parameters) != nil
+            }
+            guard !allowedMethods.isEmpty else {
+                throw RouteNotFound()
+            }
+            // GET routes also answer HEAD.
+            if allowedMethods.contains(.get), !allowedMethods.contains(.head) {
+                allowedMethods.append(.head)
+            }
+            throw MethodNotAllowed(allowedMethods: allowedMethods.sorted { $0.rawValue < $1.rawValue })
+        }
     }
 }
 
@@ -122,3 +162,27 @@ extension RouteNotFound: DebuggableError {
         .debug
     }
 }
+
+/// Thrown when no route matches a request's method, but routes for other methods match its path.
+public struct MethodNotAllowed: Error {
+    /// The methods the path is routed for, sent back in the `Allow` header.
+    ///
+    /// Includes `HEAD` wherever `GET` is routed, since `GET` routes also answer `HEAD` requests.
+    public let allowedMethods: [HTTPRequest.Method]
+
+    public init(allowedMethods: [HTTPRequest.Method]) {
+        self.allowedMethods = allowedMethods
+    }
+}
+
+extension MethodNotAllowed: AbortError {
+    public var status: HTTPResponse.Status {
+        .methodNotAllowed
+    }
+
+    public var headers: HTTPFields {
+        [.allow: self.allowedMethods.map(\.rawValue).joined(separator: ", ")]
+    }
+}
+
+extension MethodNotAllowed: DebuggableError {}

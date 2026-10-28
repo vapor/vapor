@@ -64,7 +64,7 @@ struct RouteTests {
                 try #expect(await single.body.requireString().contains("vapor"))
 
                 let wrongMethod = try await client.post("/hello/vapor")
-                #expect(wrongMethod.status == .notFound)
+                #expect(wrongMethod.status == .methodNotAllowed)
 
                 let double = try await client.get("/hello/vapor/development")
                 #expect(double.status == .ok)
@@ -327,6 +327,36 @@ struct RouteTests {
                 #expect(res.status == .found)
                 #expect(res.headers[.contentLength] == "0")
                 try #expect(await res.body.data()?.count == 0)
+            }
+        }
+    }
+
+    @Test("A routed path answers other methods with 405 and an Allow header", .bug("https://github.com/vapor/vapor/issues/2816"))
+    func testMethodNotAllowed() async throws {
+        try await withApp { app in
+            app.get("users", ":id") { _ in "user" }
+            app.delete("users", ":id") { _ in "deleted" }
+            app.post("users") { _ in "created" }
+
+            try await app.testing { client in
+                // GET routes answer HEAD too, so HEAD is listed alongside them.
+                let put = try await client.send(.put, to: "/users/42")
+                #expect(put.status == .methodNotAllowed)
+                #expect(put.headers[.allow] == "DELETE, GET, HEAD")
+
+                let get = try await client.get("/users")
+                #expect(get.status == .methodNotAllowed)
+                #expect(get.headers[.allow] == "POST")
+
+                // HEAD falls back to GET; with neither routed here, it is a 405 as well.
+                let head = try await client.send(.head, to: "/users")
+                #expect(head.status == .methodNotAllowed)
+                #expect(head.headers[.allow] == "POST")
+
+                // A path no method is routed for is still a 404.
+                let missing = try await client.send(.put, to: "/posts/42")
+                #expect(missing.status == .notFound)
+                #expect(missing.headers[.allow] == nil)
             }
         }
     }
