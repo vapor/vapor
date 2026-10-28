@@ -358,4 +358,20 @@ struct QueryTests {
             }
         }
     }
+
+    @Test("Test Query Contains")
+    func testQueryContains() async throws {
+        try await withApp { app throws in
+            var request = Request()
+            request.headers.contentType = .json
+            request.url.path = "/foo"
+            request.url.query = "hello=world&flag&user[name]=bob"
+
+            #expect(request.query.contains(at: "hello"))
+            #expect(request.query.contains(at: "flag"))
+            #expect(request.query.contains(at: "user", "name"))
+            #expect(!request.query.contains(at: "missing"))
+            #expect(!request.query.contains(at: "user", "email"))
+        }
+    }
 }
