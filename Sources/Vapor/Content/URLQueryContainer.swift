@@ -78,6 +78,30 @@ extension URLQueryContainer {
         try self.get(D.self, path: path.map(\.codingKey))
     }
 
+    /// Returns whether a value exists at the given key path in the query string.
+    ///
+    ///     if try req.query.contains(at: "page") { ... }
+    ///
+    /// Missing keys return `false`. A present value that cannot decode as `String`
+    /// (for example a type mismatch) still counts as present and returns `true`.
+    public func contains(at path: any CodingKeyRepresentable...) throws -> Bool {
+        try self.contains(at: path)
+    }
+
+    /// Returns whether a value exists at the given key path in the query string.
+    public func contains(at path: [any CodingKeyRepresentable]) throws -> Bool {
+        do {
+            _ = try self.get(String.self, at: path)
+            return true
+        } catch DecodingError.keyNotFound {
+            return false
+        } catch DecodingError.valueNotFound {
+            return false
+        } catch DecodingError.typeMismatch {
+            return true
+        }
+    }
+
     // MARK: Private
 
     /// Execute a "get at coding key path" operation.
