@@ -1,6 +1,6 @@
 # Vapor benchmarks
 
-Requires Swift 6.4 and macOS 26.2 or later, or Linux. This standalone package
+Requires Swift 6.4 and macOS 27 or later, or Linux. This standalone package
 benchmarks the current Vapor checkout. The in-memory suite uses
 `@_spi(Benchmarking) import Vapor` and
 `Application.makeBenchmarkResponder()` to access the configured responder from

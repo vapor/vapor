@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "vapor-benchmarks",
     platforms: [
-        .macOS("26.2")
+        .macOS(.v27)
     ],
     traits: [
         .trait(name: "AllocationCounting", description: "Build with the allocation counter interposer.")
