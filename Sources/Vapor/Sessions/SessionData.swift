@@ -16,14 +16,14 @@ public struct SessionData: Sendable {
     public var snapshot: [String: String] { self.storage }
 
     private var storage: [String: String]
-    
+
     /// Creates a new empty session data container.
     public init() {
         self.storage = [:]
     }
 
     /// Creates a session data container for the given data.
-    
+
     /// - Parameter data: The data to store in the container.
     public init(initialData data: [String: String]) {
         self.storage = data
@@ -47,12 +47,12 @@ extension SessionData: Equatable {
 // MARK: Codable
 
 extension SessionData: Codable {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self.storage = try container.decode([String: String].self)
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.storage)
     }

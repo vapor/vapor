@@ -1,255 +1,1129 @@
-import XCTVapor
-import XCTest
-import Vapor
+import AsyncHTTPClient
+import Atomics
+import HTTPTypes
+import Logging
 import NIOCore
+import NIOFoundationEssentialsCompat
+import NIOHTTP1
+import NIOHTTPTypesHTTP1
+import NIOPosix
+import RoutingKit
+import Synchronization
+import Testing
+import Vapor
+import VaporTesting
 
-@available(*, deprecated, message: "Test old future APIs")
-final class RequestTests: XCTestCase {
-    
-    func testCustomHostAddress() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        app.get("vapor", "is", "fun") {
-            return $0.remoteAddress?.hostname ?? "n/a"
-        }
-        
-        let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "vapor/is/fun") { res in
-            XCTAssertEqual(res.body.string, ipV4Hostname)
-        }
-    }
-    
-    func testRequestIdsAreUnique() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        let request1 = Request(application: app, on: app.eventLoopGroup.next())
-        let request2 = Request(application: app, on: app.eventLoopGroup.next())
-        
-        XCTAssertNotEqual(request1.id, request2.id)
-    }
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
-    func testRequestIdInLoggerMetadata() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        let request = Request(application: app, on: app.eventLoopGroup.next())
-        guard case .string(let string) = request.logger[metadataKey: "request-id"] else {
-            XCTFail("Did not find request-id key in logger metadata.")
-            return
-        }
-        XCTAssertEqual(string, request.id)
-    }
-
-    func testRequestPeerAddressForwarded() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("remote") { req -> String in
-            req.headers.add(name: .forwarded, value: "for=192.0.2.60; proto=http; by=203.0.113.43")
-            guard let peerAddress = req.peerAddress else {
-                return "n/a"
+@Suite("Request Tests")
+struct RequestTests {
+    @Test("Test Redirect", .timeLimit(.minutes(1)))
+    func testRedirect() async throws {
+        try await withApp { app in
+            app.get("redirect_normal") {
+                $0.redirect(to: "foo", redirectType: .normal)
             }
-            return peerAddress.description
-        }
-
-        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
-            XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
-        }
-    }
-
-    func testRequestPeerAddressXForwardedFor() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("remote") { req -> String in
-            req.headers.add(name: .xForwardedFor, value: "5.6.7.8")
-            guard let peerAddress = req.peerAddress else {
-                return "n/a"
+            app.get("redirect_permanent") {
+                $0.redirect(to: "foo", redirectType: .permanent)
             }
-            return peerAddress.description
-        }
-
-        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
-            XCTAssertEqual(res.body.string, "[IPv4]5.6.7.8:80")
-        }
-    }
-
-    func testRequestPeerAddressRemoteAddress() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("remote") { req -> String in
-            guard let peerAddress = req.peerAddress else {
-                return "n/a"
+            app.post("redirect_temporary") {
+                $0.redirect(to: "foo", redirectType: .temporary)
             }
-            return peerAddress.description
-        }
-
-        let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
-            XCTAssertContains(res.body.string, "[IPv4]\(ipV4Hostname)")
-        }
-    }
-
-    func testRequestPeerAddressMultipleHeadersOrder() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("remote") { req -> String in
-            req.headers.add(name: .xForwardedFor, value: "5.6.7.8")
-            req.headers.add(name: .forwarded, value: "for=192.0.2.60; proto=http; by=203.0.113.43")
-            guard let peerAddress = req.peerAddress else {
-                return "n/a"
+            app.post("redirect_permanentPost") {
+                $0.redirect(to: "foo", redirectType: .permanentPost)
             }
-            return peerAddress.description
-        }
 
-        let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
-            XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
-        }
-    }
+            var configuration = HTTPClient.Configuration.singletonConfiguration
+            configuration.redirectConfiguration = .disallow
 
-    func testRequestIdForwarding() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("remote") {
-            if case .string(let string) = $0.logger[metadataKey: "request-id"], string == $0.id {
-                return string
-            } else {
-                throw Abort(.notFound)
+            try await app.testing(.running, options: .live(clientOptions: .init(configuration: configuration))) { client in
+                try #expect(await client.get("redirect_normal").status == .seeOther)
+                try #expect(await client.get("redirect_permanent").status == .movedPermanently)
+                try #expect(await client.post("redirect_temporary").status == .temporaryRedirect)
+                try #expect(await client.post("redirect_permanentPost").status == .permanentRedirect)
             }
         }
-        
-        try app.testable(method: .running(port: 0)).test(.GET, "remote", beforeRequest: { req in
-            req.headers.add(name: .xRequestId, value: "test")
-        }, afterResponse: { res in
-            XCTAssertEqual(res.body.string, "test")
-        })
     }
 
-    func testRequestRemoteAddress() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        app.get("remote") {
-            $0.remoteAddress?.description ?? "n/a"
-        }
-        
-        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
-            XCTAssertContains(res.body.string, "IP")
-        }
-    }
+    @Test("Test Streaming Request", .timeLimit(.minutes(1)))
+    func testStreamingRequest() async throws {
+        try await withApp { app in
+            let testValue = String.randomDigits()
 
-    func testRedirect() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        app.http.client.configuration.redirectConfiguration = .disallow
-
-        app.get("redirect_normal") {
-            $0.redirect(to: "foo", redirectType: .normal)
-        }
-        app.get("redirect_permanent") {
-            $0.redirect(to: "foo", redirectType: .permanent)
-        }
-        app.post("redirect_temporary") {
-            $0.redirect(to: "foo", redirectType: .temporary)
-        }
-        app.post("redirect_permanentPost") {
-            $0.redirect(to: "foo", redirectType: .permanentPost)
-        }
-        
-        try app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
-        
-        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
-        XCTAssertEqual(
-            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
-            .seeOther
-        )
-        XCTAssertEqual(
-            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
-            .movedPermanently
-        )
-        XCTAssertEqual(
-            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
-            .temporaryRedirect
-        )
-        XCTAssertEqual(
-            try app.client.post("http://localhost:\(port)/redirect_permanentPost").wait().status,
-            .permanentRedirect
-        )
-    }
-    
-    @available(*, deprecated, message: "Testing deprecated methods; this attribute silences the warnings")
-    func testRedirect_old() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        app.http.client.configuration.redirectConfiguration = .disallow
-
-        // DO NOT fix these warnings.
-        // This is intentional to make sure the deprecated functions still work.
-        app.get("redirect_normal") {
-            $0.redirect(to: "foo", type: .normal)
-        }
-        app.get("redirect_permanent") {
-            $0.redirect(to: "foo", type: .permanent)
-        }
-        app.post("redirect_temporary") {
-            $0.redirect(to: "foo", type: .temporary)
-        }
-        
-        try app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
-        
-        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
-        XCTAssertEqual(
-            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
-            .seeOther
-        )
-        XCTAssertEqual(
-            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
-            .movedPermanently
-        )
-        XCTAssertEqual(
-            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
-            .temporaryRedirect
-        )
-    }
-    
-    func testCollectedBodyDrain() throws {
-        let app = Application()
-        defer { app.shutdown() }
-
-        let request = Request(
-            application: app,
-            collectedBody: .init(string: ""),
-            on: app.eventLoopGroup.any()
-        )
-        
-        let handleBufferExpectation = XCTestExpectation()
-        let endDrainExpectation = XCTestExpectation()
-        
-        request.body.drain { part in
-            switch part {
-            case .buffer:
-                return request.eventLoop.makeFutureWithTask {
-                    handleBufferExpectation.fulfill()
+            app.on(.post, "stream") { req in
+                var receivedBuffer = ByteBuffer()
+                try await req.body.forEachChunk { part in
+                    _ = part.withUnsafeBytes { unsafe receivedBuffer.writeBytes($0) }
                 }
-            case .error:
-                XCTAssertTrue(false)
-                return request.eventLoop.makeSucceededVoidFuture()
-            case .end:
-                endDrainExpectation.fulfill()
-                return request.eventLoop.makeSucceededVoidFuture()
+                let string = String(buffer: receivedBuffer)
+                return string
+            }
+
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/stream")
+                request.method = .POST
+                request.body = .stream(testValue.utf8.async, length: .unknown)
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
             }
         }
-        
-        self.wait(for: [handleBufferExpectation, endDrainExpectation], timeout: 1.0, enforceOrder: true)
+    }
+
+    @Test("Test Streaming Request Is Echoed Back As A Streaming Response", .timeLimit(.minutes(1)))
+    func testStreamingRequestEcho() async throws {
+        try await withApp { app in
+            let testValue = String.randomDigits()
+
+            // Read the streamed request body chunk by chunk and write each chunk straight back
+            // out as the streamed response body, exercising request streaming and response
+            // streaming together in a single round-trip.
+            app.on(.post, "echo") { req -> Response in
+                Response(
+                    body: .init(stream: { writer in
+                        try await req.body.forEachChunk { chunk in
+                            try await writer.write(chunk)
+                        }
+                    }))
+            }
+
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/echo")
+                request.method = .POST
+                request.body = .stream(testValue.utf8.async, length: .unknown)
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
+            }
+        }
+    }
+
+    @Test("Test Streaming Request Content Decoding", .timeLimit(.minutes(1)))
+    func testStreamingRequestContentDecoding() async throws {
+        struct Payload: Content, Equatable {
+            var message: String
+        }
+
+        try await withApp { app in
+            app.on(.post, "stream-decode") { req async throws -> String in
+                return try await req.content.decode(Payload.self).message
+            }
+
+            try await withRunningServer(app) { port in
+                let testValue = String.randomDigits()
+                let json = #"{"message":"\#(testValue)"}"#
+
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/stream-decode")
+                request.method = .POST
+                request.headers.add(name: "content-type", value: "application/json")
+                request.body = .stream(json.utf8.async, length: .unknown)
+
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
+            }
+        }
+    }
+
+    @Test("Test Streaming Request Body Cleanup")
+    func testStreamingRequestBodyCleansUp() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+
+            let bytesTheServerRead = ManagedAtomic<Int>(0)
+
+            app.on(.post, "hello") { req async throws -> Response in
+                let firstChunkBytes = try await req.body.withReader { reader in
+                    try await reader.read { span, _ in span.count }
+                }
+                bytesTheServerRead.wrappingIncrement(by: firstChunkBytes, ordering: .relaxed)
+                throw Abort(.internalServerError)
+            }
+
+            try await withRunningServer(app) { port in
+                var oneMBBB = ByteBuffer(repeating: 0x41, count: 1024 * 1024)
+                let oneMB = try #require(oneMBBB.readData(length: oneMBBB.readableBytes) as Data?)
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/hello")
+                request.method = .POST
+                request.body = .stream(oneMB.async, length: .known(Int64(oneMB.count)))
+                if let response = try? await HTTPClient.shared.execute(request, timeout: .seconds(5)) {
+                    #expect(bytesTheServerRead.load(ordering: .relaxed) > 0)
+                    #expect(response.status == .internalServerError)
+                }
+            }
+        }
+    }
+
+    @Test("Test Request Body Backpressure Works with Async Streaming", .timeLimit(.minutes(1)))
+    func testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+
+            let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
+            let bytesTheServerSaw = ManagedAtomic<Int>(0)
+            let bytesTheClientSent = ManagedAtomic<Int>(0)
+            let serverSawEnd = ManagedAtomic<Bool>(false)
+            let serverSawRequest = ManagedAtomic<Bool>(false)
+            // The handler has its first chunk and is reading no further.
+            let holdingFirstChunk = Checkpoint()
+
+            let requestHandlerTask: Mutex<Task<Response, any Error>?> = .init(nil)
+
+            app.on(.post, "hello") { req async throws -> Response in
+                requestHandlerTask.withLock {
+                    $0 = Task {
+                        #expect(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged == true)
+                        try await req.body.withReader { reader in
+                            // Read only the first chunk, then hold the reader open: the server stops
+                            // pulling more of the body (backpressure) until the test cancels this task.
+                            let firstChunkBytes = try await reader.read { span, _ in span.count }
+                            numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .sequentiallyConsistent)
+                            bytesTheServerSaw.wrappingIncrement(by: firstChunkBytes, ordering: .sequentiallyConsistent)
+                            holdingFirstChunk.reach()
+                            try await Task.sleep(for: .seconds(3600))  // wait "forever"
+                        }
+                        serverSawEnd.store(true, ordering: .sequentiallyConsistent)
+                        return Response(status: .ok)
+                    }
+                }
+
+                do {
+                    let task = requestHandlerTask.withLock { $0 }
+                    return try await task!.value
+                } catch {
+                    throw Abort(.internalServerError)
+                }
+            }
+
+            try await withRunningServer(app) { port in
+                defer { requestHandlerTask.withLock { $0?.cancel() } }
+
+                final class ResponseDelegate: HTTPClientResponseDelegate {
+                    typealias Response = Void
+
+                    private let bytesTheClientSent: ManagedAtomic<Int>
+
+                    init(bytesTheClientSent: ManagedAtomic<Int>) {
+                        self.bytesTheClientSent = bytesTheClientSent
+                    }
+
+                    func didFinishRequest(task: HTTPClient.Task<Response>) throws -> Response {
+                        return ()
+                    }
+
+                    func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
+                        self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .sequentiallyConsistent)
+                    }
+                }
+
+                // More than the kernel can hold on its own. The body goes over as one part, and the
+                // client counts it as sent only once the whole part has been written to the socket.
+                // With the server holding the first chunk and reading no further, that write can
+                // only complete if the kernel buffers the rest: Linux's loopback defaults allow about
+                // 10 MB in flight (a 6 MB receive window plus a 4 MB send buffer), so a 10 MB body was
+                // sometimes reported sent in full and the assertion below flaked. 64 MB is beyond any
+                // default on either platform.
+                let upload = ByteBuffer(repeating: 0x41, count: 64 * 1024 * 1024)
+                let request = try HTTPClient.Request(
+                    url: "http://127.0.0.1:\(port)/hello",
+                    method: .POST,
+                    headers: [:],
+                    body: .byteBuffer(upload))
+                let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
+                let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
+                // No deadline: the request ends when the test cancels it, once the server has shown
+                // it is holding the first chunk. A deadline was a guess at how long the server takes
+                // to get there, and a loaded machine outlasted it before the handler had even run.
+                let task = httpClient.execute(request: request, delegate: delegate)
+                await holdingFirstChunk.wait()
+
+                #expect(numberOfTimesTheServerGotOfferedBytes.load(ordering: .sequentiallyConsistent) == 1)
+                #expect(upload.readableBytes >= bytesTheServerSaw.load(ordering: .sequentiallyConsistent))
+                #expect(upload.readableBytes >= bytesTheClientSent.load(ordering: .sequentiallyConsistent))
+                #expect(bytesTheClientSent.load(ordering: .sequentiallyConsistent) == 0)  // Non-zero only if the whole body was written.
+                #expect(serverSawEnd.load(ordering: .sequentiallyConsistent) == false)
+                #expect(serverSawRequest.load(ordering: .sequentiallyConsistent) == true)
+
+                task.cancel()
+                await #expect(throws: HTTPClientError.cancelled) { try await task.get() }
+                try await httpClient.shutdown()
+            }
+        }
+    }
+
+    @Test("Test Large Body Collection Doesn't Crash", .bug("https://github.com/vapor/vapor/issues/2985"))
+    func testLargeBodyCollectionDoesntCrash() async throws {
+        try await withApp { app in
+            app.on(
+                .post, "upload",
+                use: { request async throws -> String in
+                    let collected = try await request.body.collect(max: .unlimited) ?? Data()
+                    return "Received \(collected.count) bytes"
+                })
+
+            try await app.testing(.running) { client in
+                // Large bodies, repeatedly. #2985 was a crash in the streaming body's handling of
+                // many chunks across requests: the reporter hit it at 600 MiB and also on repeated
+                // 100 MiB uploads. 600 MiB ten times over stalled the whole test process for seconds
+                // in CI and failed unrelated tests with timeouts, so this uses the smaller repro.
+                let payload = Data(repeating: 0x41, count: 100 * 1024 * 1024)
+
+                for _ in 0..<3 {
+                    let response = try await client.post("upload") {
+                        $0.body = .init(data: payload)
+                    }
+                    #expect(response.status == .ok)
+                    try #expect(await response.body.requireString() == "Received \(payload.count) bytes")
+                }
+            }
+        }
+    }
+
+    @Test("Test Empty Streaming Request Body", .timeLimit(.minutes(1)))
+    func testEmptyStreamingRequestBody() async throws {
+        try await withApp { app in
+            // Streaming a request with no body must simply produce zero chunks, not hang or fail.
+            app.on(.post, "count") { req -> String in
+                var total = 0
+                try await req.body.forEachChunk { chunk in
+                    total += chunk.count
+                }
+                return "\(total)"
+            }
+
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/count")
+                request.method = .POST
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == "0")
+            }
+        }
+    }
+
+    @Test("Test Large Multi-Chunk Streaming Request Body Is Fully Received", .timeLimit(.minutes(1)))
+    func testLargeMultiChunkStreamingRequest() async throws {
+        let bodySize = 4 * 1024 * 1024
+        try await withApp { app in
+            // Read a multi-megabyte streamed body chunk by chunk and report the total size, so the
+            // test fails if any chunk is dropped or the reassembly across reads is wrong.
+            app.on(.post, "count") { req -> String in
+                var total = 0
+                try await req.body.forEachChunk { chunk in
+                    total += chunk.count
+                }
+                return "\(total)"
+            }
+
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/count")
+                request.method = .POST
+                request.body = .bytes(ByteBuffer(repeating: 0x41, count: bodySize))
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == "\(bodySize)")
+            }
+        }
+    }
+
+    @Test("Test Server Survives A Handler That Ignores The Streamed Request Body", .timeLimit(.minutes(1)))
+    func testServerSurvivesHandlerIgnoringStreamedBody() async throws {
+        try await withApp { app in
+            // The handler returns without reading the request body. For a body within the drain
+            // limit the server drains it so the keep-alive connection stays usable for the next
+            // request. (An oversized unread body is handled by closing the connection instead —
+            // see `testUnknownRouteWithLargeBodyDoesNotHang`.)
+            app.on(.post, "ignore") { _ in "ignored" }
+            app.get("ok") { _ in "ok" }
+
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/ignore")
+                request.method = .POST
+                request.body = .bytes(ByteBuffer(repeating: 0x41, count: 4 * 1024))
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status == .ok)
+                #expect(try await response.body.collect(upTo: 1024 * 1024).string == "ignored")
+
+                // The server must keep serving subsequent requests.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10))
+                #expect(ok.status == .ok)
+                #expect(try await ok.body.collect(upTo: 1024 * 1024).string == "ok")
+            }
+        }
+    }
+
+    @Test("Test Collecting A Streaming Body Over The Max Returns 413", .timeLimit(.minutes(1)))
+    func testStreamingBodyExceedingCollectMaxReturns413() async throws {
+        try await withApp { app in
+            // Collecting a streamed body with an explicit limit must abort with 413 once the body
+            // exceeds it, and the server must stay alive for later requests. The body is kept small
+            // (over the collect limit but within the drain limit) so the unread remainder is drained
+            // and the 413 is delivered on a reusable connection rather than racing a close.
+            app.on(.post, "limited") { req -> String in
+                _ = try await req.body.collect(max: 1024)
+                return "ok"
+            }
+            app.get("ok") { _ in "ok" }
+
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/limited")
+                request.method = .POST
+                request.body = .bytes(ByteBuffer(repeating: 0x41, count: 2048))
+
+                let response: HTTPClientResponse = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status.code == 413)
+
+                // The server must keep serving subsequent requests.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/ok"), timeout: .seconds(10))
+                #expect(ok.status == .ok)
+                #expect(try await ok.body.collect(upTo: 1024 * 1024).string == "ok")
+            }
+        }
+    }
+
+    @Test("Test Collecting A Streaming Body Is Accepted At The Max And Rejected One Byte Over", .timeLimit(.minutes(1)))
+    func testStreamingBodyCollectMaxBoundary() async throws {
+        let maxSize = 1024
+        try await withApp { app in
+            // Collect with an explicit limit and report the byte count so we can assert the exact
+            // boundary: a body of exactly `maxSize` is accepted, one byte more is rejected with 413.
+            app.on(.post, "limited") { req -> String in
+                let collected = try await req.body.collect(max: .specified(ByteCount(value: maxSize))) ?? Data()
+                return "\(collected.count)"
+            }
+
+            try await withRunningServer(app) { port in
+                var atLimit = HTTPClientRequest(url: "http://127.0.0.1:\(port)/limited")
+                atLimit.method = .POST
+                atLimit.body = .bytes(ByteBuffer(repeating: 0x41, count: maxSize))
+                let accepted = try await HTTPClient.shared.execute(atLimit, timeout: .seconds(30))
+                #expect(accepted.status == .ok)
+                #expect(try await accepted.body.collect(upTo: 1024 * 1024).string == "\(maxSize)")
+
+                var overLimit = HTTPClientRequest(url: "http://127.0.0.1:\(port)/limited")
+                overLimit.method = .POST
+                overLimit.body = .bytes(ByteBuffer(repeating: 0x41, count: maxSize + 1))
+                let rejected = try await HTTPClient.shared.execute(overLimit, timeout: .seconds(30))
+                #expect(rejected.status.code == 413)
+            }
+        }
+    }
+
+    @Test("Test Unknown Route With A Large Body Is Not Fully Drained")
+    func testUnknownRouteWithLargeBodyDoesNotHang() async throws {
+        try await withApp { app in
+            // No route matches POST /unknown, so it 404s without reading the body. The server must
+            // answer promptly and stay alive without draining the whole (large) upload — otherwise an
+            // unknown route would be a trivial DoS vector.
+            app.get("known") { _ in "ok" }
+
+            try await withRunningServer(app) { port in
+                var unknown = HTTPClientRequest(url: "http://127.0.0.1:\(port)/unknown")
+                unknown.method = .POST
+                unknown.body = .bytes(ByteBuffer(repeating: 0x41, count: 50 * 1024 * 1024))
+
+                // Because the server refuses to read the whole body, it closes the connection rather
+                // than draining 50 MB — so the client sees either a 404 or a dropped connection.
+                // Both are fine; the point is the request resolves quickly (no unbounded drain) and
+                // the server stays up. A hang would trip the timeout and fail here.
+                _ = try? await HTTPClient.shared.execute(unknown, timeout: .seconds(10))
+
+                // The server must keep serving subsequent requests.
+                let ok = try await HTTPClient.shared.execute(
+                    HTTPClientRequest(url: "http://127.0.0.1:\(port)/known"), timeout: .seconds(10))
+                #expect(ok.status == .ok)
+                #expect(try await ok.body.collect(upTo: 1024 * 1024).string == "ok")
+            }
+        }
+    }
+
+    @Test("Test The Drain Limit Is Method-Aware (GET/HEAD Never Consume A Body)")
+    func testDrainLimitIsMethodAware() async throws {
+        try await withApp { app in
+            // Unknown paths (404) so no `.collect` gate consumes the body first — the unread body
+            // reaches the handler's `defer` drain, which is what we're exercising. A raw socket lets
+            // us see whether the server kept the connection alive or closed it.
+            try await withRunningServer(app) { port in
+                let body = String(repeating: "A", count: 128)
+
+                // GET/HEAD → drain budget 0: any body is left unread, so the server closes the connection.
+                let get = try await rawExchange(
+                    port: port,
+                    rawRequest: "GET /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)",
+                    quiet: nil)
+                #expect(get.serverClosed)
+
+                let head = try await rawExchange(
+                    port: port,
+                    rawRequest: "HEAD /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)",
+                    quiet: nil)
+                #expect(head.serverClosed)
+
+                // A body-less GET/HEAD drains nothing (just reads `.end`), so the connection stays alive.
+                let bodylessHead = try await rawExchange(
+                    port: port,
+                    rawRequest: "HEAD /nope HTTP/1.1\r\nHost: localhost\r\n\r\n")
+                #expect(!bodylessHead.serverClosed)
+
+                // POST → drain budget is the (large default) limit: 128 bytes are drained, so the
+                // connection stays alive.
+                let post = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                #expect(!post.serverClosed)
+            }
+        }
+    }
+
+    @Test("Test Draining Stops Once The Configured Budget Is Exceeded")
+    func testDrainStopsOverConfiguredBudget() async throws {
+        try await withApp { app in
+            app.serverConfiguration.maxDrainBytes = 8
+
+            try await withRunningServer(app) { port in
+                // Over the 8-byte budget → the server stops draining and closes the connection.
+                let big = String(repeating: "A", count: 128)
+                let over = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(big.count)\r\n\r\n\(big)",
+                    quiet: nil)
+                #expect(over.serverClosed)
+
+                // Within the budget → fully drained, connection stays alive.
+                let small = "AAAA"
+                let under = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /nope HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(small.count)\r\n\r\n\(small)")
+                #expect(!under.serverClosed)
+            }
+        }
+    }
+
+    @Test("Test Collecting An Already-Buffered Body Ignores A Smaller Max")
+    func testCollectOnBufferedBodyIgnoresSmallerMax() async throws {
+        try await withApp { app in
+            // An already-buffered body was accepted under its original limit. Re-collecting it with a
+            // smaller max must return it as-is rather than spuriously 413: the declared-Content-Length
+            // reject only guards an unread `.stream`, before it is read off the socket. (That stream
+            // reject is exercised end-to-end by testStreamingBodyExceedingCollectMaxReturns413.)
+            let request = Request(
+                method: .post,
+                collectedBody: Data(repeating: 0x41, count: 2048))
+
+            let collected = try await request.body.collect(max: 1024)
+            #expect(collected?.count == 2048)
+        }
+    }
+
+    @Test("Test Collecting A Body-less Request With A Large Declared Length Returns Nil")
+    func testCollectBodylessRequestWithLargeDeclaredLengthReturnsNil() async throws {
+        try await withApp { app in
+            // No body is attached (storage is `.none`) though the request claims a huge Content-Length.
+            // With nothing to read there is no DoS to guard against, so collect returns nil rather than
+            // 413 — the declared-length reject fires only when there is an actual stream to read.
+            var request = Request(method: .post)
+            request.headers[.contentLength] = "1000000"
+
+            let collected = try await request.body.collect(max: 1024)
+            #expect(collected == nil)
+        }
+    }
+
+    @Test("Test Collecting Accepts When The Declared Content-Length Is Within The Max")
+    func testCollectAcceptsWhenDeclaredContentLengthWithinMax() async throws {
+        try await withApp { app in
+            // A declared length at or under the limit must not be rejected: the body collects normally.
+            let request = Request(
+                method: .post,
+                collectedBody: Data(repeating: 0x41, count: 512))
+
+            let collected = try await request.body.collect(max: 1024)
+            #expect(collected?.count == 512)
+        }
+    }
+
+    @Test("Test Collecting With No Max Never Rejects On Content-Length")
+    func testCollectWithNilMaxDoesNotRejectOnContentLength() async throws {
+        try await withApp { app in
+            // `max: nil` means no limit, so even a large declared Content-Length must pass the check
+            // and collect the whole body.
+            let request = Request(
+                method: .post,
+                collectedBody: Data(repeating: 0x41, count: 2048))
+
+            let collected = try await request.body.collect(max: .unlimited)
+            #expect(collected?.count == 2048)
+        }
+    }
+
+    @Test("Test forEachChunk On An Empty Buffered Body Delivers No Chunks")
+    func testForEachChunkOnEmptyBufferedBodyDeliversNoChunks() async throws {
+        try await withApp { app in
+            // A buffered-but-empty body must deliver zero chunks — exactly like a raw empty stream or
+            // a body-less request — not one spurious empty chunk.
+            let request = Request(method: .post, collectedBody: Data())
+
+            var chunks = 0
+            try await request.body.forEachChunk { _ in chunks += 1 }
+            #expect(chunks == 0)
+        }
+    }
+
+    @Test("Test forEachChunk Replays A Buffered Body As A Single Chunk")
+    func testForEachChunkReplaysBufferedBody() async throws {
+        try await withApp { app in
+            let request = Request(method: .post, collectedBody: Data("hello".utf8))
+
+            var chunks = 0
+            var received = ByteBuffer()
+            try await request.body.forEachChunk { span in
+                chunks += 1
+                _ = span.withUnsafeBytes { unsafe received.writeBytes($0) }
+            }
+            #expect(chunks == 1)
+            #expect(String(buffer: received) == "hello")
+        }
+    }
+
+    @Test("Test Concurrent Reads Of The Request Body Are Rejected")
+    func testConcurrentBodyReadIsRejected() async throws {
+        try await withApp { app in
+            // A request body is a single-consumer stream. If a second task reads it while the first
+            // still holds the reader, that must surface as `RequestBodyAlreadyBeingRead` — not a
+            // silently truncated empty end-of-body.
+            app.on(.post, "concurrent-read") { req -> String in
+                // A is mid-read, with the reader checked out.
+                let held = Checkpoint()
+                // B has made its attempt, so A can let go.
+                let tried = Checkpoint()
+
+                // Task A takes the reader and holds it open inside `read` while B races it. It
+                // holds until B has tried, not for a fixed time: on a loaded machine B can take
+                // longer than any fixed hold to get here, find the reader free, and read the body
+                // instead of being rejected.
+                let holder = Task {
+                    try await req.body.withReader { reader in
+                        try await reader.read { _, _ in
+                            held.reach()
+                            await tried.wait()
+                        }
+                    }
+                }
+
+                await held.wait()
+
+                // Task B's concurrent read must be rejected, not handed a fake end-of-body.
+                var rejected = false
+                do {
+                    defer { tried.reach() }
+                    try await req.body.withReader { reader in
+                        _ = try await reader.read { _, _ in }
+                    }
+                } catch is RequestBodyAlreadyBeingRead {
+                    rejected = true
+                }
+
+                _ = try? await holder.value
+                return rejected ? "rejected" : "not-rejected"
+            }
+
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/concurrent-read")
+                request.method = .POST
+                request.body = .stream(String.randomDigits().utf8.async, length: .unknown)
+
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == "rejected")
+            }
+        }
+    }
+
+    @Test("Test A Partially-Read Streamed Body Leaves The Connection Reusable")
+    func testPartialReadKeepsConnectionAlive() async throws {
+        try await withApp { app in
+            // The handler reads a single chunk and returns normally; the server drains whatever is
+            // left (within the drain budget) so the keep-alive connection stays open. Distinct from
+            // `testServerSurvivesHandlerIgnoringStreamedBody`, which reads nothing at all.
+            app.on(.post, "partial") { req -> String in
+                _ = try await req.body.withReader { reader in
+                    try await reader.read { span, _ in span.count }
+                }
+                return "read"
+            }
+
+            try await withRunningServer(app) { port in
+                let body = String(repeating: "A", count: 128)
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /partial HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                #expect(exchange.bytes.contains("200"))
+                #expect(!exchange.serverClosed)
+            }
+        }
+    }
+
+    @Test("Test A Handler That Throws Mid-Read Leaves The Connection Reusable")
+    func testThrowMidReadKeepsConnectionAlive() async throws {
+        try await withApp { app in
+            // The handler reads one chunk then throws. The error becomes a 500, the remaining body is
+            // drained (within budget), and the connection must remain usable — the `read` catch path
+            // returns the reader to the stream so a later drain doesn't see it lost.
+            app.on(.post, "throw-mid-read") { req -> String in
+                _ = try await req.body.withReader { reader in
+                    try await reader.read { span, _ in span.count }
+                }
+                throw Abort(.internalServerError)
+            }
+
+            try await withRunningServer(app) { port in
+                let body = String(repeating: "A", count: 128)
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /throw-mid-read HTTP/1.1\r\nHost: localhost\r\nContent-Length: \(body.count)\r\n\r\n\(body)")
+                #expect(exchange.bytes.contains("500"))
+                #expect(!exchange.serverClosed)
+            }
+        }
+    }
+
+    @Test("Test An Over-Limit Declared Content-Length Is Rejected Before Any Body Is Read")
+    func testDeclaredContentLengthRejectedBeforeReadingBody() async throws {
+        try await withApp { app in
+            // `collect(max:)` rejects an over-limit *declared* Content-Length before reading a single
+            // byte. Sending only the headers (no body) isolates that early reject from the chunk-size
+            // guard: with no body bytes to read, only the declared-length check can produce the 413.
+            app.on(.post, "collect-limited") { req -> String in
+                _ = try await req.body.collect(max: 1024)
+                return "ok"
+            }
+
+            try await withRunningServer(app) { port in
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /collect-limited HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100000\r\n\r\n",
+                    until: { $0.contains(" 413 ") })
+                #expect(exchange.bytes.contains("413"))
+            }
+        }
+    }
+
+    @Test("Test Collecting Via content.decode Caches The Body For Later Reads", .timeLimit(.minutes(1)))
+    func testStreamCachesBodyAfterContentDecode() async throws {
+        struct Payload: Content, Equatable { var message: String }
+
+        try await withApp { app in
+            app.on(.post, "decode-cache") { req async throws -> String in
+                let first = try await req.content.decode(Payload.self)
+                // Decoding a streamed body collects it once and caches it as `.collected`, so the raw
+                // body is now readable and a second decode sees the same bytes, not a drained stream.
+                #expect(req.body.data != nil)
+                let again = try await req.content.decode(Payload.self)
+                #expect(first == again)
+                return first.message
+            }
+
+            try await withRunningServer(app) { port in
+                let testValue = String.randomDigits()
+                let json = #"{"message":"\#(testValue)"}"#
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/decode-cache")
+                request.method = .POST
+                request.headers.add(name: "content-type", value: "application/json")
+                request.body = .stream(json.utf8.async, length: .unknown)
+
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status == .ok)
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                #expect(body.string == testValue)
+            }
+        }
+    }
+
+    @Test("Test Custom Host Address")
+    func testCustomHostAddress() async throws {
+        try await withApp { app in
+            app.get("vapor", "is", "fun") {
+                return $0.remoteAddress?.host ?? "n/a"
+            }
+
+            let ipV4Hostname = "127.0.0.1"
+            try await app.testing(.running, options: .live(hostname: ipV4Hostname, port: 0)) { client in
+                let res = try await client.get("vapor/is/fun")
+                try #expect(await res.body.requireString() == ipV4Hostname)
+            }
+        }
+    }
+
+    @Test("Test Request IDs are Unique")
+    func testRequestIdsAreUnique() async throws {
+        try await withApp { app in
+            let request1 = Request()
+            let request2 = Request()
+
+            #expect(request1.id != request2.id)
+        }
+    }
+
+    @Test("Test Request ID in Logger Metadata")
+    func testRequestIdInLoggerMetadata() async throws {
+        try await withApp { app in
+            app.get("remote") { req -> String in
+                guard case .string(let string) = Logger.current[metadataKey: "request-id"] else {
+                    Issue.record("Did not find request-id key in logger metadata.")
+                    throw Abort(.notFound)
+                }
+                #expect(string == req.id)
+                return req.id
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote")
+                #expect(res.status == .ok)
+            }
+        }
+    }
+
+    @Test("Test Request Peer Address Forwarded")
+    func testRequestPeerAddressForwarded() async throws {
+        try await withApp { app in
+            app.get("remote") { request -> String in
+                var req = request
+                req.headers[.forwarded] = "for=192.0.2.60; proto=http; by=203.0.113.43"
+                guard let peerAddress = req.peerAddress else {
+                    return "n/a"
+                }
+                return peerAddress.description
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote")
+                try #expect(await res.body.requireString() == "[IPv4]192.0.2.60:80")
+            }
+        }
+    }
+
+    @Test("Test Request Peer Address X-Forwarded-For")
+    func testRequestPeerAddressXForwardedFor() async throws {
+        try await withApp { app in
+            app.get("remote") { request -> String in
+                var req = request
+                req.headers[.xForwardedFor] = "5.6.7.8"
+                guard let peerAddress = req.peerAddress else {
+                    return "n/a"
+                }
+                return peerAddress.description
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote")
+                try #expect(await res.body.requireString() == "[IPv4]5.6.7.8:80")
+            }
+        }
+    }
+
+    @Test("Test Request Peer Address Remote Address")
+    func testRequestPeerAddressRemoteAddress() async throws {
+        try await withApp { app in
+            app.get("remote") { req -> String in
+                guard let peerAddress = req.peerAddress else {
+                    return "n/a"
+                }
+                return peerAddress.description
+            }
+
+            let ipV4Hostname = "127.0.0.1"
+            try await app.testing(.running, options: .live(hostname: ipV4Hostname, port: 0)) { client in
+                let res = try await client.get("remote")
+                try #expect(await res.body.requireString().contains("[IPv4]\(ipV4Hostname)"))
+            }
+        }
+    }
+
+    @Test("Test Request Peer Address Multiple Headers Order")
+    func testRequestPeerAddressMultipleHeadersOrder() async throws {
+        try await withApp { app in
+            app.get("remote") { request -> String in
+                var req = request
+                req.headers[.xForwardedFor] = "5.6.7.8"
+                req.headers[.forwarded] = "for=192.0.2.60; proto=http; by=203.0.113.43"
+                guard let peerAddress = req.peerAddress else {
+                    return "n/a"
+                }
+                return peerAddress.description
+            }
+
+            let ipV4Hostname = "127.0.0.1"
+            try await app.testing(.running, options: .live(hostname: ipV4Hostname, port: 0)) { client in
+                let res = try await client.get("remote")
+                try #expect(await res.body.requireString() == "[IPv4]192.0.2.60:80")
+            }
+        }
+    }
+
+    @Test("Test Request ID Forwarding")
+    func testRequestIdForwarding() async throws {
+        try await withApp { app in
+            app.get("remote") {
+                if case .string(let string) = Logger.current[metadataKey: "request-id"], string == $0.id {
+                    return string
+                } else {
+                    throw Abort(.notFound)
+                }
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote") { req in
+                    req.headers[.xRequestId] = "test"
+                }
+                try #expect(await res.body.requireString() == "test")
+            }
+        }
+    }
+
+    @Test("Test Request Remote Address")
+    func testRequestRemoteAddress() async throws {
+        try await withApp { app in
+            app.get("remote") {
+                $0.remoteAddress?.description ?? "n/a"
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("remote")
+                try #expect(await res.body.requireString().contains("IP"))
+            }
+        }
+    }
+
+    @Test("data(max:) and string(max:) collect a lazy body; the peeks stay nil until they do")
+    func testCollectingAccessors() async throws {
+        try await withApp { app in
+            app.post("accessors") { req -> String in
+                // Bodies are lazy, so the peeks see nothing yet.
+                let peekedBefore = req.body.data == nil && req.body.string == nil
+                let collected = try await req.body.string() ?? ""
+                // Collecting caches, so now the peeks see it.
+                let peekedAfter = req.body.data != nil && req.body.string == collected
+                return "\(peekedBefore)|\(collected)|\(peekedAfter)"
+            }
+            try await app.testing(.running) { client in
+                let res = try await client.post("accessors") { $0.body = .init(data: Data("hello".utf8)) }
+                try #expect(await res.body.requireString() == "true|hello|true")
+            }
+        }
+    }
+
+    @Test("A body size limit can be a default, a literal, or unlimited")
+    func testBodySizeLimitCases() async throws {
+        try await withApp { app in
+            app.routes.defaultMaxBodySize = 8
+
+            // `.default` follows the application's ceiling...
+            app.post("default") { req -> String in
+                _ = try await req.body.data()
+                return "ok"
+            }
+            // ...a literal overrides it, in either of `ByteCount`'s spellings...
+            app.post("literal") { req -> String in
+                _ = try await req.body.data(max: "1mb")
+                return "ok"
+            }
+            // ...and `.unlimited` opts out entirely.
+            app.post("unlimited") { req -> String in
+                "\(try await req.body.data(max: .unlimited)?.count ?? 0)"
+            }
+
+            try await app.testing(.running) { client in
+                let payload = Data(repeating: 0x41, count: 64)
+                let overDefault = try await client.post("default") { $0.body = .init(data: payload) }
+                #expect(overDefault.status == .contentTooLarge)
+
+                let underLiteral = try await client.post("literal") { $0.body = .init(data: payload) }
+                #expect(underLiteral.status == .ok)
+
+                let unlimited = try await client.post("unlimited") { $0.body = .init(data: payload) }
+                try #expect(await unlimited.body.requireString() == "64")
+            }
+        }
+    }
+
+    @Test("A route's maxBodySize overrides the application default")
+    func testRouteMaxBodySizeOverride() async throws {
+        try await withApp { app in
+            app.routes.defaultMaxBodySize = 8
+            app.on(.post, "raised", maxBodySize: "1mb") { req -> String in
+                "\(try await req.body.data()?.count ?? 0)"
+            }
+            try await app.testing(.running) { client in
+                let res = try await client.post("raised") { $0.body = .init(data: Data(repeating: 0x41, count: 64)) }
+                try #expect(await res.body.requireString() == "64")
+            }
+        }
+    }
+
+    @Test("An error thrown inside a body-read closure reaches the route as itself")
+    func testClosureErrorIsNotWrapped() async throws {
+        struct Marker: Error {}
+        try await withApp { app in
+            // The consumer's closure used to run *inside* the server's read, so anything it threw
+            // came back wrapped in the server's `EitherError` and `ErrorMiddleware` saw no
+            // `AbortError`. The chunk is moved out of the read now, so the closure runs outside it.
+            app.on(.post, "probe") { req -> String in
+                do {
+                    _ = try await req.body.withReader { reader in
+                        try await reader.read { _, _ in throw Marker() }
+                    }
+                } catch is Marker {
+                    return "unwrapped"
+                } catch {
+                    return "wrapped: \(type(of: error))"
+                }
+                return "no-throw"
+            }
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/probe")
+                request.method = .POST
+                request.body = .stream("hello".utf8.async, length: .unknown)
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                let body = try await response.body.collect(upTo: 1024)
+                #expect(String(buffer: body) == "unwrapped")
+            }
+        }
+    }
+
+    @Test("A chunked over-limit body is rejected with 413, not 500")
+    func testChunkedOverLimitIsRejectedWith413() async throws {
+        try await withApp { app in
+            // With no `Content-Length` the declared-length check can't fire, so the in-closure chunk
+            // guard is what rejects this. That guard's `Abort` used to arrive wrapped, making it a 500.
+            app.on(.post, "limited") { req -> String in
+                _ = try await req.body.collect(max: 16)
+                return "ok"
+            }
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/limited")
+                request.method = .POST
+                request.body = .stream(String(repeating: "A", count: 4096).utf8.async, length: .unknown)
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                #expect(response.status.code == 413)
+            }
+        }
+    }
+
+    @Test("Collecting a body somebody else partly read fails instead of truncating")
+    func testCollectAfterPartialReadIsRejected() async throws {
+        try await withApp { app in
+            // A body is single-consumer. Once a chunk has gone to someone else, what is left is not
+            // the whole body — returning it silently is how a swallowed 413 upstream turned into a
+            // short body and a 200 downstream.
+            app.on(.post, "partial") { req -> String in
+                _ = try await req.body.withReader { reader in
+                    try await reader.read { span, _ in span.count }
+                }
+                do {
+                    _ = try await req.body.collect(max: .unlimited)
+                    return "collected"
+                } catch is RequestBodyPartiallyConsumed {
+                    return "rejected"
+                }
+            }
+            try await withRunningServer(app) { port in
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/partial")
+                request.method = .POST
+                request.body = .stream(String(repeating: "A", count: 4096).utf8.async, length: .unknown)
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
+                let body = try await response.body.collect(upTo: 1024)
+                #expect(String(buffer: body) == "rejected")
+            }
+        }
+    }
+}
+
+// This was taken from AsyncHTTPClients's AsyncRequestTests.swift code.
+// The license for the original work is reproduced below. See NOTICES.txt for
+// more.
+
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the AsyncHTTPClient open source project
+//
+// Copyright (c) 2022 Apple Inc. and the AsyncHTTPClient project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of AsyncHTTPClient project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
+struct AsyncLazySequence<Base: Sequence>: AsyncSequence {
+    typealias Element = Base.Element
+    struct AsyncIterator: AsyncIteratorProtocol {
+        var iterator: Base.Iterator
+
+        mutating func next() async throws -> Base.Element? {
+            self.iterator.next()
+        }
+    }
+
+    var base: Base
+
+    func makeAsyncIterator() -> AsyncIterator {
+        .init(iterator: self.base.makeIterator())
+    }
+}
+
+extension AsyncLazySequence: Sendable where Base: Sendable {}
+extension AsyncLazySequence.AsyncIterator: Sendable where Base.Iterator: Sendable {}
+
+extension Sequence {
+    /// Turns `self` into an `AsyncSequence` by vending each element of `self` asynchronously.
+    var async: AsyncLazySequence<Self> {
+        .init(base: self)
+    }
+}
+
+extension String {
+    fileprivate static func randomDigits(length: Int = 999) -> String {
+        var string = ""
+        for _ in 0...999 {
+            string += String(Int.random(in: 0...9))
+        }
+        return string
+    }
+}
+
+extension HTTPClient {
+    func get(_ url: String, headers: HTTPFields = .init()) async throws -> HTTPClientResponse {
+        var request = HTTPClientRequest(url: url)
+        request.method = .GET
+        request.headers = HTTPHeaders(headers)
+        return try await self.execute(request, deadline: .distantFuture)
+    }
+
+    func post(_ url: String, body: ByteBuffer? = nil) async throws -> HTTPClientResponse {
+        var request = HTTPClientRequest(url: url)
+        request.method = .POST
+        if let body = body {
+            request.body = .bytes(body)
+        }
+        return try await self.execute(request, deadline: .distantFuture)
     }
 }

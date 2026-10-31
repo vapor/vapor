@@ -1,4 +1,10 @@
-import Vapor
+public import Configuration
+public import Logging
+import ServiceLifecycle
+public import Vapor
+
+@testable import CoreMetrics
+@testable import Instrumentation
 
 /// Perform a test while handling lifecycle of the application.
 /// Feel free to create a custom function like this, tailored to your project.
@@ -8,9 +14,10 @@ import Vapor
 /// @Test
 /// func helloWorld() async throws {
 ///     try await withApp(configure: configure) { app in
-///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
+///         try await app.testing { client in
+///             let res = try await client.get("hello")
 ///             #expect(res.status == .ok)
-///             #expect(res.body.string == "Hello, world!")
+///             try #expect(await res.body.requireString() == "Hello, world!")
 ///         })
 ///     }
 /// }
@@ -21,41 +28,27 @@ import Vapor
 ///   - test: A closure which performs your actual test with the configured application.
 @discardableResult
 public func withApp<T>(
+    environment: Environment = .testing,
+    configuration: ServerConfiguration = .init(),
+    configReader: ConfigReader = ConfigReader(providers: [CommandLineArgumentsProvider(), EnvironmentVariablesProvider()]),
+    logger: Logger = Logger.current,
+    services: Application.ServiceConfiguration = .init(),
     configure: ((Application) async throws -> Void)? = nil,
     _ test: (Application) async throws -> T
 ) async throws -> T {
-    let app = try await Application.make(.testing)
-    let result: T
-    do {
-        try await configure?(app)
-        result = try await test(app)
-    } catch {
-        try? await app.asyncShutdown()
-        throw error
+    MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
+    InstrumentationSystem.bootstrapInternal(TaskLocalTracingSystemWrapper())
+    return try await withLogger(logger) { _ in
+        let app = try Application(environment, configuration: configuration, configReader: configReader, services: services)
+        let result: T
+        do {
+            try await configure?(app)
+            result = try await test(app)
+        } catch {
+            try? await app.shutdown()
+            throw error
+        }
+        try await app.shutdown()
+        return result
     }
-    try await app.asyncShutdown()
-    return result
-}
-
-
-/// Perform a test while handling lifecycle of the application.
-/// Feel free to create a custom function like this, tailored to your project.
-///
-/// Usage:
-/// ```swift
-/// @Test
-/// func helloWorld() async throws {
-///     try await withApp { app in
-///         try await app.testing().test(.GET, "hello", afterResponse: { res async in
-///             #expect(res.status == .ok)
-///             #expect(res.body.string == "Hello, world!")
-///         })
-///     }
-/// }
-/// ```
-@discardableResult
-public func withApp<T>(
-    _ test: (Application) async throws -> T
-) async throws -> T {
-    try await withApp(configure: nil, test)
 }

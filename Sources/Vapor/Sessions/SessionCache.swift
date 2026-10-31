@@ -1,16 +1,19 @@
-import NIOConcurrencyHelpers
+import Synchronization
 
-/// Singleton service cache for a `Session`. Used with a message's private container.
+/// Per-request session state, held by the ``Request`` for its lifetime.
 internal final class SessionCache: Sendable {
-    /// Set to `true` when passing through middleware.
-    let middlewareFlag: NIOLockedValueBox<Bool>
+    struct Storage: Sendable {
+        /// The cached session.
+        var session: Session? = nil
 
-    /// The cached session.
-    let session: NIOLockedValueBox<Session?>
+        /// Set to `true` when passing through ``SessionsMiddleware``.
+        var middlewareFlag: Bool = false
+    }
+
+    let storage: Mutex<Storage>
 
     /// Creates a new `SessionCache`.
     init(session: Session? = nil) {
-        self.session = .init(session)
-        self.middlewareFlag = .init(false)
+        self.storage = .init(.init(session: session))
     }
 }

@@ -1,38 +1,44 @@
-import MultipartKit
-import NIOHTTP1
+#if Multipart
+public import MultipartKit
+public import HTTPTypes
+#warning("Remove")
+import NIOCore
+import NIOFoundationEssentialsCompat
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 
 extension File: MultipartPartConvertible {
-    public var multipart: MultipartPart? {
-        var part = MultipartPart(headers: [:], body: .init(self.data.readableBytesView))
-        part.contentType = self.extension
-            .flatMap { HTTPMediaType.fileExtension($0) }
-            .flatMap { $0.serialize() }
+    public typealias Body = Data
+
+    public var multipart: MultipartPart<Data> {
+        var part = MultipartPart(headerFields: [:], body: Data(buffer: self.data))
+        part.contentType = self.contentType?.serialize()
         part.filename = self.filename
         return part
     }
-    
-    public init?(multipart: MultipartPart) {
+
+    public init(multipart: MultipartPart<some MultipartPartBodyElement>) throws {
         guard let filename = multipart.filename else {
-            return nil
+            throw Abort(.badRequest, reason: "Missing filename")
         }
-        self.init(data: multipart.body, filename: filename)
+        let contentType = multipart.headerFields.contentType
+        self.init(data: ByteBuffer(bytes: multipart.body), filename: filename, contentType: contentType)
     }
 }
 
 extension MultipartPart {
     public var contentType: String? {
         get {
-            self.headers.first(name: .contentType)
+            self.headerFields[.contentType]
         }
         set {
-            if let value = newValue {
-                self.headers.replaceOrAdd(name: .contentType, value: value)
-            } else {
-                self.headers.remove(name: .contentType)
-            }
+            self.headerFields[.contentType] = newValue
         }
     }
-    
+
     public var filename: String? {
         get {
             self.contentDisposition?.filename
@@ -46,13 +52,14 @@ extension MultipartPart {
             }
         }
     }
-    
-    public var contentDisposition: HTTPHeaders.ContentDisposition? {
+
+    public var contentDisposition: HTTPFields.ContentDisposition? {
         get {
-            self.headers.contentDisposition
+            self.headerFields.contentDisposition
         }
         set {
-            self.headers.contentDisposition = newValue
+            self.headerFields.contentDisposition = newValue
         }
     }
 }
+#endif

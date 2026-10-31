@@ -10,10 +10,10 @@ extension ValidatorResults {
     /// If both results are successful the combined result is as well.
     public struct And {
         /// `ValidatorResult` of left hand side of the "And" validation.
-        public let left: ValidatorResult
+        public let left: any ValidatorResult
 
         /// `ValidatorResult` of right hand side of the "And" validation.
-        public let right: ValidatorResult
+        public let right: any ValidatorResult
     }
 }
 
@@ -21,7 +21,7 @@ extension ValidatorResults.And: ValidatorResult {
     public var isFailure: Bool {
         self.left.isFailure || self.right.isFailure
     }
-    
+
     public var successDescription: String? {
         switch (self.left.isFailure, self.right.isFailure) {
         case (false, false):
@@ -34,7 +34,7 @@ extension ValidatorResults.And: ValidatorResult {
             return nil
         }
     }
-    
+
     public var failureDescription: String? {
         switch (self.left.isFailure, self.right.isFailure) {
         case (true, true):

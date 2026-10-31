@@ -1,1492 +1,986 @@
-#if !canImport(Darwin)
-import Dispatch
-#endif
-import Foundation
-import Vapor
-import VaporTestUtils
-import XCTest
-import XCTVapor
 import AsyncHTTPClient
-import NIOCore
-import NIOFoundationCompat
-import NIOPosix
-import NIOConcurrencyHelpers
-import NIOHTTP1
-import NIOSSL
 import Atomics
-import X509
+import HTTPTypes
+import Logging
+import NIOCore
+import NIOHTTP1
+import NIOHTTPTypesHTTP1
+import RoutingKit
+import ServiceLifecycle
 import SwiftASN1
+import Synchronization
+import Testing
+import Vapor
+import VaporTesting
+import X509
 
-final class ServerTests: XCTestCase, @unchecked Sendable {
-    var app: Application!
-    
-    override func setUp() async throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        app = try await Application.make(test)
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
+@Suite("Server Tests")
+struct ServerTests {
+    #warning("Bring back the commented-out compression tests below")
+    @Suite("Compression Tests")
+    struct CompressionTests {
+        //    @Test("Test HTTP Large Decompression", .bug("http://github.com/vapor/vapor/issues/2766"))
+        //    func testHTTPLargeDecompression() async throws {
+        //        let payload_2766 = "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"
+        //
+        //        let jsonPayload = ByteBuffer(base64String: payload_2766)! // Payload from #2766
+        //
+        //        try await withApp { app in
+        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+        //
+        //            // Max out at the smaller payload (.size is of compressed data)
+        //            app.http.server.configuration.requestDecompression = .enabled(limit: .size(200_000))
+        //            app.post("gzip") { $0.body.string ?? "" }
+        //
+        //            try await app.server.start()
+        //
+        //            let port = try #require(app.http.server.shared.localAddress?.port)
+        //
+        //            // Small payload should just barely get through.
+        //            let res = try await app.client.post("http://localhost:\(port)/gzip") { req in
+        //                req.headers[.contentEncoding] = "gzip"
+        //                req.headers[.contentType] = "application/json"
+        //                req.body = jsonPayload
+        //            }
+        //
+        //            if let body = res.body {
+        //                // Validate that we received a valid JSON object
+        //                struct Nothing: Codable {}
+        //                #expect(throws: Never.self) {
+        //                    try JSONDecoder().decode(Nothing.self, from: body)
+        //                }
+        //            } else {
+        //                Issue.record("Missing response.body")
+        //            }
+        //
+        //            try await app.server.shutdown()
+        //        }
+        //    }
+        //
+        //    @Test("Test Configure HTTP Decompression Limit")
+        //    func testConfigureHTTPDecompressionLimit() async throws {
+        //        try await withApp { app in
+        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+        //
+        //            let smallOrigString = "Hello, world!"
+        //            let smallBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11Eozy/KSVEEAObG5usNAAAA")! // "Hello, world!"
+        //            let bigBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11HILU3OgBBJmenpqUUK5flFOSkKJRmJeQpJqWn5RamKAICcGhUqAAAA")! // "Hello, much much bigger world than before!"
+        //
+        //            // Max out at the smaller payload (.size is of uncompressed data)
+        //            app.http.server.configuration.requestDecompression = .enabled(
+        //                limit: .size(smallOrigString.utf8.count)
+        //            )
+        //            app.post("gzip") { $0.body.string ?? "" }
+        //
+        //            try await app.server.start()
+        //
+        //            let port = try #require(app.http.server.shared.localAddress?.port)
+        //            // Small payload should just barely get through.
+        //            let res = try await app.client.post("http://localhost:\(port)/gzip") { req in
+        //                req.headers[.contentEncoding] = "gzip"
+        //                req.body = smallBody
+        //            }
+        //            #expect(res.body?.string == smallOrigString)
+        //
+        //            // Big payload should be hard-rejected. We can't test for the raw NIOHTTPDecompression.DecompressionError.limit error here because
+        //            // protocol decoding errors are only ever logged and can't be directly caught.
+        //            await #expect(throws: HTTPClientError.remoteConnectionClosed) {
+        //                _ = try await app.client.post("http://localhost:\(port)/gzip") { req in
+        //                    req.headers[.contentEncoding] = "gzip"
+        //                    req.body = bigBody
+        //                }
+        //            }
+        //
+        //            try await app.server.shutdown()
+        //        }
+        //    }
+        //
+        //    @Test("Test HTTP1 Request Decompression")
+        //    func testHTTP1RequestDecompression() async throws {
+        //        let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
+        //        /// To regenerate, copy the above and run `% pbpaste | gzip | base64`. To verify, run `% pbpaste | base64 -d | gzip -d` instead.
+        //        let compressedPayload = ByteBuffer(base64String: "H4sIANRAImYAA6tWSs7PLShKLS5OTVGyUohWyk6tBNJKZYk5palKOgqj/FH+KH+UP8of5RPmx9YCAMfjVAhQBgAA")!
+        //
+        //        try await withApp { app in
+        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+        //
+        //            app.http.server.configuration.supportVersions = [.one]
+        //            app.http.server.configuration.requestDecompression = .disabled
+        //
+        //            /// Make sure the client doesn't keep the server open by re-using the connection.
+        //            var clientConfig = HTTPClient.Configuration()
+        //            clientConfig.maximumUsesPerConnection = 1
+        //            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: clientConfig)
+        //
+        //            struct TestResponse: Content {
+        //                var content: ByteBuffer?
+        //                var contentLength: Int
+        //            }
+        //
+        //            app.on(.post, "compressed", maxBodySize: "1mb") { request async throws in
+        //                let contentLength = request.headers[.contentLength].flatMap { Int($0) }
+        //                let contents = try await request.body.collect().get()
+        //                return TestResponse(
+        //                    content: contents,
+        //                    contentLength: contentLength ?? 0
+        //                )
+        //            }
+        //
+        //            try await app.server.start()
+        //            let port = try #require(app.http.server.shared.localAddress?.port)
+        //
+        //            var unsupportedNoncompressedRequest = HTTPClientRequest(url: "http://localhost:\(port)/compressed")
+        //            unsupportedNoncompressedRequest.method = .POST
+        //            unsupportedNoncompressedRequest.body = .bytes(compressedPayload)
+        //
+        //            let unsupportedNoncompressedResponse = try await httpClient.execute(unsupportedNoncompressedRequest, deadline: .now())
+        //
+        //            let body = try await unsupportedNoncompressedResponse.body.collect(upTo: Int.max)
+        //            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
+        //            #expect(decodedResponse.content == compressedPayload)
+        //            #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
+        //
+        //            // TODO: The server should probably reject this?
+        //            let unsupportedCompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
+        //                request.headers[.contentEncoding] = "gzip"
+        //                request.body = compressedPayload
+        //            }
+        //
+        //            if let body = unsupportedCompressedResponse.body {
+        //                let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
+        //                #expect(decodedResponse.content == compressedPayload)
+        //                #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
+        //            } else {
+        //                Issue.record("Missing unsupportedCompressedResponse.body")
+        //            }
+        //
+        //            app.http.server.configuration.requestDecompression = .enabled(limit: .size(compressiblePayload.utf8.count))
+        //
+        //            let supportedUncompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
+        //                request.body = compressedPayload
+        //            }
+        //
+        //            if let body = supportedUncompressedResponse.body {
+        //                let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
+        //                #expect(decodedResponse.content == compressedPayload)
+        //                #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
+        //            } else {
+        //                Issue.record("Missing supportedUncompressedResponse.body")
+        //            }
+        //
+        //            let supportedCompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
+        //                request.headers[.contentEncoding] = "gzip"
+        //                request.body = compressedPayload
+        //            }
+        //
+        //            if let body = supportedCompressedResponse.body {
+        //                let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
+        //                #expect(decodedResponse.content == ByteBuffer(string: compressiblePayload))
+        //                #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
+        //            } else {
+        //                Issue.record("Missing supportedCompressedResponse.body")
+        //            }
+        //
+        //            try await app.server.shutdown()
+        //            try await httpClient.shutdown()
+        //        }
+        //    }
+        //
+        //    @Test("Test HTTP2 Request Decompression")
+        //    func testHTTP2RequestDecompression() async throws {
+        //        try await withApp { app in
+        //            guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
+        //                  let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
+        //                Issue.record("Cannot load expired cert and associated key")
+        //                return
+        //            }
+        //
+        //            let cert = try #require(NIOSSLCertificate.fromPEMFile(clientCertPath.path).first)
+        //            let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
+        //
+        //            let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
+        //            /// To regenerate, copy the above and run `% pbpaste | gzip | base64`. To verify, run `% pbpaste | base64 -d | gzip -d` instead.
+        //            let compressedPayload = ByteBuffer(base64String: "H4sIANRAImYAA6tWSs7PLShKLS5OTVGyUohWyk6tBNJKZYk5palKOgqj/FH+KH+UP8of5RPmx9YCAMfjVAhQBgAA")!
+        //
+        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+        //
+        //            var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
+        //            serverConfig.certificateVerification = .noHostnameVerification
+        //
+        //            app.http.server.configuration.tlsConfiguration = serverConfig
+        //            app.http.server.configuration.customCertificateVerifyCallback = { @Sendable peerCerts, successPromise in
+        //                /// This lies and accepts the above cert, which has actually expired.
+        //                #expect(peerCerts == [cert])
+        //                successPromise.succeed(.certificateVerified)
+        //            }
+        //            app.http.server.configuration.supportVersions = [.two]
+        //            app.http.server.configuration.requestDecompression = .disabled
+        //
+        //            /// We need to disable verification on the client, because the cert we're using has expired
+        //            var clientConfig = TLSConfiguration.makeClientConfiguration()
+        //            clientConfig.certificateVerification = .none
+        //            clientConfig.certificateChain = [.certificate(cert)]
+        //            clientConfig.privateKey = .privateKey(key)
+        //
+        //            var httpClientConfig = HTTPClient.Configuration()
+        //            httpClientConfig.tlsConfiguration = clientConfig
+        //
+        //            /// Make sure the client doesn't keep the server open by re-using the connection.
+        //            httpClientConfig.maximumUsesPerConnection = 1
+        //
+        //            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
+        //
+        //            struct TestResponse: Content {
+        //                var content: ByteBuffer?
+        //                var contentLength: Int
+        //            }
+        //
+        //            app.post("compressed") { request async throws in
+        //                let contentLength = request.headers[.contentLength]
+        //                let contents = try await request.body.collect().get()
+        //                return TestResponse(
+        //                    content: contents,
+        //                    contentLength: contentLength.flatMap { Int($0) } ?? 0
+        //                )
+        //            }
+        //
+        //            try await app.server.start()
+        //            let port = try #require(app.http.server.shared.localAddress?.port)
+        //
+        //            var unsupportedNoncompressedRequest = HTTPClientRequest(url: "https://localhost:\(port)/compressed")
+        //            unsupportedNoncompressedRequest.method = .POST
+        //            unsupportedNoncompressedRequest.body = .bytes(compressedPayload)
+        //
+        //            let unsupportedNoncompressedResponse = try await httpClient.execute(unsupportedNoncompressedRequest, timeout: .seconds(10))
+        //
+        //            let body = try await unsupportedNoncompressedResponse.body.collect(upTo: Int.max)
+        //                let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
+        //                #expect(decodedResponse.content == compressedPayload)
+        //                #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
+        //
+        //            // TODO: The server should probably reject this?
+        //            let unsupportedCompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
+        //                request.headers[.contentEncoding] = "gzip"
+        //                request.body = compressedPayload
+        //            }
+        //
+        //            if let body = unsupportedCompressedResponse.body {
+        //                let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
+        //                #expect(decodedResponse.content == compressedPayload)
+        //                #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
+        //            } else {
+        //                Issue.record("Missing unsupportedCompressedResponse.body")
+        //            }
+        //
+        //            app.http.server.configuration.requestDecompression = .enabled(limit: .size(compressiblePayload.utf8.count))
+        //
+        //            let supportedUncompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
+        //                request.body = compressedPayload
+        //            }
+        //
+        //            if let body = supportedUncompressedResponse.body {
+        //                let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
+        //                #expect(decodedResponse.content == compressedPayload)
+        //                #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
+        //            } else {
+        //                Issue.record("Missing supportedUncompressedResponse.body")
+        //            }
+        //
+        //            let supportedCompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
+        //                request.headers[.contentEncoding] = "gzip"
+        //                request.body = compressedPayload
+        //            }
+        //
+        //            if let body = supportedCompressedResponse.body {
+        //                let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
+        //                #expect(decodedResponse.content == ByteBuffer(string: compressiblePayload))
+        //                #expect(decodedResponse.contentLength == compressedPayload.readableBytes)
+        //            } else {
+        //                Issue.record("Missing supportedCompressedResponse.body")
+        //            }
+        //
+        //            try await app.server.shutdown()
+        //            try await httpClient.shutdown()
+        //        }
+        //    }
+        //
+        //    @Test("Test HTTP1 Response Decompression")
+        //    func testHTTP1ResponseDecompression() async throws {
+        //        try await withApp { app in
+        //            let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
+        //
+        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+        //
+        //            app.http.server.configuration.supportVersions = [.one]
+        //            app.http.server.configuration.responseCompression = .disabled
+        //
+        //            /// Make sure the client doesn't keep the server open by re-using the connection.
+        //            var httpClientConfig = HTTPClient.Configuration()
+        //            httpClientConfig.maximumUsesPerConnection = 1
+        //            httpClientConfig.decompression = .enabled(limit: .none)
+        //            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
+        //
+        //            app.get("compressed") { _ in compressiblePayload }
+        //
+        //            try await app.server.start()
+        //            let port = try #require(app.http.server.shared.localAddress?.port)
+        //
+        //            let unsupportedNoncompressedResponse = try await httpClient.get("http://localhost:\(port)/compressed")
+        //            #expect(unsupportedNoncompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+        //            #expect(unsupportedNoncompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) == "\(compressiblePayload.count)")
+        //            try await #expect(unsupportedNoncompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
+        //
+        //            let unsupportedCompressedResponse = try await httpClient.get("http://localhost:\(port)/compressed", headers: .init(dictionaryLiteral: (.acceptEncoding, "gzip")))
+        //            #expect(unsupportedCompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+        //            #expect(unsupportedCompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) == "\(compressiblePayload.count)")
+        //            try await #expect(unsupportedCompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
+        //
+        //            app.http.server.configuration.responseCompression = .enabled
+        //
+        //            let supportedUncompressedResponse = try await httpClient.get("http://localhost:\(port)/compressed")
+        //            #expect(supportedUncompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+        //            #expect(supportedUncompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) != "\(compressiblePayload.count)")
+        //            try await #expect(supportedUncompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
+        //
+        //            let supportedCompressedResponse = try await httpClient.get("http://localhost:\(port)/compressed", headers: .init(dictionaryLiteral: (.acceptEncoding, "gzip")))
+        //            #expect(supportedCompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) == "gzip")
+        //            #expect(supportedCompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) != "\(compressiblePayload.count)")
+        //            try await #expect(supportedCompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
+        //
+        //            try await app.server.shutdown()
+        //        }
+        //    }
+        //
+        //    @Test("Test HTTP2 Response Decompression")
+        //    func testHTTP2ResponseDecompression() async throws {
+        //        try await withApp { app in
+        //            guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
+        //                  let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
+        //                Issue.record("Cannot load expired cert and associated key")
+        //                return
+        //            }
+        //
+        //            let cert = try #require(NIOSSLCertificate.fromPEMFile(clientCertPath.path).first)
+        //            let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
+        //
+        //            let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
+        //
+        //            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+        //
+        //            var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
+        //            serverConfig.certificateVerification = .noHostnameVerification
+        //
+        //            app.http.server.configuration.tlsConfiguration = serverConfig
+        //            app.http.server.configuration.customCertificateVerifyCallback = { @Sendable peerCerts, successPromise in
+        //                /// This lies and accepts the above cert, which has actually expired.
+        //                #expect(peerCerts == [cert])
+        //                successPromise.succeed(.certificateVerified)
+        //            }
+        //            app.http.server.configuration.supportVersions = [.two]
+        //            app.http.server.configuration.responseCompression = .disabled
+        //
+        //            /// We need to disable verification on the client, because the cert we're using has expired
+        //            var clientConfig = TLSConfiguration.makeClientConfiguration()
+        //            clientConfig.certificateVerification = .none
+        //            clientConfig.certificateChain = [.certificate(cert)]
+        //            clientConfig.privateKey = .privateKey(key)
+        //
+        //            var httpClientConfig = HTTPClient.Configuration()
+        //            httpClientConfig.tlsConfiguration = clientConfig
+        //            httpClientConfig.decompression = .enabled(limit: .none)
+        //            /// Make sure the client doesn't keep the server open by re-using the connection.
+        //            httpClientConfig.maximumUsesPerConnection = 1
+        //            let httpClient = HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
+        //
+        //            app.get("compressed") { _ in compressiblePayload }
+        //
+        //            try await app.server.start()
+        //            let port = try #require(app.http.server.shared.localAddress?.port)
+        //
+        //            let unsupportedNoncompressedResponse = try await httpClient.get("https://localhost:\(port)/compressed")
+        //            #expect(unsupportedNoncompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+        //            #expect(unsupportedNoncompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) == "\(compressiblePayload.count)")
+        //            try await #expect(unsupportedNoncompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
+        //
+        //            let unsupportedCompressedResponse = try await httpClient.get("https://localhost:\(port)/compressed", headers: .init(dictionaryLiteral: (.acceptEncoding, "gzip")))
+        //            #expect(unsupportedCompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+        //            #expect(unsupportedCompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) == "\(compressiblePayload.count)")
+        //            try await #expect(unsupportedCompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
+        //
+        //            app.http.server.configuration.responseCompression = .enabled
+        //
+        //            let supportedUncompressedResponse = try await httpClient.get("https://localhost:\(port)/compressed")
+        //            #expect(supportedUncompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) != "gzip")
+        //            #expect(supportedUncompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) != "\(compressiblePayload.count)")
+        //            try await #expect(supportedUncompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
+        //
+        //            let supportedCompressedResponse = try await httpClient.get("https://localhost:\(port)/compressed", headers: .init(dictionaryLiteral: (.acceptEncoding, "gzip")))
+        //            #expect(supportedCompressedResponse.headers.first(name: HTTPField.Name.contentEncoding.canonicalName) == "gzip")
+        //            #expect(supportedCompressedResponse.headers.first(name: HTTPField.Name.contentLength.canonicalName) != "\(compressiblePayload.count)")
+        //            try await #expect(supportedCompressedResponse.body.collect(upTo: Int.max).string == compressiblePayload)
+        //
+        //            try await app.server.shutdown()
+        //            try await httpClient.shutdown()
+        //        }
+        //    }
     }
-    
-    override func tearDown() async throws {
-        try await app.asyncShutdown()
-    }
-    
-    func testPortOverride() async throws {
-        let env = Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--port", "8123"]
-        )
-        
-        let app = try await Application.make(env)
-        
-        app.get("foo") { req in
-            return "bar"
+
+    @Suite("Address Configuration Tests")
+    struct AddressConfigurationTests {
+        @Test("Address, hostname and port stay consistent")
+        func testAddressConfigurations() throws {
+            // `hostname` and `port` are views over `address`, so every way of setting one has to
+            // leave the other two agreeing.
+            var configuration = ServerConfiguration()
+            #expect(configuration.address == .hostname())
+            #expect(configuration.hostname == "127.0.0.1")
+            #expect(configuration.port == 8080)
+
+            configuration = ServerConfiguration(address: .hostname("1.2.3.4", port: 123))
+            #expect(configuration.hostname == "1.2.3.4")
+            #expect(configuration.port == 123)
+
+            configuration = ServerConfiguration(address: .hostname("1.2.3.4"))
+            #expect(configuration.address == .hostname("1.2.3.4"))
+            #expect(configuration.port == 8080)
+
+            configuration = ServerConfiguration(address: .hostname(port: 123))
+            #expect(configuration.hostname == "127.0.0.1")
+            #expect(configuration.port == 123)
         }
-        try await app.startup()
 
-        let res = try await app.client.get("http://127.0.0.1:8123/foo")
-        XCTAssertEqual(res.body?.string, "bar")
+        @Test("A socket path has no hostname or port")
+        func testUnixDomainSocketHasNoHostnameOrPort() throws {
+            // Unlike the old configuration, which reported defaults here, these are `nil`: a socket
+            // path genuinely doesn't have a hostname or a port.
+            var configuration = ServerConfiguration(address: .unixDomainSocket(path: "/path"))
+            #expect(configuration.address == .unixDomainSocket(path: "/path"))
+            #expect(configuration.hostname == nil)
+            #expect(configuration.port == nil)
 
-        try await app.asyncShutdown()
-    }
-    
-    func testSocketPathOverride() async throws {
-        let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
-        
-        let env = Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--unix-socket", socketPath]
-        )
-        
-        let app = try await Application.make(env)
+            // Setting either one converts the address, defaulting the half that wasn't given.
+            configuration.hostname = "1.2.3.4"
+            #expect(configuration.address == .hostname("1.2.3.4", port: 8080))
 
-        do {
-            app.get("foo") { _ in "bar" }
-            try await app.startup()
-
-            let res = try await app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }
-            XCTAssertEqual(res.body?.string, "bar")
-
-            // no server should be bound to the port despite one being set on the configuration.
-            do {
-                _ = try await app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }
-                XCTFail("Should have thrown error")
-            } catch {}
-
-            try await app.asyncShutdown()
-        } catch {
-            try await app.asyncShutdown()
+            configuration.address = .unixDomainSocket(path: "/path")
+            configuration.port = 123
+            #expect(configuration.address == .hostname("127.0.0.1", port: 123))
         }
-    }
-    
-    func testIncompatibleStartupOptions() async throws {
-        func checkForError(_ app: Application) async throws {
-            XCTAssertThrowsError(try app.start()) { error in
-                XCTAssertNotNil(error as? ServeCommand.Error)
-                guard let serveError = error as? ServeCommand.Error else {
-                    XCTFail("\(error) is not a ServeCommandError")
-                    return
+
+        @Test("Setting hostname or port to nil leaves the address alone")
+        func testNilHostnameOrPortIsIgnored() throws {
+            // The setters ignore `nil` rather than clearing the address — assigning nil can't
+            // leave the server with nothing to bind to.
+            var configuration = ServerConfiguration(address: .hostname("1.2.3.4", port: 123))
+            configuration.hostname = nil
+            configuration.port = nil
+            #expect(configuration.address == .hostname("1.2.3.4", port: 123))
+        }
+
+        @Test("Changing the server configuration after the application has started traps")
+        func testServerConfigurationCannotBeChangedAfterStart() async {
+            // TLS, HTTP versions and the bind address are all read once as the server comes up, so
+            // a later change would be accepted and never used. This is the value that spent several
+            // commits wrapped in a `FreezableType` without being frozen, which is why the freeze is
+            // now asked of the application's lifecycle rather than tracked per value.
+            await #expect(processExitsWith: .failure) {
+                do {
+                    try await whileServing { $0.serverConfiguration.port = 8099 }
+                } catch {
+                    print("setup failed rather than trapping: \(error)")
                 }
-                
-                XCTAssertEqual(ServeCommand.Error.incompatibleFlags, serveError)
-            }
-            try await app.asyncShutdown()
-        }
-        
-        var app = try await Application.make(Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", "/path/to/socket"]
-        ))
-        try await checkForError(app)
-
-        app = try await Application.make(Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--hostname", "localhost", "--unix-socket", "/path/to/socket"]
-        ))
-        try await checkForError(app)
-
-        app = try await Application.make(Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--unix-socket", "/path/to/socket"]
-        ))
-        try await checkForError(app)
-
-        app = try await Application.make(Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4"]
-        ))
-        try await checkForError(app)
-
-        app = try await Application.make(Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081"]
-        ))
-        try await checkForError(app)
-
-        app = try await Application.make(Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081", "--unix-socket", "/path/to/socket"]
-        ))
-        try await checkForError(app)
-
-        app = try await Application.make(Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--unix-socket", "/path/to/socket"]
-        ))
-        try await checkForError(app)
-
-        app = try await Application.make(Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
-        ))
-        try await checkForError(app)
-
-        app = try await Application.make(Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
-        ))
-        try await checkForError(app)
-    }
-    
-    @available(*, deprecated)
-    func testDeprecatedServerStartMethods() throws {
-        /// TODO: This test may be removed in the next major version
-        class OldServer: Server, @unchecked Sendable {
-            var onShutdown: EventLoopFuture<Void> {
-                preconditionFailure("We should never get here.")
-            }
-            func shutdown() { }
-            
-            var hostname:String? = ""
-            var port:Int? = 0
-            // only implements the old requirement
-            func start(hostname: String?, port: Int?) throws {
-                self.hostname = hostname
-                self.port = port
             }
         }
-        
-        // Ensure we always start with something other than what we expect when calling start
-        var oldServer = OldServer()
-        XCTAssertNotNil(oldServer.hostname)
-        XCTAssertNotNil(oldServer.port)
-        
-        // start() should set the hostname and port to nil
-        oldServer = OldServer()
-        try oldServer.start()
-        XCTAssertNil(oldServer.hostname)
-        XCTAssertNil(oldServer.port)
-        
-        // start(hostname: ..., port: ...) should set the hostname and port appropriately
-        oldServer = OldServer()
-        try oldServer.start(hostname: "1.2.3.4", port: 123)
-        XCTAssertEqual(oldServer.hostname, "1.2.3.4")
-        XCTAssertEqual(oldServer.port, 123)
-        
-        // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
-        oldServer = OldServer()
-        try oldServer.start(address: .hostname("localhost", port: 8081))
-        XCTAssertEqual(oldServer.hostname, "localhost")
-        XCTAssertEqual(oldServer.port, 8081)
-        
-        // start(address: .unixDomainSocket(path: ...)) should throw
-        oldServer = OldServer()
-        XCTAssertThrowsError(try oldServer.start(address: .unixDomainSocket(path: "/path")))
-        
-        class NewServer: Server, @unchecked Sendable {
-            var onShutdown: EventLoopFuture<Void> {
-                preconditionFailure("We should never get here.")
-            }
-            func shutdown() { }
-            
-            var hostname: String? = ""
-            var port: Int? = 0
-            var socketPath: String? = ""
-            
-            func start(address: BindAddress?) throws {
-                switch address {
-                case .none:
-                    self.hostname = nil
-                    self.port = nil
-                    self.socketPath = nil
-                case .hostname(let hostname, let port):
-                    self.hostname = hostname
-                    self.port = port
-                    self.socketPath = nil
-                case .unixDomainSocket(let path):
-                    self.hostname = nil
-                    self.port = nil
-                    self.socketPath = path
+
+        @Test("Test Port Override")
+        func testPortOverride() async throws {
+            try await withApp { app in
+                // A port set in configuration is the port it binds — not an ephemeral one, and not
+                // the default. Hence a fixed port here rather than 0.
+                app.serverConfiguration.port = 8123
+                app.get("foo") { _ in "bar" }
+
+                try await app.boot()
+                let group = ServiceGroup(
+                    configuration: .init(
+                        services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                        logger: Logger.current))
+                try await withThrowingTaskGroup(of: Void.self) { tg in
+                    tg.addTask { try await group.run() }
+
+                    let bound = try await app.server.listeningAddress
+                    #expect(bound.port == 8123)
+
+                    let res = try await HTTPClient.shared.execute(
+                        HTTPClientRequest(url: "http://127.0.0.1:8123/foo"), timeout: .seconds(15))
+                    #expect(res.status == .ok)
+                    #expect(try await res.body.collect(upTo: 1 << 20).string == "bar")
+
+                    await group.triggerGracefulShutdown()
+                    try await tg.waitForAll()
                 }
             }
         }
-        
-        // Ensure we always start with something other than what we expect when calling start
-        var newServer = NewServer()
-        XCTAssertNotNil(newServer.hostname)
-        XCTAssertNotNil(newServer.port)
-        XCTAssertNotNil(newServer.socketPath)
-        
-        // start() should set the hostname and port to nil
-        newServer = NewServer()
-        try newServer.start()
-        XCTAssertNil(newServer.hostname)
-        XCTAssertNil(newServer.port)
-        XCTAssertNil(newServer.socketPath)
-        
-        // start(hostname: ..., port: ...) should set the hostname and port appropriately
-        newServer = NewServer()
-        try newServer.start(hostname: "1.2.3.4", port: 123)
-        XCTAssertEqual(newServer.hostname, "1.2.3.4")
-        XCTAssertEqual(newServer.port, 123)
-        XCTAssertNil(newServer.socketPath)
-        
-        // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
-        newServer = NewServer()
-        try newServer.start(address: .hostname("localhost", port: 8082))
-        XCTAssertEqual(newServer.hostname, "localhost")
-        XCTAssertEqual(newServer.port, 8082)
-        XCTAssertNil(newServer.socketPath)
-        
-        // start(address: .unixDomainSocket(path: ...)) should throw
-        newServer = NewServer()
-        try newServer.start(address: .unixDomainSocket(path: "/path"))
-        XCTAssertNil(newServer.hostname)
-        XCTAssertNil(newServer.port)
-        XCTAssertEqual(newServer.socketPath, "/path")
-    }
-    
-    func testHTTPLargeDecompression_2766() throws {
-        let payload_2766 = "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"
-        
-        let jsonPayload = ByteBuffer(base64String: payload_2766)! // Payload from #2766
 
-        app.http.server.configuration.port = 0
-        
-        // Max out at the smaller payload (.size is of compressed data)
-        app.http.server.configuration.requestDecompression = .enabled(limit: .size(200_000))
-        app.post("gzip") { $0.body.string ?? "" }
-        
-        try app.server.start()
-        defer { app.server.shutdown() }
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        // Small payload should just barely get through.
-        let res = try app.client.post("http://localhost:\(port)/gzip") { req in
-            req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-            req.headers.replaceOrAdd(name: .contentType, value: "application/json")
-            req.body = jsonPayload
-        }.wait()
-        
-        if let body = res.body {
-            // Validate that we received a valid JSON object
-            struct Nothing: Codable {}
-            XCTAssertNoThrow(try JSONDecoder().decode(Nothing.self, from: body))
-        } else {
-            XCTFail("Missing response.body")
-        }
-    }
-    
-    func testConfigureHTTPDecompressionLimit() throws {
-        app.http.server.configuration.port = 0
-        
-        let smallOrigString = "Hello, world!"
-        let smallBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11Eozy/KSVEEAObG5usNAAAA")! // "Hello, world!"
-        let bigBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11HILU3OgBBJmenpqUUK5flFOSkKJRmJeQpJqWn5RamKAICcGhUqAAAA")! // "Hello, much much bigger world than before!"
-        
-        // Max out at the smaller payload (.size is of uncompressed data)
-        app.http.server.configuration.requestDecompression = .enabled(
-            limit: .size(smallOrigString.utf8.count)
-        )
-        app.post("gzip") { $0.body.string ?? "" }
-        
-        try app.server.start()
-        defer { app.server.shutdown() }
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        // Small payload should just barely get through.
-        let res = try app.client.post("http://localhost:\(port)/gzip") { req in
-            req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-            req.body = smallBody
-        }.wait()
-        XCTAssertEqual(res.body?.string, smallOrigString)
-        
-        // Big payload should be hard-rejected. We can't test for the raw NIOHTTPDecompression.DecompressionError.limit error here because
-        // protocol decoding errors are only ever logged and can't be directly caught.
-        do {
-            _ = try app.client.post("http://localhost:\(port)/gzip") { req in
-                req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-                req.body = bigBody
-            }.wait()
-        } catch let error as HTTPClientError {
-            XCTAssertEqual(error, HTTPClientError.remoteConnectionClosed)
-        } catch {
-            XCTFail("\(error)")
-        }
-    }
-    
-    func testHTTP1RequestDecompression() async throws {
-        let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
-        /// To regenerate, copy the above and run `% pbpaste | gzip | base64`. To verify, run `% pbpaste | base64 -d | gzip -d` instead.
-        let compressedPayload = ByteBuffer(base64String: "H4sIANRAImYAA6tWSs7PLShKLS5OTVGyUohWyk6tBNJKZYk5palKOgqj/FH+KH+UP8of5RPmx9YCAMfjVAhQBgAA")!
-        
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
-        
-        app.http.server.configuration.supportVersions = [.one]
-        app.http.server.configuration.requestDecompression = .disabled
-        
-        /// Make sure the client doesn't keep the server open by re-using the connection.
-        app.http.client.configuration.maximumUsesPerConnection = 1
-        
-        struct TestResponse: Content {
-            var content: ByteBuffer?
-            var contentLength: Int
-        }
-        
-        app.on(.POST, "compressed", body: .collect(maxSize: "1mb")) { request async throws in
-            let contentLength = request.headers.first(name: .contentLength).flatMap { Int($0) }
-            let contents = try await request.body.collect().get()
-            return TestResponse(
-                content: contents,
-                contentLength: contentLength ?? 0
-            )
-        }
-        
-        try await app.server.start(address: nil)
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        let unsupportedNoncompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
-            request.body = compressedPayload
-        }
-        
-        if let body = unsupportedNoncompressedResponse.body {
-            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
-            XCTAssertEqual(decodedResponse.content, compressedPayload)
-            XCTAssertEqual(decodedResponse.contentLength, compressedPayload.readableBytes)
-        } else {
-            XCTFail("Missing unsupportedNoncompressedResponse.body")
-        }
-        
-        // TODO: The server should probably reject this?
-        let unsupportedCompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
-            request.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-            request.body = compressedPayload
-        }
-        
-        if let body = unsupportedCompressedResponse.body {
-            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
-            XCTAssertEqual(decodedResponse.content, compressedPayload)
-            XCTAssertEqual(decodedResponse.contentLength, compressedPayload.readableBytes)
-        } else {
-            XCTFail("Missing unsupportedCompressedResponse.body")
-        }
-        
-        app.http.server.configuration.requestDecompression = .enabled(limit: .size(compressiblePayload.utf8.count))
-        
-        let supportedUncompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
-            request.body = compressedPayload
-        }
-        
-        if let body = supportedUncompressedResponse.body {
-            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
-            XCTAssertEqual(decodedResponse.content, compressedPayload)
-            XCTAssertEqual(decodedResponse.contentLength, compressedPayload.readableBytes)
-        } else {
-            XCTFail("Missing supportedUncompressedResponse.body")
-        }
-        
-        let supportedCompressedResponse = try await app.client.post("http://localhost:\(port)/compressed") { request in
-            request.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-            request.body = compressedPayload
-        }
-        
-        if let body = supportedCompressedResponse.body {
-            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
-            XCTAssertEqual(decodedResponse.content, ByteBuffer(string: compressiblePayload))
-            XCTAssertEqual(decodedResponse.contentLength, compressedPayload.readableBytes)
-        } else {
-            XCTFail("Missing supportedCompressedResponse.body")
-        }
-        
-        await app.server.shutdown()
-    }
-    
-    func testHTTP2RequestDecompression() async throws {
-        guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
-              let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
-            XCTFail("Cannot load expired cert and associated key")
-            return
-        }
-        
-        let cert = try NIOSSLCertificate.fromPEMFile(clientCertPath.path).first!
-        let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
+        @Test("Request reports HTTP/1.1 over plaintext", .timeLimit(.minutes(1)))
+        func testRequestVersionOverPlaintext() async throws {
+            try await withApp { app in
+                app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
 
-        let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
-        /// To regenerate, copy the above and run `% pbpaste | gzip | base64`. To verify, run `% pbpaste | base64 -d | gzip -d` instead.
-        let compressedPayload = ByteBuffer(base64String: "H4sIANRAImYAA6tWSs7PLShKLS5OTVGyUohWyk6tBNJKZYk5palKOgqj/FH+KH+UP8of5RPmx9YCAMfjVAhQBgAA")!
-        
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
-        
-        var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
-        serverConfig.certificateVerification = .noHostnameVerification
-        
-        app.http.server.configuration.tlsConfiguration = serverConfig
-        app.http.server.configuration.customCertificateVerifyCallback = { @Sendable peerCerts, successPromise in
-            /// This lies and accepts the above cert, which has actually expired.
-            XCTAssertEqual(peerCerts, [cert])
-            successPromise.succeed(.certificateVerified)
-        }
-        app.http.server.configuration.supportVersions = [.two]
-        app.http.server.configuration.requestDecompression = .disabled
-        
-        /// We need to disable verification on the client, because the cert we're using has expired
-        var clientConfig = TLSConfiguration.makeClientConfiguration()
-        clientConfig.certificateVerification = .none
-        clientConfig.certificateChain = [.certificate(cert)]
-        clientConfig.privateKey = .privateKey(key)
-        app.http.client.configuration.tlsConfiguration = clientConfig
-        
-        /// Make sure the client doesn't keep the server open by re-using the connection.
-        app.http.client.configuration.maximumUsesPerConnection = 1
-        
-        struct TestResponse: Content {
-            var content: ByteBuffer?
-            var contentLength: Int
-        }
-        
-        app.post("compressed") { request async throws in
-            let contentLength = request.headers.first(name: .contentLength)
-            let contents = try await request.body.collect().get()
-            return TestResponse(
-                content: contents,
-                contentLength: contentLength.flatMap { Int($0) } ?? 0
-            )
-        }
-        
-        try await app.server.start(address: nil)
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        let unsupportedNoncompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
-            request.body = compressedPayload
-        }
-        
-        if let body = unsupportedNoncompressedResponse.body {
-            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
-            XCTAssertEqual(decodedResponse.content, compressedPayload)
-            XCTAssertEqual(decodedResponse.contentLength, compressedPayload.readableBytes)
-        } else {
-            XCTFail("Missing unsupportedNoncompressedResponse.body")
-        }
-        
-        // TODO: The server should probably reject this?
-        let unsupportedCompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
-            request.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-            request.body = compressedPayload
-        }
-        
-        if let body = unsupportedCompressedResponse.body {
-            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
-            XCTAssertEqual(decodedResponse.content, compressedPayload)
-            XCTAssertEqual(decodedResponse.contentLength, compressedPayload.readableBytes)
-        } else {
-            XCTFail("Missing unsupportedCompressedResponse.body")
-        }
-        
-        app.http.server.configuration.requestDecompression = .enabled(limit: .size(compressiblePayload.utf8.count))
-        
-        let supportedUncompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
-            request.body = compressedPayload
-        }
-        
-        if let body = supportedUncompressedResponse.body {
-            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
-            XCTAssertEqual(decodedResponse.content, compressedPayload)
-            XCTAssertEqual(decodedResponse.contentLength, compressedPayload.readableBytes)
-        } else {
-            XCTFail("Missing supportedUncompressedResponse.body")
-        }
-        
-        let supportedCompressedResponse = try await app.client.post("https://localhost:\(port)/compressed") { request in
-            request.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-            request.body = compressedPayload
-        }
-        
-        if let body = supportedCompressedResponse.body {
-            let decodedResponse = try JSONDecoder().decode(TestResponse.self, from: body)
-            XCTAssertEqual(decodedResponse.content, ByteBuffer(string: compressiblePayload))
-            XCTAssertEqual(decodedResponse.contentLength, compressedPayload.readableBytes)
-        } else {
-            XCTFail("Missing supportedCompressedResponse.body")
-        }
-        
-        await app.server.shutdown()
-    }
-    
-    func testHTTP1ResponseDecompression() async throws {
-        let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
-        
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
-        
-        app.http.server.configuration.supportVersions = [.one]
-        app.http.server.configuration.responseCompression = .disabled
-        
-        /// Make sure the client doesn't keep the server open by re-using the connection.
-        app.http.client.configuration.maximumUsesPerConnection = 1
-        app.http.client.configuration.decompression = .enabled(limit: .none)
-        
-        app.get("compressed") { _ in compressiblePayload }
-        
-        try await app.server.start(address: nil)
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        let unsupportedNoncompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-            request.headers.remove(name: .acceptEncoding)
-        }
-        XCTAssertNotEqual(unsupportedNoncompressedResponse.headers.first(name: .contentEncoding), "gzip")
-        XCTAssertEqual(unsupportedNoncompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
-        XCTAssertEqual(unsupportedNoncompressedResponse.body?.string, compressiblePayload)
-        
-        let unsupportedCompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-            request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
-        }
-        XCTAssertNotEqual(unsupportedCompressedResponse.headers.first(name: .contentEncoding), "gzip")
-        XCTAssertEqual(unsupportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
-        XCTAssertEqual(unsupportedCompressedResponse.body?.string, compressiblePayload)
-        
-        app.http.server.configuration.responseCompression = .enabled
-        
-        let supportedUncompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-            request.headers.remove(name: .acceptEncoding)
-        }
-        XCTAssertNotEqual(supportedUncompressedResponse.headers.first(name: .contentEncoding), "gzip")
-        XCTAssertNotEqual(supportedUncompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
-        XCTAssertEqual(supportedUncompressedResponse.body?.string, compressiblePayload)
-        
-        let supportedCompressedResponse = try await app.client.get("http://localhost:\(port)/compressed") { request in
-            request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
-        }
-        XCTAssertEqual(supportedCompressedResponse.headers.first(name: .contentEncoding), "gzip")
-        XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
-        XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
-        
-        await app.server.shutdown()
-    }
-    
-    func testHTTP2ResponseDecompression() async throws {
-        guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
-              let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
-            XCTFail("Cannot load expired cert and associated key")
-            return
-        }
-        
-        let cert = try NIOSSLCertificate.fromPEMFile(clientCertPath.path).first!
-        let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
-        
-        let compressiblePayload = #"{"compressed": ["key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value", "key": "value"]}"#
-        
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
-        
-        var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
-        serverConfig.certificateVerification = .noHostnameVerification
-        
-        app.http.server.configuration.tlsConfiguration = serverConfig
-        app.http.server.configuration.customCertificateVerifyCallback = { @Sendable peerCerts, successPromise in
-            /// This lies and accepts the above cert, which has actually expired.
-            XCTAssertEqual(peerCerts, [cert])
-            successPromise.succeed(.certificateVerified)
-        }
-        app.http.server.configuration.supportVersions = [.two]
-        app.http.server.configuration.responseCompression = .disabled
-        
-        /// We need to disable verification on the client, because the cert we're using has expired
-        var clientConfig = TLSConfiguration.makeClientConfiguration()
-        clientConfig.certificateVerification = .none
-        clientConfig.certificateChain = [.certificate(cert)]
-        clientConfig.privateKey = .privateKey(key)
-        app.http.client.configuration.tlsConfiguration = clientConfig
-        
-        app.http.client.configuration.decompression = .enabled(limit: .none)
-        /// Make sure the client doesn't keep the server open by re-using the connection.
-        app.http.client.configuration.maximumUsesPerConnection = 1
-        
-        app.get("compressed") { _ in compressiblePayload }
-        
-        try await app.server.start(address: nil)
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        let unsupportedNoncompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-            request.headers.remove(name: .acceptEncoding)
-        }
-        XCTAssertNotEqual(unsupportedNoncompressedResponse.headers.first(name: .contentEncoding), "gzip")
-        XCTAssertEqual(unsupportedNoncompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
-        XCTAssertEqual(unsupportedNoncompressedResponse.body?.string, compressiblePayload)
-        
-        let unsupportedCompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-            request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
-        }
-        XCTAssertNotEqual(unsupportedCompressedResponse.headers.first(name: .contentEncoding), "gzip")
-        XCTAssertEqual(unsupportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
-        XCTAssertEqual(unsupportedCompressedResponse.body?.string, compressiblePayload)
-        
-        app.http.server.configuration.responseCompression = .enabled
-        
-        let supportedUncompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-            request.headers.remove(name: .acceptEncoding)
-        }
-        XCTAssertNotEqual(supportedUncompressedResponse.headers.first(name: .contentEncoding), "gzip")
-        XCTAssertNotEqual(supportedUncompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
-        XCTAssertEqual(supportedUncompressedResponse.body?.string, compressiblePayload)
-        
-        let supportedCompressedResponse = try await app.client.get("https://localhost:\(port)/compressed") { request in
-            request.headers.replaceOrAdd(name: .acceptEncoding, value: "gzip")
-        }
-        XCTAssertEqual(supportedCompressedResponse.headers.first(name: .contentEncoding), "gzip")
-        XCTAssertNotEqual(supportedCompressedResponse.headers.first(name: .contentLength), "\(compressiblePayload.count)")
-        XCTAssertEqual(supportedCompressedResponse.body?.string, compressiblePayload)
-        
-        await app.server.shutdown()
-    }
-    
-    func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() throws {
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
-        
-        let numRequests = ManagedAtomic<Int>(0)
-        let writersStarted = DispatchSemaphore(value: 0)
-        
-        app.get() { req  -> EventLoopFuture<Response> in
-            numRequests.wrappingIncrement(ordering: .relaxed)
-            
-            return req.eventLoop.scheduleTask(in: .milliseconds(10)) {
-                numRequests.wrappingIncrement(ordering: .relaxed)
-                
-                return Response(status: .ok, body: .init(stream: { writer in
-                    writersStarted.signal()
-                    _ = writer.write(.end)
-                }))
-            }.futureResult
-        }
-        
-        app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        let numberOfClients = 100
-        
-        for _ in 0 ..< numberOfClients {
-            let client = try ClientBootstrap(group: app.eventLoopGroup)
-                .connect(to: localAddress)
-                .wait()
-            try client.writeAndFlush(ByteBuffer(string: "GET / HTTP/1.1\r\nhost: foo\r\n\r\n")).wait()
-            try client.close().wait()
-        }
-        
-        for clientNumber in 0 ..< numberOfClients {
-            XCTAssertEqual(.success, writersStarted.wait(timeout: .now() + 1), "client #\(clientNumber) failed")
-        }
-        XCTAssertEqual(numberOfClients * 2, numRequests.load(ordering: .relaxed))
-    }
-    
-    func testLiveServer() throws {
-        app.routes.get("ping") { req -> String in
-            return "123"
-        }
-        
-        try app.testable().test(.GET, "/ping") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "123")
-        }
-    }
-    
-    func testCustomServer() throws {
-        app.servers.use(.custom)
-        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), false)
-        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), false)
-        
-        try app.server.start()
-        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
-        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), false)
-        
-        app.server.shutdown()
-        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
-        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), true)
-    }
-    
-    func testMultipleChunkBody() throws {
-        let payload = [UInt8].random(count: 1 << 20)
-        
-        app.on(.POST, "payload", body: .collect(maxSize: "1gb")) { req -> HTTPStatus in
-            guard let data = req.body.data else {
-                throw Abort(.internalServerError)
-            }
-            XCTAssertEqual(payload.count, data.readableBytes)
-            XCTAssertEqual([UInt8](data.readableBytesView), payload)
-            return .ok
-        }
-        
-        var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
-        buffer.writeBytes(payload)
-        try app.testable(method: .running(port: 0)).test(.POST, "payload", body: buffer) { res in
-            XCTAssertEqual(res.status, .ok)
-        }
-    }
-    
-    func testCollectedResponseBodyEnd() throws {
-        app.post("drain") { req -> EventLoopFuture<HTTPStatus> in
-            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
-            req.body.drain { result in
-                switch result {
-                case .buffer: break
-                case .error(let error):
-                    promise.fail(error)
-                case .end:
-                    promise.succeed(.ok)
+                try await withRunningServer(app) { port in
+                    let res = try await HTTPClient.shared.execute(
+                        HTTPClientRequest(url: "http://127.0.0.1:\(port)/version"), timeout: .seconds(15))
+                    #expect(res.status == .ok)
+                    #expect(try await res.body.collect(upTo: 1024).string == "1.1")
                 }
-                return req.eventLoop.makeSucceededFuture(())
             }
-            return promise.futureResult
         }
-        
-        try app.testable(method: .running(port: 0)).test(.POST, "drain", beforeRequest: { req in
-            try req.content.encode(["hello": "world"])
-        }, afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-        })
-    }
-    
-    // https://github.com/vapor/vapor/issues/1786
-    func testMissingBody() throws {
-        struct User: Content { }
-        
-        app.get("user") { req -> User in
-            return try req.content.decode(User.self)
-        }
-        
-        try app.testable().test(.GET, "/user") { res in
-            XCTAssertEqual(res.status, .unsupportedMediaType)
-        }
-    }
-    
-    // https://github.com/vapor/vapor/issues/2245
-    func testTooLargePort() throws {
-        app.http.server.configuration.port = .max
-        XCTAssertThrowsError(try app.start())
-    }
-    
-    func testEarlyExitStreamingRequest() throws {
-        app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<Int> in
-            guard req.headers.first(name: "test") != nil else {
-                return req.eventLoop.makeFailedFuture(Abort(.badRequest))
-            }
-            
-            let countBox = NIOLockedValueBox<Int>(0)
-            let promise = req.eventLoop.makePromise(of: Int.self)
-            req.body.drain { part in
-                switch part {
-                case .buffer(let buffer):
-                    countBox.withLockedValue { $0 += buffer.readableBytes }
-                case .error(let error):
-                    promise.fail(error)
-                case .end:
-                    promise.succeed(countBox.withLockedValue({ $0 }))
+
+        @Test("Test Too Large Port", .bug("https://github.com/vapor/vapor/issues/2245"))
+        func testTooLargePort() async throws {
+            try await withApp { app in
+                app.serverConfiguration.address = .hostname("127.0.0.1", port: .max)
+                await #expect(throws: SocketAddressError.UnknownHost.self) {
+                    try await app.boot()
+                    try await app.server.run()
                 }
-                return req.eventLoop.makeSucceededFuture(())
-            }
-            return promise.futureResult
-        }
-        
-        var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)
-        buffer.writeString(String(repeating: "a", count: 10_000_000))
-        
-        try app.testable(method: .running(port: 0)).test(.POST, "upload", beforeRequest: { req in
-            req.body = buffer
-        }, afterResponse: { res in
-            XCTAssertEqual(res.status, .badRequest)
-        }).test(.POST, "upload", beforeRequest: { req in
-            req.body = buffer
-            req.headers.replaceOrAdd(name: "test", value: "a")
-        }, afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-        })
-    }
-    
-    @available(*, deprecated, message: "To avoid deprecation warnings")
-    func testEchoServer() throws {
-        final class Context: Sendable {
-            let server: NIOLockedValueBox<[String]>
-            let client: NIOLockedValueBox<[String]>
-            init() {
-                self.server = .init([])
-                self.client = .init([])
             }
         }
-        let context = Context()
-        
-        app.on(.POST, "echo", body: .stream) { request -> Response in
-            Response(body: .init(stream: { writer in
-                request.body.drain { body in
-                    switch body {
-                    case .buffer(let buffer):
-                        context.server.withLockedValue { $0.append(buffer.string) }
-                        return writer.write(.buffer(buffer))
-                    case .error(let error):
-                        return writer.write(.error(error))
-                    case .end:
-                        return writer.write(.end)
+
+        @Test("Binding a port that is already in use throws addressInUse", .timeLimit(.minutes(1)))
+        func testAddressAlreadyInUse() async throws {
+            try await withApp { first in
+                try await withRunningServer(first) { port in
+                    try await withApp { second in
+                        second.serverConfiguration.address = .hostname("127.0.0.1", port: port)
+                        try await second.boot()
+                        await #expect(throws: ServerError.addressInUse(host: "127.0.0.1", port: port)) {
+                            try await second.server.run()
+                        }
                     }
                 }
-            }))
-        }
-        
-        app.http.server.configuration.port = 0
-        app.environment.arguments = ["serve"]
-        try app.start()
-        
-        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
-        let request = try HTTPClient.Request(
-            url: "http://localhost:\(port)/echo",
-            method: .POST,
-            headers: [
-                "transfer-encoding": "chunked"
-            ],
-            body: .stream(length: nil, { stream in
-                // We set the application to have a single event loop so we can use the same
-                // event loop here
-                let streamBox = NIOLoopBound(stream, eventLoop: self.app.eventLoopGroup.any())
-                return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-                    streamBox.value.write(.byteBuffer(.init(string: "bar")))
-                }.flatMap {
-                    streamBox.value.write(.byteBuffer(.init(string: "baz")))
-                }
-            })
-        )
-        
-        final class ResponseDelegate: HTTPClientResponseDelegate {
-            typealias Response = HTTPClient.Response
-            
-            let context: Context
-            init(context: Context) {
-                self.context = context
             }
-            
-            func didReceiveBodyPart(
-                task: HTTPClient.Task<HTTPClient.Response>,
-                _ buffer: ByteBuffer
-            ) -> EventLoopFuture<Void> {
-                self.context.client.withLockedValue { $0.append(buffer.string) }
-                return task.eventLoop.makeSucceededFuture(())
-            }
-            
-            func didFinishRequest(task: HTTPClient.Task<HTTPClient.Response>) throws -> HTTPClient.Response {
-                .init(host: "", status: .ok, version: .init(major: 1, minor: 1), headers: [:], body: nil)
-            }
-        }
-        let response = ResponseDelegate(context: context)
-        _ = try app.http.client.shared.execute(
-            request: request,
-            delegate: response
-        ).wait()
-        
-        let server = context.server.withLockedValue { $0 }
-        let client = context.client.withLockedValue { $0 }
-        XCTAssertEqual(server, ["foo", "bar", "baz"])
-        XCTAssertEqual(client, ["foo", "bar", "baz"])
-    }
-    
-    func testSkipStreaming() async throws {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let app = try await Application.make(.testing, .shared(eventLoopGroup))
-        
-        app.on(.POST, "echo", body: .stream) { request in
-            "hello, world"
-        }
-        
-        app.http.server.configuration.port = 0
-        app.environment.arguments = ["serve"]
-        try await app.startup()
-        
-        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
-        let request = try HTTPClient.Request(
-            url: "http://localhost:\(port)/echo",
-            method: .POST,
-            headers: [
-                "transfer-encoding": "chunked"
-            ],
-            body: .stream(length: nil, { stream in
-                // We set the application to have a single event loop so we can use the same
-                // event loop here
-                let streamBox = NIOLoopBound(stream, eventLoop: eventLoopGroup.any())
-                return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-                    streamBox.value.write(.byteBuffer(.init(string: "bar")))
-                }.flatMap {
-                    streamBox.value.write(.byteBuffer(.init(string: "baz")))
-                }
-            })
-        )
-        
-        let a = try await app.http.client.shared.execute(request: request).get()
-        XCTAssertEqual(a.status, .ok)
-        let b = try await app.http.client.shared.execute(request: request).get()
-        XCTAssertEqual(b.status, .ok)
-
-        try await app.asyncShutdown()
-    }
-    
-    func testStartWithValidSocketFile() throws {
-        let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
-        
-        app.http.server.configuration.address = .unixDomainSocket(path: socketPath)
-        app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
-    }
-    
-    func testStartWithUnsupportedSocketFile() throws {
-        app.http.server.configuration.address = .unixDomainSocket(path: "/tmp")
-        
-        XCTAssertThrowsError(try app.start())
-    }
-    
-    func testStartWithInvalidSocketFilePath() throws {
-        app.http.server.configuration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
-        
-        XCTAssertThrowsError(try app.start())
-    }
-    
-    func testStartWithDefaultHostnameConfiguration() throws {
-        app.http.server.configuration.address = .hostname(nil, port: nil)
-        app.environment.arguments = ["serve"]
-        
-        XCTAssertNoThrow(try app.start())
-    }
-
-    func testAddressConfigurations() throws {
-        var configuration = HTTPServer.Configuration()
-        XCTAssertEqual(configuration.address, .hostname(HTTPServer.Configuration.defaultHostname, port: HTTPServer.Configuration.defaultPort))
-        
-        configuration = HTTPServer.Configuration(hostname: "1.2.3.4", port: 123)
-        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
-        XCTAssertEqual(configuration.hostname, "1.2.3.4")
-        XCTAssertEqual(configuration.port, 123)
-        
-        configuration = HTTPServer.Configuration(address: .hostname("1.2.3.4", port: 123))
-        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
-        XCTAssertEqual(configuration.hostname, "1.2.3.4")
-        XCTAssertEqual(configuration.port, 123)
-        
-        configuration = HTTPServer.Configuration(address: .hostname("1.2.3.4", port: nil))
-        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: nil))
-        XCTAssertEqual(configuration.hostname, "1.2.3.4")
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
-        
-        configuration = HTTPServer.Configuration(address: .hostname(nil, port: 123))
-        XCTAssertEqual(configuration.address, .hostname(nil, port: 123))
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
-        XCTAssertEqual(configuration.port, 123)
-        
-        configuration = HTTPServer.Configuration(address: .hostname(nil, port: nil))
-        XCTAssertEqual(configuration.address, .hostname(nil, port: nil))
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
-        
-        configuration = HTTPServer.Configuration(address: .unixDomainSocket(path: "/path"))
-        XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
-        
-        
-        // Test mutating a config that was originally a socket path
-        configuration = HTTPServer.Configuration(address: .unixDomainSocket(path: "/path"))
-        XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
-        
-        configuration.hostname = "1.2.3.4"
-        XCTAssertEqual(configuration.hostname, "1.2.3.4")
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
-        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: nil))
-        
-        configuration.address = .unixDomainSocket(path: "/path")
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
-        XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
-        
-        configuration.port = 123
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
-        XCTAssertEqual(configuration.port, 123)
-        XCTAssertEqual(configuration.address, .hostname(nil, port: 123))
-        
-        configuration.hostname = "1.2.3.4"
-        XCTAssertEqual(configuration.hostname, "1.2.3.4")
-        XCTAssertEqual(configuration.port, 123)
-        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
-        
-        configuration.address = .hostname(nil, port: nil)
-        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
-        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
-        XCTAssertEqual(configuration.address, .hostname(nil, port: nil))
-    }
-    
-    func testQuiesceKeepAliveConnections() throws {
-        app.get("hello") { req in
-            "world"
-        }
-        
-        app.http.server.configuration.port = 0
-        app.environment.arguments = ["serve"]
-        try app.start()
-        
-        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
-        let request = try HTTPClient.Request(
-            url: "http://localhost:\(port)/hello",
-            method: .GET,
-            headers: ["connection": "keep-alive"]
-        )
-        let a = try app.http.client.shared.execute(request: request).wait()
-        XCTAssertEqual(a.headers.connection, .keepAlive)
-    }
-    
-    func testRequestBodyStreamGetsFinalisedEvenIfClientDisappears() {
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
-        
-        let serverIsFinalisedPromise = app.eventLoopGroup.any().makePromise(of: Void.self)
-        let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
-        
-        app.on(.POST, "hello", body: .stream) { req -> Response in
-            return Response(body: .init(stream: { writer in
-                req.body.drain { stream in
-                    switch stream {
-                    case .buffer:
-                        ()
-                    case .end:
-                        serverIsFinalisedPromise.succeed(())
-                        writer.write(.end, promise: nil)
-                    case .error(let error):
-                        serverIsFinalisedPromise.fail(error)
-                        writer.write(.error(error), promise: nil)
-                    }
-                    return allDonePromise.futureResult
-                }
-            }))
-        }
-        
-        app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
-        XCTAssertThrowsError(try app.http.client.shared.execute(.POST,
-                                                                url: "http://\(ip):\(port)/hello",
-                                                                body: .byteBuffer(tenMB),
-                                                                deadline: .now() + .milliseconds(100)).wait()) { error in
-            if let error = error as? HTTPClientError {
-                XCTAssert(error == .readTimeout || error == .deadlineExceeded)
-            } else {
-                XCTFail("unexpected error: \(error)")
-            }
-        }
-        
-        allDonePromise.succeed(()) // This unblocks the server
-        XCTAssertThrowsError(try serverIsFinalisedPromise.futureResult.wait()) { error in
-            XCTAssertEqual(HTTPParserError.invalidEOFState, error as? HTTPParserError)
-        }
-    }
-    
-    func testRequestBodyBackpressureWorks() {
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
-        
-        let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
-        let bytesTheServerSaw = ManagedAtomic<Int>(0)
-        let bytesTheClientSent = ManagedAtomic<Int>(0)
-        let serverSawEnd = ManagedAtomic<Bool>(false)
-        let serverSawRequest = ManagedAtomic<Bool>(false)
-        let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
-        
-        app.on(.POST, "hello", body: .stream) { req -> Response in
-            XCTAssertTrue(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged)
-            
-            return Response(body: .init(stream: { writer in
-                req.body.drain { stream in
-                    switch stream {
-                    case .buffer(let bytes):
-                        numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .relaxed)
-                        bytesTheServerSaw.wrappingIncrement(by: bytes.readableBytes, ordering: .relaxed)
-                    case .end:
-                        XCTFail("backpressure should prevent us seeing the end of the request.")
-                        serverSawEnd.store(true, ordering: .relaxed)
-                        writer.write(.end, promise: nil)
-                    case .error(let error):
-                        writer.write(.error(error), promise: nil)
-                    }
-                    return allDonePromise.futureResult
-                }
-            }))
-        }
-        
-        app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        final class ResponseDelegate: HTTPClientResponseDelegate {
-            typealias Response = Void
-            
-            private let bytesTheClientSent: ManagedAtomic<Int>
-            
-            init(bytesTheClientSent: ManagedAtomic<Int>) {
-                self.bytesTheClientSent = bytesTheClientSent
-            }
-            
-            func didFinishRequest(task: HTTPClient.Task<Response>) throws -> Response {
-                return ()
-            }
-            
-            func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
-                self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .relaxed)
-            }
-        }
-        
-        let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
-        let request = try! HTTPClient.Request(url: "http://\(ip):\(port)/hello",
-                                              method: .POST,
-                                              headers: [:],
-                                              body: .byteBuffer(tenMB))
-        let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
-        XCTAssertThrowsError(try app.http.client.shared.execute(request: request,
-                                                                delegate: delegate,
-                                                                deadline: .now() + .milliseconds(500)).wait()) { error in
-            if let error = error as? HTTPClientError {
-                XCTAssert(error == .readTimeout || error == .deadlineExceeded)
-            } else {
-                XCTFail("unexpected error: \(error)")
-            }
-        }
-        
-        XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load(ordering: .relaxed))
-        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheServerSaw.load(ordering: .relaxed))
-        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheClientSent.load(ordering: .relaxed))
-        XCTAssertEqual(0, bytesTheClientSent.load(ordering: .relaxed)) // We'd only see this if we sent the full 10 MB.
-        XCTAssertFalse(serverSawEnd.load(ordering: .relaxed))
-        XCTAssertTrue(serverSawRequest.load(ordering: .relaxed))
-        
-        allDonePromise.succeed(())
-    }
-    
-    func testCanOverrideCertValidation() throws {
-        guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
-              let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
-            XCTFail("Cannot load expired cert and associated key")
-            return
-        }
-        
-        let cert = try NIOSSLCertificate.fromPEMFile(clientCertPath.path).first!
-        let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
-
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
-        
-        var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
-        serverConfig.certificateVerification = .noHostnameVerification
-        
-        app.http.server.configuration.tlsConfiguration = serverConfig
-        app.http.server.configuration.customCertificateVerifyCallback = { @Sendable peerCerts, successPromise in
-            // This lies and accepts the above cert, which has actually expired.
-            XCTAssertEqual(peerCerts, [cert])
-            successPromise.succeed(.certificateVerified)
-        }
-        
-        // We need to disable verification on the client, because the cert we're using has expired, and we want to
-        // _send_ a client cert.
-        var clientConfig = TLSConfiguration.makeClientConfiguration()
-        clientConfig.certificateVerification = .none
-        clientConfig.certificateChain = [.certificate(cert)]
-        clientConfig.privateKey = .privateKey(key)
-        app.http.client.configuration.tlsConfiguration = clientConfig
-        
-        app.environment.arguments = ["serve"]
-        
-        app.get("hello") { req in
-            "world"
-        }
-        
-        try app.start()
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        let request = try HTTPClient.Request(
-            url: "https://\(ip):\(port)/hello",
-            method: .GET
-        )
-        let a = try app.http.client.shared.execute(request: request).wait()
-        XCTAssertEqual(a.body, ByteBuffer(string: "world"))
-    }
-
-    func testCanOverrideCertValidationWithMetadata() async throws {
-        guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
-              let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
-            XCTFail("Cannot load expired cert and associated key")
-            return
         }
 
-        let certs = try NIOSSLCertificate.fromPEMFile(clientCertPath.path)
-        let certSources = certs.map { NIOSSLCertificateSource.certificate($0) }
-        let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
-
-        var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: certSources, privateKey: .privateKey(key))
-        serverConfig.certificateVerification = .noHostnameVerification
-
-        app.http.server.configuration.tlsConfiguration = serverConfig
-        app.http.server.configuration.customCertificateVerifyCallbackWithMetadata = { @Sendable peerCerts, successPromise in
-            // This lies and accepts the above cert, which has actually expired.
-            XCTAssertEqual(peerCerts, certs)
-            successPromise.succeed(
-                .certificateVerified(
-                    VerificationMetadata(ValidatedCertificateChain(peerCerts))
-                )
+        @Test("addressInUse names the address, bracketing IPv6 hosts")
+        func testAddressInUseDescription() {
+            #expect(
+                ServerError.addressInUse(host: "127.0.0.1", port: 8080).description
+                    == "Cannot start the server: 127.0.0.1:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it."
+            )
+            #expect(
+                ServerError.addressInUse(host: "::1", port: 8080).description
+                    == "Cannot start the server: [::1]:8080 is already in use. Discover the process ID with `lsof -i :8080` to determine what to do with it."
             )
         }
 
-        // We need to disable verification on the client, because the cert we're using has expired, and we want to
-        // _send_ a client cert.
-        var clientConfig = TLSConfiguration.makeClientConfiguration()
-        clientConfig.certificateVerification = .none
-        clientConfig.certificateChain = certSources
-        clientConfig.privateKey = .privateKey(key)
-        app.http.client.configuration.tlsConfiguration = clientConfig
+        /// NIOHTTPServer cannot bind a unix domain socket yet: `NIOHTTPServerAdapter` logs a warning and
+        /// falls back to `127.0.0.1:8080` instead. Disabled until it can, so they neither run against the
+        /// fallback nor get lost.
+        static let unixDomainSocketsUnsupported: Comment =
+            "NIOHTTPServer has no unix domain socket support; the adapter falls back to 127.0.0.1:8080"
 
-        app.environment.arguments = ["serve"]
+        @Test(
+            "Server serves over a unix domain socket",
+            .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
+        func testStartWithValidSocketFile() async throws {
+            try await withApp { app in
+                let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
+                app.serverConfiguration.address = .unixDomainSocket(path: socketPath)
+                app.get("foo") { _ in "bar" }
+                try await app.boot()
 
-        app.get("hello") { req in
-            let certChain: X509.ValidatedCertificateChain = try XCTUnwrap(req.peerCertificateChain)
-            XCTAssertEqual(certChain.count, 1)
-            XCTAssertEqual(certChain.leaf, try X509.Certificate(derEncoded: try certs.first!.toDERBytes()))
-            return "world"
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    group.addTask { try await app.server.run() }
+                    let bound = try await app.server.listeningAddress
+                    #expect(bound.pathname == socketPath)
+
+                    let url = URI(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo").string
+                    let res = try await HTTPClient.shared.execute(HTTPClientRequest(url: url), timeout: .seconds(10))
+                    #expect(res.status == .ok)
+                    try #expect(await res.body.collect(upTo: 1 << 20).string == "bar")
+                    group.cancelAll()
+                }
+            }
         }
 
-        try await app.server.start(address: BindAddress.hostname("127.0.0.1", port: 0))
-
-        let localAddress = try XCTUnwrap(app.http.server.shared.localAddress)
-        guard let ip = localAddress.ipAddress, let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
+        @Test(
+            "Server startup fails when the socket path is a directory",
+            .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
+        func testStartWithUnsupportedSocketFile() async throws {
+            try await withApp { app in
+                app.serverConfiguration.address = .unixDomainSocket(path: "/tmp")
+                try await app.boot()
+                await #expect(throws: (any Error).self) {
+                    try await app.server.run()
+                }
+            }
         }
 
-        let a = try await app.client.get("https://\(ip):\(port)/hello")
-        XCTAssertEqual(a.body, ByteBuffer(string: "world"))
+        @Test(
+            "Server startup fails when the socket path's directory does not exist",
+            .disabled(AddressConfigurationTests.unixDomainSocketsUnsupported), .timeLimit(.minutes(1)))
+        func testStartWithInvalidSocketFilePath() async throws {
+            try await withApp { app in
+                app.serverConfiguration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
+                try await app.boot()
+                await #expect(throws: (any Error).self) {
+                    try await app.server.run()
+                }
+            }
+        }
 
-        await app.server.shutdown()
-    }
+        @Test("Test Configuration Has Actual Port After Start")
+        func testConfigurationHasActualPortAfterStart() async throws {
+            try await withApp { app in
+                app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+                try await app.boot()
+                let group = ServiceGroup(
+                    configuration: .init(
+                        services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                        logger: Logger.current))
+                try await withThrowingTaskGroup(of: Void.self) { tg in
+                    tg.addTask { try await group.run() }
 
-    func testCanChangeConfigurationDynamically() throws {
-        guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
-              let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
-            XCTFail("Cannot load expired cert and associated key")
-            return
-        }
-        
-        let cert = try NIOSSLCertificate.fromPEMFile(clientCertPath.path).first!
-        let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
-                
-        app.http.server.configuration.hostname = "127.0.0.1"
-        app.http.server.configuration.port = 0
-        app.http.server.configuration.serverName = "Old"
-        
-        /// We need to disable verification on the client, because the cert we're using has expired
-        var clientConfig = TLSConfiguration.makeClientConfiguration()
-        clientConfig.certificateVerification = .none
-        clientConfig.certificateChain = [.certificate(cert)]
-        clientConfig.privateKey = .privateKey(key)
-        app.http.client.configuration.tlsConfiguration = clientConfig
-        app.http.client.configuration.maximumUsesPerConnection = 1
-        
-        app.environment.arguments = ["serve"]
-        
-        app.get("hello") { req in
-            "world"
-        }
-        
-        try app.start()
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        /// Make a regular request
-        let a = try app.http.client.shared.execute(
-            request: try HTTPClient.Request(
-                url: "http://\(ip):\(port)/hello",
-                method: .GET
-            )
-        ).wait()
-        XCTAssertEqual(a.headers[.server], ["Old"])
-        XCTAssertEqual(a.body, ByteBuffer(string: "world"))
-        
-        /// Configure server name without stopping the server
-        app.http.server.configuration.serverName = "New"
-        /// Configure TLS without stopping the server
-        var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
-        serverConfig.certificateVerification = .noHostnameVerification
-        
-        app.http.server.configuration.tlsConfiguration = serverConfig
-        app.http.server.configuration.customCertificateVerifyCallback = { @Sendable peerCerts, successPromise in
-            /// This lies and accepts the above cert, which has actually expired.
-            XCTAssertEqual(peerCerts, [cert])
-            successPromise.succeed(.certificateVerified)
-        }
-        
-        /// Make a TLS request this time around
-        let b = try app.http.client.shared.execute(
-            request: try HTTPClient.Request(
-                url: "https://\(ip):\(port)/hello",
-                method: .GET
-            )
-        ).wait()
-        XCTAssertEqual(b.headers[.server], ["New"])
-        XCTAssertEqual(b.body, ByteBuffer(string: "world"))
-        
-        /// Non-TLS request should now fail
-        XCTAssertThrowsError(try app.http.client.shared.execute(
-            request: try HTTPClient.Request(
-                url: "http://\(ip):\(port)/hello",
-                method: .GET
-            )
-        ).wait()) { error in
-            XCTAssertEqual(error as? HTTPClientError, HTTPClientError.remoteConnectionClosed)
+                    // Binding with port 0 picks a port; the bound address has to report the real one.
+                    let bound = try await app.server.listeningAddress
+                    #expect(bound.port != 0)
+
+                    await group.triggerGracefulShutdown()
+                    try await tg.waitForAll()
+                }
+            }
         }
     }
-    
-    func testConfigurationHasActualPortAfterStart() throws {
-        app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
-        try app.start()
 
-        XCTAssertNotEqual(app.http.server.configuration.port, 0)
-        XCTAssertEqual(app.http.server.configuration.port, app.http.server.shared.localAddress?.port)
-    }
-    
-    override class func setUp() {
-        XCTAssertTrue(isLoggingConfigured)
-    }
-}
+    @Test("Server answers pipelined requests in request order")
+    func testPipelinedRequestsAnswerInOrder() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.get("sleep", ":ms") { req -> String in
+                let ms = try req.parameters.require("ms", as: Int64.self)
+                try await Task.sleep(for: .milliseconds(ms))
+                return "slept \(ms)ms"
+            }
 
-extension Application.Servers.Provider {
-    static var custom: Self {
-        .init {
-            $0.servers.use { $0.customServer }
+            try await app.boot()
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                // Both requests go out before either is answered, and the first is much slower than
+                // the second. HTTP/1.1 has no way to say which response belongs to which request, so
+                // answering out of order hands the client the wrong body.
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: """
+                        GET /sleep/100 HTTP/1.1\r
+                        Host: localhost\r
+                        \r
+                        GET /sleep/0 HTTP/1.1\r
+                        Host: localhost\r
+                        \r
+
+                        """,
+                    // Read until the second response lands rather than until the socket goes quiet:
+                    // the two responses are ~100ms apart by design, and a slow machine can stretch
+                    // that past any quiet period, leaving the test reading only the first.
+                    until: { $0.contains("slept 0ms") })
+
+                let slow = try #require(exchange.bytes.firstRange(of: "slept 100ms"))
+                let fast = try #require(exchange.bytes.firstRange(of: "slept 0ms"))
+                #expect(slow.lowerBound < fast.lowerBound, "responses came back out of order")
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
         }
     }
-}
 
-extension Application {
-    struct Key: StorageKey {
-        typealias Value = CustomServer
+    @Test("Server rejects invalid HTTP without breaking")
+    func testInvalidHTTPDoesNotBreakServer() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.get("ok") { _ in "ok" }
+
+            try await app.boot()
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask {
+                    try await group.run()
+                }
+                let address = try await app.server.listeningAddress
+                let port = try #require(address.port)
+
+                let garbage = try await rawExchange(
+                    port: port, rawRequest: "TOTALLY not a valid HTTP request\r\n\r\n")
+                // Rejecting outright or hanging up are both fine; carrying on as if it parsed is not.
+                #expect(garbage.serverClosed || garbage.bytes.contains("400"))
+
+                // And the listener is still healthy for everyone else.
+                let ok = try await rawExchange(port: port, path: "/ok")
+                #expect(ok.bytes.contains("ok"))
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
+        }
     }
-    
-    var customServer: CustomServer {
-        if let existing = self.storage[Key.self] {
-            return existing
-        } else {
-            let new = CustomServer()
-            self.storage[Key.self] = new
-            return new
+
+    @Test("Server chunk-frames a streamed response of unknown length")
+    func testUnknownLengthStreamedResponseIsChunkFramed() async throws {
+        try await withApp { app in
+            // A real HTTP client hides framing — it parses the response by the rules the server is
+            // supposed to be following — so asserting the wire format needs a socket. Vapor sets
+            // `Transfer-Encoding: chunked` for a body with no declared count; the server writes the
+            // chunk sizes and the terminating chunk. Covers what `PipelineTests.testEchoHandlers`
+            // checked against an `EmbeddedChannel` pipeline that no longer exists.
+            app.post("echo") { req -> Response in
+                // Bodies are lazy, so ask for it.
+                let body = try await req.body.collect() ?? Data()
+                return Response(
+                    body: .init(stream: { writer in
+                        try await writer.write(body)
+                    }))
+            }
+
+            try await withRunningServer(app) { port in
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /echo HTTP/1.1\r\nHost: localhost\r\nContent-Length: 3\r\n\r\nabc",
+                    until: { $0.contains("0\r\n\r\n") })
+
+                #expect(exchange.bytes.contains("HTTP/1.1 200 OK"))
+                // Unknown length, so chunked rather than a Content-Length.
+                #expect(exchange.bytes.lowercased().contains("transfer-encoding: chunked"))
+                #expect(!exchange.bytes.lowercased().contains("content-length:"))
+                // The body, chunk-framed, then the terminating zero-length chunk.
+                #expect(exchange.bytes.contains("3\r\nabc\r\n"))
+                #expect(exchange.bytes.hasSuffix("0\r\n\r\n"))
+                // Framing was valid, so the connection stays up.
+                #expect(!exchange.serverClosed)
+            }
+        }
+    }
+
+    @Test("Server treats a request with no framing headers as having an empty body")
+    func testRequestWithNoFramingHeadersHasEmptyBody() async throws {
+        try await withApp { app in
+            // Neither `Content-Length` nor `Transfer-Encoding`, so the request has no body. The server
+            // must treat it as empty and answer rather than wait for bytes that are never coming.
+            // AsyncHTTPClient always sends `Content-Length: 0` for a body-less POST, so a client-based
+            // test never exercises this. Covers `PipelineTests.testEOFFraming`.
+            app.post("count") { req -> String in
+                "\(req.body.data?.count ?? 0)"
+            }
+
+            try await withRunningServer(app) { port in
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: "POST /count HTTP/1.1\r\nHost: localhost\r\n\r\n",
+                    until: { $0.contains("\r\n\r\n0") })
+
+                #expect(exchange.bytes.contains("HTTP/1.1 200 OK"))
+                #expect(exchange.bytes.hasSuffix("0"))
+                #expect(!exchange.serverClosed)
+            }
+        }
+    }
+
+    @Test("Server closes with Connection: close when it can't drain the request body")
+    func testUndrainableRequestBodyIsAnsweredWithConnectionClose() async throws {
+        try await withApp { app in
+            // A request rejected without being read leaves its body on the wire. If more is left than
+            // `maxDrainBytes`, the connection can't be reused — and the client has to learn that from
+            // the response, not from a socket that dies under its still-in-flight upload. Answering
+            // with keep-alive framing and then hanging up makes the client fail the request it has
+            // already been answered.
+            app.routes.defaultMaxBodySize = 1
+            // The handler has to *ask* for the body for the limit to bite — that is what lazy
+            // collection means. A route that never reads an oversized body now answers normally.
+            app.on(.post, "reject") { req -> HTTPResponse.Status in
+                _ = try await req.body.collect()
+                return .ok
+            }
+
+            try await withRunningServer(app) { port in
+                let oversized = String(repeating: "a", count: 500_000)
+                #expect(oversized.utf8.count > app.serverConfiguration.maxDrainBytes)
+
+                let exchange = try await rawExchange(
+                    port: port,
+                    rawRequest: """
+                        POST /reject HTTP/1.1\r
+                        Host: localhost\r
+                        Content-Length: \(oversized.utf8.count)\r
+                        \r
+                        \(oversized)
+                        """,
+                    until: { $0.contains("\r\n\r\n") })
+
+                #expect(exchange.bytes.contains("HTTP/1.1 413 Payload Too Large"))
+                #expect(exchange.bytes.lowercased().contains("connection: close"))
+                // Deliberately no assertion on *how* the connection ends. With this much of the body
+                // left unread the server's close races the client's remaining writes, so it lands as
+                // either a clean FIN or an RST depending on timing — asserting either one is a flake.
+                // The header is the contract: the client is told not to reuse the connection.
+            }
+        }
+    }
+
+    @Test("Test Live Server")
+    func testLiveServer() async throws {
+        try await withApp { app in
+            app.routes.get("ping") { req -> String in
+                return "123"
+            }
+
+            try await app.testing { client in
+                let res = try await client.get("/ping")
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == "123")
+            }
+        }
+    }
+
+    @Test("Test Custom Server", .timeLimit(.minutes(1)))
+    func testCustomServer() async throws {
+        let customServer = CustomServer()
+        try await withApp(services: .init(server: .provided(customServer))) { app in
+            #expect(customServer.didStart.withLock({ $0 }) == false)
+            #expect(customServer.didShutdown.withLock({ $0 }) == false)
+
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+                await customServer.started.wait()
+                #expect(customServer.didStart.withLock({ $0 }) == true)
+                #expect(customServer.didShutdown.withLock({ $0 }) == false)
+                group.cancelAll()
+            }
+            #expect(customServer.didShutdown.withLock({ $0 }) == true)
+        }
+    }
+
+    @Test("Test Multiple Chunk Body")
+    func testMultipleChunkBody() async throws {
+        try await withApp { app in
+            let payload = [UInt8].random(count: 1 << 20)
+
+            app.on(.post, "payload", maxBodySize: "1gb") { req -> HTTPResponse.Status in
+                guard let data = try await req.body.collect() else {
+                    throw Abort(.internalServerError)
+                }
+                #expect(payload.count == data.count)
+                #expect([UInt8](data) == payload)
+                return .ok
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.post("payload") { req in
+                    req.body = .init(data: Data(payload))
+                }
+                #expect(res.status == .ok)
+            }
+        }
+    }
+
+    @Test("Test Missing Body", .bug("https://github.com/vapor/vapor/issues/1786"))
+    func testMissingBody() async throws {
+        struct User: Content {}
+
+        try await withApp { app in
+            app.get("user") { req -> User in
+                return try await req.content.decode(User.self)
+            }
+
+            try await app.testing { client in
+                let res = try await client.get("/user")
+                #expect(res.status == .unsupportedMediaType)
+            }
+        }
+    }
+
+    @Test("Test Quiesce Keep Alive Connections", .timeLimit(.minutes(1)))
+    func testQuiesceKeepAliveConnections() async throws {
+        try await withApp { app in
+            app.get("hello") { req in
+                "world"
+            }
+
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+            let group = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
+            try await withThrowingTaskGroup(of: Void.self) { tg in
+                tg.addTask { try await group.run() }
+                let port = try #require(try await app.server.listeningAddress.port)
+
+                var request = HTTPClientRequest(url: "http://127.0.0.1:\(port)/hello")
+                request.headers.add(name: "connection", value: "keep-alive")
+                let response = try await HTTPClient.shared.execute(request, timeout: .seconds(15))
+                #expect(response.status == .ok)
+                // HTTP/1.1 connections persist by default, so a correct server says nothing rather
+                // than sending `Connection: keep-alive` — only `close` needs announcing. What
+                // matters is that it doesn't ask to hang up, and that the graceful shutdown below
+                // still completes with the connection open.
+                #expect(HTTPFields(response.headers, splitCookie: false).connection != .close)
+
+                await group.triggerGracefulShutdown()
+                try await tg.waitForAll()
+            }
         }
     }
 }
 
 final class CustomServer: Server, Sendable {
-    let didStart: NIOLockedValueBox<Bool>
-    let didShutdown: NIOLockedValueBox<Bool>
-    var onShutdown: EventLoopFuture<Void> {
-        fatalError()
-    }
-    
+    let didStart: Mutex<Bool>
+    let didShutdown: Mutex<Bool>
+    /// Reached once `run()` has been entered, for a test to wait on rather than poll.
+    let started = Checkpoint()
+
     init() {
         self.didStart = .init(false)
         self.didShutdown = .init(false)
     }
-    
-    func start(address: BindAddress?) throws {
-        self.didStart.withLockedValue { $0 = true }
+
+    func run() async throws {
+        self.didStart.withLock { $0 = true }
+        self.started.reach()
+        // Block until cancelled
+        try await withTaskCancellationHandler {
+            try await Task.sleep(for: .seconds(3600))
+        } onCancel: {
+            self.didShutdown.withLock { $0 = true }
+        }
     }
-    
-    func start(address: BindAddress?) async throws {
-        self.didStart.withLockedValue { $0 = true }
-    }
-    
-    func shutdown() {
-        self.didShutdown.withLockedValue { $0 = true }
-    }
-    
-    func shutdown() async {
-        self.didShutdown.withLockedValue { $0 = true }
+
+    var listeningAddress: Vapor.SocketAddress {
+        get async throws {
+            Vapor.SocketAddress(ipAddress: "127.0.0.1", port: 0)!
+        }
     }
 }
 
-private extension ByteBuffer {
-    init?(base64String: String) {
+extension ByteBuffer {
+    fileprivate init?(base64String: String) {
         guard let decoded = Data(base64Encoded: base64String) else { return nil }
         var buffer = ByteBufferAllocator().buffer(capacity: decoded.count)
         buffer.writeBytes(decoded)

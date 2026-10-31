@@ -1,0 +1,158 @@
+import Benchmark
+import Foundation
+import HTTPTypes
+import NIOCore
+import Vapor
+
+private struct FormPayload: Codable, Equatable {
+    var name: String
+    var page: Int
+    var tags: [String]
+}
+
+func contentBenchmarks() {
+    let form = FormPayload(name: "hello world", page: 2, tags: ["swift", "server"])
+    let encodedForm = "name=hello%20world&page=2&tags[0]=swift&tags[1]=server"
+    Benchmark("content.URLEncodedFormDecoder-array-fields") { benchmark in
+        let decoder = URLEncodedFormDecoder()
+        let decoded = try decoder.decode(FormPayload.self, from: encodedForm)
+        precondition(decoded == form)
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            blackHole(try decoder.decode(FormPayload.self, from: encodedForm))
+        }
+    }
+    Benchmark("content.URLEncodedFormEncoder-array-fields") { benchmark in
+        let encoder = URLEncodedFormEncoder()
+        let encoded = try encoder.encode(form)
+        let decoded = try URLEncodedFormDecoder().decode(FormPayload.self, from: encoded)
+        precondition(decoded == form)
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            blackHole(try encoder.encode(form))
+        }
+    }
+
+    Benchmark("content.decode-JSON-body-small") { benchmark in
+        let call = RequestCall(
+            .post, "/decode",
+            headers: [.contentType: "application/json"],
+            body: json(#"{"name":"Vapor"}"#)
+        )
+        for _ in benchmark.scaledIterations {
+            blackHole(try await run(call))
+        }
+    } setup: {
+        try await setUpApplication { app in
+            app.post("decode") { req -> String in
+                try await req.content.decode(SmallPayload.self).name
+            }
+        }
+    } teardown: {
+        try await tearDownApplication()
+    }
+
+    Benchmark("content.decode-JSON-body") { benchmark in
+        let call = RequestCall(
+            .post, "/decode",
+            headers: [.contentType: "application/json"],
+            body: json(#"{"id":1,"name":"Widget 1","price":9.99,"tags":["a","b","c"]}"#)
+        )
+        for _ in benchmark.scaledIterations {
+            blackHole(try await run(call))
+        }
+    } setup: {
+        try await setUpApplication { app in
+            app.post("decode") { req -> String in
+                try await req.content.decode(Item.self).name
+            }
+        }
+    } teardown: {
+        try await tearDownApplication()
+    }
+
+    Benchmark("content.decode-JSON-array-of-100") { benchmark in
+        let encoded = try! JSONEncoder().encode(makeItems(100))
+        let call = RequestCall(
+            .post, "/decode",
+            headers: [.contentType: "application/json"],
+            body: encoded
+        )
+        for _ in benchmark.scaledIterations {
+            blackHole(try await run(call))
+        }
+    } setup: {
+        try await setUpApplication { app in
+            app.post("decode") { req -> String in
+                try await req.content.decode([Item].self).count.description
+            }
+        }
+    } teardown: {
+        try await tearDownApplication()
+    }
+
+    Benchmark("content.decode-URL-encoded-form") { benchmark in
+        let call = RequestCall(
+            .post, "/decode",
+            headers: [.contentType: "application/x-www-form-urlencoded"],
+            body: json("email=vapor%40vapor.codes&password=secret")
+        )
+        for _ in benchmark.scaledIterations {
+            blackHole(try await run(call))
+        }
+    } setup: {
+        try await setUpApplication { app in
+            app.post("decode") { req -> String in
+                try await req.content.decode(Credentials.self).email
+            }
+        }
+    } teardown: {
+        try await tearDownApplication()
+    }
+
+    Benchmark("content.decode-query-string") { benchmark in
+        let call = RequestCall(.get, "/search?term=widget&page=2&perPage=50")
+        for _ in benchmark.scaledIterations {
+            blackHole(try await run(call))
+        }
+    } setup: {
+        try await setUpApplication { app in
+            app.get("search") { req -> String in
+                try req.query.decode(SearchQuery.self).term
+            }
+        }
+    } teardown: {
+        try await tearDownApplication()
+    }
+
+    Benchmark("content.read-single-query-parameter") { benchmark in
+        let call = RequestCall(.get, "/search?term=widget&page=2&perPage=50")
+        for _ in benchmark.scaledIterations {
+            blackHole(try await run(call))
+        }
+    } setup: {
+        try await setUpApplication { app in
+            app.get("search") { req -> String in
+                try req.query.get(String.self, at: "term")
+            }
+        }
+    } teardown: {
+        try await tearDownApplication()
+    }
+
+    Benchmark("content.JSONEncoder-single-item") { benchmark in
+        let encoder = JSONEncoder()
+        let item = makeItem()
+        for _ in benchmark.scaledIterations {
+            blackHole(try encoder.encode(item))
+        }
+    }
+
+    Benchmark("content.JSONDecoder-single-item") { benchmark in
+        let decoder = JSONDecoder()
+        let data = try! JSONEncoder().encode(makeItem())
+        for _ in benchmark.scaledIterations {
+            blackHole(try decoder.decode(Item.self, from: data))
+        }
+    }
+}

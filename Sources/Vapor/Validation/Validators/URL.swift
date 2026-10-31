@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension Validator where T == String {
     /// Validates whether a `String` is a valid URL.
@@ -9,7 +13,7 @@ extension Validator where T == String {
     public static var url: Validator<T> {
         .init {
             guard
-                let url = Foundation.URL(string: $0),
+                let url = URL(string: $0),
                 url.isFileURL || (url.host != nil && url.scheme != nil)
             else {
                 return ValidatorResults.URL(isValidURL: false)
@@ -31,11 +35,11 @@ extension ValidatorResults.URL: ValidatorResult {
     public var isFailure: Bool {
         !self.isValidURL
     }
-    
+
     public var successDescription: String? {
         "is a valid URL"
     }
-    
+
     public var failureDescription: String? {
         "is an invalid URL"
     }

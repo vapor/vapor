@@ -24,34 +24,34 @@ public enum RangeResult<T>: Equatable where T: Comparable {
 
     var description: String {
         switch self {
-        case let .between(min, max):
+        case .between(let min, let max):
             return "between \(min) and \(max)"
-        case let .greaterThanOrEqualToMin(min):
+        case .greaterThanOrEqualToMin(let min):
             return "greater than or equal to minimum of \(min)"
-        case let .greaterThanMax(max):
+        case .greaterThanMax(let max):
             return "greater than maximum of \(max)"
-        case let .lessThanMin(min):
+        case .lessThanMin(let min):
             return "less than minimum of \(min)"
-        case let .lessThanOrEqualToMax(max):
+        case .lessThanOrEqualToMax(let max):
             return "less than or equal to maximum of \(max)"
         }
     }
 
     /// initialize a range result
-    /// 
+    ///
     /// in case the provided value is not comparable (e.g. Float.nan) a `RangeResultError.notComparable` will be thrown
     init(min: T?, max: T?, value: T) throws {
         precondition(min != nil || max != nil, "Either `min` or `max` has to be non-nil")
         switch (min, max) {
-        case let (.some(min), .some(max)) where value >= min && value <= max:
+        case (.some(let min), .some(let max)) where value >= min && value <= max:
             self = .between(min: min, max: max)
-        case let (.some(min), _) where value < min:
+        case (.some(let min), _) where value < min:
             self = .lessThanMin(min)
-        case let (_, .some(max)) where value > max:
+        case (_, .some(let max)) where value > max:
             self = .greaterThanMax(max)
-        case let (.some(min), _) where value >= min:
+        case (.some(let min), _) where value >= min:
             self = .greaterThanOrEqualToMin(min)
-        case let (_, .some(max)) where value <= max:
+        case (_, .some(let max)) where value <= max:
             self = .lessThanOrEqualToMax(max)
         case (_, _):
             // any other case is either not comparable (e.g. comparing Float.nan with anything is always false)

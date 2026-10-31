@@ -1,13 +1,10 @@
-#if canImport(Glibc)
-import Glibc
-#elseif canImport(Musl)
-import Musl
-#elseif canImport(Android)
-import Android
-#else
-import Darwin.C
-#endif
 import Logging
+
+#if canImport(FoundationEssentials)
+import class FoundationEssentials.FileManager
+#else
+import class Foundation.FileManager
+#endif
 
 /// `DirectoryConfiguration` represents a configured working directory.
 /// It can also be used to derive a working directory automatically.
@@ -21,7 +18,7 @@ public struct DirectoryConfiguration: Sendable {
     public var resourcesDirectory: String
     public var viewsDirectory: String
     public var publicDirectory: String
-    
+
     /// Create a new `DirectoryConfig` with a custom working directory.
     ///
     /// - parameters:
@@ -32,40 +29,30 @@ public struct DirectoryConfiguration: Sendable {
         self.viewsDirectory = self.resourcesDirectory + "Views/"
         self.publicDirectory = self.workingDirectory + "Public/"
     }
-    
+
     /// Creates a `DirectoryConfig` by deriving a working directory using the `#file` variable or `getcwd` method.
     ///
     /// - returns: The derived `DirectoryConfig` if it could be created, otherwise just "./".
     public static func detect() -> DirectoryConfiguration {
-        // get actual working directory
-        let cwd = getcwd(nil, Int(PATH_MAX))
-        defer {
-            if let cwd = cwd {
-                free(cwd)
-            }
-        }
-
-        let workingDirectory: String
-
-        if let cwd, let string = String(validatingCString: cwd) {
-            workingDirectory = string
-        } else {
-            workingDirectory = "./"
-        }
+        // get actual working directory, falling back to "./" if it's inaccessible
+        let cwd = FileManager.default.currentDirectoryPath
+        let workingDirectory = cwd.isEmpty ? "./" : cwd
 
         #if Xcode
         if workingDirectory.contains("DerivedData") {
             Logger(label: "codes.vapor.directory-config")
-                .warning("No custom working directory set for this scheme, using \(workingDirectory)")
+                .warning(
+                    "No custom working directory set for this scheme, using the process working directory",
+                    metadata: ["workingDirectory": "\(workingDirectory)"])
         }
         #endif
-        
+
         return DirectoryConfiguration(workingDirectory: workingDirectory)
     }
 }
 
-public extension String {
-    func finished(with string: String) -> String {
+extension String {
+    public func finished(with string: String) -> String {
         if !self.hasSuffix(string) {
             return self + string
         } else {

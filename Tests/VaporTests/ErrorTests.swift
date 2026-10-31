@@ -1,145 +1,200 @@
-import XCTest
-import XCTVapor
-import Vapor
-import VaporTestUtils
+import HTTPTypes
+import InMemoryLogging
 import Logging
+import RoutingKit
+import Testing
+import Vapor
+import VaporTesting
 
-final class ErrorTests: XCTestCase {
-    var app: Application!
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
-    override func setUp() async throws {
-        app = try await Application.make(.testing)
-    }
+@Suite("Error Tests")
+struct ErrorTests {
 
-    override func tearDown() async throws {
-        try await app.asyncShutdown()
-    }
-
+    @Test("Test Debug Description of Errors")
     func testPrintable() throws {
         let expectedPrintable = """
-        FooError.noFoo: You do not have a `foo`.
-        Here are some possible causes:
-        - You did not set the flongwaffle.
-        - The session ended before a `Foo` could be made.
-        - The universe conspires against us all.
-        - Computers are hard.
-        These suggestions could address the issue:
-        - You really want to use a `Bar` here.
-        - Take up the guitar and move to the beach.
-        Vapor's documentation talks about this:
-        - http://documentation.com/Foo
-        - http://documentation.com/foo/noFoo
+            FooError.noFoo: You do not have a `foo`.
+            Here are some possible causes:
+            - You did not set the flongwaffle.
+            - The session ended before a `Foo` could be made.
+            - The universe conspires against us all.
+            - Computers are hard.
+            These suggestions could address the issue:
+            - You really want to use a `Bar` here.
+            - Take up the guitar and move to the beach.
+            Vapor's documentation talks about this:
+            - http://documentation.com/Foo
+            - http://documentation.com/foo/noFoo
 
-        """
-        XCTAssertEqual(FooError.noFoo.debugDescription, expectedPrintable)
+            """
+        #expect(FooError.noFoo.debugDescription == expectedPrintable)
     }
 
+    @Test("Test Omitting Empty Fields")
     func testOmitEmptyFields() {
-        XCTAssertTrue(FooError.noFoo.stackOverflowQuestions.isEmpty)
-        XCTAssertFalse(
-            FooError.noFoo.debugDescription.contains("Stack Overflow")
-        )
+        #expect(FooError.noFoo.stackOverflowQuestions.isEmpty == true)
+        #expect(FooError.noFoo.debugDescription.contains("Stack Overflow") == false)
     }
 
+    @Test("Test Readable Names")
     func testReadableName() {
-        XCTAssertEqual(FooError.readableName, "Foo Error")
+        #expect(FooError.readableName == "Foo Error")
     }
 
+    @Test("Test Error Identifier")
     func testIdentifier() {
-        XCTAssertEqual(FooError.noFoo.identifier, "noFoo")
+        #expect(FooError.noFoo.identifier == "noFoo")
     }
 
+    @Test("Test Error Causes")
     func testCausesAndSuggestions() {
-        XCTAssertEqual(FooError.noFoo.possibleCauses, [
-            "You did not set the flongwaffle.",
-            "The session ended before a `Foo` could be made.",
-            "The universe conspires against us all.",
-            "Computers are hard."
-        ])
+        #expect(
+            FooError.noFoo.possibleCauses == [
+                "You did not set the flongwaffle.",
+                "The session ended before a `Foo` could be made.",
+                "The universe conspires against us all.",
+                "Computers are hard.",
+            ])
 
-        XCTAssertEqual(FooError.noFoo.suggestedFixes, [
-            "You really want to use a `Bar` here.",
-            "Take up the guitar and move to the beach."
-        ])
+        #expect(
+            FooError.noFoo.suggestedFixes == [
+                "You really want to use a `Bar` here.",
+                "Take up the guitar and move to the beach.",
+            ])
 
-        XCTAssertEqual(FooError.noFoo.documentationLinks, [
-            "http://documentation.com/Foo",
-            "http://documentation.com/foo/noFoo"
-        ])
+        #expect(
+            FooError.noFoo.documentationLinks == [
+                "http://documentation.com/Foo",
+                "http://documentation.com/foo/noFoo",
+            ])
     }
 
+    @Test("Test Minimum Conformance")
     func testMinimumConformance() {
         let minimum = MinimumError.alpha
         let description = minimum.debugDescription
         let expectation = """
-        MinimumError.alpha: Not enabled
-        
-        """
-        XCTAssertEqual(description, expectation)
+            MinimumError.alpha: Not enabled
+
+            """
+        #expect(description == expectation)
     }
 
-    func testAbortError() throws {
-        app.get("foo") { req -> String in
-            throw Abort(.internalServerError, reason: "Foo")
-        }
+    @Test("Test Abort Error")
+    func testAbortError() async throws {
+        try await withApp { app in
+            app.get("foo") { req -> String in
+                throw Abort(.internalServerError, reason: "Foo")
+            }
 
-        app.post("foo") { req -> Foo in
-            try req.content.decode(Foo.self)
-        }
+            app.post("foo") { req -> Foo in
+                try await req.content.decode(Foo.self)
+            }
 
-        struct AbortResponse: Content {
-            var reason: String
-        }
+            struct AbortResponse: Content {
+                var reason: String
+            }
 
-        try app.test(.GET, "foo") { res in
-            XCTAssertEqual(res.status, .internalServerError)
-            let abort = try res.content.decode(AbortResponse.self)
-            XCTAssertEqual(abort.reason, "Foo")
-        }.test(.POST, "foo", beforeRequest: { req in
-            try req.content.encode(Foo(bar: 42))
-        }, afterResponse: { res in
-            XCTAssertEqual(res.status, .internalServerError)
-            let abort = try res.content.decode(AbortResponse.self)
-            XCTAssertEqual(abort.reason, "After decode")
-        })
-    }
-    
-    func testErrorMiddlewareUsesContentConfiguration() throws {
-        app.get("foo") { req -> String in
-            throw Abort(.internalServerError, reason: "Foo")
-        }
-        
-        ContentConfiguration.global.use(encoder: URLEncodedFormEncoder(), for: .json)
-        
-        try app.test(.GET, "foo") { res in
-            XCTAssertEqual(res.status, HTTPStatus.internalServerError)
-            let option1 = "error=true&reason=Foo"
-            let option2 = "reason=Foo&error=true"
-            guard res.body.string == option1 || res.body.string == option2 else {
-                XCTFail("Response does not match")
-                return
+            try await app.testing { client in
+                let getRes = try await client.get("foo")
+                #expect(getRes.status == .internalServerError)
+                let abort = try await getRes.content.decode(AbortResponse.self)
+                #expect(abort.reason == "Foo")
+
+                let postRes = try await client.post("foo", content: Foo(bar: 42))
+                #expect(postRes.status == .internalServerError)
+                let postAbort = try await postRes.content.decode(AbortResponse.self)
+                #expect(postAbort.reason == "After decode")
             }
         }
-        
-        // Clean up
-        ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)
+    }
+
+    @Test("Error middleware reports at the error's level, or debug", .bug("https://github.com/vapor/vapor/issues/3203"))
+    func errorMiddlewareReportLevels() async throws {
+        let logHandler = InMemoryLogHandler()
+        var logger = Logger(label: "codes.vapor.test", factory: { _ in logHandler })
+        logger.logLevel = .trace
+        try await withApp(logger: logger) { app in
+            app.get("server") { _ -> String in throw Abort(.internalServerError) }
+            app.get("client") { _ -> String in throw Abort(.forbidden) }
+            app.get("plain") { _ -> String in throw PlainError() }
+            app.get("loud") { _ -> String in throw LoudError() }
+
+            try await app.testing { client in
+                for path in ["server", "client", "plain", "loud", "missing"] {
+                    _ = try await client.get(URI(path: path))
+                }
+            }
+        }
+        // The middleware's reports are the entries carrying the request's URL.
+        let levels = Dictionary(
+            logHandler.entries.compactMap { entry -> (String, Logger.Level)? in
+                guard case .string(let url) = entry.metadata["url"] else { return nil }
+                return (url, entry.level)
+            },
+            uniquingKeysWith: { first, _ in first })
+        #expect(
+            levels == [
+                "/server": .debug,
+                "/client": .debug,
+                "/plain": .debug,
+                "/loud": .error,
+                "/missing": .debug,
+            ])
+    }
+
+    @Test("Reporting an error uses the given level, then the error's own")
+    func reportUsesErrorLevel() {
+        let cases: [(any Error, Logger.Level?, Logger.Level)] = [
+            (LoudError(), nil, .error),
+            (Abort(.internalServerError), nil, .debug),
+            (PlainError(), nil, .warning),
+            (LoudError(), .debug, .debug),
+            (PlainError(), .info, .info),
+        ]
+        for (error, level, expected) in cases {
+            let logHandler = InMemoryLogHandler()
+            var logger = Logger(label: "codes.vapor.test", factory: { _ in logHandler })
+            logger.logLevel = .trace
+            logger.report(error: error, level: level)
+            #expect(logHandler.entries.map(\.level) == [expected], "\(type(of: error)) at \(String(describing: level))")
+        }
+    }
+
+    @Test("Test Error Middleware Uses Content Configuration")
+    func testErrorMiddlewareUsesContentConfiguration() async throws {
+        var contentConfiguration = ContentConfiguration.default()
+        contentConfiguration.use(encoder: URLEncodedFormEncoder(), for: .json)
+        try await withApp(services: .init(contentConfiguration: contentConfiguration)) { app in
+            app.get("foo") { req -> String in
+                throw Abort(.internalServerError, reason: "Foo")
+            }
+
+            try await app.testing { client in
+                let res = try await client.get("/foo")
+                #expect(res.status == HTTPResponse.Status.internalServerError)
+                let option1 = "error=true&reason=Foo"
+                let option2 = "reason=Foo&error=true"
+                guard res.body.string == option1 || res.body.string == option2 else {
+                    Issue.record("Response does not match")
+                    return
+                }
+            }
+        }
     }
 }
 
-func XCTAssertContains(
-    _ haystack: String?,
-    _ needle: String,
-    file: StaticString = #filePath,
-    line: UInt = #line
-) {
-    let file = (file)
-    guard let haystack = haystack else {
-        XCTFail("\(needle) not found in: nil", file: file, line: line)
-        return
-    }
-    if !haystack.contains(needle) {
-        XCTFail("\(needle) not found in: \(haystack)", file: file, line: line)
-    }
+private struct PlainError: Error {}
+
+private struct LoudError: DebuggableError {
+    var identifier: String { "loud" }
+    var reason: String { "Loud" }
+    var logLevel: Logger.Level { .error }
 }
 
 private struct Foo: Content {
@@ -167,12 +222,12 @@ private enum MinimumError: String, DebuggableError {
     ///     }
     var reason: String {
         switch self {
-            case .alpha:
-                return "Not enabled"
-            case .bravo:
-                return "Enabled, but I'm not configured"
-            case .charlie:
-                return "Broken beyond repair"
+        case .alpha:
+            return "Not enabled"
+        case .bravo:
+            return "Enabled, but I'm not configured"
+        case .charlie:
+            return "Broken beyond repair"
         }
     }
 
@@ -191,7 +246,6 @@ private enum MinimumError: String, DebuggableError {
         return []
     }
 }
-
 
 private enum FooError: String, DebuggableError {
     case noFoo
@@ -218,7 +272,7 @@ private enum FooError: String, DebuggableError {
                 "You did not set the flongwaffle.",
                 "The session ended before a `Foo` could be made.",
                 "The universe conspires against us all.",
-                "Computers are hard."
+                "Computers are hard.",
             ]
         }
     }
@@ -228,7 +282,7 @@ private enum FooError: String, DebuggableError {
         case .noFoo:
             return [
                 "You really want to use a `Bar` here.",
-                "Take up the guitar and move to the beach."
+                "Take up the guitar and move to the beach.",
             ]
         }
     }
@@ -238,7 +292,7 @@ private enum FooError: String, DebuggableError {
         case .noFoo:
             return [
                 "http://documentation.com/Foo",
-                "http://documentation.com/foo/noFoo"
+                "http://documentation.com/foo/noFoo",
             ]
         }
     }

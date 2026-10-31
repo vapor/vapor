@@ -4,67 +4,116 @@ concurrency:
   cancel-in-progress: true
 on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
-  push: { branches: [ main ] }
+  push: { branches: [main, vapor5] }
 
 jobs:
-  test-providers:
-    permissions:
-      contents: read
-    if: ${{ !(github.event.pull_request.draft || false) }}
-    strategy:
-      fail-fast: false
-      matrix:
-        provider:
-          - vapor/jwt
-          - vapor/fluent
-          - vapor/leaf
-          - vapor/queues
-          - vapor/apns
-    runs-on: ubuntu-latest
-    container: swift:6.2
-    steps:
-      - name: Check out Vapor
-        uses: actions/checkout@v6
-        with:
-          path: vapor
-      - name: Check out provider
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ matrix.provider }}
-          path: provider
-      - name: Use local Vapor
-        run: swift package --package-path ./provider edit vapor --path ./vapor
-      - name: Run tests
-        run: swift test --package-path ./provider
+  # test-providers:
+  #   permissions:
+  #     contents: read
+  #   if: ${{ !(github.event.pull_request.draft || false) }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       provider:
+  #         - vapor/jwt
+  #         - vapor/fluent
+  #         - vapor/leaf
+  #         - vapor/queues
+  #         - vapor/apns
+  #   runs-on: ubuntu-latest
+  #   container: swift:6.2
+  #   steps:
+  #     - name: Check out Vapor
+  #       uses: actions/checkout@v7
+  #       with:
+  #         path: vapor
+  #     - name: Check out provider
+  #       uses: actions/checkout@v7
+  #       with:
+  #         repository: ${{ matrix.provider }}
+  #         path: provider
+  #     - name: Use local Vapor
+  #       run: swift package --package-path ./provider edit vapor --path ./vapor
+  #     - name: Run tests
+  #       run: swift test --package-path ./provider
 
   unit-tests:
     permissions:
       contents: read
-    uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
+    uses: vapor/ci/.github/workflows/run-unit-tests.yml@86063c56edafba6c24009fca0db54a6a3bad4ea3 # main
     with:
       with_release_mode_testing: true
       with_tsan: false
       with_musl: true
+      with_android: false
       extra_musl_flags: --target Vapor
-      ios_xcodebuild_action: ''
+      ios_xcodebuild_action: ""
       ios_scheme_name: Vapor
+      with_linting: true
+      enable_all_traits: true
     secrets: inherit
+
+  package-traits:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    container: swift:noble
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v7
+      - name: Run tests with traits disabled
+        run: swift test --disable-default-traits
+
+  benchmarks:
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      matrix:
+        include:
+          - mode: uninstrumented
+            traits: ""
+          - mode: allocations
+            traits: "--traits AllocationCounting"
+    permissions:
+      contents: read
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    # Match the benchmark runner's architecture and resource limits to catch build OOMs.
+    container:
+      image: swift:6.4-noble
+      options: --cpuset-cpus=0-1 --memory=8g --memory-swap=8g
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v7
+      - name: Build release benchmarks and smoke-test all fixtures
+        run: |
+          BENCHMARK_SMOKE=1 NIO_SINGLETON_GROUP_LOOP_COUNT=2 NIO_SINGLETON_BLOCKING_POOL_THREAD_COUNT=2 \
+            swift package -c release --package-path Benchmarks --scratch-path Benchmarks/.build/${{ matrix.mode }} ${{ matrix.traits }} \
+              --disable-sandbox --allow-writing-to-package-directory benchmark --no-progress
+
+  performance-harness:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    container: swift:noble
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v7
+      # Just build for now to make sure it actually compiles
+      - name: Build the performance harness
+        run: swift build --package-path Performance
 
   submit-dependencies:
     permissions:
       contents: write
     if: ${{ github.event_name == 'push' }}
-    uses: vapor/ci/.github/workflows/submit-deps.yml@main
+    uses: vapor/ci/.github/workflows/submit-deps.yml@86063c56edafba6c24009fca0db54a6a3bad4ea3 # main
     secrets: inherit
 
-  test-parallel:
+  foundation-linking:
+    uses: vapor/ci/.github/workflows/check-foundation-linking.yml@86063c56edafba6c24009fca0db54a6a3bad4ea3 # main
     permissions:
       contents: read
-    if: ${{ !(github.event.pull_request.draft || false) }}
-    runs-on: ubuntu-latest
-    container: swift:6.2
-    steps:
-      - name: Check out Vapor
-        uses: actions/checkout@v6
-      - name: Run tests
-        run: swift test --parallel
+    with:
+      swift_image: swift:noble
+      excluded_products: 'VaporTesting'

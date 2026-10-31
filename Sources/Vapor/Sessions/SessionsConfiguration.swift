@@ -1,4 +1,8 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Configuration options for sessions.
 public struct SessionsConfiguration: Sendable {
@@ -17,18 +21,18 @@ public struct SessionsConfiguration: Sendable {
     /// - parameters:
     ///     - cookieName: Name of HTTP cookie, used as a key for the cookie value.
     ///     - cookieFactory: Creates a new `HTTPCookieValue` for the supplied value `String`.
-    @preconcurrency public init(cookieName: String, cookieFactory: @Sendable @escaping (SessionID) -> HTTPCookies.Value) {
+    public init(cookieName: String, cookieFactory: @Sendable @escaping (SessionID) -> HTTPCookies.Value) {
         self.cookieName = cookieName
         self.cookieFactory = cookieFactory
     }
 
     /// `SessionsConfig` with basic cookie factory.
     public static func `default`() -> SessionsConfiguration {
-        return .init(cookieName: "vapor-session") { sessionID in
-            return HTTPCookies.Value(
+        .init(cookieName: "vapor-session") { sessionID in
+            HTTPCookies.Value(
                 string: sessionID.string,
                 expires: Date(
-                    timeIntervalSinceNow: 60 * 60 * 24 * 7 // one week
+                    timeIntervalSinceNow: 60 * 60 * 24 * 7  // one week
                 ),
                 maxAge: nil,
                 domain: nil,

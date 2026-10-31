@@ -15,22 +15,12 @@ extension ValidatorResults.Nil: ValidatorResult {
     public var isFailure: Bool {
         !self.isNil
     }
-    
+
     public var successDescription: String? {
-        switch self.isNil {
-        case true:
-            return "is not null"
-        case false:
-            return "is null"
-        }
+        "is null"
     }
-    
+
     public var failureDescription: String? {
-        switch self.isNil {
-        case true:
-            return "is null"
-        case false:
-            return "is not null"
-        }
+        "is not null"
     }
 }

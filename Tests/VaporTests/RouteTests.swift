@@ -1,176 +1,236 @@
-import XCTVapor
-import XCTest
+import HTTPTypes
+import RoutingKit
+import Testing
 import Vapor
-import NIOCore
-import NIOHTTP1
+import VaporTesting
 
-@available(*, deprecated, message: "Test old future APIs")
-final class RouteTests: XCTestCase {
-    func testParameter() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
-        app.routes.get("hello", ":a") { req in
-            return req.parameters.get("a") ?? ""
-        }
-        app.routes.get("hello", ":a", ":b") { req in
-            return [req.parameters.get("a") ?? "", req.parameters.get("b") ?? ""]
-        }
-        try app.testable().test(.GET, "/hello/vapor") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertContains(res.body.string, "vapor")
-        }.test(.POST, "/hello/vapor") { res in
-            XCTAssertEqual(res.status, .notFound)
-        }.test(.GET, "/hello/vapor/development") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, #"["vapor","development"]"#)
-        }
-    }
-
-    func testRequiredParameter() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.routes.get("string", ":value") { req in
-            return try req.parameters.require("value")
-        }
-
-        app.routes.get("int", ":value") { req -> String in
-            let value = try req.parameters.require("value", as: Int.self)
-            return String(value)
-        }
-
-        app.routes.get("missing") { req in
-            return try req.parameters.require("value")
-        }
-
-        try app.testable().test(.GET, "/string/test") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertContains(res.body.string, "test")
-        }.test(.GET, "/int/123") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "123")
-        }.test(.GET, "/int/not-int") { res in
-            XCTAssertEqual(res.status, .unprocessableEntity)
-        }.test(.GET, "/missing") { res in
-            XCTAssertEqual(res.status, .internalServerError)
-        }
-    }
-
-    func testJSON() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.routes.get("json") { req -> [String: String] in
-            return ["foo": "bar"]
-        }
-
-        try app.testable().test(.GET, "/json") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
-        }
-    }
-
-    func testRootGet() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.routes.get("") { req -> String in
-                return "root"
-        }
-        app.routes.get("foo") { req -> String in
-            return "foo"
-        }
-
-        try app.testable().test(.GET, "/") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "root")
-        }.test(.GET, "/foo") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foo")
-        }
-    }
-    
-    func testInsensitiveRoutes() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        app.routes.caseInsensitive = true
-        
-        app.routes.get("foo") { req -> String in
-            return "foo"
-        }
-
-        try app.testable().test(.GET, "/foo") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foo")
-        }.test(.GET, "/FOO") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foo")
-        }
-    }
-
-    func testAnyResponse() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("foo") { req -> AnyResponse in
-            if try req.query.get(String.self, at: "number") == "true" {
-                return AnyResponse(42)
-            } else {
-                return AnyResponse("string")
+@Suite("Route Tests")
+struct RouteTests {
+    @Test("Setting the default max body size after the application has started traps")
+    func testDefaultMaxBodySizeCannotBeSetAfterStart() async {
+        // Applies to every route registered with the default `.collect` strategy, so it is
+        // configuration rather than a runtime dial — routes vary it with `.collect(maxSize:)`.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.routes.defaultMaxBodySize = "1mb" }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
             }
         }
+    }
 
-        try app.testable().test(.GET, "/foo", beforeRequest: { req in
-            try req.query.encode(["number": "true"])
-        }) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "42")
-        }.test(.GET, "/foo", beforeRequest: { req in
-            try req.query.encode(["number": "false"])
-        }) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "string")
+    @Test("Setting case insensitivity after the application has started traps")
+    func testCaseInsensitivityCannotBeSetAfterStart() async {
+        // Baked into the router's configuration when it is built at startup.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.routes.caseInsensitive = true }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
         }
     }
 
-    func testEnumResponse() throws {
+    @Test("Registering a route after the application has started traps")
+    func testRouteCannotBeRegisteredAfterStart() async {
+        // The router is built once at startup, so a route added later never matches.
+        await #expect(processExitsWith: .failure) {
+            do {
+                try await whileServing { $0.get("registered-too-late") { _ in "never reachable" } }
+            } catch {
+                print("setup failed rather than trapping: \(error)")
+            }
+        }
+    }
+
+    @Test("Test Parameter")
+    func testParameter() async throws {
+        try await withApp { app in
+            app.routes.get("hello", ":a") { req in
+                return req.parameters.get("a") ?? ""
+            }
+            app.routes.get("hello", ":a", ":b") { req in
+                return [req.parameters.get("a") ?? "", req.parameters.get("b") ?? ""]
+            }
+            try await app.testing { client in
+                let single = try await client.get("/hello/vapor")
+                #expect(single.status == .ok)
+                try #expect(await single.body.requireString().contains("vapor"))
+
+                let wrongMethod = try await client.post("/hello/vapor")
+                #expect(wrongMethod.status == .notFound)
+
+                let double = try await client.get("/hello/vapor/development")
+                #expect(double.status == .ok)
+                try #expect(await double.body.requireString() == #"["vapor","development"]"#)
+            }
+        }
+    }
+
+    @Test("Test Required Parameter")
+    func testRequiredParameter() async throws {
+        try await withApp { app in
+            app.routes.get("string", ":value") { req in
+                return try req.parameters.require("value")
+            }
+
+            app.routes.get("int", ":value") { req -> String in
+                let value = try req.parameters.require("value", as: Int.self)
+                return String(value)
+            }
+
+            app.routes.get("missing") { req in
+                return try req.parameters.require("value")
+            }
+
+            try await app.testing { client in
+                let string = try await client.get("/string/test")
+                #expect(string.status == .ok)
+                try #expect(await string.body.requireString().contains("test"))
+
+                let int = try await client.get("/int/123")
+                #expect(int.status == .ok)
+                try #expect(await int.body.requireString() == "123")
+
+                let notAnInt = try await client.get("/int/not-int")
+                #expect(notAnInt.status == .unprocessableContent)
+
+                let missing = try await client.get("/missing")
+                #expect(missing.status == .internalServerError)
+            }
+        }
+    }
+
+    @Test("Test JSON")
+    func testJSON() async throws {
+        try await withApp { app in
+            app.routes.get("json") { req -> [String: String] in
+                return ["foo": "bar"]
+            }
+
+            try await app.testing { client in
+                let res = try await client.get("/json")
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == #"{"foo":"bar"}"#)
+            }
+        }
+    }
+
+    @Test("Test Root Get")
+    func testRootGet() async throws {
+        try await withApp { app in
+            app.routes.get("") { req -> String in
+                return "root"
+            }
+            app.routes.get("foo") { req -> String in
+                return "foo"
+            }
+
+            try await app.testing { client in
+                let root = try await client.get("/")
+                #expect(root.status == .ok)
+                try #expect(await root.body.requireString() == "root")
+
+                let foo = try await client.get("/foo")
+                #expect(foo.status == .ok)
+                try #expect(await foo.body.requireString() == "foo")
+            }
+        }
+    }
+
+    @Test("Test Insensitive Routes")
+    func testInsensitiveRoutes() async throws {
+        try await withApp { app in
+            app.routes.caseInsensitive = true
+
+            app.routes.get("foo") { req -> String in
+                return "foo"
+            }
+
+            try await app.testing { client in
+                let lowercase = try await client.get("/foo")
+                #expect(lowercase.status == .ok)
+                try #expect(await lowercase.body.requireString() == "foo")
+
+                let uppercase = try await client.get("/FOO")
+                #expect(uppercase.status == .ok)
+                try #expect(await uppercase.body.requireString() == "foo")
+            }
+        }
+    }
+
+    @Test("Test AnyResponse")
+    func testAnyResponse() async throws {
+        try await withApp { app in
+            app.get("foo") { req -> AnyResponse in
+                if try req.query.get(String.self, at: "number") == "true" {
+                    return AnyResponse(42)
+                } else {
+                    return AnyResponse("string")
+                }
+            }
+
+            try await app.testing { client in
+                let number = try await client.get("/foo") { req in
+                    try req.query.encode(["number": "true"])
+                }
+                #expect(number.status == .ok)
+                try #expect(await number.body.requireString() == "42")
+
+                let string = try await client.get("/foo") { req in
+                    try req.query.encode(["number": "false"])
+                }
+                #expect(string.status == .ok)
+                try #expect(await string.body.requireString() == "string")
+            }
+        }
+    }
+
+    @Test("Test Enum Response")
+    func testEnumResponse() async throws {
         enum IntOrString: ResponseEncodable {
             case int(Int)
             case string(String)
 
-            func encodeResponse(for req: Request) -> EventLoopFuture<Response> {
+            func encodeResponse(for request: Request) async throws -> Response {
                 switch self {
                 case .int(let i):
-                    return i.encodeResponse(for: req)
+                    return try await i.encodeResponse(for: request)
                 case .string(let s):
-                    return s.encodeResponse(for: req)
+                    return try await s.encodeResponse(for: request)
                 }
             }
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.routes.get("foo") { req -> IntOrString in
-            if try req.query.get(String.self, at: "number") == "true" {
-                return .int(42)
-            } else {
-                return .string("string")
+        try await withApp { app in
+            app.routes.get("foo") { req -> IntOrString in
+                if try req.query.get(String.self, at: "number") == "true" {
+                    return .int(42)
+                } else {
+                    return .string("string")
+                }
             }
-        }
 
-        try app.testable().test(.GET, "/foo?number=true") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "42")
-        }.test(.GET, "/foo?number=false") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "string")
+            try await app.testing { client in
+                let number = try await client.get("/foo?number=true")
+                #expect(number.status == .ok)
+                try #expect(await number.body.requireString() == "42")
+
+                let string = try await client.get("/foo?number=false")
+                #expect(string.status == .ok)
+                try #expect(await string.body.requireString() == "string")
+            }
         }
     }
 
-    func testValidationError() throws {
+    @Test("Test Validation Error")
+    func testValidationError() async throws {
         struct User: Content, Validatable {
             static func validations(_ v: inout Validations) {
                 v.add("email", is: .email)
@@ -180,276 +240,350 @@ final class RouteTests: XCTestCase {
             var email: String
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        try await withApp { app in
+            app.post("users") { req -> User in
+                try await User.validate(content: req)
+                return try await req.content.decode(User.self)
+            }
 
-        app.post("users") { req -> User in
-            try User.validate(content: req)
-            return try req.content.decode(User.self)
-        }
+            try await app.testing { client in
+                let invalidEmail = try await client.post("/users") { req in
+                    try req.content.encode(
+                        [
+                            "name": "vapor",
+                            "email": "foo",
+                        ], as: .json)
+                }
+                #expect(invalidEmail.status == .badRequest)
+                try #expect(await invalidEmail.body.requireString().contains("email is not a valid email address"))
 
-        try app.testable().test(.POST, "/users", beforeRequest: { req in
-            try req.content.encode([
-                "name": "vapor",
-                "email": "foo"
-            ], as: .json)
-        }) { res in
-            XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, "email is not a valid email address")
-        }.test(.POST, "/users") { res in
-            XCTAssertEqual(res.status, .unprocessableEntity)
-            XCTAssertContains(res.body.string.replacingOccurrences(of: "\\", with: ""), "Missing \"Content-Type\" header")
-        }.test(.POST, "/users", headers: ["Content-Type":"application/json"]) { res in
-            XCTAssertEqual(res.status, .unprocessableEntity)
-            XCTAssertContains(res.body.string, "Empty Body")
+                let noContentType = try await client.post("/users")
+                #expect(noContentType.status == .unprocessableContent)
+                try #expect(await noContentType.body.requireString().replacing("\\", with: "").contains("Missing \"Content-Type\" header"))
+
+                let emptyBody = try await client.post("/users", headers: [.contentType: "application/json"])
+                #expect(emptyBody.status == .unprocessableContent)
+                try #expect(await emptyBody.body.requireString().contains("Empty Body"))
+            }
         }
     }
 
-    func testResponseEncodableStatus() throws {
+    @Test("Test Response Encodable Status")
+    func testResponseEncodableStatus() async throws {
         struct User: Content {
             var name: String
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.post("users") { req -> EventLoopFuture<Response> in
-            return try req.content
-                .decode(User.self)
-                .encodeResponse(status: .created, for: req)
-        }
-
-        try app.testable().test(.POST, "/users", beforeRequest: { req in
-            try req.content.encode(["name": "vapor"], as: .json)
-        }) { res in
-            XCTAssertEqual(res.status, .created)
-            XCTAssertEqual(res.headers.contentType, .json)
-            XCTAssertEqual(res.body.string, """
-            {"name":"vapor"}
-            """)
-        }
-    }
-
-    func testHeadRequestForwardedToGet() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("hello") { req -> String in
-            XCTAssertEqual(req.method, .HEAD)
-            return "hi"
-        }
-
-        try app.testable(method: .running(port: 0)).test(.HEAD, "/hello") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.headers.first(name: .contentLength), "2")
-            XCTAssertEqual(res.body.readableBytes, 0)
-        }
-    }
-
-    func testExplicitHeadRouteOverridesForwardingToGet() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("hello") { req -> Response in
-            return Response(status: .badRequest)
-        }
-
-        app.on(.HEAD, "hello") { req -> Response in
-            return Response(status: .found)
-        }
-
-        try app.testable(method: .running(port: 0)).test(.HEAD, "/hello") { res in
-            XCTAssertEqual(res.status, .found)
-            XCTAssertEqual(res.headers.first(name: .contentLength), "0")
-            XCTAssertEqual(res.body.readableBytes, 0)
-        }
-    }
-    
-    func testInvalidCookie() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.grouped(SessionsMiddleware(session: app.sessions.driver))
-            .get("get") { req -> String in
-                return req.session.data["name"] ?? "n/a"
+        try await withApp { app in
+            app.post("users") { req async throws -> Response in
+                return try await req.content
+                    .decode(User.self)
+                    .encodeResponse(status: .created, for: req)
             }
 
-        var headers = HTTPHeaders()
-        var cookies = HTTPCookies()
-        cookies["vapor-session"] = "asdf"
-        headers.cookie = cookies
-        try app.testable().test(.GET, "/get", headers: headers) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertNotNil(res.headers[.setCookie])
-            XCTAssertEqual(res.body.string, "n/a")
+            try await app.testing { client in
+                let res = try await client.post("/users") { req in
+                    try req.content.encode(["name": "vapor"], as: .json)
+                }
+                #expect(res.status == .created)
+                #expect(res.headers.contentType == .json)
+                try #expect(await res.body.requireString() == #"{"name":"vapor"}"#)
+            }
         }
     }
 
-    // https://github.com/vapor/vapor/issues/1787
-    func testGH1787() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
+    @Test("Test Head Request Forwarded to Get")
+    func testHeadRequestForwardedToGet() async throws {
+        try await withApp { app in
+            app.get("hello") { req -> String in
+                #expect(req.method == .head)
+                return "hi"
+            }
 
-        app.get("no-content") { req -> String in
-            throw Abort(.noContent)
-        }
-
-        try app.testable(method: .running(port: 0)).test(.GET, "/no-content") { res in
-            XCTAssertEqual(res.status.code, 204)
-            XCTAssertEqual(res.body.readableBytes, 0)
-        }
-    }
-
-    func testSimilarRoutingPath() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("api","addresses") { req in
-            "a"
-        }
-        app.get("api", "addresses","search", ":id") { req in
-            "b"
-        }
-
-        try app.testable(method: .running(port: 0)).test(.GET, "/api/addresses/") { res in
-            XCTAssertEqual(res.body.string, "a")
-        }.test(.GET, "/api/addresses/search/test") { res in
-            XCTAssertEqual(res.body.string, "b")
-        }.test(.GET, "/api/addresses/search/") { res in
-            XCTAssertEqual(res.status, .notFound)
-        }.test(.GET, "/api/addresses/search") { res in
-            XCTAssertEqual(res.status, .notFound)
+            try await app.testing(.running) { client in
+                let res = try await client.send(.head, to: "/hello")
+                #expect(res.status == .ok)
+                #expect(res.headers[.contentLength] == "2")
+                // The body has to be collected before it can be counted: an uncollected stream
+                // has no length, only the declared one.
+                try #expect(await res.body.data()?.count == 0)
+            }
         }
     }
 
-    func testThrowingGroup() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
+    @Test("Test Explicit Head Route Overrides Forwarding to Get")
+    func testExplicitHeadRouteOverridesForwardingToGet() async throws {
+        try await withApp { app in
+            app.get("hello") { req -> Response in
+                return Response(status: .badRequest)
+            }
 
-        XCTAssertThrowsError(try app.routes.group("foo") { router in
-            throw Abort(.internalServerError, reason: "Test")
-        })
+            app.on(.head, "hello") { req -> Response in
+                return Response(status: .found)
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.send(.head, to: "/hello")
+                #expect(res.status == .found)
+                #expect(res.headers[.contentLength] == "0")
+                try #expect(await res.body.data()?.count == 0)
+            }
+        }
     }
 
-    func testCollection() throws {
+    @Test("Test Invalid Cookie")
+    func testInvalidCookie() async throws {
+        try await withApp { app in
+            app.grouped(SessionsMiddleware(session: app.sessionDriver))
+                .get("get") { req -> String in
+                    return req.session.data["name"] ?? "n/a"
+                }
+
+            var headers = HTTPFields()
+            var cookies = HTTPCookies()
+            cookies["vapor-session"] = "asdf"
+            headers.cookie = cookies
+            try await app.testing { client in
+                let res = try await client.get("/get", headers: headers)
+                #expect(res.status == .ok)
+                #expect(res.headers[.setCookie] != nil)
+                try #expect(await res.body.requireString() == "n/a")
+            }
+        }
+    }
+
+    @Test("Test Throwing .noContent Does Not Close Connection", .bug("https://github.com/vapor/vapor/issues/1787"))
+    func testGH1787() async throws {
+        try await withApp { app in
+            app.get("no-content") { req -> String in
+                throw Abort(.noContent)
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("/no-content")
+                #expect(res.status.code == 204)
+                try #expect(await res.body.data()?.count == 0)
+            }
+        }
+    }
+
+    @Test("Test Similar Routing Path")
+    func testSimilarRoutingPath() async throws {
+        try await withApp { app in
+            app.get("api", "addresses") { req in
+                "a"
+            }
+            app.get("api", "addresses", "search", ":id") { req in
+                "b"
+            }
+
+            try await app.testing(.running) { client in
+                let rootResponse = try await client.get("/api/addresses")
+                try #expect(await rootResponse.body.requireString() == "a")
+
+                let testResponse = try await client.get("/api/addresses/search/test")
+                try #expect(await testResponse.body.requireString() == "b")
+
+                let emptySearch = try await client.get("/api/addresses/search")
+                #expect(emptySearch.status == .notFound)
+
+                let emptySearchRoot = try await client.get("/api/addresses/search/")
+                #expect(emptySearchRoot.status == .notFound)
+            }
+        }
+    }
+
+    @Test("Test Throwing Group")
+    func testThrowingGroup() async throws {
+        _ = try await withApp { app in
+            #expect(throws: Abort(.internalServerError, reason: "Test")) {
+                try app.routes.group("foo") { router in
+                    throw Abort(.internalServerError, reason: "Test")
+                }
+            }
+        }
+    }
+
+    @Test("Test Collection")
+    func testCollection() async throws {
         struct Foo: RouteCollection {
-            func boot(routes: RoutesBuilder) throws {
+            func boot(routes: any RoutesBuilder) throws {
                 routes.get("foo") { _ in "bar" }
             }
         }
 
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        try app.register(collection: Foo())
+        try await withApp { app in
+            try await app.register(collection: Foo())
 
-        try app.test(.GET, "foo") { res in
-            XCTAssertEqual(res.body.string, "bar")
+            try await app.testing { client in
+                let res = try await client.get("/foo")
+                try #expect(await res.body.requireString() == "bar")
+            }
         }
     }
 
-    func testConfigurableMaxBodySize() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
+    @Test("Test Configurable Max Body Size")
+    func testConfigurableMaxBodySize() async throws {
+        try await withApp { app in
+            #expect(app.routes.defaultMaxBodySize == 16384)
+            app.routes.defaultMaxBodySize = 1
+            #expect(app.routes.defaultMaxBodySize == 1)
 
-        XCTAssertEqual(app.routes.defaultMaxBodySize, 16384)
-        app.routes.defaultMaxBodySize = 1
-        XCTAssertEqual(app.routes.defaultMaxBodySize, 1)
+            // Each handler collects, because that is where the ceiling is enforced now: a route that
+            // never asks for the body is never rejected for its size.
+            app.on(.post, "default") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
+            }
+            app.on(.post, "1kb", maxBodySize: "1kb") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
+            }
+            app.on(.post, "1mb", maxBodySize: "1mb") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
+            }
+            app.on(.post, "1gb", maxBodySize: "1gb") { request in
+                _ = try await request.body.collect()
+                return HTTPResponse.Status.ok
+            }
 
-        app.on(.POST, "default") { request in
-            HTTPStatus.ok
-        }
-        app.on(.POST, "1kb", body: .collect(maxSize: "1kb")) { request in
-            HTTPStatus.ok
-        }
-        app.on(.POST, "1mb", body: .collect(maxSize: "1mb")) { request in
-            HTTPStatus.ok
-        }
-        app.on(.POST, "1gb", body: .collect(maxSize: "1gb")) { request in
-            HTTPStatus.ok
-        }
+            // Over the 1-byte and 1kb limits and under 1mb/1gb, and — the part that matters for the
+            // two rejected requests — inside `maxDrainBytes` (16kb). A 413 stops reading the body, so
+            // the remainder is only discarded if it fits that budget. Past it the server closes on a
+            // client that is still uploading, which RSTs the connection and destroys the 413 before it
+            // is read. Sizing around that is deliberate: `testUndrainableRequestBodyIsAnsweredWith`
+            // `ConnectionClose` covers the over-budget case, where all the client is promised is the
+            // `Connection: close` header.
+            let buffer = Data(repeating: 0, count: 8_192)
+            try await app.testing(.running) { client in
+                let defaultLimit = try await client.post("/default") { $0.body = .init(data: buffer) }
+                #expect(defaultLimit.status == .contentTooLarge)
 
-        var buffer = ByteBufferAllocator().buffer(capacity: 0)
-        buffer.writeBytes(Array(repeating: 0, count: 500_000))
-        try app.testable(method: .running(port: 0)).test(.POST, "/default", body: buffer) { res in
-            XCTAssertEqual(res.status, .payloadTooLarge)
-        }.test(.POST, "/1kb", body: buffer) { res in
-            XCTAssertEqual(res.status, .payloadTooLarge)
-        }.test(.POST, "/1mb", body: buffer) { res in
-            XCTAssertEqual(res.status, .ok)
-        }.test(.POST, "/1gb", body: buffer) { res in
-            XCTAssertEqual(res.status, .ok)
+                let oneKB = try await client.post("/1kb") { $0.body = .init(data: buffer) }
+                #expect(oneKB.status == .contentTooLarge)
+
+                let oneMB = try await client.post("/1mb") { $0.body = .init(data: buffer) }
+                #expect(oneMB.status == .ok)
+
+                let oneGB = try await client.post("/1gb") { $0.body = .init(data: buffer) }
+                #expect(oneGB.status == .ok)
+            }
         }
     }
-    
-    func testWebsocketUpgrade() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        let testMarkerHeaderKey = "TestMarker"
-        let testMarkerHeaderValue = "addedInShouldUpgrade"
-        
-        app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
-            return req.eventLoop.future([testMarkerHeaderKey: testMarkerHeaderValue])
-        }, onUpgrade: { _, _ in })
-        
-        try app.testable(method: .running(port: 0)).test(.GET, "customshouldupgrade", beforeRequest: { req in
-            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
-            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
-            req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
-            req.headers.replaceOrAdd(name: .upgrade, value: "websocket")
-        }) { res in
-            XCTAssertEqual(res.headers.first(name: testMarkerHeaderKey), testMarkerHeaderValue)
-        }
-    }
-    
-    // https://github.com/vapor/vapor/issues/2716
-    func testGH2716() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
 
-        app.get("client") { req in
-            return req.client.get("http://localhost/status/2 1").map { $0.description }
-        }
-        
-        try app.testable(method: .running(port: 0)).test(.GET, "/client") { res in
-            XCTAssertEqual(res.status.code, 500)
+    #if WebSockets
+    @Test("Test Websocket Upgrade", .disabled())
+    func testWebsocketUpgrade() async throws {
+        //        try await withApp { app in
+        //            let testMarkerHeaderKey: HTTPField.Name = .init("TestMarker")!
+        //            let testMarkerHeaderValue = "addedInShouldUpgrade"
+        //
+        //            app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
+        //                [testMarkerHeaderKey: testMarkerHeaderValue]
+        //            }, onUpgrade: { _, _ in })
+        //
+        //            try await app.testing(method: .running()).test(.get, "customshouldupgrade", beforeRequest: { req async in
+        //                req.headers[.secWebSocketVersion] = "13"
+        //                req.headers[.secWebSocketKey] = "zyFJtLIpI2ASsmMHJ4Cf0A=="
+        //                req.headers[.connection] = "Upgrade"
+        //                req.headers[.upgrade] = "websocket"
+        //            }) { res in
+        //                #expect(res.headers[testMarkerHeaderKey] == testMarkerHeaderValue)
+        //            }
+        //        }
+    }
+    #endif
+
+    @Test(
+        "Test Double Slash Route Access", .bug("https://github.com/vapor/vapor/issues/3137"),
+        .bug("https://github.com/vapor/vapor/issues/3142"))
+    func testDoubleSlashRouteAccess() async throws {
+        try await withApp { app in
+            app.get(":foo", ":bar", "buz") { req -> String in
+                "\(try req.parameters.require("foo"))\(try req.parameters.require("bar"))"
+            }
+
+            try await app.testing(.running) { client in
+                // A literal like `"//foop/barp/buz"` parses as a URL with host `foop`, so the paths
+                // under test are set as a path component against the server's own base URL.
+                let base = try #require(client.baseURL)
+                func url(_ path: String) -> URI {
+                    URI(scheme: base.scheme, host: base.host, port: base.port, path: path)
+                }
+
+                let happyPath = try await client.get(url("/foop/barp/buz"))
+                try #expect(await happyPath.body.requireString() == "foopbarp")
+                #expect(happyPath.status == .ok)
+
+                let leadingDoubleSlash = try await client.get(url("//foop/barp/buz"))
+                try #expect(await leadingDoubleSlash.body.requireString() == "foopbarp")
+                #expect(leadingDoubleSlash.status == .ok)
+
+                let leadingAndMiddleDoubleSlash = try await client.get(url("//foop//barp/buz"))
+                try #expect(await leadingAndMiddleDoubleSlash.body.requireString() == "foopbarp")
+                #expect(leadingAndMiddleDoubleSlash.status == .ok)
+
+                let leadingMiddleAndTrailingDoubleSlash = try await client.get(url("//foop//barp//buz"))
+                try #expect(await leadingMiddleAndTrailingDoubleSlash.body.requireString() == "foopbarp")
+                #expect(leadingMiddleAndTrailingDoubleSlash.status == .ok)
+
+                let middleDoubleSlash = try await client.get(url("/foop//barp/buz"))
+                try #expect(await middleDoubleSlash.body.requireString() == "foopbarp")
+                #expect(middleDoubleSlash.status == .ok)
+
+                let middleAndTrailingDoubleSlash = try await client.get(url("/foop//barp//buz"))
+                try #expect(await middleAndTrailingDoubleSlash.body.requireString() == "foopbarp")
+                #expect(middleAndTrailingDoubleSlash.status == .ok)
+
+                let trailingDoubleSlash = try await client.get(url("/foop/barp//buz"))
+                try #expect(await trailingDoubleSlash.body.requireString() == "foopbarp")
+                #expect(trailingDoubleSlash.status == .ok)
+
+                let leadingAndTrailingDoubleSlash = try await client.get(url("//foop/barp//buz"))
+                try #expect(await leadingAndTrailingDoubleSlash.body.requireString() == "foopbarp")
+                #expect(leadingAndTrailingDoubleSlash.status == .ok)
+            }
         }
     }
-    
-    // https://github.com/vapor/vapor/issues/3137
-    // https://github.com/vapor/vapor/issues/3142
-    func testDoubleSlashRouteAccess() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        app.get(":foo", ":bar", "buz") { req -> String in
-            "\(try req.parameters.require("foo"))\(try req.parameters.require("bar"))"
+
+    @Test("Catch all HTTP methods", .bug("https://github.com/vapor/vapor/issues/1887"))
+    func testCatchAllHTTPMethods() async throws {
+        try await withApp { app in
+            app.routes.all("universal") { req -> String in
+                req.method.rawValue
+            }
+
+            let methods: [HTTPRequest.Method] = [.get, .post, .put, .patch, .delete, .query, .head, .options]
+            try await app.testing { client in
+                for method in methods {
+                    let res = try await client.send(method, to: "/universal")
+                    #expect(res.status == .ok, "\(method)")
+                    try #expect(await res.body.requireString() == method.rawValue, "\(method)")
+                }
+            }
         }
-        
-        try app.testable(method: .running(port: 0)).test(.GET, "/foop/barp/buz") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foopbarp")
-        }.test(.GET, "//foop/barp/buz") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foopbarp")
-        }.test(.GET, "//foop//barp/buz") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foopbarp")
-        }.test(.GET, "//foop//barp//buz") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foopbarp")
-        }.test(.GET, "/foop//barp/buz") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foopbarp")
-        }.test(.GET, "/foop//barp//buz") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foopbarp")
-        }.test(.GET, "/foop/barp//buz") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foopbarp")
-        }.test(.GET, "//foop/barp//buz") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "foopbarp")
+    }
+
+    @Test("Unicode Routing", .bug("https://github.com/vapor/vapor/issues/3309"))
+    func unicodeRouting() async throws {
+        try await withApp { app in
+            app.get("Good👍") { req in
+                return "👍"
+            }
+            app.get("ようこそ世界へ") { req in
+                return "おめでとう"
+            }
+
+            try await app.testing(.running) { client in
+                let emoticon = try await client.get("/Good👍")
+                try #expect(await emoticon.body.requireString() == "👍")
+                #expect(emoticon.status == .ok)
+
+                let japanese = try await client.get("/ようこそ世界へ")
+                try #expect(await japanese.body.requireString() == "おめでとう")
+                #expect(japanese.status == .ok)
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
-import NIOHTTP1
+public import HTTPTypes
 
 public struct ValidationsResult: Sendable {
     public let results: [ValidationResult]
-    
+
     public var error: ValidationsError? {
         let failures = self.results.filter { $0.result.isFailure }
         if !failures.isEmpty {
@@ -11,7 +11,7 @@ public struct ValidationsResult: Sendable {
             return nil
         }
     }
-    
+
     public func assert() throws {
         if let error = self.error {
             throw error
@@ -31,7 +31,7 @@ extension ValidationsError: CustomStringConvertible {
 }
 
 extension ValidationsError: AbortError {
-    public var status: HTTPResponseStatus {
+    public var status: HTTPResponse.Status {
         .badRequest
     }
 

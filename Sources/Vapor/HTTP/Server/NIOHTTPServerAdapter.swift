@@ -1,0 +1,327 @@
+import Logging
+import NIOCore
+import NIOHTTPServer
+import Synchronization
+import SystemPackage
+
+/// Errors thrown by ``NIOHTTPServerAdapter``.
+enum NIOHTTPServerAdapterError: Error {
+    /// The underlying server reported that it was listening but exposed no addresses.
+    case noListeningAddress
+
+    /// HTTP/2 or HTTP/3 were requested without TLS. HTTP/2 and HTTP/3 require a
+    /// ``ServerConfiguration/tlsConfiguration`` to serve them. Cleartext HTTP/2 (h2c) is not
+    /// supported by the underlying server yet; if that changes this check will be gated behind an opt-in.
+    case tlsRequired
+
+    /// No HTTP versions were configured. ``ServerConfiguration/httpVersions`` must contain at least one version.
+    case noHTTPVersionsSpecified
+
+    /// The in-memory TLS credentials carried an empty certificate chain. A server has nothing to present
+    /// during the handshake without at least a leaf certificate.
+    case emptyCertificateChain
+
+    /// The address was asked for after the server had stopped serving.
+    case serverStopped
+
+    /// The provided group to use for the QUIC TLS 1.3 key exchange is not supported by the underlying server.
+    case unsupportedKeyExchangeGroup
+}
+
+/// Adapts `NIOHTTPServer` to Vapor's `Server` protocol using structured concurrency.
+///
+/// `run()` blocks for the server's lifetime. Graceful shutdown propagates from the
+/// parent task (via `ServiceGroup` or task cancellation) through to
+/// `NIOHTTPServer.serve()`'s built-in `withGracefulShutdownHandler`.
+final class NIOHTTPServerAdapter: Server, Sendable {
+    // Handles queries to the server's address
+    private struct AddressStateMachine {
+        enum State {
+            /// `run()` has not bound yet. The outcome is still unknown, so waiters park.
+            case notStarted
+            /// Bound and serving.
+            case bound(SocketAddress)
+            /// Startup failed, or the server died after binding. Retained so that a waiter arriving
+            /// afterwards throws instead of parking on an address that will never be published.
+            case failed(any Error)
+            /// `run()` returned. Distinct from `notStarted` so a late waiter is told the server has
+            /// gone rather than waiting for it to start.
+            case stopped
+
+            /// What a waiter should be handed in this state, or `nil` while the outcome is still
+            /// unknown and the waiter has to park.
+            var result: Result<SocketAddress, any Error>? {
+                switch self {
+                case .notStarted: nil
+                case .bound(let address): .success(address)
+                case .failed(let error): .failure(error)
+                case .stopped: .failure(NIOHTTPServerAdapterError.serverStopped)
+                }
+            }
+        }
+
+        var state: State = .notStarted
+        var continuations: [CheckedContinuation<SocketAddress, any Error>] = []
+
+        /// Moves to `state`, handing back the parked waiters so they can be resumed outside the lock.
+        mutating func transition(to state: State) -> [CheckedContinuation<SocketAddress, any Error>] {
+            self.state = state
+            defer { self.continuations = [] }
+            return self.continuations
+        }
+    }
+
+    let context: ServerContext
+    private let addressState = Mutex<AddressStateMachine>(.init())
+
+    init(context: ServerContext) {
+        self.context = context
+    }
+
+    func run() async throws {
+        do {
+            try await self.runServer()
+            self.transition(to: .stopped)
+        } catch {
+            self.transition(to: .failed(error))
+            throw error
+        }
+    }
+
+    /// Moves the address state on and resumes everyone parked on ``listeningAddress``.
+    ///
+    /// Continuations are resumed outside the lock: resuming wakes another task, which is not
+    /// something to do while holding one.
+    private func transition(to state: AddressStateMachine.State) {
+        let waiting = self.addressState.withLock { $0.transition(to: state) }
+        guard let result = state.result else { return }
+        for continuation in waiting {
+            continuation.resume(with: result)
+        }
+    }
+
+    private func runServer() async throws {
+        let transportSecurity: NIOHTTPServerConfiguration.TransportSecurity
+        if let tls = self.context.configuration.value.tlsConfiguration {
+            let credentials: NIOHTTPServerConfiguration.TransportSecurity.TLSCredentials
+            switch tls.source {
+            case .inMemory(let chain, let key):
+                guard !chain.isEmpty else {
+                    throw NIOHTTPServerAdapterError.emptyCertificateChain
+                }
+                credentials = .x509(.certificates(chain: chain, privateKey: key))
+            case .pemFile(let certPath, let keyPath):
+                credentials = .x509(.pemFile(certificateChainPath: certPath, privateKeyPath: keyPath))
+            case .reloading(let reloader):
+                credentials = .x509(.reloading(reloader))
+            }
+            if let clientVerification = tls.clientCertificateVerification {
+                transportSecurity = .mTLS(
+                    credentials: credentials,
+                    trustConfiguration: .init(clientVerification))
+            } else {
+                transportSecurity = .tls(credentials: credentials)
+            }
+        } else {
+            transportSecurity = .plaintext
+        }
+
+        var supportedHTTPVersions = Set<NIOHTTPServerConfiguration.HTTPVersion>()
+        var gracefulShutdown = NIOHTTPServerConfiguration.GracefulShutdownConfiguration.defaults
+        for httpVersion in self.context.configuration.value.httpVersions {
+            switch httpVersion.version {
+            case .http1_1:
+                supportedHTTPVersions.insert(.http1_1)
+            case .http2(let config):
+                supportedHTTPVersions.insert(
+                    .http2(
+                        config: .init(
+                            maxFrameSize: config.maxFrameSize,
+                            targetWindowSize: config.targetWindowSize,
+                            maxConcurrentStreams: config.maxConcurrentStreams
+                        )
+                    )
+                )
+                // swift-http-server takes the graceful shutdown limit server-wide but only enforces it on HTTP/2.
+                gracefulShutdown.maximumGracefulShutdownDuration = config.gracefulShutdown.maximumGracefulShutdownDuration
+            #if UnstableHTTP3
+            case .http3(let config):
+                var quicConfiguration: NIOHTTPServerConfiguration.HTTP3.QUICConfiguration = .defaults
+                quicConfiguration.serverName = config.quicConfiguration.serverName
+                quicConfiguration.keyExchangeGroup =
+                    switch config.quicConfiguration.keyExchangeGroup {
+                    case .secp256: .secp256
+                    case .secp384: .secp384
+                    case .x25519: .x25519
+                    case .x25519MLKEM768: .x25519MLKEM768
+                    default: throw NIOHTTPServerAdapterError.unsupportedKeyExchangeGroup
+                    }
+                quicConfiguration.maxIdleTimeout = config.quicConfiguration.maxIdleTimeout
+                quicConfiguration.initialMaxData = config.quicConfiguration.initialMaxData
+                quicConfiguration.initialMaxStreamDataBidirectionalLocal = config.quicConfiguration.initialMaxStreamDataBidirectionalLocal
+                quicConfiguration.initialMaxStreamDataBidirectionalRemote = config.quicConfiguration.initialMaxStreamDataBidirectionalRemote
+                quicConfiguration.initialMaxStreamDataUnidirectional = config.quicConfiguration.initialMaxStreamDataUnidirectional
+                quicConfiguration.initialMaxStreamsBidirectional = config.quicConfiguration.initialMaxStreamsBidirectional
+                quicConfiguration.initialMaxStreamsUnidirectional = config.quicConfiguration.initialMaxStreamsUnidirectional
+                quicConfiguration.keepAliveInterval = config.quicConfiguration.keepAliveInterval
+                quicConfiguration.sendRetry = config.quicConfiguration.sendRetry
+                quicConfiguration.keyLogPath = config.quicConfiguration.keyLogPath
+                quicConfiguration.qLogConfiguration =
+                    switch config.quicConfiguration.qLogConfiguration {
+                    case .none: nil
+                    case .some(let qLogConfig): .init(path: qLogConfig.path, topic: qLogConfig.topic, description: qLogConfig.description)
+                    }
+
+                var connectionSettings: NIOHTTPServerConfiguration.HTTP3.ConnectionSettings = .defaults
+                connectionSettings.qpackMaximumTableCapacity = config.connectionSettings.qpackMaximumTableCapacity
+                connectionSettings.qpackBlockedStreams = config.connectionSettings.qpackBlockedStreams
+                connectionSettings.maximumFieldSectionSize = config.connectionSettings.maximumFieldSectionSize
+
+                supportedHTTPVersions.insert(
+                    .http3(
+                        config: .init(
+                            preferHuffmanEncoding: config.preferHuffmanEncoding,
+                            quicConfiguration: quicConfiguration,
+                            connectionSettings: connectionSettings
+                        )
+                    )
+                )
+            #endif
+            }
+        }
+
+        guard !self.context.configuration.value.httpVersions.isEmpty else {
+            throw NIOHTTPServerAdapterError.noHTTPVersionsSpecified
+        }
+
+        // HTTP/2 and HTTP/3 require TLS. Over plaintext, only HTTP/1.1 is allowed.
+        guard
+            self.context.configuration.value.isTLSEnabled
+                || self.context.configuration.value.httpVersions == [.http1_1]
+        else {
+            throw NIOHTTPServerAdapterError.tlsRequired
+        }
+
+        let (hostname, port) = self.resolveBindAddress()
+
+        var configuration = try NIOHTTPServerConfiguration(
+            bindTarget: .hostAndPort(host: hostname, port: port),
+            supportedHTTPVersions: supportedHTTPVersions,
+            transportSecurity: transportSecurity
+        )
+        configuration.gracefulShutdown = gracefulShutdown
+
+        let nioServer = NIOHTTPServer(
+            configuration: configuration
+        )
+
+        let handler = VaporHTTPServerHandler(
+            context: self.context,
+            responder: self.context.makeResponder()
+        )
+
+        // Run serve() in a child task so we can await listeningAddress
+        // before serve() completes.
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await nioServer.serve(handler: handler)
+            }
+
+            // Wait for the server to bind, then publish the address
+            let addresses: [NIOHTTPServer.SocketAddress]
+            do {
+                addresses = try await nioServer.listeningAddresses
+            } catch {
+                do {
+                    try await group.next()
+                } catch let bindError as IOError where Errno(rawValue: bindError.errnoCode) == .addressInUse {
+                    throw ServerError.addressInUse(host: hostname, port: port)
+                }
+                throw error
+            }
+            guard let address = addresses.first, let socketAddress = SocketAddress(address) else {
+                throw NIOHTTPServerAdapterError.noListeningAddress
+            }
+
+            // Publish the address and resume anyone already waiting on it.
+            self.transition(to: .bound(socketAddress))
+
+            Logger.current.notice(
+                "Server started",
+                metadata: ["host": "\(address.host)", "port": "\(address.port)"])
+
+            // Wait for serve() to complete (blocks until shutdown/cancellation)
+            try await group.next()
+        }
+    }
+
+    var listeningAddress: SocketAddress {
+        get async throws {
+            if let result = self.addressState.withLock({ $0.state.result }) {
+                return try result.get()
+            }
+            return try await withCheckedThrowingContinuation { continuation in
+                let result: Result<SocketAddress, any Error>? = self.addressState.withLock { state in
+                    if let result = state.state.result {
+                        return result
+                    }
+                    state.continuations.append(continuation)
+                    return nil
+                }
+                if let result {
+                    continuation.resume(with: result)
+                }
+            }
+        }
+    }
+
+    private func resolveBindAddress() -> (String, Int) {
+        switch self.context.configuration.value.address {
+        case .hostname(let hostname, let port):
+            return (hostname, port)
+        case .unixDomainSocket:
+            Logger.current.warning("Unix domain sockets are not supported by NIOHTTPServer. Falling back to default address.")
+            return ("127.0.0.1", 8080)
+        }
+    }
+}
+
+extension NIOHTTPServerConfiguration.TransportSecurity.MTLSTrustConfiguration {
+    /// Maps Vapor's client-certificate verification onto the server's own mTLS trust configuration.
+    init(_ verification: ServerConfiguration.TLSConfiguration.ClientCertificateVerification) {
+        let source: TrustSource
+        switch verification.trust.backing {
+        case .systemDefaults:
+            source = .systemDefaults
+        case .certificates(let trustRoots):
+            source = .certificates(trustRoots: trustRoots)
+        case .pemFile(let path):
+            source = .pemFile(trustRootsPath: path)
+        case .pemBytes(let trustRoots):
+            source = .pemBytes(trustRoots: trustRoots)
+        case .derFile(let path):
+            source = .derFile(trustRootPath: path)
+        case .derBytes(let trustRoot):
+            source = .derBytes(trustRoot: trustRoot)
+        case .custom(let verify):
+            source = .customCertificateVerificationCallback { chain in
+                switch try await verify(chain) {
+                case .verified(let validatedChain):
+                    return .certificateVerified(.init(validatedChain))
+                case .rejected(let reason):
+                    return .failed(.init(reason: reason))
+                }
+            }
+        }
+
+        let mode: CertificateVerificationMode
+        switch verification.mode.backing {
+        case .required:
+            mode = .noHostnameVerification
+        case .optional:
+            mode = .optionalVerification
+        }
+
+        self.init(source, certificateVerification: mode)
+    }
+}

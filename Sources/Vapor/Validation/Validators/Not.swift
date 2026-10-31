@@ -7,7 +7,7 @@ public prefix func ! <T>(validator: Validator<T>) -> Validator<T> {
 
 extension ValidatorResults {
     public struct Not {
-        public let result: ValidatorResult
+        public let result: any ValidatorResult
     }
 }
 
@@ -15,11 +15,11 @@ extension ValidatorResults.Not: ValidatorResult {
     public var isFailure: Bool {
         !self.result.isFailure
     }
-    
+
     public var successDescription: String? {
         self.result.failureDescription
     }
-    
+
     public var failureDescription: String? {
         return self.result.successDescription
     }

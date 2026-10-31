@@ -1,21 +1,29 @@
-import Vapor
+import Configuration
+import ConsoleLogger
 import Logging
+import Vapor
 
 @main
 struct Entrypoint {
     static func main() async throws {
-        var env = try Environment.detect()
-        try LoggingSystem.bootstrap(from: &env)
-
-        let app = try await Application.make(env)
-        do {
-            try configure(app)
-            try await app.execute()
-            try await app.asyncShutdown()
-        } catch {
-            try? await app.asyncShutdown()
-            throw error
+        let config = ConfigReader(providers: [
+            CommandLineArgumentsProvider(),
+            EnvironmentVariablesProvider(),
+        ]
+        )
+        ConsoleLogger.bootstrapWithConfigReader(config: config)
+        var logger = Logger(label: "codes.vapor.app")
+        logger.logLevel = .debug
+        return try await withLogger(logger) { _ in
+            let app = try Application(configReader: config)
+            do {
+                try await configure(app)
+                try await app.run()
+                try await app.shutdown()
+            } catch {
+                try? await app.shutdown()
+                throw error
+            }
         }
     }
 }
-

@@ -1,8 +1,10 @@
-import class Foundation.Bundle
-import Vapor
+import Foundation
+import HTTPTypes
+import Logging
 import NIOCore
-import NIOHTTP1
-import NIOConcurrencyHelpers
+import RoutingKit
+import Vapor
+import VaporMacros
 import _NIOFileSystem
 
 struct Creds: Content {
@@ -10,43 +12,27 @@ struct Creds: Content {
     var password: String
 }
 
-public func routes(_ app: Application) throws {
-    app.on(.GET, "ping") { req -> StaticString in
+func routes(_ app: Application) async throws {
+    app.on(.get, "ping") { req -> StaticString in
         return "123" as StaticString
     }
 
+    app.get("hello", "uuid", ":uuid") { req in
+        let uuid = try req.parameters.require("uuid", as: UUID.self)
+        return uuid.uuidString
+    }
 
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
-    app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
-        let done = req.eventLoop.makePromise(of: String.self)
-
-        let totalBox = NIOLoopBoundBox(0, eventLoop: req.eventLoop)
-        req.body.drain { result in
-            let promise = req.eventLoop.makePromise(of: Void.self)
-
-            switch result {
-            case .buffer(let buffer):
-                req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
-                    totalBox.value += buffer.readableBytes
-                    promise.succeed(())
-                }
-            case .error(let error):
-                done.fail(error)
-            case .end:
-                promise.succeed(())
-                done.succeed(totalBox.value.description)
-            }
-
-            // manually return pre-completed future
-            // this should balloon in memory
-            // return req.eventLoop.makeSucceededFuture(())
-            
-            // return real future that indicates bytes were handled
-            // this should use very little memory
-            return promise.futureResult
+    app.on(.post, "slow-stream") { req -> String in
+        // Consume the streamed body slowly to demonstrate backpressure: sleeping between
+        // reads keeps memory flat because the server stops pulling more of the body until
+        // this loop asks for the next chunk.
+        var total = 0
+        try await req.body.forEachChunk { buffer in
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+            total += buffer.count
         }
-
-        return done.futureResult
+        return total.description
     }
 
     app.get("test", "head") { req -> String in
@@ -56,55 +42,101 @@ public func routes(_ app: Application) throws {
     app.post("test", "head") { req -> String in
         return "OK!"
     }
-    
+
     app.post("login") { req -> String in
-        let creds = try req.content.decode(Creds.self)
+        let creds = try await req.content.decode(Creds.self)
         return "\(creds)"
     }
-    
-    app.on(.POST, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
-        return req.body.data?.readableBytes.description  ?? "none"
+
+    app.on(.post, "large-file", maxBodySize: 1_000_000_000) { req -> String in
+        return req.body.data?.count.description ?? "none"
     }
 
-    app.get("json") { req -> [String: String] in
+    app.get("json", routeDescription: "Returns Some Test JSON") { req -> [String: String] in
         return ["foo": "bar"]
-    }.description("returns some test json")
-    
-    app.webSocket("ws") { req, ws in
-        ws.onText { ws, text in
-            ws.send(text.reversed())
-            if text == "close" {
-                ws.close(promise: nil)
-            }
-        }
-
-        let ip = req.remoteAddress?.description ?? "<no ip>"
-        ws.send("Hello 👋 \(ip)")
-    }
-    
-    app.on(.POST, "file", body: .stream) { req -> EventLoopFuture<String> in
-        let promise = req.eventLoop.makePromise(of: String.self)
-        req.body.drain { result in
-            switch result {
-            case .buffer(let buffer):
-                debugPrint(buffer)
-            case .error(let error):
-                promise.fail(error)
-            case .end:
-                promise.succeed("Done")
-            }
-            return req.eventLoop.makeSucceededFuture(())
-        }
-        return promise.futureResult
     }
 
-    app.get("shutdown") { req -> HTTPStatus in
-        guard let running = req.application.running else {
-            throw Abort(.internalServerError)
+    #warning("TODO")
+    //    app.webSocket("ws") { req, ws in
+    //        ws.onText { ws, text in
+    //            ws.send(text.reversed())
+    //            if text == "close" {
+    //                ws.close(promise: nil)
+    //            }
+    //        }
+    //
+    //        let ip = req.remoteAddress?.description ?? "<no ip>"
+    //        ws.send("Hello 👋 \(ip)")
+    //    }
+
+    app.on(.post, "file") { req in
+        try await req.body.forEachChunk { part in
+            debugPrint(part.count)
         }
-        running.stop()
-        return .ok
+        return "Done"
     }
+
+    app.get("stream", "chunks") { _ -> Response in
+        Response(
+            body: .init(stream: { writer in
+                for i in 1...5 {
+                    try await writer.write("chunk \(i)\n")
+                }
+            }))
+    }
+
+    app.get("stream", "sequence") { _ -> Response in
+        let lines = AsyncStream<String> { continuation in
+            for i in 1...10 {
+                continuation.yield("line \(i)\n")
+            }
+            continuation.finish()
+        }
+        return Response(
+            body: .init(stream: { writer in
+                for await chunk in lines {
+                    try await writer.write(chunk)
+                }
+            }))
+    }
+
+    app.get("stream", "firehose") { _ -> Response in
+        Response(
+            body: .init(stream: { writer in
+                let chunk = [UInt8](repeating: 0x41, count: 16 * 1024)
+                for _ in 0..<10_000 {
+                    try await writer.write(chunk)
+                }
+            }))
+    }
+
+    // Sleeps between chunks: with `curl` you can see each line arrive ~0.5s apart, which shows
+    // the write suspends and the response is produced lazily rather than buffered up front.
+    app.get("stream", "slow") { _ -> Response in
+        Response(
+            body: .init(stream: { writer in
+                for i in 1...10 {
+                    try await writer.write("chunk \(i)\n")
+                    try await Task.sleep(for: .milliseconds(500))
+                }
+            }))
+    }
+
+    app.get("stream", "file") { _ -> Response in
+        let path = #filePath
+        let fileSystem = FileSystem.shared
+        return Response(
+            body: .init(stream: { writer in
+                let handle = try await fileSystem.openFile(forReadingAt: FilePath(path), options: .init())
+                defer { try? await handle.close() }
+                for try await chunk in handle.readChunks(chunkLength: .bytes(64 * 1024)) {
+                    try await writer.write(chunk.readableBytesUInt8Span)
+                }
+            }))
+    }
+
+    // TODO: Implement shutdown route using structured concurrency
+    // With ServiceGroup, shutdown is triggered via SIGTERM/SIGINT signals
 
     let cache = MemoryCache()
     app.get("cache", "get", ":key") { req -> String in
@@ -133,8 +165,8 @@ public func routes(_ app: Application) throws {
     }
 
     let sessions = app.grouped("sessions")
-        .grouped(app.sessions.middleware)
-    sessions.get("set", ":value") { req -> HTTPStatus in
+        .grouped(app.sessionsMiddleware)
+    sessions.get("set", ":value") { req -> HTTPResponse.Status in
         req.session.data["name"] = req.parameters.get("value")
         return .ok
     }
@@ -147,21 +179,49 @@ public func routes(_ app: Application) throws {
     }
 
     app.get("client") { req in
-        return req.client.get("http://httpbin.org/status/201").map { $0.description }
+        let response = try await app.client.get("http://httpbin.org/status/201")
+        return response.description
     }
 
-    app.get("client-json") { req -> EventLoopFuture<String> in
+    app.get("client-json") { req in
         struct HTTPBinResponse: Decodable {
             struct Slideshow: Decodable {
                 var title: String
             }
             var slideshow: Slideshow
         }
-        return req.client.get("http://httpbin.org/json")
-            .flatMapThrowing { try $0.content.decode(HTTPBinResponse.self) }
-            .map { $0.slideshow.title }
+        let response = try await app.client.get("http://httpbin.org/json")
+        let data = try await response.content.decode(HTTPBinResponse.self)
+        return data.slideshow.title
     }
-    
+
+    // MARK: - Proxying
+
+    //   curl -i localhost:8080/proxy/                       -> https://www.vapor.codes/
+    //   curl -i localhost:8080/proxy/docs?x=1               -> https://www.vapor.codes/docs?x=1
+    //   curl -i --compressed localhost:8080/proxy/          (arrives plain: the client decodes gzip for us)
+    //   curl --limit-rate 20k localhost:8080/proxy/         (a slow reader slows the upstream pull)
+    @Sendable func proxyToVaporCodes(_ req: Request) async throws -> ClientResponse {
+        // Keep the caller's path and query as they arrived, minus our own prefix. `req.url.path` is
+        // still percent-encoded, so nothing is decoded and re-encoded on the way through.
+        let path = String(req.url.path.dropFirst("/proxy".count))
+        var target = URI(string: "https://www.vapor.codes")
+        target.path = path.isEmpty ? "/" : path
+        target.query = req.url.query
+        return try await proxy(req, to: target, using: app.client)
+    }
+    // A catch-all needs at least one component after it, so the bare prefix is registered too.
+    app.get("proxy", use: proxyToVaporCodes)
+    app.get("proxy", "**", use: proxyToVaporCodes)
+
+    // Request direction. vapor.codes has nothing to receive a body, so the POST goes to an echo
+    // endpoint that sends the body back, which makes the streamed upload visible on the way out:
+    //   curl -i -X POST --data-binary @Package.swift localhost:8080/proxy/echo
+    //   curl -i -X POST -H "Transfer-Encoding: chunked" --data-binary @Package.swift localhost:8080/proxy/echo
+    app.post("proxy", "echo") { req -> ClientResponse in
+        try await proxy(req, to: "https://httpbin.org/anything", using: app.client)
+    }
+
     let users = app.grouped("users")
     users.get { req in
         return "users"
@@ -169,144 +229,85 @@ public func routes(_ app: Application) throws {
     users.get(":userID") { req in
         return req.parameters.get("userID") ?? "no id"
     }
-    
-    app.directory.viewsDirectory = "/Users/tanner/Desktop"
+
     app.get("view") { req in
-        req.view.render("hello.txt", ["name": "world"])
+        try await app.viewRenderer.render("hello.txt", ["name": "world"])
     }
 
     app.get("error") { req -> String in
         throw TestError()
     }
 
-    app.get("secret") { req in
-        guard let secret = try await Environment.secret(path: "PASSWORD_SECRET") else {
-            throw Abort(.badRequest)
-        }
-        return secret
-    }
-
-    app.on(.POST, "max-256", body: .collect(maxSize: 256)) { req -> HTTPStatus in
+    app.on(.post, "max-256", maxBodySize: 256) { req -> HTTPResponse.Status in
         print("in route")
         return .ok
     }
 
-    @available(*, deprecated, message: "Testing deprecated functions")
-    func deprecatedUploadHandler(_ req: Request) -> EventLoopFuture<HTTPStatus> {
-        enum BodyStreamWritingToDiskError: Error {
-            case streamFailure(Error)
-            case fileHandleClosedFailure(Error)
-            case multipleFailures([BodyStreamWritingToDiskError])
-        }
-
-        return req.application.fileio.openFile(
-            path: Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? "",
-            mode: .write,
-            flags: .allowFileCreation(),
-            eventLoop: req.eventLoop
-        ).flatMap { fileHandle in
-            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
-            let fileHandleBox = NIOLoopBound(fileHandle, eventLoop: req.eventLoop)
-            req.body.drain { part in
-                let fileHandle = fileHandleBox.value
-                switch part {
-                case .buffer(let buffer):
-                    return req.application.fileio.write(
-                        fileHandle: fileHandle,
-                        buffer: buffer,
-                        eventLoop: req.eventLoop
-                    )
-                case .error(let drainError):
-                    do {
-                        try fileHandle.close()
-                        promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
-                    } catch {
-                        promise.fail(BodyStreamWritingToDiskError.multipleFailures([
-                            .fileHandleClosedFailure(error),
-                            .streamFailure(drainError)
-                        ]))
-                    }
-                    return req.eventLoop.makeSucceededFuture(())
-                case .end:
-                    do {
-                        try fileHandle.close()
-                        promise.succeed(.ok)
-                    } catch {
-                        promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))
-                    }
-                    return req.eventLoop.makeSucceededFuture(())
-                }
-            }
-            return promise.futureResult
-        }
-    }
-    app.on(.POST, "upload", body: .stream) { req -> HTTPStatus in
+    #if !canImport(FoundationEssentials)
+    app.on(.post, "upload") { req -> HTTPResponse.Status in
         return try await FileSystem.shared.withFileHandle(
             forWritingAt: .init(Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? ""),
-            options: .newFile(replaceExisting: true)) { handle in
-                var writer = handle.bufferedWriter()
-                for try await part in req.body {
-                    try await writer.write(contentsOf: part)
-                }
-                return .ok
+            options: .newFile(replaceExisting: true)
+        ) { handle in
+            var writer = handle.bufferedWriter()
+            try await req.body.forEachChunk { part in
+                try await writer.write(contentsOf: part.withUnsafeBytes { unsafe Array($0) })
             }
+            return .ok
+        }
     }
+    #endif
 
-    let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware(number: 1))
+    let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in
-        let response = try await req.client.get("https://www.google.com")
-        guard let body = response.body else {
+        let response = try await app.client.get("https://www.google.com")
+        guard let bodyString = response.body.string else {
             throw Abort(.internalServerError)
         }
-        return String(buffer: body)
+        return bodyString
     }
 
     asyncRoutes.get("client2") { req -> String in
-        let response = try await req.client.get("https://www.google.com")
-        guard let body = response.body else {
+        let response = try await app.client.get("https://www.google.com")
+        guard let bodyString = response.body.string else {
             throw Abort(.internalServerError)
         }
-        return String(buffer: body)
+        return bodyString
     }
-    
+
     asyncRoutes.get("content") { req in
         Creds(email: "name", password: "password")
     }
-    
+
     asyncRoutes.get("content2") { req async throws -> Creds in
         return Creds(email: "name", password: "password")
     }
-    
+
     asyncRoutes.get("contentArray") { req async throws -> [Creds] in
         let cred1 = Creds(email: "name", password: "password")
         return [cred1]
     }
-    
+
     @Sendable
-    func opaqueRouteTester(_ req: Request) async throws -> some AsyncResponseEncodable {
+    func opaqueRouteTester(_ req: Request) async throws -> some ResponseEncodable {
         "Hello World"
     }
     asyncRoutes.get("opaque", use: opaqueRouteTester)
-    
-    // Make sure jumping between multiple different types of middleware works
-    asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
-        return "OK"
-    }
-    
+
     let basicAuthRoutes = asyncRoutes.grouped(Test.authenticator(), Test.guardMiddleware())
     basicAuthRoutes.get("auth") { req async throws -> String in
         return try req.auth.require(Test.self).name
     }
-    
+
     struct Test: Authenticatable {
-        static func authenticator() -> AsyncAuthenticator {
+        static func authenticator() -> any RequestAuthenticator {
             TestAuthenticator()
         }
 
         var name: String
     }
 
-    struct TestAuthenticator: AsyncBasicAuthenticator {
+    struct TestAuthenticator: BasicAuthenticator {
         typealias User = Test
 
         func authenticate(basic: BasicAuthorization, for request: Request) async throws {
@@ -316,10 +317,52 @@ public func routes(_ app: Application) throws {
             }
         }
     }
+
+    app.get("matching", "partial", ":{my-file}.json") { req in
+        let fileName = try req.parameters.require("my-file")
+        return "Hello, \(fileName)"
+    }
+
+    #if MacroRouting
+    try await app.register(collection: UserController())
+    try await middlewareServiceExamples(app)
+
+    #GET(on: app, "macros", "types", Int.self) { (req: Request, id: Int) async throws -> String in
+        return "macro route with id: \(id)"
+    }
+    #endif
+}
+
+func proxy(_ req: Request, to upstream: URI, using client: any Client) async throws -> ClientResponse {
+    var headers = req.headers
+    headers.removeHopByHopFields()
+    // Tell the upstream who we are relaying for.
+    headers.forwarded.append(.init(for: req.remoteAddress?.host))
+
+    let declaredLength = req.headers[.contentLength].flatMap(Int.init)
+    let hasBody = (declaredLength ?? 0) > 0 || req.headers[.transferEncoding] != nil
+
+    do {
+        return try await client.send(req.method, headers: headers, to: upstream) { outgoing in
+            if hasBody {
+                outgoing.body = try .init(
+                    stream: { writer in
+                        try await req.body.forEachChunk { chunk in
+                            try await writer.write(chunk)
+                        }
+                    }, count: declaredLength)
+            }
+            outgoing.maxResponseBodySize = .max
+            outgoing.timeout = .seconds(300)
+        }
+    } catch {
+        Logger.current.warning("Upstream request failed", metadata: ["upstream": "\(upstream)", "error": "\(error)"])
+        throw Abort(.badGateway)
+    }
 }
 
 struct TestError: AbortError, DebuggableError {
-    var status: HTTPResponseStatus {
+    var status: HTTPResponse.Status {
         .internalServerError
     }
 
@@ -346,25 +389,108 @@ struct TestError: AbortError, DebuggableError {
     }
 }
 
-struct TestAsyncMiddleware: AsyncMiddleware {
+struct TestMiddleware: Middleware {
     let number: Int
-    
-    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
-        request.logger.debug("In async middleware - \(number)")
+
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        Logger.current.debug("In async middleware", metadata: ["number": "\(number)"])
         let response = try await next.respond(to: request)
-        request.logger.debug("In async middleware way out - \(number)")
+        Logger.current.debug("In async middleware way out", metadata: ["number": "\(number)"])
         return response
     }
 }
 
-struct TestMiddleware: Middleware {
-    let number: Int
-    
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        request.logger.debug("In non-async middleware - \(number)")
-        return next.respond(to: request).map { response in
-            request.logger.debug("In non-async middleware way out - \(self.number)")
-            return response
+struct TestController: RouteCollection {
+    func boot(routes: any RoutesBuilder) throws {
+        routes.get("test", use: testRoute)
+    }
+
+    func testRoute(_ req: Request) async throws -> String {
+        return "OK"
+    }
+}
+
+#if MacroRouting
+@Controller
+struct UserController {
+    @GET("api", "macros", "users")
+    func getUsers(req: Request) async throws -> String {
+        return "users"
+    }
+
+    @HTTP(.patch, "api", "macros", "users", "custom")
+    func getCustomHTTPMethod(req: Request) async throws -> String {
+        return "custom HTTP method"
+    }
+
+    @GET("api", "macros", "users", Int.self)
+    func getUser(req: Request, id: Int) async throws -> String {
+        return "user with id: \(id)"
+    }
+
+    @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
+    func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
+        return "custom HTTP method"
+    }
+
+    @POST("api", "macros", "lots", UUID.self, Int.self, String.self, Int.self)
+    func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String, anotherNumber: Int) async throws -> String {
+        return "uuid: \(uuid), number: \(number), text: \(text), anotherNumber: \(anotherNumber)"
+    }
+
+    @POST("api", "macros", "sync")
+    func syncRoute(req: Request) throws -> String {
+        "Sync"
+    }
+
+    @GET("macros", "manual", "int", ":id")
+    @Sendable
+    func macroDynamicPathParameter(req: Request) async throws -> String {
+        let id = try req.parameters.require("id")
+        return "macro route with id: \(id)"
+    }
+
+    @GET("macros", "manual", "partial", ":{my-file}.json")
+    @Sendable
+    func macroDynamicPartialPathParameter(req: Request) async throws -> String {
+        let file = try req.parameters.require("my-file")
+        return "macro route with file: \(file)"
+    }
+
+    @POST("api", "macros", "users", Int.self, "promote")
+    @AuthMiddleware(User.self, UserAuthMiddleware())
+    func promoteUser(req: Request, authenticatedUser: User, id: Int) async throws -> User {
+        // Must have: Request, User, then Int (in that order)
+        return authenticatedUser
+    }
+
+    //    These routes are expected not to compile and are here to demonstate/test that
+    //    @GET("NotResponseCodable")
+    //    func testNotARoute(req: Request) async throws -> NotContentType {
+    //        NotContentType(something: "")
+    //    }
+
+    //    @GET("Void")
+    //    func testVoidRoute(req: Request) throws {
+    //
+    //    }
+}
+#endif
+
+struct NotContentType {
+    let something: String
+}
+
+struct User: Authenticatable, Content {
+    let id: Int
+    let name: String
+}
+
+struct UserAuthMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+        if let authHeader = request.headers[.authorization], authHeader == "Bearer token" {
+            request.auth.login(User(id: 1, name: "Vapor"))
         }
+        return try await next.respond(to: request)
     }
 }

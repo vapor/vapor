@@ -19,11 +19,11 @@ extension ValidatorResults.Empty: ValidatorResult {
     public var isFailure: Bool {
         !self.isEmpty
     }
-    
+
     public var successDescription: String? {
         "is empty"
     }
-    
+
     public var failureDescription: String? {
         "is not empty"
     }

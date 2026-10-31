@@ -1,5 +1,10 @@
+public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
-import NIOHTTP1
+#endif
 
 /// A basic username and password.
 public struct BasicAuthorization: Sendable {
@@ -16,11 +21,11 @@ public struct BasicAuthorization: Sendable {
     }
 }
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// Access or set the `Authorization: Basic: ...` header.
     public var basicAuthorization: BasicAuthorization? {
         get {
-            guard let string = self.first(name: .authorization) else {
+            guard let string = self[.authorization] else {
                 return nil
             }
 
@@ -34,7 +39,8 @@ extension HTTPHeaders {
             guard let decodedToken = Data(base64Encoded: .init(headerParts[1])) else {
                 return nil
             }
-            let parts = String.init(decoding: decodedToken, as: UTF8.self).split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+            let parts = String.init(decoding: decodedToken, as: UTF8.self).split(
+                separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
 
             guard parts.count == 2 else {
                 return nil
@@ -46,9 +52,9 @@ extension HTTPHeaders {
             if let basic = newValue {
                 let credentials = "\(basic.username):\(basic.password)"
                 let encoded = Data(credentials.utf8).base64EncodedString()
-                replaceOrAdd(name: .authorization, value: "Basic \(encoded)")
+                self[.authorization] = "Basic \(encoded)"
             } else {
-                remove(name: .authorization)
+                self[.authorization] = nil
             }
         }
     }

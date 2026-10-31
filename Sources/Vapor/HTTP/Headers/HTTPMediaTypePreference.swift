@@ -1,15 +1,20 @@
-import Foundation
-import NIOHTTP1
+import HTTPTypes
+
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 
 /// Represents a `MediaType` and its associated preference, `q`.
 public struct HTTPMediaTypePreference {
     /// The `MediaType` in question.
     public var mediaType: HTTPMediaType
-    
+
     /// Its associated preference.
     public var q: Double?
 
-    init?(directives: [HTTPHeaders.Directive]) {
+    init?(directives: [HTTPFields.Directive]) {
         guard let mediaType = HTTPMediaType(directives: directives) else {
             return nil
         }
@@ -28,7 +33,7 @@ extension Array where Element == HTTPMediaTypePreference {
     public var mediaTypes: [HTTPMediaType] {
         return map { $0.mediaType }
     }
-    
+
     /// Returns `ComparisonResult` comparing the supplied `MediaType`s against these preferences.
     ///
     ///     let pref = httpReq.accept.comparePreference(for: .json, to: .html)

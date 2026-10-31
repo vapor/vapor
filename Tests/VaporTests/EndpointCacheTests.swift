@@ -1,112 +1,124 @@
-import XCTVapor
-import XCTest
+import RoutingKit
+import Testing
 import Vapor
-import NIOCore
-#if canImport(Android)
-import func Android.sleep
-#endif
+import VaporTesting
 
-final class EndpointCacheTests: XCTestCase {
-
-    var app: Application!
-
-    override func setUp() async throws {
-        app = try await Application.make(.testing)
-    }
-
-    override func tearDown() async throws {
-        try await app.asyncShutdown()
-    }
-
+@Suite("Endpoint Cache Tests")
+struct EndpointCacheTests {
     actor CurrentActor {
         var current = 0
-        
+
         func increment() {
             self.current += 1
         }
-        
+
         func getCurrent() -> Int {
             self.current
         }
     }
-    
-    
-    func testEndpointCacheNoCache() throws {
+
+    @Test("Test cache is filled when there is no cache entry yet")
+    func endpointCacheNoCache() async throws {
         let currentActor = CurrentActor()
         struct Test: Content {
             let number: Int
         }
 
-        app.get("number") { req -> Test in
-            let current = await currentActor.getCurrent()
-            await currentActor.increment()
-            return Test(number: current)
-        }
+        try await withApp { app in
+            app.get("number") { req -> Test in
+                let current = await currentActor.getCurrent()
+                await currentActor.increment()
+                return Test(number: current)
+            }
 
-        app.clients.use(.responder)
-
-        let cache = EndpointCache<Test>(uri: "/number")
-        do {
-            let test = try cache.get(
-                using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
-            ).wait()
-            XCTAssertEqual(test.number, 0)
-        }
-        do {
-            let test = try cache.get(
-                using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
-            ).wait()
-            XCTAssertEqual(test.number, 1)
+            try await app.testing(.running) { client in
+                let cache = EndpointCache<Test>(uri: "number", client: client)
+                do {
+                    let test = try await cache.get(using: client)
+                    #expect(test.number == 0)
+                }
+                do {
+                    let test = try await cache.get(using: client)
+                    #expect(test.number == 1)
+                }
+            }
         }
     }
 
-    func testEndpointCacheMaxAge() throws {
-        let currentActor = CurrentActor()
-        struct Test: Content {
-            let number: Int
-        }
+    @Test("Test cache is refreshed when cache age is expired")
+    func testEndpointCacheMaxAge() async throws {
+        let shortMaxAge = 1
+        try await withApp { app in
+            let currentActor = CurrentActor()
+            struct Test: Content {
+                let number: Int
+            }
 
-        app.clients.use(.responder)
+            // Two endpoints rather than one, because the halves of this test want opposite
+            // things from a lifetime. A single `maxAge` has to be short enough to expire
+            // during the test and long enough to survive two back-to-back requests, and on a
+            // loaded machine those two requests alone can outlast it — which is exactly how
+            // this test failed in CI, reporting a value that changed while still cached.
+            func number(maxAge: Int) -> @Sendable (Request) async throws -> Response {
+                { _ in
+                    var res = Response()
+                    let current = await currentActor.getCurrent()
+                    try res.content.encode(Test(number: current))
+                    res.headers.cacheControl = .init(maxAge: maxAge)
+                    await currentActor.increment()
+                    return res
+                }
+            }
+            app.get("cached", use: number(maxAge: 3600))
+            app.get("expiring", use: number(maxAge: shortMaxAge))
 
-        app.get("number") { req -> Response in
-            let res = Response()
-            let current = await currentActor.getCurrent()
-            try res.content.encode(Test(number: current))
-            res.headers.cacheControl = .init(maxAge: 1)
-            await currentActor.increment()
-            return res
-        }
+            try await app.testing(.running) { client in
+                // Two reads inside a lifetime nothing can outlast must return the same value.
+                let cached = EndpointCache<Test>(uri: "cached", client: client)
+                let first = try await cached.get(using: client).number
+                let second = try await cached.get(using: client).number
+                #expect(first == second, "cached value changed inside its lifetime")
 
-        let cache = EndpointCache<Test>(uri: "/number")
-        do {
-            let test = try cache.get(
-                using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
-            ).wait()
-            XCTAssertEqual(test.number, 0)
+                // Past the lifetime, the next read must go back to the server. Only elapsed
+                // time can break this one, and a slow machine only ever adds more of it. The
+                // new value is whatever the counter has reached, so assert that it moved
+                // rather than pinning a number the timing above could legitimately change.
+                let expiring = EndpointCache<Test>(uri: "expiring", client: client)
+                let before = try await expiring.get(using: client).number
+                try await Task.sleep(for: .seconds(shortMaxAge + 1))
+                let refreshed = try await expiring.get(using: client).number
+                #expect(refreshed > before, "cache did not refresh after its lifetime expired")
+            }
         }
-        do {
-            let test = try cache.get(
-                using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
-            ).wait()
-            XCTAssertEqual(test.number, 0)
-        }
-        // wait for expiry
-        sleep(1)
-        do {
-            let test = try cache.get(
-                using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
-            ).wait()
-            XCTAssertEqual(test.number, 1)
+    }
+
+    @Test("Test cache only runs one request at once")
+    func testEndpointCacheSequential() async throws {
+        try await withApp { app in
+            let currentActor = CurrentActor()
+            struct Test: Content, Equatable {
+                let number: Int
+            }
+
+            app.get("number") { req -> Response in
+                var res = Response()
+                let current = await currentActor.getCurrent()
+                try res.content.encode(Test(number: current))
+                res.headers.cacheControl = .init(maxAge: 10)
+                await currentActor.increment()
+                try await Task.sleep(for: .seconds(1))
+                return res
+            }
+
+            try await app.testing(.running) { client in
+                let cache = EndpointCache<Test>(uri: "number", client: client)
+                async let request1 = cache.get(using: client)
+                async let request2 = cache.get(using: client)
+                try await Task.sleep(for: .milliseconds(100))
+                #expect(try await request1 == request2)
+                let current = await currentActor.current
+                #expect(current == 1)
+            }
         }
     }
 }

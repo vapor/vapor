@@ -1,0 +1,338 @@
+import Algorithms
+public import HTTPTypes
+import Logging
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
+extension HTTPFields {
+
+    /// The unit in which `ContentRange`s and `Range`s are specified. This is usually `bytes`.
+    /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
+    public enum RangeUnit: Sendable, Equatable {
+        case bytes
+        case custom(value: String)
+
+        public func serialize() -> String {
+            switch self {
+            case .bytes:
+                return "bytes"
+            case .custom(let value):
+                return value
+            }
+        }
+    }
+
+    /// Represents the HTTP `Range` request header.
+    /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
+    public struct Range: Sendable, Equatable {
+        public let unit: RangeUnit
+        public let ranges: [HTTPFields.Range.Value]
+
+        public init(unit: RangeUnit, ranges: [HTTPFields.Range.Value]) {
+            self.unit = unit
+            self.ranges = ranges
+        }
+
+        init?(directives: [HTTPFields.Directive]) {
+            let rangeCandidates: [HTTPFields.Range.Value] = directives.enumerated().compactMap {
+                if $0.0 == 0, let parameter = $0.1.parameter {
+                    return HTTPFields.Range.Value.from(requestStr: parameter)
+                }
+                return HTTPFields.Range.Value.from(requestStr: $0.1.value)
+            }
+            guard !rangeCandidates.isEmpty else {
+                return nil
+            }
+            self.ranges = rangeCandidates
+            let lowerCasedUnit = directives[0].value.trimming(while: \.isWhitespace).lowercased()
+            self.unit =
+                lowerCasedUnit == "bytes"
+                ? RangeUnit.bytes
+                : RangeUnit.custom(value: lowerCasedUnit)
+        }
+
+        public func serialize() -> String {
+            return "\(unit.serialize())=\(ranges.map { $0.serialize() }.joined(separator: ", "))"
+        }
+    }
+
+    /// Represents the HTTP `Content-Range` response header.
+    ///
+    /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
+    public struct ContentRange: Equatable {
+        public let unit: RangeUnit
+        public let range: HTTPFields.ContentRange.Value
+
+        init?(directive: HTTPFields.Directive) {
+            let splitResult = directive.value.split(separator: " ")
+            guard splitResult.count == 2 else {
+                return nil
+            }
+            let (unitStr, rangeStr) = (splitResult[0], splitResult[1])
+            let lowerCasedUnit = unitStr.trimming(while: \.isWhitespace).lowercased()
+            guard let contentRange = HTTPFields.ContentRange.Value.from(responseStr: rangeStr) else {
+                return nil
+            }
+            self.unit =
+                lowerCasedUnit == "bytes"
+                ? RangeUnit.bytes
+                : RangeUnit.custom(value: lowerCasedUnit)
+            self.range = contentRange
+        }
+
+        public init(unit: RangeUnit, range: HTTPFields.ContentRange.Value) {
+            self.unit = unit
+            self.range = range
+        }
+
+        init?(directives: [Directive]) {
+            guard directives.count == 1 else {
+                return nil
+            }
+            self.init(directive: directives[0])
+        }
+
+        public func serialize() -> String {
+            return "\(unit.serialize()) \(range.serialize())"
+        }
+
+    }
+
+    /// Convenience for accessing the Content-Range response header.
+    ///
+    /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
+    public var contentRange: ContentRange? {
+        get {
+            return HTTPFields.ContentRange(directives: self.parseDirectives(name: .contentRange).flatMap { $0 })
+        }
+        set {
+            if self.contains(.contentRange) {
+                self[.contentRange] = nil
+            }
+            guard let newValue = newValue else {
+                return
+            }
+            self[.contentRange] = newValue.serialize()
+        }
+    }
+
+    /// Convenience for accessing the `Range` request header.
+    ///
+    /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
+    public var range: Range? {
+        get {
+            return HTTPFields.Range(directives: self.parseDirectives(name: .range).flatMap { $0 })
+        }
+        set {
+            if self.contains(.range) {
+                self[.range] = nil
+            }
+            guard let newValue = newValue else {
+                return
+            }
+            self[.range] = newValue.serialize()
+        }
+    }
+}
+
+extension HTTPFields.Range {
+    /// Represents one value of the `Range` request header.
+    ///
+    /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
+    public enum Value: Sendable, Equatable {
+        ///Integer with single trailing dash, e.g. `25-`
+        case start(value: Int)
+        ///Integer with single leading dash, e.g. `-25`
+        case tail(value: Int)
+        ///Two integers with single dash in between, e.g. `20-25`
+        case within(start: Int, end: Int)
+
+        ///Parses a string representing a requested range in one of the following formats:
+        ///
+        ///- `<range-start>-<range-end>`
+        ///- `-<range-end>`
+        ///- `<range-start>-`
+        ///
+        /// - parameters:
+        ///     - requestStr: String representing a requested range
+        /// - returns: A `HTTPFields.Range.Value` if the `requestStr` is valid, `nil` otherwise.
+        public static func from<T>(requestStr: T) -> HTTPFields.Range.Value? where T: StringProtocol {
+            let ranges = requestStr.split(separator: "-", omittingEmptySubsequences: false)
+                .map { $0.trimming(while: \.isWhitespace) }
+            let count = ranges.count
+            guard count <= 2 else { return nil }
+
+            switch (count > 0 ? Int(ranges[0]) : nil, count > 1 ? Int(ranges[1]) : nil) {
+            case (nil, nil):
+                return nil
+            case (.some(let start), nil):
+                return .start(value: start)
+            case (nil, .some(let tail)):
+                return .tail(value: tail)
+            case (.some(let start), .some(let end)):
+                return .within(start: start, end: end)
+            }
+        }
+
+        ///Serializes `HTTPFields.Range.Value` to a string for use within the HTTP `Range` header.
+        public func serialize() -> String {
+            switch self {
+            case .start(let value):
+                return "\(value)-"
+            case .tail(let value):
+                return "-\(value)"
+            case .within(let start, let end):
+                return "\(start)-\(end)"
+            }
+        }
+    }
+}
+
+extension HTTPFields.ContentRange {
+    /// Represents the value of the `Content-Range` request header.
+    ///
+    /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
+    public enum Value: Equatable {
+        case within(start: Int, end: Int)
+        case withinWithLimit(start: Int, end: Int, limit: Int)
+        case any(size: Int)
+
+        ///Parses a string representing a response range in one of the following formats:
+        ///
+        ///- `<range-start>-<range-end>/<size>`
+        ///- `<range-start>-<range-end>/*`
+        ///- `*/<size>`
+        ///
+        /// - parameters:
+        ///     - requestStr: String representing the response range
+        /// - returns: A `HTTPFields.ContentRange.Value` if the `responseStr` is valid, `nil` otherwise.
+        public static func from<T>(responseStr: T) -> HTTPFields.ContentRange.Value? where T: StringProtocol {
+            let ranges = responseStr.split(separator: "-", omittingEmptySubsequences: false)
+                .map { $0.trimming(while: \.isWhitespace) }
+
+            switch ranges.count {
+            case 1:
+                let anyRangeOfSize = ranges[0].split(separator: "/", omittingEmptySubsequences: false)
+                guard anyRangeOfSize.count == 2,
+                    anyRangeOfSize[0] == "*",
+                    let size = Int(anyRangeOfSize[1])
+                else {
+                    return nil
+                }
+                return .any(size: size)
+            case 2:
+                guard let start = Int(ranges[0]) else {
+                    return nil
+                }
+                let limits = ranges[1].split(separator: "/", omittingEmptySubsequences: false)
+                guard limits.count == 2, let end = Int(limits[0]) else {
+                    return nil
+                }
+                if limits[1] == "*" {
+                    return .within(start: start, end: end)
+                }
+                guard let limit = Int(limits[1]) else {
+                    return nil
+                }
+                return .withinWithLimit(start: start, end: end, limit: limit)
+            default: return nil
+            }
+        }
+
+        ///Serializes `HTTPFields.Range.Value` to a string for use within the HTTP `Content-Range` header.
+        public func serialize() -> String {
+            switch self {
+            case .any(let size):
+                return "*/\(size)"
+            case .within(let start, let end):
+                return "\(start)-\(end)/*"
+            case .withinWithLimit(let start, let end, let limit):
+                return "\(start)-\(end)/\(limit)"
+            }
+        }
+    }
+}
+
+extension HTTPFields.Range.Value {
+    /// Resolves this requested range against the actual length of the representation being served.
+    ///
+    /// Resolution is deliberately lenient, as RFC 9110 §14.1.2 requires: a range whose end runs
+    /// past the last byte is clamped to it rather than rejected, and a suffix longer than the
+    /// representation selects the whole of it. Only a range that selects *no* bytes — one starting
+    /// at or past the end, or a zero-length suffix — is unsatisfiable, and that is a `416` carrying
+    /// `Content-Range: bytes */size`, not a `400`. See https://github.com/vapor/vapor/issues/2991.
+    ///
+    /// A malformed range — negative, or with the start after the end — is still a `400`: that is a
+    /// syntactically broken request rather than one this representation happens not to satisfy.
+    ///
+    /// - Parameter size: The length in bytes of the representation being served.
+    /// - Returns: The concrete window of bytes to serve. `byteCount` is always at least `1`.
+    /// - Throws: ``Abort`` `.badRequest` if the range is malformed, or `.rangeNotSatisfiable` if it
+    ///   selects no bytes.
+    func resolve(againstSize size: Int) throws -> (offset: Int, byteCount: Int) {
+        /// The RFC requires an unsatisfiable range to be answered with the representation's actual
+        /// length, so a client can work out what it should have asked for.
+        func unsatisfiable() -> Abort {
+            var headers = HTTPFields()
+            headers.contentRange = .init(unit: .bytes, range: .any(size: size))
+            return Abort(.rangeNotSatisfiable, headers: headers)
+        }
+
+        switch self {
+        case .start(let start):
+            guard start >= 0 else {
+                Logger.current.debug("Requested range start was invalid", metadata: ["start": "\(start)"])
+                throw Abort(.badRequest)
+            }
+            // `start == size` selects nothing: the last byte is at `size - 1`.
+            guard start < size else {
+                throw unsatisfiable()
+            }
+            return (offset: start, byteCount: size - start)
+
+        case .tail(let suffixLength):
+            guard suffixLength >= 0 else {
+                Logger.current.debug(
+                    "Requested range suffix length was invalid",
+                    metadata: ["suffixLength": "\(suffixLength)"])
+                throw Abort(.badRequest)
+            }
+            // A suffix longer than the representation selects all of it.
+            let byteCount = min(suffixLength, size)
+            guard byteCount > 0 else {
+                throw unsatisfiable()
+            }
+            return (offset: size - byteCount, byteCount: byteCount)
+
+        case .within(let start, let end):
+            guard start >= 0, end >= 0, start <= end else {
+                Logger.current.debug(
+                    "Requested range was invalid",
+                    metadata: ["start": "\(start)", "end": "\(end)"])
+                throw Abort(.badRequest)
+            }
+            guard start < size else {
+                throw unsatisfiable()
+            }
+            // Clamp an end that runs past the last byte rather than rejecting the whole request.
+            let lastByte = min(end, size - 1)
+            return (offset: start, byteCount: lastByte - start + 1)
+        }
+    }
+
+    ///Converts this `HTTPFields.Range.Value` to a `HTTPFields.ContentRange.Value` with the given `limit`.
+    ///
+    /// The returned range is the one that will actually be served: an end past `limit` is clamped
+    /// to the last byte rather than reflected back verbatim.
+    ///
+    /// - Throws: ``Abort`` `.badRequest` if the range is malformed, or `.rangeNotSatisfiable` if it
+    ///   selects no bytes of a representation of length `limit`.
+    public func asResponseContentRange(limit: Int) throws -> HTTPFields.ContentRange.Value {
+        let (offset, byteCount) = try self.resolve(againstSize: limit)
+        return .withinWithLimit(start: offset, end: offset + byteCount - 1, limit: limit)
+    }
+}

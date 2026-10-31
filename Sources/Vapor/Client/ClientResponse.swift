@@ -1,65 +1,82 @@
-import NIOCore
-import NIOHTTP1
+public import HTTPTypes
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public struct ClientResponse: Sendable {
-    public var status: HTTPStatus
-    public var headers: HTTPHeaders
-    public var body: ByteBuffer?
-    private let byteBufferAllocator: ByteBufferAllocator
+    public var status: HTTPResponse.Status
+    public var headers: HTTPFields
+    public var body: Response.Body {
+        didSet {
+            self.body.sizeLimit = self.maxBodySize
+            self.headers.updateContentLength(body.count)
+        }
+    }
+    private let contentConfiguration: ContentConfiguration
+    /// The most bytes ``content`` will buffer when decoding a streaming body.
+    ///
+    /// A response arriving from somewhere else is not bounded by anything this process controls, so
+    /// collecting one has to have a ceiling. Streaming it with ``Response/Body/withStreamingBytes(_:)``
+    /// is not limited by this - only holding the whole thing in memory is.
+    public let maxBodySize: Int
 
-    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+    public init(
+        status: HTTPResponse.Status = .ok,
+        headers: HTTPFields = [:],
+        body: Response.Body = .empty,
+        maxBodySize: Int = 10 * 1024 * 1024,  // Default to 10 MB, matching `ClientRequest`
+        contentConfiguration: ContentConfiguration = .default()
+    ) {
         self.status = status
         self.headers = headers
+        self.maxBodySize = maxBodySize
         self.body = body
-        self.byteBufferAllocator = byteBufferAllocator
+        self.body.sizeLimit = maxBodySize
+        self.contentConfiguration = contentConfiguration
     }
 }
 
 extension ClientResponse {
     private struct _ContentContainer: ContentContainer {
-        var body: ByteBuffer?
-        var headers: HTTPHeaders
-        let allocator: ByteBufferAllocator
+        var body: Response.Body
+        var headers: HTTPFields
+        let maxBodySize: Int
+        let contentConfiguration: ContentConfiguration
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
         }
 
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = self.allocator.buffer(capacity: 0)
-            try encoder.encode(encodable, to: &body, headers: &self.headers)
-            self.body = body
+        mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E: Encodable {
+            var data = Data()
+            try encoder.encode(encodable, to: &data, headers: &self.headers, userInfo: [:])
+            self.body = .init(data: data)
         }
 
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
-            guard let body = self.body else {
+        func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D: Decodable {
+            var body = self.body
+            guard let data = try await body.collect() else {
                 throw Abort(.lengthRequired)
             }
-            return try decoder.decode(D.self, from: body, headers: self.headers)
+            return try decoder.decode(D.self, from: data, headers: self.headers, userInfo: [:])
         }
 
-        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
-            var body = self.allocator.buffer(capacity: 0)
+        mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C: Content {
+            var body = Data()
             var content = content
             try content.beforeEncode()
-            try encoder.encode(content, to: &body, headers: &self.headers)
-            self.body = body
-        }
-
-        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
-            guard let body = self.body else {
-                throw Abort(.lengthRequired)
-            }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.headers)
-            try decoded.afterDecode()
-            return decoded
+            try encoder.encode(content, to: &body, headers: &self.headers, userInfo: [:])
+            self.body = .init(data: body)
         }
     }
 
-    public var content: ContentContainer {
+    public var content: any ContentContainer {
         get {
-            return _ContentContainer(body: self.body, headers: self.headers, allocator: self.byteBufferAllocator)
+            _ContentContainer(
+                body: self.body, headers: self.headers, maxBodySize: self.maxBodySize, contentConfiguration: self.contentConfiguration)
         }
         set {
             let container = (newValue as! _ContentContainer)
@@ -73,65 +90,26 @@ extension ClientResponse: CustomStringConvertible {
     public var description: String {
         var desc = ["HTTP/1.1 \(status.code) \(status.reasonPhrase)"]
         desc += self.headers.map { "\($0.name): \($0.value)" }
-        if var body = self.body {
-            let string = body.readString(length: body.readableBytes) ?? ""
-            desc += ["", string]
+        if let body = self.body.string {
+            desc += ["", body]
         }
         return desc.joined(separator: "\n")
     }
 }
 
 extension ClientResponse: ResponseEncodable {
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let body: Response.Body
-        if let buffer = self.body {
-            body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
-        } else {
-            body = .empty
-        }
-        let response = Response(
+    public func encodeResponse(for request: Request) async throws -> Response {
+        // Returning a client response from a handler is proxying, so the origin's connection-specific
+        // fields have to go: its `Connection: close` would close *our* client's connection, and its
+        // framing headers describe a hop this response is not travelling over. `Response.init` then
+        // sets the framing to match the body actually being sent.
+        var headers = self.headers
+        headers.removeHopByHopFields()
+        return Response(
             status: self.status,
-            headers: self.headers,
-            body: body
+            headers: headers,
+            body: self.body,
+            contentConfiguration: request.contentConfiguration
         )
-        return request.eventLoop.makeSucceededFuture(response)
-    }
-}
-
-extension ClientResponse: Codable {
-    private enum CodingKeys: String, CodingKey {
-        case status = "status"
-        case headers = "headers"
-        case body = "body"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.status = try container.decode(HTTPStatus.self, forKey: .status)
-        self.headers = try container.decode(HTTPHeaders.self, forKey: .headers)
-        let bodyString = try container.decode(String?.self, forKey: .body)
-        guard let s = bodyString, let bodyData = [UInt8].init(decodingBase64: s) else {
-            throw Abort(.internalServerError, reason: "Could not decode client response body from base64 string")
-        }
-        self.byteBufferAllocator = ByteBufferAllocator()
-        self.body = self.byteBufferAllocator.buffer(bytes: bodyData)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.status, forKey: .status)
-        try container.encode(self.headers, forKey: .headers)
-        if let body = self.body {
-            let string = body.readableBytesView.base64String()
-            try container.encode(string, forKey: .body)
-        } else {
-            try container.encodeNil(forKey: .body)
-        }
-    }
-}
-
-extension ClientResponse: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        return lhs.status == rhs.status && lhs.headers == rhs.headers && lhs.body == rhs.body
     }
 }

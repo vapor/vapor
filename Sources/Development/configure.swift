@@ -1,21 +1,62 @@
+import Logging
+import SwiftASN1
 import Vapor
-import NIOConcurrencyHelpers
-import NIOSSL
+import X509
 
-public func configure(_ app: Application) throws {
-    app.logger.logLevel = Environment.process.LOG_LEVEL ?? .debug
-    
-    app.http.server.configuration.hostname = "127.0.0.1"
-    if app.environment == .tls {
-        app.http.server.configuration.port = 8443
-        try app.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
-            certificateChain: NIOSSLCertificate.fromPEMBytes(TLSData.sampleServerCertificatePEM).map { .certificate($0) },
-            privateKey: .privateKey(.init(bytes: TLSData.sampleServerPrivateKeyPEM, format: .pem))
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
+func configure(_ app: Application) async throws {
+    app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+    switch app.environment {
+    case .tls:
+        app.serverConfiguration.port = 8443
+        let privateKey = try Certificate.PrivateKey(pemEncoded: TLSData.sampleServerPrivateKeyPEM)
+        let certChain = [try Certificate(pemEncoded: TLSData.sampleServerCertificatePEM)]
+        app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
+    #if UnstableHTTP3
+    case .http3:
+        // To hit an HTTP/3 endpoint, you can use a cURL version that supports HTTP/3 inside Docker
+        //
+        // docker run --rm -p 8443:8443/udp alpine/curl-http3 curl https://host.docker.internal:8443/ping --http3-only --insecure
+        //
+        // If you want to test it with certificate verification enabled, use the following command
+        //
+        // docker run --rm \
+        //  -v "$(pwd)/Tests/VaporTests/Utilities:/certs:ro" \
+        //  -p 8443:8443/udp \
+        //  alpine/curl-http3 curl -i https://localhost:8443/ping --http3-only \
+        //  --connect-to localhost:8443:host.docker.internal:8443 \
+        //  --cacert /certs/http3-cacert.pem
+        app.serverConfiguration.address = .hostname("0.0.0.0", port: 8443)
+        let certificateChainPath = URL(filePath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appending(path: "Tests/VaporTests/Utilities/http3.crt")
+            .path()
+        let privateKeyPath = URL(filePath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appending(path: "Tests/VaporTests/Utilities/http3.key")
+            .path()
+        app.serverConfiguration.tlsConfiguration = .pemFile(
+            certificateChainPath: certificateChainPath,
+            privateKeyPath: privateKeyPath
         )
+        app.serverConfiguration.httpVersions = [.http1_1, .http2, .http3]
+        app.middleware.use(AltSvcMiddleware(serverConfiguration: app.serverConfiguration))
+    #endif
+    default:
+        break
     }
-    
+
     // routes
-    try routes(app)
+    try await routes(app)
 }
 
 actor MemoryCache {
@@ -27,10 +68,14 @@ actor MemoryCache {
 
 extension Environment {
     static var tls: Environment { .custom(name: "tls") }
+    #if UnstableHTTP3
+    static var http3: Environment { .custom(name: "http3") }
+    #endif
 }
 
 enum TLSData {
-    static var sampleServerCertificatePEM: [UInt8] { .init("""
+    static var sampleServerCertificatePEM: String {
+        """
         -----BEGIN CERTIFICATE-----
         MIIDeTCCAmGgAwIBAgIUMJzqelT95d/JU2Yp4/XHuqhJTs4wDQYJKoZIhvcNAQEL\nBQAwTDELMAkGA1UEBhMCVVMxKTAnBgNVBAoMIFZhcG9yIERldmVsb3BtZW50IEV4
         YW1wbGUgU2VydmVyMRIwEAYDVQQDDAlsb2NhbGhvc3QwHhcNMjMwMzEwMTIyNjQw\nWhcNMjcwMzEwMTIyNjQwWjBMMQswCQYDVQQGEwJVUzEpMCcGA1UECgwgVmFwb3Ig
@@ -43,9 +88,10 @@ enum TLSData {
         L9jOe/0MbZ34Gurjj9LMlVDg3p8FTKJJ9qipPMVBPy+/8ABm4qu7vx0Kacuskgc8\nu8RErJ0sqir7ggBGqgRp+Z+DC5UcqlMUZZQPKSLpCqfdrOIcDrTK9u/PU9cGdALh
         C+4n5ZIHWu66eCvARnqbCTwcOwGMxkKX/4FpI54=
         -----END CERTIFICATE-----
-        """.utf8)
+        """
     }
-    static var sampleServerPrivateKeyPEM: [UInt8] { .init("""
+    static var sampleServerPrivateKeyPEM: String {
+        """
         -----BEGIN PRIVATE KEY-----
         MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC2rwuxbh8k8BG2\nFBLVAxz3RCwoJWRsqadfqhNV7oUNaj4MexTASlwGGC40shHytRmqKwV3yxlucTR3
         0qyWFZoZtlDhjyW2bxbV2Xrn0M/Ad9burH1xCTVmyeivB1GZD8jUSUTkuSAYQ0Yi\nsVEyTk/j4aU9WaKETXf/f7/9CaDOBxFxOKDuyiG+HzOCLlSH03Ym+NmjB+4yjFX1
@@ -61,6 +107,6 @@ enum TLSData {
         0uBJy43I5AixrE+zMGW828RlUBelHHQhT9s/PSkCgYA6kQyV5FLBLrmnV5B8bdiU\ndEF7H/YHrRMvzH3bwfgaw7CxjUcreQ2LX84fkUFtZXzR2VS5bdZKGFDmSX0QVGPq
         zmVLrxbf0kgQjEEaSHsdIutYblHJg3bSjKoyOC20TB34sps7hpBRq6joJwjWH/rz\n6XoqNBpphe8vTBZn/FSkog==
         -----END PRIVATE KEY-----
-        """.utf8)
+        """
     }
 }

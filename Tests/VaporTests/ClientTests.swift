@@ -1,218 +1,396 @@
-#if !canImport(Darwin)
-import Dispatch
-#endif
-import Foundation
-import XCTest
-import Vapor
-import VaporTestUtils
-import NIOCore
-import NIOFoundationCompat
-import Logging
 import AsyncHTTPClient
-import NIOEmbedded
-import NIOConcurrencyHelpers
+import HTTPTypes
+import InMemoryLogging
+import Logging
+import RoutingKit
+import Synchronization
+import Testing
+import Vapor
+import VaporTesting
 
-@available(*, deprecated, message: "Testing deprecated future APIs")
-final class ClientTests: XCTestCase {
-    var remoteAppPort: Int!
-    var remoteApp: Application!
-    
-    override func setUp() async throws {
-        remoteApp = try await Application.make(.testing)
-        remoteApp.http.server.configuration.port = 0
-        
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
+@Suite("Client Tests")
+struct ClientTests {
+    #if HTTPClient
+    @Test("Test Client beforeSend()")
+    func testClientBeforeSend() async throws {
+        try await withRemoteApp { remoteApp, remoteAppPort in
+            try await withApp { app in
+                let res = try await app.client.post("http://127.0.0.1:\(remoteAppPort)/anything") { req in
+                    try req.content.encode(["hello": "world"])
+                }
+
+                let data = try await res.content.decode(AnythingResponse.self)
+                #expect(data.json == ["hello": "world"])
+                #expect(data.headers["content-type"] == "application/json; charset=utf-8")
+            }
+        }
+    }
+
+    @Test("Test Client Content")
+    func testClientContent() async throws {
+        try await withRemoteApp { remoteApp, remoteAppPort in
+            try await withApp { app in
+                let res = try await app.client.post("http://127.0.0.1:\(remoteAppPort)/anything", content: ["hello": "world"])
+
+                let data = try await res.content.decode(AnythingResponse.self)
+                #expect(data.json == ["hello": "world"])
+                #expect(data.headers["content-type"] == "application/json; charset=utf-8")
+            }
+        }
+    }
+
+    @Test("Test Client Timeout")
+    func testClientTimeout() async throws {
+        try await withRemoteApp { remoteApp, remoteAppPort in
+            try await withApp { app in
+                // A request to loopback that should succeed in milliseconds. Addressed by IP
+                // rather than `localhost`: the remote app binds IPv4 only, and `localhost`
+                // resolves to `::1` first, so a name here means every request starts with a
+                // doomed IPv6 attempt whose cost depends on whether the host refuses it or
+                // black-holes it.
+                // The budget here is not the thing under test — that a request carrying a
+                // timeout still completes is. It is set far above any plausible loopback
+                // round trip because a tight one measures how busy the machine is instead:
+                // at two seconds this failed in 4 of 10 loaded CI-like runs.
+                await #expect(
+                    throws: Never.self,
+                    performing: {
+                        try await app.client.get("http://127.0.0.1:\(remoteAppPort)/json") { $0.timeout = .seconds(30) }
+                    })
+                await #expect(throws: HTTPClientError.deadlineExceeded) {
+                    try await app.client.get("http://127.0.0.1:\(remoteAppPort)/stalling") {
+                        $0.timeout = .milliseconds(200)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test("Test Boilerplate Client")
+    func testBoilerplateClient() async throws {
+        try await withRemoteApp { remoteApp, remoteAppPort in
+            try await withApp { app in
+                app.get("foo") { req async throws -> String in
+                    do {
+                        let response = try await app.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
+                        #expect(response.status.code == 201)
+                        // Server shutdown handled by task cancellation
+                        return "bar"
+                    } catch {
+                        // Server shutdown handled by task cancellation
+                        throw error
+                    }
+                }
+
+                try await app.testing(.running) { client in
+                    let res = try await client.get("foo")
+                    try #expect(await res.body.requireString() == "bar")
+                }
+            }
+        }
+    }
+
+    @Test("Test Client Logging", .disabled("Broken in AHC"), .bug("https://github.com/swift-server/async-http-client/issues/854"))
+    func testClientLogging() async throws {
+        try await withRemoteApp { remoteApp, remoteAppPort in
+            let logHandler = InMemoryLogHandler()
+            let logger = Logger(
+                label: "codes.vapor.test",
+                factory: { _ in
+                    logHandler
+                })
+            try await withApp(logger: logger) { app in
+                _ = try await app.client.get("http://127.0.0.1:\(remoteAppPort)/status/201")
+
+                #expect(logHandler.metadata["ahc-request-id"] != nil)
+            }
+        }
+    }
+
+    @Test("Test URL Client Request with Invalid URL Does Not Crash", .bug("https://github.com/vapor/vapor/issues/2716"))
+    func testGH2716() async throws {
+        try await withApp { app in
+            app.get("client") { req in
+                let response = try await app.client.get("htp://localhost/status/2 1")
+                return response.description
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("/client")
+                #expect(res.status.code == 500)
+            }
+        }
+    }
+    @Test("A decoded gzip response carries headers that describe the decoded body", .timeLimit(.minutes(1)))
+    func testDecodedResponseHeadersAgreeWithBody() async throws {
+        try await withRemoteApp { _, remoteAppPort in
+            try await withApp { app in
+                // The shared client asks for gzip and decodes it. Before the headers were corrected,
+                // `Content-Encoding: gzip` and the encoded `Content-Length` came through in front of
+                // the decoded bytes, so relaying the response as a proxy declared 40 bytes, wrote 20,
+                // and had the server abort it.
+                app.get("via") { _ -> ClientResponse in
+                    try await app.client.get("http://127.0.0.1:\(remoteAppPort)/gzip")
+                }
+
+                let direct = try await app.client.get("http://127.0.0.1:\(remoteAppPort)/gzip")
+                #expect(direct.status == .ok)
+                #expect(direct.headers[.contentEncoding] == nil)
+                #expect(direct.headers[.contentLength] == nil)
+                try #expect(await direct.body.requireString() == "hello, decoded world")
+
+                try await app.testing(.running) { client in
+                    let via = try await client.get("via")
+                    #expect(via.status == .ok)
+                    #expect(via.headers[.contentEncoding] == nil)
+                    try #expect(await via.body.requireString() == "hello, decoded world")
+                }
+            }
+        }
+    }
+    #endif
+
+    @Test("Test Custom Client")
+    func testCustomClient() async throws {
+        try await withRemoteApp { remoteApp, remoteAppPort in
+            let customClient = CustomClient()
+            try await withApp(services: .init(client: .provided(customClient))) { app in
+                _ = try await app.client.get("https://vapor.codes")
+
+                #expect(customClient.requests.count == 1)
+                #expect(customClient.requests.first?.url.host == "vapor.codes")
+            }
+        }
+    }
+
+    // MARK: - Helpers
+    func withRemoteApp<T: Sendable>(_ block: @Sendable (Application, Int) async throws -> T) async throws -> T {
+        let remoteApp = try Application(.testing, configReader: testConfigReader)
+
         remoteApp.get("json") { _ in
             SomeJSON()
         }
-        
-        remoteApp.get("status", ":status") { req -> HTTPStatus in
+
+        remoteApp.get("status", ":status") { req in
             let status = try req.parameters.require("status", as: Int.self)
-            return HTTPStatus(statusCode: status)
+            return HTTPResponse.Status(code: status)
         }
-        
+
         remoteApp.post("anything") { req -> AnythingResponse in
             let headers = req.headers.reduce(into: [String: String]()) {
-                $0[$1.0] = $1.1
+                $0[$1.name.canonicalName] = $1.value
             }
-            
-            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String: Any] else {
-                throw Abort(.badRequest)
-            }
-            
+
+            let json = try await req.content.decode([String: String].self)
+
             let jsonResponse = json.mapValues {
                 return "\($0)"
             }
-            
+
             return AnythingResponse(headers: headers, json: jsonResponse)
         }
 
-        remoteApp.get("stalling") {
-            $0.eventLoop.scheduleTask(in: .seconds(2)) { SomeJSON() }.futureResult
-        }
-        
-        remoteApp.environment.arguments = ["serve"]
-        try await remoteApp.asyncBoot()
-        try await remoteApp.startup()
-        
-        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
-        guard let localAddress = remoteApp.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        self.remoteAppPort = port
-    }
-    
-    override func tearDown() async throws {
-        try await remoteApp.asyncShutdown()
-    }
-    
-    func testClientConfigurationChange() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.http.client.configuration.redirectConfiguration = .disallow
-
-        app.get("redirect") {
-            $0.redirect(to: "foo")
+        remoteApp.get("stalling") { _ in
+            try await Task.sleep(for: .seconds(1))
+            return SomeJSON()
         }
 
-        try app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
-        
-        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
-        let res = try app.client.get("http://localhost:\(port)/redirect").wait()
-
-        XCTAssertEqual(res.status, .seeOther)
-    }
-    
-    func testClientConfigurationCantBeChangedAfterClientHasBeenUsed() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.http.client.configuration.redirectConfiguration = .disallow
-
-        app.get("redirect") {
-            $0.redirect(to: "foo")
+        // gzip of "hello, decoded world": 40 bytes on the wire for 20 decoded, so the declared
+        // length is not the size of the body a decoding client ends up holding.
+        remoteApp.get("gzip") { _ -> Response in
+            let gzipped: [UInt8] = [
+                31, 139, 8, 0, 0, 0, 0, 0, 2, 255, 203, 72, 205, 201, 201, 215, 81, 72, 73, 77,
+                206, 79, 73, 77, 81, 40, 207, 47, 202, 73, 1, 0, 67, 208, 217, 200, 20, 0, 0, 0,
+            ]
+            return Response(headers: [.contentEncoding: "gzip"], body: .init(data: Data(gzipped)))
         }
 
-        try app.server.start(address: .hostname("localhost", port: 0))
-        defer { app.server.shutdown() }
-        
-        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port, "Failed to get port")
-        _ = try app.client.get("http://localhost:\(port)/redirect").wait()
-        
-        app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
-        let res = try app.client.get("http://localhost:\(port)/redirect").wait()
-        XCTAssertEqual(res.status, .seeOther)
-    }
+        do {
+            let result = try await remoteApp.testing(.running) { client in
+                try await block(remoteApp, #require(client.port))
+            }
 
-    func testClientResponseCodable() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        let res = try app.client.get("http://localhost:\(remoteAppPort!)/json").wait()
-
-        let encoded = try JSONEncoder().encode(res)
-        let decoded = try JSONDecoder().decode(ClientResponse.self, from: encoded)
-        
-        XCTAssertEqual(res, decoded)
-    }
-    
-    func testClientBeforeSend() throws {
-        let app = Application()
-        defer { app.shutdown() }
-        try app.boot()
-        
-        let res = try app.client.post("http://localhost:\(remoteAppPort!)/anything") { req in
-            try req.content.encode(["hello": "world"])
-        }.wait()
-
-        let data = try res.content.decode(AnythingResponse.self)
-        XCTAssertEqual(data.json, ["hello": "world"])
-        XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
-    }
-    
-    func testClientContent() throws {
-        let app = Application()
-        defer { app.shutdown() }
-        try app.boot()
-        
-        let res = try app.client.post("http://localhost:\(remoteAppPort!)/anything", content: ["hello": "world"]).wait()
-
-        let data = try res.content.decode(AnythingResponse.self)
-        XCTAssertEqual(data.json, ["hello": "world"])
-        XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
-    }
-
-    func testClientTimeout() throws {
-        let app = Application()
-        defer { app.shutdown() }
-        try app.boot()
-
-        XCTAssertNoThrow(try app.client.get("http://localhost:\(remoteAppPort!)/json") { $0.timeout = .seconds(1) }.wait())
-        XCTAssertThrowsError(try app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .seconds(1) }.wait()) {
-            XCTAssertTrue(type(of: $0) == HTTPClientError.self, "\(type(of: $0)) is not a \(HTTPClientError.self)")
-            XCTAssertEqual($0 as? HTTPClientError, .deadlineExceeded)
+            try await remoteApp.shutdown()
+            return result
+        } catch {
+            try await remoteApp.shutdown()
+            throw error
         }
     }
-    
-    func testBoilerplateClient() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        let remotePort = self.remoteAppPort!
 
-        app.get("foo") { req -> EventLoopFuture<String> in
-            return req.client.get("http://localhost:\(remotePort)/status/201").map { res in
-                XCTAssertEqual(res.status.code, 201)
-                req.application.running?.stop()
-                return "bar"
-            }.flatMapErrorThrowing {
-                req.application.running?.stop()
-                throw $0
+    @Test("Returning a ClientResponse forwards its body", .timeLimit(.minutes(1)))
+    func testClientResponseEncodesItsBody() async throws {
+        try await withApp { app in
+            // Proxy shape: a handler returning a ClientResponse whose body is a live stream. The body
+            // used to be dropped entirely, so this answered 200 with nothing in it.
+            app.get("proxied") { _ -> ClientResponse in
+                var headers = HTTPFields()
+                headers.contentType = .plainText
+                return ClientResponse(
+                    status: .created,
+                    headers: headers,
+                    body: try .init(
+                        stream: { writer in
+                            try await writer.write("hello ")
+                            try await writer.write("world")
+                        }, count: 11)
+                )
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
+                #expect(res.status == .created)
+                try #expect(await res.body.requireString() == "hello world")
+                // A declared length survives the proxy instead of being re-framed as chunked.
+                #expect(res.headers[.contentLength] == "11")
             }
         }
+    }
 
-        app.environment.arguments = ["serve"]
-        app.http.server.configuration.port = 0
-        try app.boot()
-        try app.start()
-        
-        XCTAssertNotNil(app.http.server.shared.localAddress)
-        guard let localAddress = app.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
+    @Test("Returning a ClientResponse of unknown length is chunked", .timeLimit(.minutes(1)))
+    func testClientResponseWithUnknownLengthIsChunked() async throws {
+        try await withApp { app in
+            app.get("proxied") { _ -> ClientResponse in
+                ClientResponse(
+                    status: .ok,
+                    body: .init(stream: { writer in
+                        try await writer.write("streamed")
+                    }))
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
+                try #expect(await res.body.requireString() == "streamed")
+                #expect(res.headers[.contentLength] == nil)
+            }
+        }
+    }
+
+    @Test("Returning a ClientResponse strips the origin's hop-by-hop headers", .timeLimit(.minutes(1)))
+    func testClientResponseStripsHopByHopHeaders() async throws {
+        try await withApp { app in
+            app.get("proxied") { _ -> ClientResponse in
+                var headers = HTTPFields()
+                // What an origin server might have sent us. None of it describes the hop between this
+                // server and its own client.
+                headers[.connection] = "close, X-Origin-Only"
+                headers[.upgrade] = "websocket"
+                headers[HTTPField.Name("Keep-Alive")!] = "timeout=5"
+                headers[HTTPField.Name("X-Origin-Only")!] = "should not be forwarded"
+                headers[HTTPField.Name("X-Kept")!] = "end-to-end"
+                return ClientResponse(status: .ok, headers: headers, body: .init(string: "body"))
+            }
+
+            try await app.testing(.running) { client in
+                let res = try await client.get("/proxied")
+                try #expect(await res.body.requireString() == "body")
+
+                #expect(res.headers[.upgrade] == nil)
+                #expect(res.headers[HTTPField.Name("Keep-Alive")!] == nil)
+                // Named by `Connection`, so hop-by-hop for that hop too.
+                #expect(res.headers[HTTPField.Name("X-Origin-Only")!] == nil)
+                // End-to-end fields are untouched.
+                #expect(res.headers[HTTPField.Name("X-Kept")!] == "end-to-end")
+            }
+        }
+    }
+
+    @Test("A client response bounds how much it will buffer")
+    func testClientResponseMaxBodySize() async throws {
+        struct Payload: Content { var value: String }
+
+        var headers = HTTPFields()
+        headers.contentType = .json
+        // A stream runs once, so each attempt below gets its own response - a network body could
+        // not be re-read after a failed decode either.
+        func makeResponse() -> ClientResponse {
+            ClientResponse(
+                status: .ok,
+                headers: headers,
+                body: .init(stream: { writer in
+                    try await writer.write(#"{"value":""#)
+                    try await writer.write(String(repeating: "x", count: 4096))
+                    try await writer.write(#""}"#)
+                }),
+                maxBodySize: 512
+            )
         }
 
-        let res = try app.client.get("http://localhost:\(port)/foo").wait()
-        XCTAssertEqual(res.body?.string, "bar")
+        await #expect(throws: Abort.self) {
+            _ = try await makeResponse().content.decode(Payload.self)
+        }
 
-        try app.running?.onStop.wait()
+        // The ceiling rides on the body, so collecting it directly is bounded too — not just the
+        // path through `content`, which is where forgetting the number used to turn into an
+        // unbounded read.
+        await #expect(throws: Abort.self) {
+            var body = makeResponse().body
+            _ = try await body.collect()
+        }
+        await #expect(throws: Abort.self) {
+            _ = try await makeResponse().body.data()
+        }
+
+        // An explicit ceiling still overrides it, in either direction.
+        var raised = makeResponse().body
+        #expect(try await raised.collect(max: "1mb")?.count == 4108)
+
+        // Streaming is not bounded by it - the ceiling is on holding the whole body in memory.
+        var seen = 0
+        try await makeResponse().body.withStreamingBytes { seen += $0.count }
+        #expect(seen == 4108)
     }
 
-    func testCustomClient() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
+}
 
-        app.clients.use(.custom)
-        _ = try app.client.get("https://vapor.codes").wait()
-
-        XCTAssertEqual(app.customClient.requests.count, 1)
-        XCTAssertEqual(app.customClient.requests.first?.url.host, "vapor.codes")
+final class CustomClient: Client, Sendable {
+    let _requests: Mutex<[ClientRequest]>
+    let contentConfiguration: ContentConfiguration = .default()
+    var requests: [ClientRequest] {
+        self._requests.withLock { $0 }
     }
 
-    func testClientLogging() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        let logs = TestLogHandler()
-        app.logger = logs.logger
-
-        _ = try app.client.get("http://localhost:\(remoteAppPort!)/status/201").wait()
-
-        let metadata = logs.getMetadata()
-        XCTAssertNotNil(metadata["ahc-request-id"])
+    init(_requests: [ClientRequest] = []) {
+        self._requests = .init(_requests)
     }
+
+    func send(_ request: ClientRequest) async throws -> ClientResponse {
+        self._requests.withLock { $0.append(request) }
+        return ClientResponse()
+    }
+}
+
+struct SomeJSON: Content {
+    let vapor: SomeNestedJSON
+
+    init() {
+        vapor = SomeNestedJSON(
+            name: "The Vapor Project", age: 7,
+            repos: [
+                VaporRepoJSON(name: "WebsocketKit", url: "https://github.com/vapor/websocket-kit"),
+                VaporRepoJSON(name: "PostgresNIO", url: "https://github.com/vapor/postgres-nio"),
+            ])
+    }
+}
+
+struct SomeNestedJSON: Content {
+    let name: String
+    let age: Int
+    let repos: [VaporRepoJSON]
+}
+
+struct VaporRepoJSON: Content {
+    let name: String
+    let url: String
+}
+
+struct AnythingResponse: Content {
+    var headers: [String: String]
+    var json: [String: String]
 }

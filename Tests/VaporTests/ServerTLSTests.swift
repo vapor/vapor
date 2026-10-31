@@ -1,0 +1,1060 @@
+import AsyncHTTPClient
+import Crypto
+import Foundation
+import HTTPTypes
+import Logging
+import NIOCertificateReloading
+import NIOCore
+import NIOHTTP1
+import NIOHTTPTypes
+import NIOPosix
+import NIOSSL
+import RoutingKit
+import ServiceLifecycle
+import SwiftASN1
+import Synchronization
+import Testing
+import VaporTesting
+import X509
+
+@testable import Vapor
+
+#if UnstableHTTP3
+import NIOQUIC
+#endif
+
+@Suite("Server TLS Tests")
+struct ServerTLSTests {
+
+    // MARK: - Configuration
+
+    @Test("tlsConfiguration defaults to nil and is settable")
+    func testTLSConfigurationProperty() {
+        var config = ServerConfiguration(address: .hostname("localhost", port: 8080))
+        #expect(config.tlsConfiguration == nil)
+        #expect(config.isTLSEnabled == false)
+        config.tlsConfiguration = .pemFile(certificateChainPath: "/x", privateKeyPath: "/y")
+        #expect(config.tlsConfiguration != nil)
+        #expect(config.isTLSEnabled == true)
+    }
+
+    @Test("tlsConfiguration can be supplied to the initialiser")
+    func testTLSConfigurationViaInitialiser() {
+        let config = ServerConfiguration(
+            address: .hostname("example.com", port: 443),
+            tlsConfiguration: .pemFile(certificateChainPath: "/x", privateKeyPath: "/y")
+        )
+        #expect(config.isTLSEnabled == true)
+        #expect(config.addressDescription == "https://example.com:443")
+    }
+
+    @Test("addressDescription uses http scheme without TLS")
+    func testAddressDescriptionHTTP() {
+        let config = ServerConfiguration(address: .hostname("example.com", port: 443))
+        #expect(config.addressDescription == "http://example.com:443")
+    }
+
+    @Test("addressDescription uses https scheme with TLS")
+    func testAddressDescriptionHTTPS() {
+        var config = ServerConfiguration(address: .hostname("example.com", port: 443))
+        config.tlsConfiguration = .pemFile(certificateChainPath: "/x", privateKeyPath: "/y")
+        #expect(config.addressDescription == "https://example.com:443")
+    }
+
+    @Test("addressDescription for unix domain socket")
+    func testAddressDescriptionUnixSocket() {
+        var config = ServerConfiguration(address: .unixDomainSocket(path: "/tmp/x.sock"))
+        #expect(config.addressDescription == "http+unix: /tmp/x.sock")
+        config.tlsConfiguration = .pemFile(certificateChainPath: "/x", privateKeyPath: "/y")
+        #expect(config.addressDescription == "https+unix: /tmp/x.sock")
+    }
+
+    @Test("tlsConfiguration can be a caller-provided CertificateReloader")
+    func testTLSConfigurationReloading() {
+        var config = ServerConfiguration(address: .hostname("localhost", port: 8080))
+        config.tlsConfiguration = .reloading(EmptyCertificateReloader())
+        #expect(config.tlsConfiguration != nil)
+        #expect(config.isTLSEnabled == true)
+    }
+
+    // MARK: - Serving over TLS
+
+    @Test("Server serves over TLS with PEM file credentials", .timeLimit(.minutes(1)))
+    func testServesOverTLSWithPEMFile() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: credentials.certificatePath,
+                privateKeyPath: credentials.privateKeyPath
+            )
+            app.get("hello") { _ in "world" }
+
+            // Make sure only our cert is trusted
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: credentials.nioCertificate))) { client in
+                #expect(client.baseURL?.scheme == "https")
+                let response = try await client.get("hello")
+                #expect(response.status == .ok)
+                try #expect(await response.body.requireString() == "world")
+            }
+        }
+    }
+
+    @Test("Server serves over TLS with in-memory certificate", .timeLimit(.minutes(1)))
+    func testServesOverTLSWithInMemoryCertificate() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [credentials.certificate],
+                privateKey: credentials.privateKey
+            )
+            app.get("hello") { _ in "world" }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: credentials.nioCertificate))) { client in
+                let response = try await client.get("hello")
+                #expect(response.status == .ok)
+                try #expect(await response.body.requireString() == "world")
+            }
+        }
+    }
+
+    @Test("Server presents a certificate updated through a caller-provided CertificateReloader", .timeLimit(.minutes(1)))
+    func testCallerProvidedReloaderUpdatesCertificate() async throws {
+        let first = try SelfSignedCredentials.generate()
+        let second = try SelfSignedCredentials.generate()
+        let reloader = MutableCertificateReloader(
+            certificate: first.nioCertificate,
+            privateKey: first.nioPrivateKey
+        )
+
+        try await withApp { app in
+            app.serverConfiguration.tlsConfiguration = .reloading(reloader)
+            app.get("hello") { _ in "world" }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: first.nioCertificate))) { client in
+                try #expect(await client.get("hello").status == .ok)
+
+                reloader.update(certificate: second.nioCertificate, privateKey: second.nioPrivateKey)
+
+                try await client.withOptions(.tls(trustingOnly: second.nioCertificate)) { client in
+                    try #expect(await client.get("hello").status == .ok)
+                }
+
+                // A fresh client rather than `client`, which can still hold a connection
+                // handshaken with the first certificate and would succeed over it.
+                await #expect(throws: (any Error).self) {
+                    try await client.withOptions(.tls(trustingOnly: first.nioCertificate)) { client in
+                        try await client.get("hello") { $0.timeout = .seconds(2) }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test("Server presents a rotated certificate from a caller-run TimedCertificateReloader", .timeLimit(.minutes(1)))
+    func testCallerRunsTimedCertificateReloader() async throws {
+        let first = try SelfSignedCredentials.generate()
+        let second = try SelfSignedCredentials.generate()
+
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let certificatePath = directory.appendingPathComponent("cert.pem").path
+        let privateKeyPath = directory.appendingPathComponent("key.pem").path
+        try first.certificatePEM.write(toFile: certificatePath, atomically: true, encoding: .utf8)
+        try first.privateKeyPEM.write(toFile: privateKeyPath, atomically: true, encoding: .utf8)
+
+        let reloader = try TimedCertificateReloader.makeReloaderValidatingSources(
+            refreshInterval: .milliseconds(50),
+            certificateSource: .init(location: .file(path: certificatePath), format: .pem),
+            privateKeySource: .init(location: .file(path: privateKeyPath), format: .pem)
+        )
+
+        try await withApp { app in
+            app.serverConfiguration.tlsConfiguration = .reloading(reloader)
+            app.get("hello") { _ in "world" }
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try await reloader.run() }
+
+                try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: first.nioCertificate))) { client in
+                    try #expect(await client.get("hello").status == .ok)
+
+                    try second.certificatePEM.write(toFile: certificatePath, atomically: true, encoding: .utf8)
+                    try second.privateKeyPEM.write(toFile: privateKeyPath, atomically: true, encoding: .utf8)
+
+                    var rotated = false
+                    for _ in 0..<50 {
+                        do {
+                            try await client.withOptions(.tls(trustingOnly: second.nioCertificate)) { client in
+                                _ = try await client.get("hello") { $0.timeout = .milliseconds(500) }
+                            }
+                            rotated = true
+                            break
+                        } catch {
+                            try await Task.sleep(for: .milliseconds(100))
+                        }
+                    }
+                    #expect(rotated, "server never presented the rotated certificate")
+                }
+
+                group.cancelAll()
+            }
+        }
+    }
+
+    @Test("Server serves plaintext without TLS configuration", .timeLimit(.minutes(1)))
+    func testServesPlaintextWithoutTLSConfiguration() async throws {
+        try await withApp { app in
+            app.get("hello") { _ in "world" }
+
+            try await app.testing(.running) { client in
+                #expect(client.baseURL?.scheme == "http")
+                let response = try await client.get("hello")
+                #expect(response.status == .ok)
+                try #expect(await response.body.requireString() == "world")
+            }
+        }
+    }
+
+    // MARK: - Negative paths
+
+    @Test("Plaintext request to a TLS server fails", .timeLimit(.minutes(1)))
+    func testPlaintextRequestToTLSServerFails() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: credentials.certificatePath,
+                privateKeyPath: credentials.privateKeyPath
+            )
+            app.get("hello") { _ in "world" }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: credentials.nioCertificate))) { client in
+                // Happy path first
+                let response = try await client.get("hello")
+                try #expect(await response.body.requireString() == "world")
+
+                // The server cannot parse plaintext HTTP bytes as a TLS handshake, so it drops the
+                // connection rather than answering. Timed and logged: this request has hung in CI
+                // past the test's time limit, and without this there's no way to tell whether it
+                // was the request or the shutdown that stalled.
+                let port = try #require(client.port)
+                var logger = Logger(label: "tls-test")
+                logger.logLevel = .debug
+                let plaintextStart = ContinuousClock.now
+                logger.notice("plaintext request to TLS port starting", metadata: ["port": "\(port)"])
+                await #expect(throws: (any Error).self) {
+                    try await client.get(URI(string: "http://127.0.0.1:\(port)/hello")) { $0.timeout = .seconds(5) }
+                }
+                logger.notice(
+                    "plaintext request to TLS port finished",
+                    metadata: ["port": "\(port)", "duration": "\(ContinuousClock.now - plaintextStart)"])
+            }
+        }
+    }
+
+    @Test("Client that does not trust the server's certificate is rejected", .timeLimit(.minutes(1)))
+    func testUntrustedClientIsRejected() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [credentials.certificate],
+                privateKey: credentials.privateKey
+            )
+            app.get("hello") { _ in "world" }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: credentials.nioCertificate))) { client in
+                // Without setting the trust store this will fail. The deadline is generous
+                // because it isn't what's under test: a rejected handshake fails in milliseconds,
+                // and a tight deadline just races it, turning a TLS error into a timeout on a
+                // loaded machine — which is what the assertion below then trips over.
+                let error = await #expect(throws: (any Error).self) {
+                    try await client.withOptions(.tls()) { client in
+                        try await client.get("hello") { $0.timeout = .seconds(15) }
+                    }
+                }
+                #expect(error is NIOSSLError || error is NIOSSLExtraError, "expected a TLS failure, got \(String(describing: error))")
+
+                // Check it actually works
+                let response = try await client.get("hello")
+                #expect(response.status == .ok)
+            }
+        }
+    }
+
+    @Test("Server startup fails when the PEM files do not exist", .timeLimit(.minutes(1)))
+    func testInvalidPEMPathFailsServerStartup() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: "/nonexistent/certificate.crt",
+                privateKeyPath: "/nonexistent/private.key"
+            )
+            app.get("hello") { _ in "world" }
+
+            try await app.boot()
+
+            await #expect(throws: (any Error).self) {
+                try await app.server.run()
+            }
+        }
+    }
+
+    @Test("Server startup fails when a CertificateReloader has no credentials", .timeLimit(.minutes(1)))
+    func testEmptyCertificateReloaderFailsServerStartup() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("localhost", port: 0)
+            app.serverConfiguration.tlsConfiguration = .reloading(EmptyCertificateReloader())
+            app.get("hello") { _ in "world" }
+
+            try await app.boot()
+
+            await #expect(throws: (any Error).self) {
+                try await app.server.run()
+            }
+        }
+    }
+
+    @Test("Server startup fails when the in-memory certificate chain is empty", .timeLimit(.minutes(1)))
+    func testEmptyCertificateChainFailsServerStartup() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [],
+                privateKey: credentials.privateKey
+            )
+            app.get("hello") { _ in "world" }
+
+            try await app.boot()
+
+            do {
+                try await app.server.run()
+                Issue.record("Expected run() to throw for an empty certificate chain.")
+            } catch NIOHTTPServerAdapterError.emptyCertificateChain {
+                // Expected.
+            } catch {
+                Issue.record("Expected emptyCertificateChain but got \(error).")
+            }
+        }
+    }
+
+    @Test("Waiting on the listening address fails when startup fails", .timeLimit(.minutes(1)))
+    func testListeningAddressFailsWhenStartupFails() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: "/nonexistent/certificate.crt",
+                privateKeyPath: "/nonexistent/private.key"
+            )
+
+            try await app.boot()
+
+            await #expect(throws: (any Error).self) {
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    group.addTask {
+                        try? await app.server.run()
+                    }
+                    _ = try await app.server.listeningAddress
+                    group.cancelAll()
+                }
+            }
+        }
+    }
+
+    @Test("Concurrent waiters all receive the listening address", .timeLimit(.minutes(1)))
+    func testConcurrentListeningAddressWaiters() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+
+                // Several tasks ask for the address before it is published. Each has to be resumed;
+                // holding a single waiter would strand all but the last one forever.
+                try await withThrowingTaskGroup(of: Int?.self) { waiters in
+                    for _ in 0..<4 {
+                        waiters.addTask { try await app.server.listeningAddress.port }
+                    }
+                    var ports: [Int?] = []
+                    for try await port in waiters {
+                        ports.append(port)
+                    }
+                    #expect(ports.count == 4)
+                    #expect(Set(ports.map { $0 ?? 0 }).count == 1, "waiters disagreed about the port")
+                }
+
+                group.cancelAll()
+            }
+        }
+    }
+
+    @Test("Concurrent waiters all see a startup failure", .timeLimit(.minutes(1)))
+    func testConcurrentListeningAddressWaitersOnFailure() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: "/nonexistent/certificate.crt",
+                privateKeyPath: "/nonexistent/private.key"
+            )
+            try await app.boot()
+
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+
+                // The address never arrives, so every waiter must be handed the startup error
+                // rather than being left parked on it.
+                await withTaskGroup(of: Bool.self) { waiters in
+                    for _ in 0..<4 {
+                        waiters.addTask {
+                            do {
+                                _ = try await app.server.listeningAddress
+                                return false
+                            } catch {
+                                return true
+                            }
+                        }
+                    }
+                    var threw = 0
+                    for await didThrow in waiters where didThrow {
+                        threw += 1
+                    }
+                    #expect(threw == 4, "some waiters were never resumed")
+                }
+
+                group.cancelAll()
+            }
+        }
+    }
+
+    @Test("Waiting on the listening address fails once the server has shut down", .timeLimit(.minutes(1)))
+    func testListeningAddressFailsAfterGracefulShutdown() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current))
+
+            let bound: Vapor.SocketAddress = try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try await serviceGroup.run() }
+                let address = try await app.server.listeningAddress
+                await serviceGroup.triggerGracefulShutdown()
+                try await group.waitForAll()
+                return address
+            }
+
+            // The address the server used to have is no longer any good: handing it back would point
+            // callers at a server that has stopped serving.
+            do {
+                let address = try await app.server.listeningAddress
+                Issue.record("Expected serverStopped, got \(address) — stale, the server was on \(bound).")
+            } catch NIOHTTPServerAdapterError.serverStopped {
+                // Expected.
+            } catch {
+                Issue.record("Expected serverStopped but got \(error).")
+            }
+        }
+    }
+
+    @Test("Waiting on the listening address fails once the server has been cancelled", .timeLimit(.minutes(1)))
+    func testListeningAddressFailsAfterCancellation() async throws {
+        try await withApp { app in
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+            try await app.boot()
+
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { try? await app.server.run() }
+                _ = try? await app.server.listeningAddress
+                group.cancelAll()
+                await group.waitForAll()
+            }
+
+            // Cancellation currently surfaces as a cancellation error rather than `serverStopped`,
+            // because the underlying `serve()` throws rather than returning. Which error it is
+            // depends on that, so it is deliberately not pinned here — what must hold either way is
+            // that the caller is not handed the address of a server that has gone.
+            await #expect(throws: (any Error).self) {
+                try await app.server.listeningAddress
+            }
+        }
+    }
+
+    @Test("HTTP/1.1 client is served when the server also offers HTTP/2", .timeLimit(.minutes(1)))
+    func testHTTP1ClientAgainstHTTP2EnabledServer() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [credentials.certificate],
+                privateKey: credentials.privateKey
+            )
+            app.serverConfiguration.httpVersions = [.http1_1, .http2]
+            app.get("hello") { _ in "world" }
+            app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
+
+            try await withRunningServer(app) { port in
+                // Force the client to HTTP/1.1: enabling HTTP/2 on the server must not break H1 clients.
+                try await withTLSClient(trustingOnly: credentials.nioCertificate, httpVersion: .http1Only) { client in
+                    let response = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                        timeout: .seconds(30)
+                    )
+                    #expect(response.status == .ok)
+                    #expect(response.version == .http1_1)
+                    #expect(try await response.body.collect(upTo: 1024).string == "world")
+
+                    let versionResponse = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/version"),
+                        timeout: .seconds(30)
+                    )
+                    #expect(try await versionResponse.body.collect(upTo: 1024).string == "1.1")
+                }
+            }
+        }
+    }
+
+    @Test("Server serves over HTTP/2 when negotiated", .timeLimit(.minutes(1)))
+    func testServesOverHTTP2() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [credentials.certificate],
+                privateKey: credentials.privateKey
+            )
+            app.serverConfiguration.httpVersions = [.http1_1, .http2]
+            app.get("hello") { _ in "world" }
+            app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
+
+            try await withRunningServer(app) { port in
+                // The client defaults to `.automatic`, advertising both h2 and http/1.1 over ALPN.
+                // The server offers h2, so the negotiated response should come back over HTTP/2.
+                try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
+                    let response = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                        timeout: .seconds(30)
+                    )
+                    #expect(response.status == .ok)
+                    #expect(response.version == .http2)
+                    #expect(try await response.body.collect(upTo: 1024).string == "world")
+
+                    let versionResponse = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/version"),
+                        timeout: .seconds(30)
+                    )
+                    #expect(try await versionResponse.body.collect(upTo: 1024).string == "2.0")
+                }
+            }
+        }
+    }
+
+    @Test("Graceful shutdown closes HTTP/2 connections after the configured limit", .timeLimit(.minutes(1)))
+    func testGracefulShutdownLimitClosesHTTP2Connections() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [credentials.certificate],
+                privateKey: credentials.privateKey
+            )
+            app.serverConfiguration.httpVersions = [
+                .http1_1,
+                .http2(config: .init(gracefulShutdown: .init(maximumGracefulShutdownDuration: .milliseconds(200)))),
+            ]
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+
+            let (handlerStarted, handlerStartedContinuation) = AsyncStream.makeStream(of: Void.self)
+            let (releaseHandler, releaseHandlerContinuation) = AsyncStream.makeStream(of: Void.self)
+            app.get("slow") { _ -> String in
+                handlerStartedContinuation.finish()
+                for await _ in releaseHandler {}
+                return "drained"
+            }
+
+            try await app.boot()
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current
+                )
+            )
+
+            try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    group.addTask { try await serviceGroup.run() }
+                    let port = try #require(try await app.server.listeningAddress.port)
+
+                    async let response = client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/slow"),
+                        timeout: .seconds(30)
+                    )
+                    for await _ in handlerStarted {}
+
+                    // The handler stays blocked, so only the limit can end the connection before the client times out.
+                    let shutdownStarted = ContinuousClock.now
+                    await serviceGroup.triggerGracefulShutdown()
+                    do {
+                        let response = try await response
+                        Issue.record("Expected the connection to be closed, got \(response.status)")
+                    } catch {}
+                    #expect(ContinuousClock.now - shutdownStarted < .seconds(10))
+
+                    releaseHandlerContinuation.finish()
+                    try await group.waitForAll()
+                }
+            }
+        }
+    }
+
+    #if UnstableHTTP3
+    @Test("Server serves over HTTP/3", .timeLimit(.minutes(1)))
+    func servesOverHTTP3() async throws {
+        var logger = Logger(label: "http3-test")
+        logger.logLevel = .debug
+        try await withApp(logger: logger) { app in
+            let credentials = try TestCredentials.http3()
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: credentials.certificatePath,
+                privateKeyPath: credentials.privateKeyPath
+            )
+            // Offer HTTP/3 only.
+            app.serverConfiguration.httpVersions = [.http3]
+            app.get("hello") { _ in "world" }
+            app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
+
+            try await withRunningServer(app) { port in
+                // The client defaults to `.automatic`, advertising both (and only) h2 and http/1.1 over ALPN.
+                // The server offers only h3, so the client should fail to negotiate a compatible protocol and throw an error.
+                try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
+                    _ = await #expect(throws: (any Error).self) {
+                        try await client.execute(
+                            HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                            timeout: .seconds(30)
+                        )
+                    }
+                }
+
+                let caCertURL = try #require(Bundle.module.url(forResource: "http3-cacert", withExtension: "pem"))
+                try await withTestHTTP3ClientConnection(
+                    ipAddress: "127.0.0.1",
+                    port: port,
+                    verificationConfiguration: .x509Certificates(trustRootsFilePath: caCertURL.path()),
+                    logger: .current,
+                    eventLoopGroup: MultiThreadedEventLoopGroup.singleton
+                ) { inbound, outbound in
+                    try await outbound.write(.head(.init(method: .get, scheme: "https", authority: "127.0.0.1:\(port)", path: "/hello")))
+                    try await outbound.write(.end(nil))
+
+                    for try await part in inbound {
+                        switch part {
+                        case .head(let header):
+                            #expect(header.status == .ok)
+                        case .body(let body):
+                            #expect(String(buffer: body) == "world")
+                        case .end:
+                            break
+                        }
+                    }
+                }
+
+                try await withTestHTTP3ClientConnection(
+                    ipAddress: "127.0.0.1",
+                    port: port,
+                    verificationConfiguration: .x509Certificates(trustRootsFilePath: caCertURL.path()),
+                    logger: .current,
+                    eventLoopGroup: MultiThreadedEventLoopGroup.singleton
+                ) { inbound, outbound in
+                    try await outbound.write(.head(.init(method: .get, scheme: "https", authority: "127.0.0.1:\(port)", path: "/version")))
+                    try await outbound.write(.end(nil))
+
+                    var body = ""
+                    for try await part in inbound {
+                        if case .body(let buffer) = part {
+                            body += String(buffer: buffer)
+                        }
+                    }
+                    #expect(body == "3.0")
+                }
+            }
+        }
+    }
+    #endif
+
+    // MARK: - Client certificates
+
+    @Test("clientCertificateVerification defaults to nil and is settable")
+    func testClientCertificateVerificationProperty() {
+        var tls = ServerConfiguration.TLSConfiguration.pemFile(certificateChainPath: "/x", privateKeyPath: "/y")
+        #expect(tls.clientCertificateVerification == nil)
+        tls.clientCertificateVerification = .init(trust: .systemDefaults)
+        #expect(tls.clientCertificateVerification?.mode == .required)
+        tls.clientCertificateVerification?.mode = .optional
+        #expect(tls.clientCertificateVerification?.mode == .optional)
+    }
+
+    @Test("Server accepts a client certificate its trust roots cover", .timeLimit(.minutes(1)))
+    func testTrustedClientCertificateIsAccepted() async throws {
+        let identity = try SelfSignedCredentials.generate()
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(trust: .certificates([identity.certificate]))
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("whoami") { req -> String in
+                guard let chain = req.peerCertificateChain else { return "anonymous" }
+                return chain.leaf == identity.certificate ? "trusted" : "unexpected \(chain.leaf.subject)"
+            }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity)))
+            { client in
+                let response = try await client.get("whoami")
+                #expect(response.status == .ok)
+                let body = try await response.body.requireString()
+                // The handshake verified the certificate, but the handler cannot see it: NIOSSL only
+                // records a validated chain when a custom verification callback hands one back, never
+                // from BoringSSL's own trust-root verification. `custom` is the way to get the chain
+                // until that changes; see testCustomVerifierAcceptsExpiredCertificate.
+                #warning(
+                    "NIOSSL does not expose the chain BoringSSL verified against trust roots, so peerCertificateChain is nil there — drop this withKnownIssue (and the one in testOptionalClientCertificate) when swift-nio-ssl or swift-http-server hand it back"
+                )
+                withKnownIssue("trust-root verification does not expose the chain to the handler") {
+                    #expect(body == "trusted")
+                }
+            }
+        }
+    }
+
+    @Test("Server rejects a client certificate it does not trust, and a missing one when required", .timeLimit(.minutes(1)))
+    func testUntrustedClientCertificateIsRejected() async throws {
+        let trusted = try SelfSignedCredentials.generate()
+        let impostor = try SelfSignedCredentials.generate()
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(trust: .certificates([trusted.certificate]))
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("hello") { _ in "world" }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: trusted))) {
+                client in
+                // No assertion on the error's type. The server rejects the client after its own
+                // handshake has completed, so what the client sees depends on whether its request
+                // was already in flight when the alert arrived: a TLS error or a closed connection.
+                await #expect(throws: (any Error).self) {
+                    try await client.withOptions(.tls(trustingOnly: server.nioCertificate, presenting: impostor)) { client in
+                        try await client.get("hello") { $0.timeout = .seconds(15) }
+                    }
+                }
+                await #expect(throws: (any Error).self) {
+                    try await client.withOptions(.tls(trustingOnly: server.nioCertificate)) { client in
+                        try await client.get("hello") { $0.timeout = .seconds(15) }
+                    }
+                }
+
+                // The trusted client is still served.
+                try #expect(await client.get("hello").status == .ok)
+            }
+        }
+    }
+
+    @Test("A client without a certificate is served when one is optional", .timeLimit(.minutes(1)))
+    func testOptionalClientCertificate() async throws {
+        let identity = try SelfSignedCredentials.generate()
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(trust: .certificates([identity.certificate]), mode: .optional)
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("whoami") { req -> String in
+                guard let chain = req.peerCertificateChain else { return "anonymous" }
+                return chain.leaf == identity.certificate ? "trusted" : "unexpected \(chain.leaf.subject)"
+            }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate))) { anonymous in
+                try #expect(await anonymous.get("whoami").body.requireString() == "anonymous")
+
+                try await anonymous.withOptions(.tls(trustingOnly: server.nioCertificate, presenting: identity)) { identified in
+                    let response = try await identified.get("whoami")
+                    #expect(response.status == .ok)
+                    let body = try await response.body.requireString()
+                    // The same upstream gap as testTrustedClientCertificateIsAccepted.
+                    withKnownIssue("trust-root verification does not expose the chain to the handler") {
+                        #expect(body == "trusted")
+                    }
+                }
+            }
+        }
+    }
+
+    @Test("A custom verifier can accept a certificate no trust store would", .timeLimit(.minutes(1)))
+    func testCustomVerifierAcceptsExpiredCertificate() async throws {
+        // The fixture expired in 2022, so trust roots are no use. A verifier of our own is handed
+        // the chain as presented and decides for itself; here it also records what it was shown.
+        let expired = try SelfSignedCredentials.expired()
+        let presented = Mutex<[Certificate]>([])
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(
+                trust: .custom { chain in
+                    presented.withLock { $0 = chain }
+                    return .verified(ValidatedCertificateChain(uncheckedCertificateChain: chain))
+                })
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("whoami") { req -> String in
+                guard let chain = req.peerCertificateChain else { return "anonymous" }
+                return chain.leaf == expired.certificate ? "trusted" : "unexpected \(chain.leaf.subject)"
+            }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: expired))) {
+                client in
+                try #expect(await client.get("whoami").body.requireString() == "trusted")
+            }
+        }
+        #expect(presented.withLock { $0 } == [expired.certificate])
+    }
+
+    @Test("A custom verifier can reject a certificate", .timeLimit(.minutes(1)))
+    func testCustomVerifierRejects() async throws {
+        let identity = try SelfSignedCredentials.generate()
+        try await withApp { app in
+            let server = try TestCredentials.localhost()
+            var tls = ServerConfiguration.TLSConfiguration.inMemory(
+                certificateChain: [server.certificate], privateKey: server.privateKey)
+            tls.clientCertificateVerification = .init(trust: .custom { _ in .rejected(reason: "not on the list") })
+            app.serverConfiguration.tlsConfiguration = tls
+            app.get("hello") { _ in "world" }
+
+            try await app.testing(.running, options: .live(clientOptions: .tls(trustingOnly: server.nioCertificate, presenting: identity)))
+            { client -> Void in
+                await #expect(throws: (any Error).self) {
+                    try await client.get("hello") { $0.timeout = .seconds(15) }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Helpers
+
+/// The long-lived self-signed certificate used by the TLS tests.
+///
+/// `CN=localhost`, with `DNS:localhost` and `IP:127.0.0.1` subject alternative names, valid until
+/// 2126. The SANs are what allow the tests to use full hostname verification rather than weakening
+/// the client; the older `expired.crt` fixture has no SANs and expired in 2022.
+private struct TestCredentials {
+    let certificatePath: String
+    let privateKeyPath: String
+    let certificate: Certificate
+    let privateKey: Certificate.PrivateKey
+    let nioCertificate: NIOSSLCertificate
+
+    static func localhost() throws -> Self {
+        let certificateURL = try #require(Bundle.module.url(forResource: "localhost", withExtension: "crt"))
+        let privateKeyURL = try #require(Bundle.module.url(forResource: "localhost", withExtension: "key"))
+        let certificatePEM = try String(contentsOf: certificateURL, encoding: .utf8)
+        let privateKeyPEM = try String(contentsOf: privateKeyURL, encoding: .utf8)
+
+        return Self(
+            certificatePath: certificateURL.path,
+            privateKeyPath: privateKeyURL.path,
+            certificate: try Certificate(pemEncoded: certificatePEM),
+            privateKey: try Certificate.PrivateKey(pemEncoded: privateKeyPEM),
+            nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem)
+        )
+    }
+
+    #if UnstableHTTP3
+    static func http3() throws -> Self {
+        let certificateURL = try #require(Bundle.module.url(forResource: "http3", withExtension: "crt"))
+        let privateKeyURL = try #require(Bundle.module.url(forResource: "http3", withExtension: "key"))
+        let certificatePEM = try String(contentsOf: certificateURL, encoding: .utf8)
+        let privateKeyPEM = try String(contentsOf: privateKeyURL, encoding: .utf8)
+
+        return Self(
+            certificatePath: certificateURL.path(),
+            privateKeyPath: privateKeyURL.path(),
+            certificate: try Certificate(pemEncoded: certificatePEM),
+            privateKey: try Certificate.PrivateKey(pemEncoded: privateKeyPEM),
+            nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem)
+        )
+    }
+    #endif
+}
+
+/// Generate a self-signed localhost certificate with SANs for hostname verification.
+private struct SelfSignedCredentials {
+    let certificatePEM: String
+    let privateKeyPEM: String
+    let certificate: Certificate
+    let nioCertificate: NIOSSLCertificate
+    let nioPrivateKey: NIOSSLPrivateKey
+
+    static func generate() throws -> Self {
+        let key = Certificate.PrivateKey(P256.Signing.PrivateKey())
+        let name = try DistinguishedName { CommonName("localhost") }
+        let certificate = try Certificate(
+            version: .v3,
+            serialNumber: .init(),
+            publicKey: key.publicKey,
+            notValidBefore: Date().addingTimeInterval(-3600),
+            notValidAfter: Date().addingTimeInterval(3600),
+            issuer: name,
+            subject: name,
+            signatureAlgorithm: .ecdsaWithSHA256,
+            extensions: try Certificate.Extensions {
+                SubjectAlternativeNames([
+                    .dnsName("localhost"),
+                    .ipAddress(ASN1OctetString(contentBytes: [127, 0, 0, 1])),
+                ])
+            },
+            issuerPrivateKey: key
+        )
+        let certificatePEM = try certificate.serializeAsPEM().pemString
+        let privateKeyPEM = try key.serializeAsPEM().pemString
+        return Self(
+            certificatePEM: certificatePEM,
+            privateKeyPEM: privateKeyPEM,
+            certificate: certificate,
+            nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem),
+            nioPrivateKey: try NIOSSLPrivateKey(bytes: Array(privateKeyPEM.utf8), format: .pem)
+        )
+    }
+
+    /// The expired fixture: self-signed CN=localhost, no SANs, expired in 2022. For tests that
+    /// need a certificate no trust store will accept.
+    static func expired() throws -> Self {
+        let certificateURL = try #require(Bundle.module.url(forResource: "expired", withExtension: "crt"))
+        let privateKeyURL = try #require(Bundle.module.url(forResource: "expired", withExtension: "key"))
+        let certificatePEM = try String(contentsOf: certificateURL, encoding: .utf8)
+        let privateKeyPEM = try String(contentsOf: privateKeyURL, encoding: .utf8)
+        return Self(
+            certificatePEM: certificatePEM,
+            privateKeyPEM: privateKeyPEM,
+            certificate: try Certificate(pemEncoded: certificatePEM),
+            nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem),
+            nioPrivateKey: try NIOSSLPrivateKey(bytes: Array(privateKeyPEM.utf8), format: .pem)
+        )
+    }
+}
+
+private struct EmptyCertificateReloader: CertificateReloader {
+    var sslContextConfigurationOverride: NIOSSLContextConfigurationOverride { .noChanges }
+}
+
+private final class MutableCertificateReloader: CertificateReloader {
+    private let override: Mutex<NIOSSLContextConfigurationOverride>
+
+    init(certificate: NIOSSLCertificate, privateKey: NIOSSLPrivateKey) {
+        var override = NIOSSLContextConfigurationOverride()
+        override.certificateChain = [.certificate(certificate)]
+        override.privateKey = .privateKey(privateKey)
+        self.override = .init(override)
+    }
+
+    var sslContextConfigurationOverride: NIOSSLContextConfigurationOverride {
+        self.override.withLock { $0 }
+    }
+
+    func update(certificate: NIOSSLCertificate, privateKey: NIOSSLPrivateKey) {
+        self.override.withLock {
+            $0.certificateChain = [.certificate(certificate)]
+            $0.privateKey = .privateKey(privateKey)
+        }
+    }
+}
+
+extension LiveClientOptions {
+    /// A client that trusts `trustedCertificate` and nothing else, or the system roots when `nil`,
+    /// and presents `identity` as its own certificate when given.
+    fileprivate static func tls(
+        trustingOnly trustedCertificate: NIOSSLCertificate? = nil,
+        presenting identity: SelfSignedCredentials? = nil
+    ) -> Self {
+        var tlsConfiguration = TLSConfiguration.makeClientConfiguration()
+        if let trustedCertificate {
+            tlsConfiguration.trustRoots = .certificates([trustedCertificate])
+        }
+        if let identity {
+            tlsConfiguration.certificateChain = [.certificate(identity.nioCertificate)]
+            tlsConfiguration.privateKey = .privateKey(identity.nioPrivateKey)
+        }
+
+        var configuration = HTTPClient.Configuration()
+        configuration.tlsConfiguration = tlsConfiguration
+
+        // Required because of https://github.com/swift-server/async-http-client/issues/919, otherwise AHC
+        // will keep retrying then return a `deadlineExceeded` error instead of NIOSSLError one
+        configuration.connectionPool.retryConnectionEstablishment = false
+        return .init(configuration: configuration)
+    }
+}
+
+/// Runs `body` with an HTTP client configured to trust `trustedCertificate` and nothing else.
+///
+/// Only for the tests that assert on the negotiated HTTP version, which `ClientResponse` doesn't
+/// carry. Everything else goes through ``LiveClientOptions/tls(trustingOnly:)``.
+///
+/// Every exchange is logged with the calling test's name and how long it took. These tests run
+/// alongside a couple of hundred others, so a failure in CI is otherwise a bare error with no way
+/// to tell which test's connection stalled, or whether it stalled at all versus never starting.
+private func withTLSClient<T>(
+    trustingOnly trustedCertificate: NIOSSLCertificate? = nil,
+    verification: NIOSSL::CertificateVerification = .fullVerification,
+    httpVersion: HTTPClient.Configuration.HTTPVersion = .automatic,
+    test: String = #function,
+    _ body: (HTTPClient) async throws -> T
+) async throws -> T {
+    var tlsConfiguration = TLSConfiguration.makeClientConfiguration()
+    if let trustedCertificate {
+        tlsConfiguration.trustRoots = .certificates([trustedCertificate])
+    }
+    tlsConfiguration.certificateVerification = verification
+
+    var clientConfiguration = HTTPClient.Configuration()
+    clientConfiguration.tlsConfiguration = tlsConfiguration
+    clientConfiguration.httpVersion = httpVersion
+    // A rejected certificate is a terminal failure — it won't start being trusted on a later
+    // attempt. AsyncHTTPClient retries connection establishment with backoff by default and only
+    // reports the failure once the connect timeout expires, which both slows these tests down and
+    // replaces the real `NIOSSLError` with `deadlineExceeded`. Fail on the first attempt so the
+    // assertions see the actual error.
+    clientConfiguration.connectionPool.retryConnectionEstablishment = false
+
+    // `.notice` so it survives the log level the tests run at; the pool's own logging is `.debug`,
+    // so the logger handed to AsyncHTTPClient below is set to that level to let it through.
+    var logger = Logger(label: "tls-test")
+    logger.logLevel = .debug
+
+    let client = HTTPClient(
+        eventLoopGroup: MultiThreadedEventLoopGroup.singleton,
+        configuration: clientConfiguration,
+        // Connection establishment, backoff and pool state are logged here — that's the detail
+        // missing when CI reports a bare `connectTimeout`.
+        backgroundActivityLogger: logger
+    )
+    let start = ContinuousClock.now
+    logger.notice("TLS exchange starting", metadata: ["test": "\(test)"])
+    do {
+        let result = try await body(client)
+        logger.notice(
+            "TLS exchange finished",
+            metadata: ["test": "\(test)", "duration": "\(ContinuousClock.now - start)"])
+        try await client.shutdown()
+        return result
+    } catch {
+        logger.notice(
+            "TLS exchange threw",
+            metadata: [
+                "test": "\(test)",
+                "duration": "\(ContinuousClock.now - start)",
+                "error": "\(error)",
+            ])
+        try? await client.shutdown()
+        throw error
+    }
+}

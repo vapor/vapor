@@ -1,5 +1,3 @@
-import struct Foundation.CharacterSet
-
 struct URLEncodedFormSerializer: Sendable {
     let splitVariablesOn: Character
     let splitKeyValueOn: Character
@@ -10,7 +8,7 @@ struct URLEncodedFormSerializer: Sendable {
         self.splitKeyValueOn = splitKeyValueOn
     }
 
-    func serialize(_ data: URLEncodedFormData, codingPath: [CodingKey] = []) throws -> String {
+    func serialize(_ data: URLEncodedFormData, codingPath: [any CodingKey] = []) throws -> String {
         var entries: [String] = []
         let key = try codingPath.toURLEncodedKey()
         for value in data.values {
@@ -21,7 +19,7 @@ struct URLEncodedFormSerializer: Sendable {
             }
         }
         for (key, child) in data.children {
-            try entries.append(serialize(child, codingPath: codingPath + [_CodingKey(stringValue: key) as CodingKey]))
+            try entries.append(serialize(child, codingPath: codingPath + [_CodingKey(stringValue: key) as any CodingKey]))
         }
         return entries.joined(separator: String(splitVariablesOn))
     }
@@ -42,14 +40,15 @@ struct URLEncodedFormSerializer: Sendable {
     }
 }
 
-extension Array where Element == CodingKey {
+extension Array where Element == any CodingKey {
     func toURLEncodedKey() throws -> String {
         if count < 1 {
             return ""
         }
-        return try self[0].stringValue.urlEncoded(codingPath: self) + self[1...].map { (key: CodingKey) -> String in
-            try "[" + key.stringValue.urlEncoded(codingPath: self) + "]"
-        }.joined()
+        return try self[0].stringValue.urlEncoded(codingPath: self)
+            + self[1...].map { (key: CodingKey) -> String in
+                try "[" + key.stringValue.urlEncoded(codingPath: self) + "]"
+            }.joined()
     }
 }
 
@@ -57,25 +56,23 @@ extension Array where Element == CodingKey {
 
 extension String {
     /// Prepares a `String` for inclusion in form-urlencoded data.
-    func urlEncoded(codingPath: [CodingKey] = []) throws -> String {
-        guard let result = self.addingPercentEncoding(
-            withAllowedCharacters: Characters.allowedCharacters
-        ) else {
-            throw EncodingError.invalidValue(self, EncodingError.Context(
-                codingPath: codingPath,
-                debugDescription: "Unable to add percent encoding to \(self)"
-            ))
+    func urlEncoded(codingPath: [any CodingKey] = []) throws -> String {
+        var encoded = ""
+        encoded.reserveCapacity(self.utf8.count)
+        for byte in self.utf8 {
+            switch byte {
+            // application/x-www-form-urlencoded allowed set: ALPHA / DIGIT / * - . _
+            // https://url.spec.whatwg.org/#application-x-www-form-urlencoded-percent-encode-set
+            case 0x30...0x39, 0x41...0x5A, 0x61...0x7A, 0x2A, 0x2D, 0x2E, 0x5F:
+                encoded.unicodeScalars.append(Unicode.Scalar(byte))
+            default:
+                encoded.append("%")
+                encoded.append(Self.hexUppercase[Int(byte >> 4)])
+                encoded.append(Self.hexUppercase[Int(byte & 0x0F)])
+            }
         }
-        return result
+        return encoded
     }
-}
 
-/// Characters allowed in form-urlencoded data.
-private enum Characters {
-    // https://url.spec.whatwg.org/#application-x-www-form-urlencoded-percent-encode-set
-    static let allowedCharacters: CharacterSet = {
-        var allowed = CharacterSet.alphanumerics
-        allowed.insert(charactersIn: "*-._")
-        return allowed
-    }()
+    private static let hexUppercase: [Character] = Array("0123456789ABCDEF")
 }

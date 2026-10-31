@@ -1,5 +1,10 @@
-import Foundation
-import Logging
+public import Logging
+
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 
 /// `Debuggable` provides an interface that allows a type
 /// to be more easily debugged in the case of an error.
@@ -28,10 +33,6 @@ public protocol DebuggableError: LocalizedError, CustomDebugStringConvertible, C
     /// Optional source for this error
     var source: ErrorSource? { get }
 
-    /// Stack trace from which this error originated (must set this from the error's init)
-    @available(*, deprecated, message: "Captured stack traces are no longer supported by Vapor")
-    var stackTrace: StackTrace? { get }
-
     /// A `String` array describing the possible causes of the error.
     /// - note: Defaults to an empty array.
     /// Provide a custom implementation to give more context.
@@ -57,8 +58,8 @@ public protocol DebuggableError: LocalizedError, CustomDebugStringConvertible, C
     /// Provide a custom implementation to a list of pertinent issues.
     var gitHubIssues: [String] { get }
 
-    /// Which log level this error should report as. 
-    /// Defaults to `.warning`.
+    /// Which log level this error should report as.
+    /// Defaults to `.debug`: most errors are handled by answering the request, so only implement this to make one louder.
     var logLevel: Logger.Level { get }
 }
 
@@ -103,24 +104,19 @@ extension DebuggableError {
         nil
     }
 
-    @available(*, deprecated, message: "Captured stack traces are no longer supported by Vapor")
-    public var stackTrace: StackTrace? {
-        nil
-    }
-
-    public var logLevel: Logger.Level { 
-        .warning
+    public var logLevel: Logger.Level {
+        .debug
     }
 }
 
 /// MARK: Custom...StringConvertible
 extension DebuggableError {
-    /// See `CustomDebugStringConvertible`
+    // See `CustomDebugStringConvertible.debugDescription`.
     public var debugDescription: String {
         self.debuggableHelp(format: .long)
     }
 
-    /// See `CustomStringConvertible`
+    // See `CustomStringConvertible.description`.
     public var description: String {
         self.debuggableHelp(format: .short)
     }
@@ -148,7 +144,6 @@ extension DebuggableError {
         self.documentationLinks.first
     }
 }
-
 
 // MARK: Representations
 /// Available formatting options for generating debug info for `Debuggable` errors.
@@ -208,9 +203,8 @@ extension DebuggableError {
     }
 }
 
-
 extension Sequence where Iterator.Element == String {
     var bulletedList: String {
-        self.map { "\n- \($0)" } .joined()
+        self.map { "\n- \($0)" }.joined()
     }
 }

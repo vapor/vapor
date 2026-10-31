@@ -1,5 +1,3 @@
-import NIOCore
-
 /// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
@@ -18,7 +16,7 @@ import NIOCore
 ///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
-public protocol Content: Codable, RequestDecodable, ResponseEncodable, AsyncRequestDecodable, AsyncResponseEncodable, Sendable {
+public protocol Content: Codable, RequestDecodable, ResponseEncodable, Sendable {
     /// The default `MediaType` to use when _encoding_ content. This can always be overridden at the encode call.
     ///
     /// Default implementation is `MediaType.json` for all types.
@@ -48,7 +46,6 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable, AsyncRequ
     /// the encoding if something isn't valid. An empty array may indicate an error, for example.
     mutating func beforeEncode() throws
 
-
     /// Called after this `Content` is decoded, generally from a `Request` object.
     ///
     /// You should use this method to perform any "sanitizing" which you need on the data.
@@ -62,75 +59,66 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable, AsyncRequ
 
 extension Content {
     public static var defaultContentType: HTTPMediaType {
-        return .json
-    }
-    
-    public static func decodeRequest(_ request: Request) -> EventLoopFuture<Self> {
-        do {
-            let content = try request.content.decode(Self.self)
-            return request.eventLoop.makeSucceededFuture(content)
-        } catch {
-            return request.eventLoop.makeFailedFuture(error)
-        }
-    }
-    
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let response = Response()
-        do {
-            try response.content.encode(self)
-        } catch {
-            return request.eventLoop.makeFailedFuture(error)
-        }
-        return request.eventLoop.makeSucceededFuture(response)
+        .json
     }
 
-    public mutating func beforeEncode() throws { }
-    public mutating func afterDecode() throws { }
+    public static func decodeRequest(_ request: Request) async throws -> Self {
+        try await request.content.decode(Self.self)
+    }
+
+    public func encodeResponse(for request: Request) async throws -> Response {
+        var response = Response(contentConfiguration: request.contentConfiguration)
+        try response.content.encode(self)
+        return response
+    }
+
+    public mutating func beforeEncode() throws {}
+    public mutating func afterDecode() throws {}
 }
 
 // MARK: Default Conformances
 
 extension String: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .plainText
+        .plainText
     }
 }
 
 extension FixedWidthInteger where Self: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .plainText
+        .plainText
     }
 }
 
-extension Int: Content { }
-extension Int8: Content { }
-extension Int16: Content { }
-extension Int32: Content { }
-extension Int64: Content { }
-extension UInt: Content { }
-extension UInt8: Content { }
-extension UInt16: Content { }
-extension UInt32: Content { }
-extension UInt64: Content { }
+extension Int: Content {}
+extension Int8: Content {}
+extension Int16: Content {}
+extension Int32: Content {}
+extension Int64: Content {}
+extension UInt: Content {}
+extension UInt8: Content {}
+extension UInt16: Content {}
+extension UInt32: Content {}
+extension UInt64: Content {}
 
 extension Bool: Content {}
 
 extension BinaryFloatingPoint where Self: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .plainText
+        .plainText
     }
 }
-extension Double: Content { }
-extension Float: Content { }
+extension Double: Content {}
+extension Float: Content {}
 
-extension Array: Content, ResponseEncodable, RequestDecodable, AsyncRequestDecodable, AsyncResponseEncodable where Element: Content {
+extension Array: Content, ResponseEncodable, RequestDecodable where Element: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .json
+        .json
     }
 }
 
-extension Dictionary: Content, ResponseEncodable, RequestDecodable, AsyncRequestDecodable, AsyncResponseEncodable where Key == String, Value: Content {
+extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content {
     public static var defaultContentType: HTTPMediaType {
-        return .json
+        .json
     }
 }
