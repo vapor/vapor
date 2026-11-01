@@ -8,6 +8,9 @@ public struct Route: CustomStringConvertible, Sendable {
     public var requestType: Any.Type
     public var responseType: Any.Type
     public var routeDescription: String?
+    #if OpenAPI
+    package var openAPI: (any Sendable)? = nil
+    #endif
 
     public var description: String {
         let path = path.map { "\($0)" }.joined(separator: "/")

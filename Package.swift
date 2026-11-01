@@ -183,6 +183,7 @@ let package = Package(
             name: "VaporOpenAPI",
             dependencies: [
                 .product(name: "OpenAPIKit", package: "OpenAPIKit", condition: .when(traits: ["OpenAPI"])),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
                 "Vapor",
             ],
             swiftSettings: swiftSettings
@@ -273,7 +274,10 @@ let package = Package(
             name: "VaporOpenAPITests",
             dependencies: [
                 "VaporOpenAPI",
+                "Vapor",
                 .product(name: "OpenAPIKit", package: "OpenAPIKit", condition: .when(traits: ["OpenAPI"])),
+                .product(name: "RoutingKit", package: "routing-kit"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
             swiftSettings: swiftSettings
         )
