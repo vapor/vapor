@@ -55,6 +55,15 @@ struct SchemaComponents: Sendable, Equatable {
         schemas[key] = schema
         return .reference(.component(named: key.rawValue))
     }
+
+    /// Takes back `type`'s component, unless something refers to it or it was already stored in
+    /// `earlier`, so a type only described to read its properties doesn't stay in the document.
+    mutating func discard(_ type: Any.Type, keepingWhatsIn earlier: SchemaComponents) {
+        let id = ObjectIdentifier(type)
+        guard let key = names[id], earlier.names[id] == nil, !referenced.contains(id) else { return }
+        names[id] = nil
+        schemas[key] = nil
+    }
 }
 
 #endif

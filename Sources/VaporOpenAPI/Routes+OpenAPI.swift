@@ -15,11 +15,16 @@ extension Routes {
         var components = SchemaComponents()
         var paths: OpenAPI.PathItem.Map = [:]
         var ends = [LinkEnd]()
+        try routes.requireUniqueOperationIDs()
 
         for route in routes {
             let (path, operation) = try route.operation(into: &components)
             var item = paths[path]?.pathItemValue ?? OpenAPI.PathItem()
-            item.set(operation: operation, for: OpenAPI.HttpMethod(route.method))
+            let method = OpenAPI.HttpMethod(route.method)
+            guard item[method] == nil else {
+                throw OpenAPIDocumentError(route: route.description, reason: "is registered twice, so only one could be described")
+            }
+            item.set(operation: operation, for: method)
             paths[path] = .b(item)
             ends += LinkEnd.ends(of: route, path: path)
         }

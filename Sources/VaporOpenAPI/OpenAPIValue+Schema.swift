@@ -58,9 +58,14 @@ extension OpenAPIValue {
             var seen = Set<String>()
             return all.reversed().filter { seen.insert($0.name).inserted }.reversed()
         default:
+            let earlier = components
             let (schema, example) = try schema(into: &components)
             guard let object = components.resolved(schema).objectContext else {
                 throw ParametersError(type: describedType)
+            }
+            // Its properties become the parameters, so the type itself isn't a schema anything uses.
+            if let type = describedType {
+                components.discard(type, keepingWhatsIn: earlier)
             }
             // Read the example's properties once, rather than once per parameter.
             let examples = example?.properties

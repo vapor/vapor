@@ -12,7 +12,8 @@ struct OpenAPIPath {
     /// The template for `components`.
     ///
     /// A `*` becomes a parameter named `anything`, since it matches one segment of any value. A
-    /// `**` can't be described: OpenAPI's path parameters never span segments.
+    /// `**` can't be described: OpenAPI's path parameters never span segments. Nor can a constant
+    /// with braces, which a template would read as a parameter.
     init(_ components: [PathComponent]) throws(Unsupported) {
         var segments: [String] = []
         var parameters: [String] = []
@@ -20,8 +21,18 @@ struct OpenAPIPath {
         for component in components {
             switch component {
             case .constant(let constant):
+                // A template reads braces as a parameter, and has no way to escape them.
+                guard !constant.contains("{"), !constant.contains("}") else {
+                    throw Unsupported(
+                        reason:
+                            "the path segment \"\(constant)\" has braces, which OpenAPI reads as a parameter. Start it with \":\" to make one."
+                    )
+                }
                 segments.append(constant)
             case .parameter(let name):
+                guard !name.contains("{"), !name.contains("}") else {
+                    throw Unsupported(reason: "the path parameter \"\(name)\" has braces, which a template can't hold.")
+                }
                 segments.append("{\(name)}")
                 parameters.append(name)
             case .partialParameter(let template, _, let names):
@@ -35,17 +46,18 @@ struct OpenAPIPath {
                 segments.append("{\(name)}")
                 parameters.append(name)
             case .catchall:
-                throw Unsupported()
+                throw Unsupported(
+                    reason: "a catch-all path (**) can't be described in OpenAPI. Hide the route with hiddenFromOpenAPI()."
+                )
             }
         }
         self.path = OpenAPI.Path(segments)
         self.parameters = parameters
     }
 
+    /// A path OpenAPI can't describe, and why.
     struct Unsupported: Error {
-        var reason: String {
-            "a catch-all path (**) can't be described in OpenAPI. Hide the route with hiddenFromOpenAPI()."
-        }
+        var reason: String
     }
 }
 

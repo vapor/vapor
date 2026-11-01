@@ -41,6 +41,23 @@ extension [Route] {
         return dictionary
     }
 
+    /// Throws when two routes share an operation ID, which client generators can't tell apart.
+    ///
+    /// Usually the ID was set on a group, which gives it to every route in the group.
+    func requireUniqueOperationIDs() throws {
+        var first: [String: Route] = [:]
+        for route in self {
+            guard let id = route.openAPIRoute.operationID else { continue }
+            if let other = first[id] {
+                throw OpenAPIDocumentError(
+                    route: route.description,
+                    reason: "its operation ID \"\(id)\" is also \(other.description)'s. Set operationID on a single route."
+                )
+            }
+            first[id] = route
+        }
+    }
+
     /// The tags the routes use, in the order they first appear, or `nil` if none do.
     var tags: [OpenAPI.Tag]? {
         var seen = Set<String>()

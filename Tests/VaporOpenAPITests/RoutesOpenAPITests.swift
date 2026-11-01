@@ -23,6 +23,11 @@ private enum PetID: OpenAPILinkKey {
 }
 private enum Unused: OpenAPILinkKey {}
 private struct Identified: Codable { var id: String }
+private struct Owner: Codable { var name: String }
+private struct Toy: Codable {
+    var name: String
+    var owner: Owner
+}
 
 /// The document for the routes `configure` registers, as JSON with sorted keys.
 private func document(_ configure: (Application) throws -> Void) async throws -> String {
@@ -214,6 +219,66 @@ struct RoutesOpenAPITests {
             }
         }
         #expect("\(error!)" == #"GET /pets/:petID: a link sets its path parameter "id", which it doesn't have"#)
+    }
+
+    @Test("Two routes with one operation ID fail, naming both")
+    func duplicateOperationID() async throws {
+        let error = await #expect(throws: (any Error).self) {
+            try await document { app in
+                let pets = app.openAPI(operationID: "pets")
+                pets.get("a") { _ in "a" }
+                pets.get("b") { _ in "b" }
+            }
+        }
+        #expect("\(error!)" == #"GET /b: its operation ID "pets" is also GET /a's. Set operationID on a single route."#)
+    }
+
+    @Test("A path segment with braces that isn't a parameter fails")
+    func bracesInConstant() async throws {
+        let error = await #expect(throws: (any Error).self) {
+            try await document { app in app.get("files", "file-{name}.zip") { _ in "x" } }
+        }
+        #expect("\(error!)".hasPrefix(#"GET /files/file-{name}.zip: the path segment "file-{name}.zip" has braces"#))
+    }
+
+    @Test("A type used only for parameters isn't kept as a schema")
+    func unusedSchemasRemoved() async throws {
+        let json = try await document { app in
+            app.openAPI(query: .type(Paging.self), response: .type(Pet.self)).get("pets") { _ in "list" }
+        }
+        #expect(json.contains(#""components":{"schemas":{"Pet":"#))
+        #expect(!json.contains("Paging"))
+    }
+
+    @Test("A type used for parameters and as a body is kept once, under its own name")
+    func parametersTypeAlsoBody() async throws {
+        let json = try await document { app in
+            app.openAPI(query: .type(Pet.self)).get("search") { _ in "list" }
+            app.openAPI(body: .type(Pet.self)).post("pets") { _ in "created" }
+        }
+        #expect(json.contains(##""$ref":"#/components/schemas/Pet""##))
+        #expect(json.contains(#""components":{"schemas":{"Pet":"#))
+        #expect(!json.contains("Pet2"))
+    }
+
+    @Test("A route registered twice fails")
+    func duplicateRoute() async throws {
+        let error = await #expect(throws: (any Error).self) {
+            try await document { app in
+                app.get("pets") { _ in "a" }
+                app.get("pets") { _ in "b" }
+            }
+        }
+        #expect("\(error!)" == "GET /pets: is registered twice, so only one could be described")
+    }
+
+    @Test("Schemas only other schemas refer to are kept")
+    func nestedSchemasKept() async throws {
+        let json = try await document { app in
+            app.openAPI(response: .type(Toy.self)).get("toys") { _ in "toy" }
+        }
+        #expect(json.contains(#""Owner":{"#))
+        #expect(json.contains(#""Toy":{"#))
     }
 
     @Test("Two different schemes under one ID fail")
