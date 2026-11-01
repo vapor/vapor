@@ -9,7 +9,7 @@ struct DecodedShape: Sendable {
     var isNullable = false
 
     indirect enum Kind {
-        /// A type with a builtin schema, decoded from a placeholder.
+        /// A type with a builtin or provided schema, decoded from a placeholder.
         case leaf
         /// An object with fixed properties, in the order they were decoded.
         case keyed([Field])

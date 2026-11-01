@@ -16,6 +16,24 @@ import OpenAPIKit
 public protocol OpenAPISchemaProvider: Sendable {
     /// The schema that describes every value of this type.
     static var openAPISchema: OpenAPISchema { get }
+
+    /// Any value of this type, used in place of decoding one when this type is a property of
+    /// another type whose schema is derived from how it decodes.
+    ///
+    /// Provide one when `init(from:)` can't decode placeholder values, as for an enum with
+    /// associated values:
+    ///
+    /// ```swift
+    /// static var openAPIPlaceholder: Shape? { .circle(radius: 0) }
+    /// ```
+    ///
+    /// The default is `nil`, which decodes the type as usual. Declare it as optional, `Self?`:
+    /// a non-optional `openAPIPlaceholder` doesn't satisfy this requirement, so it's ignored.
+    static var openAPIPlaceholder: Self? { get }
+}
+
+extension OpenAPISchemaProvider {
+    public static var openAPIPlaceholder: Self? { nil }
 }
 
 extension OpenAPISchemaProvider where Self: CaseIterable & RawRepresentable, RawValue == String {

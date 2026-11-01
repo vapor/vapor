@@ -57,6 +57,12 @@ final class SchemaDecoder {
         if let placeholder = Placeholder.value(for: type) {
             return (placeholder, DecodedShape(type: type, kind: .leaf))
         }
+        // A provider's own placeholder skips an init(from:) that may reject ours.
+        if let provider = type as? any OpenAPISchemaProvider.Type,
+            let placeholder = provider.openAPIPlaceholder as? T
+        {
+            return (placeholder, DecodedShape(type: type, kind: .leaf))
+        }
 
         // Wrappers never recurse themselves; what they hold does.
         if !Self.canBeEmpty(type), path.contains(where: { ObjectIdentifier($0) == ObjectIdentifier(type) }) {
@@ -440,8 +446,11 @@ extension SchemaDecoder {
 
         var description: String {
             let path = codingPath.map(\.stringValue).joined(separator: ".")
+            // DecodingError descriptions often end in a full stop already.
+            let reason = reason.hasSuffix(".") ? String(reason.dropLast()) : reason
             return "\(path.isEmpty ? "\(type)" : path): can't describe \(type), \(reason). "
-                + "Make it CaseIterable if it's an enum, or accept placeholder values in its init(from:)."
+                + "Make it CaseIterable if it's an enum, accept placeholder values in its init(from:), "
+                + "or give it a `static var openAPIPlaceholder: Self?` through OpenAPISchemaProvider."
         }
     }
 }

@@ -68,6 +68,55 @@ public struct OpenAPISchema: Sendable, Equatable {
         return Self(schema: .string(allowedValues: values.map { AnyCodable($0) }))
     }
 
+    /// A value that matches exactly one of the given schemas (`oneOf`).
+    ///
+    /// Use it for an enum with associated values, which `Codable` writes as an object keyed by
+    /// the case:
+    ///
+    /// ```swift
+    /// .one(of:
+    ///     .object(["circle": .object(["radius": .number()])]),
+    ///     .object(["square": .object(["side": .number()])])
+    /// )
+    /// ```
+    public static func one(of first: OpenAPISchema, _ rest: OpenAPISchema...) -> Self {
+        one(of: [first] + rest)
+    }
+
+    /// A value that matches exactly one of `schemas` (`oneOf`).
+    ///
+    /// - Precondition: `schemas` isn't empty.
+    public static func one(of schemas: [OpenAPISchema]) -> Self {
+        precondition(!schemas.isEmpty, "OpenAPISchema.one(of:) needs at least one schema")
+        return Self(schema: .one(of: schemas.map(\.schema)))
+    }
+
+    /// A value that matches at least one of the given schemas (`anyOf`).
+    public static func any(of first: OpenAPISchema, _ rest: OpenAPISchema...) -> Self {
+        any(of: [first] + rest)
+    }
+
+    /// A value that matches at least one of `schemas` (`anyOf`).
+    ///
+    /// - Precondition: `schemas` isn't empty.
+    public static func any(of schemas: [OpenAPISchema]) -> Self {
+        precondition(!schemas.isEmpty, "OpenAPISchema.any(of:) needs at least one schema")
+        return Self(schema: .any(of: schemas.map(\.schema)))
+    }
+
+    /// A value that matches every one of the given schemas (`allOf`).
+    public static func all(of first: OpenAPISchema, _ rest: OpenAPISchema...) -> Self {
+        all(of: [first] + rest)
+    }
+
+    /// A value that matches every one of `schemas` (`allOf`).
+    ///
+    /// - Precondition: `schemas` isn't empty.
+    public static func all(of schemas: [OpenAPISchema]) -> Self {
+        precondition(!schemas.isEmpty, "OpenAPISchema.all(of:) needs at least one schema")
+        return Self(schema: .all(of: schemas.map(\.schema)))
+    }
+
     /// The same schema, as a property that may be left out of its object.
     ///
     /// This only has an effect on an object's property: for `[T?]`, use ``nullable()`` instead.

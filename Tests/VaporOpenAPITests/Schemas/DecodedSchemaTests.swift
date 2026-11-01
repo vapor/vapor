@@ -98,6 +98,23 @@ private enum Plain: String, Decodable, OpenAPISchemaProvider {
     static var openAPISchema: OpenAPISchema { .enumeration(["only"]) }
 }
 private struct HoldsPlain: Decodable { var plain: Plain }
+/// Described by hand, with a placeholder so it can be a property of a decoded type.
+private enum Shape: Codable, OpenAPISchemaProvider {
+    case circle(radius: Double)
+    case square(side: Double)
+    static var openAPISchema: OpenAPISchema {
+        .one(
+            of: .object(["circle": .object(["radius": .number()])]),
+            .object(["square": .object(["side": .number()])])
+        )
+    }
+    static var openAPIPlaceholder: Shape? { .circle(radius: 0) }
+}
+private struct Drawing: Codable {
+    var title: String
+    var shape: Shape
+    var outline: Shape?
+}
 
 @Suite("Decoded schemas")
 struct DecodedSchemaTests {
@@ -234,6 +251,16 @@ struct DecodedSchemaTests {
     func strictProviderNested() throws {
         #expect(try decoded(Plain.self).schema == ##"{"$ref":"#/components/schemas/Plain"}"##)
         #expect(throws: (any Error).self) { try decoded(HoldsPlain.self) }
+    }
+
+    @Test("A provider's placeholder lets it be a property, as for an enum with associated values")
+    func providerPlaceholder() throws {
+        let result = try decoded(Drawing.self)
+        #expect(
+            result.components["Drawing"]
+                == ##"{"properties":{"outline":{"$ref":"#/components/schemas/Shape"},"shape":{"$ref":"#/components/schemas/Shape"},"title":{"type":"string"}},"required":["title","shape"],"type":"object"}"##
+        )
+        #expect(result.components["Shape"]?.hasPrefix(#"{"oneOf":["#) == true)
     }
 }
 #endif

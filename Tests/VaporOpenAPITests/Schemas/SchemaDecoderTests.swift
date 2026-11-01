@@ -281,7 +281,8 @@ struct SchemaDecoderTests {
     @Test("The error suggests what will help")
     func errorHint() throws {
         let error = try #require(throws: (any Error).self) { try SchemaDecoder.shape(of: Plain.self) }
-        #expect("\(error)".hasSuffix("Make it CaseIterable if it's an enum, or accept placeholder values in its init(from:)."))
+        #expect("\(error)".hasSuffix("or give it a `static var openAPIPlaceholder: Self?` through OpenAPISchemaProvider."))
+        #expect(!"\(error)".contains(".."))
     }
 }
 #endif

@@ -9,15 +9,15 @@ public struct OpenAPIBody: Sendable {
     /// A body whose schema is derived from `type`.
     ///
     /// The type is inspected through `Decodable`, so this sees every property, including optional
-    /// ones. For a type that's only `Encodable`, use ``example(_:)``.
+    /// ones. A type that's only `Encodable` can describe itself with ``OpenAPISchemaProvider``.
     public static func type<T: Decodable & SendableMetatype>(_ type: T.Type) -> Self {
         OpenAPIBody(value: .type(type))
     }
 
-    /// A body whose schema is derived from `value`, which is also shown as its example.
+    /// A body described by the type of `value`, as with ``type(_:)``, with `value` as its example.
     ///
-    /// Only what `value` encodes is seen: a `nil` optional or an empty array leaves that part of
-    /// the schema out. Prefer ``type(_:)`` when the type is `Decodable`.
+    /// The schema still comes from the type, so a `nil` property is described too. The type must
+    /// be `Decodable`, or describe itself with ``OpenAPISchemaProvider``.
     public static func example(_ value: some Encodable & Sendable) -> Self {
         OpenAPIBody(value: .example(value))
     }
@@ -77,15 +77,15 @@ public struct OpenAPIParameters: Sendable {
     /// Parameters taken from the properties of `type`.
     ///
     /// The type is inspected through `Decodable`, so this sees every property, including optional
-    /// ones. For a type that's only `Encodable`, use ``example(_:)``.
+    /// ones. A type that's only `Encodable` can describe itself with ``OpenAPISchemaProvider``.
     public static func type<T: Decodable & SendableMetatype>(_ type: T.Type) -> Self {
         OpenAPIParameters(value: .type(type))
     }
 
-    /// Parameters taken from the properties of `value`, which also provides their examples.
+    /// Parameters taken from the properties of `value`'s type, with `value` providing their examples.
     ///
-    /// Only what `value` encodes is seen: a `nil` optional leaves that parameter out. Prefer
-    /// ``type(_:)`` when the type is `Decodable`.
+    /// The parameters still come from the type, so a `nil` property is a parameter with no example.
+    /// The type must be `Decodable`, or describe itself with ``OpenAPISchemaProvider``.
     public static func example(_ value: some Encodable & Sendable) -> Self {
         OpenAPIParameters(value: .example(value))
     }

@@ -270,6 +270,41 @@ struct OpenAPISchemaTests {
         #expect(OpenAPISchema.object(["a": .string()]) != .object(["a": .string().optional()]))
     }
 
+    @Test("An enum with associated values is one of its cases, each keyed by its name")
+    func oneOf() throws {
+        let schema = OpenAPISchema.one(
+            of: .object(["circle": .object(["radius": .number()])]),
+            .object(["square": .object(["side": .number()])])
+        )
+        #expect(
+            try json(schema)
+                == #"{"oneOf":[{"properties":{"circle":{"properties":{"radius":{"type":"number"}},"required":["radius"],"type":"object"}},"required":["circle"],"type":"object"},{"properties":{"square":{"properties":{"side":{"type":"number"}},"required":["side"],"type":"object"}},"required":["square"],"type":"object"}]}"#
+        )
+    }
+
+    @Test("Compositions list their schemas in order")
+    func compositions() throws {
+        #expect(try json(.any(of: .string(), .integer())) == #"{"anyOf":[{"type":"string"},{"type":"integer"}]}"#)
+        #expect(
+            try json(.all(of: [.string(), .string(format: .uuid)])) == #"{"allOf":[{"type":"string"},{"format":"uuid","type":"string"}]}"#)
+        #expect(OpenAPISchema.one(of: .string()) == .one(of: [.string()]))
+    }
+
+    @Test("A nullable composition allows null alongside it")
+    func nullableComposition() throws {
+        #expect(
+            try json(.one(of: .string(), .integer()).nullable())
+                == #"{"anyOf":[{"oneOf":[{"type":"string"},{"type":"integer"}]},{"type":"null"}]}"#
+        )
+    }
+
+    @Test("An empty composition is rejected")
+    func emptyCompositionsTrap() async {
+        await #expect(processExitsWith: .failure) { _ = OpenAPISchema.one(of: []) }
+        await #expect(processExitsWith: .failure) { _ = OpenAPISchema.any(of: []) }
+        await #expect(processExitsWith: .failure) { _ = OpenAPISchema.all(of: []) }
+    }
+
     @Test("Modifiers return a copy and leave the original untouched")
     func modifiersCopy() throws {
         let original = OpenAPISchema.string()
