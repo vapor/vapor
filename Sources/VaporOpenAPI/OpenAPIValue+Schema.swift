@@ -42,17 +42,21 @@ extension OpenAPIValue {
 
     /// One parameter per property of the object this value describes.
     ///
-    /// `.allOf` concatenates its parts' parameters. A property's own example comes from an
-    /// `.example`, and an optional property is a parameter that may be left out.
+    /// `.allOf` concatenates its parts' parameters, a later part replacing an earlier one's of the
+    /// same name, as a route's do its group's. A property's own example comes from an `.example`,
+    /// and an optional property is a parameter that may be left out.
     func parameters(
         in location: ParameterLocation,
         into components: inout SchemaComponents
     ) throws -> [OpenAPI.Parameter] {
         switch self {
         case .allOf(let values):
-            return try values.flatMap { value in
+            let all = try values.flatMap { value in
                 try value.parameters(in: location, into: &components)
             }
+            // OpenAPI forbids two parameters with the same name and location, so the last one wins.
+            var seen = Set<String>()
+            return all.reversed().filter { seen.insert($0.name).inserted }.reversed()
         default:
             let (schema, example) = try schema(into: &components)
             guard let object = components.resolved(schema).objectContext else {

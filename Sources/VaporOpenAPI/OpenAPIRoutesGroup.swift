@@ -30,7 +30,9 @@ extension OpenAPIRoute {
         statusCode = statusCode ?? outer.statusCode
 
         tags = Self.appending(outer.tags, tags, by: \.self)
-        auth = Self.appending(outer.auth, auth, by: \.id)
+        // A route's scopes for a scheme replace its group's, rather than its group's winning.
+        auth = outer.auth.filter { scheme in !auth.contains { $0.id == scheme.id } } + auth
+        // By description rather than \.self: `HTTPMediaType.==` treats `*/*` as equal to any type.
         contentTypes = Self.appending(outer.contentTypes, contentTypes, by: \.description)
         responseContentTypes = Self.appending(outer.responseContentTypes, responseContentTypes, by: \.description)
 
@@ -41,7 +43,7 @@ extension OpenAPIRoute {
         responseHeaders = Self.combined(outer.responseHeaders, responseHeaders)
 
         links.merge(outer.links) { ours, _ in ours }
-        deprecated = deprecated || outer.deprecated
+        deprecated = deprecated ?? outer.deprecated
         isHidden = isHidden || outer.isHidden
     }
 

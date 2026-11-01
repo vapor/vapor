@@ -23,7 +23,8 @@ extension RoutesBuilder {
     ///   - tags: Groups the operation in the document's UI.
     ///   - summary: A one-line description of the operation.
     ///   - description: A longer description of the operation.
-    ///   - operationID: A unique name for the operation, which client generators use.
+    ///   - operationID: A unique name for the operation, which client generators use. Set it on
+    ///     a single route: on a group it would repeat on every route in it.
     ///   - query: The query parameters.
     ///   - headers: The request headers.
     ///   - path: The path parameters, to give them types. Without it they come from the route's
@@ -38,7 +39,7 @@ extension RoutesBuilder {
     ///   - statusCode: The successful response's status. `200 OK` if `nil`.
     ///   - auth: The security schemes the operation accepts.
     ///   - links: Values in the response that other operations take, by the key that ties them.
-    ///   - deprecated: Whether the operation is deprecated.
+    ///   - deprecated: Whether the operation is deprecated. `nil` inherits a group's.
     public func openAPI(
         tags: [String] = [],
         summary: String? = nil,
@@ -57,7 +58,7 @@ extension RoutesBuilder {
         statusCode: HTTPResponse.Status? = nil,
         auth: [OpenAPIAuth] = [],
         links: [OpenAPILink: any OpenAPILinkKey.Type] = [:],
-        deprecated: Bool = false
+        deprecated: Bool? = nil
     ) -> any RoutesBuilder {
         let details = OpenAPIRoute(
             tags: tags,

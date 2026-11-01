@@ -12,7 +12,8 @@ struct OpenAPIRoute: Sendable {
     var summary: String?
     var description: String?
     var operationID: String?
-    var deprecated = false
+    /// `nil` inherits a group's, so a route can also undeprecate itself with `false`.
+    var deprecated: Bool?
     /// Leaves the route out of the document.
     var isHidden = false
 

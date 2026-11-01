@@ -33,7 +33,7 @@ struct RoutesBuilderOpenAPITests {
         #expect(details.summary == "Get a user")
         #expect(details.operationID == "getUser")
         #expect(details.statusCode == .created)
-        #expect(details.deprecated)
+        #expect(details.deprecated == true)
         #expect(!details.isHidden)
     }
 
@@ -110,6 +110,43 @@ struct RoutesBuilderOpenAPITests {
         let root = Collector()
         root.openAPI(deprecated: true).openAPI(summary: "x").get("x") { _ in "x" }
         #expect(root.routes.first?.openAPIRoute.deprecated == true)
+    }
+
+    @Test("A route can undo its group's deprecation")
+    func undeprecated() throws {
+        let root = Collector()
+        root.openAPI(deprecated: true).openAPI(deprecated: false).get("x") { _ in "x" }
+        #expect(root.routes.first?.openAPIRoute.deprecated == false)
+    }
+
+    @Test("A route's scopes for a scheme replace its group's")
+    func authScopes() throws {
+        let root = Collector()
+        root.openAPI(auth: [.bearer().scopes("read"), .basic()])
+            .openAPI(auth: [.bearer().scopes("admin")])
+            .get("x") { _ in "x" }
+        let auth = try #require(root.routes.first).openAPIRoute.auth
+        #expect(auth.map(\.id) == ["http_basic", "http_bearer"])
+        #expect(auth.last?.scopes == ["admin"])
+    }
+
+    @Test("A route's parameter replaces its group's of the same name")
+    func parameterReplaced() throws {
+        struct Paging: Codable {
+            var limit: Int
+            var page: Int
+        }
+        struct Search: Codable {
+            var limit: String
+            var q: String
+        }
+        let root = Collector()
+        root.openAPI(query: .type(Paging.self)).openAPI(query: .type(Search.self)).get("x") { _ in "x" }
+        var components = SchemaComponents()
+        let parameters = try #require(root.routes.first?.openAPIRoute.query).value.parameters(in: .query, into: &components)
+        #expect(parameters.map(\.name) == ["page", "limit", "q"])
+        // The route's `limit`, a string, not the group's integer.
+        #expect(parameters[1].schemaOrContent.schemaValue?.jsonType == .string)
     }
 
     @Test("Hidden routes stay hidden however they're nested")
