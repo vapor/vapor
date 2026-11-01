@@ -1,5 +1,6 @@
 #if OpenAPI
 import HTTPTypes
+import OpenAPIKit
 import RoutingKit
 import Testing
 import Vapor
@@ -17,6 +18,11 @@ private struct Pet: Codable {
     var name: String
 }
 private struct Paging: Codable { var page: Int? }
+private enum PetID: OpenAPILinkKey {
+    static var description: String? { "The new pet's ID" }
+}
+private enum Unused: OpenAPILinkKey {}
+private struct Identified: Codable { var id: String }
 
 /// The document for the routes `configure` registers, as JSON with sorted keys.
 private func document(_ configure: (Application) throws -> Void) async throws -> String {
@@ -96,6 +102,118 @@ struct RoutesOpenAPITests {
         }
         #expect(
             "\(error!)" == "GET /proxy/**: a catch-all path (**) can't be described in OpenAPI. Hide the route with hiddenFromOpenAPI().")
+    }
+
+    @Test("A response value links to a request value with the same key")
+    func link() async throws {
+        let json = try await document { app in
+            app.openAPI(response: .type(Pet.self), links: [OpenAPILink("id", in: .response(.body)): PetID.self])
+                .post("pets") { _ in "created" }
+            app.openAPI(operationID: "getPet", links: [OpenAPILink("id", in: .request(.path)): PetID.self])
+                .get("pets", ":id") { _ in "pet" }
+        }
+        #expect(
+            json.contains(
+                ##""links":{"ResponseBodyIdGetPetRequestPathId":{"description":"The new pet's ID","operationId":"getPet","parameters":{"path.id":"$response.body#/id"}}}"##
+            )
+        )
+        #expect(
+            json.contains(
+                ##""links":{"ResponseBodyIdGetPetRequestPathId":{"$ref":"#/components/links/ResponseBodyIdGetPetRequestPathId"}}"##
+            )
+        )
+    }
+
+    @Test("A target without an operation ID is reached by a pointer to it")
+    func linkByReference() async throws {
+        let json = try await document { app in
+            app.openAPI(links: [OpenAPILink("id", in: .response(.body)): PetID.self]).post("pets") { _ in "created" }
+            app.openAPI(links: [OpenAPILink("id", in: .request(.path)): PetID.self]).get("pets", ":id") { _ in "pet" }
+        }
+        #expect(json.contains(##""operationRef":"#/paths/~1pets~1%7Bid%7D/get""##))
+        #expect(json.contains(#""ResponseBodyIdGetPetsByIdRequestPathId""#))
+    }
+
+    @Test("A key with no source or no target makes no link")
+    func unmatchedLink() async throws {
+        let json = try await document { app in
+            app.openAPI(links: [OpenAPILink("id", in: .response(.body)): Unused.self]).post("pets") { _ in "created" }
+        }
+        #expect(!json.contains("links"))
+    }
+
+    @Test("A link into a field of a request body fails")
+    func linkIntoBodyField() async throws {
+        let error = await #expect(throws: (any Error).self) {
+            try await document { app in
+                app.openAPI(links: [OpenAPILink("id", in: .response(.body)): PetID.self]).post("pets") { _ in "a" }
+                app.openAPI(links: [OpenAPILink("owner/id", in: .request(.body)): PetID.self]).put("pets") { _ in "b" }
+            }
+        }
+        #expect("\(error!)".hasPrefix("PUT /pets: a link can only set a whole request body"))
+    }
+
+    @Test("Links come out in the order their routes and ends are declared, sorted within a route")
+    func stableLinkOrder() async throws {
+        let configure: (Application) throws -> Void = { app in
+            app.openAPI(links: [
+                OpenAPILink("id", in: .response(.body)): PetID.self,
+                OpenAPILink("Location", in: .response(.header)): PetID.self,
+                OpenAPILink("owner", in: .response(.body)): Unused.self,
+            ]).post("pets") { _ in "a" }
+            app.openAPI(operationID: "a", links: [OpenAPILink("id", in: .request(.path)): PetID.self]).get("a", ":id") { _ in "a" }
+            app.openAPI(operationID: "b", query: .type(Identified.self), links: [OpenAPILink("id", in: .request(.query)): PetID.self]).get(
+                "b"
+            ) { _ in "b" }
+            app.openAPI(operationID: "c", headers: .type(Identified.self), links: [OpenAPILink("id", in: .request(.header)): PetID.self])
+                .get("c") { _ in "c" }
+        }
+        // JSONEncoder reorders keys unless they're sorted, so compare the order in the document itself.
+        func linkOrder() async throws -> [String] {
+            try await withApp { app in
+                try configure(app)
+                let document = try app.routes.openAPI(info: OpenAPIInfo(title: "Pets", version: "1.0.0")).document
+                return document.components.links.keys.map(\.rawValue)
+            }
+        }
+        // An exact order, since a dictionary keeps one order for a whole process, so comparing runs
+        // in one test can't tell sorted from unsorted.
+        #expect(
+            try await linkOrder() == [
+                "ResponseBodyIdARequestPathId", "ResponseBodyIdBRequestQueryId", "ResponseBodyIdCRequestHeaderId",
+                "ResponseHeaderLocationARequestPathId", "ResponseHeaderLocationBRequestQueryId",
+                "ResponseHeaderLocationCRequestHeaderId",
+            ]
+        )
+    }
+
+    @Test("Different links that come out with the same name are both kept")
+    func linkNameCollision() async throws {
+        let json = try await document { app in
+            app.openAPI(links: [OpenAPILink("owner/id", in: .response(.body)): PetID.self]).post("a") { _ in "a" }
+            app.openAPI(links: [OpenAPILink("ownerId", in: .response(.body)): PetID.self]).post("b") { _ in "b" }
+            app.openAPI(operationID: "getPet", links: [OpenAPILink("id", in: .request(.path)): PetID.self])
+                .get("pets", ":id") { _ in "pet" }
+        }
+        #expect(
+            json.contains(
+                ##""ResponseBodyOwnerIdGetPetRequestPathId":{"description":"The new pet's ID","operationId":"getPet","parameters":{"path.id":"$response.body#/owner/id"}}"##
+            ))
+        #expect(
+            json.contains(
+                ##""ResponseBodyOwnerIdGetPetRequestPathId2":{"description":"The new pet's ID","operationId":"getPet","parameters":{"path.id":"$response.body#/ownerId"}}"##
+            ))
+    }
+
+    @Test("A link to a parameter its operation doesn't have fails")
+    func linkToMissingParameter() async throws {
+        let error = await #expect(throws: (any Error).self) {
+            try await document { app in
+                app.openAPI(links: [OpenAPILink("id", in: .response(.body)): PetID.self]).post("pets") { _ in "a" }
+                app.openAPI(links: [OpenAPILink("id", in: .request(.path)): PetID.self]).get("pets", ":petID") { _ in "b" }
+            }
+        }
+        #expect("\(error!)" == #"GET /pets/:petID: a link sets its path parameter "id", which it doesn't have"#)
     }
 
     @Test("Two different schemes under one ID fail")
