@@ -5,10 +5,10 @@ import PackageDescription
 let package = Package(
     name: "vapor",
     platforms: [
-        .macOS("26.2"),
-        .iOS("26.2"),
-        .tvOS("26.2"),
-        .watchOS("26.2"),
+        .macOS(.v27),
+        .iOS(.v27),
+        .tvOS(.v27),
+        .watchOS(.v27),
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -20,6 +20,7 @@ let package = Package(
         .trait(name: "HTTPClient"),
         .trait(name: "Multipart"),
         .trait(name: "MacroRouting"),
+        .trait(name: "UnstableHTTP3"),
         .default(enabledTraits: [
             "WebSockets",
             "HTTPClient",
@@ -38,7 +39,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: ["CommandLineArguments"]),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", "4.0.0"..<"6.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "5.0.0"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "5.0.0-beta"),
@@ -59,7 +60,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
 
         // Swift tracing API
-        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.1.0"),
+        .package(url: "https://github.com/apple/swift-distributed-tracing.git", .upToNextMinor(from: "1.5.0")),
 
         // Swift service context
         .package(url: "https://github.com/apple/swift-service-context.git", from: "1.0.0"),
@@ -89,7 +90,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections", exact: "1.6.0"),
 
         // X509 certificate types for the Swift ecosystem
-        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.14.0"),
+        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.21.0"),
 
         // Work with certificate encoding schemes
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0"),
@@ -101,7 +102,15 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
 
         // HTTP Server for low level request and response handling
-        .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.3.0")),
+        .package(
+            url: "https://github.com/swift-server/swift-http-server.git",
+            .upToNextMinor(from: "0.4.0"),
+            traits: [.defaults, .trait(name: "HTTP3", condition: .when(traits: ["UnstableHTTP3"]))]
+        ),
+
+        // HTTP/3 and QUIC support for SwiftNIO - used for testing
+        .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.6.0")),
     ],
     targets: [
         // Vapor
@@ -205,6 +214,9 @@ let package = Package(
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
+                .product(name: "NIOHTTP3", package: "swift-nio-http3", condition: .when(traits: ["UnstableHTTP3"])),
+                .product(name: "NIOQUIC", package: "swift-nio-quic", condition: .when(traits: ["UnstableHTTP3"])),
+                .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
             ],
             resources: [
                 .copy("Utilities/foo.txt"),
@@ -217,6 +229,9 @@ let package = Package(
                 .copy("Utilities/localhost.crt"),
                 .copy("Utilities/localhost.key"),
                 .copy("Utilities/long-test-file.txt"),
+                .copy("Utilities/http3.crt"),
+                .copy("Utilities/http3.key"),
+                .copy("Utilities/http3-cacert.pem"),
             ],
             swiftSettings: swiftSettings
         ),

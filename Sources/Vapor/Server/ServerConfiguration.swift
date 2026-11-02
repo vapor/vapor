@@ -4,7 +4,7 @@ public struct ServerConfiguration: Sendable {
     /// The TLS configuration for the server, or `nil` to serve over plaintext HTTP.
     public var tlsConfiguration: TLSConfiguration?
 
-    /// The HTTP versions the server accepts. Defaults to HTTP/1.1 only; adding HTTP/2 requires a ``tlsConfiguration``.
+    /// The HTTP versions the server accepts. Defaults to HTTP/1.1 only; adding HTTP/2 or HTTP/3 requires a ``tlsConfiguration``.
     public var httpVersions: Set<HTTPVersion>
 
     /// How many file content hashes to keep for ``Application/fileio`` and middleware created by `app.makeFileMiddleware()`.

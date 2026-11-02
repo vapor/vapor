@@ -16,7 +16,8 @@ enum HTTPMethodMacroUtilities {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext,
         for method: HTTPRequest.Method,
-        customHTTPMethod: Bool = false
+        customHTTPMethod: Bool = false,
+        decodesContentArgument: Bool = false
     ) throws -> [DeclSyntax] {
         let macroName = node.attributeName.trimmedDescription
 
@@ -24,10 +25,27 @@ enum HTTPMethodMacroUtilities {
             throw MacroError.notAFunction(macroName)
         }
 
+        // @Controller lifts grouped handlers to member scope before expanding their route macros.
+        if isInsideGroupingMacro(context: context) {
+            return []
+        }
+
         let arguments: LabeledExprListSyntax? =
             switch node.arguments {
             case .argumentList(let arguments): arguments
             default: nil
+            }
+
+        // The labeled content type is decoded from the body. Unlabeled types
+        // remain path parameters, including the first argument of a route.
+        let bodyType: String? =
+            if decodesContentArgument,
+                let contentArgument = arguments?.first(where: { $0.label?.text == "content" }),
+                contentArgument.expression.trimmedDescription.hasSuffix(".self")
+            {
+                String(contentArgument.expression.trimmedDescription.dropLast(".self".count))
+            } else {
+                nil
             }
 
         var funcParameters: [FunctionParameterSyntax] = []
@@ -55,8 +73,17 @@ enum HTTPMethodMacroUtilities {
         // Separate auth params from path params
         var pathParams: [FunctionParameterSyntax] = []
         var allParamsWithAuth: [(param: FunctionParameterSyntax, isAuth: Bool, isOptionalAuth: Bool)] = []
+        var foundBodyParameter = false
 
         for param in funcParameters {
+            // When the content and authentication types match, the first
+            // matching parameter belongs to the body; later ones are auth.
+            if !foundBodyParameter, let bodyType, param.type.trimmedDescription == bodyType {
+                allParamsWithAuth.append((param: param, isAuth: false, isOptionalAuth: false))
+                pathParams.append(param)
+                foundBodyParameter = true
+                continue
+            }
             if let authInfo {
                 let paramType = param.type.trimmedDescription
                 // Match both `User` and `User?` / `Optional<User>` against the auth type
@@ -85,6 +112,21 @@ enum HTTPMethodMacroUtilities {
             }
         }
 
+        if let bodyType {
+            guard let bodyParameter = pathParams.first,
+                bodyParameter.type.trimmedDescription == bodyType
+            else {
+                throw MacroError.bodyParameterNotFound(bodyType)
+            }
+            pathParams.removeFirst()
+
+            guard let returnType = funcDecl.signature.returnClause?.type.trimmedDescription,
+                returnType != "Void", returnType != "()"
+            else {
+                throw MacroError.invalidResponseReturnType(macroName)
+            }
+        }
+
         // Parse path components and parameter types
         var parameterTypes: [String] = []
         var routeRegistrationVariable: String? = nil
@@ -96,12 +138,14 @@ enum HTTPMethodMacroUtilities {
                     routeRegistrationVariable = String(argument.expression.description.trimming(while: \.isWhitespace))
                     continue
                 }
+                if argument.label?.text == "content" {
+                    continue
+                }
                 // Skip the first non-on: argument for custom HTTP methods (that's the HTTP method itself)
                 if customHTTPMethod && !skippedHTTPMethod {
                     skippedHTTPMethod = true
                     continue
                 }
-
                 let exprStr = argument.expression.description.trimming(while: \.isWhitespace)
 
                 if exprStr.hasSuffix(".self") {
@@ -121,6 +165,7 @@ enum HTTPMethodMacroUtilities {
         var parameterExtraction = ""
         var callParameters = "req: req"
         var pathParamIndex = 0
+        var needsBodyParameter = bodyType != nil
 
         for (param, isAuth, isOptionalAuth) in allParamsWithAuth {
             let functionParameterName = param.firstName.text
@@ -138,6 +183,13 @@ enum HTTPMethodMacroUtilities {
                         """
                 }
                 callParameters += ", \(functionParameterName): \(varName)"
+            } else if needsBodyParameter, let bodyType {
+                parameterExtraction += """
+                    let body = try await req.content.decode(\(bodyType).self)
+
+                    """
+                callParameters += ", \(functionParameterName): body"
+                needsBodyParameter = false
             } else {
                 let paramType = parameterTypes[pathParamIndex]
                 let parameterName = "\(paramType.lowercased())\(pathParamIndex)"
@@ -193,7 +245,7 @@ enum HTTPMethodMacroUtilities {
                 var skippedHTTPMethodInPath = false
                 for (_, arg) in arguments.enumerated() {
                     // Skip the `on:` argument
-                    if arg.label?.text == "on" {
+                    if arg.label?.text == "on" || arg.label?.text == "content" {
                         continue
                     }
                     // Skip the first non-on: argument for custom HTTP methods
@@ -254,20 +306,35 @@ enum HTTPMethodMacroUtilities {
             else {
                 continue
             }
-            var authType: String? = nil
-            var middlewares: [String] = []
-            for (i, arg) in args.enumerated() {
-                let exprStr = String(arg.expression.description.trimming(while: \.isWhitespace))
-                if i == 0 {
-                    authType = exprStr.replacing(".self", with: "")
-                } else {
-                    middlewares.append(exprStr)
-                }
-            }
-            if let authType {
-                return (type: authType, middlewares: middlewares)
+            if let first = args.first {
+                let authType = first.expression.trimmedDescription.replacing(".self", with: "")
+                return (type: authType, middlewares: GroupingMacroHelpers.middlewareExpressions(from: args, skipAuthType: true))
             }
         }
         return nil
+    }
+
+    static func isInsideGroupingMacro(context: some MacroExpansionContext) -> Bool {
+        let groupingNames: Set<String> = ["AuthMiddleware", "Middleware"]
+        for lexical in context.lexicalContext {
+            if lexical.is(StructDeclSyntax.self)
+                || lexical.is(ClassDeclSyntax.self)
+                || lexical.is(EnumDeclSyntax.self)
+                || lexical.is(ExtensionDeclSyntax.self)
+            {
+                return false
+            }
+            if let macroCall = lexical.as(MacroExpansionDeclSyntax.self),
+                groupingNames.contains(macroCall.macroName.text)
+            {
+                return true
+            }
+            if let macroCall = lexical.as(MacroExpansionExprSyntax.self),
+                groupingNames.contains(macroCall.macroName.text)
+            {
+                return true
+            }
+        }
+        return false
     }
 }

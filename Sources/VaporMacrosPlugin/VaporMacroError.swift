@@ -5,6 +5,11 @@ enum MacroError: Error, CustomStringConvertible {
     case invalidNumberOfParameters(String, Int, Int)
     case invalidHTTPMethod(String)
     case authParameterNotFound(String)
+    case bodyParameterNotFound(String)
+    case invalidResponseReturnType(String)
+    case unsupportedMiddlewareGroupContent
+    case missingMiddlewareGroupBody(String)
+    case middlewareGroupRequiresController
 
     var description: String {
         switch self {
@@ -18,8 +23,18 @@ enum MacroError: Error, CustomStringConvertible {
             "The @\(macroName) macro defines \(macro) arguments, but the function has \(function)"
         case .invalidHTTPMethod(let method):
             "\(method) is not a valid HTTP Method"
+        case .unsupportedMiddlewareGroupContent:
+            "Middleware groups can only contain functions and nested middleware groups"
+        case .missingMiddlewareGroupBody(let name):
+            "#\(name) requires a body containing route handlers"
+        case .middlewareGroupRequiresController:
+            "Middleware groups must be declared inside a @Controller"
         case .authParameterNotFound(let typeName):
             "No function parameter of type \(typeName) found for @AuthMiddleware"
+        case .bodyParameterNotFound(let typeName):
+            "The first non-authentication parameter of @POST must have type \(typeName)"
+        case .invalidResponseReturnType(let macroName):
+            "@\(macroName) handlers with content must declare a non-Void response type"
         }
     }
 }

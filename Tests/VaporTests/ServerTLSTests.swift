@@ -6,6 +6,7 @@ import Logging
 import NIOCertificateReloading
 import NIOCore
 import NIOHTTP1
+import NIOHTTPTypes
 import NIOPosix
 import NIOSSL
 import RoutingKit
@@ -17,6 +18,10 @@ import VaporTesting
 import X509
 
 @testable import Vapor
+
+#if UnstableHTTP3
+import NIOQUIC
+#endif
 
 @Suite("Server TLS Tests")
 struct ServerTLSTests {
@@ -485,8 +490,9 @@ struct ServerTLSTests {
                 certificateChain: [credentials.certificate],
                 privateKey: credentials.privateKey
             )
-            app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
+            app.serverConfiguration.httpVersions = [.http1_1, .http2]
             app.get("hello") { _ in "world" }
+            app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
 
             try await withRunningServer(app) { port in
                 // Force the client to HTTP/1.1: enabling HTTP/2 on the server must not break H1 clients.
@@ -498,6 +504,12 @@ struct ServerTLSTests {
                     #expect(response.status == .ok)
                     #expect(response.version == .http1_1)
                     #expect(try await response.body.collect(upTo: 1024).string == "world")
+
+                    let versionResponse = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/version"),
+                        timeout: .seconds(30)
+                    )
+                    #expect(try await versionResponse.body.collect(upTo: 1024).string == "1.1")
                 }
             }
         }
@@ -511,8 +523,9 @@ struct ServerTLSTests {
                 certificateChain: [credentials.certificate],
                 privateKey: credentials.privateKey
             )
-            app.serverConfiguration.httpVersions = [.http1_1, .http2(config: .defaults)]
+            app.serverConfiguration.httpVersions = [.http1_1, .http2]
             app.get("hello") { _ in "world" }
+            app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
 
             try await withRunningServer(app) { port in
                 // The client defaults to `.automatic`, advertising both h2 and http/1.1 over ALPN.
@@ -525,10 +538,147 @@ struct ServerTLSTests {
                     #expect(response.status == .ok)
                     #expect(response.version == .http2)
                     #expect(try await response.body.collect(upTo: 1024).string == "world")
+
+                    let versionResponse = try await client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/version"),
+                        timeout: .seconds(30)
+                    )
+                    #expect(try await versionResponse.body.collect(upTo: 1024).string == "2.0")
                 }
             }
         }
     }
+
+    @Test("Graceful shutdown closes HTTP/2 connections after the configured limit", .timeLimit(.minutes(1)))
+    func testGracefulShutdownLimitClosesHTTP2Connections() async throws {
+        try await withApp { app in
+            let credentials = try TestCredentials.localhost()
+            app.serverConfiguration.tlsConfiguration = .inMemory(
+                certificateChain: [credentials.certificate],
+                privateKey: credentials.privateKey
+            )
+            app.serverConfiguration.httpVersions = [
+                .http1_1,
+                .http2(config: .init(gracefulShutdown: .init(maximumGracefulShutdownDuration: .milliseconds(200)))),
+            ]
+            app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
+
+            let (handlerStarted, handlerStartedContinuation) = AsyncStream.makeStream(of: Void.self)
+            let (releaseHandler, releaseHandlerContinuation) = AsyncStream.makeStream(of: Void.self)
+            app.get("slow") { _ -> String in
+                handlerStartedContinuation.finish()
+                for await _ in releaseHandler {}
+                return "drained"
+            }
+
+            try await app.boot()
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [.init(service: app.server, successTerminationBehavior: .gracefullyShutdownGroup)],
+                    logger: Logger.current
+                )
+            )
+
+            try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    group.addTask { try await serviceGroup.run() }
+                    let port = try #require(try await app.server.listeningAddress.port)
+
+                    async let response = client.execute(
+                        HTTPClientRequest(url: "https://127.0.0.1:\(port)/slow"),
+                        timeout: .seconds(30)
+                    )
+                    for await _ in handlerStarted {}
+
+                    // The handler stays blocked, so only the limit can end the connection before the client times out.
+                    let shutdownStarted = ContinuousClock.now
+                    await serviceGroup.triggerGracefulShutdown()
+                    do {
+                        let response = try await response
+                        Issue.record("Expected the connection to be closed, got \(response.status)")
+                    } catch {}
+                    #expect(ContinuousClock.now - shutdownStarted < .seconds(10))
+
+                    releaseHandlerContinuation.finish()
+                    try await group.waitForAll()
+                }
+            }
+        }
+    }
+
+    #if UnstableHTTP3
+    @Test("Server serves over HTTP/3", .timeLimit(.minutes(1)))
+    func servesOverHTTP3() async throws {
+        var logger = Logger(label: "http3-test")
+        logger.logLevel = .debug
+        try await withApp(logger: logger) { app in
+            let credentials = try TestCredentials.http3()
+            app.serverConfiguration.tlsConfiguration = .pemFile(
+                certificateChainPath: credentials.certificatePath,
+                privateKeyPath: credentials.privateKeyPath
+            )
+            // Offer HTTP/3 only.
+            app.serverConfiguration.httpVersions = [.http3]
+            app.get("hello") { _ in "world" }
+            app.get("version") { req in "\(req.version.major).\(req.version.minor)" }
+
+            try await withRunningServer(app) { port in
+                // The client defaults to `.automatic`, advertising both (and only) h2 and http/1.1 over ALPN.
+                // The server offers only h3, so the client should fail to negotiate a compatible protocol and throw an error.
+                try await withTLSClient(trustingOnly: credentials.nioCertificate) { client in
+                    _ = await #expect(throws: (any Error).self) {
+                        try await client.execute(
+                            HTTPClientRequest(url: "https://127.0.0.1:\(port)/hello"),
+                            timeout: .seconds(30)
+                        )
+                    }
+                }
+
+                let caCertURL = try #require(Bundle.module.url(forResource: "http3-cacert", withExtension: "pem"))
+                try await withTestHTTP3ClientConnection(
+                    ipAddress: "127.0.0.1",
+                    port: port,
+                    verificationConfiguration: .x509Certificates(trustRootsFilePath: caCertURL.path()),
+                    logger: .current,
+                    eventLoopGroup: MultiThreadedEventLoopGroup.singleton
+                ) { inbound, outbound in
+                    try await outbound.write(.head(.init(method: .get, scheme: "https", authority: "127.0.0.1:\(port)", path: "/hello")))
+                    try await outbound.write(.end(nil))
+
+                    for try await part in inbound {
+                        switch part {
+                        case .head(let header):
+                            #expect(header.status == .ok)
+                        case .body(let body):
+                            #expect(String(buffer: body) == "world")
+                        case .end:
+                            break
+                        }
+                    }
+                }
+
+                try await withTestHTTP3ClientConnection(
+                    ipAddress: "127.0.0.1",
+                    port: port,
+                    verificationConfiguration: .x509Certificates(trustRootsFilePath: caCertURL.path()),
+                    logger: .current,
+                    eventLoopGroup: MultiThreadedEventLoopGroup.singleton
+                ) { inbound, outbound in
+                    try await outbound.write(.head(.init(method: .get, scheme: "https", authority: "127.0.0.1:\(port)", path: "/version")))
+                    try await outbound.write(.end(nil))
+
+                    var body = ""
+                    for try await part in inbound {
+                        if case .body(let buffer) = part {
+                            body += String(buffer: buffer)
+                        }
+                    }
+                    #expect(body == "3.0")
+                }
+            }
+        }
+    }
+    #endif
 
     // MARK: - Client certificates
 
@@ -717,6 +867,23 @@ private struct TestCredentials {
             nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem)
         )
     }
+
+    #if UnstableHTTP3
+    static func http3() throws -> Self {
+        let certificateURL = try #require(Bundle.module.url(forResource: "http3", withExtension: "crt"))
+        let privateKeyURL = try #require(Bundle.module.url(forResource: "http3", withExtension: "key"))
+        let certificatePEM = try String(contentsOf: certificateURL, encoding: .utf8)
+        let privateKeyPEM = try String(contentsOf: privateKeyURL, encoding: .utf8)
+
+        return Self(
+            certificatePath: certificateURL.path(),
+            privateKeyPath: privateKeyURL.path(),
+            certificate: try Certificate(pemEncoded: certificatePEM),
+            privateKey: try Certificate.PrivateKey(pemEncoded: privateKeyPEM),
+            nioCertificate: try NIOSSLCertificate(bytes: Array(certificatePEM.utf8), format: .pem)
+        )
+    }
+    #endif
 }
 
 /// Generate a self-signed localhost certificate with SANs for hostname verification.
@@ -837,7 +1004,7 @@ extension LiveClientOptions {
 /// to tell which test's connection stalled, or whether it stalled at all versus never starting.
 private func withTLSClient<T>(
     trustingOnly trustedCertificate: NIOSSLCertificate? = nil,
-    verification: CertificateVerification = .fullVerification,
+    verification: NIOSSL::CertificateVerification = .fullVerification,
     httpVersion: HTTPClient.Configuration.HTTPVersion = .automatic,
     test: String = #function,
     _ body: (HTTPClient) async throws -> T
