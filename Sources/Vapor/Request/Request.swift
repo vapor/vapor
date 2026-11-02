@@ -23,6 +23,9 @@ public struct Request: CustomStringConvertible, Sendable {
     /// The header fields for this HTTP request.
     public var headers: HTTPFields
 
+    /// A convenient way to access the value of the ":protocol" pseudo header field.
+    let extendedConnectProtocol: String?
+
     /// A unique ID for the request.
     ///
     /// The request identifier is set to value of the `X-Request-Id` header when present, or to a
@@ -257,6 +260,7 @@ public struct Request: CustomStringConvertible, Sendable {
         url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
         headersNoUpdate headers: HTTPFields = .init(),
+        extendedConnectProtocol: String? = nil,
         collectedBody: Data? = nil,
         bodyStream: RequestBodyStream? = nil,
         remoteAddress: SocketAddress? = nil,
@@ -289,6 +293,7 @@ public struct Request: CustomStringConvertible, Sendable {
         self.parameters = .init()
         self.url = url
         self.headers = headers
+        self.extendedConnectProtocol = extendedConnectProtocol
         self.contentConfiguration = contentConfiguration
         self.maxBodySize = defaultMaxBodySize
     }
@@ -306,6 +311,7 @@ public struct Request: CustomStringConvertible, Sendable {
         self.parameters = parameters
         self.url = other.url
         self.headers = other.headers
+        self.extendedConnectProtocol = other.extendedConnectProtocol
         self.contentConfiguration = other.contentConfiguration
         self.maxBodySize = other.maxBodySize
         self.localAddress = other.localAddress
