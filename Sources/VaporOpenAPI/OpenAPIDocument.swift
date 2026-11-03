@@ -1,5 +1,13 @@
 #if OpenAPI
+import HTTPTypes
 import OpenAPIKit
+public import Vapor
+
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 
 /// An OpenAPI document describing an app's routes, ready to be encoded as JSON.
 ///
@@ -10,6 +18,24 @@ public struct OpenAPIDocument: Encodable, Sendable {
 
     public func encode(to encoder: any Encoder) throws {
         try document.encode(to: encoder)
+    }
+
+    /// The document as JSON, with sorted keys so it's the same on every run.
+    ///
+    /// Without sorting, `JSONEncoder` writes an object's keys in a different order each time.
+    public func json() throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return try encoder.encode(self)
+    }
+}
+
+extension OpenAPIDocument: ResponseEncodable {
+    /// The document as a JSON response.
+    public func encodeResponse(for request: Request) async throws -> Response {
+        var headers = HTTPFields()
+        headers.contentType = .json
+        return Response(headers: headers, body: .init(data: try json()))
     }
 }
 
