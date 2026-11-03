@@ -273,4 +273,33 @@ final class MiddlewareTests: XCTestCase {
 
         await app.server.shutdown()
     }
+
+    func testTracingMiddlewareUsesTaskLocalTracer() async throws {
+        let tracer = TestTracer()
+        // Create the application inside the scope. Send the request outside the scope.
+        // Vapor creates requests on a NIO event loop, where no task-local value exists.
+        let scopedApp = try await withTracer(tracer) {
+            try await Application.make(.testing)
+        }
+        scopedApp.traceAutoPropagation = true
+
+        scopedApp.grouped(TracingMiddleware()).get("testTaskLocalTracer") { req async throws -> String in
+            // The task-local tracer is the application's tracer, not the bootstrapped one.
+            XCTAssertTrue((InstrumentationSystem.tracer as AnyObject) === tracer)
+            XCTAssertTrue((req.tracer as AnyObject) === tracer)
+            // A span created inside the handler goes to the same tracer.
+            try await withSpan("child") { _ in }
+            return "done"
+        }
+
+        try await scopedApp.testable().test(.GET, "testTaskLocalTracer") { res async in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "done")
+        }
+
+        XCTAssertNotNil(tracer.spans.first(where: { $0.operationName == "GET /testTaskLocalTracer" }))
+        XCTAssertNotNil(tracer.spans.first(where: { $0.operationName == "child" }))
+
+        try await scopedApp.asyncShutdown()
+    }
 }

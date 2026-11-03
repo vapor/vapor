@@ -49,10 +49,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
         
         // Swift tracing API
-        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.1.0"),
-        
-        // Swift service context
-        .package(url: "https://github.com/apple/swift-service-context.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.7.2"),
 
         // Swift collection algorithms
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
@@ -87,7 +84,6 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
-                .product(name: "ServiceContextModule", package: "swift-service-context"),
                 .product(name: "NIO", package: "swift-nio"),
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
                 .product(name: "NIOCore", package: "swift-nio"),

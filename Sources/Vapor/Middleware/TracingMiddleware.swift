@@ -22,9 +22,10 @@ public final class TracingMiddleware: AsyncMiddleware {
     
     public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         var parentContext = request.serviceContext
-        InstrumentationSystem.instrument.extract(request.headers, into: &parentContext, using: HTTPHeadersExtractor())
+        let tracer = request.tracer
+        tracer.extract(request.headers, into: &parentContext, using: HTTPHeadersExtractor())
         
-        return try await withSpan(
+        return try await tracer.withSpan(
             // Name: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
             request.route?.description ?? "vapor_route_undefined",
             context: parentContext,
