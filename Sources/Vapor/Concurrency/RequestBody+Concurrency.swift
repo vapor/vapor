@@ -135,6 +135,10 @@ extension Request.Body: AsyncSequence {
         )
         
         let source = producer.source
+        // NIO may call `produceMore()` before the first `yield`, answering no `.stopProducing`.
+        // After the hop to the event loop, that call can resume a later pause (#3621).
+        // Yielding nothing first makes every `produceMore()` answer exactly one `.stopProducing`.
+        _ = source.yield(contentsOf: [])
         
         self.drain { streamResult in
             switch streamResult {
