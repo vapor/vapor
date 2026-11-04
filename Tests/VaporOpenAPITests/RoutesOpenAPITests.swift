@@ -24,6 +24,7 @@ private enum PetID: OpenAPILinkKey {
 private enum Unused: OpenAPILinkKey {}
 private struct Identified: Codable { var id: String }
 private struct Owner: Codable { var name: String }
+private struct Cat: Content { var name: String }
 private struct Toy: Codable {
     var name: String
     var owner: Owner
@@ -67,7 +68,7 @@ struct RoutesOpenAPITests {
         }
         #expect(json.contains(#""/pets":{"get":"#))
         #expect(json.contains(#""post":{"#))
-        #expect(json.contains(#""201":{"description":"Created"}"#))
+        #expect(json.contains(#""201":{"content":{"text/plain":{"schema":{"type":"string"}}},"description":"Created"}"#))
         #expect(
             json.contains(
                 ##""requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}},"required":true}"##))
@@ -289,6 +290,65 @@ struct RoutesOpenAPITests {
                 app.openAPI(auth: [.basic(id: "token")]).get("b") { _ in "b" }
             }
         }
+    }
+
+    @Test("A handler's return type is the response body, when no response is described")
+    func handlerResponse() async throws {
+        let json = try await document { app in
+            app.get("cats") { _ in Cat(name: "Tom") }
+        }
+        #expect(
+            json.contains(##""200":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Cat"}}},"description":"OK"}"##))
+    }
+
+    @Test("A handler returning a string or a number is sent as plain text")
+    func plainTextHandler() async throws {
+        let json = try await document { app in
+            app.get("name") { _ in "Tom" }
+            app.get("count") { _ in 3 }
+        }
+        #expect(json.contains(#""200":{"content":{"text/plain":{"schema":{"type":"string"}}},"description":"OK"}"#))
+        #expect(json.contains(#""200":{"content":{"text/plain":{"schema":{"format":"int64","type":"integer"}}},"description":"OK"}"#))
+    }
+
+    @Test("A handler returning a response has no body")
+    func responseHandler() async throws {
+        let json = try await document { app in
+            app.get("raw") { _ in Response(status: .ok) }
+        }
+        #expect(json.contains(#""200":{"description":"OK"}"#))
+    }
+
+    @Test("A described response replaces the handler's return type")
+    func describedResponse() async throws {
+        let json = try await document { app in
+            app.openAPI(response: .type(Pet.self)).get("pet") { _ in "Tom" }
+        }
+        #expect(
+            json.contains(##""200":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}},"description":"OK"}"##))
+        #expect(!json.contains("text/plain"))
+    }
+
+    @Test("A described string response is sent as plain text, unless content types are given")
+    func describedContentTypes() async throws {
+        let json = try await document { app in
+            app.openAPI(response: .type(String.self)).get("plain") { _ in Response(status: .ok) }
+            app.openAPI(response: .example("Tom")).get("example") { _ in Response(status: .ok) }
+            app.openAPI(responseContentTypes: [.html]).get("page") { _ in "<p>Tom</p>" }
+        }
+        #expect(json.contains(#""/plain":{"get":{"responses":{"200":{"content":{"text/plain":"#))
+        #expect(json.contains(#""/example":{"get":{"responses":{"200":{"content":{"text/plain":"#))
+        #expect(json.contains(#""/page":{"get":{"responses":{"200":{"content":{"text/html":"#))
+    }
+
+    @Test("A composition is sent as its parts are, or as JSON when they differ")
+    func compositionContentType() async throws {
+        let json = try await document { app in
+            app.openAPI(response: .one(of: .type(String.self), .example("Tom"))).get("same") { _ in Response(status: .ok) }
+            app.openAPI(response: .one(of: .type(String.self), .type(Cat.self))).get("mixed") { _ in Response(status: .ok) }
+        }
+        #expect(json.contains(#""/same":{"get":{"responses":{"200":{"content":{"text/plain":"#))
+        #expect(json.contains(#""/mixed":{"get":{"responses":{"200":{"content":{"application/json":"#))
     }
 }
 #endif

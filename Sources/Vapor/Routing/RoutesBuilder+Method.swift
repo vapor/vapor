@@ -167,10 +167,20 @@ extension RoutesBuilder {
             path: path,
             responder: responder,
             requestType: Request.self,
-            responseType: Response.self,
+            responseType: handlerResponseType(of: closure),
             routeDescription: routeDescription
         )
         self.add(route)
         return route
+    }
+
+    private func handlerResponseType<R: ResponseEncodable>(
+        of _: @Sendable (Request) async throws -> R
+    ) -> Any.Type {
+        #if OpenAPI
+        R.self
+        #else
+        Response.self
+        #endif
     }
 }

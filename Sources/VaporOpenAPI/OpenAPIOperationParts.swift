@@ -43,8 +43,14 @@ extension Route {
         let details = openAPIRoute
         let status = details.statusCode ?? .ok
         let body = details.response?.value ?? handlerResponse
+        // Without content types of its own, the body is sent as Vapor sends it, such as a `String`
+        // as `text/plain`.
+        let contentTypes =
+            details.responseContentTypes.isEmpty
+            ? body?.defaultContentType.map { [$0] } ?? []
+            : details.responseContentTypes
         let content =
-            try body.map { try OpenAPI.Content.map($0, contentTypes: details.responseContentTypes, into: &components) }
+            try body.map { try OpenAPI.Content.map($0, contentTypes: contentTypes, into: &components) }
             ?? [:]
         let headers = try details.responseHeaders.map { try OpenAPI.Header.map($0, into: &components) }
         let response = OpenAPI.Response(
@@ -68,6 +74,33 @@ extension Route {
         let auth = openAPIRoute.auth
         guard !auth.isEmpty else { return nil }
         return auth.map { [.component(named: $0.id): $0.scopes] }
+    }
+}
+
+extension OpenAPIValue {
+    /// The content type Vapor sends this value as, from its `Content` conformance.
+    ///
+    /// `nil` when that isn't known, such as for a type that isn't `Content`, or a composition
+    /// whose parts are sent differently.
+    var defaultContentType: HTTPMediaType? {
+        switch self {
+        case .type(let type):
+            (type as? any Content.Type)?.defaultContentType
+        case .example(let value):
+            (Swift.type(of: value) as? any Content.Type)?.defaultContentType
+        case .allOf(let values), .anyOf(let values), .oneOf(let values):
+            Self.shared(values.map(\.defaultContentType))
+        case .not:
+            nil
+        }
+    }
+
+    /// The content type all of `types` share, if they're all known and the same.
+    private static func shared(_ types: [HTTPMediaType?]) -> HTTPMediaType? {
+        guard let first = types.first, let first,
+            types.allSatisfy({ $0?.description == first.description })
+        else { return nil }
+        return first
     }
 }
 
