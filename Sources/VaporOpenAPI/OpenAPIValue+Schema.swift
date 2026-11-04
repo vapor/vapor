@@ -10,8 +10,7 @@ import Foundation
 extension OpenAPIValue {
     /// The schema this value describes, and its example when it's a single `.example`.
     ///
-    /// Combinations have no example, as in VaporToOpenAPI: merging their parts' examples rarely
-    /// gives a value that matches.
+    /// Combinations have no example: merging their parts' examples rarely gives a value that matches.
     func schema(into components: inout SchemaComponents) throws -> (schema: JSONSchema, example: AnyCodable?) {
         // Inout changes survive a throw, so drop what earlier parts of a combination stored.
         let saved = components

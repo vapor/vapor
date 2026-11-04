@@ -3,7 +3,7 @@ import Vapor
 
 /// Adds OpenAPI details to every route registered through it, then passes the route on.
 ///
-/// The same pattern as Vapor's `grouped(_:)` builders, and VaporToOpenAPI's `HTTPRoutesGroup`.
+/// The same pattern as Vapor's `grouped(_:)` builders.
 struct OpenAPIRoutesGroup: RoutesBuilder {
     let root: any RoutesBuilder
     let map: (inout OpenAPIRoute) -> Void
