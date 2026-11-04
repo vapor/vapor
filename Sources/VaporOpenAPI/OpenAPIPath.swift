@@ -11,12 +11,22 @@ struct OpenAPIPath {
 
     /// The template for `components`.
     ///
-    /// A `*` becomes a parameter named `anything`, since it matches one segment of any value. A
-    /// `**` can't be described: OpenAPI's path parameters never span segments. Nor can a constant
-    /// with braces, which a template would read as a parameter.
+    /// A `*` becomes a parameter named `anything`, since it matches one segment of any value, or
+    /// `anything2` and so on when the route already uses that name. A `**` can't be described:
+    /// OpenAPI's path parameters never span segments. Nor can a constant with braces, which a
+    /// template would read as a parameter.
     init(_ components: [PathComponent]) throws(Unsupported) {
         var segments: [String] = []
         var parameters: [String] = []
+        // Names the route gives its parameters, which a `*` mustn't take.
+        var taken = Set<String>()
+        for component in components {
+            switch component {
+            case .parameter(let name): taken.insert(name)
+            case .partialParameter(_, _, let names): taken.formUnion(names.map(String.init))
+            default: break
+            }
+        }
         var anythings = 0
         for component in components {
             switch component {
@@ -41,8 +51,11 @@ struct OpenAPIPath {
                 segments.append(template.hasPrefix(":") ? String(template.dropFirst()) : template)
                 parameters += names.map(String.init)
             case .anything:
-                anythings += 1
-                let name = anythings == 1 ? "anything" : "anything\(anythings)"
+                var name: String
+                repeat {
+                    anythings += 1
+                    name = anythings == 1 ? "anything" : "anything\(anythings)"
+                } while taken.contains(name)
                 segments.append("{\(name)}")
                 parameters.append(name)
             case .catchall:

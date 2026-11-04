@@ -15,10 +15,21 @@ extension Routes {
         var components = SchemaComponents()
         var paths: OpenAPI.PathItem.Map = [:]
         var ends = [LinkEnd]()
+        // Each path by its shape, for the routes that differ only in their parameters' names.
+        var shapes: [String: (path: OpenAPI.Path, route: Route)] = [:]
         try routes.requireUniqueOperationIDs()
 
         for route in routes {
             let (path, operation) = try route.operation(into: &components)
+            let shape = path.shape
+            if let first = shapes[shape], first.path != path {
+                throw OpenAPIDocumentError(
+                    route: route.description,
+                    reason:
+                        "is the same path to OpenAPI as \(first.route.description), since only their parameters' names differ. Give their parameters the same names."
+                )
+            }
+            shapes[shape] = shapes[shape] ?? (path, route)
             var item = paths[path]?.pathItemValue ?? OpenAPI.PathItem()
             let method = OpenAPI.HttpMethod(route.method)
             guard item[method] == nil else {
@@ -116,4 +127,25 @@ extension Routes {
     }
 }
 
+extension OpenAPI.Path {
+    /// The path with its parameters' names left out, such as `/users/{}` for `/users/{id}`.
+    ///
+    /// OpenAPI treats paths with the same shape as the same path, so they can't both be in a document.
+    var shape: String {
+        var shape = ""
+        var inParameter = false
+        for character in rawValue {
+            switch character {
+            case "{":
+                inParameter = true
+                shape.append("{}")
+            case "}":
+                inParameter = false
+            default:
+                if !inParameter { shape.append(character) }
+            }
+        }
+        return shape
+    }
+}
 #endif
