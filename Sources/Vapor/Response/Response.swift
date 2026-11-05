@@ -45,6 +45,7 @@ public struct Response: CustomStringConvertible, Sendable {
 
     #if UnstableWebTransport
     let webTransportSession: (@Sendable (consuming WebTransportSession) async throws -> Void)?
+    let webTransportApplicationProtocol: String?
     #endif
 
     /// Get and set `HTTPCookies` for this `Response`.
@@ -158,6 +159,7 @@ public struct Response: CustomStringConvertible, Sendable {
 
         #if UnstableWebTransport
         self.webTransportSession = nil
+        self.webTransportApplicationProtocol = nil
         #endif
     }
 
@@ -166,11 +168,13 @@ public struct Response: CustomStringConvertible, Sendable {
         status: HTTPResponse.Status = .ok,
         headers: HTTPFields = .init(),
         webTransportSession: (@Sendable (consuming WebTransportSession) async throws -> Void)?,
+        webTransportApplicationProtocol: String?,
         contentConfiguration: ContentConfiguration = .default()
     ) {
         self.headers = headers
         self.body = .empty
         self.webTransportSession = webTransportSession
+        self.webTransportApplicationProtocol = webTransportApplicationProtocol
         self.contentConfiguration = contentConfiguration
         self.status = status
     }

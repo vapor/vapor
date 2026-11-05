@@ -119,8 +119,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
             }
 
             #if UnstableWebTransport
-            if
-                let operation = vaporResponse.webTransportSession,
+            if let operation = vaporResponse.webTransportSession,
                 let webTransportStreamCreator = self.webTransportStreamCreator,
                 let unwrappedUniStreams = uniStreams,
                 let unwrappedBiStreams = biStreams,
@@ -135,6 +134,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
 
                 let context = requestContext
                 let webTransportSession = WebTransportSession(
+                    applicationProtocol: vaporResponse.webTransportApplicationProtocol,
                     streamCreator: webTransportStreamCreator,
                     requestContext: context,
                     incomingUnidirectionalStreams: unwrappedUniStreams,

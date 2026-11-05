@@ -70,7 +70,7 @@ func routes(_ app: Application) async throws {
     //    }
 
     #if UnstableWebTransport
-    app.webTransport("webtransport") { session in
+    app.webTransport("webtransport", availableProtocols: ["webtransport-test", "webtransport-test-2"]) { session in
         await withThrowingTaskGroup { group in
             group.addTask {
                 try await withThrowingDiscardingTaskGroup { streamsGroup in

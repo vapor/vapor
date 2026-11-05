@@ -6,6 +6,9 @@ import Synchronization
 
 /// A single WebTransport session opened over an HTTP/3 connection.
 public struct WebTransportSession: Sendable, ~Copyable {
+    /// A string representing the application-specific protocol selected by the server, or `nil` if none has been selected.
+    public let applicationProtocol: String?
+
     private let streamCreator: NIOHTTPServer.Connection.WebTransportStreamCreator
     private let requestContext: NIOHTTPServer.RequestContext
 
@@ -17,11 +20,13 @@ public struct WebTransportSession: Sendable, ~Copyable {
     public let incomingBidirectionalStreams: AsyncStream<NIOAsyncChannel<ByteBuffer, ByteBuffer>>
 
     init(
+        applicationProtocol: String?,
         streamCreator: NIOHTTPServer.Connection.WebTransportStreamCreator,
         requestContext: NIOHTTPServer.RequestContext,
         incomingUnidirectionalStreams: AsyncStream<NIOAsyncChannel<ByteBuffer, Never>>,
         incomingBidirectionalStreams: AsyncStream<NIOAsyncChannel<ByteBuffer, ByteBuffer>>
     ) {
+        self.applicationProtocol = applicationProtocol
         self.streamCreator = streamCreator
         self.requestContext = requestContext
         self.incomingUnidirectionalStreams = incomingUnidirectionalStreams

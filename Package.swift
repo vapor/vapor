@@ -112,6 +112,9 @@ let package = Package(
             ]
         ),
 
+        // A Swift implementation of the HTTP Structured Header Field specification.
+        .package(url: "https://github.com/apple/swift-http-structured-headers.git", from: "1.2.0"),
+
         // HTTP/3 and QUIC support for SwiftNIO - used for testing
         .package(url: "https://github.com/fpseverino/swift-nio-http3.git", branch: "webtransport-server"),
         .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.6.0")),
@@ -150,6 +153,11 @@ let package = Package(
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "NIOHTTPServer", package: "swift-http-server"),
                 .product(name: "SystemPackage", package: "swift-system"),
+                .product(
+                    name: "RawStructuredFieldValues",
+                    package: "swift-http-structured-headers",
+                    condition: .when(traits: ["UnstableWebTransport"])
+                ),
             ],
             swiftSettings: swiftSettings
         ),
