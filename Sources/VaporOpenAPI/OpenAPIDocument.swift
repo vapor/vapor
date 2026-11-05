@@ -33,9 +33,7 @@ public struct OpenAPIDocument: Encodable, Sendable {
 extension OpenAPIDocument: ResponseEncodable {
     /// The document as a JSON response.
     public func encodeResponse(for request: Request) async throws -> Response {
-        var headers = HTTPFields()
-        headers.contentType = .json
-        return Response(headers: headers, body: .init(data: try json()))
+        .openAPIJSON(try json())
     }
 }
 
@@ -63,11 +61,17 @@ public struct OpenAPIInfo: Sendable {
 }
 
 /// A route the document can't describe, and why.
-struct OpenAPIDocumentError: Error, CustomStringConvertible {
-    /// The route, such as `GET /users/:id`.
-    var route: String
-    var reason: String
+public struct OpenAPIDocumentError: Error, CustomStringConvertible, Sendable {
+    /// The route, such as `GET /users/:id`, or for a link, its name, such as `link "GetUser"`.
+    public var route: String
+    /// Why the route can't be described.
+    public var reason: String
 
-    var description: String { "\(route): \(reason)" }
+    init(route: String, reason: String) {
+        self.route = route
+        self.reason = reason
+    }
+
+    public var description: String { "\(route): \(reason)" }
 }
 #endif

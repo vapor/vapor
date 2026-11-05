@@ -26,17 +26,33 @@ struct PublicDocumentationAPITests {
             app.hiddenFromOpenAPI().get("health") { _ in "ok" }
             let info = OpenAPIInfo(title: "Models", version: "1.0.0")
             app.openAPIDocumentation("docs", info: info)
-            app.routes.openAPIDocumentation(["routes-docs"], info: info)
-            app.grouped("admin").openAPIDocumentation(["docs"], of: app.routes, info: info, title: "Admin")
-            // A handler can return the document as it is. It holds the app weakly, since the app
-            // keeps the route, and a strong reference would keep the app alive forever.
-            app.get("spec") { [weak app] _ in
-                guard let app else { throw Abort(.serviceUnavailable) }
-                return try app.routes.openAPI(info: info)
-            }
+            app.routes.openAPIDocumentation(["routes-docs"], of: app, info: info)
+            app.grouped("admin").openAPIDocumentation(["docs"], of: app, info: info, title: "Admin")
+            // A document built by hand can be returned as it is, and holds no reference to the app.
             let document: OpenAPIDocument = try app.routes.openAPI(info: info)
+            app.get("spec") { _ in document }
             let json: Data = try document.json()
             #expect(!json.isEmpty)
+            try await app.testing { client in
+                for path in ["/docs/openapi.json", "/routes-docs/openapi.json", "/admin/docs/openapi.json", "/spec"] {
+                    let response = try await client.get(URI(path: path))
+                    #expect(response.status == .ok, "\(path)")
+                }
+            }
+        }
+    }
+
+    @Test("A route that can't be described is reported by a public error")
+    func publicError() async throws {
+        try await withApp { app in
+            app.get("files", "**") { _ in "file" }
+            do {
+                _ = try app.routes.openAPI(info: OpenAPIInfo(title: "Files", version: "1.0.0"))
+                Issue.record("Expected the document to fail")
+            } catch let error as OpenAPIDocumentError {
+                #expect(error.route == "GET /files/**")
+                #expect(error.reason.contains("hiddenFromOpenAPI()"))
+            }
         }
     }
 }

@@ -108,7 +108,8 @@ extension Routes {
 
     private static func componentKey(_ name: String) throws -> OpenAPI.ComponentKey {
         guard let key = OpenAPI.ComponentKey(rawValue: name) else {
-            throw OpenAPIDocumentError(route: name, reason: "isn't a valid name for a link")
+            // Names aren't tied to one route, so the error names the link instead.
+            throw OpenAPIDocumentError(route: "link \"\(name)\"", reason: "isn't a valid name for a link")
         }
         return key
     }

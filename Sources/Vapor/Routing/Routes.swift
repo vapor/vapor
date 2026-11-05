@@ -26,14 +26,6 @@ package struct RouteStorage: Sendable {
 public struct Routes: RoutesBuilder, CustomStringConvertible, Sendable {
     let application: Application
 
-    #if OpenAPI
-    /// The application these routes belong to.
-    ///
-    /// For VaporOpenAPI's documentation routes, which hold it weakly: a route that held it strongly
-    /// would keep the application alive through its own routes.
-    package var owner: Application { application }
-    #endif
-
     public var all: [Route] {
         get { self.application._routes.value.all }
         nonmutating set { self.application._routes.withValue { $0.all = newValue } }

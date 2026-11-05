@@ -257,13 +257,23 @@ struct EdgeCaseTests {
         #expect(json.contains(#""nickname":{"type":"string"}"#))
     }
 
-    @Test("A type that decodes a nested container fails, naming the route and the key")
+    @Test("A described type that decodes a nested container fails, naming the route and the key")
     func nestedContainer() async throws {
         let error = await #expect(throws: OpenAPIDocumentError.self) {
-            try await document { app in app.get("wrapped") { _ in Wrapped(name: "Tom") } }
+            try await document { app in
+                app.openAPI(response: .type(Wrapped.self)).get("wrapped") { _ in Wrapped(name: "Tom") }
+            }
         }
         #expect(error?.route == "GET /wrapped")
         #expect(error?.reason.contains("Nested containers aren't supported yet") == true)
+    }
+
+    @Test("A handler's type that can't be described is left out, and stores no schema")
+    func undescribableHandlerType() async throws {
+        let document = try await document { app in app.get("wrapped") { _ in Wrapped(name: "Tom") } }
+        let json = try json(document)
+        #expect(json.contains(#""/wrapped":{"get":{"responses":{"200":{"description":"OK"}}}}"#))
+        #expect(!json.contains("Wrapped"))
     }
 
     @Test("A type that decodes a nested container can describe its own schema instead")

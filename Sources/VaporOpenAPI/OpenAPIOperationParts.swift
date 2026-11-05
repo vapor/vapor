@@ -1,5 +1,6 @@
 #if OpenAPI
 import HTTPTypes
+import Logging
 import OpenAPIKit
 import Vapor
 
@@ -49,9 +50,20 @@ extension Route {
             details.responseContentTypes.isEmpty
             ? body?.defaultContentType.map { [$0] } ?? []
             : details.responseContentTypes
-        let content =
-            try body.map { try OpenAPI.Content.map($0, contentTypes: contentTypes, into: &components) }
-            ?? [:]
+        var content: OpenAPI.Content.Map = [:]
+        if let body {
+            do {
+                content = try OpenAPI.Content.map(body, contentTypes: contentTypes, into: &components)
+            } catch {
+                // The route didn't describe its response, so one its handler's type can't give is
+                // left out rather than failing the document. `schema(into:)` has already undone
+                // what it stored.
+                guard details.response == nil else { throw error }
+                Logger.current.debug(
+                    "\(description): its handler's type isn't in the document. Describe it with openAPI(response:) or OpenAPISchemaProvider. \(error)"
+                )
+            }
+        }
         let headers = try details.responseHeaders.map { try OpenAPI.Header.map($0, into: &components) }
         let response = OpenAPI.Response(
             description: details.responseDescription ?? status.reasonPhrase,
