@@ -43,6 +43,11 @@ public struct Response: CustomStringConvertible, Sendable {
     //        }
     //    }
 
+    #if UnstableWebTransport
+    let webTransportSession: (@Sendable (consuming WebTransportSession) async throws -> Void)?
+    let webTransportApplicationProtocol: String?
+    #endif
+
     /// Get and set `HTTPCookies` for this `Response`.
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
@@ -151,7 +156,29 @@ public struct Response: CustomStringConvertible, Sendable {
         self.body = body
         self.contentConfiguration = contentConfiguration
         self.status = status
+
+        #if UnstableWebTransport
+        self.webTransportSession = nil
+        self.webTransportApplicationProtocol = nil
+        #endif
     }
+
+    #if UnstableWebTransport
+    init(
+        status: HTTPResponse.Status = .ok,
+        headers: HTTPFields = .init(),
+        webTransportSession: (@Sendable (consuming WebTransportSession) async throws -> Void)?,
+        webTransportApplicationProtocol: String?,
+        contentConfiguration: ContentConfiguration = .default()
+    ) {
+        self.headers = headers
+        self.body = .empty
+        self.webTransportSession = webTransportSession
+        self.webTransportApplicationProtocol = webTransportApplicationProtocol
+        self.contentConfiguration = contentConfiguration
+        self.status = status
+    }
+    #endif
 }
 
 extension HTTPFields {

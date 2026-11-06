@@ -21,6 +21,7 @@ let package = Package(
         .trait(name: "Multipart"),
         .trait(name: "MacroRouting"),
         .trait(name: "UnstableHTTP3"),
+        .trait(name: "UnstableWebTransport", enabledTraits: ["UnstableHTTP3"]),
         .default(enabledTraits: [
             "WebSockets",
             "HTTPClient",
@@ -102,13 +103,20 @@ let package = Package(
 
         // HTTP Server for low level request and response handling
         .package(
-            url: "https://github.com/swift-server/swift-http-server.git",
-            .upToNextMinor(from: "0.4.0"),
-            traits: [.defaults, .trait(name: "HTTP3", condition: .when(traits: ["UnstableHTTP3"]))]
+            url: "https://github.com/fpseverino/swift-http-server.git",
+            branch: "webtransport",
+            traits: [
+                .defaults,
+                .trait(name: "HTTP3", condition: .when(traits: ["UnstableHTTP3"])),
+                .trait(name: "UnstableWebTransport", condition: .when(traits: ["UnstableWebTransport"])),
+            ]
         ),
 
+        // A Swift implementation of the HTTP Structured Header Field specification.
+        .package(url: "https://github.com/apple/swift-http-structured-headers.git", from: "1.2.0"),
+
         // HTTP/3 and QUIC support for SwiftNIO - used for testing
-        .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/fpseverino/swift-nio-http3.git", branch: "webtransport-server"),
         .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.6.0")),
     ],
     targets: [
@@ -145,6 +153,11 @@ let package = Package(
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "NIOHTTPServer", package: "swift-http-server"),
                 .product(name: "SystemPackage", package: "swift-system"),
+                .product(
+                    name: "RawStructuredFieldValues",
+                    package: "swift-http-structured-headers",
+                    condition: .when(traits: ["UnstableWebTransport"])
+                ),
             ],
             swiftSettings: swiftSettings
         ),

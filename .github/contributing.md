@@ -20,6 +20,18 @@ If you want to run the development server with TLS enabled, use the command belo
 swift run Development --vapor-env tls
 ```
 
+If you want to run the development server with HTTP/3 enabled, use the command below:
+
+```sh
+swift run --traits UnstableHTTP3 Development --vapor-env http3
+```
+
+If you want to run the development server with WebTransport enabled, use the command below:
+
+```sh
+swift run --traits UnstableWebTransport Development --vapor-env http3
+```
+
 Don't forget to add tests for your new features.
 
 If you are fixing a single GitHub issue in particular, you can add a test with a `.bug("https://github.com/vapor/vapor/issues/<issue number>")` trait to ensure that your fix is working.
