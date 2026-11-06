@@ -109,6 +109,30 @@ struct QueryTests {
         }
     }
 
+    @Test("Query contains reports key presence", .bug("https://github.com/vapor/vapor/issues/3343"))
+    func testQueryContains() async throws {
+        try await withApp { app throws in
+            let withValue = Request(
+                method: .get,
+                url: .init(string: "/path?foo=a")
+            )
+            #expect(try withValue.query.contains(at: "foo") == true)
+            #expect(try withValue.query.contains(at: "bar") == false)
+
+            let withInt = Request(
+                method: .get,
+                url: .init(string: "/path?foo=1")
+            )
+            #expect(try withInt.query.contains(at: "foo") == true)
+
+            let empty = Request(
+                method: .get,
+                url: .init(string: "/path")
+            )
+            #expect(try empty.query.contains(at: "foo") == false)
+        }
+    }
+
     @Test("Test Query String Running", .bug("https://github.com/vapor/vapor/issues/1537"))
     func testQueryStringRunning() async throws {
         try await withApp { app throws in
