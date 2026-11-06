@@ -13,6 +13,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         case ready
         case pending(Request, UpgradeBufferHandler)
         case upgraded
+        case closing
     }
     
     
@@ -30,6 +31,8 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        // A rejected upgrade retires this HTTP/1 connection.
+        if case .closing = self.upgradeState { return }
         let req = self.unwrapInboundIn(data)
         
         // check if request is upgrade
@@ -102,13 +105,40 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     return sendableBox.context.pipeline.syncOperations.removeHandler(sendableBox.buffer)
                 }.cascadeFailure(to: promise)
             } else {
-                // reset handlers
-                self.upgradeState = .ready
-                context.channel.pipeline.syncOperations.removeHandler(buffer, promise: nil)
-                context.write(self.wrapOutboundOut(res), promise: promise)
+                // The HTTP decoder may stop parsing after an upgrade request even
+                // when its response rejects the upgrade. Do not advertise reuse or
+                // replay buffered bytes into that decoder.
+                self.upgradeState = .closing
+                buffer.discardBufferedInput()
+                res.headers.replaceOrAdd(name: .connection, value: "close")
+
+                // A private promise also covers callers that supplied no promise.
+                // Install the callback first: downstream writes can finish inline.
+                let written = context.eventLoop.makePromise(of: Void.self)
+                let contextBox = NIOLoopBound(context, eventLoop: context.eventLoop)
+                written.futureResult.whenComplete { result in
+                    let context = contextBox.value
+                    switch result {
+                    case .success:
+                        // Streaming response completion may precede the socket's
+                        // pending writes. Output close drains those writes; full
+                        // close is safe only after that operation completes.
+                        let drained = context.eventLoop.makePromise(of: Void.self)
+                        drained.futureResult.whenComplete { _ in
+                            contextBox.value.close(mode: .all, promise: nil)
+                        }
+                        context.close(mode: .output, promise: drained)
+                    case .failure:
+                        context.close(mode: .all, promise: nil)
+                    }
+                    promise?.completeWith(result)
+                }
+                context.write(self.wrapOutboundOut(res), promise: written)
             }
         case .ready, .upgraded:
             context.write(self.wrapOutboundOut(res), promise: promise)
+        case .closing:
+            promise?.fail(ChannelError.ioOnClosedChannel)
         }
     }
 }
@@ -117,12 +147,19 @@ private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChanne
     typealias InboundIn = ByteBuffer
     
     var buffer: [ByteBuffer]
+    private var discarding = false
     
     init() {
         self.buffer = []
     }
     
+    func discardBufferedInput() {
+        self.discarding = true
+        self.buffer.removeAll(keepingCapacity: false)
+    }
+
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        guard !self.discarding else { return }
         let data = self.unwrapInboundIn(data)
         self.buffer.append(data)
     }
