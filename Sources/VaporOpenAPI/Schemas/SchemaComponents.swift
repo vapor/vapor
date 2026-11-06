@@ -20,11 +20,10 @@ struct SchemaComponents: Sendable, Equatable {
         for type: Any.Type,
         describe: (inout SchemaComponents) throws -> JSONSchema
     ) rethrows -> JSONSchema {
-        let id = ObjectIdentifier(type)
-        if let key = names[id] {
-            referenced.insert(id)
-            return .reference(.component(named: key.rawValue))
+        if let reference = reference(to: type) {
+            return reference
         }
+        let id = ObjectIdentifier(type)
 
         let componentName = JSONSchema.componentName(for: type)
         var candidate = componentName
@@ -53,6 +52,15 @@ struct SchemaComponents: Sendable, Equatable {
             return schema
         }
         schemas[key] = schema
+        return .reference(.component(named: key.rawValue))
+    }
+
+    /// A `$ref` to `type`'s component if it's stored or being described, so it needn't be
+    /// described again.
+    mutating func reference(to type: Any.Type) -> JSONSchema? {
+        let id = ObjectIdentifier(type)
+        guard let key = names[id] else { return nil }
+        referenced.insert(id)
         return .reference(.component(named: key.rawValue))
     }
 

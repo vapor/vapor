@@ -2,6 +2,7 @@
 import HTTPTypes
 import OpenAPIKit
 import RoutingKit
+import Synchronization
 import Testing
 import Vapor
 @testable import VaporOpenAPI
@@ -103,6 +104,36 @@ private struct Tagged: Decodable {
 }
 
 private enum PetID: OpenAPILinkKey {}
+
+/// A JSON-like value: an enum that's also `ExpressibleByNilLiteral`, holding arrays of itself.
+private indirect enum JSONValue: Decodable, ExpressibleByNilLiteral {
+    case null
+    case array([JSONValue])
+
+    init(nilLiteral: ()) { self = .null }
+
+    init(from decoder: any Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        var items: [JSONValue] = []
+        while !container.isAtEnd { items.append(try container.decode(JSONValue.self)) }
+        self = .array(items)
+    }
+}
+
+/// Counts how often it's decoded.
+private struct Counted: Decodable {
+    static let decodes = Atomic(0)
+    var name: String
+
+    enum CodingKeys: String, CodingKey { case name }
+
+    init(from decoder: any Decoder) throws {
+        Self.decodes.add(1, ordering: .relaxed)
+        name = try decoder.container(keyedBy: CodingKeys.self).decode(String.self, forKey: .name)
+    }
+}
+
+private struct PetPath: Codable { var petID: Int }
 
 /// The document for the routes `configure` registers, checked by OpenAPIKit's validator.
 private func document(_ configure: (Application) throws -> Void) async throws -> OpenAPI.Document {
@@ -368,6 +399,44 @@ struct EdgeCaseTests {
                 .on(HTTPRequest.Method("PROPFIND")!, "pets", ":name") { _ in "x" }
         }
         #expect(try json(document).contains(##""operationRef":"#/paths/~1pets~1%7Bname%7D/additionalOperations/PROPFIND""##))
+    }
+
+    @Test("A type that's also an optional or collection and contains itself fails instead of recursing forever")
+    func recursiveWrapper() async throws {
+        let error = await #expect(throws: OpenAPIDocumentError.self) {
+            try await document { app in app.openAPI(response: .type(JSONValue.self)).get("json") { _ in "x" } }
+        }
+        #expect(error?.reason.contains("it contains itself, and is a collection or optional itself") == true)
+    }
+
+    @Test("A path: parameter the path doesn't have fails, listing the path's")
+    func unknownPathParameter() async throws {
+        let error = await #expect(throws: OpenAPIDocumentError.self) {
+            try await document { app in app.openAPI(path: .type(PetPath.self)).get("pets", ":id") { _ in "x" } }
+        }
+        #expect(error?.route == "GET /pets/:id")
+        #expect(error?.reason.contains(#"describe "petID", which isn't in the path. The path's parameters are "id"."#) == true)
+    }
+
+    @Test("A request body without content types of its own is in its type's default, as a response is")
+    func requestDefaultContentType() async throws {
+        let document = try await document { app in
+            app.openAPI(body: .type(String.self), response: .type(String.self)).post("echo") { _ in "x" }
+        }
+        let operation = document.paths["/echo"]?.pathItemValue?.post
+        #expect(operation?.requestBody?.b?.content.keys.map(\.rawValue) == ["text/plain"])
+        #expect(operation?.responses[status: 200]?.b?.content.keys.map(\.rawValue) == ["text/plain"])
+    }
+
+    @Test("A type used by many routes is decoded once")
+    func decodedOnce() async throws {
+        let before = Counted.decodes.load(ordering: .relaxed)
+        _ = try await document { app in
+            for name in ["a", "b", "c"] {
+                app.openAPI(response: .type(Counted.self)).get(PathComponent(stringLiteral: name)) { _ in "x" }
+            }
+        }
+        #expect(Counted.decodes.load(ordering: .relaxed) - before == 1)
     }
 
     // MARK: Info and documentation routes

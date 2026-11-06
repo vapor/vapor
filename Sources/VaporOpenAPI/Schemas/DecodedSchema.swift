@@ -16,6 +16,11 @@ extension JSONSchema {
         if let known = JSONSchema.schema(for: type) {
             return components.schema(for: type) { _ in known }
         }
+        // Decoding runs the type's `init(from:)` and its nested types' again, so a type already
+        // stored is only referred to.
+        if let stored = components.reference(to: type) {
+            return stored
+        }
         return schema(for: try SchemaDecoder.shape(of: type), into: &components)
     }
 

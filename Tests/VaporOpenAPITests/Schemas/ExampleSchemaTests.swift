@@ -76,6 +76,8 @@ struct ExampleSchemaTests {
             try JSONSchema.example(Report(title: "Q3"), into: &components)
         }
         #expect("\(error)".hasPrefix("Report is only Encodable"))
+        // The protocol to adopt, not the schema value it returns.
+        #expect("\(error)".hasSuffix("describe it with OpenAPISchemaProvider"))
         #expect(components.schemas.isEmpty)
     }
 

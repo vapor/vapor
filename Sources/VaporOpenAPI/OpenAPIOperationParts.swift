@@ -10,9 +10,15 @@ import Vapor
 extension Route {
     /// The path parameters: one per name in `path`, typed by the route's `path:` details where
     /// they have one, otherwise a required string.
+    ///
+    /// Throws when `path:` describes a parameter the path doesn't have, which would otherwise be
+    /// dropped, leaving the one meant, under another name, an untyped string.
     func pathParameters(_ path: OpenAPIPath, into components: inout SchemaComponents) throws -> [OpenAPI.Parameter] {
         var typed: [String: OpenAPI.Parameter] = [:]
         for parameter in try openAPIRoute.path?.value.parameters(in: .path, into: &components) ?? [] {
+            guard path.parameters.contains(parameter.name) else {
+                throw UnknownPathParameter(name: parameter.name, path: path.parameters)
+            }
             typed[parameter.name] = parameter
         }
         return path.parameters.map { name in
@@ -32,7 +38,10 @@ extension Route {
     func requestBody(into components: inout SchemaComponents) throws -> OpenAPI.Request? {
         let details = openAPIRoute
         guard let body = details.body else { return nil }
-        let content = try OpenAPI.Content.map(body.value, contentTypes: details.contentTypes, into: &components)
+        // As for responses: without content types of its own, the body is in the type's default.
+        let contentTypes =
+            details.contentTypes.isEmpty ? body.value.defaultContentType.map { [$0] } ?? [] : details.contentTypes
+        let content = try OpenAPI.Content.map(body.value, contentTypes: contentTypes, into: &components)
         return OpenAPI.Request(content: content, required: true)
     }
 
@@ -113,6 +122,17 @@ extension OpenAPIValue {
             types.allSatisfy({ $0?.description == first.description })
         else { return nil }
         return first
+    }
+}
+
+/// A `path:` parameter the route's path doesn't have.
+private struct UnknownPathParameter: Error, CustomStringConvertible {
+    var name: String
+    var path: [String]
+
+    var description: String {
+        let names = path.isEmpty ? "none" : path.map { "\"\($0)\"" }.joined(separator: ", ")
+        return "its path: details describe \"\(name)\", which isn't in the path. The path's parameters are \(names)."
     }
 }
 

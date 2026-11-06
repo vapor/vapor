@@ -64,8 +64,18 @@ final class SchemaDecoder {
             return (placeholder, DecodedShape(type: type, kind: .leaf))
         }
 
-        // Wrappers never recurse themselves; what they hold does.
-        if !Self.canBeEmpty(type), path.contains(where: { ObjectIdentifier($0) == ObjectIdentifier(type) }) {
+        let visits = path.count { ObjectIdentifier($0) == ObjectIdentifier(type) }
+        // Wrappers never recurse themselves; what they hold does, and is caught there first. One
+        // that turns up twice inside itself is a type of the user's that's also a collection or
+        // `ExpressibleByNilLiteral`, which would otherwise recurse until the stack runs out.
+        if Self.canBeEmpty(type), visits >= 2 {
+            throw SchemaDecodingError(
+                type: type,
+                codingPath: codingPath,
+                reason: "it contains itself, and is a collection or optional itself, so the recursion can't be ended"
+            )
+        }
+        if !Self.canBeEmpty(type), visits > 0 {
             let recursive = DecodedShape(type: type, kind: .recursive)
             if let cached = cache.values[ObjectIdentifier(type)] as? T {
                 return (cached, recursive)

@@ -38,7 +38,7 @@ extension JSONSchema {
 /// The example's type has no schema of its own and can't be decoded to work one out.
 private struct EncodableOnlyError: Error, CustomStringConvertible {
     var type: Any.Type
-    var description: String { "\(type) is only Encodable; make it Decodable, or describe it with OpenAPISchema" }
+    var description: String { "\(type) is only Encodable; make it Decodable, or describe it with OpenAPISchemaProvider" }
 }
 
 #endif
