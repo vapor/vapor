@@ -140,19 +140,23 @@ private class _Encoder: Encoder, _Container {
         self.configuration = configuration
     }
 
+    // `Codable` gives an encoder a single container. Replacing it would silently drop what was already encoded.
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key: CodingKey {
+        precondition(self.container == nil, "Requested multiple containers from the same encoder at '\(self.codingPath.dotPath)'")
         let container = KeyedContainer<Key>(codingPath: codingPath, configuration: configuration)
         self.container = container
         return .init(container)
     }
 
     func unkeyedContainer() -> any UnkeyedEncodingContainer {
+        precondition(self.container == nil, "Requested multiple containers from the same encoder at '\(self.codingPath.dotPath)'")
         let container = UnkeyedContainer(codingPath: codingPath, configuration: configuration)
         self.container = container
         return container
     }
 
     func singleValueContainer() -> any SingleValueEncodingContainer {
+        precondition(self.container == nil, "Requested multiple containers from the same encoder at '\(self.codingPath.dotPath)'")
         let container = SingleValueContainer(codingPath: codingPath, configuration: configuration)
         self.container = container
         return container
