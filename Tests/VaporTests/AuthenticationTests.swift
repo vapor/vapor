@@ -103,6 +103,48 @@ struct AuthenticationTests {
         }
     }
 
+    @Test("Test Credentials Authenticator with ContentDecodable credentials")
+    func credentialsAuthenticatorWithDecodeOnlyCredentials() async throws {
+        struct Test: Authenticatable {
+            static func authenticator() -> any RequestAuthenticator {
+                TestAuthenticator()
+            }
+
+            var name: String
+        }
+
+        struct LoginCredentials: ContentDecodable {
+            var username: String
+            var password: String
+        }
+
+        struct TestAuthenticator: CredentialsAuthenticator {
+            func authenticate(credentials: LoginCredentials, for request: Request) async throws {
+                if credentials.username == "test" && credentials.password == "secret" {
+                    let test = Test(name: "Vapor")
+                    request.auth.login(test)
+                }
+            }
+        }
+
+        try await withApp { app in
+            app.routes.grouped([
+                Test.authenticator(), Test.guardMiddleware(),
+            ]).post("login") { req -> String in
+                return try req.auth.require(Test.self).name
+            }
+
+            try await app.testing { client in
+                let unauthorisedResponse = try await client.post("/login", content: ["username": "test", "password": "wrong"])
+                #expect(unauthorisedResponse.status == .unauthorized)
+
+                let authorisedResponse = try await client.post("/login", content: ["username": "test", "password": "secret"])
+                #expect(authorisedResponse.status == .ok)
+                try #expect(await authorisedResponse.body.requireString() == "Vapor")
+            }
+        }
+    }
+
     @Test("Test Basic Authenticator WWW Authenticate Header")
     func basicAuthenticatorWWWAuthenticateHeader() async throws {
         struct TestAuthenticator: BasicAuthenticator {
