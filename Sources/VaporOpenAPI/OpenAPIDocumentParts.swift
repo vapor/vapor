@@ -13,14 +13,23 @@ extension OpenAPI.HttpMethod {
 extension [Route] {
     /// The security schemes the routes' auth refers to, by ID, in the order they first appear.
     ///
-    /// Throws when two different schemes share an ID, since one would silently replace the other.
+    /// Throws when two different schemes share an ID, since one would silently replace the other,
+    /// or when an ID can't be a component's key. Schemes that differ only in their descriptions
+    /// are the same scheme, and keep the first one's.
     func securitySchemes() throws -> OpenAPI.ComponentReferenceDictionary<OpenAPI.SecurityScheme> {
         var schemes: [String: (auth: OpenAPIAuth, route: Route)] = [:]
         var order: [String] = []
         for route in self {
             for auth in route.openAPIRoute.auth {
+                guard OpenAPI.ComponentKey(rawValue: auth.id) != nil else {
+                    throw OpenAPIDocumentError(
+                        route: route.description,
+                        reason:
+                            "its auth id \"\(auth.id)\" isn't a valid component name. Use only letters, digits, \".\", \"-\" and \"_\"."
+                    )
+                }
                 if let first = schemes[auth.id] {
-                    guard first.auth.scheme == auth.scheme else {
+                    guard first.auth.scheme.type == auth.scheme.type else {
                         throw OpenAPIDocumentError(
                             route: route.description,
                             reason:
@@ -35,6 +44,7 @@ extension [Route] {
         }
         var dictionary: OpenAPI.ComponentReferenceDictionary<OpenAPI.SecurityScheme> = [:]
         for id in order {
+            // Every ID was checked above.
             guard let key = OpenAPI.ComponentKey(rawValue: id), let auth = schemes[id]?.auth else { continue }
             dictionary[key] = .b(auth.scheme)
         }

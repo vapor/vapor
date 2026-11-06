@@ -73,6 +73,37 @@ private struct DescribedWrapped: Decodable, OpenAPISchemaProvider {
     }
 }
 
+/// Decodes its own field, then its superclass's from the same decoder.
+private class Animal: Decodable {
+    var id: Int
+}
+
+private final class Dog: Animal {
+    var breed: String
+
+    enum CodingKeys: String, CodingKey { case breed }
+
+    required init(from decoder: any Decoder) throws {
+        breed = try decoder.container(keyedBy: CodingKeys.self).decode(String.self, forKey: .breed)
+        try super.init(from: decoder)
+    }
+}
+
+/// Decodes another type's fields from its own decoder, then one of its own.
+private struct Tagged: Decodable {
+    var pet: Pet
+    var tag: String
+
+    enum CodingKeys: String, CodingKey { case tag }
+
+    init(from decoder: any Decoder) throws {
+        pet = try Pet(from: decoder)
+        tag = try decoder.container(keyedBy: CodingKeys.self).decode(String.self, forKey: .tag)
+    }
+}
+
+private enum PetID: OpenAPILinkKey {}
+
 /// The document for the routes `configure` registers, checked by OpenAPIKit's validator.
 private func document(_ configure: (Application) throws -> Void) async throws -> OpenAPI.Document {
     try await withApp { app in
@@ -282,6 +313,61 @@ struct EdgeCaseTests {
             app.openAPI(response: .type(DescribedWrapped.self)).get("wrapped") { _ in "x" }
         }
         #expect(try json(document).contains(#""data":{"properties":{"name":{"type":"string"}}"#))
+    }
+
+    // MARK: Review fixes
+
+    @Test("A subclass's fields and its superclass's are both described")
+    func subclassFields() async throws {
+        let document = try await document { app in
+            app.openAPI(body: .type(Dog.self), response: .type(Tagged.self)).post("dogs") { _ in "x" }
+        }
+        let json = try json(document)
+        #expect(
+            json.contains(
+                #""Dog":{"properties":{"breed":{"type":"string"},"id":{"format":"int64","type":"integer"}},"required":["breed","id"]"#
+            ))
+        #expect(json.contains(#""Tagged":{"properties":{"name":{"type":"string"},"tag":{"type":"string"}},"required":["name","tag"]"#))
+    }
+
+    @Test("An auth id that can't be a component's name fails, naming the route")
+    func invalidAuthID() async throws {
+        let error = await #expect(throws: OpenAPIDocumentError.self) {
+            try await document { app in app.openAPI(auth: [.bearer(id: "my auth")]).get("a") { _ in "a" } }
+        }
+        #expect(error?.route == "GET /a")
+        #expect(error?.reason.contains(#"its auth id "my auth" isn't a valid component name"#) == true)
+    }
+
+    @Test("Schemes that differ only in their descriptions are one scheme, with the first description")
+    func schemeDescriptions() async throws {
+        let document = try await document { app in
+            app.openAPI(auth: [.bearer()]).get("a") { _ in "a" }
+            app.openAPI(auth: [.bearer(description: "A JWT")]).get("b") { _ in "b" }
+        }
+        #expect(document.components.securitySchemes.count == 1)
+        #expect(try json(document).contains(#""http_bearer":{"scheme":"bearer","type":"http"}"#))
+    }
+
+    @Test("Schemes of one kind with different URLs still need ids of their own")
+    func schemeURLs() async throws {
+        await #expect(throws: OpenAPIDocumentError.self) {
+            try await document { app in
+                app.openAPI(auth: [.openIDConnect(url: URL(string: "https://a.example")!)]).get("a") { _ in "a" }
+                app.openAPI(auth: [.openIDConnect(url: URL(string: "https://b.example")!)]).get("b") { _ in "b" }
+            }
+        }
+    }
+
+    @Test("A link to an operation with a method OpenAPI doesn't name points into additionalOperations")
+    func linkToCustomMethod() async throws {
+        let document = try await document { app in
+            app.openAPI(response: .type(Pet.self), links: [OpenAPILink("name", in: .response(.body)): PetID.self])
+                .post("pets") { _ in "x" }
+            app.openAPI(links: [OpenAPILink("name", in: .request(.path)): PetID.self])
+                .on(HTTPRequest.Method("PROPFIND")!, "pets", ":name") { _ in "x" }
+        }
+        #expect(try json(document).contains(##""operationRef":"#/paths/~1pets~1%7Bname%7D/additionalOperations/PROPFIND""##))
     }
 
     // MARK: Info and documentation routes

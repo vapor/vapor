@@ -173,8 +173,9 @@ extension OpenAPIAuth {
 }
 
 extension OpenAPI.SecurityScheme {
-    /// An id derived from what the scheme is, not how it's described, so that different schemes
-    /// never share a key in `components.securitySchemes`.
+    /// An id derived from what kind of scheme it is, not how it's described, so that different
+    /// kinds never share a key in `components.securitySchemes`. Schemes of one kind that differ in
+    /// their URLs, such as two OpenID Connect providers, do, and need ids of their own.
     var autoName: String {
         let parts: [String?] =
             switch type {

@@ -89,10 +89,16 @@ extension OpenAPI.Link {
         return end.method.rawValue.lowercased().upFirst + segments.joined()
     }
 
-    /// A JSON pointer to `end`'s operation, such as `#/paths/~1users~1%7Bid%7D/get`.
+    /// A JSON pointer to `end`'s operation, such as `#/paths/~1users~1%7Bid%7D/get`, or for a
+    /// method OpenAPI doesn't name, `#/paths/~1files/additionalOperations/COPY`.
     private static func reference(to end: LinkEnd) -> URL {
         let path = end.path.rawValue.replacing("~", with: "~0").replacing("/", with: "~1")
-        let pointer = "/paths/\(path)/\(end.method.rawValue.lowercased())"
+        let operation =
+            switch end.method {
+            case .other(let method): "additionalOperations/\(method.replacing("~", with: "~0").replacing("/", with: "~1"))"
+            case let method: method.rawValue.lowercased()
+            }
+        let pointer = "/paths/\(path)/\(operation)"
         // Only the fragment is encoded, so the `#` that starts it stays as it is.
         let encoded = pointer.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed) ?? pointer
         guard let url = URL(string: "#" + encoded) else {

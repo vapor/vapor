@@ -147,7 +147,9 @@ final class SchemaDecoder {
 
 extension SchemaDecoder: Decoder {
     func container<Key: CodingKey>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> {
-        kind = .keyed([])
+        // A subclass's `super.init(from:)`, or a type decoding another from the same decoder, asks
+        // again, and adds to the fields already recorded rather than replacing them.
+        if case .keyed = kind {} else { kind = .keyed([]) }
         let keyedContainer = KeyedContainer<Key>(decoder: self)
         let keyedDecodingContainer = KeyedDecodingContainer(keyedContainer)
         return keyedDecodingContainer
