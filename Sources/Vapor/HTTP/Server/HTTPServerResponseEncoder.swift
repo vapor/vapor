@@ -68,6 +68,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                     promise: promise,
                     count: stream.count == -1 ? nil : stream.count
                 )
+                response.responseBox.withLockedValue { $0.bodyStreamCallbackInvoked = true }
                 stream.callback(channelStream)
             case .asyncStream(let stream):
                 let channelStream = ChannelResponseBodyStream(
@@ -76,6 +77,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                     promise: promise,
                     count: stream.count == -1 ? nil : stream.count
                 )
+                response.responseBox.withLockedValue { $0.bodyStreamCallbackInvoked = true }
                 
                 Task {
                     do {

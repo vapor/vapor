@@ -54,6 +54,47 @@ final class FileTests: XCTestCase {
         }
     }
 
+    func testStreamFileAdvertisesAcceptRanges() async throws {
+        app.get("file-stream") { req in
+            try await req.fileio.asyncStreamFile(at: #filePath)
+        }
+
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res async in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.headers.first(name: .acceptRanges), "bytes")
+            XCTAssertFalse(res.headers.contains(name: .accept))
+        }
+
+        var headers = HTTPHeaders()
+        headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 9)])
+        try await app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res async in
+            XCTAssertEqual(res.status, .partialContent)
+            XCTAssertEqual(res.headers.first(name: .acceptRanges), "bytes")
+            XCTAssertFalse(res.headers.contains(name: .accept))
+        }
+    }
+
+    @available(*, deprecated)
+    func testLegacyStreamFileAdvertisesAcceptRanges() throws {
+        app.get("file-stream") { req in
+            req.fileio.streamFile(at: #filePath)
+        }
+
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.headers.first(name: .acceptRanges), "bytes")
+            XCTAssertFalse(res.headers.contains(name: .accept))
+        }
+
+        var headers = HTTPHeaders()
+        headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 9)])
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .partialContent)
+            XCTAssertEqual(res.headers.first(name: .acceptRanges), "bytes")
+            XCTAssertFalse(res.headers.contains(name: .accept))
+        }
+    }
+
     func testStreamFileConnectionClose() throws {
         app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #filePath, advancedETagComparison: true)

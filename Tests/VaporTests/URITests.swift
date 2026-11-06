@@ -225,6 +225,7 @@ final class URITests: XCTestCase {
         XCTAssertNil(uri.port)
         XCTAssertNil(uri.query)
         XCTAssertNil(uri.fragment)
+        #if compiler(<6.4) || canImport(Darwin)
         if #available(macOS 14, iOS 17, watchOS 10, tvOS 17, *) {
             // TODO: It is not clear why the "encode the first colon as %3A but none of the others" behavior appears, and why only on Darwin
             XCTAssertEqual(
@@ -234,6 +235,9 @@ final class URITests: XCTestCase {
         } else {
             XCTAssertEqual(uri.path, "/")
         }
+        #else
+        XCTAssertEqual(uri.path, "/")
+        #endif
     }
     
     func testUrlParsingVectors() {
