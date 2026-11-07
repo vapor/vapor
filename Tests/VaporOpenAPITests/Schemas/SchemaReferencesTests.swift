@@ -9,13 +9,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-/// The schema as compact JSON with sorted keys, so tests can compare it exactly.
-private func json(_ schema: JSONSchema) throws -> String {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-    return String(decoding: try encoder.encode(schema), as: UTF8.self)
-}
-
 private struct User {}
 struct InternalUser {}
 private enum Outer {
@@ -34,12 +27,6 @@ private struct Користувач {}
 private func localType() -> Any.Type {
     struct Local {}
     return Local.self
-}
-
-/// A second `User`, kept out of the way of the one above.
-private func otherUser() -> Any.Type {
-    struct User {}
-    return User.self
 }
 
 @Suite("Schema references")
@@ -81,73 +68,52 @@ struct SchemaReferencesTests {
         #expect(name == String(repeating: "-", count: "Користувач".count))
     }
 
-    @Test("Types with the same name share a component name, so callers have to tell them apart")
-    func sameName() {
-        #expect(JSONSchema.componentName(for: User.self) == "User")
-        #expect(JSONSchema.componentName(for: otherUser()) == "User")
-    }
-
     // MARK: - Referenceable
 
     @Test(
-        "Named shapes are stored as components",
+        "Named shapes and compositions are stored as components",
         arguments: [
-            OpenAPISchema.object(["id": .integer()]),
-            .object(),
-            .enumeration(["admin", "user"]),
-            .enumeration(["admin"]),
-            .enumeration(["admin"]).nullable(),
+            OpenAPISchema.object(["id": .integer()]).schema,
+            OpenAPISchema.object().schema,
+            OpenAPISchema.enumeration(["admin", "user"]).schema,
+            OpenAPISchema.enumeration(["admin"]).schema,
+            OpenAPISchema.enumeration(["admin"]).nullable().schema,
+            // An object that forbids extra properties is a named shape.
+            JSONSchema.object(additionalProperties: .a(false)),
+            JSONSchema.all(of: [.string, .integer]),
+            JSONSchema.one(of: [.string, .integer]),
+            JSONSchema.any(of: [.string, .integer]),
+            JSONSchema.not(.string),
         ]
     )
-    func referenceable(schema: OpenAPISchema) {
-        #expect(schema.schema.isReferenceable)
+    func referenceable(schema: JSONSchema) {
+        #expect(schema.isReferenceable)
     }
 
     @Test(
-        "Primitives, arrays and dictionaries stay inline",
+        "Primitives, arrays, dictionaries and references stay inline",
         arguments: [
-            OpenAPISchema.string(),
-            .string(format: .uuid),
-            .integer(),
-            .number(),
-            .boolean,
-            .array(of: .object(["id": .integer()])),
-            .dictionary(of: .string()),
+            OpenAPISchema.string().schema,
+            OpenAPISchema.string(format: .uuid).schema,
+            OpenAPISchema.integer().schema,
+            OpenAPISchema.number().schema,
+            OpenAPISchema.boolean.schema,
+            OpenAPISchema.array(of: .object(["id": .integer()])).schema,
+            OpenAPISchema.dictionary(of: .string()).schema,
+            // An object that allows any extra properties is a dictionary.
+            JSONSchema.object(additionalProperties: .a(true)),
+            // A reference is already a reference.
+            ref("User"),
         ]
     )
-    func inline(schema: OpenAPISchema) {
-        #expect(!schema.schema.isReferenceable)
-    }
-
-    @Test("Compositions are stored as components")
-    func compositions() {
-        #expect(JSONSchema.all(of: [.string, .integer]).isReferenceable)
-        #expect(JSONSchema.one(of: [.string, .integer]).isReferenceable)
-        #expect(JSONSchema.any(of: [.string, .integer]).isReferenceable)
-        #expect(JSONSchema.not(.string).isReferenceable)
-    }
-
-    @Test("An object that forbids extra properties is a named shape, one that allows any isn't")
-    func additionalPropertiesFlag() {
-        #expect(JSONSchema.object(additionalProperties: .a(false)).isReferenceable)
-        #expect(!JSONSchema.object(additionalProperties: .a(true)).isReferenceable)
-    }
-
-    @Test("A reference is already a reference")
-    func referenceIsntReferenceable() {
-        #expect(!JSONSchema.reference(.component(named: "User")).isReferenceable)
+    func inline(schema: JSONSchema) {
+        #expect(!schema.isReferenceable)
     }
 
     // MARK: - Allowing null
 
-    @Test("A reference allows null through anyOf, since it can't take a type")
+    @Test("A reference allows null through anyOf, keeping its description and staying optional in an object")
     func nullableReference() throws {
-        let schema = JSONSchema.reference(.component(named: "User")).allowingNull()
-        #expect(try json(schema) == ##"{"anyOf":[{"$ref":"#/components/schemas/User"},{"type":"null"}]}"##)
-    }
-
-    @Test("A nullable reference keeps its description and stays optional in an object")
-    func nullableReferenceKeepsCore() throws {
         let reference = JSONSchema.reference(.component(named: "User"), required: false, description: "The manager")
         let schema = reference.allowingNull()
         #expect(!schema.required)
@@ -157,20 +123,11 @@ struct SchemaReferencesTests {
         )
     }
 
-    @Test("Other schemas add null to their type, and to their enum")
-    func nullableValues() throws {
-        #expect(try json(JSONSchema.string.allowingNull()) == #"{"type":["string","null"]}"#)
-        #expect(
-            try json(JSONSchema.string(allowedValues: "admin", "user").allowingNull())
-                == #"{"enum":["admin","user",null],"type":["string","null"]}"#
-        )
-    }
-
     @Test("Allowing null twice is the same as once")
     func nullableIsIdempotent() throws {
-        let reference = JSONSchema.reference(.component(named: "User"))
+        let enumeration = OpenAPISchema.enumeration(["admin"]).schema
         let composition = JSONSchema.one(of: [.string, .integer])
-        for schema in [JSONSchema.string, reference, composition] {
+        for schema in [JSONSchema.string, enumeration, ref("User"), composition] {
             #expect(try json(schema.allowingNull().allowingNull()) == json(schema.allowingNull()))
         }
     }

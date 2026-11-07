@@ -145,23 +145,6 @@ private struct LowerRequestID: Codable {
     enum CodingKeys: String, CodingKey { case id = "x-request-id" }
 }
 
-/// The document for the routes `configure` registers, checked by OpenAPIKit's validator.
-private func document(_ configure: (Application) throws -> Void) async throws -> OpenAPI.Document {
-    try await withApp { app in
-        try configure(app)
-        let document = try app.routes.openAPI(info: OpenAPIInfo(title: "Pets", version: "1.0.0")).document
-        _ = try document.validate()
-        return document
-    }
-}
-
-/// The JSON of `document`, with sorted keys.
-private func json(_ document: OpenAPI.Document) throws -> String {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-    return String(decoding: try encoder.encode(document), as: UTF8.self)
-}
-
 /// The path parameters' names of the operation at `path` for `method`.
 private func pathParameters(_ document: OpenAPI.Document, _ path: String, _ method: OpenAPI.HttpMethod = .get) -> [String] {
     let operation = document.paths[OpenAPI.Path(rawValue: path)]?.pathItemValue?[method]
@@ -202,9 +185,12 @@ struct EdgeCaseTests {
         #expect(pathParameters(document, "/ranges/{from}-{to}") == ["from", "to"])
     }
 
-    @Test("A parameter whose name has braces is left out")
-    func parameterWithBraces() async throws {
-        let document = try await document { app in app.on(.get, [.parameter("a{b}")]) { _ in "x" } }
+    @Test(
+        "A path segment or parameter name with braces is left out",
+        arguments: [[PathComponent.constant("files"), .constant("file-{name}.zip")], [.parameter("a{b}")]]
+    )
+    func braces(path: [PathComponent]) async throws {
+        let document = try await document { app in app.on(.get, path) { _ in "x" } }
         #expect(document.paths.isEmpty)
     }
 
@@ -251,6 +237,15 @@ struct EdgeCaseTests {
         #expect(OpenAPI.Path(rawValue: path).shape == shape)
     }
 
+    @Test("A path: parameter the path doesn't have fails, listing the path's")
+    func unknownPathParameter() async throws {
+        let error = await #expect(throws: OpenAPIDocumentError.self) {
+            try await document { app in app.openAPI(path: .type(PetPath.self)).get("pets", ":id") { _ in "x" } }
+        }
+        #expect(error?.route == "GET /pets/:id")
+        #expect(error?.reason.contains(#"describe "petID", which isn't in the path. The path's parameters are "id"."#) == true)
+    }
+
     // MARK: Methods
 
     @Test(
@@ -279,6 +274,30 @@ struct EdgeCaseTests {
         #expect(try json(document).contains(#""/files":{"additionalOperations":{"PROPFIND":{"#))
     }
 
+    // MARK: Operations
+
+    @Test("A route's own description is its summary, unless it has one for OpenAPI")
+    func routeDescriptionSummary() async throws {
+        let document = try await document { app in
+            app.get("a", routeDescription: "Lists things") { _ in "a" }
+            app.openAPI(summary: "Gets b").get("b", routeDescription: "Not this") { _ in "b" }
+        }
+        #expect(document.paths["/a"]?.pathItemValue?.get?.summary == "Lists things")
+        #expect(document.paths["/b"]?.pathItemValue?.get?.summary == "Gets b")
+    }
+
+    // MARK: Parameters
+
+    @Test("Headers that differ only in case are one header, the route's replacing its group's")
+    func headerCase() async throws {
+        let document = try await document { app in
+            app.openAPI(headers: .type(UpperRequestID.self)).openAPI(headers: .type(LowerRequestID.self))
+                .get("a") { _ in "a" }
+        }
+        let headers = document.paths["/a"]?.pathItemValue?.get?.parameters.compactMap(\.b).filter { $0.location == .header }
+        #expect(headers?.map(\.name) == ["x-request-id"])
+    }
+
     // MARK: Bodies and responses
 
     @Test("A request body is described for each content type given")
@@ -288,6 +307,16 @@ struct EdgeCaseTests {
         }
         let content = document.paths["/pets"]?.pathItemValue?.post?.requestBody?.b?.content
         #expect(content?.keys.map(\.rawValue).sorted() == ["application/x-www-form-urlencoded", "multipart/form-data"])
+    }
+
+    @Test("A request body without content types of its own is in its type's default, as a response is")
+    func requestDefaultContentType() async throws {
+        let document = try await document { app in
+            app.openAPI(body: .type(String.self), response: .type(String.self)).post("echo") { _ in "x" }
+        }
+        let operation = document.paths["/echo"]?.pathItemValue?.post
+        #expect(operation?.requestBody?.b?.content.keys.map(\.rawValue) == ["text/plain"])
+        #expect(operation?.responses[status: 200]?.b?.content.keys.map(\.rawValue) == ["text/plain"])
     }
 
     @Test("A response description replaces the status's reason phrase")
@@ -314,7 +343,7 @@ struct EdgeCaseTests {
         #expect(!json.contains(#""required""#))
     }
 
-    // MARK: Hand-written decoding
+    // MARK: Decoding
 
     @Test("A hand-written decoder sees every key as present and not null")
     func handDecoded() async throws {
@@ -325,6 +354,19 @@ struct EdgeCaseTests {
         // `nickname` is optional, but a decoder that says every key is there can't tell.
         #expect(json.contains(#""required":["name","nickname"]"#))
         #expect(json.contains(#""nickname":{"type":"string"}"#))
+    }
+
+    @Test("A subclass's fields and its superclass's are both described")
+    func subclassFields() async throws {
+        let document = try await document { app in
+            app.openAPI(body: .type(Dog.self), response: .type(Tagged.self)).post("dogs") { _ in "x" }
+        }
+        let json = try json(document)
+        #expect(
+            json.contains(
+                #""Dog":{"properties":{"breed":{"type":"string"},"id":{"format":"int64","type":"integer"}},"required":["breed","id"]"#
+            ))
+        #expect(json.contains(#""Tagged":{"properties":{"name":{"type":"string"},"tag":{"type":"string"}},"required":["name","tag"]"#))
     }
 
     @Test("A described type that decodes a nested container fails, naming the route and the key")
@@ -354,20 +396,26 @@ struct EdgeCaseTests {
         #expect(try json(document).contains(#""data":{"properties":{"name":{"type":"string"}}"#))
     }
 
-    // MARK: Review fixes
-
-    @Test("A subclass's fields and its superclass's are both described")
-    func subclassFields() async throws {
-        let document = try await document { app in
-            app.openAPI(body: .type(Dog.self), response: .type(Tagged.self)).post("dogs") { _ in "x" }
+    @Test("A type that's also an optional or collection and contains itself fails instead of recursing forever")
+    func recursiveWrapper() async throws {
+        let error = await #expect(throws: OpenAPIDocumentError.self) {
+            try await document { app in app.openAPI(response: .type(JSONValue.self)).get("json") { _ in "x" } }
         }
-        let json = try json(document)
-        #expect(
-            json.contains(
-                #""Dog":{"properties":{"breed":{"type":"string"},"id":{"format":"int64","type":"integer"}},"required":["breed","id"]"#
-            ))
-        #expect(json.contains(#""Tagged":{"properties":{"name":{"type":"string"},"tag":{"type":"string"}},"required":["name","tag"]"#))
+        #expect(error?.reason.contains("it contains itself, and is a collection or optional itself") == true)
     }
+
+    @Test("A type used by many routes is decoded once")
+    func decodedOnce() async throws {
+        let before = Counted.decodes.load(ordering: .relaxed)
+        _ = try await document { app in
+            for name in ["a", "b", "c"] {
+                app.openAPI(response: .type(Counted.self)).get(PathComponent(stringLiteral: name)) { _ in "x" }
+            }
+        }
+        #expect(Counted.decodes.load(ordering: .relaxed) - before == 1)
+    }
+
+    // MARK: Auth
 
     @Test("An auth id that can't be a component's name fails, naming the route")
     func invalidAuthID() async throws {
@@ -388,15 +436,30 @@ struct EdgeCaseTests {
         #expect(try json(document).contains(#""http_bearer":{"scheme":"bearer","type":"http"}"#))
     }
 
-    @Test("Schemes of one kind with different URLs still need ids of their own")
-    func schemeURLs() async throws {
-        await #expect(throws: OpenAPIDocumentError.self) {
+    @Test("Two different schemes under one id fail, naming both routes")
+    func schemeCollision() async throws {
+        let explicit = await #expect(throws: OpenAPIDocumentError.self) {
+            try await document { app in
+                app.openAPI(auth: [.bearer(id: "token")]).get("a") { _ in "a" }
+                app.openAPI(auth: [.basic(id: "token")]).get("b") { _ in "b" }
+            }
+        }
+        #expect(explicit?.description == #"GET /b: its auth "token" is a different scheme from GET /a's. Give one of them its own id."#)
+
+        // Schemes of one kind with different URLs still need ids of their own.
+        let urls = await #expect(throws: OpenAPIDocumentError.self) {
             try await document { app in
                 app.openAPI(auth: [.openIDConnect(url: URL(string: "https://a.example")!)]).get("a") { _ in "a" }
                 app.openAPI(auth: [.openIDConnect(url: URL(string: "https://b.example")!)]).get("b") { _ in "b" }
             }
         }
+        #expect(
+            urls?.description
+                == #"GET /b: its auth "openIdConnect" is a different scheme from GET /a's. Give one of them its own id."#
+        )
     }
+
+    // MARK: Links
 
     @Test("A link to an operation with a method OpenAPI doesn't name points into additionalOperations")
     func linkToCustomMethod() async throws {
@@ -409,66 +472,9 @@ struct EdgeCaseTests {
         #expect(try json(document).contains(##""operationRef":"#/paths/~1pets~1%7Bname%7D/additionalOperations/PROPFIND""##))
     }
 
-    @Test("A type that's also an optional or collection and contains itself fails instead of recursing forever")
-    func recursiveWrapper() async throws {
-        let error = await #expect(throws: OpenAPIDocumentError.self) {
-            try await document { app in app.openAPI(response: .type(JSONValue.self)).get("json") { _ in "x" } }
-        }
-        #expect(error?.reason.contains("it contains itself, and is a collection or optional itself") == true)
-    }
+    // MARK: Info
 
-    @Test("A path: parameter the path doesn't have fails, listing the path's")
-    func unknownPathParameter() async throws {
-        let error = await #expect(throws: OpenAPIDocumentError.self) {
-            try await document { app in app.openAPI(path: .type(PetPath.self)).get("pets", ":id") { _ in "x" } }
-        }
-        #expect(error?.route == "GET /pets/:id")
-        #expect(error?.reason.contains(#"describe "petID", which isn't in the path. The path's parameters are "id"."#) == true)
-    }
-
-    @Test("A request body without content types of its own is in its type's default, as a response is")
-    func requestDefaultContentType() async throws {
-        let document = try await document { app in
-            app.openAPI(body: .type(String.self), response: .type(String.self)).post("echo") { _ in "x" }
-        }
-        let operation = document.paths["/echo"]?.pathItemValue?.post
-        #expect(operation?.requestBody?.b?.content.keys.map(\.rawValue) == ["text/plain"])
-        #expect(operation?.responses[status: 200]?.b?.content.keys.map(\.rawValue) == ["text/plain"])
-    }
-
-    @Test("A type used by many routes is decoded once")
-    func decodedOnce() async throws {
-        let before = Counted.decodes.load(ordering: .relaxed)
-        _ = try await document { app in
-            for name in ["a", "b", "c"] {
-                app.openAPI(response: .type(Counted.self)).get(PathComponent(stringLiteral: name)) { _ in "x" }
-            }
-        }
-        #expect(Counted.decodes.load(ordering: .relaxed) - before == 1)
-    }
-
-    @Test("A route's own description is its summary, unless it has one for OpenAPI")
-    func routeDescriptionSummary() async throws {
-        let document = try await document { app in
-            app.get("a", routeDescription: "Lists things") { _ in "a" }
-            app.openAPI(summary: "Gets b").get("b", routeDescription: "Not this") { _ in "b" }
-        }
-        #expect(document.paths["/a"]?.pathItemValue?.get?.summary == "Lists things")
-        #expect(document.paths["/b"]?.pathItemValue?.get?.summary == "Gets b")
-    }
-
-    @Test("Headers that differ only in case are one header, the route's replacing its group's")
-    func headerCase() async throws {
-        let document = try await document { app in
-            app.openAPI(headers: .type(UpperRequestID.self)).openAPI(headers: .type(LowerRequestID.self))
-                .get("a") { _ in "a" }
-        }
-        let headers = document.paths["/a"]?.pathItemValue?.get?.parameters.compactMap(\.b).filter { $0.location == .header }
-        #expect(headers?.map(\.name) == ["x-request-id"])
-    }
-
-    // MARK: Info and documentation routes
-
+    // The golden document has no description, so this is the only check of it.
     @Test("The API's summary and description are in the document's info")
     func info() async throws {
         try await withApp { app in
@@ -478,19 +484,6 @@ struct EdgeCaseTests {
             #expect(document.info.version == "2.1.0")
             #expect(document.info.summary == "Pets for sale")
             #expect(document.info.description == "All about pets.")
-        }
-    }
-
-    @Test("The application serves the documentation at a path given as an array")
-    func applicationArrayPath() async throws {
-        try await withApp { app in
-            app.openAPIDocumentation(["api", "docs"], info: OpenAPIInfo(title: "Pets", version: "1.0.0"))
-            try await app.testing { client in
-                let document = try await client.get("/api/docs/openapi.json")
-                let page = try await client.get("/api/docs")
-                #expect(document.status == .ok)
-                #expect(page.status == .ok)
-            }
         }
     }
 }

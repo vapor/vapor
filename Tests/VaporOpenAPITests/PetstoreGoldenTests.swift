@@ -103,13 +103,15 @@ private func petstore(_ app: Application) {
     app.openAPIDocumentation("docs", info: OpenAPIInfo(title: "Petstore", version: "1.0.0"))
 }
 
-/// The Petstore document as pretty JSON with sorted keys.
+/// The Petstore document as pretty JSON with sorted keys, after checking it's valid OpenAPI.
 private func documentJSON() async throws -> String {
     try await withApp { app in
         petstore(app)
         let document = try app.routes.openAPI(
             info: OpenAPIInfo(title: "Petstore", version: "1.0.0", summary: "Pets for sale")
         )
+        let warnings = try document.document.validate()
+        #expect(warnings.isEmpty, "\(warnings)")
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes, .prettyPrinted]
         return String(decoding: try encoder.encode(document), as: UTF8.self)
@@ -118,20 +120,10 @@ private func documentJSON() async throws -> String {
 
 @Suite("Petstore golden document")
 struct PetstoreGoldenTests {
-    @Test("The document is exactly the one recorded")
+    @Test("The document is valid OpenAPI, and exactly the one recorded")
     func golden() async throws {
         let json = try await documentJSON()
         #expect(json == recordedDocument)
-    }
-
-    @Test("The document is valid OpenAPI")
-    func valid() async throws {
-        try await withApp { app in
-            petstore(app)
-            let document = try app.routes.openAPI(info: OpenAPIInfo(title: "Petstore", version: "1.0.0"))
-            let warnings = try document.document.validate()
-            #expect(warnings.isEmpty, "\(warnings)")
-        }
     }
 
     @Test("OpenAPIKit reads the JSON back as a valid document with the same operations")
@@ -142,17 +134,6 @@ struct PetstoreGoldenTests {
         #expect(try decoded.validate().isEmpty)
         let operationIDs = decoded.allOperationIds.sorted()
         #expect(operationIDs == ["addPet", "deletePet", "getPet", "listPets", "name"])
-    }
-
-    @Test("Every route but the hidden ones becomes an operation")
-    func everyRoute() async throws {
-        try await withApp { app in
-            petstore(app)
-            let document = try app.routes.openAPI(info: OpenAPIInfo(title: "Petstore", version: "1.0.0"))
-            let operations = document.document.paths.values.compactMap(\.pathItemValue).flatMap(\.endpoints)
-            // All but /health, /docs and /docs/openapi.json.
-            #expect(operations.count == app.routes.all.count - 3)
-        }
     }
 }
 

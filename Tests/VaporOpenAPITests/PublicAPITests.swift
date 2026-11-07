@@ -18,13 +18,9 @@ private enum InvoiceID: OpenAPILinkKey {
 
 @Suite("Public API")
 struct PublicAPITests {
-    @Test("A link key can be declared outside the module without a description")
-    func linkKeyWithoutDescription() {
+    @Test("A link key can be declared outside the module, with or without a description")
+    func linkKeys() {
         #expect(CustomerID.description == nil)
-    }
-
-    @Test("A link key can provide its own description outside the module")
-    func linkKeyWithDescription() {
         #expect(InvoiceID.description == "The invoice to fetch")
     }
 
@@ -60,7 +56,7 @@ struct PublicAPITests {
         #expect(auths.allSatisfy { !$0.id.isEmpty })
     }
 
-    // These only need to compile: the structure they build is checked in `OpenAPIValueTests`.
+    // These only need to compile: the structure they build is checked in `OpenAPIValueSchemaTests`.
 
     @Test("Bodies can be built outside the module, from variadics or arrays")
     func bodies() {

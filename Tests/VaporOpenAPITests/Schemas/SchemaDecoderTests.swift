@@ -122,10 +122,6 @@ private final class BinaryNode: Decodable {
     let left: BinaryNode?
     let right: BinaryNode?
 }
-private indirect enum Expression: Decodable {
-    case number(Int)
-    case sum(Expression, Expression)
-}
 
 @Suite("Schema decoder")
 struct SchemaDecoderTests {
@@ -159,10 +155,11 @@ struct SchemaDecoderTests {
         #expect(try shape(of: Set<String>.self) == "[String]")
     }
 
-    @Test("An optional is a nullable single value")
+    @Test("An optional is a nullable single value, and optionals nest")
     func optional() throws {
         #expect(try shape(of: Int?.self) == "(Int)!")
         #expect(try shape(of: [Int?].self) == "[(Int)!]")
+        #expect(try shape(of: Int??.self) == "((Int)!)!")
     }
 
     @Test("A single value wrapper records what it wraps")
@@ -176,10 +173,11 @@ struct SchemaDecoderTests {
         #expect(try shape(of: [Int: Team].self) == "[: {title: String}]")
     }
 
-    @Test("A CaseIterable enum is decoded from its first case")
+    @Test("A CaseIterable enum is decoded from its first case, with string or integer raw values")
     func caseIterable() throws {
         #expect(try shape(of: Role.self) == "(String)")
         #expect(try shape(of: [Role].self) == "[(String)]")
+        #expect(try shape(of: Level.self) == "(Int)")
     }
 
     // MARK: - Recursion
@@ -200,17 +198,20 @@ struct SchemaDecoderTests {
     func recursiveOptional() throws {
         #expect(try shape(of: Link.self) == "{value: Int, next?: ^Link}")
         #expect(try shape(of: Holder.self) == "{items: [(^Holder)!]}")
+        // A binary tree refers to itself on both sides.
+        #expect(try shape(of: BinaryNode.self) == "{value: Int, left?: ^BinaryNode, right?: ^BinaryNode}")
     }
 
     // MARK: - Errors
 
-    @Test("Recursion with no array or optional to end it is an error")
+    @Test("Recursion with no array or optional to end it is an error, mutual recursion too")
     func unbreakableRecursion() {
         #expect(throws: (any Error).self) { try SchemaDecoder.shape(of: Loop.self) }
         #expect(throws: (any Error).self) { try SchemaDecoder.shape(of: [Loop].self) }
+        #expect(throws: (any Error).self) { try SchemaDecoder.shape(of: Ping.self) }
     }
 
-    @Test("A type that can't be decoded from placeholders names its path and suggests a fix")
+    @Test("A type that can't be decoded from placeholders names its path and suggests what will help")
     func errorMessage() throws {
         let error = try #require(throws: (any Error).self) { try SchemaDecoder.shape(of: Account.self) }
         let message = "\(error)"
@@ -218,12 +219,17 @@ struct SchemaDecoderTests {
         #expect(message.contains("Make it CaseIterable"))
         // Wrapped once, by the type that failed, not again by each type around it.
         #expect(message.ranges(of: "can't describe").count == 1)
+
+        let plain = try #require(throws: (any Error).self) { try SchemaDecoder.shape(of: Plain.self) }
+        #expect("\(plain)".hasSuffix("or give it a `static var openAPIPlaceholder: Self?` through OpenAPISchemaProvider."))
+        #expect(!"\(plain)".contains(".."))
     }
 
     @Test("An enum with associated values can't be described yet")
     func associatedValues() {
         #expect(throws: (any Error).self) { try SchemaDecoder.shape(of: Shape.self) }
     }
+
     // MARK: - Edge cases
 
     @Test("Mutual recursion ends at the array or optional around it, not at the type in between")
@@ -238,26 +244,11 @@ struct SchemaDecoderTests {
         #expect(try shape(of: Family.self) == "{kids: [{family: ^Family, toys: [{owner: ^Kid, name: String}]}]}")
     }
 
-    @Test("Mutual recursion with nothing to end it is an error")
-    func unbreakableMutualRecursion() {
-        #expect(throws: (any Error).self) { try SchemaDecoder.shape(of: Ping.self) }
-    }
-
     @Test("A type that asks for no container is empty, as a synthesized empty struct does")
     func emptyTypes() throws {
         #expect(try shape(of: Nothing.self) == "empty")
         #expect(try shape(of: Silent.self) == "empty")
         #expect(try shape(of: NoElements.self) == "[]")
-    }
-
-    @Test("Optionals nest")
-    func nestedOptionals() throws {
-        #expect(try shape(of: Int??.self) == "((Int)!)!")
-    }
-
-    @Test("Integer enums are decoded from their first case too")
-    func integerEnum() throws {
-        #expect(try shape(of: Level.self) == "(Int)")
     }
 
     @Test("Unsupported containers and dictionary keys fail with their path")
@@ -266,23 +257,6 @@ struct SchemaDecoderTests {
         #expect("\(nested)".contains("Nested containers aren't supported"))
         let keyed = try #require(throws: (any Error).self) { try SchemaDecoder.shape(of: Ranked.self) }
         #expect("\(keyed)".hasPrefix("scores: "))
-    }
-
-    @Test("A binary tree refers to itself on both sides")
-    func binaryTree() throws {
-        #expect(try shape(of: BinaryNode.self) == "{value: Int, left?: ^BinaryNode, right?: ^BinaryNode}")
-    }
-
-    @Test("An indirect enum has associated values, so it can't be described yet")
-    func indirectEnum() {
-        #expect(throws: (any Error).self) { try SchemaDecoder.shape(of: Expression.self) }
-    }
-
-    @Test("The error suggests what will help")
-    func errorHint() throws {
-        let error = try #require(throws: (any Error).self) { try SchemaDecoder.shape(of: Plain.self) }
-        #expect("\(error)".hasSuffix("or give it a `static var openAPIPlaceholder: Self?` through OpenAPISchemaProvider."))
-        #expect(!"\(error)".contains(".."))
     }
 }
 #endif

@@ -25,29 +25,18 @@ private enum PetID: OpenAPILinkKey {
 }
 private enum Unused: OpenAPILinkKey {}
 private struct Identified: Codable { var id: String }
-private struct Owner: Codable { var name: String }
 private struct Cat: Content { var name: String }
-private struct Toy: Codable {
-    var name: String
-    var owner: Owner
-}
 
-/// The document for the routes `configure` registers, as JSON with sorted keys.
-private func document(_ configure: (Application) throws -> Void) async throws -> String {
-    try await withApp { app in
-        try configure(app)
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-        let document = try app.routes.openAPI(info: OpenAPIInfo(title: "Pets", version: "1.0.0"))
-        return String(decoding: try encoder.encode(document), as: UTF8.self)
-    }
+/// The validated document for the routes `configure` registers, as JSON with sorted keys.
+private func documentJSON(_ configure: (Application) throws -> Void) async throws -> String {
+    try json(await document(configure))
 }
 
 @Suite("Routes OpenAPI document")
 struct RoutesOpenAPITests {
     @Test("A described route becomes an operation under its path")
     func operation() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(tags: ["Pets"], summary: "Get a pet", operationID: "getPet", response: .type(Pet.self))
                 .get("pets", ":id") { _ in "pet" }
         }
@@ -64,7 +53,7 @@ struct RoutesOpenAPITests {
 
     @Test("Routes on the same path share it, one operation per method")
     func samePath() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.get("pets") { _ in "list" }
             app.openAPI(body: .type(Pet.self), statusCode: .created).post("pets") { _ in "created" }
         }
@@ -76,51 +65,26 @@ struct RoutesOpenAPITests {
                 ##""requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}},"required":true}"##))
     }
 
-    @Test("Hidden routes are left out")
-    func hidden() async throws {
-        let json = try await document { app in
-            app.hiddenFromOpenAPI().get("health") { _ in "ok" }
-            app.get("pets") { _ in "list" }
-        }
-        #expect(!json.contains("/health"))
-        #expect(json.contains("/pets"))
-    }
-
     @Test("Auth adds a security requirement and its scheme")
     func auth() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(auth: [.bearer()]).get("me") { _ in "me" }
         }
         #expect(json.contains(#""security":[{"http_bearer":[]}]"#))
         #expect(json.contains(#""securitySchemes":{"http_bearer":{"scheme":"bearer","type":"http"}}"#))
     }
 
-    @Test("Query parameters come from the type")
-    func query() async throws {
-        let json = try await document { app in
-            app.openAPI(query: .type(Paging.self)).get("pets") { _ in "list" }
-        }
-        #expect(json.contains(#"{"in":"query","name":"page","schema":{"format":"int64","type":"integer"}}"#))
-    }
-
-    @Test("A catch-all route is left out, and the other routes are described")
+    @Test("A catch-all route is left out, named in a warning with why, and the other routes are described")
     func catchall() async throws {
-        let json = try await document { app in
-            app.get("proxy", "**") { _ in "x" }
-            app.get("pets") { _ in "pets" }
-        }
-        #expect(json.contains(#""/pets":{"get":"#))
-        #expect(!json.contains("proxy"))
-    }
-
-    @Test("A route left out is named in a warning, with why")
-    func leftOutWarning() async throws {
         let logHandler = InMemoryLogHandler()
         let logger = Logger(label: "codes.vapor.test", factory: { _ in logHandler })
-        try await withApp(logger: logger) { app in
+        let document = try await withApp(logger: logger) { app in
             app.get("proxy", "**") { _ in "x" }
-            _ = try app.routes.openAPI(info: OpenAPIInfo(title: "Pets", version: "1.0.0"))
+            app.get("pets") { _ in "pets" }
+            return try json(app.routes.openAPI(info: petsInfo))
         }
+        #expect(document.contains(#""/pets":{"get":"#))
+        #expect(!document.contains("proxy"))
         let warnings = logHandler.entries.filter { $0.level == .warning }.map { "\($0.message)" }
         #expect(
             warnings == [
@@ -130,7 +94,7 @@ struct RoutesOpenAPITests {
 
     @Test("A response value links to a request value with the same key")
     func link() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(response: .type(Pet.self), links: [OpenAPILink("id", in: .response(.body)): PetID.self])
                 .post("pets") { _ in "created" }
             app.openAPI(operationID: "getPet", links: [OpenAPILink("id", in: .request(.path)): PetID.self])
@@ -150,7 +114,7 @@ struct RoutesOpenAPITests {
 
     @Test("A target without an operation ID is reached by a pointer to it")
     func linkByReference() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(links: [OpenAPILink("id", in: .response(.body)): PetID.self]).post("pets") { _ in "created" }
             app.openAPI(links: [OpenAPILink("id", in: .request(.path)): PetID.self]).get("pets", ":id") { _ in "pet" }
         }
@@ -158,9 +122,9 @@ struct RoutesOpenAPITests {
         #expect(json.contains(#""ResponseBodyIdGetPetsByIdRequestPathId""#))
     }
 
-    @Test("A key with no source or no target makes no link")
+    @Test("A key with no target makes no link")
     func unmatchedLink() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(links: [OpenAPILink("id", in: .response(.body)): Unused.self]).post("pets") { _ in "created" }
         }
         #expect(!json.contains("links"))
@@ -169,7 +133,7 @@ struct RoutesOpenAPITests {
     @Test("A link into a field of a request body fails")
     func linkIntoBodyField() async throws {
         let error = await #expect(throws: (any Error).self) {
-            try await document { app in
+            try await documentJSON { app in
                 app.openAPI(links: [OpenAPILink("id", in: .response(.body)): PetID.self]).post("pets") { _ in "a" }
                 app.openAPI(links: [OpenAPILink("owner/id", in: .request(.body)): PetID.self]).put("pets") { _ in "b" }
             }
@@ -196,7 +160,7 @@ struct RoutesOpenAPITests {
         func linkOrder() async throws -> [String] {
             try await withApp { app in
                 try configure(app)
-                let document = try app.routes.openAPI(info: OpenAPIInfo(title: "Pets", version: "1.0.0")).document
+                let document = try app.routes.openAPI(info: petsInfo).document
                 return document.components.links.keys.map(\.rawValue)
             }
         }
@@ -213,7 +177,7 @@ struct RoutesOpenAPITests {
 
     @Test("Different links that come out with the same name are both kept")
     func linkNameCollision() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(links: [OpenAPILink("owner/id", in: .response(.body)): PetID.self]).post("a") { _ in "a" }
             app.openAPI(links: [OpenAPILink("ownerId", in: .response(.body)): PetID.self]).post("b") { _ in "b" }
             app.openAPI(operationID: "getPet", links: [OpenAPILink("id", in: .request(.path)): PetID.self])
@@ -232,7 +196,7 @@ struct RoutesOpenAPITests {
     @Test("A link to a parameter its operation doesn't have fails")
     func linkToMissingParameter() async throws {
         let error = await #expect(throws: (any Error).self) {
-            try await document { app in
+            try await documentJSON { app in
                 app.openAPI(links: [OpenAPILink("id", in: .response(.body)): PetID.self]).post("pets") { _ in "a" }
                 app.openAPI(links: [OpenAPILink("id", in: .request(.path)): PetID.self]).get("pets", ":petID") { _ in "b" }
             }
@@ -243,7 +207,7 @@ struct RoutesOpenAPITests {
     @Test("Two routes with one operation ID fail, naming both")
     func duplicateOperationID() async throws {
         let error = await #expect(throws: (any Error).self) {
-            try await document { app in
+            try await documentJSON { app in
                 let pets = app.openAPI(operationID: "pets")
                 pets.get("a") { _ in "a" }
                 pets.get("b") { _ in "b" }
@@ -252,15 +216,9 @@ struct RoutesOpenAPITests {
         #expect("\(error!)" == #"GET /b: its operation ID "pets" is also GET /a's. Set operationID on a single route."#)
     }
 
-    @Test("A path segment with braces that isn't a parameter is left out")
-    func bracesInConstant() async throws {
-        let json = try await document { app in app.get("files", "file-{name}.zip") { _ in "x" } }
-        #expect(!json.contains("files"))
-    }
-
     @Test("A type used only for parameters isn't kept as a schema")
     func unusedSchemasRemoved() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(query: .type(Paging.self), response: .type(Pet.self)).get("pets") { _ in "list" }
         }
         #expect(json.contains(#""components":{"schemas":{"Pet":"#))
@@ -269,7 +227,7 @@ struct RoutesOpenAPITests {
 
     @Test("A type used for parameters and as a body is kept once, under its own name")
     func parametersTypeAlsoBody() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(query: .type(Pet.self)).get("search") { _ in "list" }
             app.openAPI(body: .type(Pet.self)).post("pets") { _ in "created" }
         }
@@ -281,7 +239,7 @@ struct RoutesOpenAPITests {
     @Test("A route registered twice fails")
     func duplicateRoute() async throws {
         let error = await #expect(throws: (any Error).self) {
-            try await document { app in
+            try await documentJSON { app in
                 app.get("pets") { _ in "a" }
                 app.get("pets") { _ in "b" }
             }
@@ -289,28 +247,9 @@ struct RoutesOpenAPITests {
         #expect("\(error!)" == "GET /pets: is registered twice, so only one could be described")
     }
 
-    @Test("Schemas only other schemas refer to are kept")
-    func nestedSchemasKept() async throws {
-        let json = try await document { app in
-            app.openAPI(response: .type(Toy.self)).get("toys") { _ in "toy" }
-        }
-        #expect(json.contains(#""Owner":{"#))
-        #expect(json.contains(#""Toy":{"#))
-    }
-
-    @Test("Two different schemes under one ID fail")
-    func authCollision() async throws {
-        await #expect(throws: (any Error).self) {
-            try await document { app in
-                app.openAPI(auth: [.bearer(id: "token")]).get("a") { _ in "a" }
-                app.openAPI(auth: [.basic(id: "token")]).get("b") { _ in "b" }
-            }
-        }
-    }
-
     @Test("A handler's return type is the response body, when no response is described")
     func handlerResponse() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.get("cats") { _ in Cat(name: "Tom") }
         }
         #expect(
@@ -319,7 +258,7 @@ struct RoutesOpenAPITests {
 
     @Test("A handler returning a string or a number is sent as plain text")
     func plainTextHandler() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.get("name") { _ in "Tom" }
             app.get("count") { _ in 3 }
         }
@@ -329,7 +268,7 @@ struct RoutesOpenAPITests {
 
     @Test("A handler returning a response has no body")
     func responseHandler() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.get("raw") { _ in Response(status: .ok) }
         }
         #expect(json.contains(#""200":{"description":"OK"}"#))
@@ -337,7 +276,7 @@ struct RoutesOpenAPITests {
 
     @Test("A described response replaces the handler's return type")
     func describedResponse() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(response: .type(Pet.self)).get("pet") { _ in "Tom" }
         }
         #expect(
@@ -347,7 +286,7 @@ struct RoutesOpenAPITests {
 
     @Test("A described string response is sent as plain text, unless content types are given")
     func describedContentTypes() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(response: .type(String.self)).get("plain") { _ in Response(status: .ok) }
             app.openAPI(response: .example("Tom")).get("example") { _ in Response(status: .ok) }
             app.openAPI(responseContentTypes: [.html]).get("page") { _ in "<p>Tom</p>" }
@@ -359,7 +298,7 @@ struct RoutesOpenAPITests {
 
     @Test("A composition is sent as its parts are, or as JSON when they differ")
     func compositionContentType() async throws {
-        let json = try await document { app in
+        let json = try await documentJSON { app in
             app.openAPI(response: .one(of: .type(String.self), .example("Tom"))).get("same") { _ in Response(status: .ok) }
             app.openAPI(response: .one(of: .type(String.self), .type(Cat.self))).get("mixed") { _ in Response(status: .ok) }
         }

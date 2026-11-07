@@ -62,33 +62,6 @@ struct OpenAPIDocumentationTests {
         }
     }
 
-    @Test("Under a group, the page still finds the document")
-    func underGroup() async throws {
-        try await withApp { app in
-            app.grouped("api").openAPIDocumentation("docs", of: app, info: info)
-            try await app.testing { client in
-                let document = try await client.get("/api/docs/openapi.json")
-                #expect(document.status == .ok)
-                let html = try await client.get("/api/docs").body.requireString()
-                // Relative, so from /api/docs it resolves to /api/docs/openapi.json.
-                #expect(html.contains(#"apiDescriptionUrl="./docs/openapi.json""#))
-            }
-        }
-    }
-
-    @Test("At the root, the page loads openapi.json")
-    func atRoot() async throws {
-        try await withApp { app in
-            app.openAPIDocumentation(info: info)
-            try await app.testing { client in
-                let document = try await client.get("/openapi.json")
-                #expect(document.status == .ok)
-                let html = try await client.get("/").body.requireString()
-                #expect(html.contains(#"apiDescriptionUrl="./openapi.json""#))
-            }
-        }
-    }
-
     @Test("The documentation routes aren't in the document")
     func hidden() async throws {
         try await withApp { app in
@@ -178,7 +151,7 @@ struct OpenAPIDocumentationTests {
         }
     }
 
-    @Test("Documentation registered after boot is a 503 saying why")
+    @Test("Documentation registered after boot, or in a lifecycle handler's didBoot, is a 503 saying why")
     func registeredAfterBoot() async throws {
         try await withApp { app in
             try await app.boot()
@@ -190,10 +163,6 @@ struct OpenAPIDocumentationTests {
                 #expect(reason.contains("registered after it booted"))
             }
         }
-    }
-
-    @Test("Documentation registered in a lifecycle handler's didBoot is a 503")
-    func registeredInDidBoot() async throws {
         try await withApp { app in
             app.addLifecycleHandler(AddsDocumentation())
             try await app.testing { client in
@@ -203,28 +172,36 @@ struct OpenAPIDocumentationTests {
         }
     }
 
-    @Test("With a trailing slash, the page still finds the document")
-    func trailingSlash() async throws {
+    @Test(
+        "The page finds the document, under a group, at a root, with a trailing slash or a space in its path",
+        arguments: [
+            // Relative, so from /api/docs it resolves to /api/docs/openapi.json.
+            (
+                ["api"] as [PathComponent], ["docs"] as [PathComponent], "/api/docs", "./docs/openapi.json",
+                "/api/docs/openapi.json"
+            ),
+            ([], [], "/", "./openapi.json", "/openapi.json"),
+            // From /docs/ the browser resolves this to /docs/openapi.json.
+            ([], ["docs"], "/docs/", "./openapi.json", "/docs/openapi.json"),
+            // From /api the browser resolves this to /api/openapi.json, not /openapi.json.
+            (["api"], [], "/api", "./api/openapi.json", "/api/openapi.json"),
+            ([], ["my docs"], "/my%20docs", "./my%20docs/openapi.json", "/my%20docs/openapi.json"),
+        ]
+    )
+    func pageFindsDocument(
+        group: [PathComponent],
+        path: [PathComponent],
+        page: String,
+        documentURL: String,
+        document: String
+    ) async throws {
         try await withApp { app in
-            app.openAPIDocumentation("docs", info: info)
+            app.grouped(group).openAPIDocumentation(path, of: app, info: info)
             try await app.testing { client in
-                let html = try await client.get("/docs/").body.requireString()
-                // From /docs/ the browser resolves this to /docs/openapi.json.
-                #expect(html.contains(#"apiDescriptionUrl="./openapi.json""#))
-            }
-        }
-    }
-
-    @Test("At a group's root, the page finds the document under the group")
-    func groupRoot() async throws {
-        try await withApp { app in
-            app.grouped("api").openAPIDocumentation(of: app, info: info)
-            try await app.testing { client in
-                let document = try await client.get("/api/openapi.json")
-                #expect(document.status == .ok)
-                let html = try await client.get("/api").body.requireString()
-                // From /api the browser resolves this to /api/openapi.json, not /openapi.json.
-                #expect(html.contains(#"apiDescriptionUrl="./api/openapi.json""#))
+                let response = try await client.get(URI(string: document))
+                #expect(response.status == .ok)
+                let html = try await client.get(URI(string: page)).body.requireString()
+                #expect(html.contains(#"apiDescriptionUrl="\#(documentURL)""#))
             }
         }
     }
@@ -259,20 +236,8 @@ struct OpenAPIDocumentationTests {
         }
         #expect(released == nil)
     }
-
-    @Test("A page whose path has a space finds the document")
-    func encodedPath() async throws {
-        try await withApp { app in
-            app.openAPIDocumentation("my docs", info: info)
-            try await app.testing { client in
-                let html = try await client.get("/my%20docs").body.requireString()
-                #expect(html.contains(#"apiDescriptionUrl="./my%20docs/openapi.json""#))
-                let document = try await client.get("/my%20docs/openapi.json")
-                #expect(document.status == .ok)
-            }
-        }
-    }
 }
+
 /// Registers the documentation when the application boots, too late for it to be built.
 private struct AddsDocumentation: LifecycleHandler {
     func didBoot(_ application: Application) async throws {

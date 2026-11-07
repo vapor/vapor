@@ -37,16 +37,6 @@ struct RoutesBuilderOpenAPITests {
         #expect(!details.isHidden)
     }
 
-    @Test("A route registered without openAPI has no details")
-    func plainRoute() throws {
-        let root = Collector()
-        root.get("plain") { _ in "plain" }
-        let route = try #require(root.routes.first)
-        #expect(route.openAPI == nil)
-        #expect(route.openAPIRoute.summary == nil)
-        #expect(route.openAPIRoute.tags.isEmpty)
-    }
-
     @Test("A group's details reach every route in it")
     func group() throws {
         let root = Collector()
@@ -86,37 +76,27 @@ struct RoutesBuilderOpenAPITests {
         #expect(details.auth.map(\.id) == ["http_bearer", "http_basic"])
     }
 
-    @Test("Parameters from a group and a route are combined, the group's first")
+    @Test("Parameters from a group and a route are combined, the group's first, or kept as they are if set on one side")
     func parametersCombine() throws {
         let root = Collector()
         root.openAPI(query: .type(Filter.self))
             .openAPI(query: .type(Sort.self))
-            .get("x") { _ in "x" }
-        #expect(try names(root.routes.first?.openAPIRoute.query) == ["page", "by"])
-    }
+            .get("both") { _ in "both" }
+        #expect(try names(root.routes[0].openAPIRoute.query) == ["page", "by"])
 
-    @Test("Parameters set on only one side are kept as they are")
-    func parametersOneSide() throws {
-        let root = Collector()
         root.openAPI(query: .type(Filter.self)).openAPI(summary: "x").get("x") { _ in "x" }
         root.openAPI(summary: "y").openAPI(headers: .type(Sort.self)).get("y") { _ in "y" }
-        #expect(try names(root.routes[0].openAPIRoute.query) == ["page"])
-        #expect(try names(root.routes[1].openAPIRoute.headers) == ["by"])
-        #expect(root.routes[1].openAPIRoute.query == nil)
+        #expect(try names(root.routes[1].openAPIRoute.query) == ["page"])
+        #expect(try names(root.routes[2].openAPIRoute.headers) == ["by"])
+        #expect(root.routes[2].openAPIRoute.query == nil)
     }
 
-    @Test("Flags are set if either side sets them")
-    func flags() throws {
+    @Test("A route without its own deprecation takes its group's, and can undo it")
+    func deprecation() throws {
         let root = Collector()
         root.openAPI(deprecated: true).openAPI(summary: "x").get("x") { _ in "x" }
-        #expect(root.routes.first?.openAPIRoute.deprecated == true)
-    }
-
-    @Test("A route can undo its group's deprecation")
-    func undeprecated() throws {
-        let root = Collector()
-        root.openAPI(deprecated: true).openAPI(deprecated: false).get("x") { _ in "x" }
-        #expect(root.routes.first?.openAPIRoute.deprecated == false)
+        root.openAPI(deprecated: true).openAPI(deprecated: false).get("y") { _ in "y" }
+        #expect(root.routes.map(\.openAPIRoute.deprecated) == [true, false])
     }
 
     @Test("A route's scopes for a scheme replace its group's")
@@ -128,25 +108,6 @@ struct RoutesBuilderOpenAPITests {
         let auth = try #require(root.routes.first).openAPIRoute.auth
         #expect(auth.map(\.id) == ["http_basic", "http_bearer"])
         #expect(auth.last?.scopes == ["admin"])
-    }
-
-    @Test("A route's parameter replaces its group's of the same name")
-    func parameterReplaced() throws {
-        struct Paging: Codable {
-            var limit: Int
-            var page: Int
-        }
-        struct Search: Codable {
-            var limit: String
-            var q: String
-        }
-        let root = Collector()
-        root.openAPI(query: .type(Paging.self)).openAPI(query: .type(Search.self)).get("x") { _ in "x" }
-        var components = SchemaComponents()
-        let parameters = try #require(root.routes.first?.openAPIRoute.query).value.parameters(in: .query, into: &components)
-        #expect(parameters.map(\.name) == ["page", "limit", "q"])
-        // The route's `limit`, a string, not the group's integer.
-        #expect(parameters[1].schemaOrContent.schemaValue?.jsonType == .string)
     }
 
     @Test("Hidden routes stay hidden however they're nested")

@@ -26,6 +26,7 @@ struct PublicDocumentationAPITests {
             app.hiddenFromOpenAPI().get("health") { _ in "ok" }
             let info = OpenAPIInfo(title: "Models", version: "1.0.0")
             app.openAPIDocumentation("docs", info: info)
+            app.openAPIDocumentation(["api", "docs"], info: info)
             app.routes.openAPIDocumentation(["routes-docs"], of: app, info: info)
             app.grouped("admin").openAPIDocumentation(["docs"], of: app, info: info, title: "Admin")
             // A document built by hand can be returned as it is, and holds no reference to the app.
@@ -34,7 +35,10 @@ struct PublicDocumentationAPITests {
             let json: Data = try document.json()
             #expect(!json.isEmpty)
             try await app.testing { client in
-                for path in ["/docs/openapi.json", "/routes-docs/openapi.json", "/admin/docs/openapi.json", "/spec"] {
+                for path in [
+                    "/docs/openapi.json", "/api/docs/openapi.json", "/api/docs", "/routes-docs/openapi.json",
+                    "/admin/docs/openapi.json", "/spec",
+                ] {
                     let response = try await client.get(URI(path: path))
                     #expect(response.status == .ok, "\(path)")
                 }

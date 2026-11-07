@@ -9,17 +9,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-/// The schema as compact JSON with sorted keys, so tests can compare it exactly.
-private func json(_ schema: JSONSchema) throws -> String {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-    return String(decoding: try encoder.encode(schema), as: UTF8.self)
-}
-
-private func ref(_ name: String) -> JSONSchema {
-    .reference(.component(named: name))
-}
-
 private struct User {}
 private struct Node {}
 private struct Tree {}

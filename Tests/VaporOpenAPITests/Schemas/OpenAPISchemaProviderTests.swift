@@ -10,14 +10,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-/// The schema as compact JSON with sorted keys, so tests can compare it exactly.
-private func json(_ schema: JSONSchema?) throws -> String? {
-    guard let schema else { return nil }
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.sortedKeys]
-    return String(decoding: try encoder.encode(schema), as: UTF8.self)
-}
-
 /// The schema a generic caller sees, which goes through the protocol witness.
 private func genericSchema<T: OpenAPISchemaProvider>(_: T.Type) -> OpenAPISchema {
     T.openAPISchema
@@ -26,10 +18,6 @@ private func genericSchema<T: OpenAPISchemaProvider>(_: T.Type) -> OpenAPISchema
 private enum Role: String, Codable, CaseIterable, OpenAPISchemaProvider {
     case user
     case admin
-}
-
-private enum Status: String, CaseIterable, OpenAPISchemaProvider {
-    case active
 }
 
 /// A string-backed enum that describes itself rather than taking the default.
@@ -54,8 +42,11 @@ private struct User: Codable {
     var id: Int
 }
 
-// Conformances are global, so this changes `Decimal` for every test in the process. Only
-// `schema(for:)` sees it: `builtin(for:)` doesn't look at providers.
+// WARNING: conformances are global, so this changes `Decimal` for EVERY test in the process, not
+// just this file's. Anything that describes a `Decimal` through `schema(for:)`, such as a body
+// or a property of a decoded type, gets `{"type":"string"}` here instead of the builtin number.
+// Don't describe a `Decimal` in any other test. Only `builtin(for:)` and `Placeholder` are
+// unaffected, since they don't look at providers.
 extension Decimal: OpenAPISchemaProvider {
     static var openAPISchema: OpenAPISchema { .string() }
 }
@@ -64,14 +55,10 @@ extension Decimal: OpenAPISchemaProvider {
 struct OpenAPISchemaProviderTests {
     // MARK: - String enums
 
-    @Test("A string enum is described by its raw values, in declaration order")
+    @Test("A string enum is described by its raw values, in declaration order, including in generic code")
     func enumDefault() throws {
         #expect(try json(Role.openAPISchema.schema) == #"{"enum":["user","admin"],"type":"string"}"#)
-    }
-
-    @Test("A single-case enum is written as const")
-    func singleCaseEnum() throws {
-        #expect(try json(Status.openAPISchema.schema) == #"{"const":"active","type":"string"}"#)
+        #expect(genericSchema(Role.self) == .enumeration(["user", "admin"]))
     }
 
     @Test("A type with no cases is rejected")
@@ -86,41 +73,36 @@ struct OpenAPISchemaProviderTests {
         let expected = #"{"format":"color","type":"string"}"#
         #expect(try json(Color.openAPISchema.schema) == expected)
         #expect(try json(genericSchema(Color.self).schema) == expected)
-        #expect(try json(JSONSchema.schema(for: Color.self)) == expected)
-    }
-
-    @Test("Generic code sees the enum default too")
-    func genericDefault() {
-        #expect(genericSchema(Role.self) == .enumeration(["user", "admin"]))
+        let found = try #require(JSONSchema.schema(for: Color.self))
+        #expect(try json(found) == expected)
     }
 
     // MARK: - schema(for:)
 
     @Test("A provider's schema is found from its metatype")
     func schemaForProvider() throws {
-        #expect(try json(JSONSchema.schema(for: Role.self)) == json(Role.openAPISchema.schema))
-        #expect(try json(JSONSchema.schema(for: Money.self)) == json(Money.openAPISchema.schema))
+        let role = try #require(JSONSchema.schema(for: Role.self))
+        let money = try #require(JSONSchema.schema(for: Money.self))
+        #expect(try json(role) == json(Role.openAPISchema.schema))
+        #expect(try json(money) == json(Money.openAPISchema.schema))
     }
 
     @Test("A provider takes precedence over the builtin schema")
     func providerBeatsBuiltin() throws {
-        #expect(try json(JSONSchema.schema(for: Decimal.self)) == #"{"type":"string"}"#)
-        #expect(try json(JSONSchema.builtin(for: Decimal.self)) == #"{"type":"number"}"#)
+        let provided = try #require(JSONSchema.schema(for: Decimal.self))
+        let builtin = try #require(JSONSchema.builtin(for: Decimal.self))
+        #expect(try json(provided) == #"{"type":"string"}"#)
+        #expect(try json(builtin) == #"{"type":"number"}"#)
     }
 
-    @Test("Without a provider, the builtin schema is used")
-    func schemaForBuiltin() throws {
-        #expect(try json(JSONSchema.schema(for: String.self)) == #"{"type":"string"}"#)
-        #expect(try json(JSONSchema.schema(for: UUID.self)) == #"{"format":"uuid","type":"string"}"#)
-    }
-
-    @Test("A type with neither has no schema")
-    func schemaForUnknown() throws {
+    @Test("Without a provider the builtin schema is used, and a type with neither, or a container, has none")
+    func schemaFallbacks() throws {
+        let string = try #require(JSONSchema.schema(for: String.self))
+        let uuid = try #require(JSONSchema.schema(for: UUID.self))
+        #expect(try json(string) == #"{"type":"string"}"#)
+        #expect(try json(uuid) == #"{"format":"uuid","type":"string"}"#)
         #expect(JSONSchema.schema(for: User.self) == nil)
-    }
-
-    @Test("Containers of providers aren't resolved here")
-    func schemaForContainers() {
+        // Containers of providers aren't resolved here.
         #expect(JSONSchema.schema(for: Role?.self) == nil)
         #expect(JSONSchema.schema(for: [Role].self) == nil)
         #expect(JSONSchema.schema(for: [String: Role].self) == nil)

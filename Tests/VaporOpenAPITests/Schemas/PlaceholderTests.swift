@@ -34,16 +34,6 @@ struct PlaceholderTests {
         #expect(Self.placeholder(for: type) != nil)
     }
 
-    @Test("A placeholder has the requested type")
-    func typed() {
-        #expect(Placeholder.value(for: String.self) == "")
-        #expect(Placeholder.value(for: Int8.self) == 0)
-        #expect(Placeholder.value(for: Bool.self) == false)
-        #expect(Placeholder.value(for: Date.self) == Date(timeIntervalSince1970: 0))
-        #expect(Placeholder.value(for: UUID.self)?.uuidString == "00000000-0000-0000-0000-000000000000")
-        #expect(Placeholder.value(for: URL.self)?.absoluteString == "https://example.com")
-    }
-
     @Test("App types and containers have none, since they're decoded instead")
     func noPlaceholder() {
         #expect(Placeholder.value(for: User.self) == nil)

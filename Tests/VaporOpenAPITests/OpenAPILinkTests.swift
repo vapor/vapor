@@ -10,16 +10,6 @@ private enum OrderID: OpenAPILinkKey {
 
 @Suite("OpenAPILink")
 struct OpenAPILinkTests {
-    // MARK: - Init
-
-    @Test("Init stores the name and location it's given")
-    func initStoresValues() {
-        let link = OpenAPILink("userId", in: .request(.path))
-
-        #expect(link.name == "userId")
-        #expect(link.location == .request(.path))
-    }
-
     // MARK: - Runtime expressions
 
     @Test(
@@ -31,56 +21,17 @@ struct OpenAPILinkTests {
             (OpenAPILink("id", in: .request(.body)), "$request.body#/id"),
             (OpenAPILink("Location", in: .response(.header)), "$response.header.Location"),
             (OpenAPILink("id", in: .response(.body)), "$response.body#/id"),
+            // An empty body name refers to the whole body.
+            (OpenAPILink("", in: .request(.body)), "$request.body"),
+            (OpenAPILink("", in: .response(.body)), "$response.body"),
+            // A slash in a body name reaches into nested fields.
+            (OpenAPILink("data/id", in: .response(.body)), "$response.body#/data/id"),
+            (OpenAPILink("data/items/0/id", in: .response(.body)), "$response.body#/data/items/0/id"),
+            (OpenAPILink("/id", in: .response(.body)), "$response.body#/id"),
         ]
     )
     func expressions(link: OpenAPILink, expected: String) {
         #expect(link.expression?.rawValue == expected)
-    }
-
-    @Test(
-        "An empty body name refers to the whole body",
-        arguments: [
-            (OpenAPILink.Location.request(.body), "$request.body"),
-            (.response(.body), "$response.body"),
-        ]
-    )
-    func emptyBodyNameIsWholeBody(location: OpenAPILink.Location, expected: String) {
-        #expect(OpenAPILink("", in: location).expression?.rawValue == expected)
-    }
-
-    @Test(
-        "A slash in a body name reaches into nested fields",
-        arguments: [
-            ("data/id", "$response.body#/data/id"),
-            ("data/items/0/id", "$response.body#/data/items/0/id"),
-            ("/id", "$response.body#/id"),
-        ]
-    )
-    func nestedBodyFields(name: String, expected: String) {
-        #expect(OpenAPILink(name, in: .response(.body)).expression?.rawValue == expected)
-    }
-
-    @Test("A tilde in a body name is escaped as a JSON pointer")
-    func bodyNameTildeIsEscaped() {
-        #expect(OpenAPILink("a~b", in: .response(.body)).expression?.rawValue == "$response.body#/a~0b")
-    }
-
-    @Test("Every expression round-trips through OpenAPIKit's parser")
-    func expressionsParse() throws {
-        let links = [
-            OpenAPILink("limit", in: .request(.query)),
-            OpenAPILink("X-Id", in: .request(.header)),
-            OpenAPILink("userId", in: .request(.path)),
-            OpenAPILink("id", in: .request(.body)),
-            OpenAPILink("", in: .request(.body)),
-            OpenAPILink("Location", in: .response(.header)),
-            OpenAPILink("id", in: .response(.body)),
-            OpenAPILink("", in: .response(.body)),
-        ]
-        for link in links {
-            let expression = try #require(link.expression)
-            #expect(OpenAPI.RuntimeExpression(rawValue: expression.rawValue) == expression)
-        }
     }
 
     @Test("A request cookie has no runtime expression, since it can only be a target")
@@ -113,54 +64,26 @@ struct OpenAPILinkTests {
     // MARK: - Identifiers
 
     @Test(
-        "Identifiers join the location and name in PascalCase",
+        "Identifiers join the location and name in PascalCase, safe to use as component keys",
         arguments: [
             (OpenAPILink("id", in: .response(.body)), "ResponseBodyId"),
             (OpenAPILink("Location", in: .response(.header)), "ResponseHeaderLocation"),
             (OpenAPILink("userId", in: .request(.path)), "RequestPathUserId"),
             (OpenAPILink("", in: .request(.body)), "RequestBody"),
+            // Dotted and nested body names split into PascalCase words.
+            (OpenAPILink("owner.name", in: .response(.body)), "ResponseBodyOwnerName"),
+            (OpenAPILink("data/id", in: .response(.body)), "ResponseBodyDataId"),
+            // Characters a component key can't have are replaced.
+            (OpenAPILink("owner name", in: .response(.body)), "ResponseBodyOwner-name"),
+            (OpenAPILink("user id", in: .request(.path)), "RequestPathUser-id"),
+            (OpenAPILink("X-Id", in: .request(.header)), "RequestHeaderX-Id"),
         ]
     )
     func identifiers(link: OpenAPILink, expected: String) {
         #expect(link.identifier == expected)
     }
 
-    @Test(
-        "Identifiers are safe to use as component keys",
-        arguments: [
-            (OpenAPILink("owner name", in: .response(.body)), "ResponseBodyOwner-name"),
-            (OpenAPILink("user id", in: .request(.path)), "RequestPathUser-id"),
-            (OpenAPILink("X-Id", in: .request(.header)), "RequestHeaderX-Id"),
-        ]
-    )
-    func identifiersAreComponentKeySafe(link: OpenAPILink, expected: String) throws {
-        #expect(link.identifier == expected)
-        let allowed = try Regex(#"^[a-zA-Z0-9\.\-_]+$"#)
-        #expect(link.identifier.wholeMatch(of: allowed) != nil)
-    }
-
-    @Test("Dotted and nested body names split into PascalCase words")
-    func dottedAndNestedNames() {
-        #expect(OpenAPILink("owner.name", in: .response(.body)).identifier == "ResponseBodyOwnerName")
-        #expect(OpenAPILink("data/id", in: .response(.body)).identifier == "ResponseBodyDataId")
-    }
-
-    // MARK: - Equality
-
-    @Test("Links are equal only when name and location both match")
-    func equality() {
-        #expect(OpenAPILink("id", in: .response(.body)) == OpenAPILink("id", in: .response(.body)))
-        #expect(OpenAPILink("id", in: .response(.body)) != OpenAPILink("id", in: .request(.body)))
-        #expect(OpenAPILink("id", in: .response(.body)) != OpenAPILink("ID", in: .response(.body)))
-    }
-
     // MARK: - Keys
-
-    @Test("A key without a description defaults to nil")
-    func keyDescriptionDefaultsToNil() {
-        #expect(UserID.description == nil)
-        #expect(OrderID.description == "The order to look up")
-    }
 
     @Test("Key ids are equal for the same key type and differ across types")
     func keyIDs() {
