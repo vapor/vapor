@@ -283,7 +283,7 @@ let package = Package(
                 .product(name: "HTTPTypes", package: "swift-http-types"),
             ],
             swiftSettings: swiftSettings
-        )
+        ),
     ]
 )
 
