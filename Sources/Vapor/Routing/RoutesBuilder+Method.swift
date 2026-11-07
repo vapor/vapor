@@ -167,10 +167,17 @@ extension RoutesBuilder {
             path: path,
             responder: responder,
             requestType: Request.self,
-            responseType: Response.self,
+            responseType: handlerResponseType(of: closure),
             routeDescription: routeDescription
         )
         self.add(route)
         return route
+    }
+
+    /// The handler's return type, which `some ResponseEncodable` can't name directly.
+    private func handlerResponseType<R: ResponseEncodable>(
+        of _: @Sendable (Request) async throws -> R
+    ) -> Any.Type {
+        R.self
     }
 }
