@@ -54,8 +54,11 @@ extension OpenAPIValue {
                 try value.parameters(in: location, into: &components)
             }
             // OpenAPI forbids two parameters with the same name and location, so the last one wins.
+            // Header names are the same whatever their case.
             var seen = Set<String>()
-            return all.reversed().filter { seen.insert($0.name).inserted }.reversed()
+            return all.reversed().filter { parameter in
+                seen.insert(location == .header ? parameter.name.lowercased() : parameter.name).inserted
+            }.reversed()
         default:
             let earlier = components
             let (schema, example) = try schema(into: &components)

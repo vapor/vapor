@@ -135,6 +135,16 @@ private struct Counted: Decodable {
 
 private struct PetPath: Codable { var petID: Int }
 
+private struct UpperRequestID: Codable {
+    var id: String
+    enum CodingKeys: String, CodingKey { case id = "X-Request-ID" }
+}
+
+private struct LowerRequestID: Codable {
+    var id: Int
+    enum CodingKeys: String, CodingKey { case id = "x-request-id" }
+}
+
 /// The document for the routes `configure` registers, checked by OpenAPIKit's validator.
 private func document(_ configure: (Application) throws -> Void) async throws -> OpenAPI.Document {
     try await withApp { app in
@@ -192,12 +202,10 @@ struct EdgeCaseTests {
         #expect(pathParameters(document, "/ranges/{from}-{to}") == ["from", "to"])
     }
 
-    @Test("A parameter whose name has braces fails")
+    @Test("A parameter whose name has braces is left out")
     func parameterWithBraces() async throws {
-        let error = await #expect(throws: OpenAPIDocumentError.self) {
-            try await document { app in app.on(.get, [.parameter("a{b}")]) { _ in "x" } }
-        }
-        #expect(error?.reason.contains(#"the path parameter "a{b}" has braces"#) == true)
+        let document = try await document { app in app.on(.get, [.parameter("a{b}")]) { _ in "x" } }
+        #expect(document.paths.isEmpty)
     }
 
     @Test("The root route is the path /")
@@ -437,6 +445,26 @@ struct EdgeCaseTests {
             }
         }
         #expect(Counted.decodes.load(ordering: .relaxed) - before == 1)
+    }
+
+    @Test("A route's own description is its summary, unless it has one for OpenAPI")
+    func routeDescriptionSummary() async throws {
+        let document = try await document { app in
+            app.get("a", routeDescription: "Lists things") { _ in "a" }
+            app.openAPI(summary: "Gets b").get("b", routeDescription: "Not this") { _ in "b" }
+        }
+        #expect(document.paths["/a"]?.pathItemValue?.get?.summary == "Lists things")
+        #expect(document.paths["/b"]?.pathItemValue?.get?.summary == "Gets b")
+    }
+
+    @Test("Headers that differ only in case are one header, the route's replacing its group's")
+    func headerCase() async throws {
+        let document = try await document { app in
+            app.openAPI(headers: .type(UpperRequestID.self)).openAPI(headers: .type(LowerRequestID.self))
+                .get("a") { _ in "a" }
+        }
+        let headers = document.paths["/a"]?.pathItemValue?.get?.parameters.compactMap(\.b).filter { $0.location == .header }
+        #expect(headers?.map(\.name) == ["x-request-id"])
     }
 
     // MARK: Info and documentation routes

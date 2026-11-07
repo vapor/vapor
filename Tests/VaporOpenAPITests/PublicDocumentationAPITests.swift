@@ -45,13 +45,15 @@ struct PublicDocumentationAPITests {
     @Test("A route that can't be described is reported by a public error")
     func publicError() async throws {
         try await withApp { app in
-            app.get("files", "**") { _ in "file" }
+            let files = app.openAPI(operationID: "files")
+            files.get("a") { _ in "a" }
+            files.get("b") { _ in "b" }
             do {
                 _ = try app.routes.openAPI(info: OpenAPIInfo(title: "Files", version: "1.0.0"))
                 Issue.record("Expected the document to fail")
             } catch let error as OpenAPIDocumentError {
-                #expect(error.route == "GET /files/**")
-                #expect(error.reason.contains("hiddenFromOpenAPI()"))
+                #expect(error.route == "GET /b")
+                #expect(error.reason.contains(#"its operation ID "files" is also GET /a's"#))
             }
         }
     }

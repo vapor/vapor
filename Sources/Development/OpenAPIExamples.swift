@@ -40,15 +40,17 @@ func openAPIExamples(_ app: Application) {
     pets.openAPI(summary: "List pets", query: .type(PetFilter.self))
         .get { _ in [Pet(id: 1, name: "Tom", status: .available)] }
 
+    // A handler that sets its own status returns a `Response`, so the route describes the body.
     pets.openAPI(
         summary: "Add a pet",
         body: .type(NewPet.self),
+        response: .type(Pet.self),
         statusCode: .created,
         links: [OpenAPILink("id", in: .response(.body)): PetID.self]
     )
     .post { req in
-        let pet = try await req.content.decode(NewPet.self)
-        return Pet(id: 2, name: pet.name, status: .available)
+        let new = try await req.content.decode(NewPet.self)
+        return try await Pet(id: 2, name: new.name, status: .available).encodeResponse(status: .created, for: req)
     }
 
     pets.openAPI(

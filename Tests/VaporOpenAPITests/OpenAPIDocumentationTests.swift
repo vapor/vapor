@@ -105,7 +105,9 @@ struct OpenAPIDocumentationTests {
     @Test("A route that can't be described doesn't stop the boot, and the document is a 500 naming it")
     func failure() async throws {
         try await withApp { app in
-            app.get("proxy", "**") { _ in "x" }
+            let pets = app.openAPI(operationID: "pets")
+            pets.get("a") { _ in "a" }
+            pets.get("b") { _ in "b" }
             app.openAPIDocumentation("docs", info: info)
             try await app.testing { client in
                 let document = try await client.get("/docs/openapi.json")
@@ -113,11 +115,11 @@ struct OpenAPIDocumentationTests {
                 let reason = try JSONDecoder().decode(ErrorBody.self, from: Data(body.utf8)).reason
                 #expect(document.status == .internalServerError)
                 // Not a release build, so the client is told which route and why.
-                #expect(reason.contains("GET /proxy/**: a catch-all path"))
+                #expect(reason.contains(#"GET /b: its operation ID "pets" is also GET /a's"#))
                 // The rest of the app, the page included, is served as usual.
-                let proxy = try await client.get("/proxy/a/b")
+                let route = try await client.get("/a")
                 let page = try await client.get("/docs")
-                #expect(proxy.status == .ok)
+                #expect(route.status == .ok)
                 #expect(page.status == .ok)
             }
         }

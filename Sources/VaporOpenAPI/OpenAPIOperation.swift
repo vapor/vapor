@@ -22,7 +22,8 @@ extension Route {
             let responseMap = try responses(into: &components)
             let operation = OpenAPI.Operation(
                 tags: details.tags.isEmpty ? nil : details.tags,
-                summary: details.summary,
+                // Vapor's own description of the route, when it isn't described here.
+                summary: details.summary ?? routeDescription,
                 description: details.description,
                 operationId: details.operationID,
                 parameters: parameters.map { .b($0) },

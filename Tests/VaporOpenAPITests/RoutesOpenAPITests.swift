@@ -1,5 +1,7 @@
 #if OpenAPI
 import HTTPTypes
+import InMemoryLogging
+import Logging
 import OpenAPIKit
 import RoutingKit
 import Testing
@@ -101,13 +103,29 @@ struct RoutesOpenAPITests {
         #expect(json.contains(#"{"in":"query","name":"page","schema":{"format":"int64","type":"integer"}}"#))
     }
 
-    @Test("A catch-all route fails, naming the route and how to hide it")
+    @Test("A catch-all route is left out, and the other routes are described")
     func catchall() async throws {
-        let error = await #expect(throws: (any Error).self) {
-            try await document { app in app.get("proxy", "**") { _ in "x" } }
+        let json = try await document { app in
+            app.get("proxy", "**") { _ in "x" }
+            app.get("pets") { _ in "pets" }
         }
+        #expect(json.contains(#""/pets":{"get":"#))
+        #expect(!json.contains("proxy"))
+    }
+
+    @Test("A route left out is named in a warning, with why")
+    func leftOutWarning() async throws {
+        let logHandler = InMemoryLogHandler()
+        let logger = Logger(label: "codes.vapor.test", factory: { _ in logHandler })
+        try await withApp(logger: logger) { app in
+            app.get("proxy", "**") { _ in "x" }
+            _ = try app.routes.openAPI(info: OpenAPIInfo(title: "Pets", version: "1.0.0"))
+        }
+        let warnings = logHandler.entries.filter { $0.level == .warning }.map { "\($0.message)" }
         #expect(
-            "\(error!)" == "GET /proxy/**: a catch-all path (**) can't be described in OpenAPI. Hide the route with hiddenFromOpenAPI().")
+            warnings == [
+                "GET /proxy/** is left out of the OpenAPI document: a catch-all path (**) can't be described in OpenAPI. Hide the route with hiddenFromOpenAPI()."
+            ])
     }
 
     @Test("A response value links to a request value with the same key")
@@ -234,12 +252,10 @@ struct RoutesOpenAPITests {
         #expect("\(error!)" == #"GET /b: its operation ID "pets" is also GET /a's. Set operationID on a single route."#)
     }
 
-    @Test("A path segment with braces that isn't a parameter fails")
+    @Test("A path segment with braces that isn't a parameter is left out")
     func bracesInConstant() async throws {
-        let error = await #expect(throws: (any Error).self) {
-            try await document { app in app.get("files", "file-{name}.zip") { _ in "x" } }
-        }
-        #expect("\(error!)".hasPrefix(#"GET /files/file-{name}.zip: the path segment "file-{name}.zip" has braces"#))
+        let json = try await document { app in app.get("files", "file-{name}.zip") { _ in "x" } }
+        #expect(!json.contains("files"))
     }
 
     @Test("A type used only for parameters isn't kept as a schema")

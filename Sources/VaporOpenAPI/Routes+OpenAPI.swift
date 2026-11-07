@@ -1,4 +1,5 @@
 #if OpenAPI
+import Logging
 import OpenAPIKit
 public import Vapor
 
@@ -9,9 +10,10 @@ extension Routes {
     /// let document = try app.routes.openAPI(info: OpenAPIInfo(title: "Pets", version: "1.0.0"))
     /// ```
     ///
-    /// Throws when a route can't be described, naming the route and why.
+    /// A route whose path OpenAPI can't express, such as a catch-all `**`, is left out with a
+    /// warning in the log. Throws when another route can't be described, naming the route and why.
     public func openAPI(info: OpenAPIInfo) throws -> OpenAPIDocument {
-        let routes = all.filter { !$0.openAPIRoute.isHidden }
+        let routes = all.filter { !$0.openAPIRoute.isHidden && $0.hasExpressiblePath }
         var components = SchemaComponents()
         var paths: OpenAPI.PathItem.Map = [:]
         var ends = [LinkEnd]()
@@ -124,6 +126,21 @@ extension Routes {
                 route: target.route,
                 reason: "a link sets its \(location.rawValue) parameter \"\(target.end.name)\", which it doesn't have"
             )
+        }
+    }
+}
+
+extension Route {
+    /// Whether OpenAPI can express this route's path, logging why not when it can't.
+    ///
+    /// Such a route, usually a catch-all, is left out rather than failing the whole document.
+    fileprivate var hasExpressiblePath: Bool {
+        do {
+            _ = try OpenAPIPath(path)
+            return true
+        } catch {
+            Logger.current.warning("\(description) is left out of the OpenAPI document: \(error.reason)")
+            return false
         }
     }
 }

@@ -33,8 +33,12 @@ func routes(_ app: Application) throws {
     pets.openAPI(summary: "List pets", query: .type(PetFilter.self))
         .get { req async throws -> [Pet] in … }
 
-    pets.openAPI(summary: "Add a pet", body: .type(NewPet.self), statusCode: .created)
-        .post { req async throws -> Pet in … }
+    // The handler sends the status itself, so the route says what it is.
+    pets.openAPI(summary: "Add a pet", body: .type(NewPet.self), response: .type(Pet.self), statusCode: .created)
+        .post { req async throws -> Response in
+            let pet: Pet = …
+            return try await pet.encodeResponse(status: .created, for: req)
+        }
 
     app.openAPIDocumentation("docs", info: OpenAPIInfo(title: "Petstore", version: "1.0.0"))
 }

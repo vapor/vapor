@@ -14,6 +14,7 @@ app.openAPI(summary: "Get a pet", path: .type(PetPath.self), response: .type(Pet
 
 Every detail is optional. A route registered without `openAPI(...)` is still in the document,
 with its path, method and path parameters, and with its handler's return type as its response.
+A route's `routeDescription`, given when it's registered, is its summary unless `summary:` is.
 
 ### Groups
 

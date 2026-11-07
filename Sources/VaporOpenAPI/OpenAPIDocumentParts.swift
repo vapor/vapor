@@ -17,38 +17,33 @@ extension [Route] {
     /// or when an ID can't be a component's key. Schemes that differ only in their descriptions
     /// are the same scheme, and keep the first one's.
     func securitySchemes() throws -> OpenAPI.ComponentReferenceDictionary<OpenAPI.SecurityScheme> {
-        var schemes: [String: (auth: OpenAPIAuth, route: Route)] = [:]
-        var order: [String] = []
+        var schemes: OpenAPI.ComponentReferenceDictionary<OpenAPI.SecurityScheme> = [:]
+        // The route each ID was first seen on, for the error when another uses it differently.
+        var firstRoutes: [OpenAPI.ComponentKey: Route] = [:]
         for route in self {
             for auth in route.openAPIRoute.auth {
-                guard OpenAPI.ComponentKey(rawValue: auth.id) != nil else {
+                guard let key = OpenAPI.ComponentKey(rawValue: auth.id) else {
                     throw OpenAPIDocumentError(
                         route: route.description,
                         reason:
                             "its auth id \"\(auth.id)\" isn't a valid component name. Use only letters, digits, \".\", \"-\" and \"_\"."
                     )
                 }
-                if let first = schemes[auth.id] {
-                    guard first.auth.scheme.type == auth.scheme.type else {
+                if let first = schemes[key]?.b, let firstRoute = firstRoutes[key] {
+                    guard first.type == auth.scheme.type else {
                         throw OpenAPIDocumentError(
                             route: route.description,
                             reason:
-                                "its auth \"\(auth.id)\" is a different scheme from \(first.route.description)'s. Give one of them its own id."
+                                "its auth \"\(auth.id)\" is a different scheme from \(firstRoute.description)'s. Give one of them its own id."
                         )
                     }
                 } else {
-                    schemes[auth.id] = (auth, route)
-                    order.append(auth.id)
+                    schemes[key] = .b(auth.scheme)
+                    firstRoutes[key] = route
                 }
             }
         }
-        var dictionary: OpenAPI.ComponentReferenceDictionary<OpenAPI.SecurityScheme> = [:]
-        for id in order {
-            // Every ID was checked above.
-            guard let key = OpenAPI.ComponentKey(rawValue: id), let auth = schemes[id]?.auth else { continue }
-            dictionary[key] = .b(auth.scheme)
-        }
-        return dictionary
+        return schemes
     }
 
     /// Throws when two routes share an operation ID, which client generators can't tell apart.

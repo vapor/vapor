@@ -18,7 +18,9 @@ only in some environments:
 
 ```swift
 if app.environment != .production {
-    app.grouped(AdminAuthenticator()).openAPIDocumentation("docs", of: app, info: info)
+    // An authenticator only identifies users; the guard turns the others away.
+    app.grouped(AdminAuthenticator(), Admin.guardMiddleware())
+        .openAPIDocumentation("docs", of: app, info: info)
 }
 ```
 
@@ -35,13 +37,15 @@ Until the application has booted, `openapi.json` responds with 503 Service Unava
 
 ### Routes that can't be described
 
-A route OpenAPI can't express doesn't stop the application from starting. The error is
-logged, and `openapi.json` responds with 500 Internal Server Error, naming the route and how to
-fix it, except in release builds, which say only to see the log. This happens for:
+A route whose path OpenAPI can't express is left out of the document, with a warning in the
+log: a catch-all `**`, such as a single-page app's fallback, or a constant path segment with
+braces, such as `file-{name}.zip`. Register it through `hiddenFromOpenAPI()` to leave it out
+without the warning.
 
-- a catch-all `**`, such as a single-page app's fallback. Register it through
-  `hiddenFromOpenAPI()`.
-- a constant path segment with braces, such as `file-{name}.zip`.
+Other routes that can't be described don't stop the application from starting either. The
+error is logged, and `openapi.json` responds with 500 Internal Server Error, naming the route
+and how to fix it, except in release builds, which say only to see the log. This happens for:
+
 - the same method and path registered twice, or paths that differ only in their parameters'
   names, such as `/users/:id` and `/users/:userID`.
 - two routes with one operation ID, or one auth id used for two different schemes.

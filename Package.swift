@@ -277,6 +277,7 @@ let package = Package(
             name: "VaporOpenAPITests",
             dependencies: [
                 "VaporOpenAPI",
+                .product(name: "InMemoryLogging", package: "swift-log"),
                 "Vapor",
                 "VaporTesting",
                 .product(name: "OpenAPIKit", package: "OpenAPIKit", condition: .when(traits: ["OpenAPI"])),

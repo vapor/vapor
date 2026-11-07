@@ -46,7 +46,9 @@ extension RoutesBuilder {
             StoplightPage(title: title ?? info.title, documentURL: StoplightPage.documentURL(from: request.url.path))
         }
 
-        // After the routes, so registering too late fails on the routes, which says what went wrong.
+        // After the routes, so registering once the application has started fails on the routes,
+        // which says what went wrong. Registering after boot but before start goes through, and
+        // the document is never built, so `response()` explains its 503.
         application.addLifecycleHandler(openAPIDocumentationBuilder)
     }
 }

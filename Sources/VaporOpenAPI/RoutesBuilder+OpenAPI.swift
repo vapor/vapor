@@ -31,9 +31,11 @@ extension RoutesBuilder {
     ///     path, as strings.
     ///   - cookies: The cookies the operation reads.
     ///   - body: The request body.
-    ///   - contentTypes: The request body's content types. JSON if empty.
+    ///   - contentTypes: The request body's content types. If empty, the body type's
+    ///     `Content.defaultContentType`, or JSON when it has none.
     ///   - response: The successful response's body. The handler's return type if `nil`.
-    ///   - responseContentTypes: The response body's content types. JSON if empty.
+    ///   - responseContentTypes: The response body's content types. If empty, the body type's
+    ///     `Content.defaultContentType`, such as `text/plain` for a `String`, or JSON when it has none.
     ///   - responseHeaders: The headers of the successful response.
     ///   - responseDescription: A description of the successful response.
     ///   - statusCode: The successful response's status. `200 OK` if `nil`.

@@ -189,7 +189,7 @@ extension OpenAPISchema {
 
         /// A format that isn't listed here.
         ///
-        /// An empty name means no format, and a listed name such as `"uuid"` is the same as that format.
+        /// An empty name means no format, and a listed name such as `"int64"` is the same as that format.
         public static func other(_ format: String) -> Self {
             Self(jsonFormat: .other(format))
         }
@@ -204,7 +204,7 @@ extension OpenAPISchema {
 
         /// A format that isn't listed here.
         ///
-        /// An empty name means no format, and a listed name such as `"uuid"` is the same as that format.
+        /// An empty name means no format, and a listed name such as `"double"` is the same as that format.
         public static func other(_ format: String) -> Self {
             Self(jsonFormat: .other(format))
         }
