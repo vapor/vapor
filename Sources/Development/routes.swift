@@ -7,6 +7,10 @@ import Vapor
 import VaporMacros
 import _NIOFileSystem
 
+#if OpenAPI
+import VaporOpenAPI
+#endif
+
 struct Creds: Content {
     var email: String
     var password: String
@@ -212,7 +216,12 @@ func routes(_ app: Application) async throws {
     }
     // A catch-all needs at least one component after it, so the bare prefix is registered too.
     app.get("proxy", use: proxyToVaporCodes)
+    #if OpenAPI
+    // OpenAPI can't describe a catch-all, so it's left out of the document.
+    app.hiddenFromOpenAPI().get("proxy", "**", use: proxyToVaporCodes)
+    #else
     app.get("proxy", "**", use: proxyToVaporCodes)
+    #endif
 
     // Request direction. vapor.codes has nothing to receive a body, so the POST goes to an echo
     // endpoint that sends the body back, which makes the streamed upload visible on the way out:
@@ -322,6 +331,10 @@ func routes(_ app: Application) async throws {
         let fileName = try req.parameters.require("my-file")
         return "Hello, \(fileName)"
     }
+
+    #if OpenAPI
+    openAPIExamples(app)
+    #endif
 
     #if MacroRouting
     try await app.register(collection: UserController())
