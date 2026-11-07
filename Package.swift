@@ -28,8 +28,6 @@ let package = Package(
             "HTTPClient",
             "Multipart",
             "MacroRouting",
-            // TODO: Remove
-            "OpenAPI",
         ]),
     ],
     dependencies: [
