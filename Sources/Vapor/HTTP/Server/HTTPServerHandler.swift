@@ -22,12 +22,22 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
     let context: ServerContext
     let responder: any Responder
 
+    #if UnstableWebTransport
+    let webTransportStreamCreator: NIOHTTPServer.Connection.WebTransportStreamCreator?
+    #endif
+
     func handle(
         request: HTTPRequest,
         requestContext: consuming NIOHTTPServer.RequestContext,
         reader: consuming sending NIOHTTPServer.Reader,
         responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
+        #if UnstableWebTransport
+        let uniStreams = reader.webTransportIncomingUnidirectionalStreams
+        let biStreams = reader.webTransportIncomingBidirectionalStreams
+        var datagramReader = await reader.takeDatagramReader()
+        #endif
+
         let bodyStream = RequestBodyStream(reader: consume reader)
 
         // 1. Drain any body the handler didn't read so the keep-alive connection stays usable. GET/HEAD
@@ -60,6 +70,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 url: URI(path: rawPath),
                 version: httpVersion,
                 headersNoUpdate: request.headerFields,
+                extendedConnectProtocol: request.extendedConnectProtocol,
                 bodyStream: bodyStream,
                 remoteAddress: remoteAddress,
                 localAddress: localAddress,
@@ -106,6 +117,35 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
                 try await sender.sendAndFinish(httpResponse, buffer: &empty)
                 return
             }
+
+            #if UnstableWebTransport
+            if let operation = vaporResponse.webTransportSession,
+                let webTransportStreamCreator = self.webTransportStreamCreator,
+                let unwrappedUniStreams = uniStreams,
+                let unwrappedBiStreams = biStreams,
+                var unwrappedDatagramReader = datagramReader.take()
+            {
+                // Send the HTTP response head to accept the WebTransport session
+                var streamWriter = try await sender.send(httpResponse)
+
+                guard let datagramWriter = await streamWriter.takeDatagramWriter() else {
+                    throw Abort(.internalServerError)
+                }
+
+                let context = requestContext
+                let webTransportSession = WebTransportSession(
+                    applicationProtocol: vaporResponse.webTransportApplicationProtocol,
+                    streamCreator: webTransportStreamCreator,
+                    requestContext: context,
+                    incomingUnidirectionalStreams: unwrappedUniStreams,
+                    incomingBidirectionalStreams: unwrappedBiStreams
+                )
+
+                try await operation(webTransportSession)
+                try await streamWriter.finish()
+                return
+            }
+            #endif
 
             switch vaporResponse.body.storage {
             // A stream some copy of this body already collected is spent: its bytes live in the

@@ -69,6 +69,55 @@ func routes(_ app: Application) async throws {
     //        ws.send("Hello 👋 \(ip)")
     //    }
 
+    #if UnstableWebTransport
+    app.webTransport("webtransport", availableProtocols: ["webtransport-test", "webtransport-test-2"]) { session in
+        await withThrowingTaskGroup { group in
+            group.addTask {
+                try await withThrowingDiscardingTaskGroup { streamsGroup in
+                    for await stream in session.incomingUnidirectionalStreams {
+                        streamsGroup.addTask {
+                            try await stream.executeThenClose { inbound in
+                                for try await message in inbound {
+                                    if String(buffer: message) == "open" {
+                                        try await session.withUnidirectionalStream { outbound in
+                                            try await outbound.write(ByteBuffer(string: "opened"))
+                                        }
+                                    } else {
+                                        print("Received on uni stream: \(String(buffer: message))")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            group.addTask {
+                try await withThrowingDiscardingTaskGroup { streamsGroup in
+                    for await stream in session.incomingBidirectionalStreams {
+                        streamsGroup.addTask {
+                            try await stream.executeThenClose { inbound, outbound in
+                                for try await message in inbound {
+                                    if String(buffer: message) == "open" {
+                                        try await session.withBidirectionalStream { inbound, outbound in
+                                            try await outbound.write(ByteBuffer(string: "opened"))
+                                            for try await message in inbound {
+                                                try await outbound.write(message)
+                                            }
+                                        }
+                                    } else {
+                                        try await outbound.write(message)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    #endif  // UnstableWebTransport
+
     app.on(.post, "file") { req in
         try await req.body.forEachChunk { part in
             debugPrint(part.count)
