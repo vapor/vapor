@@ -103,12 +103,12 @@ let package = Package(
         // HTTP Server for low level request and response handling
         .package(
             url: "https://github.com/swift-server/swift-http-server.git",
-            .upToNextMinor(from: "0.4.0"),
+            .upToNextMinor(from: "0.5.0"),
             traits: [.defaults, .trait(name: "HTTP3", condition: .when(traits: ["UnstableHTTP3"]))]
         ),
 
         // HTTP/3 and QUIC support for SwiftNIO - used for testing
-        .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/apple/swift-nio-http3.git", .upToNextMinor(from: "0.4.0")),
         .package(url: "https://github.com/apple/swift-nio-quic.git", .upToNextMinor(from: "0.6.0")),
     ],
     targets: [
