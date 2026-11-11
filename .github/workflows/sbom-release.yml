@@ -14,7 +14,7 @@ permissions:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     container: swift:6.4-noble
     steps:
       - name: Check out release
@@ -27,14 +27,12 @@ jobs:
           rm -f sboms/cyclonedx*.json sboms/spdx*.json
           swift build --sbom-spec cyclonedx --sbom-output-dir sboms
           swift build --sbom-spec spdx --sbom-output-dir sboms
-          mv sboms/cyclonedx*.json sboms/cyclonedx.json
-          mv sboms/spdx*.json sboms/spdx.json
 
       - name: Attach SBOMs to release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: |
-            sboms/cyclonedx.json
-            sboms/spdx.json
+            sboms/cyclonedx*.json
+            sboms/spdx*.json
           fail_on_unmatched_files: true
