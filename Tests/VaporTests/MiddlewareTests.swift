@@ -273,4 +273,72 @@ final class MiddlewareTests: XCTestCase {
 
         await app.server.shutdown()
     }
+
+    func testTracingMiddlewareUsesTaskLocalTracer() async throws {
+        let tracer = TestTracer()
+        // Create the application inside the scope. Send the request outside the scope.
+        // Vapor creates requests on a NIO event loop, where no task-local value exists.
+        let scopedApp = try await withTracer(tracer) {
+            try await Application.make(.testing)
+        }
+        scopedApp.traceAutoPropagation = true
+
+        scopedApp.grouped(TracingMiddleware()).get("testTaskLocalTracer") { req async throws -> String in
+            // The task-local tracer is the application's tracer, not the bootstrapped one.
+            XCTAssertTrue((InstrumentationSystem.tracer as AnyObject) === tracer)
+            XCTAssertTrue((req.tracer as AnyObject) === tracer)
+            // A span created inside the handler goes to the same tracer.
+            try await withSpan("child") { _ in }
+            return "done"
+        }
+
+        try await scopedApp.testable().test(.GET, "testTaskLocalTracer") { res async in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "done")
+        }
+
+        XCTAssertNotNil(tracer.spans.first(where: { $0.operationName == "GET /testTaskLocalTracer" }))
+        XCTAssertNotNil(tracer.spans.first(where: { $0.operationName == "child" }))
+
+        try await scopedApp.asyncShutdown()
+    }
+
+    func testAsyncMiddlewareWithSpanUsesApplicationTracer() async throws {
+        let appTracer = TestTracer()
+        // No tracer is bound where the request is sent. The spans reach `appTracer` only if Vapor binds the
+        // application's tracer around the middleware and the handler.
+        let scopedApp = try await withTracer(appTracer) {
+            try await Application.make(.testing)
+        }
+        scopedApp.traceAutoPropagation = true
+
+        struct SpanMiddleware: AsyncMiddleware {
+            let appTracer: TestTracer
+
+            func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
+                // The active tracer is the application's tracer.
+                XCTAssertTrue((InstrumentationSystem.tracer as AnyObject) === appTracer)
+                return try await withSpan("async-middleware") { _ in
+                    try await next.respond(to: request)
+                }
+            }
+        }
+
+        scopedApp.grouped(TracingMiddleware()).grouped(SpanMiddleware(appTracer: appTracer))
+            .get("asyncSpan") { req async throws -> String in
+                withSpan("handler") { _ in "done" }
+            }
+
+        try await scopedApp.testable().test(.GET, "asyncSpan") { res async in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "done")
+        }
+
+        XCTAssertEqual(
+            appTracer.spans.map(\.operationName).sorted(),
+            ["GET /asyncSpan", "async-middleware", "handler"]
+        )
+
+        try await scopedApp.asyncShutdown()
+    }
 }

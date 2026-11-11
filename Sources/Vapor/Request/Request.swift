@@ -2,9 +2,9 @@ import Foundation
 import NIOCore
 import NIOHTTP1
 import Logging
+import Tracing
 import RoutingKit
 import NIOConcurrencyHelpers
-import ServiceContextModule
 import X509
 
 /// Represents an HTTP request in an application.
@@ -193,6 +193,19 @@ public final class Request: CustomStringConvertible, Sendable {
         }
     }
     
+    /// The tracer that `TracingMiddleware` uses for this request.
+    ///
+    /// Defaults to the `Application`'s ``Application/tracer``. When ``Application/traceAutoPropagation``
+    /// is enabled, Vapor also binds this tracer as the task-local tracer around the request handlers.
+    public var tracer: any Tracer {
+        get {
+            self._tracer.withLockedValue { $0 }
+        }
+        set {
+            self._tracer.withLockedValue { $0 = newValue }
+        }
+    }
+
     public var serviceContext: ServiceContext {
         get {
             self._serviceContext.withLockedValue { $0 }
@@ -290,6 +303,7 @@ public final class Request: CustomStringConvertible, Sendable {
     let requestBox: NIOLockedValueBox<RequestBox>
     private let _storage: NIOLockedValueBox<Storage>
     private let _logger: NIOLockedValueBox<Logger>
+    private let _tracer: NIOLockedValueBox<any Tracer>
     private let _serviceContext: NIOLockedValueBox<ServiceContext>
     internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     
@@ -391,6 +405,7 @@ public final class Request: CustomStringConvertible, Sendable {
         remoteAddress: SocketAddress? = nil,
         peerCertificateChain: ValidatedCertificateChain?,
         logger: Logger = .init(label: "codes.vapor.request"),
+        tracer: (any Tracer)? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
@@ -405,6 +420,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var logger = logger
         logger[metadataKey: "request-id"] = .string(requestId)
         self._logger = .init(logger)
+        self._tracer = .init(tracer ?? application.tracer)
         self._serviceContext = .init(.topLevel)
         
         let storageBox = RequestBox(
@@ -429,11 +445,13 @@ public final class Request: CustomStringConvertible, Sendable {
         self.bodyStorage = .init(bodyStorage)
     }
 
-    /// Automatically restores tracing serviceContext around the provided closure
+    /// Automatically restores the tracing serviceContext and the tracer around the provided closure
     func propagateTracingIfEnabled<T>(_ closure: () throws -> T) rethrows -> T {
         if self.traceAutoPropagation {
             return try ServiceContext.withValue(self.serviceContext) {
-                try closure()
+                try withTracer(self.tracer) {
+                    try closure()
+                }
             }
         } else {
             return try closure()
