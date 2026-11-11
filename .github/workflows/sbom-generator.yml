@@ -1,0 +1,58 @@
+name: Generate SBOM
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Package.swift
+      - .github/workflows/sbom-generator.yml
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container: swift:6.4-noble
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Get token
+        id: get-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.PENNY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.PENNY_APP_PRIVATE_KEY }}
+
+      - name: Generate SBOMs
+        run: |
+          rm -f sboms/cyclonedx*.json sboms/spdx*.json
+          swift build --sbom-spec cyclonedx --sbom-output-dir sboms
+          swift build --sbom-spec spdx --sbom-output-dir sboms
+          mv sboms/cyclonedx*.json sboms/cyclonedx.json
+          mv sboms/spdx*.json sboms/spdx.json
+
+      - name: Commit and create PR
+        uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
+        with:
+          token: ${{ steps.get-token.outputs.token }}
+          add-paths: sboms/*.json
+          commit-message: Update Software Bill of Materials (SBOM)
+          committer: "Penny[bot] <360798+penny[bot]@vapor.codes>"
+          author: "Penny[bot] <360798+penny[bot]@vapor.codes>"
+          branch: update-sbom
+          base: main
+          delete-branch: true
+          title: Update Software Bill of Materials (SBOM)
+          body: Update the CycloneDX and SPDX SBOMs for Vapor's dependencies.
+          labels: no-release-needed
+          reviewers: 0xTim
