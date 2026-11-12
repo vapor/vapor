@@ -8,6 +8,13 @@ public struct Route: CustomStringConvertible, Sendable {
     public var requestType: Any.Type
     public var responseType: Any.Type
     public var routeDescription: String?
+    #if OpenAPI
+    /// What VaporOpenAPI's builders record about the route, for its OpenAPI document.
+    ///
+    /// Untyped, since VaporOpenAPI's own type isn't visible from here. Only VaporOpenAPI reads or
+    /// writes it.
+    package var openAPI: (any Sendable)? = nil
+    #endif
 
     public var description: String {
         let path = path.map { "\($0)" }.joined(separator: "/")
