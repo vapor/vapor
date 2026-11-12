@@ -24,15 +24,15 @@ jobs:
 
       - name: Generate SBOMs
         run: |
-          rm -f sboms/cyclonedx*.json sboms/spdx*.json
-          swift build --sbom-spec cyclonedx --sbom-output-dir sboms
-          swift build --sbom-spec spdx --sbom-output-dir sboms
+          rm -f security/sboms/cyclonedx*.json security/sboms/spdx*.json
+          swift build --sbom-spec cyclonedx --sbom-output-dir security/sboms
+          swift build --sbom-spec spdx --sbom-output-dir security/sboms
 
       - name: Attach SBOMs to release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: |
-            sboms/cyclonedx*.json
-            sboms/spdx*.json
+            security/sboms/cyclonedx*.json
+            security/sboms/spdx*.json
           fail_on_unmatched_files: true
