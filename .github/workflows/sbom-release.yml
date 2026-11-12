@@ -1,0 +1,38 @@
+name: Release SBOMs
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.release.tag_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container: swift:6.4-resolute
+    steps:
+      - name: Check out release
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Generate SBOMs
+        run: |
+          rm -f sboms/cyclonedx*.json sboms/spdx*.json
+          swift build --sbom-spec cyclonedx --sbom-output-dir sboms
+          swift build --sbom-spec spdx --sbom-output-dir sboms
+
+      - name: Attach SBOMs to release
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            sboms/cyclonedx*.json
+            sboms/spdx*.json
+          fail_on_unmatched_files: true
