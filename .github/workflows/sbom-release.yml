@@ -15,7 +15,7 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    container: swift:6.4-noble
+    container: swift:6.4-resolute
     steps:
       - name: Check out release
         uses: actions/checkout@v7
