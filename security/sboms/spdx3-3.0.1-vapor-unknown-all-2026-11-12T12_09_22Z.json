@@ -2,41 +2,41 @@
   "@context" : "https://spdx.org/rdf/3.0.1/spdx-context.jsonld",
   "@graph" : [
     {
-      "creationInfo" : "urn:uuid:7a6f5680-7d70-444b-a47f-eb06397e4922:creationInfo",
-      "from" : "urn:uuid:7a6f5680-7d70-444b-a47f-eb06397e4922",
+      "creationInfo" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820:creationInfo",
+      "from" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820",
       "relationshipType" : "hasDeclaredLicense",
-      "spdxId" : "urn:uuid:7a6f5680-7d70-444b-a47f-eb06397e4922-hasDeclaredLicense-urn:spdx:Apache-2.0",
+      "spdxId" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820-hasDeclaredLicense-urn:spdx:Apache-2.0",
       "to" : [
         "urn:spdx:Apache-2.0"
       ],
       "type" : "Relationship"
     },
     {
-      "creationInfo" : "urn:uuid:7a6f5680-7d70-444b-a47f-eb06397e4922:creationInfo",
+      "creationInfo" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820:creationInfo",
       "simplelicensing_licenseExpression" : "Apache-2.0",
       "spdxId" : "urn:spdx:Apache-2.0",
       "type" : "simplelicensing_LicenseExpression"
     },
     {
-      "@id" : "urn:uuid:7a6f5680-7d70-444b-a47f-eb06397e4922:creationInfo",
-      "created" : "2026-11-11T21:27:55Z",
+      "@id" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820:creationInfo",
+      "created" : "2026-11-12T12:09:22Z",
       "createdBy" : [
-        "urn:uuid:7a6f5680-7d70-444b-a47f-eb06397e4922"
+        "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820"
       ],
       "specVersion" : "6.4.2",
       "type" : "CreationInfo"
     },
     {
-      "creationInfo" : "urn:uuid:7a6f5680-7d70-444b-a47f-eb06397e4922:creationInfo",
+      "creationInfo" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820:creationInfo",
       "name" : "swift-package-manager",
-      "spdxId" : "urn:uuid:7a6f5680-7d70-444b-a47f-eb06397e4922",
+      "spdxId" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820",
       "type" : "Agent"
     },
     {
       "@id" : "_:creationInfo",
-      "created" : "2026-11-11T21:27:55Z",
+      "created" : "2026-11-12T12:09:22Z",
       "createdBy" : [
-        "urn:uuid:7a6f5680-7d70-444b-a47f-eb06397e4922"
+        "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820"
       ],
       "specVersion" : "3.0.1",
       "type" : "CreationInfo"
@@ -50,14 +50,14 @@
       "rootElement" : [
         "urn:spdx:vapor"
       ],
-      "spdxId" : "urn:uuid:9b4af9fa-a4b4-454c-92f7-537815337f0d",
+      "spdxId" : "urn:uuid:5bb08988-4357-4a04-8fe9-ff3c23636807",
       "type" : "software_Sbom"
     },
     {
       "creationInfo" : "_:creationInfo",
-      "from" : "urn:uuid:9b4af9fa-a4b4-454c-92f7-537815337f0d",
+      "from" : "urn:uuid:5bb08988-4357-4a04-8fe9-ff3c23636807",
       "relationshipType" : "describes",
-      "spdxId" : "urn:uuid:9b4af9fa-a4b4-454c-92f7-537815337f0d-describes-urn:spdx:vapor",
+      "spdxId" : "urn:uuid:5bb08988-4357-4a04-8fe9-ff3c23636807-describes-urn:spdx:vapor",
       "to" : [
         "urn:spdx:vapor"
       ],
@@ -70,9 +70,9 @@
         "software"
       ],
       "rootElement" : [
-        "urn:uuid:9b4af9fa-a4b4-454c-92f7-537815337f0d"
+        "urn:uuid:5bb08988-4357-4a04-8fe9-ff3c23636807"
       ],
-      "spdxId" : "urn:uuid:b45522de-f639-48e4-8af0-07161ebc9db4",
+      "spdxId" : "urn:uuid:84fdf4a0-9c29-410f-a93c-f7143e2bf4bf",
       "type" : "SpdxDocument"
     },
     {
@@ -689,27 +689,6 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "description" : "<ResolvedPackage: swift-nio-transport-services>",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-nio-transport-services@1.28.0",
-      "name" : "swift-nio-transport-services",
-      "software_internalVersion" : "1.28.0",
-      "software_primaryPurpose" : "library",
-      "spdxId" : "urn:spdx:swift-nio-transport-services",
-      "summary" : "swift-package",
-      "type" : "software_Package"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-nio-transport-services:NIOTransportServices@1.28.0",
-      "name" : "NIOTransportServices",
-      "software_internalVersion" : "1.28.0",
-      "software_primaryPurpose" : "library",
-      "spdxId" : "urn:spdx:swift-nio-transport-services:NIOTransportServices",
-      "summary" : "swift-product",
-      "type" : "software_Package"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
       "externalUrl" : "pkg:swift/github.com/apple/swift-nio:NIO@2.105.0",
       "name" : "NIO",
       "software_internalVersion" : "2.105.0",
@@ -735,16 +714,6 @@
       "software_internalVersion" : "2.105.0",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-nio:NIOCore",
-      "summary" : "swift-product",
-      "type" : "software_Package"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-nio:NIOFoundationCompat@2.105.0",
-      "name" : "NIOFoundationCompat",
-      "software_internalVersion" : "2.105.0",
-      "software_primaryPurpose" : "library",
-      "spdxId" : "urn:spdx:swift-nio:NIOFoundationCompat",
       "summary" : "swift-product",
       "type" : "software_Package"
     },
@@ -956,9 +925,9 @@
     {
       "creationInfo" : "_:creationInfo",
       "description" : "<ResolvedPackage: vapor>",
-      "externalUrl" : "pkg:swift/vapor@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "externalUrl" : "pkg:swift/vapor",
       "name" : "vapor",
-      "software_internalVersion" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "software_internalVersion" : "unknown",
       "software_primaryPurpose" : "application",
       "spdxId" : "urn:spdx:vapor",
       "summary" : "swift-package",
@@ -966,9 +935,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/vapor/vapor:Development@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "externalUrl" : "pkg:swift/vapor/vapor:Development",
       "name" : "Development",
-      "software_internalVersion" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "software_internalVersion" : "unknown",
       "software_primaryPurpose" : "application",
       "spdxId" : "urn:spdx:vapor:Development",
       "summary" : "swift-product",
@@ -976,9 +945,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/vapor/vapor:Vapor@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "externalUrl" : "pkg:swift/vapor/vapor:Vapor",
       "name" : "Vapor",
-      "software_internalVersion" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "software_internalVersion" : "unknown",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:vapor:Vapor",
       "summary" : "swift-product",
@@ -986,9 +955,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/vapor/vapor:VaporMacroIntegrationTests@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "externalUrl" : "pkg:swift/vapor/vapor:VaporMacroIntegrationTests",
       "name" : "VaporMacroIntegrationTests",
-      "software_internalVersion" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "software_internalVersion" : "unknown",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:vapor:VaporMacroIntegrationTests",
       "summary" : "swift-product",
@@ -996,9 +965,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/vapor/vapor:VaporMacroTests@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "externalUrl" : "pkg:swift/vapor/vapor:VaporMacroTests",
       "name" : "VaporMacroTests",
-      "software_internalVersion" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "software_internalVersion" : "unknown",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:vapor:VaporMacroTests",
       "summary" : "swift-product",
@@ -1006,9 +975,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/vapor/vapor:VaporMacros@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "externalUrl" : "pkg:swift/vapor/vapor:VaporMacros",
       "name" : "VaporMacros",
-      "software_internalVersion" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "software_internalVersion" : "unknown",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:vapor:VaporMacros",
       "summary" : "swift-product",
@@ -1016,9 +985,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/vapor/vapor:VaporMacrosPlugin@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "externalUrl" : "pkg:swift/vapor/vapor:VaporMacrosPlugin",
       "name" : "VaporMacrosPlugin",
-      "software_internalVersion" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "software_internalVersion" : "unknown",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:vapor:VaporMacrosPlugin",
       "summary" : "swift-product",
@@ -1026,9 +995,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/vapor/vapor:VaporTesting@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "externalUrl" : "pkg:swift/vapor/vapor:VaporTesting",
       "name" : "VaporTesting",
-      "software_internalVersion" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "software_internalVersion" : "unknown",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:vapor:VaporTesting",
       "summary" : "swift-product",
@@ -1036,9 +1005,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/vapor/vapor:VaporTests@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "externalUrl" : "pkg:swift/vapor/vapor:VaporTests",
       "name" : "VaporTests",
-      "software_internalVersion" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "software_internalVersion" : "unknown",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:vapor:VaporTests",
       "summary" : "swift-product",
@@ -1060,7 +1029,6 @@
         "urn:spdx:swift-nio-extras",
         "urn:spdx:swift-nio-http2",
         "urn:spdx:swift-nio-ssl",
-        "urn:spdx:swift-nio-transport-services",
         "urn:spdx:swift-service-context"
       ],
       "type" : "Relationship"
@@ -1080,7 +1048,6 @@
         "urn:spdx:swift-nio-extras:NIOSOCKS",
         "urn:spdx:swift-nio-http2:NIOHTTP2",
         "urn:spdx:swift-nio-ssl:NIOSSL",
-        "urn:spdx:swift-nio-transport-services:NIOTransportServices",
         "urn:spdx:swift-nio:NIO",
         "urn:spdx:swift-nio:NIOConcurrencyHelpers",
         "urn:spdx:swift-nio:NIOCore",
@@ -1471,7 +1438,6 @@
         "urn:spdx:swift-nio:NIO",
         "urn:spdx:swift-nio:NIOConcurrencyHelpers",
         "urn:spdx:swift-nio:NIOCore",
-        "urn:spdx:swift-nio:NIOFoundationCompat",
         "urn:spdx:swift-nio:NIOFoundationEssentialsCompat",
         "urn:spdx:swift-nio:NIOHTTP1",
         "urn:spdx:swift-nio:NIOPosix",
@@ -1649,32 +1615,6 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:swift-nio-transport-services",
-      "relationshipType" : "dependsOn",
-      "spdxId" : "urn:spdx:swift-nio-transport-services-dependsOn",
-      "to" : [
-        "urn:spdx:swift-atomics",
-        "urn:spdx:swift-nio",
-        "urn:spdx:swift-nio-transport-services:NIOTransportServices"
-      ],
-      "type" : "Relationship"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:swift-nio-transport-services:NIOTransportServices",
-      "relationshipType" : "dependsOn",
-      "spdxId" : "urn:spdx:swift-nio-transport-services:NIOTransportServices-dependsOn",
-      "to" : [
-        "urn:spdx:swift-atomics:Atomics",
-        "urn:spdx:swift-nio:NIO",
-        "urn:spdx:swift-nio:NIOCore",
-        "urn:spdx:swift-nio:NIOFoundationCompat",
-        "urn:spdx:swift-nio:NIOTLS"
-      ],
-      "type" : "Relationship"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
       "from" : "urn:spdx:swift-nio:NIO",
       "relationshipType" : "dependsOn",
       "spdxId" : "urn:spdx:swift-nio:NIO-dependsOn",
@@ -1689,17 +1629,6 @@
       "from" : "urn:spdx:swift-nio:NIOCore",
       "relationshipType" : "dependsOn",
       "spdxId" : "urn:spdx:swift-nio:NIOCore-dependsOn",
-      "to" : [
-        "urn:spdx:swift-atomics:Atomics",
-        "urn:spdx:swift-collections:DequeModule"
-      ],
-      "type" : "Relationship"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:swift-nio:NIOFoundationCompat",
-      "relationshipType" : "dependsOn",
-      "spdxId" : "urn:spdx:swift-nio:NIOFoundationCompat-dependsOn",
       "to" : [
         "urn:spdx:swift-atomics:Atomics",
         "urn:spdx:swift-collections:DequeModule"
@@ -1879,7 +1808,6 @@
         "urn:spdx:swift-nio-extras",
         "urn:spdx:swift-nio-http2",
         "urn:spdx:swift-nio-ssl",
-        "urn:spdx:swift-nio-transport-services",
         "urn:spdx:swift-service-context",
         "urn:spdx:swift-service-lifecycle",
         "urn:spdx:swift-syntax",
@@ -2155,14 +2083,6 @@
     },
     {
       "externalIdentifierType" : "gitoid",
-      "identifier" : "urn:spdx:67787bb645a5e67d2edcdfbe48a216cc549222d5",
-      "identifierLocator" : [
-        "https://github.com/apple/swift-nio-transport-services.git"
-      ],
-      "type" : "ExternalIdentifier"
-    },
-    {
-      "externalIdentifierType" : "gitoid",
       "identifier" : "urn:spdx:84f03fafeca28c19f5fc4b528df3d22ce8896bd7",
       "identifierLocator" : [
         "https://github.com/apple/swift-certificates.git"
@@ -2367,7 +2287,6 @@
         "urn:spdx:swift-nio:NIO",
         "urn:spdx:swift-nio:NIOConcurrencyHelpers",
         "urn:spdx:swift-nio:NIOCore",
-        "urn:spdx:swift-nio:NIOFoundationCompat",
         "urn:spdx:swift-nio:NIOFoundationEssentialsCompat",
         "urn:spdx:swift-nio:NIOHTTP1",
         "urn:spdx:swift-nio:NIOPosix",
@@ -2423,17 +2342,6 @@
         "urn:spdx:swift-syntax:SwiftSyntax",
         "urn:spdx:swift-syntax:SwiftSyntaxBuilder",
         "urn:spdx:swift-syntax:SwiftSyntaxMacros"
-      ],
-      "type" : "Relationship"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:67787bb645a5e67d2edcdfbe48a216cc549222d5",
-      "relationshipType" : "generates",
-      "spdxId" : "urn:spdx:67787bb645a5e67d2edcdfbe48a216cc549222d5-generates",
-      "to" : [
-        "urn:spdx:swift-nio-transport-services",
-        "urn:spdx:swift-nio-transport-services:NIOTransportServices"
       ],
       "type" : "Relationship"
     },

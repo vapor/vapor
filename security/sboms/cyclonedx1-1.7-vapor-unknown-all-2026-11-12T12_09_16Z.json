@@ -1478,56 +1478,6 @@
       "version" : "2.37.6"
     },
     {
-      "bom-ref" : "swift-nio-transport-services",
-      "externalReferences" : [
-
-      ],
-      "name" : "swift-nio-transport-services",
-      "pedigree" : {
-        "commits" : [
-          {
-            "uid" : "67787bb645a5e67d2edcdfbe48a216cc549222d5",
-            "url" : "https://github.com/apple/swift-nio-transport-services.git"
-          }
-        ]
-      },
-      "properties" : [
-        {
-          "name" : "swift-entity",
-          "value" : "swift-package"
-        }
-      ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-transport-services@1.28.0",
-      "scope" : "required",
-      "type" : "library",
-      "version" : "1.28.0"
-    },
-    {
-      "bom-ref" : "swift-nio-transport-services:NIOTransportServices",
-      "externalReferences" : [
-
-      ],
-      "name" : "NIOTransportServices",
-      "pedigree" : {
-        "commits" : [
-          {
-            "uid" : "67787bb645a5e67d2edcdfbe48a216cc549222d5",
-            "url" : "https://github.com/apple/swift-nio-transport-services.git"
-          }
-        ]
-      },
-      "properties" : [
-        {
-          "name" : "swift-entity",
-          "value" : "swift-product"
-        }
-      ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-transport-services:NIOTransportServices@1.28.0",
-      "scope" : "required",
-      "type" : "library",
-      "version" : "1.28.0"
-    },
-    {
       "bom-ref" : "swift-nio:NIO",
       "externalReferences" : [
 
@@ -1598,31 +1548,6 @@
         }
       ],
       "purl" : "pkg:swift/github.com/apple/swift-nio:NIOCore@2.105.0",
-      "scope" : "required",
-      "type" : "library",
-      "version" : "2.105.0"
-    },
-    {
-      "bom-ref" : "swift-nio:NIOFoundationCompat",
-      "externalReferences" : [
-
-      ],
-      "name" : "NIOFoundationCompat",
-      "pedigree" : {
-        "commits" : [
-          {
-            "uid" : "2f58d8ef84438d6517fc78bcea2f8527e3c72936",
-            "url" : "https://github.com/apple/swift-nio.git"
-          }
-        ]
-      },
-      "properties" : [
-        {
-          "name" : "swift-entity",
-          "value" : "swift-product"
-        }
-      ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOFoundationCompat@2.105.0",
       "scope" : "required",
       "type" : "library",
       "version" : "2.105.0"
@@ -2142,10 +2067,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/vapor@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor",
       "scope" : "required",
       "type" : "application",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     },
     {
       "bom-ref" : "vapor:Development",
@@ -2162,10 +2087,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/vapor/vapor:Development@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor/vapor:Development",
       "scope" : "required",
       "type" : "application",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     },
     {
       "bom-ref" : "vapor:Vapor",
@@ -2182,10 +2107,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/vapor/vapor:Vapor@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor/vapor:Vapor",
       "scope" : "required",
       "type" : "library",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     },
     {
       "bom-ref" : "vapor:VaporMacroIntegrationTests",
@@ -2202,10 +2127,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/vapor/vapor:VaporMacroIntegrationTests@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor/vapor:VaporMacroIntegrationTests",
       "scope" : "excluded",
       "type" : "library",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     },
     {
       "bom-ref" : "vapor:VaporMacroTests",
@@ -2222,10 +2147,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/vapor/vapor:VaporMacroTests@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor/vapor:VaporMacroTests",
       "scope" : "excluded",
       "type" : "library",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     },
     {
       "bom-ref" : "vapor:VaporMacros",
@@ -2242,10 +2167,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/vapor/vapor:VaporMacros@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor/vapor:VaporMacros",
       "scope" : "required",
       "type" : "library",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     },
     {
       "bom-ref" : "vapor:VaporMacrosPlugin",
@@ -2262,10 +2187,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/vapor/vapor:VaporMacrosPlugin@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor/vapor:VaporMacrosPlugin",
       "scope" : "required",
       "type" : "library",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     },
     {
       "bom-ref" : "vapor:VaporTesting",
@@ -2282,10 +2207,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/vapor/vapor:VaporTesting@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor/vapor:VaporTesting",
       "scope" : "required",
       "type" : "library",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     },
     {
       "bom-ref" : "vapor:VaporTests",
@@ -2302,10 +2227,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/vapor/vapor:VaporTests@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor/vapor:VaporTests",
       "scope" : "excluded",
       "type" : "library",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     }
   ],
   "dependencies" : [
@@ -2321,7 +2246,6 @@
         "swift-nio-extras",
         "swift-nio-http2",
         "swift-nio-ssl",
-        "swift-nio-transport-services",
         "swift-service-context"
       ],
       "ref" : "async-http-client"
@@ -2337,7 +2261,6 @@
         "swift-nio-extras:NIOSOCKS",
         "swift-nio-http2:NIOHTTP2",
         "swift-nio-ssl:NIOSSL",
-        "swift-nio-transport-services:NIOTransportServices",
         "swift-nio:NIO",
         "swift-nio:NIOConcurrencyHelpers",
         "swift-nio:NIOCore",
@@ -2600,7 +2523,6 @@
         "swift-nio:NIO",
         "swift-nio:NIOConcurrencyHelpers",
         "swift-nio:NIOCore",
-        "swift-nio:NIOFoundationCompat",
         "swift-nio:NIOFoundationEssentialsCompat",
         "swift-nio:NIOHTTP1",
         "swift-nio:NIOPosix",
@@ -2730,24 +2652,6 @@
     },
     {
       "dependsOn" : [
-        "swift-atomics",
-        "swift-nio",
-        "swift-nio-transport-services:NIOTransportServices"
-      ],
-      "ref" : "swift-nio-transport-services"
-    },
-    {
-      "dependsOn" : [
-        "swift-atomics:Atomics",
-        "swift-nio:NIO",
-        "swift-nio:NIOCore",
-        "swift-nio:NIOFoundationCompat",
-        "swift-nio:NIOTLS"
-      ],
-      "ref" : "swift-nio-transport-services:NIOTransportServices"
-    },
-    {
-      "dependsOn" : [
         "swift-atomics:Atomics",
         "swift-collections:DequeModule"
       ],
@@ -2759,13 +2663,6 @@
         "swift-collections:DequeModule"
       ],
       "ref" : "swift-nio:NIOCore"
-    },
-    {
-      "dependsOn" : [
-        "swift-atomics:Atomics",
-        "swift-collections:DequeModule"
-      ],
-      "ref" : "swift-nio:NIOFoundationCompat"
     },
     {
       "dependsOn" : [
@@ -2884,7 +2781,6 @@
         "swift-nio-extras",
         "swift-nio-http2",
         "swift-nio-ssl",
-        "swift-nio-transport-services",
         "swift-service-context",
         "swift-service-lifecycle",
         "swift-syntax",
@@ -3059,16 +2955,16 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/vapor@5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified",
+      "purl" : "pkg:swift/vapor",
       "scope" : "required",
       "type" : "application",
-      "version" : "5fd2f3b263c0f7da42c2d5c27087602ba90f2bcd-modified"
+      "version" : "unknown"
     },
-    "timestamp" : "2026-11-11T21:26:05Z",
+    "timestamp" : "2026-11-12T12:09:16Z",
     "tools" : {
       "components" : [
         {
-          "bom-ref" : "urn:uuid:cea4c323-d93d-4a23-8856-12cc7aaa8203",
+          "bom-ref" : "urn:uuid:cd25194f-4811-41dd-a5b8-d20382b33c5c",
           "licenses" : [
             {
               "license" : {
@@ -3086,7 +2982,7 @@
       ]
     }
   },
-  "serialNumber" : "urn:uuid:05470203-9303-4e31-9be6-dc2eecdf4b83",
+  "serialNumber" : "urn:uuid:22413c0c-e6e9-4130-86af-6774f5f4894f",
   "specVersion" : "1.7",
   "version" : 1
 }
