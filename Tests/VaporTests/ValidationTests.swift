@@ -548,6 +548,10 @@ struct ValidationTests {
     func testEmail() {
         expect("tanner@vapor.codes", passes: .email)
         expect("tanner@VAPOR.codes", passes: .email)
+        // DNS labels are case-insensitive, including the final label.
+        expect("foo@bar.COM", passes: .email)
+        expect("foo@bar.CoM", passes: .email)
+        expect("foo@bar.COM", fails: !.email, "is a valid email address")
         expect("tanner@vapor.codes", fails: !.email, "is a valid email address")
         expect("tanner@VAPOR.codes", fails: !.email, "is a valid email address")
         expect("tanner@vapor.codestanner@vapor.codes", fails: .email, "is not a valid email address")
