@@ -12,14 +12,14 @@ public protocol URLQueryContainer {
 extension URLQueryContainer {
     // MARK: - Encoding helpers
 
-    /// Serialize a ``Content`` object to the container.
-    public mutating func encode(_ content: some Content) throws {
+    /// Serialize a ``ContentEncodable`` value to the container.
+    public mutating func encode(_ content: some ContentEncodable) throws {
         var content = content
         try self.encode(&content)
     }
 
-    /// Serialize a ``Content`` object to the container without copying it.
-    public mutating func encode(_ content: inout some Content) throws {
+    /// Serialize a ``ContentEncodable`` value to the container without copying it.
+    public mutating func encode(_ content: inout some ContentEncodable) throws {
         try content.beforeEncode()
         try self.encode(content, using: self.configuredEncoder())
     }
@@ -31,8 +31,8 @@ extension URLQueryContainer {
 
     // MARK: - Decoding helpers
 
-    /// Parse a ``Content`` object from the container.
-    public func decode<C: Content>(_ content: C.Type) throws -> C {
+    /// Parse a ``ContentDecodable`` value from the container, then run its ``ContentDecodable/afterDecode()`` hook.
+    public func decode<C: ContentDecodable>(_ content: C.Type) throws -> C {
         var content = try self.decode(C.self, using: self.configuredDecoder())
         try content.afterDecode()
         return content
