@@ -78,6 +78,24 @@ extension URLQueryContainer {
         try self.get(D.self, path: path.map(\.codingKey))
     }
 
+    /// Check whether a value exists at the supplied keypath in this container.
+    ///
+    ///     if req.query.contains(at: "user") { ... }
+    ///
+    /// - Returns: `true` if a value (possibly empty) is present at the given keypath, `false` otherwise.
+    public func contains(at path: any CodingKeyRepresentable...) -> Bool {
+        self.contains(at: path)
+    }
+
+    /// Check whether a value exists at the supplied keypath in this container.
+    ///
+    ///     if req.query.contains(at: ["user", "name"]) { ... }
+    ///
+    /// - Returns: `true` if a value (possibly empty) is present at the given keypath, `false` otherwise.
+    public func contains(at path: [any CodingKeyRepresentable]) -> Bool {
+        (try? self.get(QueryExistence.self, at: path)) != nil
+    }
+
     // MARK: Private
 
     /// Execute a "get at coding key path" operation.
@@ -105,5 +123,13 @@ private struct ForwardingURLQueryDecoder: URLQueryDecoder {
     func decode<D: Decodable>(_: D.Type, from url: URI) throws -> D { try self.base.decode(D.self, from: url, userInfo: self.info) }
     func decode<D: Decodable>(_: D.Type, from url: URI, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
         try self.base.decode(D.self, from: url, userInfo: userInfo.merging(self.info) { $1 })
+    }
+}
+
+/// A `Decodable` type that succeeds decoding whenever a value is present at the requested keypath,
+/// used to implement ``URLQueryContainer/contains(at:)`` without caring about the value's type.
+private struct QueryExistence: Decodable {
+    init(from decoder: any Decoder) throws {
+        _ = try decoder.singleValueContainer()
     }
 }
