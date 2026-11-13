@@ -174,6 +174,41 @@ struct URLEncodedFormTests {
         #expect(result.contains("isCool=true"))
     }
 
+    @Test("Asking one encoder for a second container traps", .bug("https://github.com/vapor/vapor/issues/2374"))
+    func testSecondContainerTraps() async {
+        // Each wrapped value asks the same encoder for its own keyed container, which `Codable` doesn't support.
+        await #expect(processExitsWith: .failure) {
+            struct Page: Encodable {
+                var page = 2
+                var per = 10
+            }
+            struct Filter: Encodable {
+                var name = "vapor"
+            }
+            struct Query: Encodable {
+                func encode(to encoder: any Encoder) throws {
+                    try Page().encode(to: encoder)
+                    try Filter().encode(to: encoder)
+                }
+            }
+            _ = try? URLEncodedFormEncoder().encode(Query())
+        }
+
+        // The same with unkeyed containers.
+        await #expect(processExitsWith: .failure) {
+            struct Numbers: Encodable {
+                func encode(to encoder: any Encoder) throws {
+                    try [1, 2].encode(to: encoder)
+                    try [3].encode(to: encoder)
+                }
+            }
+            struct Holder: Encodable {
+                var numbers = Numbers()
+            }
+            _ = try? URLEncodedFormEncoder().encode(Holder())
+        }
+    }
+
     @Test("Test Date Array Coding")
     func testDateArrayCoding() throws {
         let toEncode = DateArrayCoding(
