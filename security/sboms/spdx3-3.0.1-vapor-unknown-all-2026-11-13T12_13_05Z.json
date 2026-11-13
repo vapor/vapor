@@ -2,41 +2,41 @@
   "@context" : "https://spdx.org/rdf/3.0.1/spdx-context.jsonld",
   "@graph" : [
     {
-      "creationInfo" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820:creationInfo",
-      "from" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820",
+      "creationInfo" : "urn:uuid:c9b92568-a12b-4a07-9720-8e38204e663d:creationInfo",
+      "from" : "urn:uuid:c9b92568-a12b-4a07-9720-8e38204e663d",
       "relationshipType" : "hasDeclaredLicense",
-      "spdxId" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820-hasDeclaredLicense-urn:spdx:Apache-2.0",
+      "spdxId" : "urn:uuid:c9b92568-a12b-4a07-9720-8e38204e663d-hasDeclaredLicense-urn:spdx:Apache-2.0",
       "to" : [
         "urn:spdx:Apache-2.0"
       ],
       "type" : "Relationship"
     },
     {
-      "creationInfo" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820:creationInfo",
+      "creationInfo" : "urn:uuid:c9b92568-a12b-4a07-9720-8e38204e663d:creationInfo",
       "simplelicensing_licenseExpression" : "Apache-2.0",
       "spdxId" : "urn:spdx:Apache-2.0",
       "type" : "simplelicensing_LicenseExpression"
     },
     {
-      "@id" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820:creationInfo",
-      "created" : "2026-11-12T12:09:22Z",
+      "@id" : "urn:uuid:c9b92568-a12b-4a07-9720-8e38204e663d:creationInfo",
+      "created" : "2026-11-13T12:13:05Z",
       "createdBy" : [
-        "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820"
+        "urn:uuid:c9b92568-a12b-4a07-9720-8e38204e663d"
       ],
       "specVersion" : "6.4.2",
       "type" : "CreationInfo"
     },
     {
-      "creationInfo" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820:creationInfo",
+      "creationInfo" : "urn:uuid:c9b92568-a12b-4a07-9720-8e38204e663d:creationInfo",
       "name" : "swift-package-manager",
-      "spdxId" : "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820",
+      "spdxId" : "urn:uuid:c9b92568-a12b-4a07-9720-8e38204e663d",
       "type" : "Agent"
     },
     {
       "@id" : "_:creationInfo",
-      "created" : "2026-11-12T12:09:22Z",
+      "created" : "2026-11-13T12:13:05Z",
       "createdBy" : [
-        "urn:uuid:b802e8cf-1fba-4aed-a8de-cbdbd4a89820"
+        "urn:uuid:c9b92568-a12b-4a07-9720-8e38204e663d"
       ],
       "specVersion" : "3.0.1",
       "type" : "CreationInfo"
@@ -50,14 +50,14 @@
       "rootElement" : [
         "urn:spdx:vapor"
       ],
-      "spdxId" : "urn:uuid:5bb08988-4357-4a04-8fe9-ff3c23636807",
+      "spdxId" : "urn:uuid:0a8be42e-57c1-4dfa-ac3a-2180ff1bf25c",
       "type" : "software_Sbom"
     },
     {
       "creationInfo" : "_:creationInfo",
-      "from" : "urn:uuid:5bb08988-4357-4a04-8fe9-ff3c23636807",
+      "from" : "urn:uuid:0a8be42e-57c1-4dfa-ac3a-2180ff1bf25c",
       "relationshipType" : "describes",
-      "spdxId" : "urn:uuid:5bb08988-4357-4a04-8fe9-ff3c23636807-describes-urn:spdx:vapor",
+      "spdxId" : "urn:uuid:0a8be42e-57c1-4dfa-ac3a-2180ff1bf25c-describes-urn:spdx:vapor",
       "to" : [
         "urn:spdx:vapor"
       ],
@@ -70,9 +70,9 @@
         "software"
       ],
       "rootElement" : [
-        "urn:uuid:5bb08988-4357-4a04-8fe9-ff3c23636807"
+        "urn:uuid:0a8be42e-57c1-4dfa-ac3a-2180ff1bf25c"
       ],
-      "spdxId" : "urn:uuid:84fdf4a0-9c29-410f-a93c-f7143e2bf4bf",
+      "spdxId" : "urn:uuid:96441be5-fcf5-4a9e-a0e2-9954af615de2",
       "type" : "SpdxDocument"
     },
     {
@@ -99,9 +99,9 @@
     {
       "creationInfo" : "_:creationInfo",
       "description" : "<ResolvedPackage: console-kit>",
-      "externalUrl" : "pkg:swift/github.com/vapor/console-kit@5.0.0-beta.3",
+      "externalUrl" : "pkg:swift/github.com/vapor/console-kit@5.0.0-beta.4",
       "name" : "console-kit",
-      "software_internalVersion" : "5.0.0-beta.3",
+      "software_internalVersion" : "5.0.0-beta.4",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:console-kit",
       "summary" : "swift-package",
@@ -109,9 +109,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/github.com/vapor/console-kit:ConsoleLogger@5.0.0-beta.3",
+      "externalUrl" : "pkg:swift/github.com/vapor/console-kit:ConsoleLogger@5.0.0-beta.4",
       "name" : "ConsoleLogger",
-      "software_internalVersion" : "5.0.0-beta.3",
+      "software_internalVersion" : "5.0.0-beta.4",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:console-kit:ConsoleLogger",
       "summary" : "swift-product",
@@ -904,9 +904,9 @@
     {
       "creationInfo" : "_:creationInfo",
       "description" : "<ResolvedPackage: swift-system>",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-system@1.8.1",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-system@1.9.0",
       "name" : "swift-system",
-      "software_internalVersion" : "1.8.1",
+      "software_internalVersion" : "1.9.0",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-system",
       "summary" : "swift-package",
@@ -914,9 +914,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-system:SystemPackage@1.8.1",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-system:SystemPackage@1.9.0",
       "name" : "SystemPackage",
-      "software_internalVersion" : "1.8.1",
+      "software_internalVersion" : "1.9.0",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-system:SystemPackage",
       "summary" : "swift-product",
@@ -2011,6 +2011,14 @@
     },
     {
       "externalIdentifierType" : "gitoid",
+      "identifier" : "urn:spdx:0b534dc28f5f9e19149ed9b348515c8c1dd37454",
+      "identifierLocator" : [
+        "https://github.com/vapor/console-kit.git"
+      ],
+      "type" : "ExternalIdentifier"
+    },
+    {
+      "externalIdentifierType" : "gitoid",
       "identifier" : "urn:spdx:0c0290ff6b24942dadb83a929ffaaa1481df04a2",
       "identifierLocator" : [
         "https://github.com/apple/swift-numerics.git"
@@ -2083,17 +2091,17 @@
     },
     {
       "externalIdentifierType" : "gitoid",
-      "identifier" : "urn:spdx:84f03fafeca28c19f5fc4b528df3d22ce8896bd7",
+      "identifier" : "urn:spdx:640e5755b5826f4437eaeedd366fd776737db62c",
       "identifierLocator" : [
-        "https://github.com/apple/swift-certificates.git"
+        "https://github.com/apple/swift-system.git"
       ],
       "type" : "ExternalIdentifier"
     },
     {
       "externalIdentifierType" : "gitoid",
-      "identifier" : "urn:spdx:869129b7bf4ecc57b97d0193ad29690ca2134750",
+      "identifier" : "urn:spdx:84f03fafeca28c19f5fc4b528df3d22ce8896bd7",
       "identifierLocator" : [
-        "https://github.com/apple/swift-system.git"
+        "https://github.com/apple/swift-certificates.git"
       ],
       "type" : "ExternalIdentifier"
     },
@@ -2187,14 +2195,6 @@
     },
     {
       "externalIdentifierType" : "gitoid",
-      "identifier" : "urn:spdx:df9e94c23cf3a31588b31a360e530bbd8e4bccae",
-      "identifierLocator" : [
-        "https://github.com/vapor/console-kit.git"
-      ],
-      "type" : "ExternalIdentifier"
-    },
-    {
-      "externalIdentifierType" : "gitoid",
       "identifier" : "urn:spdx:e3da04078777e6a1b72ce19981fbd6539b0847d8",
       "identifierLocator" : [
         "https://github.com/apple/swift-log.git"
@@ -2228,6 +2228,17 @@
       "to" : [
         "urn:spdx:swift-configuration",
         "urn:spdx:swift-configuration:Configuration"
+      ],
+      "type" : "Relationship"
+    },
+    {
+      "creationInfo" : "_:creationInfo",
+      "from" : "urn:spdx:0b534dc28f5f9e19149ed9b348515c8c1dd37454",
+      "relationshipType" : "generates",
+      "spdxId" : "urn:spdx:0b534dc28f5f9e19149ed9b348515c8c1dd37454-generates",
+      "to" : [
+        "urn:spdx:console-kit",
+        "urn:spdx:console-kit:ConsoleLogger"
       ],
       "type" : "Relationship"
     },
@@ -2347,23 +2358,23 @@
     },
     {
       "creationInfo" : "_:creationInfo",
+      "from" : "urn:spdx:640e5755b5826f4437eaeedd366fd776737db62c",
+      "relationshipType" : "generates",
+      "spdxId" : "urn:spdx:640e5755b5826f4437eaeedd366fd776737db62c-generates",
+      "to" : [
+        "urn:spdx:swift-system",
+        "urn:spdx:swift-system:SystemPackage"
+      ],
+      "type" : "Relationship"
+    },
+    {
+      "creationInfo" : "_:creationInfo",
       "from" : "urn:spdx:84f03fafeca28c19f5fc4b528df3d22ce8896bd7",
       "relationshipType" : "generates",
       "spdxId" : "urn:spdx:84f03fafeca28c19f5fc4b528df3d22ce8896bd7-generates",
       "to" : [
         "urn:spdx:swift-certificates",
         "urn:spdx:swift-certificates:X509"
-      ],
-      "type" : "Relationship"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:869129b7bf4ecc57b97d0193ad29690ca2134750",
-      "relationshipType" : "generates",
-      "spdxId" : "urn:spdx:869129b7bf4ecc57b97d0193ad29690ca2134750-generates",
-      "to" : [
-        "urn:spdx:swift-system",
-        "urn:spdx:swift-system:SystemPackage"
       ],
       "type" : "Relationship"
     },
@@ -2496,17 +2507,6 @@
       "to" : [
         "urn:spdx:swift-service-context",
         "urn:spdx:swift-service-context:ServiceContextModule"
-      ],
-      "type" : "Relationship"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:df9e94c23cf3a31588b31a360e530bbd8e4bccae",
-      "relationshipType" : "generates",
-      "spdxId" : "urn:spdx:df9e94c23cf3a31588b31a360e530bbd8e4bccae-generates",
-      "to" : [
-        "urn:spdx:console-kit",
-        "urn:spdx:console-kit:ConsoleLogger"
       ],
       "type" : "Relationship"
     },

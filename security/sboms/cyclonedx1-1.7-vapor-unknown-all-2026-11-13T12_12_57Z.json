@@ -61,7 +61,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "df9e94c23cf3a31588b31a360e530bbd8e4bccae",
+            "uid" : "0b534dc28f5f9e19149ed9b348515c8c1dd37454",
             "url" : "https://github.com/vapor/console-kit.git"
           }
         ]
@@ -72,10 +72,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/vapor/console-kit@5.0.0-beta.3",
+      "purl" : "pkg:swift/github.com/vapor/console-kit@5.0.0-beta.4",
       "scope" : "required",
       "type" : "library",
-      "version" : "5.0.0-beta.3"
+      "version" : "5.0.0-beta.4"
     },
     {
       "bom-ref" : "console-kit:ConsoleLogger",
@@ -86,7 +86,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "df9e94c23cf3a31588b31a360e530bbd8e4bccae",
+            "uid" : "0b534dc28f5f9e19149ed9b348515c8c1dd37454",
             "url" : "https://github.com/vapor/console-kit.git"
           }
         ]
@@ -97,10 +97,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/vapor/console-kit:ConsoleLogger@5.0.0-beta.3",
+      "purl" : "pkg:swift/github.com/vapor/console-kit:ConsoleLogger@5.0.0-beta.4",
       "scope" : "required",
       "type" : "library",
-      "version" : "5.0.0-beta.3"
+      "version" : "5.0.0-beta.4"
     },
     {
       "bom-ref" : "multipart-kit",
@@ -2011,7 +2011,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "869129b7bf4ecc57b97d0193ad29690ca2134750",
+            "uid" : "640e5755b5826f4437eaeedd366fd776737db62c",
             "url" : "https://github.com/apple/swift-system.git"
           }
         ]
@@ -2022,10 +2022,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-system@1.8.1",
+      "purl" : "pkg:swift/github.com/apple/swift-system@1.9.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.8.1"
+      "version" : "1.9.0"
     },
     {
       "bom-ref" : "swift-system:SystemPackage",
@@ -2036,7 +2036,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "869129b7bf4ecc57b97d0193ad29690ca2134750",
+            "uid" : "640e5755b5826f4437eaeedd366fd776737db62c",
             "url" : "https://github.com/apple/swift-system.git"
           }
         ]
@@ -2047,10 +2047,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-system:SystemPackage@1.8.1",
+      "purl" : "pkg:swift/github.com/apple/swift-system:SystemPackage@1.9.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.8.1"
+      "version" : "1.9.0"
     },
     {
       "bom-ref" : "vapor",
@@ -2960,11 +2960,11 @@
       "type" : "application",
       "version" : "unknown"
     },
-    "timestamp" : "2026-11-12T12:09:16Z",
+    "timestamp" : "2026-11-13T12:12:57Z",
     "tools" : {
       "components" : [
         {
-          "bom-ref" : "urn:uuid:cd25194f-4811-41dd-a5b8-d20382b33c5c",
+          "bom-ref" : "urn:uuid:4b9951b4-ca26-4f71-8460-467a3cfe38c4",
           "licenses" : [
             {
               "license" : {
@@ -2982,7 +2982,7 @@
       ]
     }
   },
-  "serialNumber" : "urn:uuid:22413c0c-e6e9-4130-86af-6774f5f4894f",
+  "serialNumber" : "urn:uuid:778d7068-435f-408e-b705-390c6d951804",
   "specVersion" : "1.7",
   "version" : 1
 }
