@@ -586,4 +586,17 @@ struct RouteTests {
             }
         }
     }
+
+    @Test("A route records its handler's return type")
+    func testRouteRecordsResponseType() async throws {
+        struct Greeting: Content { var text: String }
+        try await withApp { app in
+            let text = app.get("text") { _ in "hello" }
+            let greeting = app.get("greeting") { _ in Greeting(text: "hello") }
+            let response = app.get("response") { _ in Response(status: .ok) }
+            #expect(ObjectIdentifier(text.responseType) == ObjectIdentifier(String.self))
+            #expect(ObjectIdentifier(greeting.responseType) == ObjectIdentifier(Greeting.self))
+            #expect(ObjectIdentifier(response.responseType) == ObjectIdentifier(Response.self))
+        }
+    }
 }
