@@ -1,3 +1,4 @@
+import Instrumentation
 import Tracing
 
 final class TestTracer: Tracer {
@@ -27,12 +28,12 @@ final class TestTracer: Tracer {
         return
     }
     
-    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContextModule.ServiceContext, using extractor: Extract) where Carrier == Extract.Carrier, Extract : Instrumentation.Extractor {
+    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout Instrumentation.InstrumentationContext, using extractor: Extract) where Carrier == Extract.Carrier, Extract : Instrumentation.Extractor {
         context.extracted = extractor.extract(key: Self.extractKey, from: carrier)
         return
     }
     
-    func inject<Carrier, Inject>(_ context: ServiceContextModule.ServiceContext, into carrier: inout Carrier, using injector: Inject) where Carrier == Inject.Carrier, Inject : Instrumentation.Injector {
+    func inject<Carrier, Inject>(_ context: Instrumentation.InstrumentationContext, into carrier: inout Carrier, using injector: Inject) where Carrier == Inject.Carrier, Inject : Instrumentation.Injector {
         return
     }
 }

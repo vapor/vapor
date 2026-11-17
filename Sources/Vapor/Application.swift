@@ -3,6 +3,7 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
+import Tracing
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable {
@@ -37,6 +38,24 @@ public final class Application: Sendable {
         }
     }
     
+    /// The tracer that new requests use.
+    ///
+    /// If a tracer is active when the application is created, the application keeps it. A tracer is active
+    /// when `withTracer(_:_:)` encloses the creation, or when `InstrumentationSystem` is already bootstrapped.
+    /// Vapor creates requests on a NIO event loop, where no task-local value exists. The kept tracer makes
+    /// the tracer from `withTracer(_:_:)` reach the requests.
+    ///
+    /// Without an active tracer at creation, reading this property returns `InstrumentationSystem.tracer`
+    /// at the time of the read. Bootstrapping `InstrumentationSystem` after creating the application works.
+    public var tracer: any Tracer {
+        get {
+            self._tracer.withLockedValue { $0 } ?? InstrumentationSystem.tracer
+        }
+        set {
+            self._tracer.withLockedValue { $0 = newValue }
+        }
+    }
+
     /// If enabled, tracing propagation is automatically handled by restoring & setting `request.serviceContext` automatically across Vapor-internal EventLoopFuture boundaries.
     /// If disabled, traces will not automatically nest, and the user should restore & set `request.serviceContext` manually where needed.
     /// There are performance implications to enabling this feature.
@@ -119,6 +138,7 @@ public final class Application: Sendable {
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
     private let _logger: NIOLockedValueBox<Logger>
+    private let _tracer: NIOLockedValueBox<(any Tracer)?>
     private let _traceAutoPropagation: NIOLockedValueBox<Bool>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
@@ -147,6 +167,8 @@ public final class Application: Sendable {
         self._locks = .init(.init())
         self._didShutdown = .init(false)
         self._logger = .init(logger)
+        let activeTracer = InstrumentationSystem.tracer
+        self._tracer = .init(activeTracer is NoOpTracer ? nil : activeTracer)
         self._traceAutoPropagation = .init(false)
         self._storage = .init(.init(logger: logger))
         self._lifecycle = .init(.init())
