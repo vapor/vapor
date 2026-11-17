@@ -6,6 +6,7 @@ import NIOFoundationCompat
 import AsyncHTTPClient
 import Atomics
 import NIOConcurrencyHelpers
+import class NIOPosix.ClientBootstrap
 
 fileprivate extension String {
     static func randomDigits(length: Int = 999) -> String {
@@ -231,6 +232,76 @@ final class AsyncRequestTests: XCTestCase {
             let body = try await response.body.collect(upTo: 1024 * 1024)
             XCTAssertEqual(body.string, "Received \(fiftyMB.readableBytes) bytes")
         }
+    }
+
+    // https://github.com/vapor/vapor/issues/3621
+    func testGH3621() async throws {
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+
+        // One more part than the body sequence's high watermark (20), so the delivery of the
+        // queued parts pauses exactly once and no later part arrives to pause it again.
+        let parts = 21
+
+        app.on(.POST, "upload", body: .stream) { req async throws -> String in
+            // Let the event loop finish its current socket read: the parts are now queued in the
+            // request decoder, waiting for a reader.
+            try await req.eventLoop.submit {}.get()
+            // Hold the event loop while the reader starts, so that the iterator's `drain` and
+            // its first `next()` are both scheduled before any part is delivered.
+            let gate = DispatchSemaphore(value: 0)
+            req.eventLoop.execute { gate.wait() }
+            var gateOpen = false
+            defer { if !gateOpen { gate.signal() } }
+            let reader = Task {
+                var total = 0
+                for try await chunk in req.body {
+                    total += chunk.readableBytes
+                    try await Task.sleep(nanoseconds: 1_000_000)
+                }
+                return total
+            }
+            try await Task.sleep(nanoseconds: 50_000_000)
+            gate.signal()
+            gateOpen = true
+            return "read \(try await reader.value) bytes"
+        }
+
+        app.environment.arguments = ["serve"]
+        try await app.startup()
+
+        let port = try XCTUnwrap(app.http.server.shared.localAddress?.port)
+        let channel = try await ClientBootstrap(group: app.eventLoopGroup)
+            .connect(host: "127.0.0.1", port: port) { channel in
+                channel.eventLoop.makeCompletedFuture {
+                    try NIOAsyncChannel(
+                        wrappingChannelSynchronously: channel,
+                        configuration: NIOAsyncChannel.Configuration(
+                            inboundType: ByteBuffer.self,
+                            outboundType: ByteBuffer.self
+                        )
+                    )
+                }
+            }
+
+        let response = try await channel.executeThenClose { inbound, outbound in
+            // The head and all parts in one write, then the end of the body after a pause.
+            try await outbound.write(ByteBuffer(
+                string: "POST /upload HTTP/1.1\r\nHost: 127.0.0.1\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+                    + String(repeating: "1\r\nx\r\n", count: parts)
+            ))
+            try await Task.sleep(nanoseconds: 500_000_000)
+            try await outbound.write(ByteBuffer(string: "0\r\n\r\n"))
+
+            var received = ByteBuffer()
+            for try await chunk in inbound {
+                received.writeImmutableBuffer(chunk)
+            }
+            return String(buffer: received)
+        }
+
+        XCTAssertTrue(response.hasPrefix("HTTP/1.1 200 OK\r\n"), response)
+        XCTAssertTrue(response.hasSuffix("\r\n\r\nread \(parts) bytes"), response)
     }
 
     func testCustomHostAddress() throws {
