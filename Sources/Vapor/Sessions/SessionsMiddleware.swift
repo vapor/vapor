@@ -44,26 +44,31 @@ public final class SessionsMiddleware: Middleware {
                 if let data = data {
                     // Session found, restore data and id.
                     request._sessionCache.session.withLockedValue { $0 = .init(id: id, data: data) }
-                } else {
-                    // Session id not found, create new session.
-                    request._sessionCache.session.withLockedValue { $0 = .init() }
                 }
                 return next.respond(to: request).flatMap { res in
-                    return self.addCookies(to: res, for: request)
+                    return self.addCookies(to: res, for: request, hasStoredSession: data != nil)
                 }
             }
         } else {
             // No cookie value exists, simply respond.
             return next.respond(to: request).flatMap { response in
-                return self.addCookies(to: response, for: request)
+                return self.addCookies(to: response, for: request, hasStoredSession: false)
             }
         }
     }
 
     /// Adds session cookie to response or clears if session was deleted.
-    private func addCookies(to response: Response, for request: Request) -> EventLoopFuture<Response> {
-        if let session = request._sessionCache.session.withLockedValue({ $0 }), session.isValid.withLockedValue({ $0 }) {
-            // A session exists or has been created. we must
+    private func addCookies(
+        to response: Response,
+        for request: Request,
+        hasStoredSession: Bool
+    ) -> EventLoopFuture<Response> {
+        if
+            let session = request._sessionCache.session.withLockedValue({ $0 }),
+            session.isValid.withLockedValue({ $0 }),
+            session.id != nil || !session.data.snapshot.isEmpty
+        {
+            // A session exists or has been created with data. we must
             // set a cookie value on the response
             let createOrUpdate: EventLoopFuture<SessionID>
             if let id = session.id {
@@ -82,11 +87,15 @@ public final class SessionsMiddleware: Middleware {
             }
         } else if let cookieValue = request.cookies[self.configuration.cookieName] {
             // The request had a session cookie, but now there is no valid session.
-            // we need to perform cleanup.
-            let id = SessionID(string: cookieValue.string)
-            return self.session.deleteSession(id, for: request).map {
-                response.cookies[self.configuration.cookieName] = .expired
-                return response
+            // Expire the cookie, and delete from the driver if a stored session existed.
+            response.cookies[self.configuration.cookieName] = .expired
+            if hasStoredSession {
+                let id = SessionID(string: cookieValue.string)
+                return self.session.deleteSession(id, for: request).map {
+                    return response
+                }
+            } else {
+                return request.eventLoop.makeSucceededFuture(response)
             }
         } else {
             // no session or existing cookie
