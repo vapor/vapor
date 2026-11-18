@@ -31,7 +31,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.9.0"),
 
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.81.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.83.0"),
 
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.34.0"),
