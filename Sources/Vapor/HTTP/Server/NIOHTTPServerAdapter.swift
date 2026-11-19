@@ -215,16 +215,25 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             configuration: configuration
         )
 
-        let handler = VaporHTTPServerHandler(
-            context: self.context,
-            responder: self.context.makeResponder()
-        )
-
         // Run serve() in a child task so we can await listeningAddress
         // before serve() completes.
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                try await nioServer.serve(handler: handler)
+                try await nioServer.serve { connection, requestContext in
+                    #if UnstableWebTransport
+                    let handler = VaporHTTPServerHandler(
+                        context: self.context,
+                        responder: self.context.makeResponder(),
+                        webTransportStreamCreator: try await connection.webTransportStreamCreator
+                    )
+                    #else
+                    let handler = VaporHTTPServerHandler(
+                        context: self.context,
+                        responder: self.context.makeResponder()
+                    )
+                    #endif
+                    await connection.handleRequests(handler: handler)
+                }
             }
 
             // Wait for the server to bind, then publish the address
