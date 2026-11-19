@@ -13,7 +13,7 @@ enum GroupingMacroHelpers {
         }
 
         var configurationArguments: LabeledExprListSyntax {
-            LabeledExprListSyntax(arguments.filter { $0.label?.text != "body" })
+            arguments.filter { $0.label?.text != "body" }
         }
 
         var isMiddlewareGroup: Bool {
@@ -95,7 +95,7 @@ enum GroupingMacroHelpers {
     static func validateGroupContext(in context: some MacroExpansionContext) throws {
         for lexical in context.lexicalContext {
             if lexical.is(FunctionDeclSyntax.self) { break }
-            guard let type = lexical.asProtocol(DeclGroupSyntax.self) else { continue }
+            guard let type = lexical.asProtocol((any DeclGroupSyntax).self) else { continue }
             if type.attributes.contains(where: { attribute in
                 guard case .attribute(let attribute) = attribute else { return false }
                 return attribute.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Controller"

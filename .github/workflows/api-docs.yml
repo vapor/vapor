@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-and-deploy:
-    uses: vapor/api-docs/.github/workflows/deploy.yml@1905791f101ea5b9311754b77f1a606a88c6752c # main
+    uses: vapor/api-docs/.github/workflows/deploy.yml@ad2e6c90e2509b49567e835249e5d45caa6d3e6e # main
     secrets: inherit
     with:
       package: vapor
