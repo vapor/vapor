@@ -1,31 +1,37 @@
 #if Multipart
 public import MultipartKit
 public import HTTPTypes
-#warning("Remove")
-import NIOCore
-import NIOFoundationEssentialsCompat
 #if canImport(FoundationEssentials)
-public import FoundationEssentials
+import FoundationEssentials
 #else
-public import Foundation
+import Foundation
 #endif
 
 extension File: MultipartPartConvertible {
-    public typealias Body = Data
-
-    public var multipart: MultipartPart<Data> {
-        var part = MultipartPart(headerFields: [:], body: Data(buffer: self.data))
-        part.contentType = self.contentType?.serialize()
-        part.filename = self.filename
-        return part
+    public var headerFields: HTTPFields {
+        var fields: HTTPFields = [:]
+        fields.contentDisposition = .init(.formData, filename: filename)
+        if let contentType = self.contentType?.serialize() {
+            fields[.contentType] = contentType
+        }
+        return fields
     }
 
-    public init(multipart: MultipartPart<some MultipartPartBodyElement>) throws {
-        guard let filename = multipart.filename else {
+    public func withBody<R>(_ closure: (RawSpan) throws -> R) rethrows -> R {
+        try closure(self.data.bytes)
+    }
+
+    public init(headerFields: HTTPFields, body: RawSpan) throws {
+        guard
+            let filename = headerFields.contentDisposition?.filename,
+            !filename.isEmpty
+        else {
             throw Abort(.badRequest, reason: "Missing filename")
         }
-        let contentType = multipart.headerFields.contentType
-        self.init(data: ByteBuffer(bytes: multipart.body), filename: filename, contentType: contentType)
+
+        let data = body.withUnsafeBytes { unsafe Data($0) }
+
+        self.init(data: data, filename: filename, contentType: headerFields.contentType)
     }
 }
 
