@@ -32,7 +32,7 @@ public macro POST(on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents:
 /// type receives the body and a later parameter receives the authenticated user.
 /// For example: `@POST(content: User.self, "users")`.
 @attached(peer, names: prefixed(_route_), prefixed(_register_))
-public macro POST<Body: Content>(content: Body.Type, on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents: Any...) =
+public macro POST<Body: ContentDecodable>(content: Body.Type, on routeBuilder: (any RoutesBuilder)? = nil, _ pathComponents: Any...) =
     #externalMacro(
         module: "VaporMacrosPlugin",
         type: "HTTPPostMacro"

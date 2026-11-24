@@ -946,6 +946,147 @@ struct ContentTests {
             }
         }
     }
+
+    @Test("ContentEncodable values encode as their default content type")
+    func testEncodeContentEncodable() throws {
+        var response = Response(status: .ok)
+        try response.content.encode(EncodeOnlyContent())
+
+        #expect(response.headers.contentType == .json)
+        #expect(response.body.string == #"{"name":"new name"}"#)
+    }
+
+    @Test("beforeEncode runs for ContentEncodable values with an explicit content type")
+    func testEncodeContentEncodableAs() throws {
+        var response = Response(status: .ok)
+        try response.content.encode(EncodeOnlyContent(), as: .json)
+
+        #expect(response.body.string == #"{"name":"new name"}"#)
+    }
+
+    @Test("ContentEncodable values use their own default content type")
+    func testContentEncodableDefaultContentType() throws {
+        var response = Response(status: .ok)
+        try response.content.encode(FormEncodeOnlyContent())
+
+        #expect(response.headers.contentType == .urlEncodedForm)
+        #expect(response.body.string == "name=Vapor")
+    }
+
+    @Test("ContentEncodable values encode into a query")
+    func testQueryEncodeContentEncodable() throws {
+        var request = ClientRequest(url: .init(scheme: "https", host: "example.com", path: "/api"))
+        try request.query.encode(EncodeOnlyContent())
+
+        #expect(request.url.query == "name=new%20name")
+    }
+
+    @Test("The client sends ContentEncodable values")
+    func testClientSendsContentEncodable() async throws {
+        struct ReceivedDecodable: Decodable {
+            let name: String
+        }
+
+        try await withApp { app in
+            app.routes.post("echo") { req async throws -> String in
+                try await req.content.decode(ReceivedDecodable.self).name
+            }
+
+            try await app.testing { client in
+                let res = try await client.post("/echo", content: EncodeOnlyContent())
+                #expect(res.status == .ok)
+                try #expect(await res.body.requireString() == "new name")
+            }
+        }
+    }
+
+    @Test("Built-in types keep their default content types")
+    func testBuiltInDefaultContentTypes() throws {
+        // Go through the protocol like the content containers do; `Int.defaultContentType`
+        // would be resolved at compile time and skip the conformance.
+        func defaultContentType<C: ContentEncodable>(of _: C.Type) -> HTTPMediaType {
+            C.defaultContentType
+        }
+
+        #expect(defaultContentType(of: String.self) == .plainText)
+        #expect(defaultContentType(of: Int.self) == .plainText)
+        #expect(defaultContentType(of: UInt8.self) == .plainText)
+        #expect(defaultContentType(of: Double.self) == .plainText)
+        #expect(defaultContentType(of: Float.self) == .plainText)
+        #expect(defaultContentType(of: Bool.self) == .json)
+        #expect(defaultContentType(of: [Int].self) == .json)
+        #expect(defaultContentType(of: [String: Int].self) == .json)
+
+        var response = Response(status: .ok)
+        try response.content.encode(42)
+        #expect(response.headers.contentType == .plainText)
+        #expect(response.body.string == "42")
+    }
+
+    @Test("ContentDecodable values decode from a Request's content and run afterDecode", .bug("https://github.com/vapor/vapor/issues/3342"))
+    func testDecodeContentDecodable() async throws {
+        try await withApp { app in
+            var request = Request(
+                collectedBody: Data(#"{"name": "before decode"}"#.utf8)
+            )
+            request.headers.contentType = .json
+
+            try #expect(await request.content.decode(DecodeOnlyContent.self).name == "new name after decode")
+            try #expect(await request.content.decode(DecodeOnlyContent.self, as: .json).name == "new name after decode")
+            try #expect(await DecodeOnlyContent.decodeRequest(request).name == "new name after decode")
+        }
+    }
+
+    @Test("ContentDecodable values decode from a query and run afterDecode")
+    func testQueryDecodeContentDecodable() async throws {
+        try await withApp { app in
+            var request = Request(
+                collectedBody: Data()
+            )
+            request.url.query = "name=before+decode"
+
+            try #expect(request.query.decode(DecodeOnlyContent.self).name == "new name after decode")
+        }
+    }
+
+    @Test("Arrays and dictionaries of ContentDecodable values decode")
+    func testDecodeContentDecodableCollections() async throws {
+        try await withApp { app in
+            var array = Request(
+                collectedBody: Data(#"[{"name": "first"}, {"name": "second"}]"#.utf8)
+            )
+            array.headers.contentType = .json
+            try #expect(await array.content.decode([DecodeOnlyContent].self).map(\.name) == ["first", "second"])
+
+            var dictionary = Request(
+                collectedBody: Data(#"{"only": {"name": "first"}}"#.utf8)
+            )
+            dictionary.headers.contentType = .json
+            try #expect(await dictionary.content.decode([String: DecodeOnlyContent].self)["only"]?.name == "first")
+        }
+    }
+}
+
+private struct EncodeOnlyContent: ContentEncodable {
+    var name = "old name"
+
+    mutating func beforeEncode() throws {
+        name = "new name"
+    }
+}
+
+private struct FormEncodeOnlyContent: ContentEncodable {
+    static let defaultContentType = HTTPMediaType.urlEncodedForm
+
+    var name = "Vapor"
+}
+
+private struct DecodeOnlyContent: ContentDecodable {
+    var name: String
+
+    mutating func afterDecode() throws {
+        name = "new name after decode"
+    }
 }
 
 private struct SampleContent: Content {
