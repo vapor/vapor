@@ -323,6 +323,10 @@ func routes(_ app: Application) async throws {
         return "Hello, \(fileName)"
     }
 
+    #if OpenAPI
+    openAPIExamples(app)
+    #endif
+
     #if MacroRouting
     try await app.register(collection: UserController())
     try await middlewareServiceExamples(app)
