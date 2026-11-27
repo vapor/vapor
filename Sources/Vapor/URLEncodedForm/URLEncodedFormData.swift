@@ -70,8 +70,11 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
     }
 
     var allChildKeysAreSequentialIntegers: Bool {
-        for i in 0...children.count - 1 {
-            if !children.keys.contains(String(i)) {
+        guard !self.children.isEmpty else {
+            return false
+        }
+        for i in 0..<self.children.count {
+            if !self.children.keys.contains(String(i)) {
                 return false
             }
         }
@@ -100,21 +103,54 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
         self.children = Dictionary(uniqueKeysWithValues: dictionaryLiteral)
     }
 
+    private func containsValue(atPath path: ArraySlice<String>) -> Bool {
+        guard let head = path.first else {
+            return !self.values.isEmpty || !self.children.isEmpty
+        }
+        if head.isEmpty {
+            // Empty brackets denote a nested append rather than overwriting an existing field on the current element.
+            return false
+        }
+        guard let child = self.children[head] else {
+            return false
+        }
+        return child.containsValue(atPath: path.dropFirst())
+    }
+
     mutating func set(value: URLQueryFragment, forPath path: [String], recursionDepth: Int) throws {
-        guard recursionDepth <= maxRecursionDepth else {
+        try self.set(value: value, forPath: path[...], recursionDepth: recursionDepth)
+    }
+
+    private mutating func set(value: URLQueryFragment, forPath path: ArraySlice<String>, recursionDepth: Int) throws {
+        guard recursionDepth <= self.maxRecursionDepth else {
             throw URLEncodedFormError.reachedNestingLimit
         }
         guard let firstElement = path.first else {
             self.values.append(value)
             return
         }
-        var child: URLEncodedFormData
-        if let existingChild = self.children[firstElement] {
-            child = existingChild
+        let remainingPath = path.dropFirst()
+        let targetKey: String
+        if firstElement.isEmpty,
+            !remainingPath.isEmpty,
+            self.children.isEmpty || self.allChildKeysAreSequentialIntegers
+        {
+            if self.children.isEmpty {
+                targetKey = "0"
+            } else {
+                let lastIndex = self.children.count - 1
+                let lastKey = String(lastIndex)
+                if let lastChild = self.children[lastKey], lastChild.containsValue(atPath: remainingPath) {
+                    targetKey = String(lastIndex + 1)
+                } else {
+                    targetKey = lastKey
+                }
+            }
         } else {
-            child = []
+            targetKey = firstElement
         }
-        try child.set(value: value, forPath: Array(path[1...]), recursionDepth: recursionDepth + 1)
-        self.children[firstElement] = child
+        var child = self.children[targetKey] ?? []
+        try child.set(value: value, forPath: remainingPath, recursionDepth: recursionDepth + 1)
+        self.children[targetKey] = child
     }
 }
