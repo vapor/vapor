@@ -692,7 +692,7 @@ struct URLEncodedFormTests {
     func testBracketsInTheMiddle() throws {
         let data = "greetings[sub][][a]=hello&greetings[sub][][a]=hola"
         let form = try URLEncodedFormParser().parse(data)
-        #expect(form == ["greetings": ["sub": ["": ["a": ["hello", "hola"]]]]])
+        #expect(form == ["greetings": ["sub": ["0": ["a": "hello"], "1": ["a": "hola"]]]])
     }
 
     @Test("Test Sub Array Without Brackets")
@@ -774,6 +774,99 @@ struct URLEncodedFormTests {
         }
 
         #expect(true, "We should not have crashed")
+    }
+
+    @Test(
+        "Test Decode Object Array With Index Shorthand",
+        .bug("https://github.com/vapor/vapor/issues/3330")
+    )
+    func testDecodeObjectArrayWithIndexShorthand() throws {
+        struct Collapsable: Codable, Equatable {
+            var optional: Int?
+            var array: [Int]
+        }
+
+        struct ClpArrayHolder: Codable, Equatable {
+            var value: [Collapsable]
+        }
+
+        let single = try URLEncodedFormDecoder().decode(ClpArrayHolder.self, from: "value[][optional]=0")
+        #expect(single == ClpArrayHolder(value: [Collapsable(optional: 0, array: [])]))
+
+        let withNestedArray = try URLEncodedFormDecoder().decode(
+            ClpArrayHolder.self,
+            from: "value[][optional]=0&value[][array][]=1&value[][array][]=2"
+        )
+        #expect(withNestedArray == ClpArrayHolder(value: [Collapsable(optional: 0, array: [1, 2])]))
+
+        let multiple = try URLEncodedFormDecoder().decode(
+            ClpArrayHolder.self,
+            from: "value[][optional]=0&value[][array][]=1&value[][optional]=2&value[][array][]=3"
+        )
+        #expect(
+            multiple
+                == ClpArrayHolder(value: [
+                    Collapsable(optional: 0, array: [1]),
+                    Collapsable(optional: 2, array: [3]),
+                ])
+        )
+
+        #expect(throws: DecodingError.self) {
+            try URLEncodedFormDecoder().decode(ClpArrayHolder.self, from: "value[foo]=1&value[][optional]=0")
+        }
+    }
+
+    @Test(
+        "Test Decode Multi-Field Nested And Mixed Index Object Arrays",
+        .bug("https://github.com/vapor/vapor/issues/3330")
+    )
+    func testDecodeMultiFieldNestedAndMixedObjectArrays() throws {
+        struct Profile: Codable, Equatable {
+            var name: String
+            var age: Int
+        }
+
+        struct Meta: Codable, Equatable {
+            var a: Int
+            var b: Int
+        }
+
+        struct Item: Codable, Equatable {
+            var meta: Meta
+        }
+
+        let profiles = try URLEncodedFormDecoder().decode(
+            [String: [Profile]].self,
+            from: "users[][name]=Alice&users[][age]=30&users[][name]=Bob&users[][age]=25"
+        )
+        #expect(
+            profiles["users"] == [
+                Profile(name: "Alice", age: 30),
+                Profile(name: "Bob", age: 25),
+            ]
+        )
+
+        let nested = try URLEncodedFormDecoder().decode(
+            [String: [Item]].self,
+            from: "items[][meta][a]=1&items[][meta][b]=2&items[][meta][a]=3&items[][meta][b]=4"
+        )
+        #expect(
+            nested["items"] == [
+                Item(meta: Meta(a: 1, b: 2)),
+                Item(meta: Meta(a: 3, b: 4)),
+            ]
+        )
+
+        let mixed = try URLEncodedFormDecoder().decode(
+            [String: [Profile]].self,
+            from: "items[0][name]=Alice&items[0][age]=30&items[][name]=Bob&items[][age]=25"
+        )
+        #expect(
+            mixed["items"] == [
+                Profile(name: "Alice", age: 30),
+                Profile(name: "Bob", age: 25),
+            ]
+        )
     }
 }
 
