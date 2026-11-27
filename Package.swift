@@ -105,7 +105,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-http-server.git", .upToNextMinor(from: "0.3.0")),
 
         // HTTP response compression and request decompression
-        .package(url: "https://github.com/brokenhandsio/compression.git", revision: "c4e6f5be99225241fcc66d35ee7974d83d4f266b")
+        .package(url: "https://github.com/brokenhandsio/compression.git", revision: "075d17071ecad8fe1baaf3c7c3ce00c24c8a0ab8")
     ],
     targets: [
         // Vapor
@@ -140,7 +140,7 @@ let package = Package(
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "NIOHTTPServer", package: "swift-http-server"),
                 .product(name: "SystemPackage", package: "swift-system"),
-                .product(name: "Compression", package: "compression", condition: .when(traits: ["Compression"]))
+                .product(name: "CompressionDeflate", package: "compression", condition: .when(traits: ["Compression"]))
             ],
             swiftSettings: swiftSettings
         ),
@@ -201,6 +201,7 @@ let package = Package(
             name: "VaporTests",
             dependencies: [
                 .product(name: "NIOHTTPCompression", package: "swift-nio-extras", condition: .when(traits: ["Compression"])),
+                .product(name: "CompressionDeflate", package: "compression", condition: .when(traits: ["Compression"])),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
                 .product(name: "NIOCertificateReloading", package: "swift-nio-extras"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),

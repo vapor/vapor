@@ -42,8 +42,8 @@ public struct ResponseCompressionMiddleware: Middleware {
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         var response = try await next.respond(to: request)
 
-        guard 
-            self.configuration.mediaTypes.contains(response.headers.contentType), 
+        guard
+            self.configuration.mediaTypes.contains(response.headers.contentType),
             response.headers[.contentEncoding] == nil,
             response.status.kind != .informational,
             response.status != .noContent, response.status != .notModified,
@@ -54,36 +54,35 @@ public struct ResponseCompressionMiddleware: Middleware {
         // Cache entries for both the encoded and identity variants depend on Accept-Encoding.
         let vary =
             response.headers[.vary]?.split(separator: ",").map {
-                $0.trimming(while: { $0 == " " || $0 == "\t" }).lowercased()
+                $0.trimmingOWS().lowercased()
             } ?? []
         if !vary.contains("*") && !vary.contains("accept-encoding") {
             response.headers.append(.init(name: .vary, value: "Accept-Encoding"))
         }
+
         let coding: HTTPBodyCoding
-        let compressionConfiguration: Deflate.CompressionConfiguration
         switch Self.negotiate(request.headers[.acceptEncoding]) {
-        case .compress(let selected):
-            coding = selected
-            switch selected {
-            case .deflate: compressionConfiguration = .default
-            case .gzip: compressionConfiguration = .gzip
-            }
+        case .compress(let selected): coding = selected
         case .identity: return response
         case .notAcceptable:
             // This middleware can wrap ErrorMiddleware, so return the response rather than throw.
             // Do not retain representation headers (such as ETag) from the rejected response.
             return Response(status: .notAcceptable, headers: [.vary: response.headers[.vary] ?? "Accept-Encoding"])
         }
+        let compressionConfiguration: Deflate.CompressionConfiguration = coding == .gzip ? .gzip() : .default
+
         // HEAD must not execute a streaming body merely to calculate compressed metadata.
         guard request.method != .head else { return response }
 
-        let original = response.body
-        let capacity = max(64, min(self.configuration.initialByteBufferCapacity, 65_536))
         response.headers[.contentEncoding] = coding.rawValue
         // A strong validator for the identity bytes cannot be a strong validator for encoded bytes.
         if let etag = response.headers[.eTag], !etag.hasPrefix("W/") {
             response.headers[.eTag] = "W/" + etag
         }
+
+        let original = response.body
+        let capacity = max(64, min(self.configuration.initialByteBufferCapacity, 65_536))
+
         if case .stream(let stream) = original.storage, stream.state.collected == nil {
             response.body = .init(stream: { writer in
                 let compressor = CompressingBodyWriter(
@@ -91,30 +90,25 @@ public struct ResponseCompressionMiddleware: Middleware {
                 )
                 try stream.state.beginConsuming()
                 try await stream.callback(compressor)
-                if let count = stream.count, count != compressor.count {
-                    throw ResponseBodyLengthMismatch(declared: count, written: compressor.count)
+
+                if let count = stream.count, count != compressor.bytesWritten {
+                    throw ResponseBodyLengthMismatch(declared: count, written: compressor.bytesWritten)
                 }
+
                 try await compressor.finish()
             })
         } else {
-            var compressor = Deflate.StreamingCompressor(configuration: compressionConfiguration)
-            var compressed = Data()
+            let compressor = Deflate.Compressor(configuration: compressionConfiguration)
+            var compressed: [UInt8]!
             try await original.withStreamingBytes { bytes in
-                try compressor.compress(bytes) { span in
-                    for index in 0..<span.count {
-                        compressed.append(span[index])
-                    }
-                }
-
-                try compressor.finish() { span in
-                    for index in 0..<span.count {
-                        compressed.append(span[index])
-                    }
+                compressed = try [UInt8](capacity: compressor.upperBound(forInputSize: bytes.count)) { outputSpan in
+                    try compressor.compress(bytes, into: &outputSpan)
                 }
             }
 
-            response.body = .init(data: compressed)
+            response.body = .init(data: Data(compressed))
         }
+
         return response
     }
 
@@ -129,55 +123,72 @@ public struct ResponseCompressionMiddleware: Middleware {
     /// an explicit exclusion cannot be undone by another entry or field line.
     static func negotiate(_ header: String?) -> NegotiationResult {
         guard let header else { return .identity }
+
         // Only retain the four entries that affect selection, regardless of the number of unknown codings.
         var weights: [String: Int] = [:]
         for item in header.split(separator: ",") {
             let parts = item.split(separator: ";", maxSplits: 1, omittingEmptySubsequences: false)
-            let name = parts[0].trimming(while: { $0 == " " || $0 == "\t" }).lowercased()
-            guard name == "gzip" || name == "deflate" || name == "identity" || name == "*" else { continue }
-            let weight: Int
-            if parts.count == 1 {
-                weight = 1000
-            } else {
-                let parameter = parts[1].trimming(while: { $0 == " " || $0 == "\t" })
-                weight = parameter.prefix(2).lowercased() == "q=" ? Self.qualityValue(parameter.dropFirst(2)) ?? 0 : 0
-            }
+            let name = parts[0].trimmingOWS().lowercased()
+
+            guard ["gzip", "deflate", "identity", "*"].contains(name) else { continue }
+
+            let weight =
+                if parts.count == 1 {
+                    1000
+                } else {
+                    Self.qualityValue(parts[1].trimmingOWS()) ?? 0
+                }
+
             weights[name] = min(weights[name] ?? weight, weight)
         }
+
         let gzip = weights["gzip"] ?? weights["*"] ?? 0
         let deflate = weights["deflate"] ?? weights["*"] ?? 0
         let best = max(gzip, deflate)
         if best > 0, best >= (weights["identity"] ?? 0) {
             return .compress(gzip >= deflate ? .gzip : .deflate)
         }
-        let acceptsIdentity = weights["identity"].map { $0 > 0 } ?? (weights["*"] != 0)
+
+        let acceptsIdentity = (weights["identity"] ?? weights["*"] ?? 1) > 0
         return acceptsIdentity ? .identity : .notAcceptable
     }
 
-    /// RFC 9110 section 12.4.2: an ASCII 0 or 1, optionally followed by a decimal point and
-    /// at most three digits. Values beginning with 1 may only have zero fractional digits.
+    /// Parses a `q=` parameter per RFC 9110 section 12.4.2: an ASCII 0 or 1, optionally followed by
+    /// a decimal point and at most three digits. Values beginning with 1 may only have zero fractional digits.
     /// Integer thousandths avoid accepting floating-point extensions such as signs or exponents.
-    private static func qualityValue(_ value: Substring) -> Int? {
-        let bytes = value.utf8
-        guard (1...5).contains(bytes.count), let first = bytes.first, first == 48 || first == 49 else { return nil }
-        if bytes.count == 1 { return first == 49 ? 1000 : 0 }
-        guard bytes.dropFirst().first == 46 else { return nil }
-        var quality = first == 49 ? 1000 : 0
+    private static func qualityValue(_ parameter: Substring) -> Int? {
+        guard parameter.prefix(2).lowercased() == "q=" else { return nil }
+        let bytes = parameter.dropFirst(2).utf8
+        let zero = UInt8(ascii: "0")
+        let one = UInt8(ascii: "1")
+
+        guard
+            (1...5).contains(bytes.count),
+            let first = bytes.first,
+            first == zero || first == one
+        else {
+            return nil
+        }
+        var quality = first == one ? 1000 : 0
+        guard bytes.count > 1 else { return quality }
+
+        guard bytes.dropFirst().first == UInt8(ascii: ".") else { return nil }
         var place = 100
         for digit in bytes.dropFirst(2) {
-            guard (48...57).contains(digit), first == 48 || digit == 48 else { return nil }
-            quality += Int(digit - 48) * place
+            guard (zero...UInt8(ascii: "9")).contains(digit), first == zero || digit == zero else { return nil }
+            quality += Int(digit - zero) * place
             place /= 10
         }
+
         return quality
     }
 }
 
 /// A borrowed writer wrapping the transport writer; never captures it in an escaping closure.
-
 private struct CompressingBodyWriter: HTTPBodyWriter, ~Escapable {
-    final class CompressorBox { 
-        var count = 0
+    // `write` is non-mutating and the compressor is ~Copyable, so mutable state lives in a class.
+    final class CompressorBox {
+        var bytesWritten = 0
         var compressor: Deflate.StreamingCompressor
 
         init(compressor: consuming Deflate.StreamingCompressor) {
@@ -185,17 +196,18 @@ private struct CompressingBodyWriter: HTTPBodyWriter, ~Escapable {
         }
     }
 
-    var count: Int {
-        self.box.count
-    }
-
     let downstream: any HTTPBodyWriter & ~Escapable
     let box: CompressorBox
     let bufferCapacity: Int
 
+    /// Uncompressed bytes received from the body, for checking against its declared length.
+    var bytesWritten: Int {
+        self.box.bytesWritten
+    }
+
     @_lifetime(copy downstream)
     init(
-        compressionConfiguration: Deflate.CompressionConfiguration, 
+        compressionConfiguration: Deflate.CompressionConfiguration,
         bufferCapacity: Int,
         downstream: borrowing any HTTPBodyWriter & ~Escapable
     ) {
@@ -206,26 +218,42 @@ private struct CompressingBodyWriter: HTTPBodyWriter, ~Escapable {
 
     func write(_ bytes: Span<UInt8>) async throws {
         var consumed = 0
-        while consumed < bytes.count {
+        var flushed = false
+        while !flushed {
             let output = try [UInt8](capacity: bufferCapacity) { outputSpan in
-                consumed += try box.compressor.compress(bytes.extracting(consumed...), into: &outputSpan)
+                if consumed < bytes.count {
+                    consumed += try box.compressor.compress(bytes.extracting(consumed...), into: &outputSpan).consumed
+                }
+                if consumed == bytes.count {
+                    flushed = try box.compressor.flush(into: &outputSpan) == .awaitingInput
+                }
             }
-            if !output.isEmpty { 
+            if !output.isEmpty {
                 try await self.downstream.write(output.span)
             }
+
         }
-        self.box.count += consumed
+
+        self.box.bytesWritten += consumed
     }
 
     func finish() async throws {
         var isFinished = false
         while !isFinished {
             let output = try [UInt8](capacity: bufferCapacity) { outputSpan in
-                isFinished = try box.compressor.finish(into: &outputSpan)
+                isFinished = try box.compressor.finish(into: &outputSpan) == .finished
             }
-            try await self.downstream.write(output.span)
+            if !output.isEmpty {
+                try await self.downstream.write(output.span)
+            }
         }
-    } 
+    }
+}
+
+extension StringProtocol {
+    fileprivate func trimmingOWS() -> Self.SubSequence {
+        self.trimming(while: { $0 == " " || $0 == "\t" })
+    }
 }
 
 #endif

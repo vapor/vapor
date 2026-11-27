@@ -7,7 +7,9 @@ import AsyncHTTPClient
 import NIOHTTP1
 import NIOHTTPCompression
 import NIOSSL
+import CompressionDeflate
 import Foundation
+import Synchronization
 import Testing
 
 @Suite("HTTP Compression Tests", .timeLimit(.minutes(1)))
@@ -114,6 +116,65 @@ struct HTTPCompressionTests {
                 $0.body = .init(data: data)
             }
             #expect(response.status == .ok)
+        }
+    }
+
+    @Test("A request chunk that expands past one decoded read still reaches the end of the body")
+    func requestExpandingPastReadBuffer() async throws {
+        // About 200 KiB that gzips to under 1 KiB: one network chunk, several 64 KiB decoded reads.
+        let payload = String(repeating: Self.payload, count: 64)
+        let gzip = try Deflate.Compressor(configuration: .gzip()).compress(payload.utf8)
+        try await self.withServer { app in
+            app.serverConfiguration.requestDecompression = .init(limit: .size(payload.utf8.count))
+            app.on(.post, "echo", maxBodySize: "1mb") { request async throws in
+                Response(body: .init(data: try await request.body.collect() ?? Data()))
+            }
+        } test: { client in
+            let response = try await client.post("/echo") {
+                $0.headers[.contentEncoding] = "gzip"
+                $0.body = .init(data: Data(gzip))
+            }
+            #expect(response.status == .ok)
+            try #expect(await response.body.data() == Data(payload.utf8))
+        }
+    }
+
+    @Test("Each streamed write is fully flushed before the next one")
+    func streamedWritesAreFlushed() async throws {
+        // Random bytes barely compress, so one write overflows the 64-byte output buffer many times.
+        let first = (0..<4096).map { _ in UInt8.random(in: .min ... .max) }
+        let second = Array("done".utf8)
+        let received = Mutex(Data())
+        let receivedBeforeSecondWrite = Mutex(Data())
+        let middleware = ResponseCompressionMiddleware(
+            configuration: .init(mediaTypes: .excluding(.none), initialByteBufferCapacity: 64))
+        let response = try await middleware.respond(
+            to: Request(headers: [.acceptEncoding: "gzip"]),
+            chainingTo: BasicResponder { _ in
+                Response(
+                    body: .init(stream: { writer in
+                        try await writer.write(first.span)
+                        let sent = received.withLock { $0 }
+                        receivedBeforeSecondWrite.withLock { $0 = sent }
+                        try await writer.write(second.span)
+                    }))
+            })
+        try await response.body.withStreamingBytes { span in
+            let chunk = span.withUnsafeBufferPointer { unsafe Data(buffer: $0) }
+            received.withLock { $0.append(chunk) }
+        }
+
+        #expect(try Self.gunzip(receivedBeforeSecondWrite.withLock { $0 }) == first)
+        #expect(try Self.gunzip(received.withLock { $0 }) == first + second)
+    }
+
+    /// Decodes as much of a gzip stream as `data` holds, even if the stream is not finished.
+    private static func gunzip(_ data: Data) throws -> [UInt8] {
+        var configuration = Deflate.DecompressionConfiguration()
+        configuration.format = .gzip
+        var decompressor = Deflate.StreamingDecompressor(configuration: configuration)
+        return try [UInt8](capacity: 64 * 1024) { output in
+            try decompressor.decompress(data.span, into: &output)
         }
     }
 

@@ -43,8 +43,8 @@ final class HTTPBodyDecompressor {
 
     func read() async throws -> [UInt8]? {
         while true {
-            if self.decompressor.isFinished && self.offset == self.input.count {
-                if self.sourceEnded { return nil }
+            if self.decompressor.isFinished, self.sourceEnded {
+                return nil 
             }
 
             if self.offset == self.input.count && !self.pendingOutput && !self.sourceEnded {
@@ -58,11 +58,12 @@ final class HTTPBodyDecompressor {
 
             let result: [UInt8]
             do {
+                let chunk = self.input.span.extracting(self.offset...)
                 result = try [UInt8](capacity: 64 * 1024) { output throws(Deflate.Error) in
-                    self.offset += try self.decompressor.decompress(
-                        self.input.span.extracting(self.offset...), 
-                        into: &output
-                    )
+                    let step = try self.decompressor.decompress(chunk, into: &output)
+                    self.offset += step.consumed
+
+                    self.pendingOutput = step.status == .outputIsFull
                 }
             } catch .unexpectedTrailingData {
                 throw Abort(.badRequest, reason: "Trailing data in compressed request body")
